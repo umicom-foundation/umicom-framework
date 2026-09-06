@@ -27,6 +27,18 @@ int main(void)
     char path[UMI_PATH_CAPACITY];
     char value[UMI_PATH_CAPACITY];
 
+    /* Short relative strings must be classified without reading beyond their
+     * terminating NUL.  This protects callers that pass a single component
+     * while assembling a path incrementally. */
+    assert(!umi_path_is_absolute("x"));
+#ifdef _WIN32
+    assert(!umi_path_is_absolute("C:"));
+    assert(umi_path_is_absolute("C:/"));
+    assert(!umi_path_is_absolute("\\"));
+#else
+    assert(!umi_path_is_absolute("."));
+#endif
+
 #ifdef _WIN32
     assert(umi_path_normalise("C:/work/./studio/../framework",
                               path,

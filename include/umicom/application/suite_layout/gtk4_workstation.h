@@ -329,6 +329,18 @@ UmiStatus umi_application_suite_gtk4_workstation_apply_panel_settings(
     UmiApplicationSuiteGtk4Workstation *workstation,
     const UmiUiWorkspacePanelSettings *settings);
 /**
+ * Applies several panel edits as one policy-checked workstation transaction.
+ *
+ * @param workstation Live suite workstation containing the panel instances.
+ * @param settings Borrowed placement requests.
+ * @param setting_count Number of requests, bounded by the Framework contract.
+ * @return `UMI_STATUS_OK` when the visible layout was rebuilt successfully.
+ */
+UmiStatus umi_application_suite_gtk4_workstation_apply_panel_batch(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const UmiUiWorkspacePanelSettings *settings,
+    size_t setting_count);
+/**
  * Returns the native root widget owned by the workstation.
  *
  * @param workstation Live workstation.

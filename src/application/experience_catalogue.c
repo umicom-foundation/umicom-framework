@@ -65,7 +65,10 @@ static const ExperienceGetter GETTERS[] = {
 static const ExperienceAlias ALIASES[] = {
     { "org.umicom.music", "org.umicom.music-studio" },
     { "org.umicom.ai-creator", "org.umicom.creator" },
-    { "org.umicom.desk", "org.umicom.desktop" }
+    { "org.umicom.desk", "org.umicom.desktop" },
+    /* The focused IDE is the Studio experience with a smaller launcher name;
+     * keep one definition so layouts and panels cannot drift apart. */
+    { "org.umicom.ide", "org.umicom.studio" }
 };
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))

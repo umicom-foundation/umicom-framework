@@ -17,6 +17,8 @@
 #ifndef UMICOM_TRADING_UI_GTK4_TRADING_SUITE_WORKSTATION_H
 #define UMICOM_TRADING_UI_GTK4_TRADING_SUITE_WORKSTATION_H
 
+#include <stddef.h>
+
 #include <gtk/gtk.h>
 
 #include "umicom/application/suite_layout/gtk4_workstation.h"
@@ -183,6 +185,11 @@ UmiStatus umi_gtk4_trading_suite_workstation_close_window(
 UmiStatus umi_gtk4_trading_suite_workstation_apply_panel_settings(
     UmiGtk4TradingSuiteWorkstation *workstation,
     const UmiUiWorkspacePanelSettings *settings);
+/** Apply several panel edits as one policy-checked, all-or-nothing operation. */
+UmiStatus umi_gtk4_trading_suite_workstation_apply_panel_batch(
+    UmiGtk4TradingSuiteWorkstation *workstation,
+    const UmiUiWorkspacePanelSettings *settings,
+    size_t setting_count);
 /**
  * Provide the gtk4 trading suite workstation refresh operation used by this module and its
  * client applications.

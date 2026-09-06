@@ -126,6 +126,23 @@ UmiStatus umi_desk_runtime_select_all_applications(
  */
 UmiStatus umi_desk_runtime_clear_application_selection(
     UmiDeskRuntime *runtime);
+
+/**
+ * Capture the Desk multi-application selection for session persistence without
+ * exposing the launch-selection implementation to frontend adapters.
+ */
+UmiStatus umi_desk_runtime_capture_selection_checkpoint(
+    const UmiDeskRuntime *runtime,
+    UmiApplicationLaunchSelectionCheckpoint *out_checkpoint);
+
+/**
+ * Restore a validated Desk selection checkpoint and publish one runtime
+ * revision when the selection changes successfully.
+ */
+UmiStatus umi_desk_runtime_restore_selection_checkpoint(
+    UmiDeskRuntime *runtime,
+    const UmiApplicationLaunchSelectionCheckpoint *checkpoint);
+
 /**
  * Provide the desk runtime launch selected applications operation used by this module and
  * its client applications.

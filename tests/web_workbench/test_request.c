@@ -40,5 +40,10 @@ int main(void)
     assert(strstr(resolved.body, "LONDON") != NULL);
     assert(umi_web_workbench_request_validate(&resolved, message, sizeof(message)) == UMI_STATUS_OK);
     assert(umi_web_workbench_request_remove_header(&resolved, "Accept") == UMI_STATUS_OK);
+    /* A damaged header count must be rejected before any fixed header slot is accessed. */
+    resolved.header_count = UMI_WEB_MAX_HEADERS + 1U;
+    assert(umi_web_workbench_request_set_header(&resolved, "X-Test", "value") ==
+        UMI_STATUS_INVALID_STATE);
+    assert(umi_web_workbench_request_header(&resolved, "X-Test") == NULL);
     return 0;
 }

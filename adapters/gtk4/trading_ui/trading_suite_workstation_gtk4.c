@@ -597,6 +597,23 @@ UmiStatus umi_gtk4_trading_suite_workstation_apply_panel_settings(
         workstation->suite, settings);
 }
 
+/* Forward a multi-panel edit to the shared suite so Trader and other products
+ * use exactly the same validation and rollback rules. */
+UmiStatus umi_gtk4_trading_suite_workstation_apply_panel_batch(
+    UmiGtk4TradingSuiteWorkstation *workstation,
+    const UmiUiWorkspacePanelSettings *settings,
+    size_t setting_count)
+{
+    /* Reject incomplete requests before the native workstation is touched. */
+    if (workstation == NULL || settings == NULL || setting_count == 0U ||
+        setting_count > UMI_UI_WORKSPACE_MAX_PANEL_BATCH) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* The suite owns policy, staging and rendering for this shared surface. */
+    return umi_application_suite_gtk4_workstation_apply_panel_batch(
+        workstation->suite, settings, setting_count);
+}
+
 /*
  * Provide the gtk4 trading suite workstation refresh operation used by this module and its
  * client applications.

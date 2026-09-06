@@ -29,6 +29,14 @@ extern "C" {
 
 #define UMI_APPLICATION_EXPERIENCE_API_VERSION 1U
 #define UMI_APPLICATION_EXPERIENCE_REGISTRY_CAPACITY 64U
+/*
+ * Keep catalogue arrays bounded at the public contract boundary.  A caller can
+ * still provide fewer records, but it cannot make the runtime walk memory past
+ * the fixed records that its APIs understand.
+ */
+#define UMI_APPLICATION_EXPERIENCE_MAX_PANELS 64U
+#define UMI_APPLICATION_EXPERIENCE_MAX_LAYOUTS 64U
+#define UMI_APPLICATION_EXPERIENCE_MAX_FEATURES 128U
 
 /* Feature states form a truthful progression. Foundation means usable contracts
  * exist, while verified means implementation and acceptance evidence exist. */

@@ -49,31 +49,36 @@ static void verify_format(const UmiComponentInventory *inventory, UmiComponentRe
  * to the operating system.
  */
 int main(void) {
-  UmiComponentInventory inventory;
+  UmiComponentInventory *inventory =
+      (UmiComponentInventory *)calloc(1U, sizeof(*inventory));
   UmiComponentQuery query;
   char output[8192];
   char expected[64];
   size_t required = 0U;
 
-  assert(umi_component_inventory_build(NULL, 0U, &inventory) == UMI_STATUS_OK);
+  /* Report generation walks the complete component catalogue; heap storage
+   * keeps this data independent of the host test runner's stack size. */
+  assert(inventory != NULL);
+  assert(umi_component_inventory_build(NULL, 0U, inventory) == UMI_STATUS_OK);
   /* Build expected totals from the catalogue-backed inventory. This keeps the
    * report test strict while allowing the Framework catalogue to grow. */
   assert(snprintf(expected, sizeof(expected), "components=%zu",
-                  inventory.component_count) > 0);
-  verify_format(&inventory, UMI_COMPONENT_REPORT_TEXT, expected);
-  verify_format(&inventory, UMI_COMPONENT_REPORT_MARKDOWN,
+                  inventory->component_count) > 0);
+  verify_format(inventory, UMI_COMPONENT_REPORT_TEXT, expected);
+  verify_format(inventory, UMI_COMPONENT_REPORT_MARKDOWN,
                 "# Umicom Framework Component Inventory");
   assert(snprintf(expected, sizeof(expected), "\"component_count\":%zu",
-                  inventory.component_count) > 0);
-  verify_format(&inventory, UMI_COMPONENT_REPORT_JSON, expected);
+                  inventory->component_count) > 0);
+  verify_format(inventory, UMI_COMPONENT_REPORT_JSON, expected);
 
   umi_component_query_init(&query);
   query.domain_id = "trading";
-  assert(umi_component_inventory_report_write(&inventory, &query, UMI_COMPONENT_REPORT_JSON, output,
+  assert(umi_component_inventory_report_write(inventory, &query, UMI_COMPONENT_REPORT_JSON, output,
                                               sizeof(output), &required) == UMI_STATUS_OK);
   assert(snprintf(expected, sizeof(expected), "\"selected_count\":%zu",
                   umi_application_component_domain_count("trading")) > 0);
   assert(strstr(output, expected) != NULL);
   assert(strstr(output, "umicom.treasury") == NULL);
+  free(inventory);
   return 0;
 }

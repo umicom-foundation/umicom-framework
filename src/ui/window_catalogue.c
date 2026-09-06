@@ -19,6 +19,16 @@
 #include <stdio.h>
 #include <string.h>
 
+/* A catalogue may be restored from a session file.  Check both counters before
+ * any lookup walks the fixed arrays, so a damaged file cannot turn into an
+ * out-of-bounds read. */
+static bool catalogue_shape_valid(const UmiUiWindowCatalogue *catalogue)
+{
+    return catalogue != NULL &&
+           catalogue->count <= UMI_UI_WINDOW_CATALOGUE_MAX &&
+           catalogue->recent_count <= UMI_UI_WINDOW_RECENT_MAX;
+}
+
 /*
  * Provide the contains ignore case operation used by this module and its client
  * applications.
@@ -59,7 +69,8 @@ static size_t open_instance_count(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (layout == NULL || tool_id == NULL) return 0U;
+    if (layout == NULL || tool_id == NULL ||
+        layout->window_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS) return 0U;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < layout->window_count; ++index) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
@@ -81,7 +92,7 @@ static const UmiUiWindowRecentEntry *recent_entry(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (catalogue == NULL || tool_id == NULL) return NULL;
+    if (!catalogue_shape_valid(catalogue) || tool_id == NULL) return NULL;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < catalogue->recent_count; ++index) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
@@ -173,6 +184,8 @@ UmiStatus umi_ui_window_catalogue_register(UmiUiWindowCatalogue *catalogue,const
      * used.
      */
     if (catalogue == NULL || descriptor == NULL || descriptor->tool_id[0] == '\0' || descriptor->title[0] == '\0' || descriptor->category < UMI_UI_WINDOW_CATEGORY_DEVELOPMENT || descriptor->category > UMI_UI_WINDOW_CATEGORY_GENERAL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Refuse a malformed restored count before searching or appending. */
+    if (!catalogue_shape_valid(catalogue)) return UMI_STATUS_INVALID_STATE;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < catalogue->count; ++index) /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (strcmp(catalogue->items[index].tool_id,descriptor->tool_id) == 0) return UMI_STATUS_ALREADY_EXISTS;
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
@@ -183,7 +196,7 @@ UmiStatus umi_ui_window_catalogue_register(UmiUiWindowCatalogue *catalogue,const
  * Find ui window catalogue while leaving the underlying catalogue or model owned by this
  * module.
  */
-const UmiUiWindowDescriptor *umi_ui_window_catalogue_find(const UmiUiWindowCatalogue *catalogue,const char *tool_id) { size_t index; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (catalogue == NULL || tool_id == NULL) return NULL; /* Visit each bounded item once so every record receives the same rule. */ for (index = 0U; index < catalogue->count; ++index) /* Protect caller-owned memory by checking that required state is available before it is used. */ if (strcmp(catalogue->items[index].tool_id,tool_id) == 0) return &catalogue->items[index]; return NULL; }
+const UmiUiWindowDescriptor *umi_ui_window_catalogue_find(const UmiUiWindowCatalogue *catalogue,const char *tool_id) { size_t index; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (!catalogue_shape_valid(catalogue) || tool_id == NULL) return NULL; /* Visit each bounded item once so every record receives the same rule. */ for (index = 0U; index < catalogue->count; ++index) /* Protect caller-owned memory by checking that required state is available before it is used. */ if (strcmp(catalogue->items[index].tool_id,tool_id) == 0) return &catalogue->items[index]; return NULL; }
 /*
  * Provide the ui window catalogue search operation used by this module and its client
  * applications.
@@ -195,7 +208,7 @@ size_t umi_ui_window_catalogue_search(const UmiUiWindowCatalogue *catalogue,cons
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (catalogue == NULL || query == NULL || out_items == NULL) return 0U;
+    if (!catalogue_shape_valid(catalogue) || query == NULL || out_items == NULL) return 0U;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < catalogue->count; ++index) {
         const UmiUiWindowDescriptor *item = &catalogue->items[index];
@@ -239,9 +252,14 @@ UmiStatus umi_ui_window_catalogue_query(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (catalogue == NULL || query == NULL || out_result == NULL ||
+    if (!catalogue_shape_valid(catalogue) || query == NULL || out_result == NULL ||
         query->order < UMI_UI_WINDOW_CATALOGUE_ORDER_RECOMMENDED ||
-        query->order > UMI_UI_WINDOW_CATALOGUE_ORDER_RECENT) {
+        query->order > UMI_UI_WINDOW_CATALOGUE_ORDER_RECENT ||
+        (query->category != 0 &&
+         (query->category < UMI_UI_WINDOW_CATEGORY_DEVELOPMENT ||
+          query->category > UMI_UI_WINDOW_CATEGORY_GENERAL)) ||
+        (active_layout != NULL &&
+         active_layout->window_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
@@ -332,7 +350,7 @@ UmiStatus umi_ui_window_catalogue_record_open(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (catalogue == NULL || tool_id == NULL || tool_id[0] == '\0' ||
+    if (!catalogue_shape_valid(catalogue) || tool_id == NULL || tool_id[0] == '\0' ||
         umi_ui_window_catalogue_find(catalogue, tool_id) == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

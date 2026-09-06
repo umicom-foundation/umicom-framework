@@ -207,6 +207,7 @@ UmiStatus umi_application_boundary_audit(
      * used.
      */
     if (applications == NULL || application_count == 0U ||
+        application_count > UMI_APPLICATION_AUDIT_MAX_APPLICATIONS ||
         out_report == NULL || (dependency_count > 0U && dependencies == NULL))
         return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_report, 0, sizeof(*out_report));

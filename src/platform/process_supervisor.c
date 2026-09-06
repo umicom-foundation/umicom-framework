@@ -66,19 +66,25 @@ static UmiStatus copy_string(char *destination,
                              size_t capacity,
                              const char *source)
 {
+    size_t length;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
+    if (destination == NULL || capacity == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
     if (source == NULL) {
         destination[0] = '\0';
         return UMI_STATUS_OK;
     }
-    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (strlen(source) + 1U > capacity) {
+    length = strlen(source);
+    /* Compare before adding one so a hostile maximum-length string cannot wrap
+     * the size calculation before the capacity check. */
+    if (length >= capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
-    (void)strcpy(destination, source);
+    (void)memcpy(destination, source, length + 1U);
     return UMI_STATUS_OK;
 }
 
@@ -89,6 +95,17 @@ static UmiStatus own_request(UmiOwnedProcessRequest *owned,
 {
     size_t index;
     UmiStatus status;
+    /* Validate this private copy boundary as well as the public executor.  The
+     * supervisor owns fixed arrays, so counts and pointer arrays must agree
+     * before any loop can index them. */
+    if (owned == NULL || request == NULL || request->program == NULL ||
+        request->program[0] == '\0' ||
+        request->argument_count > UMI_PROCESS_MAX_ARGUMENTS ||
+        request->environment_count > UMI_PROCESS_MAX_ENVIRONMENT ||
+        (request->argument_count > 0U && request->arguments == NULL) ||
+        (request->environment_count > 0U && request->environment == NULL)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
     (void)memset(owned, 0, sizeof(*owned));
     status = copy_string(owned->program,
                          sizeof(owned->program),
@@ -108,6 +125,9 @@ static UmiStatus own_request(UmiOwnedProcessRequest *owned,
     }
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < request->argument_count; ++index) {
+        if (request->arguments[index] == NULL) {
+            return UMI_STATUS_INVALID_ARGUMENT;
+        }
         status = copy_string(owned->arguments[index],
                              sizeof(owned->arguments[index]),
                              request->arguments[index]);
@@ -117,6 +137,11 @@ static UmiStatus own_request(UmiOwnedProcessRequest *owned,
     }
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < request->environment_count; ++index) {
+        if (request->environment[index].name == NULL ||
+            request->environment[index].value == NULL ||
+            request->environment[index].name[0] == '\0') {
+            return UMI_STATUS_INVALID_ARGUMENT;
+        }
         status = copy_string(owned->environment_names[index],
                              sizeof(owned->environment_names[index]),
                              request->environment[index].name);
@@ -288,6 +313,7 @@ UmiStatus umi_process_supervisor_submit(UmiProcessSupervisor *supervisor,
                                         UmiProcessJobId *out_job_id)
 {
     UmiProcessJob *job;
+    UmiCancellationToken *cancellation = NULL;
     UmiStatus status;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -296,44 +322,52 @@ UmiStatus umi_process_supervisor_submit(UmiProcessSupervisor *supervisor,
     if (supervisor == NULL || request == NULL || out_job_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+
+    /* Create the cancellation object before reserving a job slot.  If it
+     * cannot be allocated, the supervisor remains unchanged and another
+     * caller can still use the available capacity. */
+    status = umi_cancellation_token_create(&cancellation);
+    if (status != UMI_STATUS_OK) return status;
+
     (void)umi_mutex_lock(supervisor->mutex);
     /* Apply this branch only when its contract condition is satisfied. */
     if (supervisor->shutting_down) {
         (void)umi_mutex_unlock(supervisor->mutex);
+        umi_cancellation_token_destroy(cancellation);
         return UMI_STATUS_INVALID_STATE;
     }
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (supervisor->count >= supervisor->capacity) {
         (void)umi_mutex_unlock(supervisor->mutex);
+        umi_cancellation_token_destroy(cancellation);
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
-    job = &supervisor->jobs[supervisor->count++];
+    /* Keep reservation, request ownership and thread start in one critical
+     * section.  This prevents a second submitter from being inserted between
+     * the reservation and a failed copy, which previously left a ghost job
+     * occupying capacity. */
+    job = &supervisor->jobs[supervisor->count];
     (void)memset(job, 0, sizeof(*job));
     job->owner = supervisor;
     job->job_id = supervisor->next_job_id++;
     job->state = UMI_PROCESS_JOB_CREATED;
-    (void)snprintf(job->label,
-                   sizeof(job->label),
-                   "%s",
-                   label != NULL ? label : "process");
-    supervisor->stats.jobs = supervisor->count;
-    supervisor->stats.submitted += 1U;
-    (void)umi_mutex_unlock(supervisor->mutex);
-
-    status = umi_cancellation_token_create(&job->cancellation);
+    job->cancellation = cancellation;
+    status = copy_string(job->label,
+                         sizeof(job->label),
+                         label != NULL ? label : "process");
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
-        status = own_request(&job->owned, request, job->cancellation);
+        status = own_request(&job->owned, request, cancellation);
     }
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
+        supervisor->count += 1U;
+        supervisor->stats.jobs = supervisor->count;
+        supervisor->stats.submitted += 1U;
         status = umi_thread_start(process_job_thread, job, &job->thread);
     }
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
-        umi_cancellation_token_destroy(job->cancellation);
-        job->cancellation = NULL;
-        (void)umi_mutex_lock(supervisor->mutex);
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (supervisor->count > 0U &&
             &supervisor->jobs[supervisor->count - 1U] == job) {
@@ -343,8 +377,12 @@ UmiStatus umi_process_supervisor_submit(UmiProcessSupervisor *supervisor,
             (void)memset(job, 0, sizeof(*job));
         }
         (void)umi_mutex_unlock(supervisor->mutex);
+        /* The thread-start contract leaves out_thread NULL on failure, so no
+         * worker can still reference this token when it is released here. */
+        umi_cancellation_token_destroy(cancellation);
         return status;
     }
+    (void)umi_mutex_unlock(supervisor->mutex);
     *out_job_id = job->job_id;
     return UMI_STATUS_OK;
 }

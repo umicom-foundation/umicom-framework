@@ -28,13 +28,15 @@
 /**
  * Describe one ordinary structure member. The compiler calculates the offset
  * and size, avoiding hand-written numbers that can become incorrect later.
+ * String metadata is assigned directly so strict C compilers do not diagnose
+ * parenthesised string constants when the destination is a character array.
  */
 #define UMI_REFLECTION_FIELD(TYPE, MEMBER, TYPE_ID, VALUE_KIND, FLAGS, TEXT) \
     {                                                                        \
         .field_id = #MEMBER,                                                 \
         .display_name = #MEMBER,                                             \
-        .type_id = (TYPE_ID),                                                \
-        .description = (TEXT),                                               \
+        .type_id = TYPE_ID,                                                   \
+        .description = TEXT,                                                  \
         .value_kind = (VALUE_KIND),                                          \
         .offset = offsetof(TYPE, MEMBER),                                    \
         .size = sizeof(((TYPE *)0)->MEMBER),                                 \
@@ -44,15 +46,16 @@
 
 /**
  * Describe a fixed C array and record its element count for inspectors and
- * serializers that need to stay inside the declared storage.
+ * serializers that need to stay inside the declared storage.  As above, the
+ * text arguments remain direct string initialisers for pedantic C builds.
  */
 #define UMI_REFLECTION_ARRAY_FIELD(                                          \
     TYPE, MEMBER, TYPE_ID, VALUE_KIND, FLAGS, TEXT)                          \
     {                                                                        \
         .field_id = #MEMBER,                                                 \
         .display_name = #MEMBER,                                             \
-        .type_id = (TYPE_ID),                                                \
-        .description = (TEXT),                                               \
+        .type_id = TYPE_ID,                                                   \
+        .description = TEXT,                                                  \
         .value_kind = (VALUE_KIND),                                          \
         .offset = offsetof(TYPE, MEMBER),                                    \
         .size = sizeof(((TYPE *)0)->MEMBER),                                 \

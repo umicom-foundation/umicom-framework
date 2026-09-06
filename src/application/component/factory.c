@@ -142,7 +142,10 @@ umi_application_component_factory_registry_find(
   /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < registry->count; ++index) {
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (registry->items[index].frontend == frontend &&
+    /* A restored registry can contain an empty slot; skip it before strcmp so
+     * corrupted state cannot turn discovery into a null-pointer dereference. */
+    if (registry->items[index].factory_id != NULL &&
+        registry->items[index].frontend == frontend &&
         strcmp(registry->items[index].factory_id, factory_id) == 0)
       return &registry->items[index];
   }

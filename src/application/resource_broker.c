@@ -26,6 +26,8 @@
 #include <string.h>
 
 #include "umicom/application/presentation.h"
+#include "umicom/application/experience_catalogue.h"
+#include "umicom/application/portfolio.h"
 #include "umicom/application/resource_catalogue.h"
 #include "umicom/runtime/capability_catalogue.h"
 
@@ -215,35 +217,109 @@ static const UmiApplicationResourceDescriptor STATIC_RESOURCES[] = {
      UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
      UMI_APPLICATION_RESOURCE_SHARED | UMI_APPLICATION_RESOURCE_APPLICATION_ICON |
          UMI_APPLICATION_RESOURCE_THEME_DEPENDENT},
+    /* Each product receives a stable logical icon ID.  Frontends can map these
+     * IDs to a branded theme asset without changing application code. */
+    {sizeof(UmiApplicationResourceDescriptor),
+     "umicom.icon.application.accountant", "x-office-spreadsheet-symbolic",
+     "image/x-icon-name", UMI_APPLICATION_RESOURCE_THEME_ICON,
+     UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
+     UMI_APPLICATION_RESOURCE_SHARED | UMI_APPLICATION_RESOURCE_APPLICATION_ICON |
+         UMI_APPLICATION_RESOURCE_THEME_DEPENDENT},
+    {sizeof(UmiApplicationResourceDescriptor),
+     "umicom.icon.application.media", "applications-multimedia-symbolic",
+     "image/x-icon-name", UMI_APPLICATION_RESOURCE_THEME_ICON,
+     UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
+     UMI_APPLICATION_RESOURCE_SHARED | UMI_APPLICATION_RESOURCE_APPLICATION_ICON |
+         UMI_APPLICATION_RESOURCE_THEME_DEPENDENT},
+    {sizeof(UmiApplicationResourceDescriptor),
+     "umicom.icon.application.music", "audio-x-generic-symbolic",
+     "image/x-icon-name", UMI_APPLICATION_RESOURCE_THEME_ICON,
+     UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
+     UMI_APPLICATION_RESOURCE_SHARED | UMI_APPLICATION_RESOURCE_APPLICATION_ICON |
+         UMI_APPLICATION_RESOURCE_THEME_DEPENDENT},
+    {sizeof(UmiApplicationResourceDescriptor),
+     "umicom.icon.application.creator", "applications-graphics-symbolic",
+     "image/x-icon-name", UMI_APPLICATION_RESOURCE_THEME_ICON,
+     UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
+     UMI_APPLICATION_RESOURCE_SHARED | UMI_APPLICATION_RESOURCE_APPLICATION_ICON |
+         UMI_APPLICATION_RESOURCE_THEME_DEPENDENT},
+    {sizeof(UmiApplicationResourceDescriptor),
+     "umicom.icon.application.games", "applications-games-symbolic",
+     "image/x-icon-name", UMI_APPLICATION_RESOURCE_THEME_ICON,
+     UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
+     UMI_APPLICATION_RESOURCE_SHARED | UMI_APPLICATION_RESOURCE_APPLICATION_ICON |
+         UMI_APPLICATION_RESOURCE_THEME_DEPENDENT},
+    {sizeof(UmiApplicationResourceDescriptor),
+     "umicom.icon.application.design", "applications-graphics-symbolic",
+     "image/x-icon-name", UMI_APPLICATION_RESOURCE_THEME_ICON,
+     UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
+     UMI_APPLICATION_RESOURCE_SHARED | UMI_APPLICATION_RESOURCE_APPLICATION_ICON |
+         UMI_APPLICATION_RESOURCE_THEME_DEPENDENT},
+    {sizeof(UmiApplicationResourceDescriptor),
+     "umicom.icon.application.author", "accessories-text-editor-symbolic",
+     "image/x-icon-name", UMI_APPLICATION_RESOURCE_THEME_ICON,
+     UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
+     UMI_APPLICATION_RESOURCE_SHARED | UMI_APPLICATION_RESOURCE_APPLICATION_ICON |
+         UMI_APPLICATION_RESOURCE_THEME_DEPENDENT},
+    {sizeof(UmiApplicationResourceDescriptor),
+     "umicom.icon.application.web", "applications-internet-symbolic",
+     "image/x-icon-name", UMI_APPLICATION_RESOURCE_THEME_ICON,
+     UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
+     UMI_APPLICATION_RESOURCE_SHARED | UMI_APPLICATION_RESOURCE_APPLICATION_ICON |
+         UMI_APPLICATION_RESOURCE_THEME_DEPENDENT},
+    {sizeof(UmiApplicationResourceDescriptor),
+     "umicom.icon.application.mobile", "phone-symbolic",
+     "image/x-icon-name", UMI_APPLICATION_RESOURCE_THEME_ICON,
+     UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
+     UMI_APPLICATION_RESOURCE_SHARED | UMI_APPLICATION_RESOURCE_APPLICATION_ICON |
+         UMI_APPLICATION_RESOURCE_THEME_DEPENDENT},
+    {sizeof(UmiApplicationResourceDescriptor),
+     "umicom.icon.application.database", "network-server-symbolic",
+     "image/x-icon-name", UMI_APPLICATION_RESOURCE_THEME_ICON,
+     UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
+     UMI_APPLICATION_RESOURCE_SHARED | UMI_APPLICATION_RESOURCE_APPLICATION_ICON |
+         UMI_APPLICATION_RESOURCE_THEME_DEPENDENT},
+    {sizeof(UmiApplicationResourceDescriptor),
+     "umicom.icon.application.integration", "network-workgroup-symbolic",
+     "image/x-icon-name", UMI_APPLICATION_RESOURCE_THEME_ICON,
+     UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
+     UMI_APPLICATION_RESOURCE_SHARED | UMI_APPLICATION_RESOURCE_APPLICATION_ICON |
+         UMI_APPLICATION_RESOURCE_THEME_DEPENDENT},
+    {sizeof(UmiApplicationResourceDescriptor),
+     "umicom.icon.application.education", "accessories-dictionary-symbolic",
+     "image/x-icon-name", UMI_APPLICATION_RESOURCE_THEME_ICON,
+     UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK,
+     UMI_APPLICATION_RESOURCE_SHARED | UMI_APPLICATION_RESOURCE_APPLICATION_ICON |
+         UMI_APPLICATION_RESOURCE_THEME_DEPENDENT},
 };
 
 static const UmiApplicationPresentation APPLICATION_PRESENTATIONS[] = {
     {sizeof(UmiApplicationPresentation), "org.umicom.studio",
-     "umicom.icon.application.studio", "develop", "development",
+     "umicom.icon.application.studio", "development", "development",
      UMI_APPLICATION_ENTRY_WORKBENCH, true, false},
     {sizeof(UmiApplicationPresentation), "org.umicom.ide",
-     "umicom.icon.application.studio", "develop", "development",
+     "umicom.icon.application.studio", "development", "development",
      UMI_APPLICATION_ENTRY_WORKBENCH, false, false},
     {sizeof(UmiApplicationPresentation), "org.umicom.trader",
      "umicom.icon.application.trader", "trading", "finance",
      UMI_APPLICATION_ENTRY_WORKBENCH, false, false},
     {sizeof(UmiApplicationPresentation), "org.umicom.tms",
-     "umicom.icon.application.tms", "treasury", "finance",
+     "umicom.icon.application.tms", "front-office", "finance",
      UMI_APPLICATION_ENTRY_WORKBENCH, false, false},
     {sizeof(UmiApplicationPresentation), "org.umicom.llm",
-     "umicom.icon.application.llm", "ai", "artificial-intelligence",
+     "umicom.icon.application.llm", "chat", "artificial-intelligence",
      UMI_APPLICATION_ENTRY_WORKBENCH, false, false},
     {sizeof(UmiApplicationPresentation), "org.umicom.rag",
-     "umicom.icon.application.llm", "rag", "artificial-intelligence",
+     "umicom.icon.application.llm", "knowledge", "artificial-intelligence",
      UMI_APPLICATION_ENTRY_WORKBENCH, false, false},
     {sizeof(UmiApplicationPresentation), "org.umicom.bank",
      "umicom.icon.application.bank", "banking", "finance",
      UMI_APPLICATION_ENTRY_WORKBENCH, false, false},
     {sizeof(UmiApplicationPresentation), "org.umicom.exchange",
-     "umicom.icon.application.exchange", "exchange", "finance",
+     "umicom.icon.application.exchange", "marketplace", "finance",
      UMI_APPLICATION_ENTRY_WORKBENCH, false, false},
     {sizeof(UmiApplicationPresentation), "org.umicom.marketplace",
-     "umicom.icon.application.marketplace", "applications", "platform",
+     "umicom.icon.application.marketplace", "marketplace", "platform",
      UMI_APPLICATION_ENTRY_UTILITY, true, false},
     {sizeof(UmiApplicationPresentation), "org.umicom.operations",
      "umicom.icon.application.os", "operations", "platform",
@@ -255,8 +331,47 @@ static const UmiApplicationPresentation APPLICATION_PRESENTATIONS[] = {
      "umicom.icon.application.os", "system", "system",
      UMI_APPLICATION_ENTRY_SYSTEM, true, false},
     {sizeof(UmiApplicationPresentation), "org.umicom.desktop",
-     "umicom.icon.application.desktop", "mosaic", "platform",
+     "umicom.icon.application.desktop", "flow", "platform",
      UMI_APPLICATION_ENTRY_SYSTEM, true, false},
+    {sizeof(UmiApplicationPresentation), "org.umicom.accountant",
+     "umicom.icon.application.accountant", "bookkeeping", "finance",
+     UMI_APPLICATION_ENTRY_WORKBENCH, false, false},
+    {sizeof(UmiApplicationPresentation), "org.umicom.media-studio",
+     "umicom.icon.application.media", "edit", "media",
+     UMI_APPLICATION_ENTRY_WORKBENCH, false, false},
+    {sizeof(UmiApplicationPresentation), "org.umicom.music-studio",
+     "umicom.icon.application.music", "compose", "media",
+     UMI_APPLICATION_ENTRY_WORKBENCH, false, false},
+    {sizeof(UmiApplicationPresentation), "org.umicom.creator",
+     "umicom.icon.application.creator", "create", "artificial-intelligence",
+     UMI_APPLICATION_ENTRY_WORKBENCH, false, false},
+    {sizeof(UmiApplicationPresentation), "org.umicom.games",
+     "umicom.icon.application.games", "world", "games",
+     UMI_APPLICATION_ENTRY_WORKBENCH, false, false},
+    {sizeof(UmiApplicationPresentation), "org.umicom.kitchen-designer",
+     "umicom.icon.application.design", "design", "design",
+     UMI_APPLICATION_ENTRY_WORKBENCH, false, false},
+    {sizeof(UmiApplicationPresentation), "org.umicom.cad",
+     "umicom.icon.application.design", "design", "design",
+     UMI_APPLICATION_ENTRY_WORKBENCH, false, false},
+    {sizeof(UmiApplicationPresentation), "org.umicom.author",
+     "umicom.icon.application.author", "author", "media",
+     UMI_APPLICATION_ENTRY_WORKBENCH, false, false},
+    {sizeof(UmiApplicationPresentation), "org.umicom.web-studio",
+     "umicom.icon.application.web", "design", "development",
+     UMI_APPLICATION_ENTRY_WORKBENCH, false, false},
+    {sizeof(UmiApplicationPresentation), "org.umicom.mobile-studio",
+     "umicom.icon.application.mobile", "design", "development",
+     UMI_APPLICATION_ENTRY_WORKBENCH, false, false},
+    {sizeof(UmiApplicationPresentation), "org.umicom.database-studio",
+     "umicom.icon.application.database", "database", "enterprise",
+     UMI_APPLICATION_ENTRY_WORKBENCH, false, false},
+    {sizeof(UmiApplicationPresentation), "org.umicom.integration-studio",
+     "umicom.icon.application.integration", "design", "enterprise",
+     UMI_APPLICATION_ENTRY_WORKBENCH, false, false},
+    {sizeof(UmiApplicationPresentation), "org.umicom.education",
+     "umicom.icon.application.education", "course", "education",
+     UMI_APPLICATION_ENTRY_WORKBENCH, false, false},
 };
 
 /* Provide the copy text operation used by this module and its client applications. */
@@ -554,6 +669,7 @@ UmiStatus umi_application_presentation_validate(
     const UmiApplicationPresentation *presentation)
 {
     const UmiApplicationResourceDescriptor *icon;
+    const UmiApplicationExperienceDefinition *experience;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -576,6 +692,16 @@ UmiStatus umi_application_presentation_validate(
     if (icon == NULL || icon->kind != UMI_APPLICATION_RESOURCE_THEME_ICON ||
         (icon->flags & UMI_APPLICATION_RESOURCE_APPLICATION_ICON) == 0U)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* When an experience exists, its default layout is the authoritative
+     * layout key and the presentation must point at a real recipe. */
+    experience = umi_application_experience_catalogue_find(
+        presentation->application_id);
+    if (experience != NULL &&
+        (umi_application_experience_layout_find(
+             experience, presentation->default_layout_id) == NULL ||
+         strcmp(experience->default_layout_id,
+                presentation->default_layout_id) != 0))
+        return UMI_STATUS_INVALID_STATE;
     return UMI_STATUS_OK;
 }
 
@@ -587,6 +713,7 @@ UmiStatus umi_application_presentation_catalogue_validate(void)
 {
     size_t first;
     size_t second;
+    size_t portfolio_index;
     /* Visit each bounded item once so every record receives the same rule. */
     for (first = 0U; first < COUNT_OF(APPLICATION_PRESENTATIONS); ++first) {
         /* Apply this operation only while the related capability or state is available. */
@@ -602,6 +729,17 @@ UmiStatus umi_application_presentation_catalogue_validate(void)
                        APPLICATION_PRESENTATIONS[second].application_id) == 0)
                 return UMI_STATUS_ALREADY_EXISTS;
         }
+    }
+    /* Every installable portfolio product needs one presentation record so
+     * Desk can show its name, icon, layout and launch action. */
+    for (portfolio_index = 0U;
+         portfolio_index < umi_application_portfolio_count();
+         ++portfolio_index) {
+        const UmiApplicationDefinition *definition =
+            umi_application_portfolio_at(portfolio_index);
+        if (definition == NULL ||
+            umi_application_presentation_find(definition->application_id) == NULL)
+            return UMI_STATUS_NOT_FOUND;
     }
     return UMI_STATUS_OK;
 }

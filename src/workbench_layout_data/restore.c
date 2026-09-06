@@ -16,6 +16,7 @@
 #include "umicom/workbench_layout_data/restore.h"
 #include "umicom/workbench_layout_data/key_codec.h"
 #include "umicom/workbench_layout_data/value_codec.h"
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include "internal.h"
@@ -93,6 +94,11 @@ static UmiStatus restore_record(
     if (separator == NULL) return UMI_STATUS_PARSE_ERROR;
     key_length = (size_t)(separator - (line + 7U));
     value_length = length - 7U - key_length - 1U;
+    /* Both temporary strings need a terminator.  Reject an impossible
+     * maximal length before adding that byte to either allocation request. */
+    if (key_length == SIZE_MAX || value_length == SIZE_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
     encoded_key = (char *)calloc(key_length + 1U, sizeof(char));
     encoded_value = (char *)calloc(value_length + 1U, sizeof(char));
     /*

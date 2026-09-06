@@ -3,8 +3,8 @@
  * File: src/platform/directory.c
  *
  * PURPOSE:
- *   Implement the directory behavior for
- *   Umicom Framework.
+ *   Implement sorted, bounded directory traversal and portable file metadata
+ *   collection for Windows and POSIX systems.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -17,23 +17,9 @@
 #define _POSIX_C_SOURCE 200809L
 #endif
 
-/*-----------------------------------------------------------------------------
- * Umicom Framework
- * File: src/platform/directory.c
- *
- * PURPOSE:
- *   Implement sorted, bounded directory traversal and portable file metadata
- *   collection for Windows and POSIX systems.
- *
- * AUTHOR AND ORGANISATION:
- * Sammy Hegab
- * Umicom Foundation
- *
- * LICENCE:
- * MIT
- *---------------------------------------------------------------------------*/
 #include "umicom/platform/directory.h"
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -90,15 +76,26 @@ static UmiStatus name_list_add(UmiNameList *list, const char *name)
     char *copy;
     char **resized;
     size_t capacity;
+    size_t name_length;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
     if (list == NULL || name == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    name_length = strlen(name);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (list->count == list->capacity) {
-        capacity = list->capacity == 0U ? 32U : list->capacity * 2U;
-        resized = (char **)realloc(list->items, capacity * sizeof(*resized));
+        if (list->capacity == 0U) {
+            capacity = 32U;
+        } else {
+            if (list->capacity > SIZE_MAX / 2U)
+                return UMI_STATUS_CAPACITY_EXCEEDED;
+            capacity = list->capacity * 2U;
+        }
+        if (capacity > SIZE_MAX / sizeof(*resized))
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        resized = (char **)realloc(list->items,
+                                   capacity * sizeof(*resized));
         /*
          * Protect caller-owned memory by checking that required state is available before it is
          * used.
@@ -107,13 +104,16 @@ static UmiStatus name_list_add(UmiNameList *list, const char *name)
         list->items = resized;
         list->capacity = capacity;
     }
-    copy = (char *)malloc(strlen(name) + 1U);
+    /* Reserve a terminator without allowing a maximal name length to wrap the
+     * allocation size. */
+    if (name_length == SIZE_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    copy = (char *)malloc(name_length + 1U);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
     if (copy == NULL) return UMI_STATUS_OUT_OF_MEMORY;
-    (void)strcpy(copy, name);
+    (void)memcpy(copy, name, name_length + 1U);
     list->items[list->count++] = copy;
     return UMI_STATUS_OK;
 }

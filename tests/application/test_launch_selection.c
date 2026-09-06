@@ -100,13 +100,17 @@ int main(void)
     UmiApplicationLaunchSelection *selection = NULL;
     UmiApplicationLauncherAdapter adapter = {0};
     UmiApplicationLaunchSelectionSnapshot snapshot;
+    UmiApplicationLaunchSelectionCheckpoint checkpoint;
     UmiApplicationLaunchSelectionReport report;
+    UmiApplicationLaunchChoice choice;
     UmiApplicationRuntimeRegistration studio = registration(
         "org.umicom.studio", "Umicom Studio IDE", "umicom-studio-ide");
     UmiApplicationRuntimeRegistration trader = registration(
         "org.umicom.trader", "Umicom Trader", "umicom-trader");
     UmiApplicationRuntimeRegistration bank = registration(
         "org.umicom.bank", "Umicom Bank", "umicom-bank-console");
+    UmiApplicationRuntimeRegistration unknown = registration(
+        "org.umicom.unknown", "Unknown Product", "unknown-product");
     FakeProcesses processes = {0};
 
     adapter.structure_size = sizeof(adapter);
@@ -122,6 +126,8 @@ int main(void)
                 catalogue, &trader) == UMI_STATUS_OK);
     REQUIRE(umi_application_runtime_catalogue_register(
                 catalogue, &bank) == UMI_STATUS_OK);
+    REQUIRE(umi_application_runtime_catalogue_register(
+                catalogue, &unknown) == UMI_STATUS_OK);
     REQUIRE(umi_application_launcher_create(
                 catalogue, NULL, &adapter, &launcher) == UMI_STATUS_OK);
     REQUIRE(umi_application_launch_selection_create(
@@ -133,8 +139,39 @@ int main(void)
                 selection, "org.umicom.trader", true) == UMI_STATUS_OK);
     REQUIRE(umi_application_launch_selection_snapshot(
                 selection, &snapshot) == UMI_STATUS_OK);
-    REQUIRE(snapshot.choice_count == 3U);
+    REQUIRE(snapshot.choice_count == 4U);
+    REQUIRE(snapshot.readiness_blocked_count == 1U);
     REQUIRE(snapshot.selected_count == 2U);
+    REQUIRE(umi_application_launch_selection_find(
+                selection, "org.umicom.studio", &choice) == UMI_STATUS_OK);
+    REQUIRE(choice.readiness_state == UMI_APPLICATION_LAUNCH_READINESS_READY);
+    REQUIRE(choice.readiness_percent <= 100U);
+    REQUIRE(choice.readiness_reason[0] != '\0');
+    REQUIRE(choice.layout_id[0] != '\0');
+    REQUIRE(umi_application_launch_selection_checkpoint_capture(
+                selection, &checkpoint) == UMI_STATUS_OK);
+    REQUIRE(checkpoint.structure_size == sizeof(checkpoint));
+    REQUIRE(checkpoint.selected_count == 2U);
+    REQUIRE(checkpoint.application_ids[0][0] != '\0');
+    REQUIRE(checkpoint.layout_ids[0][0] != '\0');
+    REQUIRE(umi_application_launch_selection_clear(selection) == UMI_STATUS_OK);
+    REQUIRE(umi_application_launch_selection_checkpoint_restore(
+                selection, &checkpoint) == UMI_STATUS_OK);
+    REQUIRE(umi_application_launch_selection_snapshot(
+                selection, &snapshot) == UMI_STATUS_OK);
+    REQUIRE(snapshot.selected_count == 2U);
+    checkpoint.structure_size = 0U;
+    REQUIRE(umi_application_launch_selection_checkpoint_restore(
+                selection, &checkpoint) == UMI_STATUS_INVALID_ARGUMENT);
+    checkpoint.structure_size = sizeof(checkpoint);
+    REQUIRE(umi_application_launch_selection_find(
+                selection, "org.umicom.unknown", &choice) == UMI_STATUS_OK);
+    REQUIRE(choice.readiness_state ==
+            UMI_APPLICATION_LAUNCH_READINESS_MISSING_EXPERIENCE);
+    REQUIRE(!choice.eligible);
+    REQUIRE(umi_application_launch_selection_set_selected(
+                selection, "org.umicom.unknown", true) ==
+            UMI_STATUS_UNAVAILABLE);
     REQUIRE(umi_application_launch_selection_execute(
                 selection, launcher, &report) == UMI_STATUS_OK);
     REQUIRE(report.result_count == 2U);

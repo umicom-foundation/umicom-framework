@@ -158,8 +158,10 @@ GtkWidget *umi_gtk4_ws_shell_header_widget(
 /**
  * Select the SVG mark described by a validated appearance profile.
  *
- * A missing packaged image presents the shared `<>` fallback beside the native
- * application name, so a packaging problem never removes the whole identity.
+ * The mark is a Framework-owned packaged asset. If the asset is missing, the
+ * image remains hidden and the readable product title stays visible; packaging
+ * conformance diagnostics must report the missing asset rather than drawing a
+ * substitute logo.
  */
 UmiStatus umi_gtk4_ws_shell_header_apply_appearance(
     UmiGtk4WorkstationShellHeader *header,

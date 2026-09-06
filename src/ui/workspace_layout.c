@@ -19,7 +19,7 @@
 
 /* Provide the find mutable operation used by this module and its client applications. */
 static UmiUiWorkspaceWindow *find_mutable(UmiUiWorkspaceLayout *layout,const char *window_id)
-{ size_t index; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (layout == NULL || window_id == NULL) return NULL; /* Visit each bounded item once so every record receives the same rule. */ for (index = 0U; index < layout->window_count; ++index) /* Protect caller-owned memory by checking that required state is available before it is used. */ if (strcmp(layout->windows[index].window_id,window_id) == 0) return &layout->windows[index]; return NULL; }
+{ size_t index; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (layout == NULL || window_id == NULL || layout->window_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS) return NULL; /* Visit each bounded item once so every record receives the same rule. */ for (index = 0U; index < layout->window_count; ++index) /* Protect caller-owned memory by checking that required state is available before it is used. */ if (strcmp(layout->windows[index].window_id,window_id) == 0) return &layout->windows[index]; return NULL; }
 /* Check that rectangle satisfies its contract before another service relies on it. */
 static bool rectangle_valid(double x,double y,double width,double height) { return x >= 0.0 && y >= 0.0 && width > 0.0 && height > 0.0 && x + width <= 1.000001 && y + height <= 1.000001; }
 /*
@@ -98,6 +98,9 @@ UmiStatus umi_ui_workspace_layout_remove_window(UmiUiWorkspaceLayout *layout,con
      * used.
      */
     if (layout == NULL || window_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Reject corrupted persisted counts before memmove could read past the fixed array. */
+    if (layout->window_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS)
+        return UMI_STATUS_INVALID_STATE;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
     /* Visit each bounded item once so every record receives the same rule. */
@@ -436,7 +439,8 @@ size_t umi_ui_workspace_layout_count_tool(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (layout == NULL || tool_id == NULL) return 0U;
+    if (layout == NULL || tool_id == NULL ||
+        layout->window_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS) return 0U;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < layout->window_count; ++index) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
@@ -456,6 +460,13 @@ UmiStatus umi_ui_workspace_layout_validate(const UmiUiWorkspaceLayout *layout,ch
      * used.
      */
     if (layout == NULL || out_reason == NULL || capacity == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A count beyond the array capacity is malformed state, not a list to iterate. */
+    if (layout->window_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS) {
+        length = snprintf(out_reason, capacity,
+                          "Layout contains too many windows");
+        return length < 0 || (size_t)length >= capacity
+            ? UMI_STATUS_CAPACITY_EXCEEDED : UMI_STATUS_INVALID_STATE;
+    }
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < layout->window_count; ++index) /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (!rectangle_valid(layout->windows[index].x,layout->windows[index].y,layout->windows[index].width,layout->windows[index].height)) { length = snprintf(out_reason,capacity,"Window %s is outside the normalised workspace",layout->windows[index].window_id); return length < 0 || (size_t)length >= capacity ? UMI_STATUS_CAPACITY_EXCEEDED : UMI_STATUS_INVALID_STATE; }
     length = snprintf(out_reason,capacity,"Layout is valid"); return length < 0 || (size_t)length >= capacity ? UMI_STATUS_CAPACITY_EXCEEDED : UMI_STATUS_OK;
@@ -472,6 +483,9 @@ UmiStatus umi_ui_workspace_layout_clone(const UmiUiWorkspaceLayout *source,const
      * used.
      */
     if (source == NULL || layout_id == NULL || name == NULL || out_layout == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Do not clone malformed state into another object where it could fail later. */
+    if (source->window_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS)
+        return UMI_STATUS_INVALID_STATE;
     *out_layout = *source; first = snprintf(out_layout->layout_id,sizeof(out_layout->layout_id),"%s",layout_id); second = snprintf(out_layout->name,sizeof(out_layout->name),"%s",name);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (first < 0 || second < 0 || (size_t)first >= sizeof(out_layout->layout_id) || (size_t)second >= sizeof(out_layout->name)) return UMI_STATUS_CAPACITY_EXCEEDED;

@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/workstation/workspace_layout_host.h"
+#include "umicom/ui/workbench_canvas.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -246,7 +247,8 @@ static bool is_known_placement(const char *placement_id)
            strcmp(placement_id, "centre") == 0 ||
            strcmp(placement_id, "right") == 0 ||
            strcmp(placement_id, "top") == 0 ||
-           strcmp(placement_id, "bottom") == 0;
+           strcmp(placement_id, "bottom") == 0 ||
+           strcmp(placement_id, UMI_UI_WORKSPACE_CANVAS_PLACEMENT) == 0;
 }
 
 /* Unknown custom placements fall back to centre so no visible panel is lost. */
@@ -256,6 +258,14 @@ static bool window_matches_placement(
 {
     if (window == NULL || placement_id == NULL) return false;
     if (strcmp(window->placement_id, placement_id) == 0) return true;
+    /* Canvas-managed panels use one portable placement token while GTK renders
+     * them in the centre workspace; keeping this mapping explicit prevents the
+     * token from being treated as an arbitrary extension placement. */
+    if (strcmp(placement_id, "centre") == 0 &&
+        strcmp(window->placement_id,
+               UMI_UI_WORKSPACE_CANVAS_PLACEMENT) == 0) {
+        return true;
+    }
     return strcmp(placement_id, "centre") == 0 &&
            !is_known_placement(window->placement_id);
 }

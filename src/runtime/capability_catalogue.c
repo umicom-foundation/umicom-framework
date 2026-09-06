@@ -29,6 +29,16 @@ static const UmiFrameworkCapabilityDefinition UMI_CAPABILITIES[] = {
      "Aggregate commands, queries, events, durable channels, routing, reliability, and replay."},
     {"umicom.ui", "presentation", UMI_CAPABILITY_IMPLEMENTED,
      "Toolkit-neutral workbench contracts with headless and GTK4 adapters."},
+    /* Live Preview uses a small provider-neutral browser capability so Studio
+     * can render HTML and declarative documents without coupling Framework to
+     * one embedded web toolkit. */
+    {"umicom.browser", "presentation", UMI_CAPABILITY_IMPLEMENTED,
+     "Trusted document preview surface for HTML, scripts and declarative UI."},
+    /* Desktop user-journey automation is shared by Studio and future products;
+     * keeping it in the catalogue lets tests discover the same capability as
+     * normal application panels. */
+    {"umicom.ui.automation", "quality", UMI_CAPABILITY_IMPLEMENTED,
+     "Toolkit-neutral desktop interaction, assertions and acceptance evidence."},
     {"umicom.build", "development", UMI_CAPABILITY_IMPLEMENTED,
      "Build profiles, CMake/Ninja providers, diagnostics, history, and cancellation."},
     {"umicom.protocol", "development", UMI_CAPABILITY_IMPLEMENTED,

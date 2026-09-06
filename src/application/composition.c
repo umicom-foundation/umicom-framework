@@ -85,6 +85,9 @@ static UmiStatus add_id(
     if (items == NULL || count == NULL || id == NULL || id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Never search or append through a caller-restored count beyond the
+     * capacity supplied by this array. */
+    if (*count > maximum) return UMI_STATUS_INVALID_STATE;
 
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (contains_id(items, *count, id)) return UMI_STATUS_OK;
@@ -113,7 +116,8 @@ static void remove_id(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (items == NULL || count == NULL || id == NULL) return;
+    if (items == NULL || count == NULL || id == NULL ||
+        *count > UMI_APPLICATION_COMPOSITION_MAX_CAPABILITIES) return;
 
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < *count; ++index) {
@@ -410,7 +414,8 @@ UmiStatus umi_application_composition_build(
     if (request == NULL || out_plan == NULL ||
         request->structure_size != sizeof(*request) ||
         request->api_version != UMI_APPLICATION_COMPOSITION_API_VERSION ||
-        request->definition == NULL) {
+        request->definition == NULL ||
+        request->additional_pack_count > UMI_APPLICATION_COMPOSITION_MAX_PACKS) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
@@ -539,6 +544,7 @@ int umi_application_composition_has_pack(
     const char *pack_id)
 {
     return plan != NULL &&
+        plan->pack_count <= UMI_APPLICATION_COMPOSITION_MAX_PACKS &&
         contains_id(plan->pack_ids, plan->pack_count, pack_id);
 }
 
@@ -554,7 +560,10 @@ int umi_application_composition_has_capability(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (plan == NULL || capability_id == NULL) return 0;
+    if (plan == NULL || capability_id == NULL ||
+        plan->required_capability_count > UMI_APPLICATION_COMPOSITION_MAX_CAPABILITIES ||
+        plan->optional_capability_count > UMI_APPLICATION_COMPOSITION_MAX_CAPABILITIES)
+        return 0;
 
     return contains_id(plan->required_capabilities,
                        plan->required_capability_count,
@@ -573,6 +582,7 @@ int umi_application_composition_has_component(
     const char *component_id)
 {
     return plan != NULL &&
+        plan->component_count <= UMI_APPLICATION_COMPOSITION_MAX_COMPONENTS &&
         contains_id(plan->component_ids,
                     plan->component_count,
                     component_id);

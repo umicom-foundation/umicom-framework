@@ -152,6 +152,13 @@ void umi_application_component_workspace_destroy(
    * used.
    */
   if (workspace != NULL) {
+    /* A workspace may be restored from a file or plugin. Clear malformed
+     * counts before the close loop so a bad value cannot index past the fixed
+     * instance array and trigger a Windows stack/cookie failure. */
+    if (workspace->instance_count > UMI_APPLICATION_COMPONENT_LAYOUT_CAPACITY) {
+      (void)memset(workspace, 0, sizeof(*workspace));
+      return;
+    }
     /*
      * Continue only while work remains available; the loop body advances the state on each
      * pass.

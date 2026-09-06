@@ -43,6 +43,11 @@ static UmiProductCapabilityUsage *find_mutable(
     UmiProductCapabilityMatrix *matrix, const char *capability_id)
 {
     size_t index;
+    /* A caller may restore this value from storage; never iterate beyond the
+     * matrix's fixed row array when that state is malformed. */
+    if (matrix == NULL || capability_id == NULL ||
+        matrix->usage_count > UMI_PRODUCTISATION_MAX_CAPABILITIES)
+        return NULL;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < matrix->usage_count; ++index) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
@@ -61,12 +66,19 @@ static UmiStatus touch_usage(UmiProductCapabilityMatrix *matrix,
 {
     UmiProductCapabilityUsage *usage;
     const UmiFrameworkCapabilityDefinition *capability;
-    const uint64_t application_bit = UINT64_C(1) << application_index;
+    uint64_t application_bit;
     UmiStatus status;
 
     /* An optional empty capability does not create a false missing entry. */
     if (capability_id == NULL || capability_id[0] == '\0')
         return UMI_STATUS_OK;
+    /* Bit masks have one bit per application, so reject an index that could
+     * shift outside the 64-bit value before calculating the mask. */
+    if (application_index >= 64U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Compute the bit only after the range check; shifting by 64 or more is
+     * undefined in C and can corrupt the matrix on malformed restored data. */
+    application_bit = UINT64_C(1) << application_index;
     usage = find_mutable(matrix, capability_id);
     /* The first reference resolves the capability once and records whether its
      * Framework declaration is missing. Later references reuse this result. */
@@ -211,7 +223,8 @@ const UmiProductCapabilityUsage *umi_product_capability_matrix_find(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (matrix == NULL || capability_id == NULL) return NULL;
+    if (matrix == NULL || capability_id == NULL ||
+        matrix->usage_count > UMI_PRODUCTISATION_MAX_CAPABILITIES) return NULL;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < matrix->usage_count; ++index) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */

@@ -16,6 +16,8 @@
 include_guard(GLOBAL)
 
 set(UMICOM_APPLICATION_PRODUCTISATION_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+set(UMICOM_APPLICATION_SOURCE_ROOT
+    "${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/../applications")
 
 # Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_application)
@@ -35,6 +37,7 @@ target_sources(umicom_application PRIVATE
     "${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/src/application/productisation/command_catalogue.c"
     "${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/src/application/productisation/runtime.c"
     "${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/src/application/productisation/surface_projection.c"
+    "${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/src/application/productisation/surface_audit.c"
     "${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/src/application/productisation/adoption.c"
     "${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/src/application/productisation/adoption_registry.c"
     "${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/src/application/productisation/session.c"
@@ -42,6 +45,18 @@ target_sources(umicom_application PRIVATE
     "${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/src/application/productisation/workspace_guide_portfolio.c"
     "${UMICOM_APPLICATION_PRODUCTISATION_ROOT}/src/application/productisation/launch_guidance.c"
 )
+
+# Keep a source-level guard for every thin application.  It checks the two
+# files needed to start a headless verification process before a UI is built.
+if(NOT TARGET umicom-application-surface-audit)
+    add_custom_target(umicom-application-surface-audit
+        COMMAND "${CMAKE_COMMAND}"
+            "-DUMICOM_APPLICATION_ROOT=${UMICOM_APPLICATION_SOURCE_ROOT}"
+            "-DUMICOM_SURFACE_AUDIT_OUTPUT=${CMAKE_BINARY_DIR}/umicom-application-surface-audit.json"
+            -P "${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationSurfaceAudit.cmake"
+        COMMENT "Checking application layouts and start entry points"
+        VERBATIM)
+endif()
 
 # This source-only target keeps the generated API reference complete even on a
 # computer where the native compiler and optional UI libraries are not ready.
@@ -125,6 +140,10 @@ if(BUILD_TESTING)
         framework.application_productisation.surface_projection
         tests/application_productisation/test_surface_projection.c)
     umicom_add_application_productisation_test(
+        umicom-application-productisation-surface-audit-test
+        framework.application_productisation.surface_audit
+        tests/application_productisation/test_surface_audit.c)
+    umicom_add_application_productisation_test(
         umicom-application-productisation-adoption-test
         framework.application_productisation.adoption
         tests/application_productisation/test_adoption.c)
@@ -160,6 +179,15 @@ if(BUILD_TESTING)
     set_tests_properties(
         framework.application_productisation.documentation
         PROPERTIES LABELS "framework;application;productisation;documentation")
+    add_test(
+        NAME framework.application.surface.audit
+        COMMAND "${CMAKE_COMMAND}"
+            "-DUMICOM_APPLICATION_ROOT=${UMICOM_APPLICATION_SOURCE_ROOT}"
+            "-DUMICOM_SURFACE_AUDIT_OUTPUT=${CMAKE_BINARY_DIR}/umicom-application-surface-audit.json"
+            -P "${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationSurfaceAudit.cmake")
+    set_tests_properties(
+        framework.application.surface.audit
+        PROPERTIES LABELS "framework;application;layouts;launch")
 endif()
 
 # Completion plans remain canonical productisation data; this layer executes

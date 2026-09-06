@@ -30,6 +30,11 @@ static size_t persistence_layout_index(
     if (customisation == NULL || layout_id == NULL) {
         return UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS;
     }
+    /* A customisation may have come from a user file, so reject a corrupt
+     * count before the fixed layout array is inspected. */
+    if (customisation->layout_count > UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS) {
+        return UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS;
+    }
     /* Compare only populated entries because unused fixed-array elements do
      * not represent layouts even when their memory happens to contain zeros. */
     for (index = 0U; index < customisation->layout_count; ++index) {
@@ -56,6 +61,12 @@ static UmiStatus validate_import_dependencies(
      * saved panel is safe to accept in this application. */
     if (customisation == NULL || layout == NULL || options == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* A decoded layout has a fixed window array. This guard remains useful
+     * even when this helper is called by a future importer with a different
+     * decoder. */
+    if (layout->window_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS) {
+        return UMI_STATUS_INVALID_STATE;
     }
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < layout->window_count; ++index) {
@@ -111,6 +122,13 @@ static UmiStatus reconcile_imported_contexts(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(previous_group_ids, 0, sizeof(previous_group_ids));
+    /* A replacement layout is normally validated by the decoder. Keep this
+     * second boundary check so direct callers cannot make the loops unsafe. */
+    if (layout->window_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS ||
+        (replaced_layout != NULL &&
+         replaced_layout->window_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS)) {
+        return UMI_STATUS_INVALID_STATE;
+    }
     /* Capture roles for panels which survive replacement before removing any
      * old memberships from the reverse group store. */
     for (index = 0U; index < layout->window_count; ++index) {

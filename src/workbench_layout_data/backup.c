@@ -17,6 +17,7 @@
 #include "umicom/workbench_layout_data/key_codec.h"
 #include "umicom/workbench_layout_data/value_codec.h"
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -35,13 +36,25 @@ typedef struct BackupWriter {
 /* Provide the append text operation used by this module and its client applications. */
 static void append_text(BackupWriter *writer, const char *text)
 {
-    const size_t length = strlen(text);
+    size_t length;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (writer->buffer != NULL &&
-        writer->written + length < writer->capacity) {
+    if (writer == NULL || text == NULL) return;
+    length = strlen(text);
+    /* Saturate accounting when a hostile or corrupted record would wrap the
+     * required-size counters.  The caller will report the result as a buffer
+     * overflow instead of allocating or indexing with a wrapped value. */
+    if (length > SIZE_MAX - writer->written ||
+        length > SIZE_MAX - writer->required) {
+        writer->overflow = true;
+        writer->written = SIZE_MAX;
+        writer->required = SIZE_MAX;
+        return;
+    }
+    if (writer->buffer != NULL && writer->written < writer->capacity &&
+        length < writer->capacity - writer->written) {
         (void)memcpy(writer->buffer + writer->written, text, length);
     } else /* Protect caller-owned memory by checking that required state is available before it is used. */ if (writer->buffer != NULL) {
         writer->overflow = true;
@@ -293,7 +306,8 @@ UmiStatus umi_workbench_layout_backup_create(
     result.structure_size = sizeof(result);
     result.status = status;
     result.manifest = writer.manifest;
-    result.bytes_required = writer.required + 1U;
+    result.bytes_required = writer.required == SIZE_MAX
+        ? SIZE_MAX : writer.required + 1U;
     result.bytes_written =
         buffer != NULL && !writer.overflow ? writer.written : 0U;
     (void)umi_workbench_layout_data_copy_text(

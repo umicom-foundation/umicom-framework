@@ -60,11 +60,15 @@ const UmiExperiencePanelDefinition *umi_application_experience_panel_find(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (definition == NULL || !text_present(panel_id)) return NULL;
+    if (definition == NULL || !text_present(panel_id) ||
+        definition->panels == NULL ||
+        definition->panel_count > UMI_APPLICATION_EXPERIENCE_MAX_PANELS)
+        return NULL;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < definition->panel_count; ++index) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (strcmp(definition->panels[index].panel_id, panel_id) == 0)
+        if (definition->panels[index].panel_id != NULL &&
+            strcmp(definition->panels[index].panel_id, panel_id) == 0)
             return &definition->panels[index];
     }
     return NULL;
@@ -83,11 +87,15 @@ const UmiExperienceLayoutDefinition *umi_application_experience_layout_find(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (definition == NULL || !text_present(layout_id)) return NULL;
+    if (definition == NULL || !text_present(layout_id) ||
+        definition->layouts == NULL ||
+        definition->layout_count > UMI_APPLICATION_EXPERIENCE_MAX_LAYOUTS)
+        return NULL;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < definition->layout_count; ++index) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (strcmp(definition->layouts[index].layout_id, layout_id) == 0)
+        if (definition->layouts[index].layout_id != NULL &&
+            strcmp(definition->layouts[index].layout_id, layout_id) == 0)
             return &definition->layouts[index];
     }
     return NULL;
@@ -106,11 +114,15 @@ const UmiExperienceFeatureDefinition *umi_application_experience_feature_find(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (definition == NULL || !text_present(feature_id)) return NULL;
+    if (definition == NULL || !text_present(feature_id) ||
+        definition->features == NULL ||
+        definition->feature_count > UMI_APPLICATION_EXPERIENCE_MAX_FEATURES)
+        return NULL;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < definition->feature_count; ++index) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (strcmp(definition->features[index].feature_id, feature_id) == 0)
+        if (definition->features[index].feature_id != NULL &&
+            strcmp(definition->features[index].feature_id, feature_id) == 0)
             return &definition->features[index];
     }
     return NULL;
@@ -141,6 +153,12 @@ UmiStatus umi_application_experience_validate(
         definition->features == NULL || definition->feature_count == 0U)
         return UMI_STATUS_INVALID_ARGUMENT;
 
+    /* Reject oversized counts before any loop can trust an unbounded caller value. */
+    if (definition->panel_count > UMI_APPLICATION_EXPERIENCE_MAX_PANELS ||
+        definition->layout_count > UMI_APPLICATION_EXPERIENCE_MAX_LAYOUTS ||
+        definition->feature_count > UMI_APPLICATION_EXPERIENCE_MAX_FEATURES)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < definition->panel_count; ++index) {
         const UmiExperiencePanelDefinition *panel = &definition->panels[index];
@@ -154,6 +172,8 @@ UmiStatus umi_application_experience_validate(
         /* Visit each bounded item once so every record receives the same rule. */
         for (nested = index + 1U; nested < definition->panel_count; ++nested) {
             /* Use the stable identifier comparison to choose the matching record or policy. */
+            if (definition->panels[nested].panel_id == NULL)
+                return UMI_STATUS_INVALID_ARGUMENT;
             if (strcmp(panel->panel_id,
                        definition->panels[nested].panel_id) == 0)
                 return UMI_STATUS_ALREADY_EXISTS;
@@ -168,18 +188,22 @@ UmiStatus umi_application_experience_validate(
             !text_present(layout->layout_id) ||
             !text_present(layout->title) ||
             !text_present(layout->description) ||
-            layout->panel_ids == NULL || layout->panel_count == 0U)
+            layout->panel_ids == NULL || layout->panel_count == 0U ||
+            layout->panel_count > UMI_APPLICATION_EXPERIENCE_MAX_PANELS)
             return UMI_STATUS_INVALID_ARGUMENT;
         /* Visit each bounded item once so every record receives the same rule. */
         for (nested = 0U; nested < layout->panel_count; ++nested) {
             /* Apply this branch only when its contract condition is satisfied. */
-            if (umi_application_experience_panel_find(
+            if (layout->panel_ids[nested] == NULL ||
+                umi_application_experience_panel_find(
                     definition, layout->panel_ids[nested]) == NULL)
                 return UMI_STATUS_NOT_FOUND;
         }
         /* Visit each bounded item once so every record receives the same rule. */
         for (nested = index + 1U; nested < definition->layout_count; ++nested) {
             /* Use the stable identifier comparison to choose the matching record or policy. */
+            if (definition->layouts[nested].layout_id == NULL)
+                return UMI_STATUS_INVALID_ARGUMENT;
             if (strcmp(layout->layout_id,
                        definition->layouts[nested].layout_id) == 0)
                 return UMI_STATUS_ALREADY_EXISTS;
@@ -207,6 +231,8 @@ UmiStatus umi_application_experience_validate(
         /* Visit each bounded item once so every record receives the same rule. */
         for (nested = index + 1U; nested < definition->feature_count; ++nested) {
             /* Use the stable identifier comparison to choose the matching record or policy. */
+            if (definition->features[nested].feature_id == NULL)
+                return UMI_STATUS_INVALID_ARGUMENT;
             if (strcmp(feature->feature_id,
                        definition->features[nested].feature_id) == 0)
                 return UMI_STATUS_ALREADY_EXISTS;
@@ -230,7 +256,10 @@ size_t umi_application_experience_feature_state_count(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (definition == NULL || !valid_feature_state(state)) return 0U;
+    if (definition == NULL || !valid_feature_state(state) ||
+        definition->features == NULL ||
+        definition->feature_count > UMI_APPLICATION_EXPERIENCE_MAX_FEATURES)
+        return 0U;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < definition->feature_count; ++index) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
@@ -252,7 +281,10 @@ unsigned umi_application_experience_readiness_percent(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (definition == NULL || definition->feature_count == 0U) return 0U;
+    if (definition == NULL || definition->features == NULL ||
+        definition->feature_count == 0U ||
+        definition->feature_count > UMI_APPLICATION_EXPERIENCE_MAX_FEATURES)
+        return 0U;
 
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < definition->feature_count; ++index) {

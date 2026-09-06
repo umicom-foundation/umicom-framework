@@ -66,11 +66,12 @@ static UmiStatus append_text(char *out_text,
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (out_text == NULL || used == NULL || text == NULL)
+    if (out_text == NULL || used == NULL || text == NULL || *used > capacity)
         return UMI_STATUS_INVALID_ARGUMENT;
     length = strlen(text);
-    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (*used + length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Subtract first so a hostile length cannot wrap the addition and pass
+     * the capacity check on platforms where size_t is unsigned. */
+    if (length >= capacity - *used) return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)memcpy(out_text + *used, text, length + 1U);
     *used += length;
     return UMI_STATUS_OK;

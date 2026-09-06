@@ -17,6 +17,7 @@
 #include "umicom/workbench_layout_data/key_codec.h"
 #include "umicom/workbench_layout_data/value_codec.h"
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include "internal.h"
@@ -288,6 +289,12 @@ UmiStatus umi_workbench_layout_chunk_store_save(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     length = strlen(text);
+    /* Check the rounding add before computing the number of chunks.  Without
+     * this guard, a maximal length could wrap to a small count and bypass the
+     * configured chunk limit. */
+    if (length > SIZE_MAX - (UMI_WORKBENCH_LAYOUT_CHUNK_PAYLOAD - 1U)) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
     count = length == 0U
         ? 1U
         : (length + UMI_WORKBENCH_LAYOUT_CHUNK_PAYLOAD - 1U) /
@@ -402,6 +409,11 @@ UmiStatus umi_workbench_layout_chunk_store_load(
     status = load_manifest(store, aggregate_id, &manifest);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Leave room for the public text terminator without allowing the manifest
+     * byte count to wrap the allocation size. */
+    if (manifest.byte_count == SIZE_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
     text = (char *)calloc(manifest.byte_count + 1U, sizeof(char));
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -421,7 +433,8 @@ UmiStatus umi_workbench_layout_chunk_store_load(
         /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             /* Apply this branch only when its contract condition is satisfied. */
-            if (offset + chunk_size > manifest.byte_count) {
+            if (offset > manifest.byte_count ||
+                chunk_size > manifest.byte_count - offset) {
                 status = UMI_STATUS_PARSE_ERROR;
             } /* Use this fallback path when the earlier condition does not apply. */ else {
                 (void)memcpy(text + offset, chunk, chunk_size);

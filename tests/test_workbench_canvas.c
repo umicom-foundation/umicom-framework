@@ -17,6 +17,7 @@
 #include "umicom/ui/workbench_canvas.h"
 
 #include <assert.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "umicom/application/experience_catalogue.h"
@@ -37,7 +38,7 @@ static void register_explorer(UmiUiWorkspaceCustomisation *customisation)
     };
 
     assert(umi_ui_window_catalogue_register(
-               &customisation->catalogue,
+               &customisation->windows,
                &descriptor) == UMI_STATUS_OK);
 }
 
@@ -53,43 +54,58 @@ static void verify_application_layouts(void)
          ++index) {
         const UmiApplicationExperienceDefinition *experience =
             umi_application_experience_catalogue_at(index);
-        UmiUiWorkspaceCustomisation customisation;
+        /* The customisation model owns several complete layouts, so heap
+         * storage keeps this catalogue sweep independent of the native stack
+         * limit on Windows and other hosts. */
+        UmiUiWorkspaceCustomisation *customisation =
+            (UmiUiWorkspaceCustomisation *)calloc(1U, sizeof(*customisation));
         UmiUiWorkbenchCanvas canvas;
         const UmiUiWorkbenchCanvasHost *host;
 
         assert(experience != NULL);
+        assert(customisation != NULL);
         assert(experience->layout_count > 0U);
+        umi_ui_workspace_customisation_init(customisation);
         umi_ui_workbench_canvas_init(&canvas);
         assert(umi_ui_workbench_canvas_add_application_host(
                    &canvas,
                    "catalogue-host",
                    experience->application_id,
                    "monitor-1",
-                   &customisation) == UMI_STATUS_OK);
+                   customisation) == UMI_STATUS_OK);
         host = umi_ui_workbench_canvas_host_const(
             &canvas,
             "catalogue-host");
         assert(host != NULL);
-        assert(host->customisation == &customisation);
-        assert(customisation.layout_count == experience->layout_count);
+        assert(host->customisation == customisation);
+        assert(customisation->layout_count == experience->layout_count);
         assert(umi_ui_workspace_customisation_active_const(
-                   &customisation) != NULL);
+                   customisation) != NULL);
+        free(customisation);
     }
 }
 
 /* Exercise the complete host, layout, surface and monitor lifecycle. */
 int main(void)
 {
-    UmiUiWorkspaceCustomisation customisation;
+    /* This model contains bounded catalogues and layout snapshots; allocating
+     * it on the heap avoids stack exhaustion that otherwise appears as a
+     * Windows 0xc0000409 fast-fail before the test can report a check. */
+    UmiUiWorkspaceCustomisation *customisation =
+        (UmiUiWorkspaceCustomisation *)calloc(1U, sizeof(*customisation));
     UmiUiWorkbenchCanvas canvas;
     UmiUiWorkbenchCanvasSnapshot snapshot;
     const UmiUiWorkbenchCanvasHost *host;
     const UmiUiWorkbenchCanvasSurfaceState *surface;
+    UmiUiWorkbenchCanvasSurfaceState surface_snapshot[2];
+    size_t surface_snapshot_count;
     char window_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    char second_window_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
     char oversized_monitor[UMI_UI_WORKBENCH_CANVAS_MONITOR_ID_CAPACITY + 1U];
 
-    umi_ui_workspace_customisation_init(&customisation);
-    register_explorer(&customisation);
+    assert(customisation != NULL);
+    umi_ui_workspace_customisation_init(customisation);
+    register_explorer(customisation);
     umi_ui_workbench_canvas_init(&canvas);
 
     assert(umi_ui_workbench_canvas_add_host(
@@ -97,7 +113,7 @@ int main(void)
                "studio-host-1",
                "org.umicom.studio",
                "monitor-1",
-               &customisation) == UMI_STATUS_OK);
+               customisation) == UMI_STATUS_OK);
     assert(umi_ui_workbench_canvas_create_blank_layout(
                &canvas,
                "studio-host-1",
@@ -120,7 +136,7 @@ int main(void)
                0.10) == UMI_STATUS_OK);
     {
         const UmiUiWorkspaceLayout *layout =
-            umi_ui_workspace_customisation_active_const(&customisation);
+            umi_ui_workspace_customisation_active_const(customisation);
         const UmiUiWorkspaceWindow *window =
             umi_ui_workspace_layout_find_window(layout, window_id);
 
@@ -179,10 +195,89 @@ int main(void)
     assert(!surface->detached);
     assert(strcmp(surface->monitor_id, "monitor-1") == 0);
 
+    /* A single canvas edit often changes several panels together. Verify the
+     * batch contract rolls back the whole gesture when one request is bad. */
+    assert(umi_ui_workbench_canvas_open_surface(
+               &canvas,
+               "studio-host-1",
+               "explorer",
+               "right",
+               false,
+               200U,
+               second_window_id,
+               sizeof(second_window_id)) == UMI_STATUS_OK);
+    {
+        UmiUiWorkspacePanelSettings batch[2];
+        UmiUiWorkspaceLayout before_batch =
+            *umi_ui_workspace_customisation_active_const(customisation);
+
+        batch[0] = umi_ui_workspace_panel_settings_default(window_id);
+        batch[0].floating = true;
+        batch[0].x = 0.05;
+        batch[0].y = 0.05;
+        batch[0].width = 0.40;
+        batch[0].height = 0.40;
+        batch[1] = umi_ui_workspace_panel_settings_default("missing-window");
+        assert(umi_ui_workbench_canvas_apply_panel_batch(
+                   &canvas, "studio-host-1", batch, 2U) ==
+               UMI_STATUS_NOT_FOUND);
+        assert(memcmp(&before_batch,
+                      umi_ui_workspace_customisation_active_const(
+                          customisation),
+                      sizeof(before_batch)) == 0);
+
+        batch[1] = umi_ui_workspace_panel_settings_default(second_window_id);
+        batch[1].placement_id = "right";
+        batch[1].stack_id = "quotes";
+        assert(umi_ui_workbench_canvas_apply_panel_batch(
+                   &canvas, "studio-host-1", batch, 2U) == UMI_STATUS_OK);
+        {
+            const UmiUiWorkspaceLayout *layout =
+                umi_ui_workspace_customisation_active_const(customisation);
+            const UmiUiWorkspaceWindow *first =
+                umi_ui_workspace_layout_find_window(layout, window_id);
+            const UmiUiWorkspaceWindow *second =
+                umi_ui_workspace_layout_find_window(layout, second_window_id);
+
+            assert(first != NULL && second != NULL);
+            assert(first->floating);
+            assert(strcmp(first->placement_id, "floating") == 0);
+            assert(!second->floating);
+            assert(strcmp(second->placement_id, "right") == 0);
+            assert(strcmp(second->stack_id, "quotes") == 0);
+        }
+        assert(umi_ui_workbench_canvas_apply_panel_batch(
+                   &canvas, "studio-host-1", batch, 0U) ==
+               UMI_STATUS_INVALID_ARGUMENT);
+    }
+
+    /* Frontends receive a copied surface list instead of walking mutable host
+     * storage. A short destination is rejected so no panel silently vanishes. */
+    host = umi_ui_workbench_canvas_host_const(&canvas, "studio-host-1");
+    assert(host != NULL);
+    assert(umi_ui_workbench_canvas_surface_snapshot(
+               host,
+               surface_snapshot,
+               1U,
+               &surface_snapshot_count) == UMI_STATUS_CAPACITY_EXCEEDED);
+    assert(surface_snapshot_count == 0U);
+    assert(umi_ui_workbench_canvas_surface_snapshot(
+               host,
+               surface_snapshot,
+               2U,
+               &surface_snapshot_count) == UMI_STATUS_OK);
+    assert(surface_snapshot_count == 2U);
+    assert(umi_ui_workbench_canvas_surface_snapshot(
+               host,
+               NULL,
+               0U,
+               &surface_snapshot_count) == UMI_STATUS_CAPACITY_EXCEEDED);
+    assert(surface_snapshot_count == 0U);
+
     assert(umi_ui_workbench_canvas_snapshot(&canvas, &snapshot) ==
            UMI_STATUS_OK);
     assert(snapshot.host_count == 1U);
-    assert(snapshot.hosts[0].surface_count == 1U);
+    assert(snapshot.hosts[0].surface_count == 2U);
 
     assert(umi_ui_workbench_canvas_set_layout_locked(
                &canvas,
@@ -198,17 +293,20 @@ int main(void)
     /* Closing one native host must remove only that host and select the
      * remaining application window instead of leaving a stale route. */
     {
-        UmiUiWorkspaceCustomisation second_customisation;
+        UmiUiWorkspaceCustomisation *second_customisation =
+            (UmiUiWorkspaceCustomisation *)calloc(
+                1U, sizeof(*second_customisation));
         UmiUiWorkbenchCanvasSnapshot after_remove;
 
-        umi_ui_workspace_customisation_init(&second_customisation);
-        register_explorer(&second_customisation);
+        assert(second_customisation != NULL);
+        umi_ui_workspace_customisation_init(second_customisation);
+        register_explorer(second_customisation);
         assert(umi_ui_workbench_canvas_add_host(
                    &canvas,
                    "trader-host-1",
                    "org.umicom.trader",
                    "monitor-2",
-                   &second_customisation) == UMI_STATUS_OK);
+                   second_customisation) == UMI_STATUS_OK);
         assert(umi_ui_workbench_canvas_set_active_host(
                    &canvas, "trader-host-1") == UMI_STATUS_OK);
         assert(umi_ui_workbench_canvas_remove_host(
@@ -232,8 +330,10 @@ int main(void)
         assert(umi_ui_workbench_canvas_remove_host(
                    &canvas, "trader-host-1") == UMI_STATUS_OK);
         assert(canvas.host_count == 0U);
+        free(second_customisation);
     }
 
     verify_application_layouts();
+    free(customisation);
     return 0;
 }

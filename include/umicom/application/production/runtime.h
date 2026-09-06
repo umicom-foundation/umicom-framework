@@ -41,6 +41,7 @@ typedef struct UmiApplicationProductionRuntime {
     UmiApplicationProductionLayoutBindings layouts;
     UmiApplicationProductionFeatureBindings features;
     UmiApplicationProductionCommandBindings commands;
+    UmiApplicationProductionCommandJournal command_journal;
     UmiApplicationProductionCapabilityRequirements requirements;
     UmiApplicationProductionCapabilityProbeResults probe_results;
     UmiApplicationProductionReadinessReport readiness;
@@ -79,6 +80,31 @@ UmiStatus umi_application_production_runtime_refresh_acceptance(
 UmiStatus umi_application_production_runtime_checkpoint(
     UmiApplicationProductionRuntime *runtime, const char *reason,
     int clean_shutdown);
+
+/**
+ * Invoke one production command through the runtime-owned binding and retain its outcome in
+ * the runtime command journal.
+ */
+UmiStatus umi_application_production_runtime_invoke_command(
+    UmiApplicationProductionRuntime *runtime,
+    const UmiApplicationProductionCommandInvocationRequest *request,
+    UmiApplicationProductionCommandInvocationResult *out_result);
+
+/**
+ * Capture the runtime command history for a session checkpoint without exposing runtime
+ * storage to the caller.
+ */
+UmiStatus umi_application_production_runtime_command_journal_capture(
+    const UmiApplicationProductionRuntime *runtime,
+    UmiApplicationProductionCommandJournal *out_checkpoint);
+
+/**
+ * Restore runtime command history atomically and advance the runtime revision when it
+ * succeeds.
+ */
+UmiStatus umi_application_production_runtime_command_journal_restore(
+    UmiApplicationProductionRuntime *runtime,
+    const UmiApplicationProductionCommandJournal *checkpoint);
 
 #ifdef __cplusplus
 }

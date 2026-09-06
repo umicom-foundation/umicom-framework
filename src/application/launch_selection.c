@@ -57,6 +57,20 @@ static UmiStatus copy_text(char *destination,
     return UMI_STATUS_OK;
 }
 
+/* Confirm a fixed-width checkpoint field has a terminator before string APIs read it. */
+static UmiStatus checkpoint_text_validate(const char *text,
+                                          size_t capacity,
+                                          bool allow_empty)
+{
+    /* Reject missing storage or a field that is not terminated inside its contract. */
+    if (text == NULL || capacity == 0U || memchr(text, '\0', capacity) == NULL) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    /* An empty application ID cannot identify a record during restore. */
+    if (!allow_empty && text[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    return UMI_STATUS_OK;
+}
+
 /* Provide the find mutable operation used by this module and its client applications. */
 static UmiApplicationLaunchChoice *find_mutable(
     UmiApplicationLaunchSelection *selection,
@@ -202,6 +216,7 @@ UmiStatus umi_application_launch_selection_refresh(
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < catalogue_count; ++index) {
         UmiApplicationRuntimeRecord record;
+        UmiApplicationLaunchReadiness readiness;
         UmiApplicationLaunchChoice *choice;
         UmiStatus status = umi_application_runtime_catalogue_at(
             selection->catalogue, index, &record);
@@ -233,11 +248,30 @@ UmiStatus umi_application_launch_selection_refresh(
                                sizeof(choice->icon_resource_id),
                                record.icon_resource_id, true);
         }
+        /* Retain the registered default layout beside the choice for session checkpoints. */
+        if (status == UMI_STATUS_OK) {
+            status = copy_text(choice->layout_id,
+                               sizeof(choice->layout_id),
+                               record.default_layout_id, true);
+        }
+        /* Check the shared Framework experience before offering this product to the user. */
+        if (status == UMI_STATUS_OK) {
+            status = umi_application_launch_readiness_check(
+                record.application_id, &readiness);
+        }
         /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         choice->state = record.state;
+        choice->readiness_state = readiness.state;
+        choice->readiness_percent = readiness.feature_readiness_percent;
+        status = copy_text(choice->readiness_reason,
+                           sizeof(choice->readiness_reason),
+                           readiness.reason, true);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
         choice->eligible = record.installed && record.compatible &&
-                           record.enabled && record.visible;
+                           record.enabled && record.visible &&
+                           readiness.launchable;
         choice->running = record.running;
         choice->selected = choice->eligible && previous_selection(
             previous, previous_count, record.application_id);
@@ -393,6 +427,126 @@ UmiStatus umi_application_launch_selection_snapshot(
         if (choice->selected) out_snapshot->selected_count += 1U;
         /* Apply this branch only when its contract condition is satisfied. */
         if (choice->running) out_snapshot->running_count += 1U;
+        /* Keep blocked choices visible to the caller so the picker can explain them. */
+        if (choice->readiness_state != UMI_APPLICATION_LAUNCH_READINESS_READY) {
+            out_snapshot->readiness_blocked_count += 1U;
+        }
+    }
+    return UMI_STATUS_OK;
+}
+
+/* Capture selected choices as bounded IDs so a caller can persist a multi-app session. */
+UmiStatus umi_application_launch_selection_checkpoint_capture(
+    const UmiApplicationLaunchSelection *selection,
+    UmiApplicationLaunchSelectionCheckpoint *out_checkpoint)
+{
+    size_t index;
+
+    /* Reject missing state before reading the selection or writing the checkpoint. */
+    if (selection == NULL || out_checkpoint == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    (void)memset(out_checkpoint, 0, sizeof(*out_checkpoint));
+    out_checkpoint->structure_size = (uint32_t)sizeof(*out_checkpoint);
+    out_checkpoint->source_revision = selection->revision;
+    /* Copy only selected choices; unselected products need no session storage. */
+    for (index = 0U; index < selection->count; ++index) {
+        const UmiApplicationLaunchChoice *choice = &selection->choices[index];
+        UmiApplicationRuntimeRecord record;
+        UmiStatus status;
+
+        /* Keep the operation inside its fixed checkpoint capacity. */
+        if (!choice->selected) continue;
+        if (out_checkpoint->selected_count >=
+            UMI_APPLICATION_LAUNCH_SELECTION_MAX_RESULTS) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        /* A selected choice must remain eligible; otherwise its state is inconsistent. */
+        if (!choice->eligible) return UMI_STATUS_UNAVAILABLE;
+        status = umi_application_runtime_catalogue_find(
+            selection->catalogue, choice->application_id, &record);
+        /* Preserve the catalogue failure so the checkpoint cannot hide stale state. */
+        if (status != UMI_STATUS_OK) return status;
+        status = copy_text(
+            out_checkpoint->application_ids[out_checkpoint->selected_count],
+            sizeof(out_checkpoint->application_ids[out_checkpoint->selected_count]),
+            choice->application_id,
+            false);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+        status = copy_text(
+            out_checkpoint->layout_ids[out_checkpoint->selected_count],
+            sizeof(out_checkpoint->layout_ids[out_checkpoint->selected_count]),
+            record.default_layout_id,
+            true);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+        out_checkpoint->selected_count += 1U;
+    }
+    return UMI_STATUS_OK;
+}
+
+/* Restore a checkpoint atomically after every saved application passes current launch rules. */
+UmiStatus umi_application_launch_selection_checkpoint_restore(
+    UmiApplicationLaunchSelection *selection,
+    const UmiApplicationLaunchSelectionCheckpoint *checkpoint)
+{
+    bool previous_selected[UMI_APPLICATION_RUNTIME_MAX_APPLICATIONS];
+    size_t index;
+    uint64_t original_revision;
+
+    /* Reject missing state or an incompatible checkpoint layout before reading its arrays. */
+    if (selection == NULL || checkpoint == NULL ||
+        checkpoint->structure_size != sizeof(*checkpoint) ||
+        checkpoint->selected_count > UMI_APPLICATION_LAUNCH_SELECTION_MAX_RESULTS) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Validate all IDs and detect duplicates before changing the live selection. */
+    for (index = 0U; index < checkpoint->selected_count; ++index) {
+        const UmiApplicationLaunchChoice *choice;
+        UmiStatus status = checkpoint_text_validate(
+            checkpoint->application_ids[index],
+            sizeof(checkpoint->application_ids[index]),
+            false);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+        status = checkpoint_text_validate(
+            checkpoint->layout_ids[index],
+            sizeof(checkpoint->layout_ids[index]),
+            true);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+        choice = find_const(selection, checkpoint->application_ids[index]);
+        /* A removed product cannot be silently restored as a different product. */
+        if (choice == NULL) return UMI_STATUS_NOT_FOUND;
+        /* A saved selection is actionable only when the current gate allows it. */
+        if (!choice->eligible) return UMI_STATUS_UNAVAILABLE;
+        /* Duplicate IDs would make the restored order ambiguous. */
+        for (size_t nested = 0U; nested < index; ++nested) {
+            if (strcmp(checkpoint->application_ids[nested],
+                       checkpoint->application_ids[index]) == 0) {
+                return UMI_STATUS_ALREADY_EXISTS;
+            }
+        }
+    }
+
+    /* Save the old flags so a defensive rollback can keep the operation atomic. */
+    original_revision = selection->revision;
+    for (index = 0U; index < selection->count; ++index) {
+        previous_selected[index] = selection->choices[index].selected;
+    }
+    (void)umi_application_launch_selection_clear(selection);
+    /* Apply each validated ID; this loop cannot fail unless the catalogue changed concurrently. */
+    for (index = 0U; index < checkpoint->selected_count; ++index) {
+        UmiStatus status = umi_application_launch_selection_set_selected(
+            selection, checkpoint->application_ids[index], true);
+        if (status != UMI_STATUS_OK) {
+            for (size_t nested = 0U; nested < selection->count; ++nested) {
+                selection->choices[nested].selected = previous_selected[nested];
+            }
+            selection->revision = original_revision;
+            return status;
+        }
     }
     return UMI_STATUS_OK;
 }

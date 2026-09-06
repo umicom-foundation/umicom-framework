@@ -1055,6 +1055,60 @@ UmiStatus umi_application_suite_gtk4_workstation_apply_panel_settings(
     return status;
 }
 
+/* Apply several policy-checked panel requests and rebuild the visible host
+ * only after the complete list has committed successfully. */
+UmiStatus umi_application_suite_gtk4_workstation_apply_panel_batch(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const UmiUiWorkspacePanelSettings *settings,
+    size_t setting_count)
+{
+    UmiStatus status;
+
+    /* A live workstation and bounded request list are required. */
+    if (workstation == NULL || settings == NULL || setting_count == 0U ||
+        setting_count > UMI_UI_WORKSPACE_MAX_PANEL_BATCH) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* The public workstation helper owns the edit lifetime for callers that
+     * are responding directly to a multi-selection gesture. */
+    status = umi_ui_workspace_customisation_begin_edit(
+        &workstation->customisation);
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    status = umi_application_suite_customisation_apply_panel_batch(
+        &workstation->customisation,
+        settings,
+        setting_count);
+    if (status == UMI_STATUS_OK) {
+        status = umi_ui_workspace_customisation_commit_edit(
+            &workstation->customisation);
+    } else {
+        (void)umi_ui_workspace_customisation_cancel_edit(
+            &workstation->customisation);
+    }
+    /* A failed commit keeps the edit open in the lower-level contract; cancel
+     * it before returning so the native host cannot remain unlocked. */
+    if (status != UMI_STATUS_OK) {
+        if (workstation->customisation.edit_active) {
+            (void)umi_ui_workspace_customisation_cancel_edit(
+                &workstation->customisation);
+        }
+        /* Keep the native Edit Layout and New Window controls aligned with
+         * the transaction state after a rejected request list. */
+        refresh_edit_controls(workstation);
+        return status;
+    }
+    status = rebuild_active_layout(workstation);
+    /* The batch owns the edit lifetime, so refresh buttons even when the
+     * native rebuild reports an error after the model was committed. */
+    refresh_edit_controls(workstation);
+    if (status == UMI_STATUS_OK) {
+        workstation->revision += 1U;
+    }
+    return status;
+}
+
 /* Return the editor row which represents the panel's current placement. */
 static guint panel_editor_region_index(const UmiUiWorkspaceWindow *window)
 {

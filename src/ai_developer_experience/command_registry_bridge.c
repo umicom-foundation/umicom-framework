@@ -61,12 +61,22 @@ static UmiStatus binding_execute(
      * host integrations that can only pass one string.
      */
     if (argument != NULL && argument[0] != '\0') {
-        const size_t length = strlen(argument);
+        size_t length = 0U;
+
+        /* The host callback supplies borrowed text.  Bound the scan before
+         * copying it into the fixed command context. */
+        while (length < sizeof(context.approval_id) &&
+               argument[length] != '\0') {
+            ++length;
+        }
 
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (length < sizeof(context.approval_id)) {
-            (void)memcpy(context.approval_id, argument, length + 1U);
+        if (length >= sizeof(context.approval_id)) {
+            /* Do not silently execute a command with a stale approval ID when
+             * the host supplied an argument that cannot be represented. */
+            return UMI_STATUS_CAPACITY_EXCEEDED;
         }
+        (void)memcpy(context.approval_id, argument, length + 1U);
     }
 
     return umi_ai_developer_command_execute(
@@ -93,13 +103,18 @@ static int binding_enabled(
 
     context = binding->bridge->context;
 
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (argument != NULL && argument[0] != '\0' &&
-        strlen(argument) < sizeof(context.approval_id)) {
-        (void)strcpy(context.approval_id, argument);
+    /* Inspect at most the approval identifier capacity.  Enablement checks
+     * run before execution, so they must not read an unterminated host string
+     * while deciding whether a command may be shown as active. */
+    if (argument != NULL && argument[0] != '\0') {
+        size_t length = 0U;
+
+        while (length < sizeof(context.approval_id) &&
+               argument[length] != '\0') {
+            ++length;
+        }
+        if (length >= sizeof(context.approval_id)) return 0;
+        (void)memcpy(context.approval_id, argument, length + 1U);
     }
 
     return umi_ai_developer_command_enabled(

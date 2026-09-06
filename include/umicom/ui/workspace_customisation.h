@@ -14,11 +14,18 @@
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_WORKSPACE_CUSTOMISATION_H
 #define UMICOM_UI_WORKSPACE_CUSTOMISATION_H
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
 #include "umicom/ui/window_catalogue.h"
 #include "umicom/ui/window_group.h"
 #include "umicom/ui/layout_library.h"
 #include "umicom/ui/theme_profile.h"
 #define UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS 16U
+/* Bound one coordinated layout edit so callers cannot submit an unbounded
+ * list of panel changes to a synchronous transaction. */
+#define UMI_UI_WORKSPACE_MAX_PANEL_BATCH 32U
 /**
  * Represent the ui workspace customisation data shared with callers of this public
  * contract.
@@ -181,6 +188,12 @@ UmiUiWorkspacePanelSettings umi_ui_workspace_panel_settings_default(
 UmiStatus umi_ui_workspace_customisation_apply_panel_settings(
     UmiUiWorkspaceCustomisation *customisation,
     const UmiUiWorkspacePanelSettings *settings);
+/* Apply several complete panel requests while keeping the live model unchanged
+ * if any item fails validation. The caller still owns begin/commit/cancel. */
+UmiStatus umi_ui_workspace_customisation_apply_panel_batch(
+    UmiUiWorkspaceCustomisation *customisation,
+    const UmiUiWorkspacePanelSettings *settings,
+    size_t setting_count);
 /* Close a non-critical window while preserving the catalogue definition. */
 UmiStatus umi_ui_workspace_customisation_close_window(
     UmiUiWorkspaceCustomisation *customisation,

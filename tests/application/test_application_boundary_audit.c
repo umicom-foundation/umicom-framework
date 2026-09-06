@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "umicom/application/application.h"
 
@@ -23,33 +24,38 @@
  * to the operating system.
  */
 int main(void) {
-  UmiApplicationAuditReport report;
+  UmiApplicationAuditReport *report;
   const UmiApplicationDefinition *applications[2];
   UmiApplicationDependency forbidden = {"org.umicom.studio", UMI_APPLICATION_DEPENDENCY_APPLICATION,
                                         "org.umicom.trader"};
 
-  assert(umi_application_portfolio_audit(&report) == UMI_STATUS_OK);
+  /* Findings include human-readable rule text; heap storage avoids making
+   * the test depend on the process stack reservation. */
+  report = (UmiApplicationAuditReport *)calloc(1U, sizeof(*report));
+  assert(report != NULL);
+  assert(umi_application_portfolio_audit(report) == UMI_STATUS_OK);
   /* Apply this branch only when its contract condition is satisfied. */
-  if (!report.passed) {
+  if (!report->passed) {
     size_t finding_index;
     /* Emit the exact architecture rule so focused test linkage cannot
      * conceal a missing capability or invalid component projection. */
-    for (finding_index = 0U; finding_index < report.finding_count; ++finding_index) {
-      (void)fprintf(stderr, "%s|%s|%s\n", report.findings[finding_index].rule_id,
-                    report.findings[finding_index].subject, report.findings[finding_index].message);
+    for (finding_index = 0U; finding_index < report->finding_count; ++finding_index) {
+      (void)fprintf(stderr, "%s|%s|%s\n", report->findings[finding_index].rule_id,
+                    report->findings[finding_index].subject, report->findings[finding_index].message);
     }
   }
-  assert(report.passed);
-  assert(report.error_count == 0U);
-  assert(report.application_count == umi_application_portfolio_count());
-  assert(report.capability_reference_count > report.application_count);
+  assert(report->passed);
+  assert(report->error_count == 0U);
+  assert(report->application_count == umi_application_portfolio_count());
+  assert(report->capability_reference_count > report->application_count);
 
   applications[0] = umi_application_portfolio_find("org.umicom.studio");
   applications[1] = umi_application_portfolio_find("org.umicom.trader");
-  assert(umi_application_boundary_audit(applications, 2U, &forbidden, 1U, &report) ==
+  assert(umi_application_boundary_audit(applications, 2U, &forbidden, 1U, report) ==
          UMI_STATUS_OK);
-  assert(!report.passed);
-  assert(report.error_count == 1U);
-  assert(report.finding_count == 1U);
+  assert(!report->passed);
+  assert(report->error_count == 1U);
+  assert(report->finding_count == 1U);
+  free(report);
   return 0;
 }

@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 #ifdef _WIN32
@@ -95,6 +96,17 @@ static void append_output(UmiProcessResult *result,
     (void)memcpy(result->output + used, bytes, count);
     result->output[used + count] = '\0';
 }
+
+#ifdef _WIN32
+/* Add two sizes without allowing an environment or command-line allocation
+ * calculation to wrap back to a small value. */
+static int umi_process_size_add(size_t left, size_t right, size_t *out)
+{
+    if (out == NULL || right > SIZE_MAX - left) return 0;
+    *out = left + right;
+    return 1;
+}
+#endif
 
 #ifdef _WIN32
 
@@ -252,13 +264,21 @@ static UmiStatus umi_windows_command_line(const UmiProcessRequest *request,
  */
 static int umi_windows_env_name_matches(const char *entry, const char *name)
 {
+    size_t entry_length;
     size_t name_length;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
     if (entry == NULL || name == NULL) return 0;
+    entry_length = strlen(entry);
     name_length = strlen(name);
+    /* A matching environment record must contain the complete name and the
+     * separator.  Check the entry length before indexing at name_length so a
+     * shorter record can never cause a read beyond its terminator. */
+    if (name_length == SIZE_MAX || entry_length < name_length + 1U) {
+        return 0;
+    }
     return _strnicmp(entry, name, name_length) == 0 &&
            entry[name_length] == '=';
 }
@@ -299,14 +319,29 @@ static char *umi_windows_environment_block(const UmiProcessRequest *request)
             }
         }
         /* Apply this branch only when its contract condition is satisfied. */
-        if (!replaced) total += strlen(cursor) + 1U;
+        if (!replaced) {
+            size_t length = strlen(cursor);
+            if (!umi_process_size_add(total, length, &total) ||
+                !umi_process_size_add(total, 1U, &total)) {
+                FreeEnvironmentStringsA(current);
+                return NULL;
+            }
+        }
     }
     /* Visit each bounded item once so every record receives the same rule. */
     for (override_index = 0U;
          override_index < request->environment_count;
          ++override_index) {
-        total += strlen(request->environment[override_index].name) +
-                 strlen(request->environment[override_index].value) + 2U;
+        size_t name_length = strlen(
+            request->environment[override_index].name);
+        size_t value_length = strlen(
+            request->environment[override_index].value);
+        if (!umi_process_size_add(total, name_length, &total) ||
+            !umi_process_size_add(total, value_length, &total) ||
+            !umi_process_size_add(total, 2U, &total)) {
+            FreeEnvironmentStringsA(current);
+            return NULL;
+        }
     }
     block = (char *)calloc(total, 1U);
     /*
@@ -467,6 +502,15 @@ static UmiStatus umi_process_execute_windows(const UmiProcessRequest *request,
     }
 
     environment_block = umi_windows_environment_block(request);
+    /* A NULL block means "inherit the current environment" to
+     * CreateProcessA.  That is only correct when no overrides were requested;
+     * otherwise an allocation or Windows environment-read failure must abort
+     * the launch instead of silently dropping the caller's variables. */
+    if (request->environment_count > 0U && environment_block == NULL) {
+        if (write_pipe != NULL) (void)CloseHandle(write_pipe);
+        if (read_pipe != NULL) (void)CloseHandle(read_pipe);
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
     created = CreateProcessA(NULL,
                              command_line,
                              NULL,
@@ -758,6 +802,10 @@ UmiStatus umi_process_execute(const UmiProcessRequest *request,
 {
     UmiProcessResult local_result;
     UmiProcessResult *result = out_result != NULL ? out_result : &local_result;
+    size_t index;
+    /* Initialise the result before validation so callers never inspect
+     * uninitialised output when a malformed request is rejected. */
+    umi_process_result_init(result);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -772,7 +820,21 @@ UmiStatus umi_process_execute(const UmiProcessRequest *request,
         (request->environment_count > 0U && request->environment == NULL)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
-    umi_process_result_init(result);
+    /* Reject holes in the argument and environment arrays before the platform
+     * adapters turn them into argv or environment blocks.  A NULL argument can
+     * otherwise be mistaken for the argv terminator, while a NULL environment
+     * value can make setenv or the Windows block builder dereference invalid
+     * memory. */
+    for (index = 0U; index < request->argument_count; ++index) {
+        if (request->arguments[index] == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    for (index = 0U; index < request->environment_count; ++index) {
+        if (request->environment[index].name == NULL ||
+            request->environment[index].value == NULL ||
+            request->environment[index].name[0] == '\0') {
+            return UMI_STATUS_INVALID_ARGUMENT;
+        }
+    }
 #ifdef _WIN32
     return umi_process_execute_windows(request, result);
 #else
@@ -809,7 +871,7 @@ UmiStatus umi_process_capture(const char *program,
     status = umi_process_execute(&request, &result);
     length = strlen(result.output);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (length + 1U > capacity) length = capacity - 1U;
+    if (length >= capacity) length = capacity - 1U;
     (void)memcpy(out_text, result.output, length);
     out_text[length] = '\0';
     /*

@@ -56,8 +56,9 @@ UmiStatus umi_decl_copy_text(char *destination, size_t capacity, const char *sou
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     length = strlen(source);
-    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (length + 1U > capacity) {
+    /* Compare before adding the terminator byte so a maximal length cannot
+     * wrap the size calculation before the capacity check. */
+    if (length >= capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     (void)memcpy(destination, source, length + 1U);

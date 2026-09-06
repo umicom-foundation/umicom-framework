@@ -164,6 +164,32 @@ static void write_direct_change_reason(char *destination,
                               available);
 }
 
+/* Explain an inherited dependency without passing an unbounded provider name
+ * to snprintf.  Provider identifiers may come from a repository manifest and
+ * are therefore shortened only in this display field; the structured scope
+ * identifier remains unchanged for planning and diagnostics. */
+static void write_inherited_change_reason(char *destination,
+                                          size_t capacity,
+                                          const char *provider_name)
+{
+    static const char prefix[] = "Consumes changed shared scope: ";
+    const char *provider = provider_name != NULL ? provider_name : "workspace";
+    size_t offset;
+
+    if (destination == NULL || capacity == 0U) return;
+    destination[0] = '\0';
+    offset = append_summary_text(destination,
+                                 capacity,
+                                 0U,
+                                 prefix,
+                                 sizeof(prefix) - 1U);
+    (void)append_summary_text(destination,
+                              capacity,
+                              offset,
+                              provider,
+                              capacity);
+}
+
 /*
  * Convert Windows separators to the workspace's portable forward-slash form,
  * remove a leading "./", collapse repeated separators and trim a final slash.
@@ -468,10 +494,9 @@ static UmiStatus add_inherited_item(UmiBuildAutomation *automation,
          UMI_BUILD_AUTOMATION_ACTION_STAGE);
     item->inherited_change = 1;
     if (!item->direct_change) {
-        (void)snprintf(item->reason,
-                       sizeof(item->reason),
-                       "Consumes changed shared scope: %s",
-                       provider_name != NULL ? provider_name : "workspace");
+        write_inherited_change_reason(item->reason,
+                                      sizeof(item->reason),
+                                      provider_name);
     }
     return UMI_STATUS_OK;
 }
@@ -921,16 +946,33 @@ static void append_action_text(char *out_text,
                                const char *label,
                                int *first)
 {
-    const size_t used = strlen(out_text);
+    size_t used;
 
+    /* A report formatter may be called with optional output storage. Treat
+     * missing storage as a no-op instead of allowing strlen to dereference it. */
+    if (out_text == NULL || first == NULL || capacity == 0U) {
+        return;
+    }
+    used = strlen(out_text);
     if (used >= capacity) {
         return;
     }
-    (void)snprintf(out_text + used,
-                   capacity - used,
-                   "%s%s",
-                   *first ? "" : ",",
-                   label);
+    /* Add the separator only when there is still room for the label and its
+     * terminator. A short report is preferable to a compiler warning or an
+     * unterminated diagnostic string. */
+    if (!*first) {
+        if (used >= capacity - 1U) {
+            out_text[capacity - 1U] = '\0';
+            return;
+        }
+        out_text[used++] = ',';
+        out_text[used] = '\0';
+    }
+    (void)append_summary_text(out_text,
+                              capacity,
+                              used,
+                              label != NULL ? label : "",
+                              capacity);
     *first = 0;
 }
 

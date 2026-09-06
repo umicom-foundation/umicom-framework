@@ -16,6 +16,7 @@
 
 #include "umicom/application/suite_layout/customisation.h"
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -560,4 +561,59 @@ UmiStatus umi_application_suite_customisation_apply_panel_settings(
     }
     return umi_ui_workspace_customisation_apply_panel_settings(
         customisation, settings);
+}
+
+/* Apply policy checks and workspace mutations to one candidate copy. The
+ * caller's live model is replaced only after every panel request succeeds. */
+UmiStatus umi_application_suite_customisation_apply_panel_batch(
+    UmiUiWorkspaceCustomisation *customisation,
+    const UmiUiWorkspacePanelSettings *settings,
+    size_t setting_count)
+{
+    UmiUiWorkspaceCustomisation *candidate;
+    UmiUiWorkspacePanelSettings requests[
+        UMI_UI_WORKSPACE_MAX_PANEL_BATCH];
+    UmiStatus status;
+    size_t index;
+
+    /* A bounded non-empty list is needed for a meaningful coordinated edit. */
+    if (customisation == NULL || settings == NULL || setting_count == 0U ||
+        setting_count > UMI_UI_WORKSPACE_MAX_PANEL_BATCH) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* The existing transaction remains owned by the caller. This function
+     * stages changes inside that transaction and never starts or commits it. */
+    if (!customisation->edit_active) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    /* Each staged request can update placement and context. Reserve the
+     * maximum increments so the public revision cannot wrap while a product
+     * is applying a multi-panel edit. */
+    if (customisation->revision >
+        UINT64_MAX - ((uint64_t)setting_count * UINT64_C(2))) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    /* Copy descriptors before mutation so an aliased caller array cannot be
+     * overwritten when the candidate is published during a later iteration. */
+    (void)memcpy(requests,
+                 settings,
+                 setting_count * sizeof(requests[0]));
+    candidate = (UmiUiWorkspaceCustomisation *)malloc(sizeof(*candidate));
+    if (candidate == NULL) {
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    *candidate = *customisation;
+    for (index = 0U; index < setting_count; ++index) {
+        status = umi_application_suite_customisation_apply_panel_settings(
+            candidate,
+            &requests[index]);
+        if (status != UMI_STATUS_OK) {
+            free(candidate);
+            return status;
+        }
+    }
+    /* One assignment is the publication boundary for the complete panel list. */
+    *customisation = *candidate;
+    free(candidate);
+    return UMI_STATUS_OK;
 }

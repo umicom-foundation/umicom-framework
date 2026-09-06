@@ -2286,6 +2286,9 @@ add_library(umicom_application STATIC
     src/application/presentation/surface_behavior_catalogue.c
     src/application/presentation/workspace_runtime_policy.c
     src/application/presentation/workspace_runtime_policy_catalogue.c
+    # Transfer tokens coordinate cross-host application tabs without moving
+    # native widget pointers or serialising credentials.
+    src/application/runtime/surface_transfer.c
     src/application/boundary_audit.c
     src/application/governance/types.c
     src/application/governance/evidence.c
@@ -3322,6 +3325,9 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-workspace-customisation-edit-session-test framework.workspace_customisation.edit_session tests/test_workspace_customisation_edit_session.c)
     umicom_add_framework_test(umicom-workspace-customisation-suite-test framework.workspace_customisation.application_suite tests/test_workspace_customisation_suite.c)
     umicom_add_framework_test(umicom-workbench-canvas-test framework.ui.workbench_canvas tests/test_workbench_canvas.c)
+    # Transfer protocol tests cover acknowledgement, idempotence, cancellation
+    # and expiry before a native host is allowed to release a tab.
+    umicom_add_framework_test(umicom-application-surface-transfer-test framework.application.surface_transfer tests/test_surface_transfer.c)
 
     # Unified immutable diagnostics, Problems and Output pipeline.
     umicom_add_framework_test(umicom-diagnostic-snapshot-test framework.diagnostic_snapshot tests/test_diagnostic_snapshot.c)

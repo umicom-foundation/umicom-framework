@@ -32,6 +32,9 @@ extern "C" {
 /* Bound host and monitor state so plugins cannot allocate untrusted amounts. */
 #define UMI_UI_WORKBENCH_CANVAS_MAX_HOSTS 8U
 #define UMI_UI_WORKBENCH_CANVAS_MONITOR_ID_CAPACITY UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY
+/* Bound one edit gesture so a plugin cannot keep a canvas transaction open
+ * indefinitely or force an untrusted allocation during layout editing. */
+#define UMI_UI_WORKBENCH_CANVAS_MAX_PANEL_BATCH UMI_UI_WORKSPACE_MAX_PANEL_BATCH
 
 /** Describe one surface's detached-window state. */
 typedef struct UmiUiWorkbenchCanvasSurfaceState {
@@ -195,10 +198,30 @@ UmiStatus umi_ui_workbench_canvas_set_layout_locked(
     const char *host_id,
     bool locked);
 
+/* Apply several panel placement requests as one Edit Layout transaction. The
+ * caller's array and its borrowed strings are read only for the duration of
+ * this call. If any request is invalid, the host layout and context links are
+ * rolled back together, so a drag-and-drop gesture cannot leave half its
+ * panels in the new arrangement. */
+UmiStatus umi_ui_workbench_canvas_apply_panel_batch(
+    UmiUiWorkbenchCanvas *canvas,
+    const char *host_id,
+    const UmiUiWorkspacePanelSettings *settings,
+    size_t setting_count);
+
 /* Return detached/monitor state for one known surface. */
 const UmiUiWorkbenchCanvasSurfaceState *umi_ui_workbench_canvas_surface_state(
     const UmiUiWorkbenchCanvasHost *host,
     const char *window_id);
+
+/* Copy all detached-surface records into caller-owned storage. This gives a
+ * renderer or accessibility panel a stable read model without exposing the
+ * host's mutable array or requiring it to know the internal capacity. */
+UmiStatus umi_ui_workbench_canvas_surface_snapshot(
+    const UmiUiWorkbenchCanvasHost *host,
+    UmiUiWorkbenchCanvasSurfaceState *out_surfaces,
+    size_t capacity,
+    size_t *out_count);
 
 /* Copy a bounded host summary for menus, status bars and accessibility views. */
 UmiStatus umi_ui_workbench_canvas_snapshot(

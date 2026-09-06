@@ -948,6 +948,65 @@ UmiStatus umi_ui_workbench_canvas_set_layout_locked(
     return status;
 }
 
+/* Apply one complete multi-panel edit while the host owns a single rollback
+ * baseline. This keeps related drag, resize and grouping changes consistent
+ * for every frontend instead of publishing each panel independently. */
+UmiStatus umi_ui_workbench_canvas_apply_panel_batch(
+    UmiUiWorkbenchCanvas *canvas,
+    const char *host_id,
+    const UmiUiWorkspacePanelSettings *settings,
+    size_t setting_count)
+{
+    UmiUiWorkbenchCanvasHost *host;
+    UmiUiWorkspacePanelSettings requests[
+        UMI_UI_WORKBENCH_CANVAS_MAX_PANEL_BATCH];
+    UmiStatus status;
+    size_t index;
+
+    /* A bounded non-empty request list is required for an edit transaction. */
+    if (canvas == NULL || host_id == NULL || settings == NULL ||
+        setting_count == 0U ||
+        setting_count > UMI_UI_WORKBENCH_CANVAS_MAX_PANEL_BATCH) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    host = find_host(canvas, host_id);
+    /* Unknown hosts cannot receive a panel edit. */
+    if (host == NULL || host->customisation == NULL) {
+        return UMI_STATUS_NOT_FOUND;
+    }
+    /* One request can update placement and context separately, and the edit
+     * itself adds two more revision steps. Reserve the maximum possible
+     * increments so a long batch cannot wrap its public revision counter. */
+    if (host->customisation->revision >
+        UINT64_MAX - ((uint64_t)setting_count * UINT64_C(2) + UINT64_C(2))) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    /* Copy the small request descriptors before editing. This prevents an
+     * unusual caller that aliases the array with workspace storage from seeing
+     * its request list change as the layout is updated. The strings remain
+     * borrowed and are read only by the delegated operation. */
+    (void)memcpy(requests,
+                 settings,
+                 setting_count * sizeof(requests[0]));
+    status = begin_host_edit(host);
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    /* Each request is applied to the same edit baseline. A failure cancels the
+     * entire list, including context-group membership and panel geometry. */
+    for (index = 0U; index < setting_count; ++index) {
+        status = umi_ui_workspace_customisation_apply_panel_settings(
+            host->customisation,
+            &requests[index]);
+        if (status != UMI_STATUS_OK) {
+            (void)cancel_host_edit(host);
+            return status;
+        }
+    }
+    /* Publish one host/canvas revision only after every panel request passed. */
+    return commit_host_edit(canvas, host);
+}
+
 /* Return detached state without transferring ownership to the caller. */
 const UmiUiWorkbenchCanvasSurfaceState *umi_ui_workbench_canvas_surface_state(
     const UmiUiWorkbenchCanvasHost *host,
@@ -969,6 +1028,41 @@ const UmiUiWorkbenchCanvasSurfaceState *umi_ui_workbench_canvas_surface_state(
         }
     }
     return NULL;
+}
+
+/* Copy the bounded surface table so a frontend can render it without reading
+ * mutable host memory while another command is being prepared. */
+UmiStatus umi_ui_workbench_canvas_surface_snapshot(
+    const UmiUiWorkbenchCanvasHost *host,
+    UmiUiWorkbenchCanvasSurfaceState *out_surfaces,
+    size_t capacity,
+    size_t *out_count)
+{
+    /* The count is always reset first so a failed query cannot leave stale
+     * success data in a caller's menu or accessibility model. */
+    if (out_count == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    *out_count = 0U;
+    /* A null output array is valid only for an empty surface table. */
+    if (host == NULL || (out_surfaces == NULL && capacity != 0U)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (host->surface_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    /* Refuse a short destination rather than silently dropping a detached
+     * surface that the user expects to see in another monitor's menu. */
+    if (capacity < host->surface_count) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    if (host->surface_count > 0U) {
+        (void)memcpy(out_surfaces,
+                     host->surfaces,
+                     host->surface_count * sizeof(out_surfaces[0]));
+    }
+    *out_count = host->surface_count;
+    return UMI_STATUS_OK;
 }
 
 /* Build an immutable summary so frontends do not inspect mutable state during a command. */

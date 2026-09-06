@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 
 #include <assert.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "umicom/designer/designer.h"
@@ -26,9 +27,14 @@ int main(void)
     UmiDeclSchema schema;
     UmiDesignerDocument *document = NULL;
     UmiDesignerSelection selection;
-    UmiDesignerWorkspaceModel model;
+    UmiDesignerWorkspaceModel *model;
     UmiDeclNode root;
     UmiDeclNode action;
+
+    /* The model carries several bounded panel snapshots; heap storage avoids
+     * a large stack frame in native acceptance-test hosts. */
+    model = (UmiDesignerWorkspaceModel *)calloc(1U, sizeof(*model));
+    assert(model != NULL);
 
     (void)memset(&selection, 0, sizeof(selection));
     assert(umi_designer_catalogue_create(
@@ -67,22 +73,23 @@ int main(void)
         &selection,
         components,
         "button",
-        &model) == UMI_STATUS_OK);
-    assert(umi_designer_workspace_model_validate(&model) == UMI_STATUS_OK);
-    assert(model.document.component_count == 2U);
-    assert(model.hierarchy.count == 2U);
-    assert(model.has_selection);
-    assert(model.has_inspector);
-    assert(model.has_inspector_schema);
-    assert(strcmp(model.selected_node_id, "save-action") == 0);
-    assert(model.inspector.attribute_count == 1U);
-    assert(model.inspector_schema.property_count > 0U);
-    assert(model.palette_count > 0U);
+        model) == UMI_STATUS_OK);
+    assert(umi_designer_workspace_model_validate(model) == UMI_STATUS_OK);
+    assert(model->document.component_count == 2U);
+    assert(model->hierarchy.count == 2U);
+    assert(model->has_selection);
+    assert(model->has_inspector);
+    assert(model->has_inspector_schema);
+    assert(strcmp(model->selected_node_id, "save-action") == 0);
+    assert(model->inspector.attribute_count == 1U);
+    assert(model->inspector_schema.property_count > 0U);
+    assert(model->palette_count > 0U);
     assert(umi_designer_workspace_model_find_palette_item(
-        &model,
+        model,
         "button") != NULL);
 
     umi_designer_document_destroy(document);
     umi_decl_component_registry_destroy(components);
+    free(model);
     return 0;
 }

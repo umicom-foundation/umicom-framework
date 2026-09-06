@@ -171,6 +171,35 @@ int main(void)
             customisation, auto_hide_id));
         assert(umi_ui_workspace_customisation_commit_edit(customisation) ==
                UMI_STATUS_OK);
+
+        /* Policy-aware callers can stage several independent panel changes
+         * while keeping the original layout as one rollback baseline. */
+        assert(umi_ui_workspace_customisation_begin_edit(customisation) ==
+               UMI_STATUS_OK);
+        {
+            UmiUiWorkspacePanelSettings batch[2];
+            UmiUiWorkspaceLayout before_batch =
+                *umi_ui_workspace_customisation_active_const(customisation);
+
+            batch[0] = umi_ui_workspace_panel_settings_default(floating_id);
+            batch[0].placement_id = "left";
+            batch[0].stack_id = "batch-left";
+            batch[1] = umi_ui_workspace_panel_settings_default("missing-window");
+            assert(umi_application_suite_customisation_apply_panel_batch(
+                       customisation, batch, 2U) == UMI_STATUS_NOT_FOUND);
+            assert(memcmp(
+                       &before_batch,
+                       umi_ui_workspace_customisation_active_const(customisation),
+                       sizeof(before_batch)) == 0);
+
+            batch[1] = umi_ui_workspace_panel_settings_default(auto_hide_id);
+            batch[1].placement_id = "right";
+            batch[1].stack_id = "batch-right";
+            assert(umi_application_suite_customisation_apply_panel_batch(
+                       customisation, batch, 2U) == UMI_STATUS_OK);
+        }
+        assert(umi_ui_workspace_customisation_commit_edit(customisation) ==
+               UMI_STATUS_OK);
     }
 
     {

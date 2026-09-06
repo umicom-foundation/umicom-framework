@@ -30,6 +30,8 @@ typedef struct UmiApplicationCommandDescriptor {
     UmiApplicationCommandKind kind;
     const char *target_id;
     const char *title;
+    /* Capability metadata lets a palette explain why a command is unavailable. */
+    const char *required_capability;
     UmiExperienceFeatureState feature_state;
 } UmiApplicationCommandDescriptor;
 
@@ -42,6 +44,29 @@ typedef struct UmiApplicationCommandSurface {
     UmiApplicationCommandDescriptor commands[UMI_APPLICATION_RUNTIME_MAX_COMMANDS];
     size_t command_count;
 } UmiApplicationCommandSurface;
+
+/**
+ * Describe a command-palette query without allocating or owning catalogue text.
+ */
+typedef struct UmiApplicationCommandQuery {
+    uint32_t structure_size;
+    const char *text;
+    bool include_unavailable;
+    UmiApplicationCapabilityProbe capability_probe;
+    void *capability_probe_data;
+} UmiApplicationCommandQuery;
+
+/**
+ * Return bounded command indices and availability counts for one query.
+ */
+typedef struct UmiApplicationCommandQueryResult {
+    uint32_t structure_size;
+    size_t match_count;
+    size_t available_count;
+    size_t unavailable_count;
+    size_t command_indices[UMI_APPLICATION_RUNTIME_MAX_COMMANDS];
+    bool available[UMI_APPLICATION_RUNTIME_MAX_COMMANDS];
+} UmiApplicationCommandQueryResult;
 
 /**
  * Provide the application command surface build operation used by this module and its
@@ -58,6 +83,25 @@ const UmiApplicationCommandDescriptor *umi_application_command_surface_find(
     const UmiApplicationCommandSurface *surface,
     UmiApplicationCommandKind kind,
     const char *target_id);
+
+/**
+ * Search command titles and IDs while applying feature and capability
+ * availability rules shared by every product palette.
+ */
+UmiStatus umi_application_command_surface_query(
+    const UmiApplicationCommandSurface *surface,
+    const UmiApplicationCommandQuery *query,
+    UmiApplicationCommandQueryResult *out_result);
+
+/**
+ * Check whether one command is mature and supported by the optional capability provider.
+ * Keeping this rule in one Framework function prevents palettes and command invokers from
+ * disagreeing about which actions the user may run.
+ */
+bool umi_application_command_descriptor_is_available(
+    const UmiApplicationCommandDescriptor *command,
+    UmiApplicationCapabilityProbe capability_probe,
+    void *capability_probe_data);
 
 #ifdef __cplusplus
 }

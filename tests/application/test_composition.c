@@ -13,7 +13,8 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "umicom/application/composition.h"
@@ -43,7 +44,15 @@ int main(void)
 
     UmiApplicationDefinition definition;
     UmiApplicationCompositionRequest request;
-    UmiApplicationCompositionPlan plan;
+    UmiApplicationCompositionPlan *plan;
+
+    /* The plan owns several bounded inventories, so allocate it on the heap
+     * instead of consuming the small native stack used by Windows test hosts. */
+    plan = (UmiApplicationCompositionPlan *)calloc(1U, sizeof(*plan));
+    if (plan == NULL) {
+        (void)fprintf(stderr, "could not allocate composition plan\n");
+        return EXIT_FAILURE;
+    }
 
     (void)memset(&definition, 0, sizeof(definition));
     definition.structure_size = (uint32_t)sizeof(definition);
@@ -79,33 +88,32 @@ int main(void)
         sizeof(extra_packs) / sizeof(extra_packs[0]);
     request.include_definition_domains = 1;
 
-    assert(umi_application_composition_build(
-        &request, &plan) == UMI_STATUS_OK);
+    if (umi_application_composition_build(&request, plan) != UMI_STATUS_OK) {
+        (void)fprintf(stderr, "composition build failed\n");
+        free(plan);
+        return EXIT_FAILURE;
+    }
 
-    assert(strcmp(plan.application_id, "org.umicom.sample") == 0);
-    assert(umi_application_composition_has_pack(
-        &plan, "umicom.pack.core-runtime"));
-    assert(umi_application_composition_has_pack(
-        &plan, "umicom.pack.developer"));
-    assert(umi_application_composition_has_pack(
-        &plan, "umicom.pack.ai-assistant"));
-
-    assert(umi_application_composition_has_capability(
-        &plan, "umicom.build"));
-    assert(umi_application_composition_has_capability(
-        &plan, "umicom.ai.coding-assistant"));
-
-    assert(umi_application_composition_has_component(
-        &plan, "umicom.development.explorer"));
-    assert(umi_application_composition_has_component(
-        &plan, "umicom.development.build"));
-    assert(umi_application_composition_has_component(
-        &plan, "umicom.ai.chat"));
-
-    assert(plan.pack_count > 0U);
-    assert(plan.required_capability_count > 0U);
-    assert(plan.component_count > 0U);
-    assert(plan.implemented_capability_count > 0U);
-
+    if (strcmp(plan->application_id, "org.umicom.sample") != 0 ||
+        !umi_application_composition_has_pack(
+            plan, "umicom.pack.core-runtime") ||
+        !umi_application_composition_has_pack(
+            plan, "umicom.pack.developer") ||
+        !umi_application_composition_has_pack(
+            plan, "umicom.pack.ai-assistant") ||
+        !umi_application_composition_has_capability(plan, "umicom.build") ||
+        !umi_application_composition_has_capability(
+            plan, "umicom.ai.coding-assistant") ||
+        !umi_application_composition_has_component(
+            plan, "umicom.development.explorer") ||
+        !umi_application_composition_has_component(plan, "umicom.development.build") ||
+        !umi_application_composition_has_component(plan, "umicom.ai.chat") ||
+        plan->pack_count == 0U || plan->required_capability_count == 0U ||
+        plan->component_count == 0U || plan->implemented_capability_count == 0U) {
+        (void)fprintf(stderr, "composition plan does not satisfy its contract\n");
+        free(plan);
+        return EXIT_FAILURE;
+    }
+    free(plan);
     return 0;
 }

@@ -25,11 +25,14 @@ static int find_active_panel(const UmiApplicationSession *session, const char *p
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (session == NULL || panel_id == NULL) return -1;
+    if (session == NULL || panel_id == NULL ||
+        session->active_panel_count > UMI_APPLICATION_RUNTIME_MAX_PANELS)
+        return -1;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < session->active_panel_count; ++index) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (strcmp(session->active_panel_ids[index], panel_id) == 0)
+        if (session->active_panel_ids[index] != NULL &&
+            strcmp(session->active_panel_ids[index], panel_id) == 0)
             return (int)index;
     }
     return -1;
@@ -45,6 +48,8 @@ static UmiStatus load_layout_panels(
 {
     size_t index;
     /* Apply this branch only when its contract condition is satisfied. */
+    if (session == NULL || layout == NULL || layout->panel_ids == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
     if (layout->panel_count > UMI_APPLICATION_RUNTIME_MAX_PANELS)
         return UMI_STATUS_CAPACITY_EXCEEDED;
     session->active_panel_count = 0U;
@@ -65,6 +70,7 @@ UmiStatus umi_application_session_init(
     UmiApplicationSession *out_session)
 {
     const UmiExperienceLayoutDefinition *layout;
+    UmiStatus status;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -72,8 +78,8 @@ UmiStatus umi_application_session_init(
     if (experience == NULL || out_session == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (umi_application_experience_validate(experience) != UMI_STATUS_OK)
-        return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_application_experience_validate(experience);
+    if (status != UMI_STATUS_OK) return status;
     memset(out_session, 0, sizeof(*out_session));
     out_session->structure_size = sizeof(*out_session);
     out_session->experience = experience;
@@ -96,12 +102,16 @@ UmiStatus umi_application_session_select_layout(
     const char *layout_id)
 {
     const UmiExperienceLayoutDefinition *layout;
+    UmiStatus status;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
     if (session == NULL || session->experience == NULL || layout_id == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Recheck the borrowed catalogue before a layout can populate session arrays. */
+    status = umi_application_experience_validate(session->experience);
+    if (status != UMI_STATUS_OK) return status;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (session->layout_locked) return UMI_STATUS_PERMISSION_DENIED;
     layout = umi_application_experience_layout_find(session->experience, layout_id);

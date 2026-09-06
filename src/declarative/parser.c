@@ -21,6 +21,7 @@
 #include "umicom/declarative/parser.h"
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include "umicom/declarative/lexer.h"
@@ -66,13 +67,26 @@ static UmiStatus join_tokens(const UmiDeclTokenLine *tokens, size_t start, char 
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (tokens == NULL || out_text == NULL || capacity == 0U || start >= tokens->count) return UMI_STATUS_INVALID_ARGUMENT;
+    if (tokens == NULL || out_text == NULL || capacity == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* The token line owns a fixed array.  Treat a damaged count as invalid
+     * state before indexing that array. */
+    if (tokens->count > UMI_DECL_MAX_TOKENS_PER_LINE) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    if (start >= tokens->count) return UMI_STATUS_INVALID_ARGUMENT;
     out_text[0] = '\0';
     /* Visit each bounded item once so every record receives the same rule. */
     for (i = start; i < tokens->count; ++i) {
         size_t length = strlen(tokens->tokens[i]);
+        size_t separator = i > start ? 1U : 0U;
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (used + length + (i > start ? 1U : 0U) + 1U > capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+        if (used >= capacity ||
+            separator > capacity - used - 1U ||
+            length > capacity - used - 1U - separator) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
         /* Apply this branch only when its contract condition is satisfied. */
         if (i > start) out_text[used++] = ' ';
         (void)memcpy(out_text + used, tokens->tokens[i], length);
@@ -87,6 +101,7 @@ UmiStatus umi_decl_parse_text(const char *text, UmiDeclDocument **out_document, 
 {
     char *copy;
     char *cursor;
+    size_t text_length;
     char application_id[UMI_DECL_ID_CAPACITY] = {0};
     UmiDeclDocument *document = NULL;
     size_t line_number = 0U;
@@ -98,13 +113,17 @@ UmiStatus umi_decl_parse_text(const char *text, UmiDeclDocument **out_document, 
     if (text == NULL || out_document == NULL || diagnostics == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_document = NULL;
     umi_decl_diagnostics_clear(diagnostics);
-    copy = (char *)malloc(strlen(text) + 1U);
+    text_length = strlen(text);
+    /* Reserve the terminator only after proving the size calculation cannot
+     * wrap for a maximal caller-provided source string. */
+    if (text_length == SIZE_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    copy = (char *)malloc(text_length + 1U);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
     if (copy == NULL) return UMI_STATUS_OUT_OF_MEMORY;
-    (void)strcpy(copy, text);
+    (void)memcpy(copy, text, text_length + 1U);
     cursor = copy;
 
     /* Parsing is line oriented: each statement is independently diagnosable and beginner friendly. */

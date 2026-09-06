@@ -58,6 +58,7 @@ int main(void)
     UmiApplicationRuntimeRegistration registration = {0};
     UmiApplicationRuntimeRegistration trader = {0};
     UmiDeskRuntimeSnapshot snapshot;
+    UmiApplicationLaunchSelectionCheckpoint checkpoint;
     UmiApplicationLaunchSelectionReport launch_report;
     FakeLaunch launch = {100U};
 
@@ -115,6 +116,15 @@ int main(void)
                 runtime, "org.umicom.studio", true) == UMI_STATUS_OK);
     REQUIRE(umi_desk_runtime_select_application(
                 runtime, "org.umicom.trader", true) == UMI_STATUS_OK);
+    REQUIRE(umi_desk_runtime_capture_selection_checkpoint(
+                runtime, &checkpoint) == UMI_STATUS_OK);
+    REQUIRE(checkpoint.selected_count == 2U);
+    REQUIRE(umi_desk_runtime_clear_application_selection(runtime) ==
+            UMI_STATUS_OK);
+    REQUIRE(umi_desk_runtime_restore_selection_checkpoint(
+                runtime, &checkpoint) == UMI_STATUS_OK);
+    REQUIRE(umi_desk_runtime_snapshot(runtime, &snapshot) == UMI_STATUS_OK);
+    REQUIRE(snapshot.launch_selection.selected_count == 2U);
     REQUIRE(umi_desk_runtime_launch_selected_applications(
                 runtime, &launch_report) == UMI_STATUS_OK);
     REQUIRE(launch_report.result_count == 2U);

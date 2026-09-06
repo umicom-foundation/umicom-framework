@@ -18,6 +18,24 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Copy externally supplied approval text only when it is terminated inside the
+ * destination capacity.  Approval records are later rendered by UI clients,
+ * so silently truncating a permission or subject would make the review unsafe. */
+static UmiStatus copy_checked_text(char *destination,
+                                   size_t capacity,
+                                   const char *source)
+{
+    size_t length = 0U;
+
+    if (destination == NULL || capacity == 0U || source == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    while (length < capacity && source[length] != '\0') ++length;
+    if (length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+    (void)memcpy(destination, source, length + 1U);
+    return UMI_STATUS_OK;
+}
+
 /*
  * Initialise ai developer approval service from caller-provided values so later operations
  * receive a known state.
@@ -90,6 +108,9 @@ UmiStatus umi_ai_developer_approval_request_tool(
         (size_t)written >= sizeof(request.approval_id)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Check the caller's output buffer before enqueueing.  A failed copy must
+     * not leave an approval request that the caller cannot identify. */
+    if ((size_t)written >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
 
     request.kind = descriptor->risk ==
             UMI_AI_CODING_TOOL_RISK_SOURCE_CONTROL_MUTATION
@@ -104,36 +125,26 @@ UmiStatus umi_ai_developer_approval_request_tool(
     request.requested_sequence = service->sequence;
     request.executable = 1;
 
-    (void)snprintf(
-        request.title,
-        sizeof(request.title),
-        "%s",
-        descriptor->label);
-    (void)snprintf(
-        request.summary,
-        sizeof(request.summary),
-        "%s",
-        descriptor->description);
-    (void)snprintf(
-        request.permission,
-        sizeof(request.permission),
-        "%s",
-        descriptor->permission);
-    (void)snprintf(
-        request.subject_id,
-        sizeof(request.subject_id),
-        "%s",
-        descriptor->tool_id);
+    status = copy_checked_text(
+        request.title, sizeof(request.title), descriptor->label);
+    if (status == UMI_STATUS_OK) {
+        status = copy_checked_text(
+            request.summary, sizeof(request.summary), descriptor->description);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = copy_checked_text(
+            request.permission, sizeof(request.permission), descriptor->permission);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = copy_checked_text(
+            request.subject_id, sizeof(request.subject_id), descriptor->tool_id);
+    }
+    if (status != UMI_STATUS_OK) return status;
 
     status = umi_ai_developer_approval_queue_add(
         service->queue, &request);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
-
-    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (strlen(request.approval_id) >= capacity) {
-        return UMI_STATUS_CAPACITY_EXCEEDED;
-    }
 
     (void)strcpy(out_approval_id, request.approval_id);
     return UMI_STATUS_OK;
@@ -175,6 +186,9 @@ UmiStatus umi_ai_developer_approval_request_patch(
         (size_t)written >= sizeof(request.approval_id)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Do this check before queue insertion for the same all-or-nothing
+     * behaviour as tool approvals. */
+    if ((size_t)written >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
 
     request.kind = UMI_AI_DEVELOPER_APPROVAL_PATCH;
     request.state = UMI_AI_DEVELOPER_APPROVAL_PENDING;
@@ -187,31 +201,24 @@ UmiStatus umi_ai_developer_approval_request_patch(
         sizeof(request.title),
         "%.250s",
         patch->title[0] != '\0' ? patch->title : "AI Coding Patch");
-    (void)snprintf(
-        request.summary,
-        sizeof(request.summary),
-        "%s",
-        patch->rationale);
-    (void)snprintf(
-        request.permission,
-        sizeof(request.permission),
-        "%s",
-        "agent.patch.approve");
-    (void)snprintf(
-        request.subject_id,
-        sizeof(request.subject_id),
-        "%s",
-        patch->patch_id);
+    status = copy_checked_text(
+        request.summary, sizeof(request.summary), patch->rationale);
+    if (status == UMI_STATUS_OK) {
+        status = copy_checked_text(
+            request.permission,
+            sizeof(request.permission),
+            "agent.patch.approve");
+    }
+    if (status == UMI_STATUS_OK) {
+        status = copy_checked_text(
+            request.subject_id, sizeof(request.subject_id), patch->patch_id);
+    }
+    if (status != UMI_STATUS_OK) return status;
 
     status = umi_ai_developer_approval_queue_add(
         service->queue, &request);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
-
-    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (strlen(request.approval_id) >= capacity) {
-        return UMI_STATUS_CAPACITY_EXCEEDED;
-    }
 
     (void)strcpy(out_approval_id, request.approval_id);
     return UMI_STATUS_OK;

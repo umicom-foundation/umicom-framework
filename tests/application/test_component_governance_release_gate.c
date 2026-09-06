@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
+#include <stdlib.h>
 
 #include "umicom/application/application.h"
 
@@ -22,21 +23,29 @@
  * to the operating system.
  */
 int main(void) {
-  UmiComponentInventory inventory;
+  UmiComponentInventory *inventory =
+      (UmiComponentInventory *)calloc(1U, sizeof(*inventory));
   UmiComponentReleasePolicy policy;
-  UmiComponentReleaseReport report;
+  UmiComponentReleaseReport *report;
   UmiComponentGovernanceOverride override_record = {0};
 
-  assert(umi_component_inventory_build(NULL, 0U, &inventory) == UMI_STATUS_OK);
+  /* A release report contains up to 512 detailed findings. Heap storage
+   * keeps this acceptance test safe on hosts with a small native stack. */
+  report = (UmiComponentReleaseReport *)calloc(1U, sizeof(*report));
+  assert(report != NULL);
+  /* Keep the complete inventory off the native stack on Windows, where a
+   * large fixed catalogue can otherwise look like a stack-cookie failure. */
+  assert(inventory != NULL);
+  assert(umi_component_inventory_build(NULL, 0U, inventory) == UMI_STATUS_OK);
   umi_component_release_policy_init(&policy);
-  assert(umi_component_release_gate_evaluate(&inventory, &policy, &report) == UMI_STATUS_OK);
-  assert(!report.passed);
-  assert(report.evaluated_component_count == inventory.status_count[UMI_COMPONENT_API_CANDIDATE]);
-  assert(report.blocker_count > 100U);
+  assert(umi_component_release_gate_evaluate(inventory, &policy, report) == UMI_STATUS_OK);
+  assert(!report->passed);
+  assert(report->evaluated_component_count == inventory->status_count[UMI_COMPONENT_API_CANDIDATE]);
+  assert(report->blocker_count > 100U);
 
   policy.status_mask = umi_component_api_status_mask(UMI_COMPONENT_API_STABLE);
-  assert(umi_component_release_gate_evaluate(&inventory, &policy, &report) == UMI_STATUS_OK);
-  assert(report.passed);
+  assert(umi_component_release_gate_evaluate(inventory, &policy, report) == UMI_STATUS_OK);
+  assert(report->passed);
 
   override_record.component_id = "umicom.trading.chart";
   override_record.api_status = UMI_COMPONENT_API_STABLE;
@@ -44,25 +53,27 @@ int main(void) {
   override_record.frontend_support = UMI_COMPONENT_FRONTEND_HEADLESS | UMI_COMPONENT_FRONTEND_GTK4;
   override_record.replace_available_evidence = 1;
   override_record.replace_frontend_support = 1;
-  assert(umi_component_inventory_build(&override_record, 1U, &inventory) == UMI_STATUS_OK);
-  assert(umi_component_release_gate_evaluate(&inventory, &policy, &report) == UMI_STATUS_OK);
-  assert(report.passed);
-  assert(report.evaluated_component_count == 1U);
+  assert(umi_component_inventory_build(&override_record, 1U, inventory) == UMI_STATUS_OK);
+  assert(umi_component_release_gate_evaluate(inventory, &policy, report) == UMI_STATUS_OK);
+  assert(report->passed);
+  assert(report->evaluated_component_count == 1U);
 
   override_record.available_evidence &= ~(uint32_t)UMI_COMPONENT_EVIDENCE_ACCESSIBILITY;
-  assert(umi_component_inventory_build(&override_record, 1U, &inventory) == UMI_STATUS_OK);
-  assert(umi_component_release_gate_evaluate(&inventory, &policy, &report) == UMI_STATUS_OK);
-  assert(!report.passed);
-  assert(report.findings[0].missing_evidence != 0U);
+  assert(umi_component_inventory_build(&override_record, 1U, inventory) == UMI_STATUS_OK);
+  assert(umi_component_release_gate_evaluate(inventory, &policy, report) == UMI_STATUS_OK);
+  assert(!report->passed);
+  assert(report->findings[0].missing_evidence != 0U);
 
   override_record.api_status = UMI_COMPONENT_API_DEPRECATED;
   override_record.replacement_component_id = NULL;
   policy.status_mask = 0U;
-  assert(umi_component_inventory_build(&override_record, 1U, &inventory) == UMI_STATUS_OK);
-  assert(umi_component_release_gate_evaluate(&inventory, &policy, &report) == UMI_STATUS_OK);
-  assert(!report.passed);
+  assert(umi_component_inventory_build(&override_record, 1U, inventory) == UMI_STATUS_OK);
+  assert(umi_component_release_gate_evaluate(inventory, &policy, report) == UMI_STATUS_OK);
+  assert(!report->passed);
   policy.status_mask = 1U << 30;
-  assert(umi_component_release_gate_evaluate(&inventory, &policy, &report) ==
+  assert(umi_component_release_gate_evaluate(inventory, &policy, report) ==
          UMI_STATUS_INVALID_ARGUMENT);
+  free(report);
+  free(inventory);
   return 0;
 }

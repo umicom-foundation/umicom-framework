@@ -54,7 +54,13 @@ static int contains_text(const char *value, const char *needle) {
 /* Provide the record matches operation used by this module and its client applications. */
 static int record_matches(const UmiComponentGovernanceRecord *record,
                           const UmiComponentQuery *query) {
-  const UmiApplicationComponentDefinition *definition = record->definition;
+  const UmiApplicationComponentDefinition *definition;
+
+  /* A query result can be loaded from persisted diagnostics, so do not assume
+   * every slot contains a complete governance record. */
+  if (record == NULL || query == NULL || record->definition == NULL)
+    return 0;
+  definition = record->definition;
 
   /*
    * Protect caller-owned memory by checking that required state is available before it is
@@ -165,7 +171,9 @@ UmiStatus umi_component_inventory_query(const UmiComponentInventory *inventory,
 const UmiComponentGovernanceRecord *
 umi_component_query_result_at(const UmiComponentInventory *inventory,
                               const UmiComponentQueryResult *result, size_t index) {
-  return inventory != NULL && result != NULL && index < result->count
+  return inventory != NULL && result != NULL &&
+             result->count <= UMI_COMPONENT_GOVERNANCE_MAX_COMPONENTS &&
+             index < result->count
              ? umi_component_inventory_at(inventory, result->indexes[index])
              : NULL;
 }

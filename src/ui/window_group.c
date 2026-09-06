@@ -19,7 +19,7 @@
 
 /* Provide the find mutable operation used by this module and its client applications. */
 static UmiUiWindowGroup *find_mutable(UmiUiWindowGroupStore *store,const char *group_id)
-{ size_t index; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (store == NULL || group_id == NULL) return NULL; /* Visit each bounded item once so every record receives the same rule. */ for (index = 0U; index < store->count; ++index) /* Protect caller-owned memory by checking that required state is available before it is used. */ if (strcmp(store->items[index].group_id,group_id) == 0) return &store->items[index]; return NULL; }
+{ size_t index; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (store == NULL || group_id == NULL || store->count > UMI_UI_WINDOW_GROUP_MAX) return NULL; /* Visit each bounded item once so every record receives the same rule. */ for (index = 0U; index < store->count; ++index) { /* A malformed member count would make later loops read beyond the fixed member array. */ if (store->items[index].member_count > UMI_UI_WINDOW_GROUP_MAX_MEMBERS) return NULL; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (strcmp(store->items[index].group_id,group_id) == 0) return &store->items[index]; } return NULL; }
 
 /* Provide the remove member operation used by this module and its client applications. */
 static bool remove_member(UmiUiWindowGroup *group, const char *window_id)
@@ -29,7 +29,8 @@ static bool remove_member(UmiUiWindowGroup *group, const char *window_id)
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (group == NULL || window_id == NULL) return false;
+    if (group == NULL || window_id == NULL ||
+        group->member_count > UMI_UI_WINDOW_GROUP_MAX_MEMBERS) return false;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < group->member_count; ++index) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
@@ -58,6 +59,10 @@ UmiStatus umi_ui_window_group_define(UmiUiWindowGroupStore *store,const char *gr
      * used.
      */
     if (store == NULL || group_id == NULL || colour_token == NULL || group_id[0] == '\0' || colour_token[0] == '\0' || context_kind < UMI_UI_WINDOW_CONTEXT_GENERIC || context_kind > UMI_UI_WINDOW_CONTEXT_TIMELINE) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A restored store may report an impossible number of groups. Reject that
+     * state before lookup can mistake a corrupt record for a new group. */
+    if (store->count > UMI_UI_WINDOW_GROUP_MAX)
+        return UMI_STATUS_INVALID_STATE;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -83,6 +88,9 @@ UmiStatus umi_ui_window_group_join(UmiUiWindowGroupStore *store,const char *grou
      * used.
      */
     if (store == NULL || group_id == NULL || window_id == NULL || window_id[0] == '\0' || role < UMI_UI_WINDOW_GROUP_SOURCE || role > UMI_UI_WINDOW_GROUP_BIDIRECTIONAL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Refuse malformed store state before searching or appending to its fixed arrays. */
+    if (store->count > UMI_UI_WINDOW_GROUP_MAX)
+        return UMI_STATUS_INVALID_STATE;
     group = find_mutable(store,group_id); /* Protect caller-owned memory by checking that required state is available before it is used. */ if (group == NULL) return UMI_STATUS_NOT_FOUND;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < group->member_count; ++index) /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (strcmp(group->members[index].window_id,window_id) == 0) return UMI_STATUS_ALREADY_EXISTS;
@@ -103,6 +111,9 @@ UmiStatus umi_ui_window_group_leave(UmiUiWindowGroupStore *store,const char *gro
      * used.
      */
     if (store == NULL || group_id == NULL || window_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Refuse malformed store state before a leave operation iterates its records. */
+    if (store->count > UMI_UI_WINDOW_GROUP_MAX)
+        return UMI_STATUS_INVALID_STATE;
     group = find_mutable(store,group_id); /* Protect caller-owned memory by checking that required state is available before it is used. */ if (group == NULL) return UMI_STATUS_NOT_FOUND;
     /* Use the stable identifier comparison to choose the matching record or policy. */
     if (remove_member(group, window_id)) {
@@ -137,6 +148,9 @@ UmiStatus umi_ui_window_group_assign(
         role > UMI_UI_WINDOW_GROUP_BIDIRECTIONAL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Refuse malformed store state before removing or adding members. */
+    if (store->count > UMI_UI_WINDOW_GROUP_MAX)
+        return UMI_STATUS_INVALID_STATE;
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (strlen(window_id) >= sizeof(store->items[0].members[0].window_id))
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -213,6 +227,13 @@ UmiStatus umi_ui_window_group_unassign(
      */
     if (store == NULL || window_id == NULL || window_id[0] == '\0')
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Refuse malformed store state before the unassign loop visits fixed storage. */
+    if (store->count > UMI_UI_WINDOW_GROUP_MAX)
+        return UMI_STATUS_INVALID_STATE;
+    /* Every member count is checked before remove_member reads that group's array. */
+    for (index = 0U; index < store->count; ++index)
+        if (store->items[index].member_count > UMI_UI_WINDOW_GROUP_MAX_MEMBERS)
+            return UMI_STATUS_INVALID_STATE;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < store->count; ++index) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
@@ -244,10 +265,12 @@ const UmiUiWindowGroup *umi_ui_window_group_for_window(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (store == NULL || window_id == NULL) return NULL;
+    if (store == NULL || window_id == NULL || store->count > UMI_UI_WINDOW_GROUP_MAX) return NULL;
     /* Visit each bounded item once so every record receives the same rule. */
     for (group_index = 0U; group_index < store->count; ++group_index) {
         const UmiUiWindowGroup *group = &store->items[group_index];
+        /* Stop before indexing a member array with corrupted persisted data. */
+        if (group->member_count > UMI_UI_WINDOW_GROUP_MAX_MEMBERS) return NULL;
         /* Visit each bounded item once so every record receives the same rule. */
         for (member_index = 0U; member_index < group->member_count;
              ++member_index) {
@@ -277,7 +300,8 @@ size_t umi_ui_window_group_route(const UmiUiWindowGroupStore *store,const char *
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (group == NULL || source_window_id == NULL || out_window_ids == NULL) return 0U;
+    if (group == NULL || source_window_id == NULL || out_window_ids == NULL ||
+        group->member_count > UMI_UI_WINDOW_GROUP_MAX_MEMBERS) return 0U;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < group->member_count; ++index) /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (strcmp(group->members[index].window_id,source_window_id) == 0 && group->members[index].role != UMI_UI_WINDOW_GROUP_DESTINATION) source_allowed = true;
     /* Apply this operation only while the related capability or state is available. */

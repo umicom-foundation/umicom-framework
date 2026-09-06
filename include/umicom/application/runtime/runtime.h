@@ -37,5 +37,6 @@
 #include "umicom/application/runtime/operation.h"
 #include "umicom/application/runtime/module_status.h"
 #include "umicom/application/runtime/workspace_runtime.h"
+#include "umicom/application/runtime/surface_transfer.h"
 
 #endif

@@ -26,4 +26,18 @@
  * Start this command or application, report setup failures, and return a process exit code
  * to the operating system.
  */
-int main(void){char b[256];assert(umi_codeguard_external_tool_command(UMI_CODEGUARD_TOOL_CLANG_ANALYZER,"x.c",b,sizeof(b)));assert(strstr(b,"--analyze")!=NULL);return 0;}
+int main(void){
+    char b[256];
+    /* A normal path is quoted so a workspace directory containing spaces remains one argument. */
+    assert(umi_codeguard_external_tool_command(
+        UMI_CODEGUARD_TOOL_CLANG_ANALYZER,"folder with spaces/x.c",b,sizeof(b)));
+    assert(strstr(b,"--analyze")!=NULL);
+    assert(strstr(b,"\"folder with spaces/x.c\"")!=NULL);
+    /* Shell metacharacters are rejected instead of being copied into executable command text. */
+    assert(!umi_codeguard_external_tool_command(
+        UMI_CODEGUARD_TOOL_CLANG_ANALYZER,"x.c; erase important.txt",b,sizeof(b)));
+    /* Windows environment expansion is rejected as well as command separators. */
+    assert(!umi_codeguard_external_tool_command(
+        UMI_CODEGUARD_TOOL_CLANG_ANALYZER,"%TEMP%/x.c",b,sizeof(b)));
+    return 0;
+}

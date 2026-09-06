@@ -17,6 +17,7 @@
 
 #include <stddef.h>
 #include <ctype.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -41,6 +42,7 @@ static char *trim(char *text)
 static UmiStatus list_add(char items[][UMI_PLUGIN_ITEM_CAPACITY], size_t *count, const char *value)
 {
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (items == NULL || count == NULL || value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     if (*count >= UMI_PLUGIN_LIST_MAX || strlen(value) >= UMI_PLUGIN_ITEM_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)snprintf(items[(*count)++], UMI_PLUGIN_ITEM_CAPACITY, "%s", value); return UMI_STATUS_OK;
 }
@@ -58,14 +60,18 @@ static UmiStatus parse_version(const char *value, UmiVersion *version)
  */
 UmiStatus umi_plugin_manifest_parse(const char *text, UmiPluginManifest *out_manifest)
 {
-    char *copy, *line, *next; UmiStatus status = UMI_STATUS_OK;
+    char *copy, *line, *next; UmiStatus status = UMI_STATUS_OK; size_t text_length;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
     if (text == NULL || out_manifest == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_manifest, 0, sizeof(*out_manifest));
-    copy = (char *)malloc(strlen(text) + 1U); /* Protect caller-owned memory by checking that required state is available before it is used. */ if (copy == NULL) return UMI_STATUS_OUT_OF_MEMORY; (void)strcpy(copy, text);
+    text_length = strlen(text);
+    /* Reserve the terminator only after proving the source length cannot wrap
+     * the allocation size. */
+    if (text_length == SIZE_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    copy = (char *)malloc(text_length + 1U); /* Protect caller-owned memory by checking that required state is available before it is used. */ if (copy == NULL) return UMI_STATUS_OUT_OF_MEMORY; (void)memcpy(copy, text, text_length + 1U);
     line = copy;
     /*
      * Continue only while work remains available; the loop body advances the state on each
@@ -108,6 +114,9 @@ UmiStatus umi_plugin_manifest_load(const char *path, UmiPluginManifest *out_mani
     stream = fopen(path, "rb"); /* Protect caller-owned memory by checking that required state is available before it is used. */ if (stream == NULL) return UMI_STATUS_IO_ERROR;
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (fseek(stream, 0, SEEK_END) != 0 || (size = ftell(stream)) < 0 || fseek(stream, 0, SEEK_SET) != 0) { (void)fclose(stream); return UMI_STATUS_IO_ERROR; }
+    /* The file size is converted before adding the terminator so a maximal
+     * representable value cannot wrap the allocation request. */
+    if ((uintmax_t)size >= (uintmax_t)SIZE_MAX) { (void)fclose(stream); return UMI_STATUS_CAPACITY_EXCEEDED; }
     text = (char *)malloc((size_t)size + 1U); /* Protect caller-owned memory by checking that required state is available before it is used. */ if (text == NULL) { (void)fclose(stream); return UMI_STATUS_OUT_OF_MEMORY; }
     read = fread(text, 1U, (size_t)size, stream); (void)fclose(stream); text[read] = '\0'; status = read == (size_t)size ? umi_plugin_manifest_parse(text, out_manifest) : UMI_STATUS_IO_ERROR; free(text); return status;
 }

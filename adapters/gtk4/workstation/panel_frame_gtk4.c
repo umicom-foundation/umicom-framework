@@ -39,6 +39,28 @@ typedef struct PanelPendingAction {
     UmiWsPanelChrome chrome;
 } PanelPendingAction;
 
+/* Confirm public fixed-size text fields are terminated before GTK or libc
+ * treats them as strings.  This turns malformed extension data into a clean
+ * constructor failure instead of an out-of-bounds read. */
+static bool text_is_terminated(const char *text, size_t capacity)
+{
+    size_t index;
+
+    if (text == NULL || capacity == 0U) return false;
+    for (index = 0U; index < capacity; ++index) {
+        if (text[index] == '\0') return true;
+    }
+    return false;
+}
+
+/* Release a widget that has not yet been attached to a parent. GTK widgets
+ * hold their own reference after construction, so this closes allocation
+ * failure paths without disturbing widgets already owned by a container. */
+static void release_unparented_widget(GtkWidget *widget)
+{
+    if (widget != NULL) g_object_unref(widget);
+}
+
 /* Release one signal closure using GTK's exact notifier signature. */
 static void panel_action_data_destroy(gpointer data, GClosure *closure)
 {
@@ -151,7 +173,11 @@ static GtkWidget *make_action_button(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (button == NULL || chrome == NULL) return button;
+    if (button == NULL) return NULL;
+    if (chrome == NULL) {
+        release_unparented_widget(button);
+        return NULL;
+    }
     gtk_widget_add_css_class(button, "flat");
     gtk_widget_add_css_class(button, "umicom-panel-action");
     gtk_widget_set_tooltip_text(button, umi_ws_panel_action_text(action));
@@ -160,8 +186,10 @@ static GtkWidget *make_action_button(
         automation_id, sizeof(automation_id), "%s.action.%s",
         chrome->panel_id, action_token(action));
     (void)umi_gtk4_automation_tag_widget(button, automation_id);
-    (void)bind_action(
-        button, chrome, action, handler, user_data);
+    if (!bind_action(button, chrome, action, handler, user_data)) {
+        release_unparented_widget(button);
+        return NULL;
+    }
     return button;
 }
 
@@ -187,7 +215,11 @@ static GtkWidget *make_menu_action_button(
      */
     if (button == NULL || row == NULL || icon == NULL ||
         label == NULL || chrome == NULL) {
-        return button;
+        release_unparented_widget(button);
+        release_unparented_widget(row);
+        release_unparented_widget(icon);
+        release_unparented_widget(label);
+        return NULL;
     }
     gtk_widget_add_css_class(button, "flat");
     gtk_widget_add_css_class(button, "umicom-panel-menu-action");
@@ -203,8 +235,10 @@ static GtkWidget *make_menu_action_button(
         automation_id, sizeof(automation_id), "%s.menu.%s",
         chrome->panel_id, action_token(action));
     (void)umi_gtk4_automation_tag_widget(button, automation_id);
-    (void)bind_action(
-        button, chrome, action, handler, user_data);
+    if (!bind_action(button, chrome, action, handler, user_data)) {
+        release_unparented_widget(button);
+        return NULL;
+    }
     return button;
 }
 
@@ -265,7 +299,10 @@ static GtkWidget *make_overflow_menu(
      * used.
      */
     if (button == NULL || popover == NULL || menu_box == NULL) {
-        return button;
+        release_unparented_widget(button);
+        release_unparented_widget(popover);
+        release_unparented_widget(menu_box);
+        return NULL;
     }
 
     action_count += append_menu_action(
@@ -291,12 +328,9 @@ static GtkWidget *make_overflow_menu(
 
     /* No empty menu button should occupy permanent panel-header space. */
     if (action_count == 0U) {
-        g_object_ref_sink(menu_box);
-        g_object_unref(menu_box);
-        g_object_ref_sink(popover);
-        g_object_unref(popover);
-        g_object_ref_sink(button);
-        g_object_unref(button);
+        release_unparented_widget(menu_box);
+        release_unparented_widget(popover);
+        release_unparented_widget(button);
         return NULL;
     }
 
@@ -335,7 +369,8 @@ static const char *context_colour_css_class(const char *colour_token)
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (colour_token == NULL || colour_token[0] == '\0') return NULL;
+    if (!text_is_terminated(colour_token, UMI_UI_TEXT_CAPACITY) ||
+        colour_token[0] == '\0') return NULL;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < G_N_ELEMENTS(colours); ++index) {
         const char *colour = colours[index];
@@ -378,6 +413,8 @@ void umi_gtk4_ws_panel_frame_set_context_colour(
      * used.
      */
     if (frame == NULL) return;
+    if (colour_token != NULL &&
+        !text_is_terminated(colour_token, UMI_UI_TEXT_CAPACITY)) return;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < sizeof(classes) / sizeof(classes[0]); ++index) {
         gtk_widget_remove_css_class(frame, classes[index]);
@@ -403,91 +440,95 @@ GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
     UmiGtk4WsPanelActionHandler action_handler,
     void *user_data)
 {
-    UmiGtk4WsPanelFrameState *state =
-        g_new0(UmiGtk4WsPanelFrameState, 1U);
-    GtkWidget *frame = gtk_frame_new(NULL);
-    GtkWidget *root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    GtkWidget *header = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
-    GtkWidget *titles = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    GtkWidget *frame;
+    GtkWidget *root;
+    GtkWidget *header;
+    GtkWidget *titles;
     GtkWidget *title;
     GtkWidget *subtitle;
     GtkWidget *badge;
+    GtkWidget *context;
+    GtkWidget *overflow;
+    GtkWidget *button;
     const char *context_class;
     bool editing_enabled;
     char automation_id[UMI_UI_TEXT_CAPACITY + 32U];
 
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (state == NULL || frame == NULL || root == NULL || header == NULL ||
-        titles == NULL) {
-        g_free(state);
-        return frame;
+    /* A panel frame needs both semantic chrome and content; rejecting either
+     * missing value prevents later GTK calls from dereferencing NULL. */
+    if (chrome == NULL || child == NULL ||
+        !text_is_terminated(chrome->title, sizeof(chrome->title)) ||
+        !text_is_terminated(chrome->subtitle, sizeof(chrome->subtitle)) ||
+        !text_is_terminated(chrome->badge, sizeof(chrome->badge)) ||
+        !text_is_terminated(chrome->panel_id, sizeof(chrome->panel_id)) ||
+        !text_is_terminated(chrome->placement_id,
+                            sizeof(chrome->placement_id)) ||
+        !text_is_terminated(chrome->context_group_id,
+                            sizeof(chrome->context_group_id)) ||
+        !text_is_terminated(chrome->context_colour_token,
+                            sizeof(chrome->context_colour_token))) {
+        return NULL;
     }
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (chrome != NULL) state->chrome = *chrome;
-    state->action_handler = action_handler;
-    state->user_data = user_data;
-    g_object_set_data_full(G_OBJECT(frame), "umicom-panel-frame-state", state,
-                           g_free);
-    if (chrome != NULL && umi_ui_id_is_valid(chrome->panel_id)) {
-        /* The whole frame is addressable for visibility and evidence checks. */
-        (void)umi_gtk4_automation_tag_widget(frame, chrome->panel_id);
+    frame = gtk_frame_new(NULL);
+    root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    header = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
+    titles = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    title = gtk_label_new(chrome->title);
+    subtitle = gtk_label_new(chrome->subtitle);
+    badge = gtk_label_new(chrome->badge);
+    if (frame == NULL || root == NULL || header == NULL || titles == NULL ||
+        title == NULL || subtitle == NULL || badge == NULL) {
+        /* Constructors normally fail only under memory pressure. Release all
+         * still-unparented objects so an error path does not leak widgets. */
+        if (frame != NULL) g_object_unref(frame);
+        if (root != NULL) g_object_unref(root);
+        if (header != NULL) g_object_unref(header);
+        if (titles != NULL) g_object_unref(titles);
+        if (title != NULL) g_object_unref(title);
+        if (subtitle != NULL) g_object_unref(subtitle);
+        if (badge != NULL) g_object_unref(badge);
+        return NULL;
     }
 
-    title = gtk_label_new(chrome != NULL ? chrome->title : "Panel");
-    subtitle = gtk_label_new(chrome != NULL ? chrome->subtitle : "");
-    badge = gtk_label_new(chrome != NULL ? chrome->badge : "");
+    editing_enabled = !chrome->locked;
     gtk_widget_add_css_class(frame, "umicom-workstation-panel");
     gtk_widget_add_css_class(header, "umicom-panel-header");
-    context_class = chrome != NULL
-        ? context_colour_css_class(chrome->context_colour_token)
-        : NULL;
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
+    context_class = context_colour_css_class(chrome->context_colour_token);
     if (context_class != NULL) {
         /* The group colour is presentation metadata only; linked selection and
          * routing continue to be owned by the toolkit-neutral context model. */
         gtk_widget_add_css_class(frame, context_class);
     }
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (chrome != NULL && chrome->compact)
+    if (chrome->compact)
         gtk_widget_add_css_class(header, "umicom-panel-header-compact");
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (chrome != NULL && chrome->locked)
+    if (chrome->locked)
         gtk_widget_add_css_class(header, "umicom-panel-header-locked");
+
     gtk_label_set_xalign(GTK_LABEL(title), 0.0F);
-    gtk_label_set_ellipsize(
-        GTK_LABEL(title), PANGO_ELLIPSIZE_END);
+    gtk_label_set_ellipsize(GTK_LABEL(title), PANGO_ELLIPSIZE_END);
     gtk_widget_set_hexpand(title, TRUE);
+    gtk_label_set_xalign(GTK_LABEL(subtitle), 0.0F);
+    gtk_label_set_ellipsize(GTK_LABEL(subtitle), PANGO_ELLIPSIZE_END);
+    gtk_widget_add_css_class(subtitle, "umicom-panel-subtitle");
+    gtk_widget_set_visible(subtitle, chrome->subtitle[0] != '\0');
+    gtk_widget_add_css_class(badge, "umicom-panel-badge");
     gtk_widget_set_visible(badge, chrome->badge[0] != '\0');
-    gtk_box_append(GTK_BOX(header), title);
+    gtk_box_append(GTK_BOX(titles), title);
+    gtk_box_append(GTK_BOX(titles), subtitle);
+    gtk_box_append(GTK_BOX(header), titles);
     gtk_box_append(GTK_BOX(header), badge);
 
     /* Keep the linked-context control visible because it changes the panel's
      * operational context rather than its geometry. */
     if (action_handler != NULL && chrome->show_context) {
         context = make_action_button(
-            "view-filter-symbolic",
-            chrome,
-            UMI_WS_PANEL_ACTION_CONTEXT_GROUP,
-            editing_enabled,
-            action_handler,
-            user_data);
-        gtk_widget_add_css_class(context, "umicom-panel-context-link");
-        gtk_box_append(GTK_BOX(header), context);
+            "view-filter-symbolic", chrome,
+            UMI_WS_PANEL_ACTION_CONTEXT_GROUP, editing_enabled,
+            action_handler, user_data);
+        if (context != NULL) {
+            gtk_widget_add_css_class(context, "umicom-panel-context-link");
+            gtk_box_append(GTK_BOX(header), context);
+        }
     }
 
     /* Normal mode uses one overflow control. Edit mode expands all geometry
@@ -495,43 +536,35 @@ GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
     if (action_handler != NULL && chrome->show_menu) {
         overflow = make_overflow_menu(
             chrome, editing_enabled, action_handler, user_data);
-        /*
-         * Protect caller-owned memory by checking that required state is available before it is
-         * used.
-         */
         if (overflow != NULL) gtk_box_append(GTK_BOX(header), overflow);
     } else if (action_handler != NULL) {
-        /* Apply this branch only when its contract condition is satisfied. */
         if (chrome->show_pin) {
             button = make_action_button(
                 "view-pin-symbolic", chrome,
                 UMI_WS_PANEL_ACTION_PIN_TOGGLE, editing_enabled,
                 action_handler, user_data);
-            gtk_box_append(GTK_BOX(header), button);
+            if (button != NULL) gtk_box_append(GTK_BOX(header), button);
         }
-        /* Apply this branch only when its contract condition is satisfied. */
         if (chrome->show_move) {
             button = make_action_button(
                 "view-restore-symbolic", chrome,
                 UMI_WS_PANEL_ACTION_MOVE, editing_enabled,
                 action_handler, user_data);
-            gtk_box_append(GTK_BOX(header), button);
+            if (button != NULL) gtk_box_append(GTK_BOX(header), button);
         }
-        /* Apply this branch only when its contract condition is satisfied. */
         if (chrome->show_float) {
             button = make_action_button(
                 "window-new-symbolic", chrome,
                 UMI_WS_PANEL_ACTION_FLOAT_TOGGLE, editing_enabled,
                 action_handler, user_data);
-            gtk_box_append(GTK_BOX(header), button);
+            if (button != NULL) gtk_box_append(GTK_BOX(header), button);
         }
-        /* Apply this branch only when its contract condition is satisfied. */
         if (chrome->show_maximise) {
             button = make_action_button(
                 "view-fullscreen-symbolic", chrome,
                 UMI_WS_PANEL_ACTION_MAXIMISE_TOGGLE, editing_enabled,
                 action_handler, user_data);
-            gtk_box_append(GTK_BOX(header), button);
+            if (button != NULL) gtk_box_append(GTK_BOX(header), button);
         }
         /* Settings opens the complete editor rather than mutating one field. */
         if (chrome->show_settings) {
@@ -539,7 +572,7 @@ GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
                 "emblem-system-symbolic", chrome,
                 UMI_WS_PANEL_ACTION_SETTINGS, true,
                 action_handler, user_data);
-            gtk_box_append(GTK_BOX(header), button);
+            if (button != NULL) gtk_box_append(GTK_BOX(header), button);
         }
     }
     /* Closing changes layout membership and is therefore enabled only while
@@ -549,27 +582,23 @@ GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
             "window-close-symbolic", chrome,
             UMI_WS_PANEL_ACTION_CLOSE, editing_enabled,
             action_handler, user_data);
-        gtk_box_append(GTK_BOX(header), button);
+        if (button != NULL) gtk_box_append(GTK_BOX(header), button);
     }
 
-    gtk_box_append(GTK_BOX(frame), header);
-    gtk_box_append(GTK_BOX(frame), content);
+    gtk_widget_set_hexpand(child, TRUE);
+    gtk_widget_set_vexpand(child, TRUE);
+    gtk_box_append(GTK_BOX(root), header);
+    gtk_box_append(GTK_BOX(root), child);
+    gtk_frame_set_child(GTK_FRAME(frame), root);
     umi_gtk4_ws_panel_frame_set_context_colour(
         frame, chrome->context_colour_token);
+    if (umi_ui_id_is_valid(chrome->panel_id)) {
+        /* The whole frame is addressable for visibility and evidence checks. */
+        (void)umi_gtk4_automation_tag_widget(frame, chrome->panel_id);
+    }
     (void)snprintf(
         automation_id, sizeof(automation_id), "%s.frame",
         chrome->panel_id);
     (void)umi_gtk4_automation_tag_widget(frame, automation_id);
     return frame;
-}
-
-/*
- * Initialise gtk4 ws panel frame from caller-provided values so later operations receive a
- * known state.
- */
-GtkWidget *umi_gtk4_ws_panel_frame_create(const UmiWsPanelChrome *chrome,
-                                          GtkWidget *child)
-{
-    return umi_gtk4_ws_panel_frame_create_interactive(
-        chrome, child, NULL, NULL);
 }

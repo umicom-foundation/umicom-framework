@@ -87,7 +87,9 @@ UmiStatus umi_path_copy(char *out_path,
     }
     length = strlen(path);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (length + 1U > capacity) {
+    /* Compare the measured length directly so the terminator calculation
+     * cannot wrap for an invalid or hostile input string. */
+    if (length >= capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     (void)memcpy(out_path, path, length + 1U);
@@ -105,9 +107,11 @@ int umi_path_is_absolute(const char *path)
         return 0;
     }
 #ifdef _WIN32
-    return (isalpha((unsigned char)path[0]) && path[1] == ':' &&
+    return (isalpha((unsigned char)path[0]) && path[1] != '\0' &&
+            path[1] == ':' && path[2] != '\0' &&
             is_separator(path[2])) ||
-           (is_separator(path[0]) && is_separator(path[1]));
+           (is_separator(path[0]) && path[1] != '\0' &&
+            is_separator(path[1]));
 #else
     return path[0] == '/';
 #endif
@@ -129,7 +133,8 @@ static UmiStatus append_text(char *out_path,
     }
     length = strlen(text);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (*used + length + 1U > capacity) {
+    /* Check the current offset before subtracting so corrupted state cannot wrap arithmetic. */
+    if (*used >= capacity || length >= capacity - *used) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     (void)memcpy(out_path + *used, text, length);
@@ -168,7 +173,8 @@ UmiStatus umi_path_normalise(const char *path,
 
 #ifdef _WIN32
     /* Apply this branch only when its contract condition is satisfied. */
-    if (isalpha((unsigned char)path[0]) && path[1] == ':') {
+    if (isalpha((unsigned char)path[0]) && path[1] != '\0' &&
+        path[1] == ':') {
         buffer[write_index++] = (char)toupper((unsigned char)path[0]);
         buffer[write_index++] = ':';
         prefix_length = 2U;
@@ -178,7 +184,7 @@ UmiStatus umi_path_normalise(const char *path,
             rooted = 1;
             ++read_index;
         }
-    } else /* Apply this branch only when its contract condition is satisfied. */ if (is_separator(path[0]) && is_separator(path[1])) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (is_separator(path[0]) && path[1] != '\0' && is_separator(path[1])) {
         unc = 1;
         rooted = 1;
         read_index = 2U;
@@ -221,11 +227,12 @@ UmiStatus umi_path_normalise(const char *path,
             buffer[write_index++] = path[read_index++];
         }
         buffer[write_index++] = '\0';
-        segments[segment_count++] = &buffer[start];
-        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        /* Check capacity before storing the new pointer; the old order wrote one
+         * element past the fixed segment array for exactly 256 segments. */
         if (segment_count >= UMI_PATH_MAX_SEGMENTS) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
+        segments[segment_count++] = &buffer[start];
     }
 
     {
@@ -245,10 +252,16 @@ UmiStatus umi_path_normalise(const char *path,
                     strcmp(resolved[resolved_count - 1U], "..") != 0) {
                     --resolved_count;
                 } else /* Apply this branch only when its contract condition is satisfied. */ if (!rooted) {
+                    /* The source segment count is bounded, so this append is
+                     * safe; keep the check explicit for future limit changes. */
+                    if (resolved_count >= UMI_PATH_MAX_SEGMENTS)
+                        return UMI_STATUS_CAPACITY_EXCEEDED;
                     resolved[resolved_count++] = segment;
                 }
                 continue;
             }
+            if (resolved_count >= UMI_PATH_MAX_SEGMENTS)
+                return UMI_STATUS_CAPACITY_EXCEEDED;
             resolved[resolved_count++] = segment;
         }
 

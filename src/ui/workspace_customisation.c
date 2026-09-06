@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/workspace_customisation.h"
 #include <math.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -77,7 +78,8 @@ static size_t layout_index(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (customisation == NULL || layout_id == NULL)
+    if (customisation == NULL || layout_id == NULL ||
+        customisation->layout_count > UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS)
         return UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < customisation->layout_count; ++index) {
@@ -100,6 +102,9 @@ UmiStatus umi_ui_workspace_customisation_add_layout(UmiUiWorkspaceCustomisation 
      * used.
      */
     if (customisation == NULL || layout == NULL || layout->layout_id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    /* Refuse corrupt restored state before scanning the fixed layout array. */
+    if (customisation->layout_count > UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS)
+        return UMI_STATUS_INVALID_STATE;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (customisation->edit_active) return UMI_STATUS_BUSY;
     /* Visit each bounded item once so every record receives the same rule. */
@@ -230,6 +235,8 @@ UmiStatus umi_ui_workspace_customisation_remove_layout(
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (customisation->edit_active) return UMI_STATUS_BUSY;
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (customisation->layout_count > UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS)
+        return UMI_STATUS_INVALID_STATE;
     if (customisation->layout_count <= 1U) return UMI_STATUS_INVALID_STATE;
     index = layout_index(customisation, layout_id_value);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
@@ -290,6 +297,11 @@ UmiStatus umi_ui_workspace_customisation_begin_edit(
     if (customisation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (customisation->edit_active) return UMI_STATUS_BUSY;
+    /* A revision is part of the persisted session identity, so refuse to wrap
+     * it when opening a new transaction. */
+    if (customisation->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
     active = umi_ui_workspace_customisation_active(customisation);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -327,6 +339,11 @@ UmiStatus umi_ui_workspace_customisation_commit_edit(
     if (customisation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!customisation->edit_active) return UMI_STATUS_INVALID_STATE;
+    /* Keep the public revision monotonic even if a process has been running
+     * long enough to reach the largest representable value. */
+    if (customisation->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
     active = umi_ui_workspace_customisation_active(customisation);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -935,6 +952,60 @@ UmiStatus umi_ui_workspace_customisation_apply_panel_settings(
     return status;
 }
 
+/* Stage several complete requests on one candidate so a failed request cannot
+ * leave earlier panel changes visible to the user. */
+UmiStatus umi_ui_workspace_customisation_apply_panel_batch(
+    UmiUiWorkspaceCustomisation *customisation,
+    const UmiUiWorkspacePanelSettings *settings,
+    size_t setting_count)
+{
+    UmiUiWorkspaceCustomisation *candidate;
+    UmiUiWorkspacePanelSettings requests[
+        UMI_UI_WORKSPACE_MAX_PANEL_BATCH];
+    UmiStatus status;
+    size_t index;
+
+    /* Require a bounded request list before touching the current layout. */
+    if (customisation == NULL || settings == NULL || setting_count == 0U ||
+        setting_count > UMI_UI_WORKSPACE_MAX_PANEL_BATCH) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* The caller controls the surrounding edit transaction so several related
+     * operations can still be followed by one explicit commit or cancel. */
+    if (!customisation->edit_active) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    /* Reserve one revision for each nested operation before publishing the
+     * candidate, preventing a counter wrap after a long-running session. */
+    if (customisation->revision >
+        UINT64_MAX - ((uint64_t)setting_count * UINT64_C(2))) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    /* Copy request records first so the caller may safely reuse its array only
+     * after this function returns. Borrowed string fields remain read-only. */
+    (void)memcpy(requests,
+                 settings,
+                 setting_count * sizeof(requests[0]));
+    candidate = (UmiUiWorkspaceCustomisation *)malloc(sizeof(*candidate));
+    if (candidate == NULL) {
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    *candidate = *customisation;
+    for (index = 0U; index < setting_count; ++index) {
+        status = umi_ui_workspace_customisation_apply_panel_settings(
+            candidate,
+            &requests[index]);
+        if (status != UMI_STATUS_OK) {
+            free(candidate);
+            return status;
+        }
+    }
+    /* Publish the fully validated candidate as one observable model update. */
+    *customisation = *candidate;
+    free(candidate);
+    return UMI_STATUS_OK;
+}
+
 /*
  * Provide the ui workspace customisation close window operation used by this module and
  * its client applications.
@@ -1081,8 +1152,17 @@ void umi_ui_workspace_customisation_snapshot(const UmiUiWorkspaceCustomisation *
      * used.
      */
     if (customisation == NULL) return;
-    out_snapshot->layouts = customisation->layout_count; out_snapshot->available_windows = customisation->windows.count; out_snapshot->recent_windows = customisation->windows.recent_count; out_snapshot->groups = customisation->groups.count; out_snapshot->presets = customisation->library.count; (void)snprintf(out_snapshot->active_layout_id,sizeof(out_snapshot->active_layout_id),"%s",customisation->active_layout_id); (void)snprintf(out_snapshot->theme_id,sizeof(out_snapshot->theme_id),"%s",customisation->theme.theme_id); out_snapshot->editing = customisation->edit_active; out_snapshot->revision = customisation->revision;
+    /* Clamp restored counters in the read-only snapshot.  A diagnostic view
+     * must remain safe even when the session file is damaged. */
+    out_snapshot->layouts = customisation->layout_count <= UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS ? customisation->layout_count : 0U;
+    out_snapshot->available_windows = customisation->windows.count <= UMI_UI_WINDOW_CATALOGUE_MAX ? customisation->windows.count : 0U;
+    out_snapshot->recent_windows = customisation->windows.recent_count <= UMI_UI_WINDOW_RECENT_MAX ? customisation->windows.recent_count : 0U;
+    out_snapshot->groups = customisation->groups.count <= UMI_UI_WINDOW_GROUP_MAX ? customisation->groups.count : 0U;
+    out_snapshot->presets = customisation->library.count <= UMI_UI_LAYOUT_LIBRARY_MAX ? customisation->library.count : 0U;
+    (void)snprintf(out_snapshot->active_layout_id,sizeof(out_snapshot->active_layout_id),"%s",customisation->active_layout_id); (void)snprintf(out_snapshot->theme_id,sizeof(out_snapshot->theme_id),"%s",customisation->theme.theme_id); out_snapshot->editing = customisation->edit_active; out_snapshot->revision = customisation->revision;
     /* Visit each bounded item once so every record receives the same rule. */
+    if (customisation->layout_count > UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS)
+        return;
     for (index = 0U; index < customisation->layout_count; ++index) /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (strcmp(customisation->layouts[index].layout_id,customisation->active_layout_id) == 0) out_snapshot->active_layout_locked = customisation->layouts[index].locked;
 }
 
@@ -1097,7 +1177,10 @@ static UmiStatus canvas_records_validate(
 
     if (customisation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     if (customisation->layout_count > UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS ||
+        customisation->windows.count > UMI_UI_WINDOW_CATALOGUE_MAX ||
+        customisation->windows.recent_count > UMI_UI_WINDOW_RECENT_MAX ||
         customisation->groups.count > UMI_UI_WINDOW_GROUP_MAX ||
+        customisation->library.count > UMI_UI_LAYOUT_LIBRARY_MAX ||
         memchr(customisation->active_layout_id, '\0',
                sizeof(customisation->active_layout_id)) == NULL)
         return UMI_STATUS_INVALID_STATE;
@@ -1131,7 +1214,9 @@ static UmiStatus canvas_records_validate(
     }
     for (index = 0U; index < customisation->groups.count; ++index) {
         const UmiUiWindowGroup *group = &customisation->groups.items[index];
-        if (group->member_count > UMI_UI_WINDOW_GROUP_MAX_MEMBERS)
+        if (group->group_id[0] == '\0' ||
+            memchr(group->group_id, '\0', sizeof(group->group_id)) == NULL ||
+            group->member_count > UMI_UI_WINDOW_GROUP_MAX_MEMBERS)
             return UMI_STATUS_INVALID_STATE;
         for (member = 0U; member < group->member_count; ++member) {
             size_t earlier;
@@ -1145,6 +1230,14 @@ static UmiStatus canvas_records_validate(
                     return UMI_STATUS_INVALID_STATE;
             }
         }
+    }
+    /* Recent-window entries are metadata rather than layout records, but an
+     * unterminated identifier would still make catalogue lookups unsafe. */
+    for (index = 0U; index < customisation->windows.recent_count; ++index) {
+        if (customisation->windows.recent[index].tool_id[0] == '\0' ||
+            memchr(customisation->windows.recent[index].tool_id, '\0',
+                  sizeof(customisation->windows.recent[index].tool_id)) == NULL)
+            return UMI_STATUS_INVALID_STATE;
     }
     return UMI_STATUS_OK;
 }
@@ -1331,4 +1424,3 @@ UmiStatus umi_ui_workspace_customisation_place_canvas_window(
     customisation->revision += 1U;
     return UMI_STATUS_OK;
 }
-

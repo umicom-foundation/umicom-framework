@@ -27,6 +27,7 @@
 #include "umicom/application/productisation/runtime.h"
 #include "umicom/application/productisation/execution/execution.h"
 #include "umicom/application/productisation/surface_projection.h"
+#include "umicom/application/productisation/surface_audit.h"
 #include "umicom/application/productisation/adoption.h"
 #include "umicom/application/productisation/adoption_registry.h"
 #include "umicom/application/productisation/session.h"

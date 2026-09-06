@@ -97,6 +97,34 @@ static int verify_window_mode_validation(void)
         UMI_STATUS_INVALID_ARGUMENT;
 }
 
+/* Reject sparse argument and environment arrays before a platform adapter can
+ * interpret NULL as an argv terminator or dereference it while building the
+ * child process environment. */
+static int verify_sparse_request_validation(void)
+{
+    UmiProcessRequest request;
+    UmiProcessResult result;
+    const char *arguments[] = {NULL};
+    const UmiEnvironmentVariable environment[] = {
+        {"UMICOM_TEST_VALUE", NULL}
+    };
+
+    (void)memset(&request, 0, sizeof(request));
+    request.program = "unused";
+    request.arguments = arguments;
+    request.argument_count = 1U;
+    request.window_mode = UMI_PROCESS_WINDOW_HIDDEN;
+    if (umi_process_execute(&request, &result) != UMI_STATUS_INVALID_ARGUMENT) {
+        return 0;
+    }
+
+    request.arguments = NULL;
+    request.argument_count = 0U;
+    request.environment = environment;
+    request.environment_count = 1U;
+    return umi_process_execute(&request, &result) == UMI_STATUS_INVALID_ARGUMENT;
+}
+
 /*
  * Exercise verify long output keeps final diagnostic and return a clear result when the
  * behaviour no longer matches its contract.
@@ -149,6 +177,8 @@ int main(void)
     if (!verify_hidden_request()) return EXIT_FAILURE;
     /* Apply this operation only while the related capability or state is available. */
     if (!verify_window_mode_validation()) return EXIT_FAILURE;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (!verify_sparse_request_validation()) return EXIT_FAILURE;
     /* Apply this branch only when its contract condition is satisfied. */
     if (!verify_long_output_keeps_final_diagnostic()) return EXIT_FAILURE;
     return EXIT_SUCCESS;

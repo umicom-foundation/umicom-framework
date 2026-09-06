@@ -18,6 +18,7 @@
 
 #include <ctype.h>
 #include <dirent.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,6 +26,20 @@
 #include "umicom/platform/filesystem.h"
 
 #define UMI_SCAFFOLD_TEMPLATE_CAPACITY 262144U
+
+/* Add two sizes only when the result can still fit in the caller's fixed
+ * replacement buffer.  Template content is external input, so arithmetic
+ * must be checked before it is used for pointer offsets or allocation sizes. */
+static int umi_scaffold_size_add(size_t left,
+                                 size_t right,
+                                 size_t capacity,
+                                 size_t *out)
+{
+    if (out == NULL || left > capacity || right > capacity - left)
+        return 0;
+    *out = left + right;
+    return 1;
+}
 
 /* Provide the scaffold replace operation used by this module and its client applications. */
 static UmiStatus umi_scaffold_replace(char *text,
@@ -43,8 +58,18 @@ static UmiStatus umi_scaffold_replace(char *text,
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (text == NULL || token == NULL || replacement == NULL) {
+    if (text == NULL || token == NULL || replacement == NULL ||
+        capacity == 0U || token[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* The replacement helper receives a fixed-capacity text block.  Verify
+     * that its source has a terminator before strstr begins scanning. */
+    {
+        size_t text_length = 0U;
+        while (text_length < capacity && text[text_length] != '\0') {
+            ++text_length;
+        }
+        if (text_length == capacity) return UMI_STATUS_INVALID_STATE;
     }
     buffer = (char *)malloc(capacity);
     /*
@@ -62,8 +87,16 @@ static UmiStatus umi_scaffold_replace(char *text,
      */
     while ((match = strstr(cursor, token)) != NULL) {
         size_t prefix = (size_t)(match - cursor);
+        size_t required;
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (used + prefix + replacement_length + 1U > capacity) {
+        if (!umi_scaffold_size_add(prefix,
+                                   replacement_length,
+                                   capacity - 1U,
+                                   &required) ||
+            !umi_scaffold_size_add(used,
+                                   required + 1U,
+                                   capacity,
+                                   &required)) {
             free(buffer);
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -74,12 +107,24 @@ static UmiStatus umi_scaffold_replace(char *text,
         cursor = match + token_length;
     }
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (used + strlen(cursor) + 1U > capacity) {
+    {
+        const size_t tail_length = strlen(cursor);
+        size_t required;
+        if (!umi_scaffold_size_add(tail_length, 1U, capacity, &required) ||
+            !umi_scaffold_size_add(used, required, capacity, &required)) {
+            free(buffer);
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        (void)memcpy(buffer + used, cursor, tail_length + 1U);
+        used += tail_length;
+    }
+    /* Copy the complete terminated result without using an unchecked string
+     * primitive after the capacity proof above. */
+    if (used >= capacity) {
         free(buffer);
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
-    (void)strcpy(buffer + used, cursor);
-    (void)snprintf(text, capacity, "%s", buffer);
+    (void)memcpy(text, buffer, used + 1U);
     free(buffer);
     return UMI_STATUS_OK;
 }
@@ -170,7 +215,7 @@ static UmiStatus umi_scaffold_render_text(
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     /* Apply this branch only when its contract condition is satisfied. */
-    if (strlen(text) + 8192U > UMI_SCAFFOLD_TEMPLATE_CAPACITY) {
+    if (strlen(text) > UMI_SCAFFOLD_TEMPLATE_CAPACITY - 8192U) {
         umi_fs_free_text(text);
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }

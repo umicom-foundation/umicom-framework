@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "umicom/application/application.h"
@@ -23,20 +24,24 @@
  * to the operating system.
  */
 int main(void) {
-  UmiComponentInventory inventory;
+  UmiComponentInventory *inventory =
+      (UmiComponentInventory *)calloc(1U, sizeof(*inventory));
   UmiComponentGovernanceOverride overrides[2] = {{0}, {0}};
   const UmiComponentDomainInventory *trading;
   const UmiComponentGovernanceRecord *chart;
 
-  assert(umi_component_inventory_build(NULL, 0U, &inventory) == UMI_STATUS_OK);
-  assert(inventory.component_count == umi_application_component_catalogue_count());
-  assert(inventory.domain_count == 31U);
-  assert(umi_component_inventory_validate(&inventory) == UMI_STATUS_OK);
-  trading = umi_component_inventory_domain_find(&inventory, "trading");
+  /* The inventory contains every component and domain, so keep it on the
+   * heap and leave the native stack available for the test harness. */
+  assert(inventory != NULL);
+  assert(umi_component_inventory_build(NULL, 0U, inventory) == UMI_STATUS_OK);
+  assert(inventory->component_count == umi_application_component_catalogue_count());
+  assert(inventory->domain_count == 31U);
+  assert(umi_component_inventory_validate(inventory) == UMI_STATUS_OK);
+  trading = umi_component_inventory_domain_find(inventory, "trading");
   assert(trading != NULL);
   assert(trading->component_count ==
          umi_application_component_domain_count("trading"));
-  chart = umi_component_inventory_find(&inventory, "umicom.trading.chart");
+  chart = umi_component_inventory_find(inventory, "umicom.trading.chart");
   assert(chart != NULL);
   assert(chart->api_status == UMI_COMPONENT_API_CANDIDATE);
 
@@ -47,15 +52,16 @@ int main(void) {
   overrides[0].introduced_version = "1.0.0";
   overrides[0].replace_available_evidence = 1;
   overrides[0].replace_frontend_support = 1;
-  assert(umi_component_inventory_build(overrides, 1U, &inventory) == UMI_STATUS_OK);
-  chart = umi_component_inventory_find(&inventory, "umicom.trading.chart");
+  assert(umi_component_inventory_build(overrides, 1U, inventory) == UMI_STATUS_OK);
+  chart = umi_component_inventory_find(inventory, "umicom.trading.chart");
   assert(chart != NULL && chart->api_status == UMI_COMPONENT_API_STABLE);
   assert(umi_component_evidence_is_complete(chart));
   assert(strcmp(chart->introduced_version, "1.0.0") == 0);
 
   overrides[1] = overrides[0];
-  assert(umi_component_inventory_build(overrides, 2U, &inventory) == UMI_STATUS_ALREADY_EXISTS);
+  assert(umi_component_inventory_build(overrides, 2U, inventory) == UMI_STATUS_ALREADY_EXISTS);
   overrides[0].component_id = "umicom.unknown.component";
-  assert(umi_component_inventory_build(overrides, 1U, &inventory) == UMI_STATUS_NOT_FOUND);
+  assert(umi_component_inventory_build(overrides, 1U, inventory) == UMI_STATUS_NOT_FOUND);
+  free(inventory);
   return 0;
 }

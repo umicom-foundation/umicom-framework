@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/application_ui/application_ui.h"
 
+#include <stdlib.h>
 #include <stdint.h>
 
 #include "umicom/ui/gtk4/widget_catalogue.h"
@@ -166,10 +167,18 @@ UmiStatus umi_application_ui_boundary_audit_view_create(
     const char *view_id,
     UmiUiViewModel **out_view)
 {
-    UmiApplicationAuditReport report;
-    UmiStatus status = umi_application_portfolio_audit(&report);
+    UmiApplicationAuditReport *report;
+    UmiStatus status;
+    /* The audit carries a bounded list of detailed findings. Heap storage
+     * keeps every frontend safe even when its native stack is small. */
+    report = (UmiApplicationAuditReport *)calloc(1U, sizeof(*report));
+    if (report == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = umi_application_portfolio_audit(report);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status != UMI_STATUS_OK) return status;
+    if (status != UMI_STATUS_OK) {
+        free(report);
+        return status;
+    }
     status = create_view(
         view_id, UMI_APPLICATION_UI_VIEW_BOUNDARY_AUDIT,
         "Application Boundary Audit",
@@ -177,33 +186,34 @@ UmiStatus umi_application_ui_boundary_audit_view_create(
         out_view);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
-        status = set_boolean(*out_view, "audit.passed", report.passed);
+        status = set_boolean(*out_view, "audit.passed", report->passed);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "audit.applications",
-                             report.application_count);
+                             report->application_count);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "audit.capability-references",
-                             report.capability_reference_count);
+                             report->capability_reference_count);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "audit.component-domains",
-                             report.component_domain_reference_count);
+                             report->component_domain_reference_count);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "audit.reusable-components",
-                             report.reusable_component_count);
+                             report->reusable_component_count);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
-        status = set_integer(*out_view, "audit.errors", report.error_count);
+        status = set_integer(*out_view, "audit.errors", report->error_count);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
-        status = set_integer(*out_view, "audit.warnings", report.warning_count);
+        status = set_integer(*out_view, "audit.warnings", report->warning_count);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_string(*out_view, "audit.rule",
                             "No application-to-application dependencies");
+    free(report);
     return status;
 }
 

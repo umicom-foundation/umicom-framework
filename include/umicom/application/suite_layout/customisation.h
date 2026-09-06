@@ -16,6 +16,8 @@
 #ifndef UMICOM_APPLICATION_SUITE_LAYOUT_CUSTOMISATION_H
 #define UMICOM_APPLICATION_SUITE_LAYOUT_CUSTOMISATION_H
 
+#include <stddef.h>
+
 #include "umicom/application/experience.h"
 #include "umicom/ui/workspace_customisation.h"
 
@@ -111,6 +113,22 @@ UmiStatus umi_application_suite_customisation_set_auto_hidden(
 UmiStatus umi_application_suite_customisation_apply_panel_settings(
     UmiUiWorkspaceCustomisation *customisation,
     const UmiUiWorkspacePanelSettings *settings);
+
+/**
+ * Applies several panel-settings requests as one policy-checked edit.
+ *
+ * @param customisation Loaded workspace customisation service.
+ * @param settings Borrowed requests; each item uses the same capability checks
+ *        as the single-panel operation.
+ * @param setting_count Number of requests, from one to
+ *        `UMI_UI_WORKSPACE_MAX_PANEL_BATCH`.
+ * @return `UMI_STATUS_OK` when every request is allowed; otherwise the
+ *         customisation remains unchanged.
+ */
+UmiStatus umi_application_suite_customisation_apply_panel_batch(
+    UmiUiWorkspaceCustomisation *customisation,
+    const UmiUiWorkspacePanelSettings *settings,
+    size_t setting_count);
 
 #ifdef __cplusplus
 }

@@ -118,6 +118,9 @@ int test_experience_portfolio_alignment(void)
         assert(application->application_id != NULL);
         assert(application->display_name != NULL);
         assert(application->repository_slug != NULL);
+        /* Validate the complete shared contract, not only the identifiers that
+         * are needed to find the matching portfolio entry. */
+        assert_universal_application_contract(experience, application);
     }
 
     assert(umi_application_portfolio_find("org.umicom.bank") != NULL);

@@ -22,6 +22,9 @@ static size_t header_index(
     const char *name)
 {
     size_t index;
+    /* A damaged count must never turn a lookup into an out-of-bounds read. */
+    if (request->header_count > UMI_WEB_MAX_HEADERS)
+        return UMI_WEB_MAX_HEADERS;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < request->header_count; ++index) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
@@ -93,6 +96,9 @@ UmiStatus umi_web_workbench_request_set_header(
     if (request == NULL || name == NULL || value == NULL || name[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Reject a corrupted public record before indexing its fixed header array. */
+    if (request->header_count > UMI_WEB_MAX_HEADERS)
+        return UMI_STATUS_INVALID_STATE;
     index = header_index(request, name);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == request->header_count) {
@@ -125,6 +131,9 @@ UmiStatus umi_web_workbench_request_remove_header(
      * used.
      */
     if (request == NULL || name == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Reject a corrupted public record before indexing its fixed header array. */
+    if (request->header_count > UMI_WEB_MAX_HEADERS)
+        return UMI_STATUS_INVALID_STATE;
     index = header_index(request, name);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == request->header_count) return UMI_STATUS_NOT_FOUND;
@@ -152,7 +161,9 @@ const char *umi_web_workbench_request_header(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (request == NULL || name == NULL) return NULL;
+    if (request == NULL || name == NULL ||
+        request->header_count > UMI_WEB_MAX_HEADERS)
+        return NULL;
     index = header_index(request, name);
     return index < request->header_count ? request->headers[index].value : NULL;
 }
@@ -259,6 +270,9 @@ UmiStatus umi_web_workbench_request_resolve(
      * used.
      */
     if (request == NULL || out_request == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Resolve only a structurally valid header array copied from the caller. */
+    if (request->header_count > UMI_WEB_MAX_HEADERS)
+        return UMI_STATUS_INVALID_STATE;
     *out_request = *request;
     status = umi_web_workbench_environment_resolve(environment, request->url,
         out_request->url, sizeof(out_request->url), &unresolved);

@@ -25,6 +25,12 @@ static void add_finding(UmiComponentReleaseReport *report, UmiComponentGateSever
   UmiComponentGateFinding *finding;
 
   /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+  /* A release report can be assembled by an optional adapter. Reject an
+   * incomplete finding request before reading its strings or writing output. */
+  if (report == NULL || rule_id == NULL || component_id == NULL || message == NULL)
+    return;
+  if (report->finding_count > UMI_COMPONENT_GOVERNANCE_MAX_FINDINGS)
+    return;
   if (report->finding_count >= UMI_COMPONENT_GOVERNANCE_MAX_FINDINGS) {
     report->truncated = 1;
     return;

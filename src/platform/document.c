@@ -16,6 +16,7 @@
 #include "umicom/platform/document.h"
 #include "umicom/platform/filesystem.h"
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,11 +46,16 @@ UmiStatus umi_document_open(UmiDocument *document, const char *path)
     UmiStatus status;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (document == 0 || path == 0) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Refuse a path that cannot be represented by the public document record.
+     * Silently truncating it would make a later save overwrite a different
+     * file than the one the user opened. */
+    if (strlen(path) >= sizeof(document->path))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
     status = umi_fs_read_text(path, &text, &length);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     umi_document_dispose(document);
-    (void)snprintf(document->path, sizeof(document->path), "%s", path);
+    (void)memcpy(document->path, path, strlen(path) + 1U);
     document->text = text;
     document->length = length;
     document->revision = 1U;
@@ -64,6 +70,9 @@ UmiStatus umi_document_set_text(UmiDocument *document, const char *text)
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (document == 0 || text == 0) return UMI_STATUS_INVALID_ARGUMENT;
     length = strlen(text);
+    /* The allocation includes one byte for the terminator; guard the
+     * addition before asking malloc for its size. */
+    if (length == SIZE_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     copy = malloc(length + 1U);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (copy == 0) return UMI_STATUS_OUT_OF_MEMORY;
@@ -82,7 +91,14 @@ UmiStatus umi_document_append(UmiDocument *document, const char *text)
     char *resized;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (document == 0 || text == 0) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A non-zero length without storage means the caller supplied a damaged
+     * document.  Stop before realloc or pointer arithmetic can use it. */
+    if (document->text == 0 && document->length != 0U)
+        return UMI_STATUS_INVALID_STATE;
     extra = strlen(text);
+    if (document->length >= SIZE_MAX ||
+        extra > SIZE_MAX - document->length - 1U)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
     resized = realloc(document->text, document->length + extra + 1U);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (resized == 0) return UMI_STATUS_OUT_OF_MEMORY;

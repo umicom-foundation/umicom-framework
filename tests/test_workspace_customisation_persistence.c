@@ -63,6 +63,10 @@ static void seed_layout(UmiUiWorkspaceCustomisation *customisation)
 
     assert(umi_ui_workspace_layout_init(
                &layout, "development", "Development") == UMI_STATUS_OK);
+    /* New layouts start locked so an imported or published workspace cannot
+     * be edited accidentally. Open an explicit edit phase while constructing
+     * this fixture, then lock it again before adding it to the customisation. */
+    assert(umi_ui_workspace_layout_set_locked(&layout, false) == UMI_STATUS_OK);
     assert(umi_ui_workspace_layout_add_window(
                &layout, &editor) == UMI_STATUS_OK);
     assert(umi_ui_workspace_layout_set_locked(

@@ -117,6 +117,7 @@ UmiStatus umi_ai_coding_tool_checkpoint_create_invoke(
 
         {
             char normalized[UMI_AI_TEXT_CAPACITY];
+            size_t normalized_length;
 
             status = umi_ai_coding_runtime_path_normalize_relative(
                 path_storage[index],
@@ -125,7 +126,16 @@ UmiStatus umi_ai_coding_tool_checkpoint_create_invoke(
             /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
 
-            (void)strcpy(path_storage[index], normalized);
+            /* Keep the copy explicit even though the normaliser already
+             * validates its destination.  This second check protects the
+             * checkpoint buffer if that contract changes in the future. */
+            normalized_length = strlen(normalized);
+            if (normalized_length >= sizeof(path_storage[index])) {
+                return UMI_STATUS_CAPACITY_EXCEEDED;
+            }
+            (void)memcpy(path_storage[index],
+                         normalized,
+                         normalized_length + 1U);
         }
 
         paths[index] = path_storage[index];

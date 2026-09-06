@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/web/workbench/auth_profile.h"
 
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -172,8 +173,24 @@ static UmiStatus encode_base64(
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     size_t input = 0U;
     size_t output = 0U;
+    size_t groups;
+    size_t required;
+
+    /* Empty input is valid, but a non-empty value always needs readable
+     * source storage and every result needs a writable output terminator. */
+    if (out_text == NULL || capacity == 0U ||
+        (source == NULL && length > 0U)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Calculate the encoded size without adding to a possibly maximal length.
+     * This keeps hostile or corrupted lengths from wrapping to a small value. */
+    groups = length / 3U + (length % 3U != 0U ? 1U : 0U);
+    if (groups > (SIZE_MAX - 1U) / 4U) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    required = groups * 4U + 1U;
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (capacity < ((length + 2U) / 3U) * 4U + 1U) {
+    if (capacity < required) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     /*
@@ -220,8 +237,24 @@ static UmiStatus append_query_secret(
     static const char hex[] = "0123456789ABCDEF";
     char encoded[UMI_WEB_HEADER_VALUE_CAPACITY * 3U];
     size_t output = 0U;
-    const unsigned char *cursor = (const unsigned char *)secret;
-    size_t url_length = strlen(request->url);
+    const unsigned char *cursor;
+    size_t name_length;
+    size_t url_length;
+    size_t prefix_length;
+    /* Reject missing inputs before strlen or pointer arithmetic can dereference them. */
+    if (request == NULL || name == NULL || secret == NULL || name[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Measure the fixed URL field without reading beyond its terminator. */
+    for (url_length = 0U; url_length < sizeof(request->url); ++url_length) {
+        if (request->url[url_length] == '\0') break;
+    }
+    if (url_length == sizeof(request->url)) return UMI_STATUS_INVALID_STATE;
+    name_length = strlen(name);
+    cursor = (const unsigned char *)secret;
+    /* Leave room for the separator, equals sign and final terminator. */
+    if (url_length > sizeof(request->url) - 2U ||
+        name_length > sizeof(request->url) - url_length - 2U)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
     /*
      * Continue only while work remains available; the loop body advances the state on each
      * pass.
@@ -242,15 +275,21 @@ static UmiStatus append_query_secret(
         ++cursor;
     }
     encoded[output] = '\0';
+    prefix_length = url_length + 1U + name_length + 1U;
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (url_length + 1U + strlen(name) + 1U + output >= sizeof(request->url)) {
+    if (prefix_length > sizeof(request->url) - 1U ||
+        output > sizeof(request->url) - 1U - prefix_length) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Build the suffix with bounded copies so a future field-size change cannot
+     * reintroduce an unbounded strcat call. */
     request->url[url_length++] = strchr(request->url, '?') != NULL ? '&' : '?';
+    memcpy(request->url + url_length, name, name_length);
+    url_length += name_length;
+    request->url[url_length++] = '=';
+    memcpy(request->url + url_length, encoded, output);
+    url_length += output;
     request->url[url_length] = '\0';
-    (void)strcat(request->url, name);
-    (void)strcat(request->url, "=");
-    (void)strcat(request->url, encoded);
     request->revision++;
     return UMI_STATUS_OK;
 }

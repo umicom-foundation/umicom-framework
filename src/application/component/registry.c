@@ -51,7 +51,11 @@ const UmiApplicationComponentContract *umi_application_component_registry_find(
   /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < registry->count; ++index) {
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (strcmp(registry->items[index].definition->component_id, component_id) == 0)
+    /* A registry can be restored from user storage, so skip an incomplete
+       slot rather than dereferencing a missing definition. */
+    if (registry->items[index].definition != NULL &&
+        registry->items[index].definition->component_id != NULL &&
+        strcmp(registry->items[index].definition->component_id, component_id) == 0)
       return &registry->items[index];
   }
   return NULL;

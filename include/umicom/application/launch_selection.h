@@ -21,6 +21,7 @@
 #include <stdint.h>
 
 #include "umicom/application/launcher.h"
+#include "umicom/application/runtime/readiness.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,11 +38,19 @@ typedef struct UmiApplicationLaunchChoice {
     char application_id[UMI_APPLICATION_RUNTIME_ID_CAPACITY];
     char display_name[UMI_APPLICATION_RUNTIME_NAME_CAPACITY];
     char icon_resource_id[UMI_APPLICATION_RUNTIME_ID_CAPACITY];
+    /* Default layout is retained so a restored selection can explain its starting surface. */
+    char layout_id[UMI_APPLICATION_RUNTIME_ID_CAPACITY];
     UmiApplicationRuntimeState state;
     bool selected;
     bool eligible;
     bool running;
     uint64_t revision;
+    /* The shared gate explains whether the Framework workspace can be opened. */
+    UmiApplicationLaunchReadinessState readiness_state;
+    /* Feature maturity remains informational and does not by itself block launch. */
+    unsigned readiness_percent;
+    /* A bounded human-readable explanation is safe for GUI labels and logs. */
+    char readiness_reason[UMI_APPLICATION_RUNTIME_MESSAGE_CAPACITY];
 } UmiApplicationLaunchChoice;
 
 /**
@@ -78,8 +87,24 @@ typedef struct UmiApplicationLaunchSelectionSnapshot {
     size_t eligible_count;
     size_t selected_count;
     size_t running_count;
+    /* Number of choices blocked because their Framework experience is incomplete. */
+    size_t readiness_blocked_count;
     uint64_t revision;
 } UmiApplicationLaunchSelectionSnapshot;
+
+/**
+ * Carry a bounded multi-application selection between sessions or storage
+ * providers without exposing the launch-selection implementation.
+ */
+typedef struct UmiApplicationLaunchSelectionCheckpoint {
+    uint32_t structure_size;
+    char application_ids[UMI_APPLICATION_LAUNCH_SELECTION_MAX_RESULTS]
+                         [UMI_APPLICATION_RUNTIME_ID_CAPACITY];
+    char layout_ids[UMI_APPLICATION_LAUNCH_SELECTION_MAX_RESULTS]
+                   [UMI_APPLICATION_RUNTIME_ID_CAPACITY];
+    size_t selected_count;
+    uint64_t source_revision;
+} UmiApplicationLaunchSelectionCheckpoint;
 
 /**
  * Represent the application launch selection data shared with callers of this public
@@ -150,6 +175,23 @@ UmiStatus umi_application_launch_selection_find(
 UmiStatus umi_application_launch_selection_snapshot(
     const UmiApplicationLaunchSelection *selection,
     UmiApplicationLaunchSelectionSnapshot *out_snapshot);
+
+/**
+ * Capture selected applications and their default layouts for later session
+ * restore. The caller owns the returned value and may store it in its chosen
+ * Framework persistence service.
+ */
+UmiStatus umi_application_launch_selection_checkpoint_capture(
+    const UmiApplicationLaunchSelection *selection,
+    UmiApplicationLaunchSelectionCheckpoint *out_checkpoint);
+
+/**
+ * Restore a previously captured selection after validating every application
+ * still exists and is currently launchable.
+ */
+UmiStatus umi_application_launch_selection_checkpoint_restore(
+    UmiApplicationLaunchSelection *selection,
+    const UmiApplicationLaunchSelectionCheckpoint *checkpoint);
 
 /*
  * Every selected application is attempted even when an earlier application

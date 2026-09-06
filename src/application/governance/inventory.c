@@ -76,6 +76,12 @@ static UmiComponentDomainInventory *find_or_add_domain(UmiComponentInventory *in
                                                        const char *domain_id) {
   size_t index;
 
+  /* A restored inventory may contain a corrupt count; do not walk past the
+   * fixed domain array while trying to repair or extend it. */
+  if (inventory == NULL || domain_id == NULL ||
+      inventory->domain_count > UMI_COMPONENT_GOVERNANCE_MAX_DOMAINS) {
+    return NULL;
+  }
   /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < inventory->domain_count; ++index) {
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
@@ -263,8 +269,10 @@ UmiStatus umi_component_inventory_validate(const UmiComponentInventory *inventor
  */
 const UmiComponentGovernanceRecord *
 umi_component_inventory_at(const UmiComponentInventory *inventory, size_t index) {
-  return inventory != NULL && index < inventory->component_count ? &inventory->records[index]
-                                                                 : NULL;
+  return inventory != NULL &&
+                 inventory->component_count <= UMI_COMPONENT_GOVERNANCE_MAX_COMPONENTS &&
+                 index < inventory->component_count ? &inventory->records[index]
+                                                   : NULL;
 }
 
 /*
@@ -279,12 +287,17 @@ umi_component_inventory_find(const UmiComponentInventory *inventory, const char 
    * Protect caller-owned memory by checking that required state is available before it is
    * used.
    */
-  if (inventory == NULL || component_id == NULL)
+  if (inventory == NULL || component_id == NULL ||
+      inventory->component_count > UMI_COMPONENT_GOVERNANCE_MAX_COMPONENTS)
     return NULL;
   /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < inventory->component_count; ++index) {
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (strcmp(inventory->records[index].definition->component_id, component_id) == 0) {
+    /* Incomplete slots can occur while loading a failed or partial report;
+       they are not valid matches and must not be dereferenced. */
+    if (inventory->records[index].definition != NULL &&
+        inventory->records[index].definition->component_id != NULL &&
+        strcmp(inventory->records[index].definition->component_id, component_id) == 0) {
       return &inventory->records[index];
     }
   }
@@ -297,7 +310,9 @@ umi_component_inventory_find(const UmiComponentInventory *inventory, const char 
  */
 const UmiComponentDomainInventory *
 umi_component_inventory_domain_at(const UmiComponentInventory *inventory, size_t index) {
-  return inventory != NULL && index < inventory->domain_count ? &inventory->domains[index] : NULL;
+  return inventory != NULL &&
+                 inventory->domain_count <= UMI_COMPONENT_GOVERNANCE_MAX_DOMAINS &&
+                 index < inventory->domain_count ? &inventory->domains[index] : NULL;
 }
 
 /*
@@ -312,7 +327,8 @@ umi_component_inventory_domain_find(const UmiComponentInventory *inventory, cons
    * Protect caller-owned memory by checking that required state is available before it is
    * used.
    */
-  if (inventory == NULL || domain_id == NULL)
+  if (inventory == NULL || domain_id == NULL ||
+      inventory->domain_count > UMI_COMPONENT_GOVERNANCE_MAX_DOMAINS)
     return NULL;
   /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < inventory->domain_count; ++index) {

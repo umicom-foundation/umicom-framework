@@ -32,7 +32,6 @@ struct UmiGtk4WorkstationShellHeader {
     GtkWidget *root;
     GtkWidget *application_tab;
     GtkWidget *icon;
-    GtkWidget *fallback_icon;
     GtkWidget *title;
     GtkWidget *subtitle;
     GtkWidget *badge;
@@ -52,7 +51,6 @@ struct UmiGtk4WorkstationShellHeader {
 struct UmiGtk4WorkstationStartupSplash {
     GtkWidget *root;
     GtkWidget *icon;
-    GtkWidget *fallback_icon;
     GtkWidget *title;
     GtkWidget *subtitle;
     GtkWidget *status;
@@ -886,7 +884,6 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
         GTK_ORIENTATION_HORIZONTAL,
         config->compact ? 6 : 10);
     header->icon = gtk_picture_new();
-    header->fallback_icon = gtk_label_new("<>");
     titles = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
     header->title = gtk_label_new("");
     header->subtitle = gtk_label_new("");
@@ -896,7 +893,7 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
      * used.
      */
     if (header->root == NULL || header->application_tab == NULL ||
-        header->icon == NULL || header->fallback_icon == NULL ||
+        header->icon == NULL ||
         titles == NULL ||
         header->title == NULL || header->subtitle == NULL ||
         header->badge == NULL) {
@@ -913,9 +910,6 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
     gtk_widget_add_css_class(
         header->application_tab, "umicom-workstation-identity");
     gtk_widget_add_css_class(header->icon, "umicom-workstation-identity-icon");
-    gtk_widget_add_css_class(
-        header->fallback_icon, "umicom-workstation-identity-fallback");
-    gtk_widget_add_css_class(header->fallback_icon, "heading");
     gtk_widget_add_css_class(header->title, "umicom-workstation-identity-title");
     gtk_widget_add_css_class(header->subtitle, "dim-label");
     gtk_widget_add_css_class(header->badge, "umicom-mode-badge");
@@ -931,9 +925,6 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
         config->compact ? 18 : 24);
     gtk_picture_set_can_shrink(GTK_PICTURE(header->icon), TRUE);
     gtk_widget_set_visible(header->icon, FALSE);
-    gtk_widget_set_visible(header->fallback_icon, TRUE);
-    gtk_widget_set_tooltip_text(
-        header->fallback_icon, "Umicom application identity");
     gtk_label_set_xalign(GTK_LABEL(header->title), 0.0F);
     gtk_label_set_xalign(GTK_LABEL(header->subtitle), 0.0F);
     gtk_label_set_ellipsize(
@@ -944,7 +935,6 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
     gtk_box_append(GTK_BOX(titles), header->title);
     gtk_box_append(GTK_BOX(titles), header->subtitle);
     gtk_box_append(GTK_BOX(header->application_tab), header->icon);
-    gtk_box_append(GTK_BOX(header->application_tab), header->fallback_icon);
     gtk_box_append(GTK_BOX(header->application_tab), titles);
     gtk_box_append(GTK_BOX(header->application_tab), header->badge);
     gtk_box_append(GTK_BOX(header->root), header->application_tab);
@@ -1001,10 +991,6 @@ fail:
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (header->fallback_icon != NULL &&
-        gtk_widget_get_parent(header->fallback_icon) == NULL) {
-        g_object_unref(header->fallback_icon);
-    }
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -1065,7 +1051,6 @@ void umi_gtk4_ws_shell_header_destroy(
     header->root = NULL;
     header->application_tab = NULL;
     header->icon = NULL;
-    header->fallback_icon = NULL;
     header->title = NULL;
     header->subtitle = NULL;
     header->badge = NULL;
@@ -1086,8 +1071,9 @@ GtkWidget *umi_gtk4_ws_shell_header_widget(
     return header != NULL ? header->root : NULL;
 }
 
-/* Apply the appearance's contrast-aware SVG. Failure to find a packaged file
- * is treated as a graceful text-only identity, not an application error. */
+/* Apply the appearance's contrast-aware SVG. A missing packaged asset leaves
+ * the image hidden so a fake text mark can never be mistaken for the official
+ * Umicom identity; packaging diagnostics are responsible for reporting it. */
 UmiStatus umi_gtk4_ws_shell_header_apply_appearance(
     UmiGtk4WorkstationShellHeader *header,
     const UmiUiAppearanceProfile *profile)
@@ -1123,14 +1109,12 @@ UmiStatus umi_gtk4_ws_shell_header_apply_appearance(
         gtk_picture_set_filename(GTK_PICTURE(header->icon), resolved);
         gtk_widget_set_tooltip_text(header->icon, header->state.title);
         gtk_widget_set_visible(header->icon, TRUE);
-        gtk_widget_set_visible(header->fallback_icon, FALSE);
         header->state.icon_visible = 1;
         g_free(resolved);
-    } /* Use this fallback path when the earlier condition does not apply. */ else {
+    } else {
         gtk_picture_set_paintable(GTK_PICTURE(header->icon), NULL);
         gtk_widget_set_visible(header->icon, FALSE);
-        gtk_widget_set_visible(header->fallback_icon, TRUE);
-        header->state.icon_visible = 1;
+        header->state.icon_visible = 0;
     }
     header->state.revision += 1U;
     return UMI_STATUS_OK;
@@ -1286,8 +1270,9 @@ umi_gtk4_ws_startup_splash_config_default(
     return config;
 }
 
-/* Resolve and present the packaged mark, retaining a readable text mark when
- * an installation has no image resource. */
+/* Resolve and present the packaged mark. If packaging omitted the official
+ * resource, keep the image hidden and let conformance diagnostics report the
+ * defect instead of presenting a misleading substitute. */
 static void startup_splash_apply_icon(
     UmiGtk4WorkstationStartupSplash *splash,
     const char *icon_resource)
@@ -1306,14 +1291,12 @@ static void startup_splash_apply_icon(
     if (resolved != NULL) {
         gtk_picture_set_filename(GTK_PICTURE(splash->icon), resolved);
         gtk_widget_set_visible(splash->icon, TRUE);
-        gtk_widget_set_visible(splash->fallback_icon, FALSE);
         splash->state.icon_visible = 1;
         g_free(resolved);
-    } /* Use this fallback path when the earlier condition does not apply. */ else {
+    } else {
         gtk_picture_set_paintable(GTK_PICTURE(splash->icon), NULL);
         gtk_widget_set_visible(splash->icon, FALSE);
-        gtk_widget_set_visible(splash->fallback_icon, TRUE);
-        splash->state.icon_visible = 1;
+        splash->state.icon_visible = 0;
     }
 }
 
@@ -1405,7 +1388,6 @@ UmiStatus umi_gtk4_ws_startup_splash_create(
     identity = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 14);
     status_group = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
     splash->icon = gtk_picture_new();
-    splash->fallback_icon = gtk_label_new("<>");
     splash->title = gtk_label_new(splash->state.title);
     splash->subtitle = gtk_label_new(splash->state.subtitle);
     splash->status = gtk_label_new(splash->state.status);
@@ -1419,7 +1401,7 @@ UmiStatus umi_gtk4_ws_startup_splash_create(
      */
     if (splash->root == NULL || hero == NULL || identity == NULL ||
         status_group == NULL || splash->icon == NULL ||
-        splash->fallback_icon == NULL || splash->title == NULL ||
+        splash->title == NULL ||
         splash->subtitle == NULL || splash->status == NULL ||
         splash->badge == NULL || splash->progress == NULL ||
         separator == NULL) {
@@ -1438,7 +1420,6 @@ UmiStatus umi_gtk4_ws_startup_splash_create(
     gtk_widget_add_css_class(hero, "umicom-startup-hero");
     gtk_widget_add_css_class(identity, "umicom-startup-identity");
     gtk_widget_add_css_class(splash->icon, "umicom-startup-icon");
-    gtk_widget_add_css_class(splash->fallback_icon, "title-1");
     gtk_widget_add_css_class(splash->title, "title-1");
     gtk_widget_add_css_class(splash->subtitle, "title-4");
     gtk_widget_add_css_class(splash->status, "dim-label");
@@ -1463,7 +1444,6 @@ UmiStatus umi_gtk4_ws_startup_splash_create(
     gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(splash->progress), FALSE);
 
     gtk_box_append(GTK_BOX(identity), splash->icon);
-    gtk_box_append(GTK_BOX(identity), splash->fallback_icon);
     gtk_box_append(GTK_BOX(identity), splash->title);
     gtk_box_append(GTK_BOX(hero), identity);
     update_optional_label(splash->subtitle, splash->state.subtitle);
@@ -1509,7 +1489,6 @@ void umi_gtk4_ws_startup_splash_destroy(
         splash->root = NULL;
     }
     splash->icon = NULL;
-    splash->fallback_icon = NULL;
     splash->title = NULL;
     splash->subtitle = NULL;
     splash->status = NULL;

@@ -107,8 +107,9 @@ static void show_application_chooser(UmiGtk4Desk *desk)
 static UmiStatus refresh_selection_controls(UmiGtk4Desk *desk)
 {
     UmiApplicationLaunchSelectionSnapshot snapshot;
+    UmiApplicationLaunchReadinessSummary portfolio;
     UmiStatus status;
-    char selection_text[160U];
+    char selection_text[224U];
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -123,12 +124,20 @@ static UmiStatus refresh_selection_controls(UmiGtk4Desk *desk)
         umi_desk_runtime_launch_selection(desk->runtime), &snapshot);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Refresh the read-only portfolio totals beside the current user selection. */
+    status = umi_application_launch_readiness_summary(&portfolio);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
     (void)snprintf(
         selection_text, sizeof(selection_text),
-        "%zu selected · %zu installed · %zu running",
+        "%zu selected · %zu launchable · %zu running · %zu blocked by layout gate · "
+        "portfolio %zu/%zu ready",
         snapshot.selected_count,
         snapshot.eligible_count,
-        snapshot.running_count);
+        snapshot.running_count,
+        snapshot.readiness_blocked_count,
+        portfolio.ready_count,
+        portfolio.application_count);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -476,9 +485,15 @@ static GtkWidget *make_launch_choice(
     GtkWidget *check = gtk_check_button_new();
     GtkWidget *text = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
     GtkWidget *name = gtk_label_new(choice->display_name);
-    GtkWidget *state = gtk_label_new(
-        choice->running ? "Running — select to bring it forward"
-                        : "Ready to launch");
+    const char *state_text = choice->running
+        ? "Running — select to bring it forward"
+        : "Ready to launch";
+
+    /* Explain a blocked workspace directly in the picker when a row is shown. */
+    if (!choice->eligible && choice->readiness_reason[0] != '\0') {
+        state_text = choice->readiness_reason;
+    }
+    GtkWidget *state = gtk_label_new(state_text);
 
     gtk_widget_add_css_class(row, "umicom-desk-launch-choice");
     gtk_widget_add_css_class(name, "heading");
@@ -727,8 +742,12 @@ UmiStatus umi_gtk4_desk_refresh(UmiGtk4Desk *desk)
             launch_selection, index, &choice);
         /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
-        /* Apply this branch only when its contract condition is satisfied. */
-        if (!choice.eligible) continue;
+        /* Keep invalid Framework surfaces visible so the user can understand
+         * why a product is blocked, while hiding ordinary uninstalled entries. */
+        if (!choice.eligible &&
+            choice.readiness_state == UMI_APPLICATION_LAUNCH_READINESS_READY) {
+            continue;
+        }
         gtk_box_append(GTK_BOX(desk->application_choices),
                        make_launch_choice(desk, &choice));
     }

@@ -137,6 +137,9 @@ UmiStatus umi_application_production_runtime_init(
         &out_runtime->binding, &out_runtime->commands);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Start a fresh command history for this runtime session. */
+    umi_application_production_command_journal_init(
+        &out_runtime->command_journal);
     status = umi_application_production_capability_requirements_build(
         &out_runtime->binding, &out_runtime->requirements);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -220,6 +223,59 @@ UmiStatus umi_application_production_runtime_checkpoint(
     status = umi_application_production_checkpoint_store_put(
         &runtime->checkpoints, &runtime->workspace, reason, clean_shutdown);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) runtime->revision += 1U;
+    return status;
+}
+
+/* Route a product command through the runtime-owned binding and journal its outcome. */
+UmiStatus umi_application_production_runtime_invoke_command(
+    UmiApplicationProductionRuntime *runtime,
+    const UmiApplicationProductionCommandInvocationRequest *request,
+    UmiApplicationProductionCommandInvocationResult *out_result)
+{
+    UmiApplicationProductionCommandInvocationRequest effective_request;
+    UmiStatus status;
+
+    /* A stopped or partially-created runtime must not expose its command catalogue. */
+    if (runtime == NULL || !runtime->initialised || request == NULL ||
+        out_result == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Clear a caller's old result so invalid requests cannot look like resolved commands. */
+    (void)memset(out_result, 0, sizeof(*out_result));
+    effective_request = *request;
+    /* Runtime owns the journal so every product records commands consistently. */
+    effective_request.journal = &runtime->command_journal;
+    status = umi_application_production_command_bindings_invoke(
+        &runtime->commands, &effective_request, out_result);
+    /* A resolved command changes runtime evidence even when its executor reports failure. */
+    if (out_result->binding != NULL) runtime->revision += 1U;
+    return status;
+}
+
+/* Capture command evidence from an active runtime for a larger session checkpoint. */
+UmiStatus umi_application_production_runtime_command_journal_capture(
+    const UmiApplicationProductionRuntime *runtime,
+    UmiApplicationProductionCommandJournal *out_checkpoint)
+{
+    /* Do not snapshot a runtime that did not finish its production initialisation. */
+    if (runtime == NULL || !runtime->initialised || out_checkpoint == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_application_production_command_journal_capture(
+        &runtime->command_journal, out_checkpoint);
+}
+
+/* Restore command evidence only after the complete checkpoint has been validated. */
+UmiStatus umi_application_production_runtime_command_journal_restore(
+    UmiApplicationProductionRuntime *runtime,
+    const UmiApplicationProductionCommandJournal *checkpoint)
+{
+    UmiStatus status;
+
+    /* A stopped runtime cannot accept restored command history. */
+    if (runtime == NULL || !runtime->initialised || checkpoint == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_application_production_command_journal_restore(
+        checkpoint, &runtime->command_journal);
     if (status == UMI_STATUS_OK) runtime->revision += 1U;
     return status;
 }

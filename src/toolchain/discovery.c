@@ -38,6 +38,7 @@
 
 #include <ctype.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdatomic.h>
 #include <string.h>
@@ -132,7 +133,7 @@ static UmiStatus umi_find_in_directory(const char *directory,
         return UMI_STATUS_NOT_FOUND;
     }
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (strlen(candidate) + 1U > capacity) {
+    if (strlen(candidate) >= capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     (void)snprintf(out_path, capacity, "%s", candidate);
@@ -151,6 +152,7 @@ UmiStatus umi_toolchain_find_on_path(const char *executable,
     char *copy;
     char *cursor;
     char *save_pointer = NULL;
+    size_t path_length;
 #ifdef _WIN32
     const char *delimiter = ";";
 #else
@@ -173,7 +175,13 @@ UmiStatus umi_toolchain_find_on_path(const char *executable,
     if (path_value == NULL) {
         return UMI_STATUS_NOT_FOUND;
     }
-    copy = (char *)malloc(strlen(path_value) + 1U);
+    path_length = strlen(path_value);
+    /* Reserve the terminator only after proving the size calculation cannot
+     * wrap for a maximal PATH value. */
+    if (path_length == SIZE_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    copy = (char *)malloc(path_length + 1U);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -181,7 +189,7 @@ UmiStatus umi_toolchain_find_on_path(const char *executable,
     if (copy == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
-    (void)strcpy(copy, path_value);
+    (void)memcpy(copy, path_value, path_length + 1U);
 
     cursor = strtok_r(copy, delimiter, &save_pointer);
     /*

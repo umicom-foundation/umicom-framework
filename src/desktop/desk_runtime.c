@@ -361,6 +361,33 @@ UmiStatus umi_desk_runtime_clear_application_selection(
     return status;
 }
 
+/* Capture the shared Desk selection through the Framework-owned session boundary. */
+UmiStatus umi_desk_runtime_capture_selection_checkpoint(
+    const UmiDeskRuntime *runtime,
+    UmiApplicationLaunchSelectionCheckpoint *out_checkpoint)
+{
+    /* Reject missing runtime state before forwarding the request to its selection service. */
+    if (runtime == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_application_launch_selection_checkpoint_capture(
+        runtime->launch_selection, out_checkpoint);
+}
+
+/* Restore a selection checkpoint and advance Desk state only after validation succeeds. */
+UmiStatus umi_desk_runtime_restore_selection_checkpoint(
+    UmiDeskRuntime *runtime,
+    const UmiApplicationLaunchSelectionCheckpoint *checkpoint)
+{
+    UmiStatus status;
+
+    /* Reject missing runtime state before attempting to mutate the live selection. */
+    if (runtime == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_application_launch_selection_checkpoint_restore(
+        runtime->launch_selection, checkpoint);
+    /* A successful restore is one observable Desk state change. */
+    if (status == UMI_STATUS_OK) runtime->revision += 1U;
+    return status;
+}
+
 /*
  * Provide the desk runtime launch selected applications operation used by this module and
  * its client applications.

@@ -121,6 +121,10 @@ UmiStatus umi_application_suite_layout_render_plan_build(
     /* Rendering needs a source layout and caller-owned result storage. */
     if (layout == NULL || out_plan == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* The workspace stores windows in a fixed array. Reject a corrupted count
+     * before the projection loop could index beyond that array. */
+    if (layout->window_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS)
+        return UMI_STATUS_INVALID_STATE;
     (void)memset(out_plan, 0, sizeof(*out_plan));
     status = copy_text(out_plan->layout_id, sizeof(out_plan->layout_id),
                        layout->layout_id);
@@ -198,7 +202,9 @@ umi_application_suite_layout_render_plan_stack_at(
     const UmiApplicationSuiteLayoutRenderPlan *plan,
     size_t index)
 {
-    return plan != NULL && index < plan->stack_count
+    return plan != NULL &&
+        plan->stack_count <= UMI_APPLICATION_SUITE_LAYOUT_MAX_STACKS &&
+        index < plan->stack_count
         ? &plan->stacks[index] : NULL;
 }
 
@@ -212,7 +218,8 @@ umi_application_suite_layout_render_plan_find_placement(
     size_t index;
     size_t found = 0U;
     /* Missing plan input has no matching stack. */
-    if (plan == NULL) return NULL;
+    if (plan == NULL ||
+        plan->stack_count > UMI_APPLICATION_SUITE_LAYOUT_MAX_STACKS) return NULL;
     /* Count only stacks in the requested placement. */
     for (index = 0U; index < plan->stack_count; ++index) {
         /* Other regions do not change the occurrence counter. */
@@ -232,7 +239,8 @@ size_t umi_application_suite_layout_render_plan_count_placement(
     size_t index;
     size_t count = 0U;
     /* Missing plan input contains no render stacks. */
-    if (plan == NULL) return 0U;
+    if (plan == NULL ||
+        plan->stack_count > UMI_APPLICATION_SUITE_LAYOUT_MAX_STACKS) return 0U;
     /* Inspect only active stack entries, not unused fixed capacity. */
     for (index = 0U; index < plan->stack_count; ++index)
         /* Each matching stack contributes once to the result. */

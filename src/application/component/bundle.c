@@ -129,11 +129,19 @@ UmiStatus umi_application_component_bundle_layout(
       bundle->title == NULL || bundle->component_ids == NULL ||
       bundle->regions == NULL || bundle->component_count == 0U)
     return UMI_STATUS_INVALID_ARGUMENT;
+  /* Bundles are often loaded from extension metadata. Reject a forged count
+   * before either parallel array is indexed or copied into the layout. */
+  if (bundle->component_count > UMI_APPLICATION_COMPONENT_LAYOUT_CAPACITY)
+    return UMI_STATUS_INVALID_STATE;
   status = umi_application_component_layout_init(out_layout, bundle->bundle_id,
                                                  bundle->title);
   /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; status == UMI_STATUS_OK && index < bundle->component_count;
        ++index) {
+    /* Each slot needs both a component identity and a matching region. A
+     * missing string must be reported instead of reaching layout_add(). */
+    if (bundle->component_ids[index] == NULL)
+      return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_application_component_layout_add(
         out_layout, bundle->component_ids[index], bundle->component_ids[index],
         bundle->regions[index],
