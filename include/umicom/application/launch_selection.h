@@ -173,6 +173,11 @@ void umi_application_launch_selection_destroy(
  */
 UmiStatus umi_application_launch_selection_refresh(
     UmiApplicationLaunchSelection *selection);
+/* Opt-in live-discovery policy: preserve explicit choices across temporary
+ * absence. Existing selection flags are unchanged; refresh applies the policy.
+ * Cannot be replaced during dispatch. Original constructors keep defaults. */
+UmiStatus umi_application_launch_selection_set_retention(
+    UmiApplicationLaunchSelection *selection, bool retain_unavailable);
 /**
  * Find application launch selection set while leaving the underlying catalogue or model
  * owned by this module.

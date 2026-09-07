@@ -229,7 +229,50 @@ int main(void)
     before_created = fixture.created;
     CHECK(umi_gtk4_workspace_layout_host_rebuild(host, layout) == UMI_STATUS_OK);
     CHECK(fixture.created == before_created + 1U);
+    /* Default Suite-style hosts also keep the exact provider draft when only
+     * the active layout name/revision changes. This does not enable retention. */
+    editor = find_data(root, "test-content-id", "one-too-many");
+    CHECK(GTK_IS_ENTRY(editor));
+    gtk_editable_set_text(GTK_EDITABLE(editor), "draft survives a library rename");
+    CHECK(umi_gtk4_workspace_layout_host_maximise_window(host, "one-too-many") == UMI_STATUS_OK);
+    before_created = fixture.created;
+    before_released = fixture.released;
+    *blank = *layout;
+    (void)g_strlcpy(blank->name, "Renamed library layout", sizeof(blank->name));
+    ++blank->revision;
+    /* Equal text with different unused bytes must not be compared as a raw
+     * public struct; independent callers need not initialise trailing storage. */
+    blank->windows[0].title[strlen(blank->windows[0].title) + 1U] = 'X';
+    CHECK(umi_gtk4_workspace_layout_host_update_metadata(host, blank) == UMI_STATUS_OK);
+    snapshot = umi_gtk4_workspace_layout_host_snapshot(host);
+    CHECK(snapshot.source_layout_revision == blank->revision && !snapshot.content_retention_enabled);
+    CHECK(snapshot.maximised && strcmp(snapshot.maximised_window_id, "one-too-many") == 0);
+    CHECK(find_data(root, "test-content-id", "one-too-many") == editor);
+    CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(editor)), "draft survives a library rename") == 0);
+    CHECK(fixture.created == before_created && fixture.released == before_released);
+    CHECK(umi_gtk4_workspace_layout_host_update_metadata(host, blank) == UMI_STATUS_OK);
+    CHECK(umi_gtk4_workspace_layout_host_snapshot(host).revision == snapshot.revision);
+    ++blank->windows[0].z_order;
+    CHECK(umi_gtk4_workspace_layout_host_update_metadata(host, blank) == UMI_STATUS_INVALID_STATE);
+    --blank->windows[0].z_order;
+    blank->windows[0].x += 0.01;
+    CHECK(umi_gtk4_workspace_layout_host_update_metadata(host, blank) == UMI_STATUS_INVALID_STATE);
+    blank->windows[0].x = layout->windows[0].x;
+    blank->locked = !blank->locked;
+    CHECK(umi_gtk4_workspace_layout_host_update_metadata(host, blank) == UMI_STATUS_INVALID_STATE);
+    blank->locked = layout->locked;
+    --blank->revision;
+    CHECK(umi_gtk4_workspace_layout_host_update_metadata(host, blank) == UMI_STATUS_INVALID_STATE);
+    ++blank->revision;
+    (void)g_strlcpy(blank->name, "Another name without a new revision", sizeof(blank->name));
+    CHECK(umi_gtk4_workspace_layout_host_update_metadata(host, blank) == UMI_STATUS_INVALID_STATE);
+    (void)memset(blank->name, 'X', sizeof(blank->name));
+    CHECK(umi_gtk4_workspace_layout_host_update_metadata(host, blank) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(umi_gtk4_workspace_layout_host_snapshot(host).revision == snapshot.revision);
+    CHECK(fixture.created == before_created && fixture.released == before_released);
+    CHECK(find_data(root, "test-content-id", "one-too-many") == editor);
     CHECK(umi_gtk4_workspace_layout_host_focus_window(host, "missing") == UMI_STATUS_NOT_FOUND);
+    CHECK(umi_gtk4_workspace_layout_host_restore_maximised(host) == UMI_STATUS_OK);
     CHECK(umi_gtk4_workspace_layout_host_focus_window(NULL, "editor") == UMI_STATUS_INVALID_ARGUMENT);
 
 cleanup:

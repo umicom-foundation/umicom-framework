@@ -666,6 +666,7 @@ add_library(umicom_ui STATIC
     src/ui/appearance_catalogue.c
     src/ui/layout_persistence.c
     src/ui/workspace_customisation.c
+    src/ui/workspace_library.c
     src/ui/workspace_customisation_persistence.c
     src/ui/workbench_canvas.c
 )
@@ -1037,6 +1038,7 @@ add_library(umicom_build STATIC
     src/build/ninja_provider.c
     src/build/ctest_provider.c
     src/build/runner.c
+    src/build/project_session.c
     src/build/graph.c
     src/build/policy.c
     src/build/plan.c
@@ -3320,6 +3322,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-layout-library-theme-test framework.layout_library_theme tests/test_layout_library_theme.c)
     umicom_add_framework_test(umicom-layout-persistence-test framework.layout_persistence tests/test_layout_persistence.c)
     umicom_add_framework_test(umicom-workspace-customisation-test framework.workspace_customisation tests/test_workspace_customisation.c)
+    umicom_add_framework_test(umicom-workspace-library-test framework.workspace_library tests/test_workspace_library.c)
     umicom_add_framework_test(umicom-workspace-customisation-persistence-test framework.workspace_customisation.persistence tests/test_workspace_customisation_persistence.c)
     umicom_add_framework_test(umicom-window-catalogue-recommendations-test framework.window_catalogue.recommendations tests/test_window_catalogue_recommendations.c)
     umicom_add_framework_test(umicom-workspace-customisation-edit-session-test framework.workspace_customisation.edit_session tests/test_workspace_customisation_edit_session.c)
@@ -3540,6 +3543,17 @@ if(BUILD_TESTING)
         framework.application_manifest
         tests/test_application_manifest.c
     )
+    # Read the current test process path only; this never starts a child tool.
+    umicom_add_framework_test(
+        umicom-platform-executable-path-test
+        framework.platform.executable_path
+        tests/test_platform_executable_path.c
+    )
+    set_tests_properties(framework.platform.executable_path PROPERTIES
+        LABELS "framework;platform;path;native;regression")
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-platform-executable-path-test)
+    endif()
     umicom_add_framework_test(
         umicom-suite-tests
         framework.suite

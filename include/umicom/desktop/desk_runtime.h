@@ -27,6 +27,7 @@
 #include "umicom/application/launcher.h"
 #include "umicom/application/launch_selection.h"
 #include "umicom/application/runtime_catalogue.h"
+#include "umicom/application/native_discovery.h"
 #include "umicom/desktop/application_strip.h"
 #include "umicom/desktop/shell_model.h"
 
@@ -80,6 +81,23 @@ UmiStatus umi_desk_runtime_create(
  * Release or reset state held by desk runtime so the same storage can be reused safely.
  */
 void umi_desk_runtime_destroy(UmiDeskRuntime *runtime);
+
+/* Explicit initial admission of already-registered native built-ins. Call once
+ * in native composition; it is not repeated by discovery or ordinary refresh. */
+UmiStatus umi_desk_runtime_admit_native_portfolio(UmiDeskRuntime *runtime);
+/* Opt in without scanning or starting a timer. NULL disables monitoring. The
+ * runtime copies root/suffix bytes; only probe_context remains borrowed and
+ * must outlive monitoring. Root/suffix must exactly match the launcher's
+ * location; otherwise configuration fails without changing the old binding.
+ * Headless and unpresented callers remain inert. */
+UmiStatus umi_desk_runtime_configure_native_discovery(
+    UmiDeskRuntime *runtime, const UmiApplicationNativeDiscoveryConfig *config);
+/* The caller supplies monotonic milliseconds. First, forced and backward-clock
+ * polls scan immediately. Unchanged/throttled scans do not publish revisions.
+ * An error preserves scan state; no process is started, stopped or unloaded. */
+UmiStatus umi_desk_runtime_poll_native_discovery(
+    UmiDeskRuntime *runtime, uint64_t now_ms, bool force,
+    UmiApplicationNativeDiscoveryReport *out_report);
 
 /**
  * Provide the desk runtime upsert application operation used by this module and its client

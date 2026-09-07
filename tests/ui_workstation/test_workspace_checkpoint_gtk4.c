@@ -212,6 +212,90 @@ cleanup:
     return failed;
 }
 
+/* Drain only queued native actions; do not present a product or wait on timers. */
+static void drain_library_actions(void)
+{
+    for (size_t index = 0U; index < 128U && g_main_context_pending(NULL); ++index)
+        (void)g_main_context_iteration(NULL, FALSE);
+}
+
+/* Borrow the actual Framework library popover without opening a native window. */
+static GtkWidget *library_popover(UmiApplicationSuiteGtk4Workstation *workstation)
+{
+    GtkWidget *button = find_tag(umi_application_suite_gtk4_workstation_widget(workstation),
+        "umicom.layout.library");
+    return GTK_IS_MENU_BUTTON(button)
+        ? GTK_WIDGET(gtk_menu_button_get_popover(GTK_MENU_BUTTON(button))) : NULL;
+}
+
+/* Full-list persistence uses separate controls and leaves the older active
+ * checkpoint unchanged. A recreated host must opt into confirmed restoration. */
+static int check_library_restart(UmiDataServer **server, const char *sqlite_path)
+{
+    UmiApplicationSuiteGtk4WorkstationConfig config = {
+        "org.umicom.trader", "Library fixture", "Test", create_panel, NULL
+    };
+    UmiApplicationSuiteGtk4Workstation *workstation = NULL;
+    UmiApplicationSuiteGtk4WorkstationSnapshot saved;
+    UmiApplicationSuiteGtk4WorkstationSnapshot current;
+    GtkWidget *popover;
+    GtkWidget *button;
+    GtkWidget *confirm;
+    int failed = 0;
+    CHECK(umi_application_suite_gtk4_workstation_create(&config, &workstation) == UMI_STATUS_OK);
+    CHECK(umi_application_suite_gtk4_workstation_bind_checkpoint_storage(workstation, *server) == UMI_STATUS_OK);
+    CHECK(umi_application_suite_gtk4_workstation_create_blank_layout(workstation,
+        "org.umicom.trader.library-saved", "Saved library canvas") == UMI_STATUS_OK);
+    saved = umi_application_suite_gtk4_workstation_snapshot(workstation);
+    popover = library_popover(workstation);
+    CHECK(popover != NULL);
+    button = find_tag(popover, "workstation.layout-library.save-library");
+    CHECK(GTK_IS_BUTTON(button) && gtk_widget_get_sensitive(button));
+    g_signal_emit_by_name(button, "clicked");
+    drain_library_actions();
+    CHECK(umi_application_suite_gtk4_workstation_snapshot(workstation).checkpoint_storage_revision ==
+        saved.checkpoint_storage_revision);
+    CHECK(umi_application_suite_gtk4_workstation_create_blank_layout(workstation,
+        "org.umicom.trader.library-unsaved", "Unsaved library canvas") == UMI_STATUS_OK);
+    confirm = find_tag(popover, "workstation.layout-library.confirm-restore");
+    button = find_tag(popover, "workstation.layout-library.restore-library");
+    CHECK(GTK_IS_CHECK_BUTTON(confirm) && GTK_IS_BUTTON(button) && !gtk_widget_get_sensitive(button));
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(confirm), TRUE);
+    CHECK(gtk_widget_get_sensitive(button));
+    g_signal_emit_by_name(button, "clicked");
+    drain_library_actions();
+    current = umi_application_suite_gtk4_workstation_snapshot(workstation);
+    CHECK(current.layout_count == saved.layout_count && strcmp(current.active_layout_id, saved.active_layout_id) == 0);
+    CHECK(strcmp(current.active_layout_name, "Saved library canvas") == 0);
+    CHECK(!gtk_check_button_get_active(GTK_CHECK_BUTTON(confirm)));
+    umi_application_suite_gtk4_workstation_destroy(workstation);
+    workstation = NULL;
+    if (sqlite_path != NULL) {
+        umi_data_server_destroy(*server);
+        *server = NULL;
+        CHECK(umi_data_server_create_sqlite(sqlite_path, server) == UMI_STATUS_OK);
+    }
+    CHECK(umi_application_suite_gtk4_workstation_create(&config, &workstation) == UMI_STATUS_OK);
+    CHECK(umi_application_suite_gtk4_workstation_bind_checkpoint_storage(workstation, *server) == UMI_STATUS_OK);
+    current = umi_application_suite_gtk4_workstation_snapshot(workstation);
+    CHECK(strcmp(current.active_layout_id, saved.active_layout_id) != 0);
+    popover = library_popover(workstation);
+    CHECK(popover != NULL);
+    confirm = find_tag(popover, "workstation.layout-library.confirm-restore");
+    button = find_tag(popover, "workstation.layout-library.restore-library");
+    CHECK(GTK_IS_CHECK_BUTTON(confirm) && GTK_IS_BUTTON(button));
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(confirm), TRUE);
+    CHECK(gtk_widget_get_sensitive(button));
+    g_signal_emit_by_name(button, "clicked");
+    drain_library_actions();
+    current = umi_application_suite_gtk4_workstation_snapshot(workstation);
+    CHECK(current.layout_count == saved.layout_count && strcmp(current.active_layout_id, saved.active_layout_id) == 0);
+    CHECK(current.source_layout_revision > saved.source_layout_revision && all_windows_unpresented());
+cleanup:
+    umi_application_suite_gtk4_workstation_destroy(workstation);
+    return failed;
+}
+
 /* No windows are presented. The SQLite case uses only a fixture-owned temporary
  * directory, never user configuration or any product's real Data Server. */
 int main(void)
@@ -227,6 +311,7 @@ int main(void)
     CHECK(check_product_scopes() == 0);
     CHECK(umi_data_server_create_memory(&server) == UMI_STATUS_OK);
     CHECK(check_restart(&server, NULL, 0) == 0);
+    CHECK(check_library_restart(&server, NULL) == 0);
     umi_data_server_destroy(server);
     server = NULL;
     directory = g_dir_make_tmp("umicom-suite-checkpoint-XXXXXX", &error);
@@ -234,7 +319,10 @@ int main(void)
     path = g_build_filename(directory, "workspace.sqlite3", NULL);
     status = umi_data_server_create_sqlite(path, &server);
     CHECK(status == UMI_STATUS_OK || status == UMI_STATUS_UNAVAILABLE);
-    if (status == UMI_STATUS_OK) CHECK(check_restart(&server, path, 1) == 0);
+    if (status == UMI_STATUS_OK) {
+        CHECK(check_restart(&server, path, 1) == 0);
+        CHECK(check_library_restart(&server, path) == 0);
+    }
     else {
         (void)fprintf(stderr, "SKIP: SQLite unavailable; memory checks completed, durable restart unverified.\n");
         failed = 77;

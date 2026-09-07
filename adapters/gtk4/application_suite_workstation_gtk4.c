@@ -29,6 +29,8 @@
 #include "umicom/ui/workspace_customisation.h"
 #include "umicom/ui/workspace_geometry.h"
 #include "umicom/ui/gtk4/workstation/workspace_storage.h"
+#include "umicom/ui/gtk4/workstation/layout_library.h"
+#include "umicom/ui/workspace_library_checkpoint.h"
 
 struct UmiApplicationSuiteGtk4Workstation {
     UmiApplicationSuiteLayoutRuntime runtime;
@@ -36,6 +38,8 @@ struct UmiApplicationSuiteGtk4Workstation {
     UmiUiWorkspaceCustomisation customisation;
     UmiUiWorkbenchCanvas canvas;
     UmiGtk4WorkspaceLayoutHost *host;
+    /* A copied-row view; customisation remains the sole layout authority. */
+    UmiGtk4WorkspaceLayoutLibrary *layout_library;
     UmiGtk4AppearanceEditor *appearance;
     UmiGtk4WorkstationShellHeader *identity;
     UmiGtk4WorkstationWindowTitlebar *titlebar;
@@ -80,6 +84,13 @@ struct UmiApplicationSuiteGtk4Workstation {
     UmiDataServer *checkpoint_server;
     UmiDataServer *owned_checkpoint_server;
     UmiUiWorkspaceCheckpointReport checkpoint_report;
+    /* Library storage is separate from the active-layout checkpoint. A binding
+     * generation invalidates queued operations when the borrowed server changes. */
+    UmiUiWorkspaceLibraryCheckpointReport library_checkpoint_report;
+    UmiStatus library_storage_status;
+    uint64_t library_storage_generation;
+    bool library_has_saved;
+    bool library_save_conflict;
     UmiStatus checkpoint_storage_status;
     int checkpoint_storage_requested;
     int changing_selection;
@@ -561,6 +572,8 @@ static void refresh_edit_controls(
                 : "Restore the last checkpoint saved in this session");
     }
     refresh_command_model(workstation);
+    if (workstation->layout_library != NULL)
+        (void)umi_gtk4_ws_layout_library_refresh(workstation->layout_library);
 }
 
 /*
@@ -995,6 +1008,209 @@ static UmiStatus checkpoint_scope(
     return UMI_STATUS_OK;
 }
 
+/* The same product prefix protects both checkpoint imports and library actions. */
+static UmiStatus suite_layout_library_read(
+    UmiUiWorkspaceLibrarySnapshot *out_snapshot, void *context)
+{
+    UmiApplicationSuiteGtk4Workstation *workstation = context;
+    UmiUiWorkspaceCheckpointScope scope;
+    char prefix[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    UmiStatus status = checkpoint_scope(workstation, &scope, prefix, sizeof(prefix));
+    if (status != UMI_STATUS_OK) return status;
+    return umi_ui_workspace_library_snapshot(&workstation->customisation,
+        &(const UmiUiWorkspaceLibraryPolicy){ prefix }, out_snapshot);
+}
+
+/* Render a validated private candidate before committing it. Metadata-only
+ * changes keep panel bodies intact; a failed layout switch retains the owner
+ * and attempts to restore its previous native presentation. */
+static UmiStatus suite_publish_library_candidate(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const UmiUiWorkspaceCustomisation *candidate, bool force_rebuild)
+{
+    const UmiUiWorkspaceLayout *previous;
+    const UmiUiWorkspaceLayout *next;
+    size_t index;
+    UmiStatus status = UMI_STATUS_OK;
+    if (workstation->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (candidate->revision == workstation->customisation.revision) return UMI_STATUS_OK;
+    previous = active_layout(workstation);
+    next = umi_ui_workspace_customisation_active_const(candidate);
+    if (previous == NULL || next == NULL) status = UMI_STATUS_INVALID_STATE;
+    else if (force_rebuild || strcmp(previous->layout_id, next->layout_id) != 0) {
+        status = umi_gtk4_workspace_layout_host_rebuild(workstation->host, next);
+        if (status != UMI_STATUS_OK)
+            (void)umi_gtk4_workspace_layout_host_rebuild(workstation->host, previous);
+    } else if (previous->revision != next->revision) {
+        status = umi_gtk4_workspace_layout_host_update_metadata(workstation->host, next);
+    }
+    if (status != UMI_STATUS_OK) return status;
+    workstation->customisation = *candidate;
+    (void)umi_gtk4_workspace_layout_host_set_context_groups(
+        workstation->host, &workstation->customisation.groups);
+    /* Canonical short IDs remain compatibility metadata, not an authority
+     * that can recreate a removed or renamed user-owned layout implicitly. */
+    for (index = 0U; index < workstation->selector.count; ++index) {
+        char qualified[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+        const char *short_id = workstation->selector.choices[index].layout_id;
+        if (qualify_layout_id(qualified, sizeof(qualified),
+                workstation->runtime.experience->application_id, short_id) == UMI_STATUS_OK &&
+            strcmp(workstation->customisation.active_layout_id, qualified) == 0) {
+            (void)umi_application_suite_layout_runtime_select(&workstation->runtime, short_id);
+            (void)umi_application_suite_layout_selector_select(&workstation->selector, short_id);
+            break;
+        }
+    }
+    refresh_layout_choices(workstation);
+    refresh_heading(workstation);
+    refresh_edit_controls(workstation);
+    ++workstation->revision;
+    return UMI_STATUS_OK;
+}
+
+/* Every library command validates on private storage before native publication. */
+static UmiStatus suite_layout_library_apply(
+    const UmiUiWorkspaceLibraryRequest *request, void *context)
+{
+    UmiApplicationSuiteGtk4Workstation *workstation = context;
+    UmiUiWorkspaceCheckpointScope scope;
+    UmiUiWorkspaceCustomisation *candidate;
+    char prefix[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    UmiStatus status = checkpoint_scope(workstation, &scope, prefix, sizeof(prefix));
+    if (status != UMI_STATUS_OK) return status;
+    candidate = malloc(sizeof(*candidate));
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    *candidate = workstation->customisation;
+    status = umi_ui_workspace_library_apply(candidate,
+        &(const UmiUiWorkspaceLibraryPolicy){ prefix }, request, NULL);
+    if (status == UMI_STATUS_OK)
+        status = suite_publish_library_candidate(workstation, candidate, false);
+    free(candidate);
+    return status;
+}
+
+/* Inspect once when storage is explicitly bound. Routine GUI refreshes read
+ * this copied evidence and never poll SQLite or publish a saved arrangement. */
+static void suite_probe_library_storage(UmiApplicationSuiteGtk4Workstation *workstation)
+{
+    UmiUiWorkspaceCheckpointScope scope;
+    UmiUiWorkspaceCustomisation *candidate;
+    char prefix[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    memset(&workstation->library_checkpoint_report, 0, sizeof(workstation->library_checkpoint_report));
+    /* Backend capability is already known from binding, even if allocating a
+     * library probe fails before the checkpoint service can return a report. */
+    workstation->library_checkpoint_report.checkpoint.durable = workstation->checkpoint_report.durable;
+    workstation->library_has_saved = false;
+    workstation->library_save_conflict = false;
+    workstation->library_storage_status = UMI_STATUS_UNAVAILABLE;
+    if (workstation->checkpoint_server == NULL) return;
+    candidate = malloc(sizeof(*candidate));
+    if (candidate == NULL) { workstation->library_storage_status = UMI_STATUS_OUT_OF_MEMORY; return; }
+    workstation->library_storage_status = checkpoint_scope(workstation, &scope, prefix, sizeof(prefix));
+    if (workstation->library_storage_status == UMI_STATUS_OK)
+        workstation->library_storage_status = umi_ui_workspace_library_checkpoint_load_candidate(
+            workstation->checkpoint_server, &scope, &workstation->customisation,
+            candidate, &workstation->library_checkpoint_report);
+    workstation->library_has_saved = workstation->library_storage_status != UMI_STATUS_NOT_FOUND;
+    free(candidate);
+}
+
+/* Cached capability is presentation, not permission to replace another
+ * writer's saved revision or a developer's current edit session. */
+static UmiStatus suite_library_storage_read(
+    UmiGtk4WorkspaceLayoutLibraryStorageState *out_state, void *context)
+{
+    UmiApplicationSuiteGtk4Workstation *workstation = context;
+    const UmiUiWorkspaceCheckpointReport *report = &workstation->library_checkpoint_report.checkpoint;
+    const char *message;
+    bool all_locked = workstation->customisation.layout_count != 0U &&
+        workstation->customisation.layout_count <= UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS;
+    for (size_t index = 0U; all_locked && index < workstation->customisation.layout_count; ++index)
+        all_locked = workstation->customisation.layouts[index].locked;
+    memset(out_state, 0, sizeof(*out_state));
+    out_state->supported = workstation->checkpoint_server != NULL;
+    out_state->durable = report->durable;
+    out_state->revision_known = report->storage_revision_known;
+    out_state->has_saved = workstation->library_has_saved;
+    out_state->save_enabled = report->storage_revision_known && all_locked && !workstation->library_save_conflict;
+    out_state->restore_enabled = workstation->checkpoint_server != NULL;
+    out_state->storage_revision = report->storage_revision;
+    out_state->storage_generation = workstation->library_storage_generation;
+    message = !out_state->supported ? "No Data Server is connected for library storage."
+        : !all_locked ? "Apply and lock every layout before saving the library."
+        : workstation->library_save_conflict ? "Another writer changed the saved library. Restore and review it before saving again."
+        : workstation->library_storage_status == UMI_STATUS_NOT_FOUND ? "No saved library. Save library stores all committed layouts."
+        : workstation->library_storage_status != UMI_STATUS_OK ? "Library storage needs attention. Restore re-reads saved data; current layouts are kept on failure."
+        : report->recovered_last_good ? "Previous valid library recovered. Review it before saving."
+        : report->durable ? "Library checkpoint on disk. Unsaved library changes still need Save library."
+        : "Memory-only library checkpoint; it will not survive process exit.";
+    (void)g_strlcpy(out_state->message, message, sizeof(out_state->message));
+    return UMI_STATUS_OK;
+}
+
+/* Save does not modify the visible owner. Restore validates the entire archive
+ * and renders its active layout before replacing the current named list. */
+static UmiStatus suite_library_storage_operation(
+    const UmiGtk4WorkspaceLayoutLibraryStorageRequest *request, void *context)
+{
+    UmiApplicationSuiteGtk4Workstation *workstation = context;
+    UmiUiWorkspaceCheckpointScope scope;
+    UmiUiWorkspaceLibraryCheckpointReport report = {0};
+    UmiUiWorkspaceCustomisation *candidate = NULL;
+    char prefix[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    UmiStatus status;
+    if (workstation->checkpoint_server == NULL) return UMI_STATUS_UNAVAILABLE;
+    if (workstation->customisation.edit_active) return UMI_STATUS_BUSY;
+    if (request->expected_customisation_revision != workstation->customisation.revision ||
+        request->expected_storage_generation != workstation->library_storage_generation ||
+        request->expected_storage_revision != workstation->library_checkpoint_report.checkpoint.storage_revision)
+        return UMI_STATUS_INVALID_STATE;
+    status = checkpoint_scope(workstation, &scope, prefix, sizeof(prefix));
+    if (status != UMI_STATUS_OK) return status;
+    if (request->action == UMI_GTK4_WORKSPACE_LAYOUT_LIBRARY_STORAGE_SAVE) {
+        const gint64 now = g_get_real_time();
+        const uint64_t saved_at_ns = now > 0 && (uint64_t)now <= UINT64_MAX / UINT64_C(1000)
+            ? (uint64_t)now * UINT64_C(1000) : 0U;
+        if (!workstation->library_checkpoint_report.checkpoint.storage_revision_known)
+            return UMI_STATUS_INVALID_STATE;
+        status = umi_ui_workspace_library_checkpoint_save(workstation->checkpoint_server,
+            &scope, &workstation->customisation, saved_at_ns,
+            request->expected_storage_revision, &report);
+    } else if (request->action == UMI_GTK4_WORKSPACE_LAYOUT_LIBRARY_STORAGE_RESTORE) {
+        if (!request->restore_confirmed) return UMI_STATUS_PERMISSION_DENIED;
+        candidate = malloc(sizeof(*candidate));
+        if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+        status = umi_ui_workspace_library_checkpoint_load_candidate(workstation->checkpoint_server,
+            &scope, &workstation->customisation, candidate, &report);
+        if (status == UMI_STATUS_OK) status = suite_publish_library_candidate(workstation, candidate, true);
+    } else return UMI_STATUS_INVALID_ARGUMENT;
+    free(candidate);
+    workstation->library_storage_status = status;
+    if (status == UMI_STATUS_OK) {
+        workstation->library_checkpoint_report = report;
+        workstation->library_has_saved = true;
+        workstation->library_save_conflict = false;
+    } else if (request->action == UMI_GTK4_WORKSPACE_LAYOUT_LIBRARY_STORAGE_RESTORE &&
+               status == UMI_STATUS_NOT_FOUND && report.checkpoint.storage_revision_known &&
+               report.checkpoint.storage_revision == 0U) {
+        /* An explicit read confirmed that both saved copies are absent. Keep
+         * session layouts, but allow a new first save against known revision 0. */
+        workstation->library_checkpoint_report = report;
+        workstation->library_has_saved = false;
+        workstation->library_save_conflict = false;
+    } else {
+        /* A failed Save never adopts the competing writer's CAS revision. */
+        if (report.checkpoint.storage_revision_known &&
+            report.checkpoint.storage_revision != request->expected_storage_revision)
+            workstation->library_save_conflict = true;
+        if (report.checkpoint.primary_status != UMI_STATUS_NOT_FOUND)
+            workstation->library_has_saved = true;
+        if (!report.checkpoint.storage_revision_known && report.checkpoint.primary_status != UMI_STATUS_NOT_FOUND)
+            workstation->library_checkpoint_report.checkpoint.storage_revision_known = false;
+    }
+    return status;
+}
+
 /* Explain persistence outcomes beside the actual Save/Restore controls. */
 static void checkpoint_feedback(UmiApplicationSuiteGtk4Workstation *workstation,
     UmiStatus status, const char *success)
@@ -1027,6 +1243,7 @@ UmiStatus umi_application_suite_gtk4_workstation_bind_checkpoint_storage(
     UmiStatus status = UMI_STATUS_OK;
     if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     if (workstation->customisation.edit_active) return UMI_STATUS_BUSY;
+    if (workstation->library_storage_generation == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     if (server != NULL) {
         candidate = (char *)calloc(UMI_UI_LAYOUT_ENCODED_CAPACITY, 1U);
         if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
@@ -1052,6 +1269,8 @@ UmiStatus umi_application_suite_gtk4_workstation_bind_checkpoint_storage(
     workstation->checkpoint_storage_requested = server != NULL;
     workstation->checkpoint_storage_status = UMI_STATUS_OK;
     workstation->checkpoint_report = report;
+    ++workstation->library_storage_generation;
+    suite_probe_library_storage(workstation);
     free(workstation->saved_layout_text);
     workstation->saved_layout_text = candidate;
     workstation->saved_layout_at_ns = candidate != NULL ? report.saved_at_ns : 0U;
@@ -2952,6 +3171,22 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
     gtk_box_append(GTK_BOX(header), workstation->layout_dropdown);
     refresh_layout_choices(workstation);
 
+    /* All clients of this Framework workstation share one library component. */
+    {
+        GtkWidget *library_button = gtk_menu_button_new();
+        gtk_menu_button_set_label(GTK_MENU_BUTTON(library_button), "Layout Library");
+        (void)umi_gtk4_automation_tag_widget(library_button, "umicom.layout.library");
+        gtk_box_append(GTK_BOX(header), library_button);
+        status = umi_gtk4_ws_layout_library_create(suite_layout_library_read,
+            suite_layout_library_apply, workstation, &workstation->layout_library);
+        if (status != UMI_STATUS_OK) goto fail;
+        gtk_menu_button_set_popover(GTK_MENU_BUTTON(library_button),
+            umi_gtk4_ws_layout_library_popover(workstation->layout_library));
+        status = umi_gtk4_ws_layout_library_set_storage_handlers(workstation->layout_library,
+            suite_library_storage_read, suite_library_storage_operation, workstation);
+        if (status != UMI_STATUS_OK) goto fail;
+    }
+
     /* Keep layout creation reachable even on a completely empty canvas. */
     {
         GtkWidget *content = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
@@ -3145,6 +3380,9 @@ void umi_application_suite_gtk4_workstation_destroy(
     /* Release the driver's retained root before dismantling child services. */
     umi_gtk4_automation_driver_destroy(workstation->automation);
     workstation->automation = NULL;
+    /* Deferred library requests borrow this workstation and must stop first. */
+    umi_gtk4_ws_layout_library_destroy(workstation->layout_library);
+    workstation->layout_library = NULL;
     umi_gtk4_workspace_layout_host_destroy(workstation->host);
     workstation->host = NULL;
     /* Disconnect the borrowed callback before releasing its target. */

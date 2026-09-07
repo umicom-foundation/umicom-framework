@@ -45,6 +45,10 @@ target_sources(umicom_desktop PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/desk_runtime.c"
 )
 
+# Native installation evidence uses the public platform file-stat boundary.
+# Keep that dependency explicit for consumers linking the application target.
+target_link_libraries(umicom_application PUBLIC Umicom::platform)
+
 # Configure the optional target only when its feature has created it.
 if(TARGET umicom_ui_gtk4)
     target_sources(umicom_ui_gtk4 PRIVATE
@@ -91,6 +95,18 @@ if(BUILD_TESTING)
         framework.application.launcher
         tests/application/test_launcher.c
     )
+    # Inject installation evidence and fake adapters: no filesystem mutation,
+    # subprocess, display or running application is needed by this regression.
+    umicom_add_application_runtime_test(
+        umicom-application-native-discovery-test
+        framework.application.native_discovery
+        tests/application/test_native_discovery.c
+    )
+    set_tests_properties(framework.application.native_discovery PROPERTIES
+        LABELS "application;framework;launcher;discovery;native;regression")
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-application-native-discovery-test)
+    endif()
     umicom_add_application_runtime_test(
         umicom-application-launch-selection-test
         framework.application.launch_selection

@@ -335,6 +335,62 @@ UmiStatus umi_desktop_shell_model_set_viewport(
     return status;
 }
 
+/* Project one authoritative runtime record without deriving process death from
+ * installation policy. This is presentation only, not a second registry. */
+UmiStatus umi_desktop_shell_model_project_application(
+    UmiDesktopShellModel *model, const UmiApplicationRuntimeRecord *record)
+{
+    UmiDesktopTaskbarItem *item;
+    UmiDesktopTaskbarItem candidate;
+    UmiDesktopApplicationState state;
+    if (model == NULL || record == NULL ||
+        memchr(record->application_id, '\0', sizeof(record->application_id)) == NULL ||
+        memchr(record->executable_name, '\0', sizeof(record->executable_name)) == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    item = find_application_mutable(model, record->application_id);
+    if (item == NULL) return UMI_STATUS_NOT_FOUND;
+    switch (record->state) {
+    case UMI_APPLICATION_RUNTIME_UNAVAILABLE: state = UMI_DESKTOP_APPLICATION_UNAVAILABLE; break;
+    case UMI_APPLICATION_RUNTIME_STARTING: state = UMI_DESKTOP_APPLICATION_STARTING; break;
+    case UMI_APPLICATION_RUNTIME_RUNNING: state = UMI_DESKTOP_APPLICATION_RUNNING; break;
+    case UMI_APPLICATION_RUNTIME_ATTENTION: state = UMI_DESKTOP_APPLICATION_ATTENTION; break;
+    case UMI_APPLICATION_RUNTIME_FAILED: state = UMI_DESKTOP_APPLICATION_FAILED; break;
+    default: state = UMI_DESKTOP_APPLICATION_STOPPED; break;
+    }
+    candidate = *item;
+    if (strlen(record->executable_name) >= sizeof(candidate.executable_name))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    (void)snprintf(candidate.executable_name, sizeof(candidate.executable_name), "%s", record->executable_name);
+    candidate.state = state;
+    candidate.installed = record->installed;
+    candidate.compatible = record->compatible;
+    candidate.enabled = record->enabled;
+    candidate.visible = record->visible;
+    candidate.pinned = record->pinned;
+    candidate.running = record->running;
+    candidate.active = record->active;
+    candidate.attention = record->attention;
+    if (candidate.state == item->state && candidate.installed == item->installed &&
+        candidate.compatible == item->compatible && candidate.enabled == item->enabled &&
+        candidate.visible == item->visible && candidate.pinned == item->pinned &&
+        candidate.running == item->running && candidate.active == item->active &&
+        candidate.attention == item->attention &&
+        strcmp(candidate.executable_name, item->executable_name) == 0)
+        return UMI_STATUS_OK;
+    ++candidate.revision;
+    *item = candidate;
+    if (record->active) {
+        size_t index;
+        for (index = 0U; index < model->application_count; ++index)
+            if (&model->applications[index] != item) model->applications[index].active = false;
+        (void)snprintf(model->active_application_id, sizeof(model->active_application_id), "%s", item->application_id);
+    } else if (strcmp(model->active_application_id, item->application_id) == 0) {
+        model->active_application_id[0] = '\0';
+    }
+    ++model->revision;
+    return UMI_STATUS_OK;
+}
+
 /*
  * Provide the desktop shell model set application presence operation used by this module
  * and its client applications.

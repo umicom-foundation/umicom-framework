@@ -200,6 +200,63 @@ static int check_product(const UmiApplicationExperienceDefinition *experience)
     *after = umi_application_suite_gtk4_workstation_snapshot(workstation);
     CHECK(after->editing_layout && strcmp(after->active_layout_id, named_id) == 0);
     CHECK(umi_application_suite_gtk4_workstation_cancel_layout_edit(workstation) == UMI_STATUS_OK);
+    /* The actual shared library controls work for every product namespace.
+     * Rename must not ask its provider to replace an unsaved panel body. */
+    {
+        GtkWidget *library_button = find_data(root, "umicom-automation-id", "umicom.layout.library");
+        GtkWidget *popover;
+        GtkWidget *name;
+        GtkWidget *action;
+        char copy_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+        CHECK(GTK_IS_MENU_BUTTON(library_button));
+        popover = GTK_WIDGET(gtk_menu_button_get_popover(GTK_MENU_BUTTON(library_button)));
+        CHECK(popover != NULL);
+        action = find_data(popover, "umicom-automation-id", "workstation.layout-library.refresh");
+        CHECK(GTK_IS_BUTTON(action));
+        g_signal_emit_by_name(action, "clicked");
+        found = find_data(popover, "umicom-layout-library-id", named_id);
+        row = find_data(popover, "umicom-automation-id", "workstation.layout-library.list");
+        CHECK(GTK_IS_LIST_BOX_ROW(found) && GTK_IS_LIST_BOX(row));
+        gtk_list_box_select_row(GTK_LIST_BOX(row), GTK_LIST_BOX_ROW(found));
+        name = find_data(popover, "umicom-automation-id", "workstation.layout-library.name");
+        action = find_data(popover, "umicom-automation-id", "workstation.layout-library.rename");
+        CHECK(GTK_IS_EDITABLE(name) && GTK_IS_BUTTON(action) && gtk_widget_get_sensitive(action));
+        found = find_data(root, "navigation-body-id", opened_id);
+        CHECK(GTK_IS_EDITABLE(found));
+        body = g_object_ref(found);
+        gtk_editable_set_text(GTK_EDITABLE(body), "Keep this library rename draft");
+        provider_count = fixture.created;
+        gtk_editable_set_text(GTK_EDITABLE(name), "Renamed navigation workspace");
+        g_signal_emit_by_name(action, "clicked");
+        drain_navigation_actions();
+        *before = umi_application_suite_gtk4_workstation_snapshot(workstation);
+        CHECK(strcmp(before->active_layout_name, "Renamed navigation workspace") == 0);
+        CHECK(fixture.created == provider_count && find_data(root, "navigation-body-id", opened_id) == body);
+        CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(body)), "Keep this library rename draft") == 0);
+        g_clear_object(&body);
+
+        written = snprintf(copy_id, sizeof(copy_id), "%s.library-copy", experience->application_id);
+        CHECK(written >= 0 && (size_t)written < sizeof(copy_id));
+        found = find_data(popover, "umicom-automation-id", "workstation.layout-library.new-id");
+        CHECK(GTK_IS_EDITABLE(found));
+        gtk_editable_set_text(GTK_EDITABLE(found), copy_id);
+        gtk_editable_set_text(GTK_EDITABLE(name), "Library copy");
+        action = find_data(popover, "umicom-automation-id", "workstation.layout-library.duplicate");
+        CHECK(GTK_IS_BUTTON(action) && gtk_widget_get_sensitive(action));
+        g_signal_emit_by_name(action, "clicked");
+        drain_navigation_actions();
+        *after = umi_application_suite_gtk4_workstation_snapshot(workstation);
+        CHECK(after->layout_count == before->layout_count + 1U && strcmp(after->active_layout_id, copy_id) == 0);
+        found = find_data(popover, "umicom-automation-id", "workstation.layout-library.confirm-remove");
+        action = find_data(popover, "umicom-automation-id", "workstation.layout-library.remove");
+        CHECK(GTK_IS_CHECK_BUTTON(found) && GTK_IS_BUTTON(action) && !gtk_widget_get_sensitive(action));
+        gtk_check_button_set_active(GTK_CHECK_BUTTON(found), TRUE);
+        CHECK(gtk_widget_get_sensitive(action));
+        g_signal_emit_by_name(action, "clicked");
+        drain_navigation_actions();
+        *after = umi_application_suite_gtk4_workstation_snapshot(workstation);
+        CHECK(after->layout_count == before->layout_count && strcmp(after->active_layout_id, copy_id) != 0);
+    }
     /* No fixture may create a visible top-level as a side effect. */
     {
         GListModel *windows = gtk_window_get_toplevels();

@@ -106,11 +106,14 @@ UmiStatus umi_application_suite_layout_project(
         if (status == UMI_STATUS_OK)
             status = copy_text(window.stack_id, sizeof(window.stack_id),
                                panel->default_region);
-        /* Linked context is optional, so an absent group becomes empty text. */
+        /* Linked context is optional, so an absent group becomes empty text.
+         * Descriptive group metadata does not grant routing permission: keep
+         * unlinked panels independent, matching context seeding and imports. */
         if (status == UMI_STATUS_OK)
             status = copy_text(
                 window.context_group_id,
                 sizeof(window.context_group_id),
+                (panel->flags & UMI_EXPERIENCE_PANEL_CONTEXT_LINKED) != 0U &&
                 panel->context_group_id != NULL
                     ? panel->context_group_id
                     : "");

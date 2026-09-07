@@ -215,8 +215,15 @@ int main(void)
     CHECK(umi_gtk4_workspace_layout_host_maximise_window(fixture.host, "missing") == UMI_STATUS_NOT_FOUND);
     CHECK(umi_gtk4_workspace_layout_host_maximise_window(fixture.host, "protected") == UMI_STATUS_PERMISSION_DENIED);
     CHECK(umi_gtk4_workspace_layout_host_maximise_window(fixture.host, "fixed") == UMI_STATUS_PERMISSION_DENIED);
-    button = find_data(root, "umicom-automation-id", "editor.action.maximise");
-    CHECK(button != NULL && gtk_widget_get_sensitive(button));
+    /* Locked normal-mode chrome deliberately groups geometry/presentation
+     * commands in its overflow menu. The inline .action controls belong to
+     * unlocked edit mode; looking for that different ID misses a valid menu. */
+    CHECK(find_data(root, "umicom-automation-id", "editor.action.menu") != NULL);
+    CHECK(find_data(root, "umicom-automation-id", "editor.action.maximise") == NULL);
+    CHECK(find_data(root, "umicom-automation-id", "protected.menu.maximise") == NULL);
+    CHECK(find_data(root, "umicom-automation-id", "fixed.menu.maximise") == NULL);
+    button = find_data(root, "umicom-automation-id", "editor.menu.maximise");
+    CHECK(GTK_IS_BUTTON(button) && gtk_widget_get_sensitive(button));
     g_signal_emit_by_name(button, "clicked"); drain_ready();
     snapshot = umi_gtk4_workspace_layout_host_snapshot(fixture.host);
     CHECK(snapshot.maximised && strcmp(snapshot.maximised_window_id, "editor") == 0);
@@ -228,6 +235,16 @@ int main(void)
     CHECK(find_data(root, "test-body-id", "editor") == body && find_data(root, "test-body-id", "notes") == other_body);
     CHECK(gtk_notebook_page_num(GTK_NOTEBOOK(notebook), frame) == page &&
         gtk_notebook_get_tab_label(GTK_NOTEBOOK(notebook), frame) == tab);
+    /* The same live overflow action toggles back, without an owner callback,
+     * a replacement provider, a layout unlock or a saved-geometry mutation. */
+    CHECK(find_data(root, "umicom-automation-id", "editor.menu.maximise") == button);
+    g_signal_emit_by_name(button, "clicked"); drain_ready();
+    CHECK(!umi_gtk4_workspace_layout_host_snapshot(fixture.host).maximised);
+    CHECK(gtk_frame_get_child(GTK_FRAME(frame)) == frame_child);
+    CHECK(fixture.actions == 0U && fixture.created == created && fixture.released == 0U);
+    CHECK(memcmp(layout, saved, sizeof(*layout)) == 0);
+    g_signal_emit_by_name(button, "clicked"); drain_ready();
+    CHECK(umi_gtk4_workspace_layout_host_snapshot(fixture.host).maximised);
     CHECK(umi_gtk4_workspace_layout_host_maximise_window(fixture.host, "editor") == UMI_STATUS_OK);
     CHECK(umi_gtk4_workspace_layout_host_focus_window(fixture.host, "editor") == UMI_STATUS_OK);
     CHECK(umi_gtk4_workspace_layout_host_snapshot(fixture.host).maximised);
@@ -292,6 +309,18 @@ int main(void)
     CHECK(umi_gtk4_workspace_layout_host_rebuild(fixture.host, layout) == UMI_STATUS_OK);
     CHECK(umi_gtk4_workspace_layout_host_set_canvas_geometry_handler(fixture.host, on_geometry, &fixture) == UMI_STATUS_OK);
     gtk_widget_allocate(root, 1200, 900, -1, NULL);
+    /* Edit mode renders the inline action instead of an overflow item. It
+     * reaches the same transient host operation, not the geometry callback. */
+    CHECK(find_data(root, "umicom-automation-id", "chart.menu.maximise") == NULL);
+    CHECK(find_data(root, "umicom-automation-id", "protected.action.maximise") == NULL);
+    CHECK(find_data(root, "umicom-automation-id", "fixed.action.maximise") == NULL);
+    button = find_data(root, "umicom-automation-id", "chart.action.maximise");
+    CHECK(GTK_IS_BUTTON(button) && gtk_widget_get_sensitive(button));
+    g_signal_emit_by_name(button, "clicked"); drain_ready();
+    CHECK(umi_gtk4_workspace_layout_host_snapshot(fixture.host).maximised);
+    CHECK(fixture.actions == 0U && fixture.geometry_requests == 0U);
+    g_signal_emit_by_name(button, "clicked"); drain_ready();
+    CHECK(!umi_gtk4_workspace_layout_host_snapshot(fixture.host).maximised);
     button = find_data(root, "umicom-automation-id", "workstation.canvas.drag.chart");
     CHECK(button != NULL);
     drag_keys = find_keys(button);

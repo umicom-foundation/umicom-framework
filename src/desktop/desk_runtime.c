@@ -14,8 +14,10 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/desk_runtime.h"
+#include "umicom/application/portfolio.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 struct UmiDeskRuntime {
@@ -25,31 +27,17 @@ struct UmiDeskRuntime {
     UmiDesktopApplicationStrip *strip;
     UmiDesktopShellModel *shell;
     uint64_t revision;
+    UmiApplicationNativeDiscoveryConfig discovery;
+    char discovery_root[UMI_APPLICATION_RUNTIME_PATH_CAPACITY];
+    char discovery_suffix[5U];
+    UmiApplicationNativeDiscoveryReport discovery_report;
+    uint64_t discovery_poll_ms;
+    bool discovery_enabled;
+    bool discovery_polled;
+    bool discovery_busy;
+    bool discovery_projection_pending;
+    bool native_portfolio_admitted;
 };
-
-/* Provide the map shell state operation used by this module and its client applications. */
-static UmiDesktopApplicationState map_shell_state(
-    UmiApplicationRuntimeState state)
-{
-    /* Select the behaviour associated with the requested command or state value. */
-    switch (state) {
-    case UMI_APPLICATION_RUNTIME_UNAVAILABLE:
-        return UMI_DESKTOP_APPLICATION_UNAVAILABLE;
-    case UMI_APPLICATION_RUNTIME_STARTING:
-        return UMI_DESKTOP_APPLICATION_STARTING;
-    case UMI_APPLICATION_RUNTIME_RUNNING:
-        return UMI_DESKTOP_APPLICATION_RUNNING;
-    case UMI_APPLICATION_RUNTIME_ATTENTION:
-        return UMI_DESKTOP_APPLICATION_ATTENTION;
-    case UMI_APPLICATION_RUNTIME_FAILED:
-        return UMI_DESKTOP_APPLICATION_FAILED;
-    case UMI_APPLICATION_RUNTIME_STOPPING:
-    case UMI_APPLICATION_RUNTIME_STOPPED:
-    case UMI_APPLICATION_RUNTIME_UNKNOWN:
-    default:
-        return UMI_DESKTOP_APPLICATION_STOPPED;
-    }
-}
 
 /*
  * Provide the synchronise shell application operation used by this module and its client
@@ -71,27 +59,124 @@ static UmiStatus synchronise_shell_application(
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
-    status = umi_desktop_shell_model_set_application_presence(
-        runtime->shell, application_id,
-        record.installed, record.compatible, record.enabled);
+    status = umi_desktop_shell_model_project_application(runtime->shell, &record);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_NOT_FOUND) return UMI_STATUS_OK;
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status != UMI_STATUS_OK) return status;
+    return status;
+}
 
-    status = umi_desktop_shell_model_set_application_state(
-        runtime->shell, application_id, map_shell_state(record.state));
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status != UMI_STATUS_OK) return status;
-    status = umi_desktop_shell_model_pin_application(
-        runtime->shell, application_id, record.pinned);
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status != UMI_STATUS_OK) return status;
-    /* Apply this operation only while the related capability or state is available. */
-    if (record.active) {
-        status = umi_desktop_shell_model_activate_application(
-            runtime->shell, application_id);
+/* Refresh dependent views after a successful catalogue change. A rare view
+ * allocation failure remains pending for retry; the authoritative scan is not
+ * undone or falsely reported as a successful native publication. */
+static UmiStatus project_native_discovery(UmiDeskRuntime *runtime)
+{
+    size_t index;
+    UmiStatus status = umi_application_launch_selection_refresh(runtime->launch_selection);
+    if (status == UMI_STATUS_OK) status = umi_desktop_application_strip_refresh(runtime->strip);
+    for (index = 0U; status == UMI_STATUS_OK &&
+         index < umi_application_runtime_catalogue_count(runtime->applications); ++index) {
+        UmiApplicationRuntimeRecord record;
+        status = umi_application_runtime_catalogue_at(runtime->applications, index, &record);
+        if (status == UMI_STATUS_OK) status = synchronise_shell_application(runtime, record.application_id);
     }
+    runtime->discovery_projection_pending = status != UMI_STATUS_OK;
+    if (status == UMI_STATUS_OK) ++runtime->revision;
+    return status;
+}
+
+/* Recheck the exact trusted native target immediately before a new process.
+ * Existing Activate/Stop operations deliberately do not invoke this callback. */
+static UmiStatus validate_native_launch(void *context, const UmiApplicationLaunchPlan *plan)
+{
+    UmiDeskRuntime *runtime = (UmiDeskRuntime *)context;
+    const char *name = umi_application_portfolio_gui_executable(plan->application_id);
+    char expected[UMI_APPLICATION_RUNTIME_PATH_CAPACITY];
+    bool present = false;
+    int count;
+    UmiStatus status;
+    if (runtime == NULL || !runtime->discovery_enabled) return UMI_STATUS_INVALID_STATE;
+    if (name == NULL) return UMI_STATUS_UNAVAILABLE;
+    count = snprintf(expected, sizeof(expected), "%s/%s%s", runtime->discovery_root,
+                     name, runtime->discovery_suffix);
+    if (count < 0 || (size_t)count >= sizeof(expected)) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (strcmp(expected, plan->executable_path) != 0) return UMI_STATUS_INVALID_STATE;
+    status = umi_application_native_discovery_probe(&runtime->discovery, plan->application_id, &present);
+    return status == UMI_STATUS_OK && !present ? UMI_STATUS_UNAVAILABLE : status;
+}
+
+/* Native composition explicitly admits policy once; scans never reenforce it. */
+UmiStatus umi_desk_runtime_admit_native_portfolio(UmiDeskRuntime *runtime)
+{
+    UmiStatus status;
+    if (runtime == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (runtime->discovery_busy) return UMI_STATUS_BUSY;
+    if (runtime->native_portfolio_admitted) return UMI_STATUS_INVALID_STATE;
+    status = umi_application_runtime_catalogue_admit_native_portfolio(runtime->applications);
+    if (status == UMI_STATUS_OK) runtime->native_portfolio_admitted = true;
+    return status == UMI_STATUS_OK ? project_native_discovery(runtime) : status;
+}
+
+/* Copy configuration bytes and borrow only an explicitly supplied probe context. */
+UmiStatus umi_desk_runtime_configure_native_discovery(
+    UmiDeskRuntime *runtime, const UmiApplicationNativeDiscoveryConfig *config)
+{
+    UmiStatus status;
+    if (runtime == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (runtime->discovery_busy) return UMI_STATUS_BUSY;
+    if (config == NULL) {
+        status = umi_application_launch_selection_set_retention(runtime->launch_selection, false);
+        if (status != UMI_STATUS_OK) return status;
+        runtime->discovery_enabled = false;
+        runtime->discovery_polled = false;
+        (void)memset(&runtime->discovery, 0, sizeof(runtime->discovery));
+        (void)memset(&runtime->discovery_report, 0, sizeof(runtime->discovery_report));
+        return umi_application_launcher_set_validation_handler(runtime->launcher, NULL, NULL);
+    }
+    status = umi_application_native_discovery_config_validate(config);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_application_launcher_validate_location(runtime->launcher,
+        config->executable_root, config->executable_suffix);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_application_launch_selection_set_retention(runtime->launch_selection, true);
+    if (status != UMI_STATUS_OK) return status;
+    (void)snprintf(runtime->discovery_root, sizeof(runtime->discovery_root), "%s", config->executable_root);
+    (void)snprintf(runtime->discovery_suffix, sizeof(runtime->discovery_suffix), "%s", config->executable_suffix);
+    runtime->discovery = *config;
+    runtime->discovery.executable_root = runtime->discovery_root;
+    runtime->discovery.executable_suffix = runtime->discovery_suffix;
+    runtime->discovery_enabled = true;
+    runtime->discovery_polled = false;
+    (void)memset(&runtime->discovery_report, 0, sizeof(runtime->discovery_report));
+    return umi_application_launcher_set_validation_handler(runtime->launcher, validate_native_launch, runtime);
+}
+
+/* Reconcile a bounded scan on owner-supplied time; no timer or worker is owned. */
+UmiStatus umi_desk_runtime_poll_native_discovery(
+    UmiDeskRuntime *runtime, uint64_t now_ms, bool force,
+    UmiApplicationNativeDiscoveryReport *out_report)
+{
+    UmiStatus status;
+    if (runtime == NULL || out_report == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (runtime->discovery_busy) return UMI_STATUS_BUSY;
+    if (!runtime->discovery_enabled || (!force && runtime->discovery_polled &&
+        now_ms >= runtime->discovery_poll_ms &&
+        now_ms - runtime->discovery_poll_ms < runtime->discovery.interval_ms)) {
+        *out_report = runtime->discovery_report;
+        out_report->changed_count = 0U;
+        out_report->skipped = true;
+        return runtime->discovery_enabled ? out_report->status : UMI_STATUS_OK;
+    }
+    runtime->discovery_busy = true;
+    status = umi_application_runtime_catalogue_discover_native(runtime->applications,
+        &runtime->discovery, &runtime->discovery_report);
+    runtime->discovery_polled = true;
+    runtime->discovery_poll_ms = now_ms;
+    if (status == UMI_STATUS_OK && (runtime->discovery_report.changed_count != 0U ||
+                                   runtime->discovery_projection_pending))
+        status = project_native_discovery(runtime);
+    runtime->discovery_report.status = status;
+    *out_report = runtime->discovery_report;
+    runtime->discovery_busy = false;
     return status;
 }
 

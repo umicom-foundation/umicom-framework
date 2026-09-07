@@ -78,8 +78,10 @@ UmiStatus umi_fs_current_directory(char *out_path, size_t capacity);
  */
 UmiStatus umi_fs_temp_directory(char *out_path, size_t capacity);
 /**
- * Provide the fs executable path operation used by this module and its client
- * applications.
+ * Read the current process image path from the operating system, never PATH,
+ * argv[0] or the working directory. Windows returns UTF-8; Linux returns its
+ * native path bytes. Nonzero output storage is cleared on failure, including
+ * truncation. Other platform adapters currently return NOT_IMPLEMENTED.
  */
 UmiStatus umi_fs_executable_path(char *out_path, size_t capacity);
 /**

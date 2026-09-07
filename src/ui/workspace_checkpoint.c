@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/workspace_checkpoint.h"
+#include "workspace_checkpoint_internal.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -452,4 +453,74 @@ done:
     free(text); free(candidate);
     if (out_report != NULL) *out_report = report;
     return status;
+}
+
+/* Reuse scope validation while assigning a distinct complete-library
+ * namespace. Existing active-checkpoint keys and payloads never change. */
+UmiStatus umi_ui_checkpoint_internal_library_keys(
+    const UmiUiWorkspaceCheckpointScope *scope, char *primary, char *backup)
+{
+    UmiStatus status = checkpoint_keys(scope, primary, backup);
+    int first, second;
+    if (status != UMI_STATUS_OK) return status;
+    first = snprintf(primary, UMI_UI_CHECKPOINT_AGGREGATE_CAPACITY,
+        "%s@%s@library-primary", scope->application_id, scope->workspace_id);
+    second = snprintf(backup, UMI_UI_CHECKPOINT_AGGREGATE_CAPACITY,
+        "%s@%s@library-last-good", scope->application_id, scope->workspace_id);
+    return first < 0 || second < 0 ||
+        (size_t)first >= UMI_UI_CHECKPOINT_AGGREGATE_CAPACITY ||
+        (size_t)second >= UMI_UI_CHECKPOINT_AGGREGATE_CAPACITY
+        ? UMI_STATUS_CAPACITY_EXCEEDED : UMI_STATUS_OK;
+}
+
+/* Keep missing-store, transient-error and durability evidence identical. */
+void umi_ui_checkpoint_internal_report_init(
+    UmiDataServer *server, UmiUiWorkspaceCheckpointReport *report)
+{
+    checkpoint_report_init(server, report);
+}
+
+/* Check existing host bounds and importer revision reserves before reuse. */
+UmiStatus umi_ui_checkpoint_internal_validate_host(
+    const UmiUiWorkspaceCustomisation *model)
+{
+    return validate_host(model);
+}
+
+/* Apply the same hidden-window, singleton, product and native projection
+ * rules without requiring a free live layout slot for whole-list replacement. */
+UmiStatus umi_ui_checkpoint_internal_validate_record(
+    const UmiUiWorkspaceCheckpointScope *scope,
+    const UmiUiWorkspaceCustomisation *model,
+    const UmiUiLayoutPersistenceRecord *record)
+{
+    UmiApplicationSuiteLayoutRenderPlan *plan;
+    UmiStatus status = validate_record(scope, model, record);
+    size_t index;
+    if (status != UMI_STATUS_OK) return status;
+    for (index = 0U; index < record->layout.window_count; ++index) {
+        const char *group = record->layout.windows[index].context_group_id;
+        if (group[0] != '\0' && umi_ui_window_group_find(&model->groups, group) == NULL)
+            return UMI_STATUS_NOT_FOUND;
+    }
+    plan = malloc(sizeof(*plan));
+    if (plan == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = umi_application_suite_layout_render_plan_build(&record->layout, plan);
+    free(plan);
+    return status;
+}
+
+/* Read trustworthy primary CAS metadata through the established decoder. */
+UmiStatus umi_ui_checkpoint_internal_read_revision(
+    UmiDataServer *server, const char *primary,
+    UmiUiWorkspaceCheckpointReport *report)
+{
+    return read_primary_revision(server, primary, report);
+}
+
+/* Finish only the transaction opened by a checkpoint service. */
+UmiStatus umi_ui_checkpoint_internal_finish_transaction(
+    UmiDataServer *server, UmiStatus status)
+{
+    return finish_transaction(server, status);
 }

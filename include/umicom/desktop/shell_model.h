@@ -18,6 +18,7 @@
 #define UMICOM_DESKTOP_SHELL_MODEL_H
 
 #include "umicom/application/presentation.h"
+#include "umicom/application/runtime_catalogue.h"
 #include "umicom/desktop/layout_designer.h"
 #include "umicom/desktop/monitor_canvas.h"
 #include "umicom/desktop/shell_actions.h"
@@ -129,6 +130,11 @@ UmiStatus umi_desktop_shell_model_set_viewport(
     double height);
 
 /* Application taskbar and launcher state. */
+/* Copy the authoritative runtime presentation as one bounded update. Missing
+ * installation and a living process are independent; no shell-local launch or
+ * inferred termination occurs. Unknown shell rows are reported NOT_FOUND. */
+UmiStatus umi_desktop_shell_model_project_application(
+    UmiDesktopShellModel *model, const UmiApplicationRuntimeRecord *record);
 UmiStatus umi_desktop_shell_model_set_application_presence(
     UmiDesktopShellModel *model,
     const char *application_id,

@@ -714,6 +714,19 @@ int main(void)
     REQUIRE(snapshot.source_layout_revision == source_revision);
     REQUIRE(fixture.created_content == 2U);
     REQUIRE(!contains_notebook(root));
+    /* A saved library rename updates future gesture revisions without
+     * replacing canvas frames or asking providers to recreate their content. */
+    ++fixture.layout->windows[2].z_order;
+    REQUIRE(umi_gtk4_workspace_layout_host_update_metadata(fixture.host,
+        fixture.layout) == UMI_STATUS_INVALID_STATE);
+    --fixture.layout->windows[2].z_order;
+    (void)g_strlcpy(fixture.layout->name, "Renamed canvas", sizeof(fixture.layout->name));
+    ++fixture.layout->revision;
+    REQUIRE(umi_gtk4_workspace_layout_host_update_metadata(fixture.host,
+        fixture.layout) == UMI_STATUS_OK);
+    source_revision = fixture.layout->revision;
+    REQUIRE(umi_gtk4_workspace_layout_host_snapshot(fixture.host).source_layout_revision == source_revision);
+    REQUIRE(fixture.created_content == 2U && fixture.released_content == 0U);
     canvas = find_tag(root, "workstation.workspace-canvas");
     panel = find_tag(root, "workstation.canvas.panel.alpha");
     REQUIRE(canvas != NULL && panel != NULL);
@@ -748,6 +761,8 @@ int main(void)
         UMI_STATUS_OK);
     REQUIRE(observed.x > original.x && observed.y > original.y);
     REQUIRE(observed.width == original.width && fixture.requests == 0U);
+    REQUIRE(umi_gtk4_workspace_layout_host_update_metadata(fixture.host,
+        fixture.layout) == UMI_STATUS_BUSY);
     g_signal_emit_by_name(gesture, "cancel", NULL);
     g_object_unref(gesture);
     gesture = NULL;
@@ -773,6 +788,8 @@ int main(void)
         "alpha", &changed, source_revision) == UMI_STATUS_OK);
     snapshot = umi_gtk4_workspace_layout_host_snapshot(fixture.host);
     REQUIRE(snapshot.geometry_pending && fixture.requests == 0U);
+    REQUIRE(umi_gtk4_workspace_layout_host_update_metadata(fixture.host,
+        fixture.layout) == UMI_STATUS_BUSY);
     /* Validation happens before publication or cancellation. A malformed new
      * rectangle must leave the existing view and its queued request intact. */
     memset(fixture.layout->windows[2].title, 'X', sizeof(fixture.layout->windows[2].title));

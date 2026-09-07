@@ -942,6 +942,65 @@ void umi_gtk4_workspace_layout_host_set_transient_parent(
     if (host != NULL) host->transient_parent = parent;
 }
 
+/* Rename an accepted layout without replacing provider widgets or changing
+ * transient presentation. Compare all saved window fields explicitly so
+ * padding and unused string bytes never control draft ownership. */
+UmiStatus umi_gtk4_workspace_layout_host_update_metadata(
+    UmiGtk4WorkspaceLayoutHost *host, const UmiUiWorkspaceLayout *layout)
+{
+    UmiApplicationSuiteLayoutRenderPlan *candidate_plan;
+    UmiStatus status;
+    size_t index;
+    int name_changed;
+
+    if (host == NULL || layout == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (layout->window_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (!workspace_layout_text_valid(layout)) return UMI_STATUS_INVALID_ARGUMENT;
+    if (host->active_canvas_entry != NULL || host->pending_geometry_id != 0U ||
+        host->pending_action_id != 0U || host->pending_restore_id != 0U)
+        return UMI_STATUS_BUSY;
+    if (strcmp(host->layout.layout_id, layout->layout_id) != 0 ||
+        host->layout.locked != layout->locked ||
+        host->layout.window_count != layout->window_count)
+        return UMI_STATUS_INVALID_STATE;
+    for (index = 0U; index < layout->window_count; ++index) {
+        const UmiUiWorkspaceWindow *previous = &host->layout.windows[index];
+        const UmiUiWorkspaceWindow *next = &layout->windows[index];
+        if (!canvas_window_metadata_equal(previous, next) ||
+            previous->x != next->x || previous->y != next->y ||
+            previous->width != next->width || previous->height != next->height)
+            return UMI_STATUS_INVALID_STATE;
+    }
+    name_changed = strcmp(host->layout.name, layout->name) != 0;
+    if (layout->revision < host->layout.revision ||
+        (name_changed && layout->revision == host->layout.revision))
+        return UMI_STATUS_INVALID_STATE;
+    if (!name_changed && layout->revision == host->layout.revision)
+        return UMI_STATUS_OK;
+    if (host->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    candidate_plan = g_try_new0(UmiApplicationSuiteLayoutRenderPlan, 1);
+    if (candidate_plan == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = umi_application_suite_layout_render_plan_build(layout, candidate_plan);
+    if (status != UMI_STATUS_OK) {
+        g_free(candidate_plan);
+        return status;
+    }
+    (void)g_strlcpy(host->layout.name, layout->name, sizeof(host->layout.name));
+    host->layout.revision = layout->revision;
+    host->plan = *candidate_plan;
+    g_free(candidate_plan);
+    /* No gesture is active or queued, so future requests can safely use the
+     * accepted source revision without retargeting an earlier user action. */
+    for (index = 0U; host->canvas_entries != NULL &&
+         index < host->canvas_entries->len; ++index) {
+        CanvasEntry *entry = g_ptr_array_index(host->canvas_entries, (guint)index);
+        entry->source_revision = layout->revision;
+    }
+    ++host->revision;
+    return UMI_STATUS_OK;
+}
+
 /* Render semantic regions with nested paned containers. */
 UmiStatus umi_gtk4_workspace_layout_host_rebuild(
     UmiGtk4WorkspaceLayoutHost *host,

@@ -674,21 +674,53 @@ UmiStatus umi_fs_executable_path(char *out_path, size_t capacity)
     if (out_path == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* A failed lookup must never leave a partial path that a caller might
+     * mistake for a trusted installation directory. */
+    out_path[0] = '\0';
+    if (capacity < 2U) return UMI_STATUS_CAPACITY_EXCEEDED;
 #ifdef _WIN32
     {
-        DWORD count = GetModuleFileNameA(NULL, out_path, (DWORD)capacity);
+        /* Windows supplies UTF-16. Convert explicitly to the Framework UTF-8
+         * path contract instead of depending on the workstation's ANSI page.
+         * Keep the maximum native path buffer off small Windows test stacks. */
+        const DWORD native_capacity = 32768U;
+        WCHAR *native_path = calloc((size_t)native_capacity, sizeof(*native_path));
+        DWORD count;
+        int required;
+        UmiStatus status = UMI_STATUS_OK;
+        if (native_path == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+        count = GetModuleFileNameW(NULL, native_path, native_capacity);
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (count == 0U || count >= (DWORD)capacity) {
-            return UMI_STATUS_IO_ERROR;
+        if (count == 0U) {
+            status = UMI_STATUS_IO_ERROR;
+        } else if (count >= native_capacity) {
+            status = UMI_STATUS_CAPACITY_EXCEEDED;
+        } else {
+            required = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS,
+                native_path, -1, NULL, 0, NULL, NULL);
+            if (required <= 0) status = UMI_STATUS_IO_ERROR;
+            else if ((size_t)required > capacity) status = UMI_STATUS_CAPACITY_EXCEEDED;
+            else if (WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS,
+                    native_path, -1, out_path, required, NULL, NULL) != required)
+                status = UMI_STATUS_IO_ERROR;
         }
-        return UMI_STATUS_OK;
+        free(native_path);
+        if (status != UMI_STATUS_OK) out_path[0] = '\0';
+        return status;
     }
 #elif defined(__linux__)
     {
         ssize_t count = readlink("/proc/self/exe", out_path, capacity - 1U);
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (count < 0 || (size_t)count >= capacity) {
+        if (count < 0) {
+            out_path[0] = '\0';
             return UMI_STATUS_IO_ERROR;
+        }
+        /* readlink does not terminate or report truncation separately. A full
+         * buffer is ambiguous, so reject it rather than trust a shortened path. */
+        if ((size_t)count >= capacity - 1U) {
+            out_path[0] = '\0';
+            return UMI_STATUS_CAPACITY_EXCEEDED;
         }
         out_path[(size_t)count] = '\0';
         return UMI_STATUS_OK;

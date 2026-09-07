@@ -238,6 +238,16 @@ void umi_application_launch_selection_destroy(
     free(selection);
 }
 
+/* Bind explicit outage-retention policy without changing current selections. */
+UmiStatus umi_application_launch_selection_set_retention(
+    UmiApplicationLaunchSelection *selection, bool retain_unavailable)
+{
+    if (selection == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (selection->dispatching) return UMI_STATUS_BUSY;
+    selection->retain_unavailable_selection = retain_unavailable;
+    return UMI_STATUS_OK;
+}
+
 /*
  * Provide the application launch selection refresh operation used by this module and its
  * client applications.
@@ -334,7 +344,7 @@ UmiStatus umi_application_launch_selection_refresh(
             refresh_status = status;
             goto finish_refresh;
         }
-        choice->eligible = record.installed && record.compatible &&
+        choice->eligible = (record.installed || record.running) && record.compatible &&
                            record.enabled && record.visible &&
                            readiness.launchable;
         choice->running = record.running;
@@ -742,7 +752,7 @@ static UmiStatus dispatch_eligibility(
     status = umi_application_runtime_catalogue_find(
         selection->catalogue, choice->application_id, &record);
     if (status != UMI_STATUS_OK) return status;
-    if (!record.installed || !record.compatible || !record.enabled || !record.visible) {
+    if ((!record.installed && !record.running) || !record.compatible || !record.enabled || !record.visible) {
         return UMI_STATUS_UNAVAILABLE;
     }
     status = umi_application_launch_readiness_check(

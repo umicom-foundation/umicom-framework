@@ -245,6 +245,18 @@ UmiStatus umi_gtk4_workspace_layout_host_canvas_geometry(
 UmiStatus umi_gtk4_workspace_layout_host_rebuild(
     UmiGtk4WorkspaceLayoutHost *host,
     const UmiUiWorkspaceLayout *layout);
+/** Update only the active layout's name and source revision without rebuilding
+ * widgets, releasing provider drafts or changing transient view state. Layout
+ * identity, lock, window order/count and every stored window field must match
+ * the current host semantically; text padding is ignored. A changed name needs
+ * a newer revision; revisions cannot decrease. No-op updates keep host revision.
+ * Active canvas previews and queued geometry, actions or Restore return BUSY
+ * without cancellation. Invalid input or differing structure returns an error
+ * without changing the host. No provider or owner callback runs. GTK thread only.
+ */
+UmiStatus umi_gtk4_workspace_layout_host_update_metadata(
+    UmiGtk4WorkspaceLayoutHost *host,
+    const UmiUiWorkspaceLayout *layout);
 /**
  * Provide the gtk4 workspace layout host widget operation used by this module and its
  * client applications.

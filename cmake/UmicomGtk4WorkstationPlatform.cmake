@@ -104,6 +104,7 @@ if(TARGET umicom_ui_gtk4)
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/data_grid_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/dock_overlay_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/inspector_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/layout_library_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/media_canvas_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/node_graph_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/palette_gtk4.c"
@@ -128,6 +129,7 @@ if(TARGET umicom_ui_gtk4)
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/data_grid_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/dock_overlay_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/inspector_gtk4.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/layout_library_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/media_canvas_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/node_graph_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/palette_gtk4.c"
@@ -270,7 +272,7 @@ if(BUILD_TESTING)
         endif()
         # These native interaction fixtures create inert widgets only. They
         # never present application windows or invoke external commands.
-        foreach(interaction_case IN ITEMS workspace_maximise suite_navigation command_bar_lifetime)
+        foreach(interaction_case IN ITEMS workspace_maximise suite_navigation command_bar_lifetime desk_home layout_library)
             string(REPLACE "_" "-" interaction_target_suffix "${interaction_case}")
             string(REPLACE "_" "." interaction_test_suffix "${interaction_case}")
             set(interaction_target "umicom-gtk4-${interaction_target_suffix}-test")

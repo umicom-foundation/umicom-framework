@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "umicom/application/portfolio.h"
+#include "umicom/application/native_discovery.h"
 
 struct UmiApplicationRuntimeCatalogue {
     UmiApplicationRuntimeRecord records[
@@ -138,21 +139,23 @@ static void update_visibility(UmiApplicationRuntimeRecord *record)
      */
     if (record == NULL) return;
     record->visible =
+        record->running ||
         (record->installed && record->compatible && record->enabled) ||
         record->visible_when_unavailable;
     /* Apply this branch only when its contract condition is satisfied. */
-    if (!record->installed) {
-        record->state = UMI_APPLICATION_RUNTIME_UNAVAILABLE;
+    if (!record->installed && !record->running) {
+        if (record->state != UMI_APPLICATION_RUNTIME_FAILED)
+            record->state = UMI_APPLICATION_RUNTIME_UNAVAILABLE;
         record->running = false;
         record->active = false;
-        record->attention = false;
+        if (record->state != UMI_APPLICATION_RUNTIME_FAILED) record->attention = false;
         record->process_token = 0U;
     } else /* Apply this operation only while the related capability or state is available. */ if (!record->compatible || !record->enabled) {
         /* Apply this branch only when its contract condition is satisfied. */
         if (!state_is_running(record->state)) {
             record->state = UMI_APPLICATION_RUNTIME_STOPPED;
         }
-        record->active = false;
+        if (!record->running) record->active = false;
     } else /* Apply this branch only when its contract condition is satisfied. */ if (record->state == UMI_APPLICATION_RUNTIME_UNKNOWN ||
                record->state == UMI_APPLICATION_RUNTIME_UNAVAILABLE) {
         record->state = UMI_APPLICATION_RUNTIME_STOPPED;
@@ -536,7 +539,7 @@ UmiStatus umi_application_runtime_catalogue_set_state(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     /* Apply this branch only when its contract condition is satisfied. */
-    if (!record->installed &&
+    if (!record->installed && !record->running &&
         state != UMI_APPLICATION_RUNTIME_UNKNOWN &&
         state != UMI_APPLICATION_RUNTIME_UNAVAILABLE) {
         return UMI_STATUS_INVALID_STATE;
@@ -638,7 +641,7 @@ UmiStatus umi_application_runtime_catalogue_activate(
      */
     if (record == NULL) return UMI_STATUS_NOT_FOUND;
     /* Apply this branch only when its contract condition is satisfied. */
-    if (!record->installed || !record->compatible ||
+    if ((!record->installed && !record->running) || !record->compatible ||
         !record->enabled || !record->visible) {
         return UMI_STATUS_UNAVAILABLE;
     }
@@ -681,9 +684,8 @@ UmiStatus umi_application_runtime_catalogue_mark_exit(
     record->running = false;
     record->active = false;
     record->attention = exit_code != 0;
-    record->state = exit_code == 0
-        ? UMI_APPLICATION_RUNTIME_STOPPED
-        : UMI_APPLICATION_RUNTIME_FAILED;
+    record->state = exit_code != 0 ? UMI_APPLICATION_RUNTIME_FAILED :
+        (record->installed ? UMI_APPLICATION_RUNTIME_STOPPED : UMI_APPLICATION_RUNTIME_UNAVAILABLE);
     /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(catalogue->active_application_id,
                record->application_id) == 0) {
@@ -693,6 +695,7 @@ UmiStatus umi_application_runtime_catalogue_mark_exit(
                        message, true);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    update_visibility(record);
     record->revision += 1U;
     catalogue->revision += 1U;
     return UMI_STATUS_OK;
@@ -815,3 +818,6 @@ const char *umi_application_runtime_state_text(
     default: return "invalid";
     }
 }
+
+/* Presence scanning shares this catalogue's transactional record storage. */
+#include "runtime_catalogue_native_discovery.inc"

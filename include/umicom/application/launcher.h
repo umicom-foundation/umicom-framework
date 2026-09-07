@@ -111,6 +111,20 @@ typedef struct UmiApplicationLauncherSnapshot {
  */
 typedef struct UmiApplicationLauncher UmiApplicationLauncher;
 
+/* Optional composition-owned preflight for START/RESTART only. It is called
+ * both during preparation and immediately before execution, and must not
+ * launch, mutate the catalogue or reenter the launcher. Context is borrowed. */
+typedef UmiStatus (*UmiApplicationLauncherValidateFn)(
+    void *context, const UmiApplicationLaunchPlan *plan);
+/* Replace or clear the borrowed preflight callback without executing a plan. */
+UmiStatus umi_application_launcher_set_validation_handler(
+    UmiApplicationLauncher *launcher, UmiApplicationLauncherValidateFn handler,
+    void *context);
+/* Check that an optional discovery binding describes this launcher's exact
+ * existing root/suffix. Mismatches are rejected before monitoring is changed. */
+UmiStatus umi_application_launcher_validate_location(
+    const UmiApplicationLauncher *launcher, const char *root, const char *suffix);
+
 /**
  * Provide the application launch config default operation used by this module and its
  * client applications.

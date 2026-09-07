@@ -27,6 +27,8 @@ struct UmiApplicationLauncher {
     uint32_t graceful_stop_timeout_ms;
     UmiApplicationLauncherSnapshot snapshot;
     uint64_t next_plan_revision;
+    UmiApplicationLauncherValidateFn validate;
+    void *validation_context;
 };
 
 /* Provide the copy text operation used by this module and its client applications. */
@@ -250,6 +252,26 @@ void umi_application_launcher_destroy(UmiApplicationLauncher *launcher)
     free(launcher);
 }
 
+/* Validate discovery location before a composition changes its live binding. */
+UmiStatus umi_application_launcher_validate_location(
+    const UmiApplicationLauncher *launcher, const char *root, const char *suffix)
+{
+    if (launcher == NULL || root == NULL || suffix == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return strcmp(launcher->executable_root, root) == 0 &&
+        strcmp(launcher->executable_suffix, suffix) == 0 ? UMI_STATUS_OK : UMI_STATUS_INVALID_STATE;
+}
+
+/* Bind optional launch-time installation evidence without owning its context. */
+UmiStatus umi_application_launcher_set_validation_handler(
+    UmiApplicationLauncher *launcher, UmiApplicationLauncherValidateFn handler,
+    void *context)
+{
+    if (launcher == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    launcher->validate = handler;
+    launcher->validation_context = handler != NULL ? context : NULL;
+    return UMI_STATUS_OK;
+}
+
 /*
  * Provide the application launcher prepare operation used by this module and its client
  * applications.
@@ -277,12 +299,17 @@ UmiStatus umi_application_launcher_prepare(
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     /* Apply this branch only when its contract condition is satisfied. */
-    if (!record.installed || !record.compatible ||
-        !record.enabled || !record.visible) {
+    if (action == UMI_APPLICATION_LAUNCH_START && record.running)
+        action = UMI_APPLICATION_LAUNCH_ACTIVATE;
+    if (action != UMI_APPLICATION_LAUNCH_STOP &&
+        (!record.compatible || !record.enabled || !record.visible ||
+         ((action == UMI_APPLICATION_LAUNCH_START || action == UMI_APPLICATION_LAUNCH_RESTART) &&
+          !record.installed))) {
         return UMI_STATUS_UNAVAILABLE;
     }
     /* Apply this branch only when its contract condition is satisfied. */
-    if (action == UMI_APPLICATION_LAUNCH_STOP && !record.running) {
+    if ((action == UMI_APPLICATION_LAUNCH_STOP || action == UMI_APPLICATION_LAUNCH_ACTIVATE) &&
+        !record.running) {
         return UMI_STATUS_INVALID_STATE;
     }
 
@@ -314,7 +341,52 @@ UmiStatus umi_application_launcher_prepare(
                            sizeof(out_plan->working_directory),
                            working_directory, true);
     }
+    if (status == UMI_STATUS_OK && launcher->validate != NULL &&
+        (action == UMI_APPLICATION_LAUNCH_START || action == UMI_APPLICATION_LAUNCH_RESTART))
+        status = launcher->validate(launcher->validation_context, out_plan);
     return status;
+}
+
+/* Recheck copied plans against current identity, policy and process evidence.
+ * A stale or caller-altered plan never reaches the platform adapter. */
+static UmiStatus validate_execution_plan(UmiApplicationLauncher *launcher,
+                                        const UmiApplicationLaunchPlan *plan)
+{
+    UmiApplicationRuntimeRecord record;
+    char expected[UMI_APPLICATION_RUNTIME_PATH_CAPACITY];
+    UmiStatus status;
+    size_t index;
+    if (plan->argument_count > UMI_APPLICATION_LAUNCH_MAX_ARGUMENTS ||
+        memchr(plan->application_id, '\0', sizeof(plan->application_id)) == NULL ||
+        memchr(plan->executable_path, '\0', sizeof(plan->executable_path)) == NULL ||
+        memchr(plan->working_directory, '\0', sizeof(plan->working_directory)) == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (index = 0U; index < plan->argument_count; ++index)
+        if (memchr(plan->arguments[index], '\0', sizeof(plan->arguments[index])) == NULL)
+            return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_application_runtime_catalogue_find(launcher->catalogue, plan->application_id, &record);
+    if (status != UMI_STATUS_OK) return status;
+    if (plan->action == UMI_APPLICATION_LAUNCH_STOP || plan->action == UMI_APPLICATION_LAUNCH_ACTIVATE) {
+        if (!record.running || record.process_token != plan->existing_process_token)
+            return UMI_STATUS_INVALID_STATE;
+        if (plan->action == UMI_APPLICATION_LAUNCH_ACTIVATE && (!record.enabled || !record.compatible))
+            return UMI_STATUS_UNAVAILABLE;
+        return UMI_STATUS_OK;
+    }
+    if (plan->action != UMI_APPLICATION_LAUNCH_START && plan->action != UMI_APPLICATION_LAUNCH_RESTART)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (!record.installed || !record.compatible || !record.enabled || !record.visible)
+        return UMI_STATUS_UNAVAILABLE;
+    if ((plan->action == UMI_APPLICATION_LAUNCH_START && record.running) ||
+        (plan->action == UMI_APPLICATION_LAUNCH_RESTART && record.process_token != plan->existing_process_token))
+        return UMI_STATUS_INVALID_STATE;
+    status = make_executable_path(launcher, &record, expected, sizeof(expected));
+    if (status != UMI_STATUS_OK) return status;
+    if (strcmp(expected, plan->executable_path) != 0 ||
+        strcmp(plan->working_directory, record.working_directory[0] != '\0' ?
+               record.working_directory : launcher->default_working_directory) != 0)
+        return UMI_STATUS_INVALID_STATE;
+    return launcher->validate != NULL ? launcher->validate(launcher->validation_context, plan) : UMI_STATUS_OK;
 }
 
 /* Provide the execute start operation used by this module and its client applications. */
@@ -421,6 +493,12 @@ UmiStatus umi_application_launcher_execute(
     if (launcher == NULL || plan == NULL ||
         plan->structure_size < sizeof(UmiApplicationLaunchPlan)) {
         return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = validate_execution_plan(launcher, plan);
+    if (status != UMI_STATUS_OK) {
+        /* Malformed fixed-width text/counts must not escape through snapshots. */
+        record_request(launcher, status == UMI_STATUS_INVALID_ARGUMENT ? NULL : plan, status);
+        return status;
     }
     /* Select the behaviour associated with the requested command or state value. */
     switch (plan->action) {
