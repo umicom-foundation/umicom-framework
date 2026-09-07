@@ -174,8 +174,9 @@ UmiStatus umi_studio_runtime_workspace_seed(UmiUiWorkspaceCustomisation *model)
             status = umi_ui_window_group_assign(&candidate->groups, surface_context(binding->kind),
                 descriptor.tool_id, UMI_UI_WINDOW_GROUP_BIDIRECTIONAL);
     }
-    /* Existing native presets define exactly which real tools start visible.
-     * Hidden singleton records keep their last placement for later reopening. */
+    /* Existing presets define the working tool set. The welcome/default
+     * arrangement starts side tools collapsed so the document area is clear;
+     * other presets retain their established permanent docking defaults. */
     for (preset_index = 0U; status == UMI_STATUS_OK && preset_index < umi_studio_layout_catalogue_count(); ++preset_index) {
         const UmiStudioRuntimeLayoutPresetDefinition *preset = umi_studio_layout_catalogue_at(preset_index);
         status = umi_studio_layout_preset_validate(preset);
@@ -186,6 +187,34 @@ UmiStatus umi_studio_runtime_workspace_seed(UmiUiWorkspaceCustomisation *model)
             UmiUiWorkspaceWindow window;
             status = surface_window(binding,
                 umi_studio_layout_preset_contains_surface(preset, binding->kind) != 0, &window);
+            if (status == UMI_STATUS_OK && strcmp(preset->preset_id,
+                    umi_studio_layout_preset_default()->preset_id) == 0 &&
+                (binding->kind == UMI_STUDIO_SURFACE_OUTLINE ||
+                 binding->kind == UMI_STUDIO_SURFACE_OBJECT_INSPECTOR ||
+                 (window.visible && (binding->region == UMI_APPLICATION_SHELL_REGION_PRIMARY_SIDEBAR ||
+                                     binding->region == UMI_APPLICATION_SHELL_REGION_SECONDARY_SIDEBAR)))) {
+                const UmiExperiencePanelDefinition *panel = product_panel(binding->kind);
+                const bool left = binding->kind == UMI_STUDIO_SURFACE_OUTLINE ||
+                    binding->kind == UMI_STUDIO_SURFACE_OBJECT_INSPECTOR ||
+                    binding->region == UMI_APPLICATION_SHELL_REGION_PRIMARY_SIDEBAR;
+                const UmiApplicationSuiteLayoutRect rail_rect = umi_application_suite_layout_region_rect(
+                    left ? UMI_UI_PLACEMENT_LEFT : UMI_UI_PLACEMENT_RIGHT);
+                /* Structure and Object Inspector share the left edge. Their
+                 * real widget identities do not change when the rail is named. */
+                if (panel != NULL && (panel->flags & UMI_EXPERIENCE_PANEL_AUTO_HIDE) == 0U)
+                    status = UMI_STATUS_PERMISSION_DENIED;
+                if (status == UMI_STATUS_OK) status = copy_text(window.placement_id,
+                    sizeof(window.placement_id), left ? "auto-hide:left" : "auto-hide:right");
+                if (status == UMI_STATUS_OK) status = copy_text(window.stack_id, sizeof(window.stack_id), left ? "left" : "right");
+                if (status == UMI_STATUS_OK) status = copy_text(window.group_id, sizeof(window.group_id), left ? "left" : "right");
+                if (status == UMI_STATUS_OK && binding->kind == UMI_STUDIO_SURFACE_OUTLINE)
+                    status = copy_text(window.title, sizeof(window.title), "Structure");
+                if (status == UMI_STATUS_OK && binding->kind == UMI_STUDIO_SURFACE_OBJECT_INSPECTOR)
+                    status = copy_text(window.title, sizeof(window.title), "Object Inspector");
+                window.x = rail_rect.x; window.y = rail_rect.y;
+                window.width = rail_rect.width; window.height = rail_rect.height;
+                window.visible = false;
+            }
             if (status == UMI_STATUS_OK) status = umi_ui_workspace_layout_add_window(layout, &window);
         }
         if (status == UMI_STATUS_OK) status = umi_ui_workspace_layout_set_locked(layout, true);
@@ -238,6 +267,92 @@ UmiStatus umi_studio_runtime_workspace_create_blank(
     if (status == UMI_STATUS_OK) status = umi_ui_workspace_customisation_begin_edit(candidate);
     if (status == UMI_STATUS_OK) *model = *candidate;
     free(candidate);
+    return status;
+}
+
+/* Build a new named product default from today's catalogue, not from a saved
+ * default record which may contain a user's older arrangement. Only a complete
+ * registered candidate is published; documents and checkpoint storage are not
+ * owned by this model and are never accessed by this operation. */
+UmiStatus umi_studio_runtime_workspace_create_default(
+    UmiUiWorkspaceCustomisation *model, const char *layout_id, const char *name)
+{
+    UmiUiWorkspaceCustomisation *candidate;
+    UmiUiWorkspaceCustomisation *fresh;
+    UmiUiWorkspaceLayout *layout;
+    UmiStatus status;
+    size_t index;
+    if (model == NULL || !qualified_id(layout_id) || name == NULL || name[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (strlen(layout_id) >= UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY ||
+        strlen(name) >= sizeof(model->layouts[0].name)) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (model->edit_active) return UMI_STATUS_BUSY;
+    if (model->layout_count > UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS ||
+        model->windows.count > UMI_UI_WINDOW_CATALOGUE_MAX ||
+        model->windows.recent_count > UMI_UI_WINDOW_RECENT_MAX ||
+        model->groups.count > UMI_UI_WINDOW_GROUP_MAX) return UMI_STATUS_INVALID_STATE;
+    for (index = 0U; index < model->layout_count; ++index) {
+        if (memchr(model->layouts[index].layout_id, '\0', sizeof(model->layouts[index].layout_id)) == NULL)
+            return UMI_STATUS_INVALID_STATE;
+        if (strcmp(model->layouts[index].layout_id, layout_id) == 0) return UMI_STATUS_ALREADY_EXISTS;
+    }
+    if (model->layout_count == UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS ||
+        model->revision > UINT64_MAX - 2U)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Lookups borrow fixed-size identity fields. Validate their bounds before
+     * projecting memberships, without mutating any shared routing record. */
+    for (index = 0U; index < model->windows.count; ++index)
+        if (model->windows.items[index].tool_id[0] == '\0' ||
+            memchr(model->windows.items[index].tool_id, '\0', sizeof(model->windows.items[index].tool_id)) == NULL)
+            return UMI_STATUS_INVALID_STATE;
+    for (index = 0U; index < model->groups.count; ++index) {
+        const UmiUiWindowGroup *group = &model->groups.items[index];
+        size_t member_index;
+        if (group->member_count > UMI_UI_WINDOW_GROUP_MAX_MEMBERS ||
+            group->group_id[0] == '\0' ||
+            memchr(group->group_id, '\0', sizeof(group->group_id)) == NULL)
+            return UMI_STATUS_INVALID_STATE;
+        for (member_index = 0U; member_index < group->member_count; ++member_index) {
+            const UmiUiWindowGroupMember *member = &group->members[member_index];
+            if (member->window_id[0] == '\0' ||
+                memchr(member->window_id, '\0', sizeof(member->window_id)) == NULL ||
+                member->role < UMI_UI_WINDOW_GROUP_SOURCE || member->role > UMI_UI_WINDOW_GROUP_BIDIRECTIONAL)
+                return UMI_STATUS_INVALID_STATE;
+        }
+    }
+    candidate = (UmiUiWorkspaceCustomisation *)malloc(sizeof(*candidate));
+    fresh = (UmiUiWorkspaceCustomisation *)calloc(1U, sizeof(*fresh));
+    if (candidate == NULL || fresh == NULL) {
+        free(candidate); free(fresh);
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    *candidate = *model;
+    umi_ui_workspace_customisation_init(fresh);
+    status = umi_studio_runtime_workspace_seed(fresh);
+    layout = umi_ui_workspace_customisation_active(fresh);
+    if (status == UMI_STATUS_OK && layout == NULL) status = UMI_STATUS_INVALID_STATE;
+    if (status == UMI_STATUS_OK) status = copy_text(layout->layout_id, sizeof(layout->layout_id), layout_id);
+    if (status == UMI_STATUS_OK) status = copy_text(layout->name, sizeof(layout->name), name);
+    /* Reset geometry and chrome only. Group membership is shared across saved
+     * layouts, so changing it here would also change unrelated user layouts.
+     * The new layout adopts the live mappings, including explicit unlinking. */
+    for (index = 0U; status == UMI_STATUS_OK && index < layout->window_count; ++index) {
+        UmiUiWorkspaceWindow *window = &layout->windows[index];
+        const UmiUiWindowDescriptor *descriptor = umi_ui_window_catalogue_find(
+            &candidate->windows, window->tool_id);
+        if (descriptor == NULL) status = UMI_STATUS_NOT_FOUND;
+        else if (descriptor->supports_multiple) status = UMI_STATUS_INVALID_STATE;
+        else {
+            const UmiUiWindowGroup *group = umi_ui_window_group_for_window(
+                &candidate->groups, window->window_id, NULL);
+            status = copy_text(window->context_group_id, sizeof(window->context_group_id),
+                group != NULL ? group->group_id : "");
+        }
+    }
+    if (status == UMI_STATUS_OK) status = umi_ui_workspace_customisation_add_layout(candidate, layout);
+    if (status == UMI_STATUS_OK) status = umi_ui_workspace_customisation_activate(candidate, layout->layout_id);
+    if (status == UMI_STATUS_OK) *model = *candidate;
+    free(fresh); free(candidate);
     return status;
 }
 
@@ -297,6 +412,43 @@ UmiStatus umi_studio_runtime_workspace_set_visible(
         if (status == UMI_STATUS_OK) candidate->revision += 1U;
     }
     if (status == UMI_STATUS_OK && automatic_edit) status = umi_ui_workspace_customisation_commit_edit(candidate);
+    if (status == UMI_STATUS_OK) *model = *candidate;
+    free(candidate);
+    return status;
+}
+
+/* Route ordinary tool presentation through the same transaction owner. This
+ * path does not replace the explicit edit-only structural visibility API. */
+UmiStatus umi_studio_runtime_workspace_set_tool_presentation(
+    UmiUiWorkspaceCustomisation *model, UmiStudioRuntimeSurfaceKind kind,
+    bool visible, bool auto_hidden)
+{
+    const char *id = umi_studio_runtime_workspace_surface_id(kind);
+    const UmiExperiencePanelDefinition *panel = product_panel(kind);
+    const UmiUiWorkspaceLayout *layout;
+    const UmiUiWorkspaceWindow *window;
+    UmiUiWorkspaceCustomisation *candidate;
+    UmiStatus status = UMI_STATUS_OK;
+    if (model == NULL || id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    layout = umi_ui_workspace_customisation_active_const(model);
+    if (layout == NULL) return UMI_STATUS_NOT_FOUND;
+    window = umi_ui_workspace_layout_find_window(layout, id);
+    if (window != NULL && strcmp(window->tool_id, id) != 0) return UMI_STATUS_INVALID_STATE;
+    if (panel != NULL && (visible || auto_hidden)) {
+        uint32_t required = window != NULL && window->floating
+            ? UMI_EXPERIENCE_PANEL_FLOATABLE : UMI_EXPERIENCE_PANEL_DOCKABLE;
+        if (auto_hidden) required |= UMI_EXPERIENCE_PANEL_AUTO_HIDE;
+        if ((panel->flags & required) != required) return UMI_STATUS_PERMISSION_DENIED;
+    }
+    if (window == NULL && !visible && !auto_hidden) return UMI_STATUS_OK;
+    candidate = malloc(sizeof(*candidate));
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    *candidate = *model;
+    /* Opening and the following mode change publish together, even when the
+     * requested tool did not exist in a newly created blank canvas. */
+    if (window == NULL) status = umi_studio_runtime_workspace_set_visible(candidate, kind, true);
+    if (status == UMI_STATUS_OK)
+        status = umi_ui_workspace_customisation_set_tool_presentation(candidate, id, visible, auto_hidden);
     if (status == UMI_STATUS_OK) *model = *candidate;
     free(candidate);
     return status;

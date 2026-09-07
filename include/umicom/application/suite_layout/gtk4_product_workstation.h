@@ -72,6 +72,11 @@ umi_application_product_gtk4_workstation_config_default(
 UmiStatus umi_application_product_gtk4_workstation_create(
     const UmiApplicationProductGtk4WorkstationConfig *config,
     UmiApplicationProductGtk4Workstation **out_workstation);
+/** Bind the existing shared product identity to a native window before its
+ * first realization. The Framework owns titlebar composition and lifetime;
+ * no application catalogue or appearance state is duplicated. */
+UmiStatus umi_application_product_gtk4_workstation_bind_window(
+    UmiApplicationProductGtk4Workstation *workstation, GtkWindow *window);
 /** Explicitly enable shared user-local SQLite layout checkpoints.
  * Native launchers opt in after construction; constructors do no checkpoint I/O.
  * A failed restore leaves the current layout visible and reports its error. */

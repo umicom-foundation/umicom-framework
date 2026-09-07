@@ -137,7 +137,21 @@ static const char *scope_text(UmiWsCommandScope scope)
 
 /* Remove old rows before a new query is projected. GTK owns every child after
  * append, so removing it from the list also releases the old row safely. */
-static void clear_result_list(GtkWidget *list)
+/* Retained rows and entry widgets must not keep callbacks into a released or
+ * replaced controller. GTK's own signal handlers have different user data. */
+static void disconnect_command_bar_widgets(
+    GtkWidget *widget, UmiGtk4WorkstationCommandBar *command_bar)
+{
+    GtkWidget *child;
+    if (widget == NULL) return;
+    g_signal_handlers_disconnect_by_data(widget, command_bar);
+    for (child = gtk_widget_get_first_child(widget); child != NULL;
+         child = gtk_widget_get_next_sibling(child))
+        disconnect_command_bar_widgets(child, command_bar);
+}
+
+/* Disconnect each old result before removing its parent-owned reference. */
+static void clear_result_list(GtkWidget *list, UmiGtk4WorkstationCommandBar *command_bar)
 {
     GtkWidget *child;
 
@@ -153,6 +167,7 @@ static void clear_result_list(GtkWidget *list)
      */
     while (child != NULL) {
         GtkWidget *next = gtk_widget_get_next_sibling(child);
+        disconnect_command_bar_widgets(child, command_bar);
         gtk_list_box_remove(GTK_LIST_BOX(list), child);
         child = next;
     }
@@ -179,6 +194,22 @@ static const UmiWsCommandBarItem *find_item(
         }
     }
     return NULL;
+}
+
+/* Copy dispatch data before closing the popover. The owner may replace the
+ * model or destroy this component; no controller state is read afterwards. */
+static void activate_item(UmiGtk4WorkstationCommandBar *command_bar,
+                          const UmiWsCommandBarItem *item)
+{
+    UmiWsCommandBarItem copied;
+    UmiGtk4WorkstationCommandBarActivatedHandler handler;
+    void *context;
+    if (command_bar == NULL || item == NULL || !item->enabled) return;
+    copied = *item;
+    handler = command_bar->activated_handler;
+    context = command_bar->activated_user_data;
+    gtk_popover_popdown(GTK_POPOVER(command_bar->popover));
+    if (handler != NULL) handler(&copied, context);
 }
 
 /* Dispatch only enabled entries. Disabled entries remain visible so a user
@@ -208,11 +239,7 @@ static void on_result_clicked(GtkButton *button, gpointer user_data)
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (command_bar->activated_handler != NULL) {
-        command_bar->activated_handler(
-            item, command_bar->activated_user_data);
-    }
-    gtk_popover_popdown(GTK_POPOVER(command_bar->popover));
+    activate_item(command_bar, item);
 }
 
 /* Project portable results into native rows. Only a bounded number is rendered
@@ -228,7 +255,7 @@ static void rebuild_result_widgets(
      * used.
      */
     if (command_bar == NULL || command_bar->result_list == NULL) return;
-    clear_result_list(command_bar->result_list);
+    clear_result_list(command_bar->result_list, command_bar);
     gtk_label_set_text(
         GTK_LABEL(command_bar->scope_label),
         scope_text(command_bar->model.query.scope));
@@ -311,7 +338,7 @@ static void on_search_changed(GtkSearchEntry *entry, gpointer user_data)
     rebuild_result_widgets(command_bar);
     /* Suggestions follow non-empty typing and disappear when the query is
      * cleared. The result button can still open the complete catalogue. */
-    if (text[0] != '\0') {
+    if (text[0] != '\0' && gtk_widget_get_mapped(command_bar->root)) {
         gtk_popover_popup(GTK_POPOVER(command_bar->popover));
     } /* Use this fallback path when the earlier condition does not apply. */ else {
         gtk_popover_popdown(GTK_POPOVER(command_bar->popover));
@@ -341,8 +368,7 @@ static void on_search_activate(GtkSearchEntry *entry, gpointer user_data)
         command_bar->activated_handler == NULL) {
         return;
     }
-    command_bar->activated_handler(item, command_bar->activated_user_data);
-    gtk_popover_popdown(GTK_POPOVER(command_bar->popover));
+    activate_item(command_bar, item);
 }
 
 /* Keep actions visible on small screens by shortening the field before it can
@@ -552,6 +578,10 @@ void umi_gtk4_ws_command_bar_destroy(
      * used.
      */
     if (command_bar == NULL) return;
+    command_bar->activated_handler = NULL;
+    command_bar->activated_user_data = NULL;
+    disconnect_command_bar_widgets(command_bar->popover, command_bar);
+    disconnect_command_bar_widgets(command_bar->root, command_bar);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.

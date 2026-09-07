@@ -52,6 +52,17 @@ UmiStatus umi_studio_runtime_workspace_select(
 UmiStatus umi_studio_runtime_workspace_create_blank(
     UmiUiWorkspaceCustomisation *model,
     const char *layout_id, const char *name);
+/* Add and select a new, locked copy of the current Framework product default.
+ * This does not copy a previously customised layout with the default ID, and
+ * never replaces existing layouts, documents or saved checkpoints. The caller
+ * supplies a unique qualified ID and name. Registered tools are reused; the
+ * shared context routing store is preserved exactly and its current mappings
+ * are projected into the new layout, including tools with no context group.
+ * Missing tool registrations, an active edit or capacity failure leave the
+ * complete model unchanged. Saving this new arrangement is a separate action. */
+UmiStatus umi_studio_runtime_workspace_create_default(
+    UmiUiWorkspaceCustomisation *model,
+    const char *layout_id, const char *name);
 
 /* Open/reopen or hide a real native tool without duplicating its singleton.
  * Opening outside Edit Layout makes one short, atomic edit and restores locking.
@@ -61,6 +72,14 @@ UmiStatus umi_studio_runtime_workspace_create_blank(
 UmiStatus umi_studio_runtime_workspace_set_visible(
     UmiUiWorkspaceCustomisation *model,
     UmiStudioRuntimeSurfaceKind kind, bool visible);
+/* Normal tool Close/Reopen and Dock/Auto Hide use the same model authority
+ * without requiring Edit Layout. A missing real tool is opened through the
+ * native catalogue. Auto-hide stores visible=false plus its existing edge
+ * prefix; revealing/collapsing that rail is transient adapter presentation.
+ * Product capabilities and protected pinning remain enforced. */
+UmiStatus umi_studio_runtime_workspace_set_tool_presentation(
+    UmiUiWorkspaceCustomisation *model,
+    UmiStudioRuntimeSurfaceKind kind, bool visible, bool auto_hidden);
 /* Placement remains an explicit edit operation. Canonical product capability
  * flags are respected wherever a native surface has a matching product panel. */
 UmiStatus umi_studio_runtime_workspace_apply_panel_settings(

@@ -448,6 +448,216 @@ cleanup:
     return failed;
 }
 
+/* Find one owned key/focus controller attached to the title only. */
+static GObject *find_canvas_controller(GtkWidget *widget, GType type)
+{
+    GListModel *controllers = gtk_widget_observe_controllers(widget);
+    GObject *found = NULL;
+    guint index;
+    for (index = 0U; index < g_list_model_get_n_items(controllers); ++index) {
+        GObject *candidate = g_list_model_get_item(controllers, index);
+        if (G_TYPE_CHECK_INSTANCE_TYPE(candidate, type)) { found = candidate; break; }
+        g_object_unref(candidate);
+    }
+    g_object_unref(controllers);
+    return found;
+}
+
+/* Synthetic controller signals never send keys to the user's desktop. */
+static gboolean emit_canvas_key(GObject *controller, guint key, GdkModifierType state)
+{
+    gboolean handled = FALSE;
+    g_signal_emit_by_name(controller, "key-pressed", key, 0U, state, &handled);
+    return handled;
+}
+
+/* Small tolerance checks normalized geometry without screen-pixel rounding. */
+static bool canvas_near(double actual, double expected)
+{
+    return actual >= expected - 0.000000001 && actual <= expected + 0.000000001;
+}
+
+/* Exercise every actual handle and the keyboard preview/accept/cancel path.
+ * The owner records values only, so rejected or uncommitted previews must
+ * always return to the same original rectangle without replacing its body. */
+static int verify_canvas_edit_controls(void)
+{
+    static const struct {
+        const char *suffix;
+        int left, top, right, bottom;
+    } edges[] = {
+        { "", 0, 0, 1, 1 }, { "north.", 0, 1, 0, 0 },
+        { "north-east.", 0, 1, 1, 0 }, { "east.", 0, 0, 1, 0 },
+        { "south.", 0, 0, 0, 1 }, { "south-west.", 1, 0, 0, 1 },
+        { "west.", 1, 0, 0, 0 }, { "north-west.", 1, 1, 0, 0 }
+    };
+    CanvasFixture fixture = {0};
+    UmiApplicationSuiteLayoutRect original = { 0.125, 0.125, 0.50, 0.50 };
+    UmiApplicationSuiteLayoutRect observed;
+    GtkWidget *root = NULL;
+    GtkWidget *canvas;
+    GtkWidget *panel;
+    GtkWidget *title;
+    GtkGestureDrag *gesture = NULL;
+    GtkGestureDrag *other_gesture = NULL;
+    GObject *keys = NULL;
+    GObject *focus = NULL;
+    size_t index;
+    size_t before;
+    char tag[96];
+    int failed = 0;
+
+    fixture.layout = calloc(1U, sizeof(*fixture.layout));
+    REQUIRE(fixture.layout != NULL);
+    REQUIRE(umi_ui_workspace_layout_init(fixture.layout, "test.controls", "Canvas controls") == UMI_STATUS_OK);
+    REQUIRE(umi_ui_workspace_layout_set_locked(fixture.layout, false) == UMI_STATUS_OK);
+    REQUIRE(add_canvas_panel(fixture.layout, "alpha", original, true) == UMI_STATUS_OK);
+    REQUIRE(umi_gtk4_workspace_layout_host_create_interactive(fixture.layout, create_test_panel,
+        &fixture, record_panel_action, &fixture, &fixture.host) == UMI_STATUS_OK);
+    REQUIRE(umi_gtk4_workspace_layout_host_set_canvas_geometry_handler(
+        fixture.host, accept_geometry, &fixture) == UMI_STATUS_OK);
+    root = g_object_ref(umi_gtk4_workspace_layout_host_widget(fixture.host));
+    canvas = find_tag(root, "workstation.workspace-canvas");
+    panel = find_tag(root, "workstation.canvas.panel.alpha");
+    title = find_tag(root, "workstation.canvas.drag.alpha");
+    REQUIRE(canvas != NULL && panel != NULL && title != NULL);
+    REQUIRE(gtk_widget_get_focusable(title));
+    gtk_widget_allocate(canvas, 1000, 800, -1, NULL);
+    for (index = 0U; index < sizeof(edges) / sizeof(edges[0]); ++index) {
+        GtkWidget *handle;
+        graphene_rect_t bounds;
+        int written = snprintf(tag, sizeof(tag), "workstation.canvas.resize.%salpha", edges[index].suffix);
+        REQUIRE(written >= 0 && (size_t)written < sizeof(tag));
+        handle = find_tag(root, tag);
+        REQUIRE(handle != NULL && gtk_widget_get_visible(handle) && gtk_widget_get_sensitive(handle));
+        REQUIRE(gtk_widget_compute_bounds(handle, panel, &bounds));
+        REQUIRE(bounds.origin.x >= 0.0F && bounds.origin.y >= 0.0F);
+        REQUIRE(bounds.size.width > 0.0F && bounds.size.height > 0.0F);
+        REQUIRE(bounds.origin.x + bounds.size.width <= 500.0F);
+        REQUIRE(bounds.origin.y + bounds.size.height <= 400.0F);
+        /* The square corner is a visual allocation, not a square hit target.
+         * Interior chrome must remain reachable through its L-shaped border. */
+        REQUIRE(gtk_widget_contains(handle, bounds.size.width / 2.0, bounds.size.height / 2.0) ==
+            !((edges[index].left || edges[index].right) && (edges[index].top || edges[index].bottom)));
+        REQUIRE(gtk_widget_contains(handle,
+            edges[index].left ? 1.0 : bounds.size.width - 1.0,
+            edges[index].top ? 1.0 : bounds.size.height - 1.0));
+        {
+            GtkWidget *close_button = find_tag(root, "alpha.action.close");
+            graphene_point_t button_point;
+            graphene_point_t grip_point;
+            REQUIRE(GTK_IS_BUTTON(close_button));
+            button_point = GRAPHENE_POINT_INIT(
+                (float)gtk_widget_get_width(close_button) / 2.0F,
+                (float)gtk_widget_get_height(close_button) / 2.0F);
+            REQUIRE(gtk_widget_compute_point(close_button, handle, &button_point, &grip_point));
+            REQUIRE(!gtk_widget_contains(handle, grip_point.x, grip_point.y));
+        }
+        gesture = find_drag_controller(handle);
+        REQUIRE(gesture != NULL);
+        g_signal_emit_by_name(gesture, "drag-begin", 1.0, 1.0);
+        g_signal_emit_by_name(gesture, "drag-update", 50.0, 40.0);
+        REQUIRE(umi_gtk4_workspace_layout_host_canvas_geometry(fixture.host, "alpha", &observed) == UMI_STATUS_OK);
+        REQUIRE(canvas_near(observed.x, original.x + (edges[index].left ? 0.05 : 0.0)));
+        REQUIRE(canvas_near(observed.y, original.y + (edges[index].top ? 0.05 : 0.0)));
+        REQUIRE(canvas_near(observed.width, original.width + (edges[index].right - edges[index].left) * 0.05));
+        REQUIRE(canvas_near(observed.height, original.height + (edges[index].bottom - edges[index].top) * 0.05));
+        REQUIRE(fixture.requests == 0U);
+        g_signal_emit_by_name(gesture, "cancel", NULL);
+        g_clear_object(&gesture);
+    }
+    /* A second handle cannot update or end the first handle's active drag. */
+    gesture = find_drag_controller(find_tag(root, "workstation.canvas.resize.alpha"));
+    other_gesture = find_drag_controller(find_tag(root, "workstation.canvas.resize.north-west.alpha"));
+    REQUIRE(gesture != NULL && other_gesture != NULL);
+    g_signal_emit_by_name(gesture, "drag-begin", 1.0, 1.0);
+    g_signal_emit_by_name(other_gesture, "drag-update", 50.0, 40.0);
+    g_signal_emit_by_name(other_gesture, "drag-end", 50.0, 40.0);
+    REQUIRE(umi_gtk4_workspace_layout_host_canvas_geometry(fixture.host, "alpha", &observed) == UMI_STATUS_OK);
+    REQUIRE(canvas_near(observed.x, original.x) && canvas_near(observed.width, original.width));
+    g_signal_emit_by_name(gesture, "cancel", NULL);
+    g_clear_object(&other_gesture);
+
+    keys = find_canvas_controller(title, GTK_TYPE_EVENT_CONTROLLER_KEY);
+    focus = find_canvas_controller(title, GTK_TYPE_EVENT_CONTROLLER_FOCUS);
+    REQUIRE(keys != NULL && focus != NULL);
+    REQUIRE(!emit_canvas_key(keys, GDK_KEY_Right, GDK_CONTROL_MASK));
+    REQUIRE(emit_canvas_key(keys, GDK_KEY_Right, 0));
+    REQUIRE(emit_canvas_key(keys, GDK_KEY_Down, GDK_SHIFT_MASK));
+    REQUIRE(umi_gtk4_workspace_layout_host_canvas_geometry(fixture.host, "alpha", &observed) == UMI_STATUS_OK);
+    REQUIRE(canvas_near(observed.x, 0.15) && canvas_near(observed.y, 0.125));
+    REQUIRE(canvas_near(observed.width, 0.50) && canvas_near(observed.height, 0.525));
+    REQUIRE(fixture.requests == 0U && gtk_widget_has_css_class(panel, "canvas-keyboard-edit"));
+    REQUIRE(emit_canvas_key(keys, GDK_KEY_Escape, 0));
+    REQUIRE(!gtk_widget_has_css_class(panel, "canvas-keyboard-edit"));
+    REQUIRE(emit_canvas_key(keys, GDK_KEY_Left, 0));
+    g_signal_emit_by_name(focus, "leave");
+    REQUIRE(umi_gtk4_workspace_layout_host_canvas_geometry(fixture.host, "alpha", &observed) == UMI_STATUS_OK);
+    REQUIRE(canvas_near(observed.x, original.x) && fixture.requests == 0U);
+    REQUIRE(!emit_canvas_key(keys, GDK_KEY_Return, 0));
+    REQUIRE(emit_canvas_key(keys, GDK_KEY_Right, 0));
+    REQUIRE(emit_canvas_key(keys, GDK_KEY_Return, 0));
+    REQUIRE(fixture.requests == 0U);
+    REQUIRE(umi_gtk4_workspace_layout_host_snapshot(fixture.host).geometry_pending);
+    drain_ready_callbacks();
+    REQUIRE(fixture.requests == 1U && fixture.expected_revision == fixture.layout->revision);
+    REQUIRE(canvas_near(fixture.requested_rect.x, 0.15));
+    REQUIRE(fixture.created_content == 1U);
+
+    /* Rebuild cancels an active preview and disconnects retained old keys and
+     * edge controllers. Locked and pinned titles cannot start a new request. */
+    REQUIRE(emit_canvas_key(keys, GDK_KEY_Down, 0));
+    REQUIRE(umi_ui_workspace_layout_set_locked(fixture.layout, true) == UMI_STATUS_OK);
+    REQUIRE(umi_gtk4_workspace_layout_host_rebuild(fixture.host, fixture.layout) == UMI_STATUS_OK);
+    REQUIRE(!emit_canvas_key(keys, GDK_KEY_Return, 0));
+    g_signal_emit_by_name(gesture, "drag-begin", 1.0, 1.0);
+    g_signal_emit_by_name(gesture, "drag-end", 50.0, 40.0);
+    g_clear_object(&keys);
+    g_clear_object(&focus);
+    g_clear_object(&gesture);
+    title = find_tag(root, "workstation.canvas.drag.alpha");
+    REQUIRE(!gtk_widget_get_focusable(title));
+    keys = find_canvas_controller(title, GTK_TYPE_EVENT_CONTROLLER_KEY);
+    REQUIRE(keys != NULL && !emit_canvas_key(keys, GDK_KEY_Right, 0));
+    REQUIRE(umi_ui_workspace_layout_set_locked(fixture.layout, false) == UMI_STATUS_OK);
+    fixture.layout->windows[0].pinned = true;
+    fixture.layout->revision += 1U;
+    REQUIRE(umi_gtk4_workspace_layout_host_rebuild(fixture.host, fixture.layout) == UMI_STATUS_OK);
+    g_clear_object(&keys);
+    title = find_tag(root, "workstation.canvas.drag.alpha");
+    keys = find_canvas_controller(title, GTK_TYPE_EVENT_CONTROLLER_KEY);
+    REQUIRE(keys != NULL && !emit_canvas_key(keys, GDK_KEY_Right, 0));
+    fixture.layout->windows[0].pinned = false;
+    fixture.layout->windows[0].resizable = false;
+    fixture.layout->revision += 1U;
+    REQUIRE(umi_gtk4_workspace_layout_host_rebuild(fixture.host, fixture.layout) == UMI_STATUS_OK);
+    g_clear_object(&keys);
+    title = find_tag(root, "workstation.canvas.drag.alpha");
+    keys = find_canvas_controller(title, GTK_TYPE_EVENT_CONTROLLER_KEY);
+    REQUIRE(keys != NULL && !emit_canvas_key(keys, GDK_KEY_Right, GDK_SHIFT_MASK));
+    canvas = find_tag(root, "workstation.workspace-canvas");
+    REQUIRE(canvas != NULL);
+    gtk_widget_allocate(canvas, 1000, 800, -1, NULL);
+    REQUIRE(emit_canvas_key(keys, GDK_KEY_Right, 0));
+    before = fixture.requests;
+    REQUIRE(emit_canvas_key(keys, GDK_KEY_Return, 0));
+    umi_gtk4_workspace_layout_host_destroy(fixture.host);
+    fixture.host = NULL;
+    REQUIRE(!emit_canvas_key(keys, GDK_KEY_Return, 0));
+    drain_ready_callbacks();
+    REQUIRE(fixture.requests == before);
+cleanup:
+    umi_gtk4_workspace_layout_host_destroy(fixture.host);
+    if (keys != NULL) g_object_unref(keys);
+    if (focus != NULL) g_object_unref(focus);
+    if (gesture != NULL) g_object_unref(gesture);
+    if (other_gesture != NULL) g_object_unref(other_gesture);
+    if (root != NULL) g_object_unref(root);
+    if (fixture.created_content != fixture.released_content) failed = 1;
+    free(fixture.layout);
+    return failed;
+}
+
 /* A display connection is required to construct GTK objects, but no window
  * is realized or presented. Missing display support is a skip, not a pass. */
 int main(void)
@@ -768,6 +978,7 @@ int main(void)
     REQUIRE(verify_suite_canvas("org.umicom.bank", "accounts") == 0);
     REQUIRE(verify_suite_canvas("org.umicom.trader", "chart") == 0);
     REQUIRE(verify_suite_canvas("org.umicom.studio", "editor") == 0);
+    REQUIRE(verify_canvas_edit_controls() == 0);
 
 cleanup:
     umi_gtk4_workspace_layout_host_destroy(fixture.host);

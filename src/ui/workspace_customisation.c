@@ -750,10 +750,12 @@ UmiStatus umi_ui_workspace_customisation_set_auto_hidden(
     bool auto_hidden)
 {
     UmiUiWorkspaceLayout *layout;
-    UmiUiWorkspaceLayout before;
+    UmiUiWorkspaceLayout *before;
     UmiUiWorkspaceWindow *window;
     const size_t prefix_length = strlen(UMI_UI_AUTO_HIDE_PREFIX);
     char placement[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    UmiUiPlacement edge;
+    const char *dock_placement;
     UmiStatus status;
 
     /*
@@ -783,11 +785,20 @@ UmiStatus umi_ui_workspace_customisation_set_auto_hidden(
     if (window == NULL) {
         return UMI_STATUS_NOT_FOUND;
     }
+    /* Layout editing and protection are separate from auto-hide docking. */
+    if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    if (memchr(window->placement_id, '\0', sizeof(window->placement_id)) == NULL)
+        return UMI_STATUS_INVALID_STATE;
+    dock_placement = window->placement_id;
+    if (strncmp(dock_placement, UMI_UI_AUTO_HIDE_PREFIX, prefix_length) == 0)
+        dock_placement += prefix_length;
     /* Apply this branch only when its contract condition is satisfied. */
     /* Auto-hide needs a dock edge. A free canvas panel has no such edge and
      * must stay visible until it is closed or explicitly docked. */
     if (auto_hidden && (window->floating ||
-        strcmp(window->placement_id, UMI_UI_WORKSPACE_CANVAS_PLACEMENT) == 0)) {
+        umi_ui_placement_parse(dock_placement, &edge) != UMI_STATUS_OK ||
+        (edge != UMI_UI_PLACEMENT_LEFT && edge != UMI_UI_PLACEMENT_RIGHT &&
+         edge != UMI_UI_PLACEMENT_TOP && edge != UMI_UI_PLACEMENT_BOTTOM))) {
         return UMI_STATUS_INVALID_STATE;
     }
     /* Apply this branch only when its contract condition is satisfied. */
@@ -797,6 +808,9 @@ UmiStatus umi_ui_workspace_customisation_set_auto_hidden(
                  prefix_length) == 0)) {
         return UMI_STATUS_OK;
     }
+    if (window->pinned) return UMI_STATUS_PERMISSION_DENIED;
+    if (customisation->revision == UINT64_MAX || layout->revision > UINT64_MAX - 2U)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
 
     /* Auto-hide is encoded as a reversible placement prefix, keeping the
      * stable workspace record unchanged while preserving its dock region. */
@@ -824,7 +838,11 @@ UmiStatus umi_ui_workspace_customisation_set_auto_hidden(
         }
     }
 
-    before = *layout;
+    /* The rollback layout holds up to 64 panels; allocate it off the native
+     * thread stack while retaining the same all-or-nothing edit behavior. */
+    before = malloc(sizeof(*before));
+    if (before == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    *before = *layout;
     status = umi_ui_workspace_layout_set_placement(
         layout, window_id, placement);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -832,12 +850,11 @@ UmiStatus umi_ui_workspace_customisation_set_auto_hidden(
         status = umi_ui_workspace_layout_set_visible(
             layout, window_id, !auto_hidden);
     }
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status == UMI_STATUS_OK) {
-        status = umi_ui_workspace_layout_set_pinned(
-            layout, window_id, !auto_hidden);
-    }
-    return finish_layout_mutation(customisation, layout, &before, status);
+    /* Docking a tool does not grant geometry/close protection. That protected
+     * pin remains under its distinct explicit layout action. */
+    status = finish_layout_mutation(customisation, layout, before, status);
+    free(before);
+    return status;
 }
 
 /*
@@ -1282,6 +1299,65 @@ static UmiStatus canvas_records_validate(
             return UMI_STATUS_INVALID_STATE;
     }
     return UMI_STATUS_OK;
+}
+
+/* Apply a normal close/reopen or dock/auto-hide action to a complete candidate.
+ * Only committed presentation is saved; an open rail flyout stays transient. */
+UmiStatus umi_ui_workspace_customisation_set_tool_presentation(
+    UmiUiWorkspaceCustomisation *customisation,
+    const char *window_id, bool visible, bool auto_hidden)
+{
+    UmiUiWorkspaceCustomisation *candidate;
+    UmiUiWorkspaceLayout *layout;
+    const UmiUiWorkspaceWindow *window;
+    UmiUiPlacement edge;
+    UmiStatus status = canvas_records_validate(customisation);
+    const size_t prefix_length = sizeof(UMI_UI_AUTO_HIDE_PREFIX) - 1U;
+    bool was_auto_hidden, automatic_edit, originally_locked;
+    const char *placement;
+    if (status != UMI_STATUS_OK) return status;
+    if (window_id == NULL || window_id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    layout = umi_ui_workspace_customisation_active(customisation);
+    if (layout == NULL) return UMI_STATUS_NOT_FOUND;
+    window = umi_ui_workspace_layout_find_window(layout, window_id);
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    if (memchr(window->placement_id, '\0', sizeof(window->placement_id)) == NULL)
+        return UMI_STATUS_INVALID_STATE;
+    was_auto_hidden = strncmp(window->placement_id, UMI_UI_AUTO_HIDE_PREFIX, prefix_length) == 0;
+    if (auto_hidden) visible = false;
+    if (window->visible == visible && was_auto_hidden == auto_hidden) return UMI_STATUS_OK;
+    if (window->pinned || (!visible && !auto_hidden && !window->closable))
+        return UMI_STATUS_PERMISSION_DENIED;
+    if (customisation->edit_active && layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    if (customisation->revision > UINT64_MAX - 8U || layout->revision > UINT64_MAX - 8U)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    placement = window->placement_id + (was_auto_hidden ? prefix_length : 0U);
+    /* Auto-hide has a physical edge, never a centre card or native window.
+     * Existing saved geometry remains untouched when switching modes. */
+    if (auto_hidden && (window->floating || umi_ui_placement_parse(placement, &edge) != UMI_STATUS_OK ||
+        (edge != UMI_UI_PLACEMENT_LEFT && edge != UMI_UI_PLACEMENT_RIGHT &&
+         edge != UMI_UI_PLACEMENT_TOP && edge != UMI_UI_PLACEMENT_BOTTOM)))
+        return UMI_STATUS_INVALID_STATE;
+    candidate = malloc(sizeof(*candidate));
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    *candidate = *customisation;
+    originally_locked = layout->locked;
+    automatic_edit = !candidate->edit_active;
+    if (automatic_edit) status = umi_ui_workspace_customisation_begin_edit(candidate);
+    if (status == UMI_STATUS_OK)
+        status = umi_ui_workspace_customisation_set_auto_hidden(candidate, window_id, auto_hidden);
+    layout = umi_ui_workspace_customisation_active(candidate);
+    if (status == UMI_STATUS_OK) {
+        status = umi_ui_workspace_layout_set_visible(layout, window_id, visible);
+        if (status == UMI_STATUS_OK) candidate->revision += 1U;
+    }
+    if (status == UMI_STATUS_OK && automatic_edit)
+        status = umi_ui_workspace_customisation_commit_edit(candidate);
+    if (status == UMI_STATUS_OK && automatic_edit && !originally_locked)
+        status = umi_ui_workspace_layout_set_locked(layout, false);
+    if (status == UMI_STATUS_OK) *customisation = *candidate;
+    free(candidate);
+    return status;
 }
 
 /* Keep another saved layout's context links when legacy layouts reuse the

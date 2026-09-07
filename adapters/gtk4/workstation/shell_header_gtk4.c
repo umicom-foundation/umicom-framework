@@ -18,6 +18,7 @@
 #include "umicom/ui/gtk4/workstation/shell_header.h"
 
 #include "umicom/application/portfolio.h"
+#include "umicom/ui/appearance_catalogue.h"
 #include "umicom/ui/gtk4/automation.h"
 
 #include <stdio.h>
@@ -56,6 +57,7 @@ struct UmiGtk4WorkstationShellHeader {
     bool syncing_application_selection;
     bool dispatching_applications;
     bool destroy_pending;
+    bool titlebar_owned;
     unsigned operation_depth;
     char *resource_root;
     UmiGtk4WorkstationShellHeaderSnapshot state;
@@ -1849,6 +1851,263 @@ umi_gtk4_ws_shell_header_snapshot(
      * used.
      */
     if (header != NULL) snapshot = header->state;
+    return snapshot;
+}
+
+/* Keep titlebar lifetime separate from document chrome. The window is weakly
+ * observed so destroying either side first cannot leave a borrowed callback. */
+struct UmiGtk4WorkstationWindowTitlebar {
+    GtkWidget *root;
+    GtkWidget *context;
+    GtkWindow *window;
+    UmiGtk4WorkstationShellHeader *identity;
+    gulong title_changed_id;
+    char context_title_prefix[UMI_UI_TEXT_CAPACITY];
+};
+
+/* Compactness changes spacing only. User font size and colours remain owned
+ * by the active appearance; large accessibility fonts may exceed 36 pixels. */
+static void ensure_window_titlebar_spacing(GdkDisplay *display)
+{
+    static const char css[] =
+        "headerbar.umicom-workstation-titlebar { min-height: 0; padding: 0 6px; }"
+        "headerbar.umicom-workstation-titlebar windowcontrols { margin: 0; padding: 0; }"
+        "headerbar.umicom-workstation-titlebar windowcontrols button {"
+        " min-height: 28px; min-width: 28px; margin: 0; padding: 0 4px; }"
+        "headerbar.umicom-workstation-titlebar .umicom-workstation-header.compact {"
+        " min-height: 0; margin: 0; padding: 0; }"
+        "headerbar.umicom-workstation-titlebar .umicom-workstation-identity.compact {"
+        " min-height: 0; margin: 0; padding: 0; border: 0;"
+        " background: transparent; box-shadow: none; }";
+    GtkCssProvider *provider;
+    if (display == NULL ||
+        g_object_get_data(G_OBJECT(display), "umicom-window-titlebar-spacing") != NULL) return;
+    provider = gtk_css_provider_new();
+#if GTK_CHECK_VERSION(4, 12, 0)
+    gtk_css_provider_load_from_string(provider, css);
+#else
+    gtk_css_provider_load_from_data(provider, css, -1);
+#endif
+    gtk_style_context_add_provider_for_display(display, GTK_STYLE_PROVIDER(provider),
+        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    g_object_set_data_full(G_OBJECT(display), "umicom-window-titlebar-spacing",
+        provider, g_object_unref);
+}
+
+/* A document may contain an em dash. Strip only the exact leading product
+ * prefix, never an arbitrary first segment of user-provided title text. */
+static const char *window_titlebar_context(
+    const UmiGtk4WorkstationWindowTitlebar *titlebar, const char *title)
+{
+    const char *prefixes[2] = { titlebar->context_title_prefix, titlebar->identity->state.title };
+    size_t index;
+    for (index = 0U; index < 2U; ++index) {
+        size_t length = strlen(prefixes[index]);
+        if (length == 0U) continue;
+        if (strcmp(title, prefixes[index]) == 0) return "";
+        if (strncmp(title, prefixes[index], length) == 0 &&
+            strncmp(title + length, " — ", strlen(" — ")) == 0)
+            return title + length + strlen(" — ");
+    }
+    return title;
+}
+
+/* Follow the existing window-title projection without feeding it back into
+ * GtkWindow or changing the permanently left-aligned application identity. */
+static void on_window_titlebar_title_changed(
+    GtkWindow *window, GParamSpec *property, gpointer user_data)
+{
+    UmiGtk4WorkstationWindowTitlebar *titlebar = user_data;
+    const char *title = gtk_window_get_title(window);
+    const char *context;
+    (void)property;
+    if (title == NULL) title = "";
+    context = window_titlebar_context(titlebar, title);
+    gtk_label_set_text(GTK_LABEL(titlebar->context), context);
+    gtk_widget_set_tooltip_text(titlebar->context, context);
+    gtk_accessible_update_property(GTK_ACCESSIBLE(titlebar->context),
+        GTK_ACCESSIBLE_PROPERTY_LABEL, context, -1);
+}
+
+/* Move the existing control without creating another launcher or controller.
+ * The temporary reference bridges removal from the identity's GtkBox. */
+static void pack_window_titlebar_application_control(
+    UmiGtk4WorkstationWindowTitlebar *titlebar, GtkWidget *control)
+{
+    g_object_ref(control);
+    gtk_box_remove(GTK_BOX(titlebar->identity->root), control);
+    gtk_header_bar_pack_end(GTK_HEADER_BAR(titlebar->root), control);
+    g_object_unref(control);
+}
+
+/* Install before realization so GTK can provide a single real title row,
+ * including its internal WindowHandle and guarded native window actions. */
+UmiStatus umi_gtk4_ws_window_titlebar_create_from_header(
+    GtkWindow *window, UmiGtk4WorkstationShellHeader *identity,
+    const char *context_title_prefix, UmiGtk4WorkstationWindowTitlebar **out_titlebar)
+{
+    UmiGtk4WorkstationWindowTitlebar *titlebar;
+    GtkWidget *parent;
+    GtkRoot *existing_root;
+    UmiStatus status;
+    if (out_titlebar == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_titlebar = NULL;
+    if (window == NULL || !GTK_IS_WINDOW(window) || identity == NULL ||
+        identity->destroy_pending || identity->root == NULL ||
+        (context_title_prefix != NULL && !g_utf8_validate(context_title_prefix, -1, NULL)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (identity->operation_depth != 0U) return UMI_STATUS_BUSY;
+    parent = gtk_widget_get_parent(identity->root);
+    existing_root = gtk_widget_get_root(identity->root);
+    if (identity->titlebar_owned || gtk_widget_get_realized(GTK_WIDGET(window)) ||
+        gtk_window_get_titlebar(window) != NULL ||
+        (parent != NULL && !GTK_IS_BOX(parent)) ||
+        (existing_root != NULL && existing_root != GTK_ROOT(window)))
+        return UMI_STATUS_INVALID_STATE;
+    titlebar = calloc(1U, sizeof(*titlebar));
+    if (titlebar == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = copy_text(titlebar->context_title_prefix, sizeof(titlebar->context_title_prefix),
+        context_title_prefix != NULL ? context_title_prefix : identity->state.title);
+    if (status != UMI_STATUS_OK) goto fail;
+    /* All rejecting operations precede transfer. Preserve the original
+     * identity, operational mode, appearance and catalogue selection state. */
+    titlebar->identity = identity;
+    identity->titlebar_owned = true;
+    (void)umi_gtk4_ws_shell_header_set_application_controls(identity, true, true, false);
+    titlebar->root = gtk_header_bar_new();
+    g_object_ref_sink(titlebar->root);
+    titlebar->context = gtk_label_new("");
+    gtk_widget_add_css_class(titlebar->root, "umicom-workstation-titlebar");
+    gtk_widget_add_css_class(titlebar->context, "umicom-workstation-titlebar-context");
+    gtk_widget_set_hexpand(titlebar->context, TRUE);
+    gtk_label_set_single_line_mode(GTK_LABEL(titlebar->context), TRUE);
+    gtk_label_set_ellipsize(GTK_LABEL(titlebar->context), PANGO_ELLIPSIZE_MIDDLE);
+    gtk_label_set_width_chars(GTK_LABEL(titlebar->context), 1);
+    gtk_label_set_max_width_chars(GTK_LABEL(titlebar->context), 72);
+    gtk_label_set_xalign(GTK_LABEL(titlebar->context), 0.5F);
+    gtk_header_bar_set_title_widget(GTK_HEADER_BAR(titlebar->root), titlebar->context);
+    if (parent != NULL) gtk_box_remove(GTK_BOX(parent), identity->root);
+    gtk_header_bar_pack_start(GTK_HEADER_BAR(titlebar->root),
+        umi_gtk4_ws_shell_header_widget(titlebar->identity));
+    /* Preserve application actions at the right, before GTK's own native
+     * controls. The identity root remains in the same window for callbacks. */
+    pack_window_titlebar_application_control(titlebar,
+        titlebar->identity->application_catalogue_button);
+    pack_window_titlebar_application_control(titlebar,
+        titlebar->identity->new_window_button);
+    gtk_header_bar_set_show_title_buttons(GTK_HEADER_BAR(titlebar->root), TRUE);
+    gtk_header_bar_set_decoration_layout(GTK_HEADER_BAR(titlebar->root), ":minimize,maximize,close");
+    /* GtkHeaderBar owns a WindowHandle already. Do not nest another gesture
+     * controller or replace its real minimise/maximise/close actions. */
+    ensure_window_titlebar_spacing(gtk_widget_get_display(GTK_WIDGET(window)));
+    (void)umi_gtk4_automation_tag_widget(titlebar->root, "workstation.window-titlebar");
+    (void)umi_gtk4_automation_tag_widget(titlebar->context, "workstation.window-titlebar.context");
+    titlebar->window = window;
+    g_object_add_weak_pointer(G_OBJECT(window), (gpointer *)&titlebar->window);
+    titlebar->title_changed_id = g_signal_connect(window, "notify::title",
+        G_CALLBACK(on_window_titlebar_title_changed), titlebar);
+    gtk_window_set_titlebar(window, titlebar->root);
+    (void)umi_gtk4_ws_apply_window_identity(window);
+    on_window_titlebar_title_changed(window, NULL, titlebar);
+    *out_titlebar = titlebar;
+    return UMI_STATUS_OK;
+fail:
+    umi_gtk4_ws_window_titlebar_destroy(titlebar);
+    return status;
+}
+
+/* Create a fresh identity only for callers which do not already own one.
+ * Existing workstation compositions use the transfer API above instead. */
+UmiStatus umi_gtk4_ws_window_titlebar_create(
+    GtkWindow *window, const UmiGtk4WorkstationShellHeaderConfig *config,
+    const char *context_title_prefix, UmiGtk4WorkstationWindowTitlebar **out_titlebar)
+{
+    UmiGtk4WorkstationShellHeaderConfig identity_config;
+    UmiGtk4WorkstationShellHeader *identity = NULL;
+    UmiUiAppearanceProfile appearance;
+    UmiStatus status;
+    if (out_titlebar == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_titlebar = NULL;
+    if (window == NULL || !GTK_IS_WINDOW(window) || config == NULL ||
+        config->title == NULL || !g_utf8_validate(config->title, -1, NULL) ||
+        (context_title_prefix != NULL && !g_utf8_validate(context_title_prefix, -1, NULL)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (gtk_widget_get_realized(GTK_WIDGET(window)) || gtk_window_get_titlebar(window) != NULL)
+        return UMI_STATUS_INVALID_STATE;
+    identity_config = *config;
+    identity_config.compact = true;
+    identity_config.subtitle = "";
+    identity_config.mode_badge = "";
+    status = umi_gtk4_ws_shell_header_create_managed(&identity_config, &identity);
+    if (status != UMI_STATUS_OK) return status;
+    /* A newly created titlebar starts with the canonical contrast-aware mark;
+     * transferring an existing identity never resets its active appearance. */
+    if (umi_ui_appearance_catalogue_find("umicom-dark", &appearance) == UMI_STATUS_OK)
+        (void)umi_gtk4_ws_shell_header_apply_appearance(identity, &appearance);
+    status = umi_gtk4_ws_window_titlebar_create_from_header(
+        window, identity, context_title_prefix, out_titlebar);
+    if (status != UMI_STATUS_OK) umi_gtk4_ws_shell_header_destroy(identity);
+    return status;
+}
+
+/* Remove every controller callback from externally retained widgets; GTK's
+ * own window controls keep their normal parent-owned native action lifetime. */
+void umi_gtk4_ws_window_titlebar_destroy(UmiGtk4WorkstationWindowTitlebar *titlebar)
+{
+    if (titlebar == NULL) return;
+    if (titlebar->window != NULL) {
+        if (titlebar->title_changed_id != 0U &&
+            g_signal_handler_is_connected(titlebar->window, titlebar->title_changed_id))
+            g_signal_handler_disconnect(titlebar->window, titlebar->title_changed_id);
+        g_object_remove_weak_pointer(G_OBJECT(titlebar->window), (gpointer *)&titlebar->window);
+    }
+    titlebar->window = NULL;
+    /* Application buttons were reparented outside identity->root. Disconnect
+     * that complete subtree while the shared controller is still alive,
+     * including a popover or button another client retains after teardown. */
+    disconnect_header_callbacks(titlebar->root, titlebar->identity);
+    umi_gtk4_ws_shell_header_destroy(titlebar->identity);
+    if (titlebar->root != NULL) g_object_unref(titlebar->root);
+    free(titlebar);
+}
+
+/* Return the real topmost titlebar, not the content-root application strip. */
+GtkWidget *umi_gtk4_ws_window_titlebar_widget(UmiGtk4WorkstationWindowTitlebar *titlebar)
+{
+    return titlebar != NULL ? titlebar->root : NULL;
+}
+
+/* Keep the same vector resolver, logical icon size and appearance validation. */
+UmiStatus umi_gtk4_ws_window_titlebar_apply_appearance(
+    UmiGtk4WorkstationWindowTitlebar *titlebar, const UmiUiAppearanceProfile *profile)
+{
+    return titlebar != NULL
+        ? umi_gtk4_ws_shell_header_apply_appearance(titlebar->identity, profile)
+        : UMI_STATUS_INVALID_ARGUMENT;
+}
+
+/* Copy bounded UTF-8 observations while retaining full context in GTK's label
+ * and tooltip. The snapshot cannot split a multi-byte character at its limit. */
+UmiGtk4WorkstationWindowTitlebarSnapshot umi_gtk4_ws_window_titlebar_snapshot(
+    const UmiGtk4WorkstationWindowTitlebar *titlebar)
+{
+    UmiGtk4WorkstationWindowTitlebarSnapshot snapshot = {0};
+    const char *context;
+    const char *end;
+    size_t length;
+    if (titlebar == NULL) return snapshot;
+    (void)copy_text(snapshot.title, sizeof(snapshot.title), titlebar->identity->state.title);
+    (void)copy_text(snapshot.icon_resource, sizeof(snapshot.icon_resource),
+        titlebar->identity->state.icon_resource);
+    context = gtk_label_get_text(GTK_LABEL(titlebar->context));
+    length = strlen(context);
+    if (length >= sizeof(snapshot.context)) length = sizeof(snapshot.context) - 1U;
+    if (!g_utf8_validate(context, (gssize)length, &end)) length = (size_t)(end - context);
+    memcpy(snapshot.context, context, length);
+    snapshot.context[length] = '\0';
+    snapshot.icon_visible = titlebar->identity->state.icon_visible;
+    snapshot.installed = titlebar->window != NULL &&
+        gtk_window_get_titlebar(titlebar->window) == titlebar->root;
     return snapshot;
 }
 

@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <limits.h>
 #include <math.h>
 #include <stdlib.h>
 
@@ -238,7 +239,11 @@ static bool decode_u64(const char *field, uint64_t *value)
     for (; *scan != 0U; ++scan) if (*scan < '0' || *scan > '9') return false;
     errno = 0;
     parsed = strtoull(field, &end, 10);
-    if (errno == ERANGE || *end != '\0' || parsed > UINT64_MAX) return false;
+    if (errno == ERANGE || *end != '\0') return false;
+#if ULLONG_MAX > UINT64_MAX
+    /* Unusual platforms may have an unsigned long long wider than uint64_t. */
+    if (parsed > UINT64_MAX) return false;
+#endif
     *value = (uint64_t)parsed;
     return true;
 }
@@ -365,6 +370,9 @@ UmiStatus umi_ui_layout_persistence_decode(
          */
         if (end == NULL) return UMI_STATUS_PARSE_ERROR;
         *end = '\0';
+        /* Windows text tools may translate LF to CRLF. Strip exactly its
+         * terminal CR; embedded or repeated carriage returns remain invalid. */
+        if (end > line && end[-1] == '\r') end[-1] = '\0';
         /* Header conversions are bounded before assigning narrower public
          * fields. Literal separators and complete numbers prevent ambiguity. */
         char *fields[8];
@@ -395,6 +403,9 @@ UmiStatus umi_ui_layout_persistence_decode(
         if (!had_newline) end = line + strlen(line);
         /* Apply this branch only when its contract condition is satisfied. */
         if (had_newline) *end = '\0';
+        /* Preserve the same CRLF compatibility for each complete panel row.
+         * A final row without LF remains supported, but a bare CR does not. */
+        if (had_newline && end > line && end[-1] == '\r') end[-1] = '\0';
         status = schema == 2U
             ? decode_window_v2(line, window)
             : decode_window_v3(line, window);

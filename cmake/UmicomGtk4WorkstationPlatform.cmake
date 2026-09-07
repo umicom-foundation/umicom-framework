@@ -171,6 +171,85 @@ if(BUILD_TESTING)
         if(COMMAND umicom_register_validation_target)
             umicom_register_validation_target(umicom-gtk4-application-catalogue-test)
         endif()
+        # The actual topmost titlebar is inspected without realizing or
+        # presenting windows; branding comes from the unchanged canonical SVG.
+        add_executable(umicom-gtk4-window-titlebar-test
+            "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/test_window_titlebar_gtk4.c")
+        target_link_libraries(umicom-gtk4-window-titlebar-test PRIVATE Umicom::ui_gtk4)
+        target_compile_definitions(umicom-gtk4-window-titlebar-test PRIVATE
+            UMICOM_TEST_BRAND_ICON_PATH="${UMICOM_GTK4_WORKSTATION_ROOT}/resources/brand/umicom-icon-on-dark.svg")
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(umicom-gtk4-window-titlebar-test)
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(umicom-gtk4-window-titlebar-test)
+        endif()
+        add_test(NAME framework.ui_workstation.window.titlebar.gtk4
+            COMMAND umicom-gtk4-window-titlebar-test)
+        set_tests_properties(framework.ui_workstation.window.titlebar.gtk4 PROPERTIES
+            SKIP_RETURN_CODE 77 LABELS "framework;ui-workstation;gtk4;branding;acceptance")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-gtk4-window-titlebar-test)
+        endif()
+        # Suite binding preserves existing identity/catalogue state and checks
+        # both lifetime orders without presenting or launching any application.
+        add_executable(umicom-gtk4-suite-titlebar-test
+            "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/test_suite_titlebar_gtk4.c")
+        target_link_libraries(umicom-gtk4-suite-titlebar-test PRIVATE Umicom::ui_gtk4)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(umicom-gtk4-suite-titlebar-test)
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(umicom-gtk4-suite-titlebar-test)
+        endif()
+        add_test(NAME framework.ui_workstation.suite.titlebar.gtk4
+            COMMAND umicom-gtk4-suite-titlebar-test)
+        set_tests_properties(framework.ui_workstation.suite.titlebar.gtk4 PROPERTIES
+            SKIP_RETURN_CODE 77 LABELS "framework;ui-workstation;gtk4;branding;acceptance")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-gtk4-suite-titlebar-test)
+        endif()
+        # Private production startup callbacks are exercised with inert probe
+        # work; the fixture never invokes startup, presentation or application launch.
+        add_executable(umicom-gtk4-product-startup-lifetime-test
+            "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/test_product_startup_lifetime_gtk4.c")
+        target_link_libraries(umicom-gtk4-product-startup-lifetime-test PRIVATE Umicom::ui_gtk4)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(umicom-gtk4-product-startup-lifetime-test)
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(umicom-gtk4-product-startup-lifetime-test)
+        endif()
+        add_test(NAME framework.ui_workstation.product.startup.lifetime.gtk4
+            COMMAND umicom-gtk4-product-startup-lifetime-test)
+        set_tests_properties(framework.ui_workstation.product.startup.lifetime.gtk4 PROPERTIES
+            SKIP_RETURN_CODE 77 LABELS "framework;ui-workstation;gtk4;startup;acceptance")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-gtk4-product-startup-lifetime-test)
+        endif()
+        # Named edge tabs and their real flyouts are inspected without opening
+        # a desktop window, launching tools, or changing a user workspace.
+        foreach(tool_case IN ITEMS tool_rail workspace_tool_windows)
+            string(REPLACE "_" "-" tool_target_suffix "${tool_case}")
+            string(REPLACE "_" "." tool_test_suffix "${tool_case}")
+            set(tool_target "umicom-gtk4-${tool_target_suffix}-test")
+            add_executable(${tool_target}
+                "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/test_${tool_case}_gtk4.c")
+            target_link_libraries(${tool_target} PRIVATE Umicom::ui_gtk4)
+            if(COMMAND umicom_apply_warnings)
+                umicom_apply_warnings(${tool_target})
+            endif()
+            if(COMMAND umicom_apply_sanitizers)
+                umicom_apply_sanitizers(${tool_target})
+            endif()
+            add_test(NAME framework.ui_workstation.${tool_test_suffix}.gtk4
+                COMMAND ${tool_target})
+            set_tests_properties(framework.ui_workstation.${tool_test_suffix}.gtk4 PROPERTIES
+                SKIP_RETURN_CODE 77 LABELS "framework;ui-workstation;gtk4;tools;acceptance")
+            if(COMMAND umicom_register_validation_target)
+                umicom_register_validation_target(${tool_target})
+            endif()
+        endforeach()
         # Native canvas checks allocate widgets without presenting a window.
         # Their fake panel provider never starts applications or external tools.
         add_executable(umicom-gtk4-workspace-canvas-test
@@ -189,6 +268,30 @@ if(BUILD_TESTING)
         if(COMMAND umicom_register_validation_target)
             umicom_register_validation_target(umicom-gtk4-workspace-canvas-test)
         endif()
+        # These native interaction fixtures create inert widgets only. They
+        # never present application windows or invoke external commands.
+        foreach(interaction_case IN ITEMS workspace_maximise suite_navigation command_bar_lifetime)
+            string(REPLACE "_" "-" interaction_target_suffix "${interaction_case}")
+            string(REPLACE "_" "." interaction_test_suffix "${interaction_case}")
+            set(interaction_target "umicom-gtk4-${interaction_target_suffix}-test")
+            add_executable(${interaction_target}
+                "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/test_${interaction_case}_gtk4.c")
+            target_link_libraries(${interaction_target} PRIVATE Umicom::ui_gtk4)
+            if(COMMAND umicom_apply_warnings)
+                umicom_apply_warnings(${interaction_target})
+            endif()
+            if(COMMAND umicom_apply_sanitizers)
+                umicom_apply_sanitizers(${interaction_target})
+            endif()
+            add_test(NAME framework.ui_workstation.${interaction_test_suffix}.gtk4
+                COMMAND ${interaction_target})
+            set_tests_properties(framework.ui_workstation.${interaction_test_suffix}.gtk4 PROPERTIES
+                SKIP_RETURN_CODE 77 TIMEOUT 60
+                LABELS "framework;ui-workstation;gtk4;interaction;acceptance")
+            if(COMMAND umicom_register_validation_target)
+                umicom_register_validation_target(${interaction_target})
+            endif()
+        endforeach()
         # Retained provider bodies are tested with unpresented GTK entries;
         # no file, repository, compiler or product service is started.
         add_executable(umicom-gtk4-workspace-content-test

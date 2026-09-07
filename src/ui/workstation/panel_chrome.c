@@ -133,6 +133,7 @@ const char *umi_ws_panel_action_text(UmiWsPanelAction action)
     case UMI_WS_PANEL_ACTION_MAXIMISE_TOGGLE: return "Maximise or restore panel";
     case UMI_WS_PANEL_ACTION_SETTINGS: return "Panel settings";
     case UMI_WS_PANEL_ACTION_CLOSE: return "Close panel";
+    case UMI_WS_PANEL_ACTION_AUTO_HIDE_TOGGLE: return "Dock or auto-hide panel";
     default: return "Unknown panel action";
     }
 }

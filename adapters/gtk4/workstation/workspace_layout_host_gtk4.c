@@ -17,6 +17,7 @@
 
 #include "umicom/ui/gtk4/workstation/workspace_layout_host.h"
 #include "umicom/ui/workbench_canvas.h"
+#include "umicom/ui/workstation/maximize_mode.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -26,6 +27,7 @@
 #include "umicom/ui/gtk4/workstation/panel_frame.h"
 #include "umicom/ui/gtk4/workstation/shell_header.h"
 #include "umicom/ui/gtk4/workstation/tab_host.h"
+#include "umicom/ui/gtk4/workstation/tool_rail.h"
 #include "umicom/ui/gtk4/automation.h"
 
 typedef struct StackEntry {
@@ -60,6 +62,19 @@ typedef struct PendingHostAction {
 /* Canvas gesture records are view-owned and never replace the layout model. */
 typedef struct CanvasEntry CanvasEntry;
 
+/* A flyout is a temporary view over the saved workspace, not another layout.
+ * One selected tool per edge keeps the editor visible while tools are switched. */
+typedef struct ToolWindowEdge {
+    UmiGtk4WorkspaceLayoutHost *host;
+    GtkWidget *rail;
+    GtkWidget *drawer;
+    GtkWidget *stack;
+    GtkWidget *title;
+    GtkWidget *close_button;
+    GtkWidget *dock_button;
+    char selected_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+} ToolWindowEdge;
+
 struct UmiGtk4WorkspaceLayoutHost {
     GtkWidget *root;
     UmiUiWorkspaceLayout layout;
@@ -85,12 +100,47 @@ struct UmiGtk4WorkspaceLayoutHost {
     int retain_content;
     int content_invalidated;
     const UmiUiWindowGroupStore *context_groups;
+    ToolWindowEdge tool_edges[4];
+    GPtrArray *tool_window_tabs;
+    GtkWidget *tool_overlay;
+    GtkGesture *tool_outside_click;
+    GtkEventController *tool_keys;
+    int updating_tool_tabs;
+    int tool_presentation_actions;
+    /* Parentage and focus are view state only; canonical geometry stays in
+     * layout. The source frame stays in its original notebook/canvas slot. */
+    UmiWsMaximizeMode maximise_mode;
+    GtkWidget *maximise_source_frame;
+    GtkWidget *maximise_normal;
+    GtkWidget *maximise_container;
+    GtkWidget *maximise_frame;
+    GtkWidget *maximise_focus;
+    GtkWidget *maximise_restore_button;
+    GtkEventController *maximise_keys;
+    guint pending_restore_id;
 };
 
 /* Defined with content ownership helpers below; native destruction must
  * separate a retained body from its disappearing frame before invalidation. */
 static void retained_content_unmount_window(
     UmiGtk4WorkspaceLayoutHost *host, const char *window_id);
+
+/* These view helpers are implemented below the canvas and content adapters. */
+static GtkWidget *find_live_window_frame(GtkWidget *widget, const char *window_id);
+static void restore_maximised_presentation(UmiGtk4WorkspaceLayoutHost *host, int focus);
+
+/* Only explicit edge placement creates a tool tab; ordinary hidden windows
+ * must stay hidden, including in intentionally blank layouts. */
+static int tool_window_edge_index(const UmiUiWorkspaceWindow *window)
+{
+    static const char *const placements[] = {
+        "auto-hide:left", "auto-hide:right", "auto-hide:top", "auto-hide:bottom"
+    };
+    if (window == NULL || window->floating) return -1;
+    for (int edge = 0; edge < 4; ++edge)
+        if (strcmp(window->placement_id, placements[edge]) == 0) return edge;
+    return -1;
+}
 
 /* Dispatch a native-window request only after its current signal has returned,
  * allowing the model owner to rebuild or destroy GTK content safely. */
@@ -100,6 +150,7 @@ static gboolean dispatch_host_action_from_idle(gpointer user_data)
 
     if (pending != NULL && pending->host != NULL) {
         pending->host->pending_action_id = 0U;
+        restore_maximised_presentation(pending->host, 0);
         if (pending->host->action_handler != NULL) {
             pending->host->action_handler(
                 pending->panel_id,
@@ -206,8 +257,20 @@ static void on_panel_action(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (host != NULL && host->action_handler != NULL && chrome != NULL &&
-        chrome->panel_id[0] != '\0') {
+    if (host != NULL && chrome != NULL && chrome->panel_id[0] != '\0') {
+        const UmiUiWorkspaceWindow *window =
+            umi_ui_workspace_layout_find_window(&host->layout, chrome->panel_id);
+        if (action == UMI_WS_PANEL_ACTION_MAXIMISE_TOGGLE && window != NULL && !window->floating) {
+            if (umi_ws_maximize_mode_matches(&host->maximise_mode, chrome->panel_id))
+                (void)umi_gtk4_workspace_layout_host_restore_maximised(host);
+            else
+                (void)umi_gtk4_workspace_layout_host_maximise_window(host, chrome->panel_id);
+            return;
+        }
+        /* Return the original frame before an owner may close, detach or
+         * rebuild it. Do not access host after the external callback. */
+        restore_maximised_presentation(host, 0);
+        if (host->action_handler == NULL) return;
         host->action_handler(
             chrome->panel_id, action, host->action_user_data);
     }
@@ -222,6 +285,7 @@ static void on_tab_close(const char *tab_id, void *user_data)
 
     if (host != NULL && host->action_handler != NULL &&
         tab_id != NULL && tab_id[0] != '\0') {
+        restore_maximised_presentation(host, 0);
         host->action_handler(
             tab_id, UMI_WS_PANEL_ACTION_CLOSE, host->action_user_data);
     }
@@ -481,7 +545,7 @@ static GtkWidget *create_panel(
     UmiGtk4WorkspaceLayoutHost *host,
     const UmiUiWorkspaceWindow *window)
 {
-    UmiWsPanelChrome chrome;
+    UmiWsPanelChrome chrome = {0};
     GtkWidget *content;
 
     /*
@@ -510,7 +574,8 @@ static GtkWidget *create_panel(
         gtk_widget_set_vexpand(viewport, TRUE);
         content = viewport;
     }
-    (void)umi_ws_panel_chrome_init(&chrome, window->title);
+    (void)umi_ws_panel_chrome_init(&chrome,
+        window->title[0] != '\0' ? window->title : window->window_id);
     (void)umi_ws_panel_chrome_set_identity(
         &chrome, window->window_id, window->placement_id);
     (void)umi_ws_panel_chrome_set_context(
@@ -518,22 +583,36 @@ static GtkWidget *create_panel(
     (void)umi_ws_panel_chrome_set_badge(
         &chrome,
         host->layout.locked ? "" : window->placement_id);
-    chrome.show_close = window->floating &&
-        window->closable && !window->pinned;
+    chrome.show_close = window->closable && !window->pinned;
+    chrome.allow_close_locked = host->tool_presentation_actions && !window->floating &&
+        strcmp(window->placement_id, UMI_UI_WORKSPACE_CANVAS_PLACEMENT) != 0;
+    chrome.show_auto_hide = host->tool_presentation_actions && !window->pinned && !window->floating &&
+        (strcmp(window->placement_id, "left") == 0 ||
+         strcmp(window->placement_id, "right") == 0 ||
+         strcmp(window->placement_id, "top") == 0 ||
+         strcmp(window->placement_id, "bottom") == 0);
     chrome.show_pin = true;
     chrome.show_menu = host->layout.locked;
     chrome.show_context = true;
     chrome.show_move = true;
     chrome.show_float = true;
-    /* Only native detached windows currently apply maximisation. Do not offer
-     * an internal-panel action that merely changes a flag without resizing. */
-    chrome.show_maximise = window->floating;
+    /* Internal maximisation is a host-owned presentation, never a persisted
+     * geometry edit. Native floating windows retain their existing owner path. */
+    chrome.allow_maximise_locked = window->visible && !window->floating &&
+        window->resizable && !window->pinned && tool_window_edge_index(window) < 0;
+    chrome.show_maximise = window->floating || chrome.allow_maximise_locked;
     chrome.show_settings = true;
     chrome.compact = true;
     chrome.pinned = window->pinned;
     chrome.locked = host->layout.locked;
     chrome.floating = window->floating;
     chrome.maximised = window->maximised;
+    if (host->action_handler == NULL) {
+        chrome.show_close = chrome.show_pin = chrome.show_context = false;
+        chrome.show_move = chrome.show_float = chrome.show_settings = false;
+        chrome.show_auto_hide = false;
+        chrome.show_maximise = chrome.allow_maximise_locked;
+    }
     GtkWidget *frame = umi_gtk4_ws_panel_frame_create_interactive(
         &chrome, content, on_panel_action, host);
     /* A copied identity lets commands find the live frame after any rebuild,
@@ -591,9 +670,10 @@ static GtkWidget *build_stack(
                 window->window_id,
                 window->title,
                 frame,
-                !host->layout.locked &&
+                host->action_handler != NULL &&
+                    (!host->layout.locked || host->tool_presentation_actions) &&
                     window->closable && !window->pinned,
-                on_tab_close,
+                host->action_handler != NULL ? on_tab_close : NULL,
                 host);
             if (status == UMI_STATUS_OK) {
                 entry->page_count += 1U;
@@ -628,7 +708,9 @@ static GtkWidget *build_stack(
 /* Keep the private native canvas implementation beside this adapter. It uses
  * the same panel factory, chrome and portable model rather than a second
  * layout engine. */
+#include "workspace_tool_windows_gtk4.inc"
 #include "workspace_canvas_gtk4.inc"
+#include "workspace_maximise_gtk4.inc"
 
 /* Create all detached windows after the dock tree is available. */
 static void build_floating_windows(UmiGtk4WorkspaceLayoutHost *host)
@@ -727,6 +809,22 @@ UmiStatus umi_gtk4_workspace_layout_host_create_interactive(
     void *action_user_data,
     UmiGtk4WorkspaceLayoutHost **out_host)
 {
+    return umi_gtk4_workspace_layout_host_create_with_options(layout,
+        panel_factory, panel_user_data, action_handler, action_user_data,
+        NULL, out_host);
+}
+
+/* Copy optional action policy before the first tree is created. Existing
+ * callers keep their original edit-only contract unless they opt in. */
+UmiStatus umi_gtk4_workspace_layout_host_create_with_options(
+    const UmiUiWorkspaceLayout *layout,
+    UmiGtk4WorkspaceLayoutPanelFactory panel_factory,
+    void *panel_user_data,
+    UmiGtk4WorkspaceLayoutActionHandler action_handler,
+    void *action_user_data,
+    const UmiGtk4WorkspaceLayoutHostOptions *options,
+    UmiGtk4WorkspaceLayoutHost **out_host)
+{
     UmiGtk4WorkspaceLayoutHost *host;
     UmiStatus status;
 
@@ -750,12 +848,14 @@ UmiStatus umi_gtk4_workspace_layout_host_create_interactive(
         floating_window_entry_destroy);
     host->canvas_entries = g_ptr_array_new_with_free_func(canvas_entry_destroy);
     host->retained_content = g_ptr_array_new_with_free_func(retained_content_destroy);
+    host->tool_window_tabs = g_ptr_array_new_with_free_func(tool_window_tab_destroy);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
     if (host->root == NULL || host->floating_windows == NULL ||
-        host->canvas_entries == NULL || host->retained_content == NULL) {
+        host->canvas_entries == NULL || host->retained_content == NULL ||
+        host->tool_window_tabs == NULL) {
         umi_gtk4_workspace_layout_host_destroy(host);
         return UMI_STATUS_OUT_OF_MEMORY;
     }
@@ -764,6 +864,8 @@ UmiStatus umi_gtk4_workspace_layout_host_create_interactive(
     host->panel_user_data = panel_user_data;
     host->action_handler = action_handler;
     host->action_user_data = action_user_data;
+    host->tool_presentation_actions = action_handler != NULL && options != NULL &&
+        options->tool_presentation_actions != 0;
     gtk_widget_set_hexpand(host->root, TRUE);
     gtk_widget_set_vexpand(host->root, TRUE);
     gtk_widget_add_css_class(host->root, "umicom-workspace-layout-host");
@@ -789,7 +891,12 @@ void umi_gtk4_workspace_layout_host_destroy(
      * used.
      */
     if (host == NULL) return;
+    restore_maximised_presentation(host, 0);
     cancel_canvas_geometry(host);
+    clear_tool_windows(host);
+    if (host->tool_window_tabs != NULL)
+        g_ptr_array_free(host->tool_window_tabs, TRUE);
+    host->tool_window_tabs = NULL;
     /* Detach bodies before invalidating wrapper actions. A body can contain
      * its own controls, which are not part of the retired outer frame. */
     retained_content_unmount(host);
@@ -850,6 +957,7 @@ UmiStatus umi_gtk4_workspace_layout_host_rebuild(
     GtkWidget *main_bottom;
     GtkWidget *workspace;
     UmiApplicationSuiteLayoutRenderPlan *candidate_plan;
+    char revealed_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY] = {0};
 
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -879,6 +987,7 @@ UmiStatus umi_gtk4_workspace_layout_host_rebuild(
         g_free(candidate_plan);
         return status;
     }
+    restore_maximised_presentation(host, 0);
     host->plan = *candidate_plan;
     g_free(candidate_plan);
     cancel_canvas_geometry(host);
@@ -888,6 +997,16 @@ UmiStatus umi_gtk4_workspace_layout_host_rebuild(
     }
     if (!host->content_invalidated && refresh_canvas_geometry_without_rebuild(host, layout))
         return UMI_STATUS_OK;
+    /* Keep an explicitly opened tool across refreshes of the same layout,
+     * but never carry a temporary flyout into a different saved workspace. */
+    if (strcmp(host->layout.layout_id, layout->layout_id) == 0) {
+        for (int edge = 0; edge < 4; ++edge) {
+            if (host->tool_edges[edge].selected_id[0] != '\0')
+                (void)snprintf(revealed_id, sizeof(revealed_id), "%s",
+                    host->tool_edges[edge].selected_id);
+        }
+    }
+    clear_tool_windows(host);
     retained_content_unmount(host);
     retained_content_prune(host, layout);
     clear_canvas_entries(host);
@@ -945,11 +1064,14 @@ UmiStatus umi_gtk4_workspace_layout_host_rebuild(
     }
     workspace = build_canvas_layer(host, workspace);
     if (workspace == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    workspace = build_tool_windows(host, workspace);
     gtk_widget_set_hexpand(workspace, TRUE);
     gtk_widget_set_vexpand(workspace, TRUE);
     gtk_box_append(GTK_BOX(host->root), workspace);
 
     build_floating_windows(host);
+    if (revealed_id[0] != '\0')
+        (void)umi_gtk4_workspace_layout_host_reveal_tool_window(host, revealed_id);
     host->revision += 1U;
     return UMI_STATUS_OK;
 }
@@ -981,13 +1103,22 @@ UmiGtk4WorkspaceLayoutHostSnapshot umi_gtk4_workspace_layout_host_snapshot(
     snapshot.floating_count = host->plan.floating_window_count;
     snapshot.revision = host->revision;
     snapshot.canvas_count = host->plan.canvas_item_count;
-    snapshot.canvas_editable = !host->layout.locked &&
+    snapshot.canvas_editable = !host->layout.locked && !host->maximise_mode.active &&
         host->canvas_geometry_handler != NULL;
     snapshot.geometry_pending = host->pending_geometry_id != 0U;
     snapshot.source_layout_revision = host->layout.revision;
     snapshot.content_retention_enabled = host->retain_content;
     snapshot.retained_content_count = host->retained_content != NULL
         ? host->retained_content->len : 0U;
+    snapshot.tool_rail_count = host->tool_window_tabs != NULL
+        ? host->tool_window_tabs->len : 0U;
+    snapshot.maximised = host->maximise_mode.active;
+    if (snapshot.maximised)
+        (void)snprintf(snapshot.maximised_window_id,
+            sizeof(snapshot.maximised_window_id), "%s", host->maximise_mode.surface_id);
+    for (int edge = 0; edge < 4; ++edge)
+        if (host->tool_edges[edge].selected_id[0] != '\0')
+            ++snapshot.revealed_tool_count;
     return snapshot;
 }
 
@@ -1047,6 +1178,9 @@ UmiStatus umi_gtk4_workspace_layout_host_set_context_groups(
         }
         if (frame != NULL)
             umi_gtk4_ws_panel_frame_set_context_colour(frame, window_context_colour(host, window));
+        if (umi_ws_maximize_mode_matches(&host->maximise_mode, window->window_id))
+            umi_gtk4_ws_panel_frame_set_context_colour(
+                host->maximise_frame, window_context_colour(host, window));
     }
     return UMI_STATUS_OK;
 }
@@ -1063,7 +1197,12 @@ UmiStatus umi_gtk4_workspace_layout_host_focus_window(
         return UMI_STATUS_INVALID_ARGUMENT;
     window = umi_ui_workspace_layout_find_window(&host->layout, window_id);
     if (window == NULL || !window->visible) return UMI_STATUS_NOT_FOUND;
+    if (host->maximise_mode.active &&
+        !umi_ws_maximize_mode_matches(&host->maximise_mode, window_id))
+        restore_maximised_presentation(host, 0);
     frame = find_live_window_frame(host->root, window_id);
+    if (umi_ws_maximize_mode_matches(&host->maximise_mode, window_id))
+        frame = host->maximise_frame;
     if (window->floating) {
         for (guint index = 0U; index < host->floating_windows->len; ++index) {
             FloatingWindowEntry *entry = g_ptr_array_index(host->floating_windows, index);

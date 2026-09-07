@@ -96,7 +96,7 @@ static UmiStatus retained_content_check_capacity(UmiGtk4WorkspaceLayoutHost *hos
     for (size_t window_index = 0U; window_index < layout->window_count; ++window_index) {
         const UmiUiWorkspaceWindow *window = &layout->windows[window_index];
         RetainedWorkspaceContent *entry;
-        if (!window->visible) continue;
+        if (!window->visible && tool_window_edge_index(window) < 0) continue;
         entry = retained_content_find(host, window->window_id);
         if (entry == NULL || entry->invalidated || strcmp(entry->tool_id, window->tool_id) != 0)
             ++count;

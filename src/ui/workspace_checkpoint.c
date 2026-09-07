@@ -204,9 +204,9 @@ static UmiStatus validate_record(const UmiUiWorkspaceCheckpointScope *scope,
     return UMI_STATUS_OK;
 }
 
-/* Reuse decode, render projection and atomic import validation. Re-encoding
- * rejects trailing numeric junk or noncanonical booleans accepted by older
- * permissive readers, without defining another workspace file grammar. */
+/* Reuse the strict existing decoder, render projection and atomic importer.
+ * Validation concerns field meaning, not decimal formatting, so historical
+ * fixed-decimal records remain readable without another workspace grammar. */
 static UmiStatus validate_text(const UmiUiWorkspaceCheckpointScope *scope,
                               const UmiUiWorkspaceCustomisation *model,
                               const char *text, UmiUiWorkspaceCheckpointReport *report)

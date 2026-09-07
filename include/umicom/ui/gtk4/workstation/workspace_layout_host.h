@@ -66,6 +66,12 @@ typedef struct UmiGtk4WorkspaceLayoutHostSnapshot {
     /* Rebuild consumers when the public snapshot grows. Retention is opt-in. */
     size_t retained_content_count;
     int content_retention_enabled;
+    /* Rail membership is saved; temporary flyout visibility is not. */
+    size_t tool_rail_count;
+    size_t revealed_tool_count;
+    /* Transient presentation only; no saved rectangle or model revision changes. */
+    int maximised;
+    char maximised_window_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
 } UmiGtk4WorkspaceLayoutHostSnapshot;
 
 /**
@@ -73,6 +79,25 @@ typedef struct UmiGtk4WorkspaceLayoutHostSnapshot {
  * contract.
  */
 typedef struct UmiGtk4WorkspaceLayoutHost UmiGtk4WorkspaceLayoutHost;
+
+/** Optional capabilities of the model-owning callback. Zero preserves the
+ * original edit-only geometry actions. This is not saved workspace state. */
+typedef struct UmiGtk4WorkspaceLayoutHostOptions {
+    int tool_presentation_actions;
+} UmiGtk4WorkspaceLayoutHostOptions;
+
+/** Create a host whose owner explicitly supports recoverable Close and
+ * AUTO_HIDE_TOGGLE while layout movement is locked. The options are copied;
+ * NULL preserves the original policy. A NULL handler disables model actions;
+ * internal maximise/restore is handled by the host itself. */
+UmiStatus umi_gtk4_workspace_layout_host_create_with_options(
+    const UmiUiWorkspaceLayout *layout,
+    UmiGtk4WorkspaceLayoutPanelFactory panel_factory,
+    void *panel_user_data,
+    UmiGtk4WorkspaceLayoutActionHandler action_handler,
+    void *action_user_data,
+    const UmiGtk4WorkspaceLayoutHostOptions *options,
+    UmiGtk4WorkspaceLayoutHost **out_host);
 
 /**
  * Initialise gtk4 workspace layout host from caller-provided values so later operations
@@ -137,6 +162,33 @@ UmiStatus umi_gtk4_workspace_layout_host_invalidate_content(
  */
 UmiStatus umi_gtk4_workspace_layout_host_focus_window(
     UmiGtk4WorkspaceLayoutHost *host, const char *window_id);
+/** Temporarily expand one visible docked or canvas panel over this host.
+ * Reuses its existing header and body; sibling widgets and notebook pages are
+ * retained. This is not layout editing and works while movement is locked.
+ * Protected or non-resizable panels return PERMISSION_DENIED, hidden/floating
+ * panels return NOT_FOUND, and active/pending geometry or actions return BUSY.
+ * Repeated calls for the same panel are harmless. Focusing another window,
+ * accepted rebuild, or host destruction restores the normal presentation.
+ * The Restore button or an unhandled, unmodified Escape also restores it;
+ * editor/provider key handlers receive Escape first. GTK owning thread only.
+ */
+UmiStatus umi_gtk4_workspace_layout_host_maximise_window(
+    UmiGtk4WorkspaceLayoutHost *host, const char *window_id);
+/** Restore the exact panel widgets and notebook/canvas placement without
+ * changing any saved model property. Idempotent; cancels a queued Restore.
+ * GTK owning thread only. The host and provider bodies remain alive. */
+UmiStatus umi_gtk4_workspace_layout_host_restore_maximised(
+    UmiGtk4WorkspaceLayoutHost *host);
+/** Open an existing auto-hide tool without changing the saved layout. This
+ * explicit user action lazily creates its body and switches the current flyout.
+ * Repeated calls keep it open; normal hidden or absent IDs return NOT_FOUND.
+ * GTK owning thread only; does not create a native top-level window. */
+UmiStatus umi_gtk4_workspace_layout_host_reveal_tool_window(
+    UmiGtk4WorkspaceLayoutHost *host, const char *window_id);
+/** Collapse flyouts while retaining their bodies and named edge tabs. No
+ * model revision, placement, saved visibility or draft content is changed. */
+void umi_gtk4_workspace_layout_host_collapse_tool_windows(
+    UmiGtk4WorkspaceLayoutHost *host);
 /** Borrow the existing workspace group store to resolve header colours.
  * The store must outlive the host, and updates happen on the GTK thread.
  * This immediately refreshes current frames and is used on future rebuilds.
@@ -148,6 +200,11 @@ UmiStatus umi_gtk4_workspace_layout_host_set_context_groups(
     UmiGtk4WorkspaceLayoutHost *host, const UmiUiWindowGroupStore *groups);
 /** Replace the borrowed canvas geometry handler on the GTK owning thread.
  * Replacing it cancels pending gestures/requests; NULL disables manipulation.
+ * Unlocked, unprotected panels expose eight resize handles when resizable.
+ * Their focusable title accepts arrows to preview a 2.5-percent grid move,
+ * Shift+arrows to resize the bottom/right edges, Enter to queue, and Escape
+ * or focus departure to cancel. Editor/provider key events are not intercepted.
+ * These operations reuse the existing model revision and edit transaction.
  */
 UmiStatus umi_gtk4_workspace_layout_host_set_canvas_geometry_handler(
     UmiGtk4WorkspaceLayoutHost *host,

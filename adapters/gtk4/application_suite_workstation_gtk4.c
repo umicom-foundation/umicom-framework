@@ -38,6 +38,8 @@ struct UmiApplicationSuiteGtk4Workstation {
     UmiGtk4WorkspaceLayoutHost *host;
     UmiGtk4AppearanceEditor *appearance;
     UmiGtk4WorkstationShellHeader *identity;
+    UmiGtk4WorkstationWindowTitlebar *titlebar;
+    GtkWindow *bound_window;
     UmiGtk4WorkstationCommandBar *command_bar;
     UmiGtk4AutomationDriver *automation;
     UmiWsCommandBarModel command_model;
@@ -113,137 +115,142 @@ static const UmiUiWindowCategory WINDOW_CATEGORIES[] = {
     UMI_UI_WINDOW_CATEGORY_GENERAL
 };
 
-/* Build the shared suite action catalogue from real layout metadata. Product
- * applications inherit these actions and do not duplicate header commands. */
-static UmiStatus build_command_model(
-    UmiApplicationSuiteGtk4Workstation *workstation)
+/* Navigation reads the existing workspace owner; it never creates a second
+ * list of panel instances or an implicit layout-edit transaction. */
+static const UmiUiWorkspaceLayout *active_layout(
+    const UmiApplicationSuiteGtk4Workstation *workstation);
+static void refresh_window_catalogue_controls(UmiApplicationSuiteGtk4Workstation *workstation);
+
+/* Visible tools only need focus. Ordinary hidden dock tools may be reopened;
+ * adding a missing instance or changing placement remains an explicit edit. */
+static int can_show_window(const UmiApplicationSuiteGtk4Workstation *workstation,
+    const UmiUiWorkspaceWindow *window)
 {
+    const UmiExperiencePanelDefinition *panel;
+    if (window == NULL) return 0;
+    if (window->visible || umi_ui_workspace_customisation_window_is_auto_hidden(
+            &workstation->customisation, window->window_id)) return 1;
+    if (window->pinned || window->floating || strcmp(window->placement_id, "canvas") == 0)
+        return 0;
+    panel = workstation->runtime.experience != NULL
+        ? umi_application_experience_panel_find(workstation->runtime.experience, window->tool_id)
+        : NULL;
+    return panel == NULL || (panel->flags & UMI_EXPERIENCE_PANEL_DOCKABLE) != 0U;
+}
+
+/* Four workspace actions, every stored layout and every current instance fit
+ * without expanding the established public command-model structure. */
+_Static_assert(4U + UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS + UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS
+    <= UMI_WS_MAX_PALETTE_ITEMS, "Workspace navigation must fit the command catalogue");
+
+/* Build into a heap candidate: allocation/validation failure cannot publish a
+ * partial list, and large public models do not consume the Windows C stack.
+ * Item keys identify result rows; complete target IDs are carried separately
+ * in command_id so a maximum-length saved ID never needs truncating a prefix. */
+static UmiStatus build_command_model(UmiApplicationSuiteGtk4Workstation *workstation)
+{
+    static const struct { const char *id; const char *title; const char *description;
+        const char *keywords; UmiWsCommandScope scope; uint32_t priority; } actions[] = {
+        { "suite.layout.edit", "Edit or apply layout",
+          "Unlock panel movement, or apply and lock the current arrangement.",
+          "layout lock unlock customise arrange", UMI_WS_COMMAND_SCOPE_COMMAND, 100U },
+        { "suite.window.open", "Windows and tools",
+          "Focus or reopen an existing tool. Edit Layout enables adding or moving tools.",
+          "panel tool dock float new window", UMI_WS_COMMAND_SCOPE_PANEL, 95U },
+        { "suite.layout.save", "Save layout checkpoint",
+          "Keep a recovery copy of the current locked arrangement.",
+          "layout checkpoint recovery", UMI_WS_COMMAND_SCOPE_COMMAND, 90U },
+        { "suite.layout.restore", "Restore layout checkpoint",
+          "Return to the most recently saved arrangement.",
+          "layout checkpoint recover reset", UMI_WS_COMMAND_SCOPE_COMMAND, 85U }
+    };
+    const UmiUiWorkspaceLayout *layout;
+    UmiWsCommandBarModel *candidate;
+    UmiStatus status = UMI_STATUS_OK;
     size_t index;
-    UmiStatus status;
-
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
     if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    umi_ws_command_bar_model_init(&workstation->command_model);
-
-    status = umi_ws_command_bar_model_add(
-        &workstation->command_model,
-        "suite.layout.edit",
-        "Edit or apply layout",
-        "Unlock panel movement, or apply and lock the current arrangement.",
-        "suite.layout.edit",
-        "layout lock unlock customise arrange",
-        UMI_WS_COMMAND_SCOPE_COMMAND,
-        100U);
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status == UMI_STATUS_OK) {
-        status = umi_ws_command_bar_model_add(
-            &workstation->command_model,
-            "suite.window.open",
-            "Add or move a window",
-            "Open the shared window catalogue for the unlocked layout.",
-            "suite.window.open",
-            "panel tool dock float new window",
-            UMI_WS_COMMAND_SCOPE_PANEL,
-            95U);
-    }
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status == UMI_STATUS_OK) {
-        status = umi_ws_command_bar_model_add(
-            &workstation->command_model,
-            "suite.layout.save",
-            "Save layout checkpoint",
-            "Keep a recovery copy of the current locked arrangement.",
-            "suite.layout.save",
-            "layout checkpoint recovery",
-            UMI_WS_COMMAND_SCOPE_COMMAND,
-            90U);
-    }
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status == UMI_STATUS_OK) {
-        status = umi_ws_command_bar_model_add(
-            &workstation->command_model,
-            "suite.layout.restore",
-            "Restore layout checkpoint",
-            "Return to the most recently saved arrangement.",
-            "suite.layout.restore",
-            "layout checkpoint recover reset",
-            UMI_WS_COMMAND_SCOPE_COMMAND,
-            85U);
-    }
-
-    /* Every canonical layout becomes discoverable through the same command
-     * centre. Its identifier is copied into a bounded namespaced command. */
-    for (index = 0U;
-         status == UMI_STATUS_OK && index < workstation->selector.count;
-         ++index) {
-        const UmiApplicationSuiteLayoutChoice *choice =
-            &workstation->selector.choices[index];
-        char command_id[UMI_UI_ID_CAPACITY];
-        char description[UMI_UI_TEXT_CAPACITY];
-        int written;
-
-        written = snprintf(
-            command_id, sizeof(command_id), "suite.layout.%s",
-            choice->layout_id);
-        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (written < 0 || (size_t)written >= sizeof(command_id)) {
-            return UMI_STATUS_CAPACITY_EXCEEDED;
+    layout = active_layout(workstation);
+    if (workstation->customisation.layout_count > UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS ||
+        (layout != NULL && layout->window_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS))
+        return UMI_STATUS_INVALID_STATE;
+    candidate = malloc(sizeof(*candidate));
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    umi_ws_command_bar_model_init(candidate);
+    for (index = 0U; status == UMI_STATUS_OK && index < G_N_ELEMENTS(actions); ++index)
+        status = umi_ws_command_bar_model_add(candidate, actions[index].id,
+            actions[index].title, actions[index].description, actions[index].id,
+            actions[index].keywords, actions[index].scope, actions[index].priority);
+    /* Named user layouts are first-class choices alongside product presets. */
+    for (index = 0U; status == UMI_STATUS_OK &&
+            index < workstation->customisation.layout_count; ++index) {
+        const UmiUiWorkspaceLayout *choice = &workstation->customisation.layouts[index];
+        char item_id[32];
+        int written = snprintf(item_id, sizeof(item_id), "suite.choice.%zu", index);
+        if (written < 0 || (size_t)written >= sizeof(item_id)) {
+            status = UMI_STATUS_CAPACITY_EXCEEDED;
+            break;
         }
-        written = snprintf(
-            description,
-            sizeof(description),
-            "Switch this application to the %s workspace.",
-            choice->title);
-        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (written < 0 || (size_t)written >= sizeof(description)) {
-            return UMI_STATUS_CAPACITY_EXCEEDED;
-        }
-        status = umi_ws_command_bar_model_add(
-            &workstation->command_model,
-            command_id,
-            choice->title,
-            description,
-            command_id,
-            choice->layout_id,
-            UMI_WS_COMMAND_SCOPE_COMMAND,
-            50U);
+        status = umi_ws_command_bar_model_add(candidate, item_id, choice->name,
+            workstation->customisation.edit_active
+                ? "Apply or cancel the current edit before switching layouts."
+                : "Switch to this product or user-created workspace.",
+            choice->layout_id, "layout workspace", UMI_WS_COMMAND_SCOPE_COMMAND, 50U);
+        if (status == UMI_STATUS_OK)
+            status = umi_ws_command_bar_model_set_enabled(candidate, item_id,
+                !workstation->customisation.edit_active);
     }
+    /* Include hidden and auto-hide instances, not just rendered GTK children.
+     * Focus/reopen resolves their copied ID against the live model on dispatch. */
+    for (index = 0U; status == UMI_STATUS_OK && layout != NULL &&
+            index < layout->window_count; ++index) {
+        const UmiUiWorkspaceWindow *window = &layout->windows[index];
+        char item_id[32];
+        const int available = can_show_window(workstation, window);
+        const int rail = umi_ui_workspace_customisation_window_is_auto_hidden(
+            &workstation->customisation, window->window_id);
+        const char *description = !available
+            ? "This hidden panel cannot be reopened here. Use Edit Layout to review its permissions and placement."
+            : rail ? "Reveal this edge tool without changing the saved arrangement."
+            : window->visible ? "Focus this existing panel without moving or recreating it."
+            : "Reopen this docked tool at its existing position.";
+        int written = snprintf(item_id, sizeof(item_id), "suite.panel.%zu", index);
+        if (written < 0 || (size_t)written >= sizeof(item_id)) {
+            status = UMI_STATUS_CAPACITY_EXCEEDED;
+            break;
+        }
+        status = umi_ws_command_bar_model_add(candidate, item_id,
+            window->title[0] != '\0' ? window->title : window->window_id,
+            description, window->window_id, window->tool_id, UMI_WS_COMMAND_SCOPE_PANEL, 75U);
+        if (status == UMI_STATUS_OK)
+            status = umi_ws_command_bar_model_set_enabled(candidate, item_id, available != 0);
+    }
+    if (status == UMI_STATUS_OK) workstation->command_model = *candidate;
+    free(candidate);
     return status;
 }
 
-/* Synchronise availability after edit or checkpoint state changes. A disabled
- * action remains documented in search results but cannot be dispatched. */
-static void refresh_command_model(
-    UmiApplicationSuiteGtk4Workstation *workstation)
+/* Refresh from the live model after every layout transition. The managed
+ * renderer keeps the current search text while replacing its result entries. */
+static void refresh_command_model(UmiApplicationSuiteGtk4Workstation *workstation)
 {
+    UmiStatus status;
     int editing;
-
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
     if (workstation == NULL) return;
-    editing = workstation->customisation.edit_active ? 1 : 0;
-    (void)umi_ws_command_bar_model_set_enabled(
-        &workstation->command_model, "suite.window.open", editing != 0);
-    (void)umi_ws_command_bar_model_set_enabled(
-        &workstation->command_model, "suite.layout.save",
-        editing == 0 && checkpoint_save_enabled(workstation));
-    (void)umi_ws_command_bar_model_set_enabled(
-        &workstation->command_model,
-        "suite.layout.restore",
-        editing == 0 && (workstation->checkpoint_server != NULL || workstation->saved_layout_text != NULL));
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (workstation->command_bar != NULL) {
-        (void)umi_gtk4_ws_command_bar_set_model(
-            workstation->command_bar, &workstation->command_model);
+    status = build_command_model(workstation);
+    if (status != UMI_STATUS_OK) {
+        if (workstation->layout_status != NULL)
+            gtk_label_set_text(GTK_LABEL(workstation->layout_status),
+                "Workspace search could not refresh. Existing layout data is unchanged.");
+        return;
     }
+    editing = workstation->customisation.edit_active ? 1 : 0;
+    (void)umi_ws_command_bar_model_set_enabled(&workstation->command_model,
+        "suite.layout.save", editing == 0 && checkpoint_save_enabled(workstation));
+    (void)umi_ws_command_bar_model_set_enabled(&workstation->command_model,
+        "suite.layout.restore", editing == 0 &&
+        (workstation->checkpoint_server != NULL || workstation->saved_layout_text != NULL));
+    if (workstation->command_bar != NULL)
+        (void)umi_gtk4_ws_command_bar_set_model(workstation->command_bar, &workstation->command_model);
 }
 
 /* Provide the copy text operation used by this module and its client applications. */
@@ -312,6 +319,45 @@ static void refresh_heading(UmiApplicationSuiteGtk4Workstation *workstation)
         identity.title,
         layout->name,
         identity.mode_badge);
+    /* The native title owns its centred layout context; the product identity
+     * and operational-mode badge remain unchanged in the shared header. */
+    if (workstation->bound_window != NULL) {
+        char *title = g_strdup_printf("%s — %s", identity.title, layout->name);
+        gtk_window_set_title(workstation->bound_window, title);
+        g_free(title);
+    }
+}
+
+/* Explicit window binding leaves standalone/embedded workstation creation
+ * unchanged. Successful transfer moves only existing identity widgets; panel
+ * bodies, catalogue state and the appearance owner are not reconstructed. */
+UmiStatus umi_application_suite_gtk4_workstation_bind_window(
+    UmiApplicationSuiteGtk4Workstation *workstation, GtkWindow *window)
+{
+    UmiGtk4WorkstationShellHeaderSnapshot identity;
+    UmiStatus status;
+    if (workstation == NULL || window == NULL || !GTK_IS_WINDOW(window) ||
+        workstation->identity == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (workstation->titlebar != NULL)
+        return workstation->bound_window == window ? UMI_STATUS_OK : UMI_STATUS_INVALID_STATE;
+    identity = umi_gtk4_ws_shell_header_snapshot(workstation->identity);
+    status = umi_gtk4_ws_window_titlebar_create_from_header(
+        window, workstation->identity, identity.title, &workstation->titlebar);
+    if (status != UMI_STATUS_OK) return status;
+    /* A titlebar is a sibling of content, not an ancestor retaining the
+     * GtkWindow. Keep the original UAT driver and extend its observed scope. */
+    status = umi_gtk4_automation_driver_add_observed_scope(workstation->automation,
+        umi_gtk4_ws_window_titlebar_widget(workstation->titlebar));
+    if (status != UMI_STATUS_OK) return status;
+    workstation->bound_window = window;
+    g_object_add_weak_pointer(G_OBJECT(window), (gpointer *)&workstation->bound_window);
+    /* Reuse the existing display provider and profile scope, including custom
+     * user fonts/colours, after identity moves outside the content root. */
+    gtk_widget_add_css_class(umi_gtk4_ws_window_titlebar_widget(workstation->titlebar),
+        "umicom-appearance-scope");
+    refresh_heading(workstation);
+    workstation->revision += 1U;
+    return UMI_STATUS_OK;
 }
 
 /* Keep the shared SVG mark in step with the appearance editor. The callback
@@ -353,12 +399,18 @@ static UmiStatus rebuild_active_layout(
     UmiApplicationSuiteGtk4Workstation *workstation)
 {
     const UmiUiWorkspaceLayout *layout = active_layout(workstation);
+    UmiStatus status;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
     if (workstation == NULL || layout == NULL) return UMI_STATUS_INVALID_STATE;
-    return umi_gtk4_workspace_layout_host_rebuild(workstation->host, layout);
+    status = umi_gtk4_workspace_layout_host_rebuild(workstation->host, layout);
+    if (status == UMI_STATUS_OK) {
+        refresh_window_catalogue_controls(workstation);
+        refresh_command_model(workstation);
+    }
+    return status;
 }
 
 /* Rebuild the visible choices from the same model that owns named layouts.
@@ -471,8 +523,9 @@ static void refresh_edit_controls(
      * used.
      */
     if (workstation->new_window_button != NULL) {
-        gtk_widget_set_sensitive(workstation->new_window_button, editing);
+        gtk_widget_set_sensitive(workstation->new_window_button, TRUE);
     }
+    refresh_window_catalogue_controls(workstation);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -1881,6 +1934,132 @@ static GtkWidget *build_panel_editor(
     return revealer;
 }
 
+/* Stage ordinary tool presentation before publishing the shared model. Native
+ * allocation failures retain its old layout and attempt to restore the host. */
+static UmiStatus set_normal_tool_presentation(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const char *window_id, bool visible, bool auto_hidden)
+{
+    const UmiUiWorkspaceLayout *previous = active_layout(workstation);
+    const UmiUiWorkspaceWindow *window = previous != NULL
+        ? umi_ui_workspace_layout_find_window(previous, window_id) : NULL;
+    const UmiExperiencePanelDefinition *panel;
+    UmiUiWorkspaceCustomisation *candidate;
+    const UmiUiWorkspaceLayout *candidate_layout;
+    UmiStatus status;
+    bool rebuild_attempted = false;
+    if (workstation == NULL || window_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    if (workstation->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    panel = workstation->runtime.experience != NULL
+        ? umi_application_experience_panel_find(workstation->runtime.experience, window->tool_id) : NULL;
+    if (panel != NULL && (visible || auto_hidden)) {
+        uint32_t required = window->floating ? UMI_EXPERIENCE_PANEL_FLOATABLE : UMI_EXPERIENCE_PANEL_DOCKABLE;
+        if (auto_hidden) required |= UMI_EXPERIENCE_PANEL_AUTO_HIDE;
+        if ((panel->flags & required) != required) return UMI_STATUS_PERMISSION_DENIED;
+    }
+    candidate = malloc(sizeof(*candidate));
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    *candidate = workstation->customisation;
+    status = umi_ui_workspace_customisation_set_tool_presentation(candidate,
+        window_id, visible, auto_hidden);
+    /* A rail reveal request is not a persistent edit or a reason to rebuild
+     * all native tool widgets; the caller reveals the existing host flyout. */
+    if (status == UMI_STATUS_OK && candidate->revision == workstation->customisation.revision) {
+        free(candidate);
+        return UMI_STATUS_OK;
+    }
+    candidate_layout = umi_ui_workspace_customisation_active_const(candidate);
+    if (status == UMI_STATUS_OK) {
+        rebuild_attempted = true;
+        status = candidate_layout != NULL
+            ? umi_gtk4_workspace_layout_host_rebuild(workstation->host, candidate_layout)
+            : UMI_STATUS_INVALID_STATE;
+    }
+    if (status == UMI_STATUS_OK) {
+        workstation->customisation = *candidate;
+        workstation->revision += 1U;
+        refresh_heading(workstation);
+        refresh_edit_controls(workstation);
+    } else if (rebuild_attempted && previous != NULL) {
+        (void)umi_gtk4_workspace_layout_host_rebuild(workstation->host, previous);
+    }
+    free(candidate);
+    return status;
+}
+
+/* Open/focus is a normal view operation, not an implicit panel mover. Copy the
+ * caller's ID before an accepted model update can replace its backing bytes. */
+UmiStatus umi_application_suite_gtk4_workstation_show_window(
+    UmiApplicationSuiteGtk4Workstation *workstation, const char *window_id)
+{
+    char identity[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    const UmiUiWorkspaceLayout *layout;
+    const UmiUiWorkspaceWindow *window;
+    UmiStatus status;
+    if (workstation == NULL || window_id == NULL || window_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = copy_text(identity, sizeof(identity), window_id);
+    if (status != UMI_STATUS_OK) return status;
+    layout = active_layout(workstation);
+    window = layout != NULL ? umi_ui_workspace_layout_find_window(layout, identity) : NULL;
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    if (!can_show_window(workstation, window)) return UMI_STATUS_PERMISSION_DENIED;
+    if (umi_ui_workspace_customisation_window_is_auto_hidden(
+            &workstation->customisation, identity))
+        return umi_gtk4_workspace_layout_host_reveal_tool_window(workstation->host, identity);
+    if (!window->visible) {
+        status = set_normal_tool_presentation(workstation, identity, true, false);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    return umi_gtk4_workspace_layout_host_focus_window(workstation->host, identity);
+}
+
+/* A catalogue row opens the first eligible existing instance. Creating another
+ * instance, or moving a singleton, continues through explicit Edit Layout. */
+static const UmiUiWorkspaceWindow *existing_catalogue_window(
+    const UmiApplicationSuiteGtk4Workstation *workstation, const char *tool_id)
+{
+    const UmiUiWorkspaceLayout *layout = active_layout(workstation);
+    const UmiUiWorkspaceWindow *hidden = NULL;
+    size_t index;
+    if (layout == NULL || tool_id == NULL) return NULL;
+    for (index = 0U; index < layout->window_count; ++index) {
+        const UmiUiWorkspaceWindow *window = &layout->windows[index];
+        if (strcmp(window->tool_id, tool_id) != 0 || !can_show_window(workstation, window)) continue;
+        if (window->visible) return window;
+        if (hidden == NULL) hidden = window;
+    }
+    return hidden;
+}
+
+/* Placement controls explain their edit-only role, while ordinary Open/Focus
+ * stays usable when locked. Unavailable definitions remain visible with a reason. */
+static void refresh_window_catalogue_controls(UmiApplicationSuiteGtk4Workstation *workstation)
+{
+    GtkWidget *row;
+    const int editing = workstation->customisation.edit_active ? 1 : 0;
+    if (workstation->new_window_region != NULL)
+        gtk_widget_set_sensitive(workstation->new_window_region, editing);
+    if (workstation->new_window_floating != NULL)
+        gtk_widget_set_sensitive(workstation->new_window_floating, editing);
+    if (workstation->new_window_list == NULL) return;
+    for (row = gtk_widget_get_first_child(workstation->new_window_list); row != NULL;
+         row = gtk_widget_get_next_sibling(row)) {
+        GtkWidget *button = gtk_list_box_row_get_child(GTK_LIST_BOX_ROW(row));
+        const UmiUiWindowDescriptor *descriptor = button != NULL
+            ? g_object_get_data(G_OBJECT(button), "umicom-window-descriptor") : NULL;
+        const UmiUiWorkspaceWindow *window = descriptor != NULL
+            ? existing_catalogue_window(workstation, descriptor->tool_id) : NULL;
+        if (button == NULL || descriptor == NULL) continue;
+        gtk_widget_set_sensitive(button, editing || window != NULL);
+        gtk_widget_set_tooltip_text(button, editing
+            ? "Add an instance or move an existing singleton to the selected placement."
+            : window != NULL ? "Focus or reopen an existing tool without changing its placement."
+            : "No reopenable instance is in this layout. Use Edit Layout to add one or review protection.");
+    }
+}
+
 /* Provide the on panel action operation used by this module and its client applications. */
 static void on_panel_action(const char *window_id,
                             UmiWsPanelAction action,
@@ -1890,6 +2069,7 @@ static void on_panel_action(const char *window_id,
         (UmiApplicationSuiteGtk4Workstation *)user_data;
     UmiUiWorkspaceLayout *layout;
     UmiUiWorkspaceWindow *window;
+    UmiStatus presentation_status = UMI_STATUS_OK;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -1908,6 +2088,11 @@ static void on_panel_action(const char *window_id,
         (void)umi_application_suite_gtk4_workstation_set_window_pinned(
             workstation, window_id, window->pinned ? 0 : 1);
         break;
+    case UMI_WS_PANEL_ACTION_AUTO_HIDE_TOGGLE:
+        presentation_status = set_normal_tool_presentation(workstation,
+            window_id, true, !umi_ui_workspace_customisation_window_is_auto_hidden(
+                &workstation->customisation, window_id));
+        break;
     case UMI_WS_PANEL_ACTION_FLOAT_TOGGLE:
         (void)umi_application_suite_gtk4_workstation_set_window_floating(
             workstation, window_id, window->floating ? 0 : 1);
@@ -1917,8 +2102,12 @@ static void on_panel_action(const char *window_id,
             workstation, window_id, window->maximised ? 0 : 1);
         break;
     case UMI_WS_PANEL_ACTION_CLOSE:
-        (void)umi_application_suite_gtk4_workstation_close_window(
-            workstation, window_id);
+        /* Normal docked tools can be reopened without unlocking or losing
+         * their placement. Detached/canvas removal retains its edit policy. */
+        if (!window->floating && strcmp(window->placement_id, "canvas") != 0)
+            presentation_status = set_normal_tool_presentation(workstation, window_id, false, false);
+        else
+            (void)umi_application_suite_gtk4_workstation_close_window(workstation, window_id);
         break;
     case UMI_WS_PANEL_ACTION_MOVE:
     case UMI_WS_PANEL_ACTION_CONTEXT_GROUP:
@@ -1931,6 +2120,11 @@ static void on_panel_action(const char *window_id,
         /* Unknown future actions remain harmless until their semantic command
          * is understood by this frontend adapter. */
         break;
+    }
+    if (presentation_status != UMI_STATUS_OK && workstation->layout_status != NULL) {
+        gtk_label_set_text(GTK_LABEL(workstation->layout_status), umi_status_text(presentation_status));
+        gtk_widget_set_tooltip_text(workstation->layout_status,
+            "The requested model update was not committed. Protected tools and unsupported modes remain unchanged.");
     }
 }
 
@@ -2091,6 +2285,17 @@ static void on_new_window_selected(GtkButton *button, gpointer user_data)
         GTK_CHECK_BUTTON(workstation->new_window_floating));
     status = UMI_STATUS_NOT_FOUND;
 
+    /* Normal mode never falls through to instance creation, even for a
+     * multi-instance definition. The result identifies an existing instance. */
+    if (!workstation->customisation.edit_active) {
+        const UmiUiWorkspaceWindow *existing =
+            existing_catalogue_window(workstation, descriptor->tool_id);
+        status = existing != NULL
+            ? umi_application_suite_gtk4_workstation_show_window(workstation, existing->window_id)
+            : UMI_STATUS_NOT_FOUND;
+        goto show_result;
+    }
+
     /* Singleton entries double as a simple panel mover. This mirrors the
      * discoverability of a New Window catalogue without creating duplicate
      * instances of tools that are intentionally unique. */
@@ -2105,6 +2310,8 @@ static void on_new_window_selected(GtkButton *button, gpointer user_data)
             if (strcmp(window->tool_id, descriptor->tool_id) == 0) {
                 UmiUiPlacement placement;
                 UmiApplicationSuiteLayoutRect region;
+                /* Normal-mode Open was handled above. Only an explicit edit
+                 * is allowed to replace the singleton's placement here. */
                 /* Apply this branch only when its contract condition is satisfied. */
                 if (floating) {
                     placement = UMI_UI_PLACEMENT_FLOATING;
@@ -2141,7 +2348,8 @@ static void on_new_window_selected(GtkButton *button, gpointer user_data)
             window_id,
             sizeof(window_id));
     }
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
+show_result:
+    /* Report the actual Open/Focus or edit result without silently unlocking. */
     if (status == UMI_STATUS_OK) {
         gtk_label_set_text(
             GTK_LABEL(workstation->new_window_status), "");
@@ -2151,10 +2359,10 @@ static void on_new_window_selected(GtkButton *button, gpointer user_data)
             GTK_LABEL(workstation->new_window_status),
             status == UMI_STATUS_PERMISSION_DENIED ||
                     status == UMI_STATUS_INVALID_STATE
-                ? "Unlock the layout before changing its windows."
+                ? "This panel or mode does not allow that operation. Use Edit Layout to review placement and protection."
                 : (status == UMI_STATUS_CAPACITY_EXCEEDED
                     ? "This layout has reached its window capacity."
-                    : "The selected window could not be added or moved."));
+                    : "No existing tool could be opened. Use Edit Layout to add an instance."));
     }
 }
 
@@ -2174,10 +2382,10 @@ static GtkWidget *build_new_window_popover(
     };
     GtkWidget *popover = gtk_popover_new();
     GtkWidget *root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
-    GtkWidget *heading = gtk_label_new("New Window");
+    GtkWidget *heading = gtk_label_new("Windows and tools");
     GtkWidget *help = gtk_label_new(
-        "Search Framework panels, choose a destination, then add or move "
-        "one in the unlocked layout.");
+        "Open or focus an existing tool. Edit Layout enables destination "
+        "controls for adding or moving panels.");
     GtkWidget *options = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
     GtkWidget *scroll = gtk_scrolled_window_new();
     UmiUiWindowCatalogueQuery catalogue_query =
@@ -2464,7 +2672,8 @@ static void on_command_bar_activated(
     const UmiWsCommandBarItem *item,
     void *user_data)
 {
-    static const char LAYOUT_PREFIX[] = "suite.layout.";
+    static const char LAYOUT_PREFIX[] = "suite.choice.";
+    static const char PANEL_PREFIX[] = "suite.panel.";
     UmiApplicationSuiteGtk4Workstation *workstation =
         (UmiApplicationSuiteGtk4Workstation *)user_data;
 
@@ -2487,13 +2696,19 @@ static void on_command_bar_activated(
             gtk_menu_button_popup(
                 GTK_MENU_BUTTON(workstation->new_window_button));
         }
-    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strncmp(
-                   item->command_id,
+    } else if (strncmp(item->item_id, PANEL_PREFIX, sizeof(PANEL_PREFIX) - 1U) == 0) {
+        UmiStatus status = umi_application_suite_gtk4_workstation_show_window(
+            workstation, item->command_id);
+        if (status != UMI_STATUS_OK && workstation->layout_status != NULL)
+            gtk_label_set_text(GTK_LABEL(workstation->layout_status),
+                "The selected panel is no longer available in this arrangement.");
+    } else /* Resolve the copied saved-layout ID, never the result-row index. */ if (strncmp(
+                   item->item_id,
                    LAYOUT_PREFIX,
                    sizeof(LAYOUT_PREFIX) - 1U) == 0) {
         (void)umi_application_suite_gtk4_workstation_select_layout(
             workstation,
-            item->command_id + sizeof(LAYOUT_PREFIX) - 1U);
+            item->command_id);
     }
 }
 
@@ -2624,12 +2839,13 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
      * used.
      */
     if (layout == NULL) { status = UMI_STATUS_INVALID_STATE; goto fail; }
-    status = umi_gtk4_workspace_layout_host_create_interactive(
+    status = umi_gtk4_workspace_layout_host_create_with_options(
         layout,
         config->panel_factory,
         config->user_data,
         on_panel_action,
         workstation,
+        &(const UmiGtk4WorkspaceLayoutHostOptions){ .tool_presentation_actions = 1 },
         &workstation->host);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto fail;
@@ -2775,7 +2991,7 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
         workstation->new_window_button,
         "umicom.window-catalogue.menu");
     gtk_menu_button_set_label(
-        GTK_MENU_BUTTON(workstation->new_window_button), "New Window");
+        GTK_MENU_BUTTON(workstation->new_window_button), "Windows");
     gtk_widget_set_tooltip_text(
         workstation->new_window_button,
         "Add a Framework panel to the unlocked layout");
@@ -2938,7 +3154,17 @@ void umi_application_suite_gtk4_workstation_destroy(
         workstation->command_bar, NULL, NULL);
     umi_gtk4_ws_command_bar_destroy(workstation->command_bar);
     workstation->command_bar = NULL;
-    umi_gtk4_ws_shell_header_destroy(workstation->identity);
+    if (workstation->bound_window != NULL)
+        g_object_remove_weak_pointer(G_OBJECT(workstation->bound_window),
+            (gpointer *)&workstation->bound_window);
+    workstation->bound_window = NULL;
+    /* Binding transfers identity ownership. Never destroy the borrowed alias
+     * twice; unbound embedded clients retain the original header ownership. */
+    if (workstation->titlebar != NULL)
+        umi_gtk4_ws_window_titlebar_destroy(workstation->titlebar);
+    else
+        umi_gtk4_ws_shell_header_destroy(workstation->identity);
+    workstation->titlebar = NULL;
     workstation->identity = NULL;
     umi_gtk4_appearance_editor_destroy(workstation->appearance);
     workstation->appearance = NULL;

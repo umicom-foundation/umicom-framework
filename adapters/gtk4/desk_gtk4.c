@@ -21,6 +21,7 @@
 #include "umicom/ui/gtk4/desk.h"
 #include "umicom/ui/gtk4/workstation/shell_header.h"
 #include "umicom/ui/gtk4/workstation/window_fit.h"
+#include "umicom/ui/gtk4/workstation/command_bar.h"
 
 #include <gtk/gtk.h>
 #include <stdio.h>
@@ -30,6 +31,8 @@
 struct UmiGtk4Desk {
     GtkApplication *application;
     GtkWidget *window;
+    GtkWidget *root;
+    GtkWidget *content_identity;
     GtkWidget *application_strip;
     GtkWidget *layout_strip;
     GtkWidget *content_stack;
@@ -39,11 +42,24 @@ struct UmiGtk4Desk {
     GtkWidget *workbench_title;
     GtkWidget *workbench_description;
     GtkWidget *status_label;
+    UmiGtk4WorkstationCommandBar *navigation;
     UmiDeskRuntime *runtime;
 };
 
+/* A caller may retain an old chooser row or the original body after a refresh
+ * or window replacement. Disconnect borrowed Desk callbacks before release. */
+static void disconnect_desk_widgets(GtkWidget *widget, UmiGtk4Desk *desk)
+{
+    GtkWidget *child;
+    if (widget == NULL) return;
+    g_signal_handlers_disconnect_by_data(widget, desk);
+    for (child = gtk_widget_get_first_child(widget); child != NULL;
+         child = gtk_widget_get_next_sibling(child))
+        disconnect_desk_widgets(child, desk);
+}
+
 /* Provide the clear box operation used by this module and its client applications. */
-static void clear_box(GtkWidget *box)
+static void clear_box(GtkWidget *box, UmiGtk4Desk *desk)
 {
     GtkWidget *child;
     /*
@@ -58,6 +74,7 @@ static void clear_box(GtkWidget *box)
      */
     while (child != NULL) {
         GtkWidget *next = gtk_widget_get_next_sibling(child);
+        disconnect_desk_widgets(child, desk);
         gtk_box_remove(GTK_BOX(box), child);
         child = next;
     }
@@ -442,15 +459,90 @@ static GtkWidget *make_layout_button(
     return button;
 }
 
+/* Navigation opens only existing Desk UI or a registered semantic layout.
+ * It does not start applications or claim the placeholder hosts their tools. */
+static void on_navigation_activated(const UmiWsCommandBarItem *item, void *data)
+{
+    UmiGtk4Desk *desk = data;
+    UmiStatus status;
+    if (desk == NULL || item == NULL || !item->enabled) return;
+    if (strcmp(item->item_id, "desk.applications") == 0) {
+        show_application_chooser(desk);
+        set_status(desk, "Choose applications; launching still requires Launch selected.");
+        return;
+    }
+    if (strncmp(item->item_id, "desk.layout.", sizeof("desk.layout.") - 1U) != 0) return;
+    status = umi_desk_runtime_activate_layout(desk->runtime, item->command_id);
+    if (status == UMI_STATUS_OK) status = umi_gtk4_desk_refresh(desk);
+    set_status(desk, status == UMI_STATUS_OK ? "Desk layout selected." : umi_status_text(status));
+}
+
+/* Copy only genuine chooser/layout entries into Framework's existing search
+ * model. The old query survives refresh, and no application launch is added. */
+static UmiStatus refresh_navigation(UmiGtk4Desk *desk, const UmiDeskRuntimeSnapshot *snapshot)
+{
+    UmiWsCommandBarModel *model = calloc(1U, sizeof(*model));
+    UmiDesktopShellModel *shell = umi_desk_runtime_shell(desk->runtime);
+    UmiStatus status;
+    size_t index;
+    if (model == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    umi_ws_command_bar_model_init(model);
+    status = umi_ws_command_bar_model_add(model, "desk.applications", "Applications",
+        "Open the application chooser. Nothing starts automatically.", "desk.applications",
+        "chooser launcher select applications", UMI_WS_COMMAND_SCOPE_PANEL, 100U);
+    for (index = 0U; status == UMI_STATUS_OK && snapshot->has_shell &&
+            index < snapshot->shell.tab_count; ++index) {
+        UmiDesktopShellTab tab;
+        char id[UMI_UI_ID_CAPACITY];
+        int written;
+        status = umi_desktop_shell_model_tab_at(shell, index, &tab);
+        if (status != UMI_STATUS_OK) break;
+        /* The copied command payload retains the complete canonical ID. A
+         * bounded presentation key must not shorten a valid long layout ID. */
+        written = snprintf(id, sizeof(id), "desk.layout.%zu", index);
+        if (written < 0 || (size_t)written >= sizeof(id)) {
+            status = UMI_STATUS_CAPACITY_EXCEEDED;
+            break;
+        }
+        status = umi_ws_command_bar_model_add(model, id, tab.label,
+            "Select this existing Desk layout. Product panels are not embedded here.",
+            tab.layout_id, "layout workspace arrangement", UMI_WS_COMMAND_SCOPE_COMMAND, 70U);
+    }
+    if (status == UMI_STATUS_OK) status = umi_gtk4_ws_command_bar_set_model(desk->navigation, model);
+    free(model);
+    return status;
+}
+
+/* Build the owned search component before exposing any borrowed Desk callback. */
+static UmiStatus create_navigation(UmiGtk4Desk *desk)
+{
+    UmiWsCommandBarModel *model = calloc(1U, sizeof(*model));
+    UmiGtk4WorkstationCommandBarConfig config = umi_gtk4_ws_command_bar_config_default();
+    UmiStatus status;
+    if (model == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    umi_ws_command_bar_model_init(model);
+    config.placeholder = "Search Applications and Desk layouts";
+    config.compact_placeholder = "Desk navigation";
+    config.initial_available_width = 280;
+    status = umi_gtk4_ws_command_bar_create_managed(&config, model, &desk->navigation);
+    free(model);
+    if (status == UMI_STATUS_OK)
+        status = umi_gtk4_ws_command_bar_set_activated_handler(desk->navigation,
+            on_navigation_activated, desk);
+    return status;
+}
+
 /* Provide the build top bar operation used by this module and its client applications. */
 static GtkWidget *build_top_bar(UmiGtk4Desk *desk)
 {
     GtkWidget *bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
     GtkWidget *brand = gtk_label_new("Umicom Desk");
-    GtkWidget *search = gtk_search_entry_new();
+    GtkWidget *search = umi_gtk4_ws_command_bar_widget(desk->navigation);
     GtkWidget *applications = make_global_button("Applications");
     gtk_widget_add_css_class(bar, "umicom-desk-global-bar");
     gtk_widget_add_css_class(brand, "title-2");
+    gtk_widget_add_css_class(brand, "umicom-desk-content-identity");
+    desk->content_identity = brand;
     gtk_widget_set_margin_start(bar, 8);
     gtk_widget_set_margin_end(bar, 8);
     gtk_widget_set_margin_top(bar, 5);
@@ -465,11 +557,10 @@ static GtkWidget *build_top_bar(UmiGtk4Desk *desk)
     gtk_box_append(GTK_BOX(bar), make_global_button("Help"));
     gtk_widget_set_hexpand(search, TRUE);
     gtk_widget_set_halign(search, GTK_ALIGN_END);
-    gtk_widget_set_size_request(search, 320, -1);
     gtk_accessible_update_property(
         GTK_ACCESSIBLE(search),
         GTK_ACCESSIBLE_PROPERTY_LABEL,
-        "Search applications, commands, layouts and settings",
+        "Search Applications and existing Desk layouts",
         -1);
     gtk_box_append(GTK_BOX(bar), search);
     return bar;
@@ -654,11 +745,12 @@ UmiStatus umi_gtk4_desk_create(
 {
     UmiGtk4Desk *desk;
     GtkWidget *root;
+    UmiStatus status;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (native_gtk_application == NULL || runtime == NULL ||
+    if (native_gtk_application == NULL || !GTK_IS_APPLICATION(native_gtk_application) || runtime == NULL ||
         out_desk == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -671,7 +763,15 @@ UmiStatus umi_gtk4_desk_create(
     if (desk == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     desk->application = GTK_APPLICATION(native_gtk_application);
     desk->runtime = runtime;
+    status = create_navigation(desk);
+    if (status != UMI_STATUS_OK) {
+        umi_gtk4_desk_destroy(desk);
+        return status;
+    }
     desk->window = gtk_application_window_new(desk->application);
+    /* Keep native and original-body observations valid even when an external
+     * window close unparents the content before the Desk owner is destroyed. */
+    g_object_ref_sink(desk->window);
     gtk_window_set_title(GTK_WINDOW(desk->window), "Umicom Desk");
     (void)umi_gtk4_ws_apply_window_identity(GTK_WINDOW(desk->window));
     /* Keep Desk's roomy default within the same monitor bounds as its apps. */
@@ -679,6 +779,7 @@ UmiStatus umi_gtk4_desk_create(
         GTK_WINDOW(desk->window), 1480, 900, 960, 600);
 
     root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    desk->root = g_object_ref_sink(root);
     gtk_widget_add_css_class(root, "umicom-desk-root");
     gtk_box_append(GTK_BOX(root), build_top_bar(desk));
     gtk_box_append(GTK_BOX(root), gtk_separator_new(
@@ -703,14 +804,40 @@ UmiStatus umi_gtk4_desk_create(
     gtk_box_append(GTK_BOX(root), build_bottom_area(desk));
     gtk_window_set_child(GTK_WINDOW(desk->window), root);
 
+    status = umi_gtk4_desk_refresh(desk);
+    if (status != UMI_STATUS_OK) {
+        umi_gtk4_desk_destroy(desk);
+        return status;
+    }
     *out_desk = desk;
-    return umi_gtk4_desk_refresh(desk);
+    return UMI_STATUS_OK;
 }
 
 /* Release or reset state held by gtk4 desk so the same storage can be reused safely. */
 void umi_gtk4_desk_destroy(UmiGtk4Desk *desk)
 {
+    if (desk == NULL) return;
+    /* Widgets must stop borrowing the controller before its runtime pointer
+     * becomes invalid. Retained descendants remain inert after this call. */
+    disconnect_desk_widgets(desk->root, desk);
+    disconnect_desk_widgets(desk->window, desk);
+    umi_gtk4_ws_command_bar_destroy(desk->navigation);
+    desk->navigation = NULL;
+    if (desk->window != NULL) {
+        gtk_window_destroy(GTK_WINDOW(desk->window));
+        g_object_unref(desk->window);
+    }
+    if (desk->root != NULL) g_object_unref(desk->root);
     free(desk);
+}
+
+/* A topmost identity owner hides only the duplicate product label, never the
+ * Desk application launcher, menus, application strip or status information. */
+UmiStatus umi_gtk4_desk_set_content_identity_visible(UmiGtk4Desk *desk, bool visible)
+{
+    if (desk == NULL || desk->content_identity == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    gtk_widget_set_visible(desk->content_identity, visible);
+    return UMI_STATUS_OK;
 }
 
 /* Provide the gtk4 desk refresh operation used by this module and its client applications. */
@@ -736,8 +863,11 @@ UmiStatus umi_gtk4_desk_refresh(UmiGtk4Desk *desk)
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    status = refresh_navigation(desk, &snapshot);
+    if (status != UMI_STATUS_OK) return status;
+
     launch_selection = umi_desk_runtime_launch_selection(desk->runtime);
-    clear_box(desk->application_choices);
+    clear_box(desk->application_choices, desk);
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < snapshot.launch_selection.choice_count;
@@ -761,7 +891,7 @@ UmiStatus umi_gtk4_desk_refresh(UmiGtk4Desk *desk)
     if (status != UMI_STATUS_OK) return status;
 
     strip = umi_desk_runtime_application_strip(desk->runtime);
-    clear_box(desk->application_strip);
+    clear_box(desk->application_strip, desk);
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < snapshot.strip.item_count; ++index) {
         UmiDesktopApplicationStripItem item;
@@ -783,7 +913,7 @@ UmiStatus umi_gtk4_desk_refresh(UmiGtk4Desk *desk)
         }
     }
 
-    clear_box(desk->layout_strip);
+    clear_box(desk->layout_strip, desk);
     /* Apply this branch only when its contract condition is satisfied. */
     if (snapshot.has_shell) {
         UmiDesktopShellModel *shell = umi_desk_runtime_shell(desk->runtime);

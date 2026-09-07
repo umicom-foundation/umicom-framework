@@ -250,6 +250,136 @@ static void test_gestures(void)
     CANVAS_REQUIRE(umi_application_suite_layout_canvas_rect_valid(&result));
 }
 
+/* Every edge and corner uses the same pixel basis and keeps its opposite
+ * anchor. Explicit expected rectangles catch reversed north/west signs. */
+static void test_resize_directions(void)
+{
+    static const struct {
+        UmiApplicationSuiteLayoutCanvasGesture gesture;
+        int horizontal;
+        int vertical;
+        UmiApplicationSuiteLayoutRect expected;
+    } cases[] = {
+        {UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_SOUTH_EAST, 1, 1, {0.2, 0.25, 0.5, 0.6}},
+        {UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH, 0, -1, {0.2, 0.35, 0.4, 0.4}},
+        {UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH_EAST, 1, -1, {0.2, 0.35, 0.5, 0.4}},
+        {UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_EAST, 1, 0, {0.2, 0.25, 0.5, 0.5}},
+        {UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_SOUTH, 0, 1, {0.2, 0.25, 0.4, 0.6}},
+        {UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_SOUTH_WEST, -1, 1, {0.3, 0.25, 0.3, 0.6}},
+        {UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_WEST, -1, 0, {0.3, 0.25, 0.3, 0.5}},
+        {UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH_WEST, -1, -1, {0.3, 0.35, 0.3, 0.4}}
+    };
+    const UmiApplicationSuiteLayoutRect start = {0.2, 0.25, 0.4, 0.5};
+    const UmiApplicationSuiteLayoutRect off_grid = {0.13, 0.17, 0.04, 0.05};
+    UmiApplicationSuiteLayoutRect result;
+    CANVAS_REQUIRE(UMI_APPLICATION_SUITE_LAYOUT_CANVAS_MOVE == 1 &&
+        UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_SOUTH_EAST == 2);
+    for (size_t index = 0U; index < sizeof(cases) / sizeof(cases[0]); ++index) {
+        const int horizontal = cases[index].horizontal;
+        const int vertical = cases[index].vertical;
+        CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+            &start, cases[index].gesture, 100.0, 50.0, 1000.0, 500.0,
+            120.0, 80.0, 0.0, &result) == UMI_STATUS_OK);
+        require_near(result.x, cases[index].expected.x);
+        require_near(result.y, cases[index].expected.y);
+        require_near(result.width, cases[index].expected.width);
+        require_near(result.height, cases[index].expected.height);
+        CANVAS_REQUIRE(umi_application_suite_layout_canvas_rect_valid(&result));
+        /* The caller can safely reuse its original rectangle as output. */
+        result = start;
+        CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+            &result, cases[index].gesture, 100.0, 50.0, 1000.0, 500.0,
+            120.0, 80.0, 0.0, &result) == UMI_STATUS_OK);
+        require_near(result.x, cases[index].expected.x);
+        require_near(result.height, cases[index].expected.height);
+
+        /* A coarse grid cannot override the minimum. Huge inward gestures
+         * stop before crossing the fixed edge or producing an empty panel. */
+        CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+            &start, cases[index].gesture, horizontal < 0 ? DBL_MAX : -DBL_MAX,
+            vertical < 0 ? DBL_MAX : -DBL_MAX, 1000.0, 500.0,
+            120.0, 80.0, 0.3, &result) == UMI_STATUS_OK);
+        require_near(result.width, horizontal == 0 ? start.width : 0.12);
+        require_near(result.height, vertical == 0 ? start.height : 0.16);
+        require_near(horizontal < 0 ? result.x + result.width : result.x,
+            horizontal < 0 ? start.x + start.width : start.x);
+        require_near(vertical < 0 ? result.y + result.height : result.y,
+            vertical < 0 ? start.y + start.height : start.y);
+        CANVAS_REQUIRE(umi_application_suite_layout_canvas_rect_valid(&result));
+
+        /* Outward gestures stop at the viewport, even when an impossible
+         * minimum and grid would prefer a larger panel. */
+        CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+            &start, cases[index].gesture, horizontal < 0 ? -DBL_MAX : DBL_MAX,
+            vertical < 0 ? -DBL_MAX : DBL_MAX, 20.0, 10.0,
+            120.0, 80.0, 0.3, &result) == UMI_STATUS_OK);
+        require_near(result.width, horizontal == 0 ? start.width
+            : horizontal < 0 ? start.x + start.width : 1.0 - start.x);
+        require_near(result.height, vertical == 0 ? start.height
+            : vertical < 0 ? start.y + start.height : 1.0 - start.y);
+        require_near(horizontal < 0 ? result.x + result.width : result.x,
+            horizontal < 0 ? start.x + start.width : start.x);
+        require_near(vertical < 0 ? result.y + result.height : result.y,
+            vertical < 0 ? start.y + start.height : start.y);
+        CANVAS_REQUIRE(umi_application_suite_layout_canvas_rect_valid(&result));
+
+        /* Imported undersized panels do not jump on pointer-down, and an
+         * untouched axis remains byte-for-byte unchanged despite snapping. */
+        CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+            &off_grid, cases[index].gesture, 0.0, 0.0, 1000.0, 500.0,
+            120.0, 80.0, 0.1, &result) == UMI_STATUS_OK);
+        CANVAS_REQUIRE(memcmp(&result, &off_grid, sizeof(result)) == 0);
+        CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+            &off_grid, cases[index].gesture, 50.0, 0.0, 1000.0, 500.0,
+            120.0, 80.0, 0.1, &result) == UMI_STATUS_OK);
+        CANVAS_REQUIRE(result.y == off_grid.y && result.height == off_grid.height);
+        if (horizontal == 0) CANVAS_REQUIRE(memcmp(&result, &off_grid, sizeof(result)) == 0);
+        CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+            &off_grid, cases[index].gesture, 0.0, 50.0, 1000.0, 500.0,
+            120.0, 80.0, 0.1, &result) == UMI_STATUS_OK);
+        CANVAS_REQUIRE(result.x == off_grid.x && result.width == off_grid.width);
+        if (vertical == 0) CANVAS_REQUIRE(memcmp(&result, &off_grid, sizeof(result)) == 0);
+    }
+    CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+        &off_grid, UMI_APPLICATION_SUITE_LAYOUT_CANVAS_MOVE, 0.0, 0.0,
+        1000.0, 500.0, 120.0, 80.0, 0.1, &result) == UMI_STATUS_OK);
+    CANVAS_REQUIRE(memcmp(&result, &off_grid, sizeof(result)) == 0);
+}
+
+/* North/west dimension snapping retains the original opposite edge instead
+ * of snapping that edge or changing the unrelated dimension. */
+static void test_resize_snapping_and_precision(void)
+{
+    UmiApplicationSuiteLayoutRect start = {0.13, 0.17, 0.32, 0.39};
+    UmiApplicationSuiteLayoutRect result;
+    CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+        &start, UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH_WEST,
+        46.0, 31.0, 1000.0, 500.0, 120.0, 80.0, 0.1, &result) == UMI_STATUS_OK);
+    require_near(result.width, 0.3); require_near(result.height, 0.3);
+    require_near(result.x, 0.15); require_near(result.y, 0.26);
+    CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+        &start, UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH_WEST,
+        46.0, 31.0, 1000.0, 500.0, 120.0, 80.0, DBL_MIN, &result) == UMI_STATUS_OK);
+    require_near(result.width, 0.274); require_near(result.height, 0.328);
+    require_near(result.x + result.width, start.x + start.width);
+    require_near(result.y + result.height, start.y + start.height);
+    /* The minimum must not exceed a subnormal amount of available space. */
+    start = (UmiApplicationSuiteLayoutRect){0.0, 0.0, DBL_MIN / 2.0, DBL_MIN / 2.0};
+    CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+        &start, UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH_WEST,
+        DBL_MAX, DBL_MAX, 1.0, 1.0, 120.0, 80.0, 0.1, &result) == UMI_STATUS_OK);
+    CANVAS_REQUIRE(umi_application_suite_layout_canvas_rect_valid(&result));
+    CANVAS_REQUIRE(result.x == 0.0 && result.y == 0.0 &&
+        result.width == start.width && result.height == start.height);
+    start = (UmiApplicationSuiteLayoutRect){0.5, 0.5, 0.5, 0.5};
+    CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+        &start, UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH_WEST,
+        DBL_MAX, DBL_MAX, 1.0, 1.0, DBL_MIN, DBL_MIN, 0.0, &result) == UMI_STATUS_OK);
+    CANVAS_REQUIRE(umi_application_suite_layout_canvas_rect_valid(&result));
+    require_near(result.x + result.width, 1.0);
+    require_near(result.y + result.height, 1.0);
+}
+
 /* Invalid motion inputs leave the caller's previous preview untouched. */
 static void test_invalid_gestures(void)
 {
@@ -263,6 +393,19 @@ static void test_invalid_gestures(void)
             100.0, 50.0, invalid_values[index], 500.0, 120.0, 80.0, 0.0,
             &result) == UMI_STATUS_INVALID_ARGUMENT);
         CANVAS_REQUIRE(memcmp(&result, &start, sizeof(result)) == 0);
+        CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+            &start, UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH_WEST,
+            100.0, 50.0, 1000.0, invalid_values[index], 120.0, 80.0, 0.0,
+            &result) == UMI_STATUS_INVALID_ARGUMENT);
+        CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+            &start, UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH_EAST,
+            100.0, 50.0, 1000.0, 500.0, invalid_values[index], 80.0, 0.0,
+            &result) == UMI_STATUS_INVALID_ARGUMENT);
+        CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+            &start, UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_SOUTH_WEST,
+            100.0, 50.0, 1000.0, 500.0, 120.0, invalid_values[index], 0.0,
+            &result) == UMI_STATUS_INVALID_ARGUMENT);
+        CANVAS_REQUIRE(memcmp(&result, &start, sizeof(result)) == 0);
     }
     CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
         &start, UMI_APPLICATION_SUITE_LAYOUT_CANVAS_MOVE,
@@ -271,9 +414,49 @@ static void test_invalid_gestures(void)
         &start, (UmiApplicationSuiteLayoutCanvasGesture)99,
         0.0, 0.0, 1000.0, 500.0, 120.0, 80.0, 0.0, &result) == UMI_STATUS_INVALID_ARGUMENT);
     CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+        &start, (UmiApplicationSuiteLayoutCanvasGesture)0,
+        0.0, 0.0, 1000.0, 500.0, 120.0, 80.0, 0.0, &result) == UMI_STATUS_INVALID_ARGUMENT);
+    CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+        &start, UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_WEST,
+        INFINITY, 0.0, 1000.0, 500.0, 120.0, 80.0, 0.0, &result) == UMI_STATUS_INVALID_ARGUMENT);
+    CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+        &start, UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH,
+        0.0, -INFINITY, 1000.0, 500.0, 120.0, 80.0, 0.0, &result) == UMI_STATUS_INVALID_ARGUMENT);
+    CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+        &start, UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH,
+        0.0, NAN, 1000.0, 500.0, 120.0, 80.0, 0.0, &result) == UMI_STATUS_INVALID_ARGUMENT);
+    CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
         &start, UMI_APPLICATION_SUITE_LAYOUT_CANVAS_MOVE,
         0.0, 0.0, 1000.0, 500.0, 120.0, 80.0, 1.1, &result) == UMI_STATUS_INVALID_ARGUMENT);
     CANVAS_REQUIRE(memcmp(&result, &start, sizeof(result)) == 0);
+    {
+        const double invalid_grids[] = {-0.1, NAN, INFINITY};
+        UmiApplicationSuiteLayoutRect invalid_start = start;
+        for (size_t index = 0U; index < sizeof(invalid_grids) / sizeof(invalid_grids[0]); ++index)
+            CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+                &start, UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_EAST,
+                100.0, 0.0, 1000.0, 500.0, 120.0, 80.0, invalid_grids[index],
+                &result) == UMI_STATUS_INVALID_ARGUMENT);
+        CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+            NULL, UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH_WEST,
+            100.0, 50.0, 1000.0, 500.0, 120.0, 80.0, 0.0,
+            &result) == UMI_STATUS_INVALID_ARGUMENT);
+        CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+            &start, UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH_WEST,
+            100.0, 50.0, 1000.0, 500.0, 120.0, 80.0, 0.0,
+            NULL) == UMI_STATUS_INVALID_ARGUMENT);
+        invalid_start.width = 0.0;
+        CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+            &invalid_start, UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH_WEST,
+            100.0, 50.0, 1000.0, 500.0, 120.0, 80.0, 0.0,
+            &result) == UMI_STATUS_INVALID_ARGUMENT);
+        invalid_start.width = NAN;
+        CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+            &invalid_start, UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH_WEST,
+            100.0, 50.0, 1000.0, 500.0, 120.0, 80.0, 0.0,
+            &result) == UMI_STATUS_INVALID_ARGUMENT);
+        CANVAS_REQUIRE(memcmp(&result, &start, sizeof(result)) == 0);
+    }
     CANVAS_REQUIRE(!umi_application_suite_layout_canvas_rect_valid(NULL));
     /* A positive but sub-precision width must not make x == 1 appear valid. */
     start.x = 1.0;
@@ -281,7 +464,7 @@ static void test_invalid_gestures(void)
     CANVAS_REQUIRE(!umi_application_suite_layout_canvas_rect_valid(&start));
 }
 
-/* A fixed range of fractions exercises boundary rounding on both gesture types. */
+/* A fixed range of fractions exercises rounding for all nine gesture modes. */
 static void test_gesture_boundary_range(void)
 {
     for (unsigned int index = 0U; index < 1000U; ++index) {
@@ -294,13 +477,14 @@ static void test_gesture_boundary_range(void)
         double dx = (double)(index % 23U) * 100.0 - 1100.0;
         double dy = (double)(index % 17U) * 100.0 - 800.0;
         double grid = index % 2U == 0U ? 0.05 : 0.0;
-        UmiApplicationSuiteLayoutCanvasGesture gesture = index % 3U == 0U
-            ? UMI_APPLICATION_SUITE_LAYOUT_CANVAS_MOVE
-            : UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_SOUTH_EAST;
-        CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
-            &start, gesture, dx, dy, 1024.0, 768.0, 120.0, 80.0,
-            grid, &result) == UMI_STATUS_OK);
-        CANVAS_REQUIRE(umi_application_suite_layout_canvas_rect_valid(&result));
+        for (int gesture = UMI_APPLICATION_SUITE_LAYOUT_CANVAS_MOVE;
+             gesture <= UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH_WEST; ++gesture) {
+            CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+                &start, (UmiApplicationSuiteLayoutCanvasGesture)gesture,
+                dx, dy, 1024.0, 768.0, 120.0, 80.0,
+                grid, &result) == UMI_STATUS_OK);
+            CANVAS_REQUIRE(umi_application_suite_layout_canvas_rect_valid(&result));
+        }
     }
 }
 
@@ -392,6 +576,36 @@ static void test_canvas_open_and_settings(void)
         workspace, &settings) == UMI_STATUS_INVALID_ARGUMENT);
     CANVAS_REQUIRE(memcmp(before, workspace, sizeof(*workspace)) == 0);
 
+    /* Projection is a pure calculation, never permission to publish it. Every
+     * resize direction still passes the existing pin, resize and lock checks. */
+    {
+        UmiUiWorkspaceLayout *active = umi_ui_workspace_customisation_active(workspace);
+        UmiUiWorkspaceWindow *editable = umi_ui_workspace_layout_find_window_mutable(active, first_id);
+        UmiApplicationSuiteLayoutRect start;
+        CANVAS_REQUIRE(editable != NULL);
+        start = (UmiApplicationSuiteLayoutRect){editable->x, editable->y, editable->width, editable->height};
+        for (int protection = 0; protection < 3; ++protection) {
+            editable->pinned = protection == 0;
+            editable->resizable = protection != 1;
+            active->locked = protection == 2;
+            *before = *workspace;
+            for (int gesture = UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_SOUTH_EAST;
+                 gesture <= UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH_WEST; ++gesture) {
+                UmiApplicationSuiteLayoutRect projected;
+                CANVAS_REQUIRE(umi_application_suite_layout_project_canvas_gesture(
+                    &start, (UmiApplicationSuiteLayoutCanvasGesture)gesture,
+                    100.0, 50.0, 1000.0, 500.0, 120.0, 80.0, 0.0,
+                    &projected) == UMI_STATUS_OK);
+                CANVAS_REQUIRE(umi_ui_workspace_customisation_place_canvas_window(workspace,
+                    first_id, projected.x, projected.y, projected.width, projected.height)
+                    == UMI_STATUS_PERMISSION_DENIED);
+                CANVAS_REQUIRE(memcmp(before, workspace, sizeof(*workspace)) == 0);
+            }
+        }
+        editable->pinned = false;
+        editable->resizable = true;
+        active->locked = false;
+    }
     CANVAS_REQUIRE(umi_ui_workspace_customisation_cancel_edit(workspace) == UMI_STATUS_OK);
     CANVAS_REQUIRE(umi_ui_workspace_customisation_active_const(workspace)->window_count == 0U);
     CANVAS_REQUIRE(workspace->groups.count == 0U && !workspace->edit_active);
@@ -409,6 +623,8 @@ int main(void)
     test_capacity(layout, plan);
     test_invalid_canvas(layout, plan);
     test_gestures();
+    test_resize_directions();
+    test_resize_snapping_and_precision();
     test_invalid_gestures();
     test_gesture_boundary_range();
     test_canvas_open_and_settings();

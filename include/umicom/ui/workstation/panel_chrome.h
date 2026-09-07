@@ -47,6 +47,14 @@ typedef struct UmiWsPanelChrome {
     bool locked;
     bool floating;
     bool maximised;
+    /* Recoverable tool hiding does not require moving or unlocking a layout.
+     * Hosts opt in only when their action owner implements that transaction. */
+    bool allow_close_locked;
+    bool show_auto_hide;
+    bool auto_hidden;
+    /* Internal focus presentation may expand a panel without editing geometry.
+     * Hosts opt in only when they implement transient maximise and restore. */
+    bool allow_maximise_locked;
 } UmiWsPanelChrome;
 
 /**
@@ -59,7 +67,9 @@ typedef enum UmiWsPanelAction {
     UMI_WS_PANEL_ACTION_FLOAT_TOGGLE = 4,
     UMI_WS_PANEL_ACTION_MAXIMISE_TOGGLE = 5,
     UMI_WS_PANEL_ACTION_SETTINGS = 6,
-    UMI_WS_PANEL_ACTION_CLOSE = 7
+    UMI_WS_PANEL_ACTION_CLOSE = 7,
+    /* Docking presentation is distinct from protected geometry pinning. */
+    UMI_WS_PANEL_ACTION_AUTO_HIDE_TOGGLE = 8
 } UmiWsPanelAction;
 
 /**

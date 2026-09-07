@@ -61,6 +61,47 @@ typedef struct UmiApplicationManifest {
     size_t capability_count;
 } UmiApplicationManifest;
 
+/** Explicit frontend names accompany the legacy manifest without changing its
+ * ABI. Empty names mean undeclared, never a guessed or console GUI fallback.
+ * These are executable basenames, not paths, arguments or shell commands. */
+typedef struct UmiApplicationLaunchSpec {
+    size_t structure_size;
+    char native_executable[UMI_MANIFEST_TEXT_CAPACITY];
+    char console_executable[UMI_MANIFEST_TEXT_CAPACITY];
+} UmiApplicationLaunchSpec;
+
+/** Initialise an empty explicit launch specification. */
+void umi_application_launch_spec_init(UmiApplicationLaunchSpec *launch_spec);
+
+/** Validate bounded native/console declarations against advertised frontends.
+ * Native currently denotes GTK4. No executable existence or readiness is
+ * inferred. Legacy executable text remains a separate compatibility field. */
+UmiStatus umi_application_launch_spec_validate(
+    const UmiApplicationManifest *manifest,
+    const UmiApplicationLaunchSpec *launch_spec);
+
+/** Parse the supported YAML subset and explicit launch declarations together.
+ * Input is borrowed NUL-terminated text. Outputs must be distinct, caller-owned
+ * storage; they are cleared on failure. Duplicate executable declarations,
+ * truncation, paths, whitespace and shell syntax in explicit names are rejected.
+ * Legacy manifests without the companion fields remain valid with empty names.
+ * Canonical nested umicom.application.v1 and existing generated flat
+ * umicom.application/v1 are accepted separately; their spelling is preserved.
+ * Schema must be the first non-comment field. Nested application executable
+ * declarations must be direct two-space children. Mixing nested application/
+ * framework blocks into the flat shape is rejected. */
+UmiStatus umi_application_manifest_parse_with_launch_spec(
+    const char *text,
+    UmiApplicationManifest *out_manifest,
+    UmiApplicationLaunchSpec *out_launch_spec);
+
+/** Load the same manifest/launch contract from a file, without launching it.
+ * Ownership and failure behaviour match parse_with_launch_spec. */
+UmiStatus umi_application_manifest_load_with_launch_spec(
+    const char *path,
+    UmiApplicationManifest *out_manifest,
+    UmiApplicationLaunchSpec *out_launch_spec);
+
 /**
  * Initialise application manifest from caller-provided values so later operations receive
  * a known state.

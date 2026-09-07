@@ -17,6 +17,25 @@
 #define CANVAS_GRID_STEP 0.025
 #define CANVAS_MIN_WIDTH 144.0
 #define CANVAS_MIN_HEIGHT 96.0
+#define CANVAS_RESIZE_HANDLES 8U
+
+/* The first entry keeps the established southeast grip and automation tag.
+ * Every other edge shares the same portable, opposite-edge-anchored projector. */
+static const struct {
+    UmiApplicationSuiteLayoutCanvasGesture kind;
+    const char *suffix;
+    const char *cursor;
+    const char *description;
+} canvas_resize_edges[CANVAS_RESIZE_HANDLES] = {
+    { UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_SOUTH_EAST, "", "se-resize", "Resize bottom right" },
+    { UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH, "north.", "n-resize", "Resize top edge" },
+    { UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH_EAST, "north-east.", "ne-resize", "Resize top right" },
+    { UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_EAST, "east.", "e-resize", "Resize right edge" },
+    { UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_SOUTH, "south.", "s-resize", "Resize bottom edge" },
+    { UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_SOUTH_WEST, "south-west.", "sw-resize", "Resize bottom left" },
+    { UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_WEST, "west.", "w-resize", "Resize left edge" },
+    { UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH_WEST, "north-west.", "nw-resize", "Resize top left" }
+};
 
 /* Each panel owns its controller references until every callback is detached.
  * Widget data is cleared before this record is released, including when a
@@ -25,9 +44,12 @@ struct CanvasEntry {
     UmiGtk4WorkspaceLayoutHost *host;
     GtkWidget *panel;
     GtkWidget *drag_handle;
-    GtkWidget *resize_handle;
+    GtkWidget *resize_handles[CANVAS_RESIZE_HANDLES];
     GtkGesture *move_gesture;
-    GtkGesture *resize_gesture;
+    GtkGesture *resize_gestures[CANVAS_RESIZE_HANDLES];
+    GtkGesture *active_gesture;
+    GtkEventController *keys;
+    GtkEventController *focus;
     char window_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
     UmiApplicationSuiteLayoutRect model_rect;
     UmiApplicationSuiteLayoutRect preview_rect;
@@ -42,6 +64,7 @@ struct CanvasEntry {
     int native_sequence;
     int motion_seen;
     int active;
+    int keyboard_preview;
     int pinned;
     int resizable;
 };
@@ -68,17 +91,102 @@ typedef struct UmiWorkspaceCanvasLayerClass {
 typedef struct UmiWorkspaceCanvasPanel {
     GtkWidget parent_instance;
     GtkWidget *content;
-    GtkWidget *resize_handle;
+    GtkWidget *resize_handles[CANVAS_RESIZE_HANDLES];
 } UmiWorkspaceCanvasPanel;
 typedef struct UmiWorkspaceCanvasPanelClass {
     GtkWidgetClass parent_class;
 } UmiWorkspaceCanvasPanelClass;
 
-/* Keep both widget types private to the shared workspace adapter. */
+/* Corner visuals occupy a square, but pointer input belongs only to its outer
+ * L-shaped border. This keeps header buttons and provider controls clickable. */
+typedef struct UmiWorkspaceCanvasGrip {
+    GtkWidget parent_instance;
+    GtkWidget *glyph;
+    size_t edge_index;
+} UmiWorkspaceCanvasGrip;
+typedef struct UmiWorkspaceCanvasGripClass {
+    GtkWidgetClass parent_class;
+} UmiWorkspaceCanvasGripClass;
+
+/* Keep the viewport, panel and resize-grip types private to this adapter. */
 static GType umi_workspace_canvas_layer_get_type(void);
 static GType umi_workspace_canvas_panel_get_type(void);
+static GType umi_workspace_canvas_grip_get_type(void);
 G_DEFINE_TYPE(UmiWorkspaceCanvasLayer, umi_workspace_canvas_layer, GTK_TYPE_WIDGET)
 G_DEFINE_TYPE(UmiWorkspaceCanvasPanel, umi_workspace_canvas_panel, GTK_TYPE_WIDGET)
+G_DEFINE_TYPE(UmiWorkspaceCanvasGrip, umi_workspace_canvas_grip, GTK_TYPE_WIDGET)
+
+/* Restrict corner picking to the same five-pixel border used by edge strips. */
+static gboolean canvas_grip_contains(GtkWidget *widget, double x, double y)
+{
+    UmiWorkspaceCanvasGrip *grip = (UmiWorkspaceCanvasGrip *)widget;
+    const double width = gtk_widget_get_width(widget);
+    const double height = gtk_widget_get_height(widget);
+    if (x < 0.0 || y < 0.0 || x >= width || y >= height) return FALSE;
+    switch (grip->edge_index) {
+    case 0U: return x >= width - 5.0 || y >= height - 5.0;
+    case 2U: return x >= width - 5.0 || y < 5.0;
+    case 5U: return x < 5.0 || y >= height - 5.0;
+    case 7U: return x < 5.0 || y < 5.0;
+    default: return TRUE;
+    }
+}
+
+/* Keep the established southeast visual without giving its label hit targets. */
+static void canvas_grip_allocate(GtkWidget *widget, int width, int height, int baseline)
+{
+    UmiWorkspaceCanvasGrip *grip = (UmiWorkspaceCanvasGrip *)widget;
+    (void)baseline;
+    if (grip->glyph != NULL) gtk_widget_allocate(grip->glyph, width, height, -1, NULL);
+}
+
+/* Snapshot only the optional glyph; GTK supplies the grip's CSS background. */
+static void canvas_grip_snapshot(GtkWidget *widget, GtkSnapshot *snapshot)
+{
+    UmiWorkspaceCanvasGrip *grip = (UmiWorkspaceCanvasGrip *)widget;
+    if (grip->glyph != NULL) gtk_widget_snapshot_child(widget, grip->glyph, snapshot);
+}
+
+/* Parent ownership is released even if automation retains an old grip. */
+static void canvas_grip_dispose(GObject *object)
+{
+    UmiWorkspaceCanvasGrip *grip = (UmiWorkspaceCanvasGrip *)object;
+    GtkWidget *glyph = grip->glyph;
+    grip->glyph = NULL;
+    if (glyph != NULL) gtk_widget_unparent(glyph);
+    G_OBJECT_CLASS(umi_workspace_canvas_grip_parent_class)->dispose(object);
+}
+
+/* Grips never contribute a minimum size to a provider's allocation. */
+static void canvas_grip_measure(GtkWidget *widget, GtkOrientation orientation, int for_size,
+    int *minimum, int *natural, int *minimum_baseline, int *natural_baseline)
+{
+    (void)widget;
+    (void)orientation;
+    (void)for_size;
+    if (minimum != NULL) *minimum = 0;
+    if (natural != NULL) *natural = 18;
+    if (minimum_baseline != NULL) *minimum_baseline = -1;
+    if (natural_baseline != NULL) *natural_baseline = -1;
+}
+
+/* Register explicit measurement, painting and picking for the border shape. */
+static void umi_workspace_canvas_grip_class_init(UmiWorkspaceCanvasGripClass *klass)
+{
+    GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
+    widget_class->measure = canvas_grip_measure;
+    widget_class->contains = canvas_grip_contains;
+    widget_class->size_allocate = canvas_grip_allocate;
+    widget_class->snapshot = canvas_grip_snapshot;
+    G_OBJECT_CLASS(klass)->dispose = canvas_grip_dispose;
+    gtk_widget_class_set_css_name(widget_class, "umicom-canvas-grip");
+}
+
+/* A narrow grip must not draw beyond its clipped canvas panel. */
+static void umi_workspace_canvas_grip_init(UmiWorkspaceCanvasGrip *grip)
+{
+    gtk_widget_set_overflow(GTK_WIDGET(grip), GTK_OVERFLOW_HIDDEN);
+}
 
 /* Measure the available surface, never the potentially oversized providers. */
 static void canvas_layer_measure(
@@ -206,22 +314,38 @@ static void canvas_panel_measure(
     if (natural_baseline != NULL) *natural_baseline = -1;
 }
 
-/* The resize handle overlays the real frame without consuming content space. */
+/* Narrow edge strips and corner grips overlay the frame only during editing.
+ * They meet without overlapping and shrink inside even a tiny viewport. */
 static void canvas_panel_allocate(
     GtkWidget *widget, int width, int height, int baseline)
 {
     UmiWorkspaceCanvasPanel *panel = (UmiWorkspaceCanvasPanel *)widget;
-    graphene_point_t corner = GRAPHENE_POINT_INIT(
-        (float)MAX(0, width - 18), (float)MAX(0, height - 18));
+    const int corner_width = MIN(18, MAX(0, width / 2));
+    const int corner_height = MIN(18, MAX(0, height / 2));
+    const int edge_width = MIN(5, corner_width);
+    const int edge_height = MIN(5, corner_height);
+    const int rectangles[CANVAS_RESIZE_HANDLES][4] = {
+        { width - corner_width, height - corner_height, corner_width, corner_height },
+        { corner_width, 0, width - 2 * corner_width, edge_height },
+        { width - corner_width, 0, corner_width, corner_height },
+        { width - edge_width, corner_height, edge_width, height - 2 * corner_height },
+        { corner_width, height - edge_height, width - 2 * corner_width, edge_height },
+        { 0, height - corner_height, corner_width, corner_height },
+        { 0, corner_height, edge_width, height - 2 * corner_height },
+        { 0, 0, corner_width, corner_height }
+    };
+    size_t index;
 
     (void)baseline;
     if (panel->content != NULL)
         gtk_widget_allocate(panel->content, width, height, -1, NULL);
-    if (panel->resize_handle != NULL &&
-        gtk_widget_get_visible(panel->resize_handle)) {
-        gtk_widget_allocate(panel->resize_handle,
-            MIN(18, width), MIN(18, height), -1,
-            gsk_transform_translate(NULL, &corner));
+    for (index = 0U; index < CANVAS_RESIZE_HANDLES; ++index) {
+        GtkWidget *handle = panel->resize_handles[index];
+        graphene_point_t origin = GRAPHENE_POINT_INIT(
+            (float)rectangles[index][0], (float)rectangles[index][1]);
+        if (handle != NULL && gtk_widget_get_visible(handle))
+            gtk_widget_allocate(handle, rectangles[index][2], rectangles[index][3],
+                -1, gsk_transform_translate(NULL, &origin));
     }
 }
 
@@ -242,14 +366,14 @@ static void canvas_panel_snapshot(GtkWidget *widget, GtkSnapshot *snapshot)
     gtk_snapshot_pop(snapshot);
 }
 
-/* Release content and the grip, including externally retained child widgets. */
+/* Release content and all grips, including externally retained child widgets. */
 static void canvas_panel_dispose(GObject *object)
 {
     UmiWorkspaceCanvasPanel *panel = (UmiWorkspaceCanvasPanel *)object;
     GtkWidget *child;
 
     panel->content = NULL;
-    panel->resize_handle = NULL;
+    memset(panel->resize_handles, 0, sizeof(panel->resize_handles));
     while ((child = gtk_widget_get_first_child(GTK_WIDGET(object))) != NULL)
         gtk_widget_unparent(child);
     G_OBJECT_CLASS(umi_workspace_canvas_panel_parent_class)->dispose(object);
@@ -293,23 +417,27 @@ static CanvasEntry *find_canvas_entry(
 static void update_canvas_controls(UmiGtk4WorkspaceLayoutHost *host)
 {
     guint index;
+    size_t edge;
 
     if (host == NULL || host->canvas_entries == NULL) return;
     for (index = 0U; index < host->canvas_entries->len; ++index) {
         CanvasEntry *entry = g_ptr_array_index(host->canvas_entries, index);
-        const gboolean editable = !host->layout.locked && !entry->pinned &&
+        const gboolean editable = !host->layout.locked && !host->maximise_mode.active && !entry->pinned &&
             host->canvas_geometry_handler != NULL &&
             host->pending_geometry_id == 0U;
 
         gtk_widget_set_sensitive(entry->drag_handle, editable);
+        gtk_widget_set_focusable(entry->drag_handle, editable);
         gtk_widget_set_cursor_from_name(entry->drag_handle,
             editable ? "move" : "default");
-        gtk_widget_set_visible(entry->resize_handle,
-            !host->layout.locked && entry->resizable && !entry->pinned);
-        gtk_widget_set_sensitive(entry->resize_handle,
-            editable && entry->resizable);
-        gtk_widget_set_cursor_from_name(entry->resize_handle,
-            editable && entry->resizable ? "se-resize" : "default");
+        for (edge = 0U; edge < CANVAS_RESIZE_HANDLES; ++edge) {
+            gtk_widget_set_visible(entry->resize_handles[edge],
+                !host->layout.locked && entry->resizable && !entry->pinned);
+            gtk_widget_set_sensitive(entry->resize_handles[edge],
+                editable && entry->resizable);
+            gtk_widget_set_cursor_from_name(entry->resize_handles[edge],
+                editable && entry->resizable ? canvas_resize_edges[edge].cursor : "default");
+        }
     }
 }
 
@@ -324,6 +452,9 @@ static void restore_canvas_previews(UmiGtk4WorkspaceLayoutHost *host)
         for (index = 0U; index < host->canvas_entries->len; ++index) {
             CanvasEntry *entry = g_ptr_array_index(host->canvas_entries, index);
             entry->active = 0;
+            entry->active_gesture = NULL;
+            entry->keyboard_preview = 0;
+            gtk_widget_remove_css_class(entry->panel, "canvas-keyboard-edit");
             entry->preview_rect = entry->model_rect;
         }
     }
@@ -347,6 +478,7 @@ static void cancel_canvas_geometry(UmiGtk4WorkspaceLayoutHost *host)
 static void canvas_entry_destroy(gpointer data)
 {
     CanvasEntry *entry = (CanvasEntry *)data;
+    size_t edge;
 
     if (entry == NULL) return;
     entry->host = NULL;
@@ -358,10 +490,20 @@ static void canvas_entry_destroy(gpointer data)
         gtk_event_controller_reset(GTK_EVENT_CONTROLLER(entry->move_gesture));
         g_object_unref(entry->move_gesture);
     }
-    if (entry->resize_gesture != NULL) {
-        g_signal_handlers_disconnect_by_data(entry->resize_gesture, entry);
-        gtk_event_controller_reset(GTK_EVENT_CONTROLLER(entry->resize_gesture));
-        g_object_unref(entry->resize_gesture);
+    for (edge = 0U; edge < CANVAS_RESIZE_HANDLES; ++edge) {
+        if (entry->resize_gestures[edge] != NULL) {
+            g_signal_handlers_disconnect_by_data(entry->resize_gestures[edge], entry);
+            gtk_event_controller_reset(GTK_EVENT_CONTROLLER(entry->resize_gestures[edge]));
+            g_object_unref(entry->resize_gestures[edge]);
+        }
+    }
+    if (entry->keys != NULL) {
+        g_signal_handlers_disconnect_by_data(entry->keys, entry);
+        g_object_unref(entry->keys);
+    }
+    if (entry->focus != NULL) {
+        g_signal_handlers_disconnect_by_data(entry->focus, entry);
+        g_object_unref(entry->focus);
     }
     if (entry->panel != NULL) g_object_unref(entry->panel);
     g_free(entry);
@@ -422,7 +564,7 @@ UmiStatus umi_gtk4_workspace_layout_host_request_canvas_geometry(
     if (host == NULL || window_id == NULL || window_id[0] == '\0' ||
         !umi_application_suite_layout_canvas_rect_valid(rect))
         return UMI_STATUS_INVALID_ARGUMENT;
-    if (host->pending_geometry_id != 0U) return UMI_STATUS_BUSY;
+    if (host->pending_geometry_id != 0U || host->maximise_mode.active) return UMI_STATUS_BUSY;
     entry = find_canvas_entry(host, window_id);
     if (entry == NULL) return UMI_STATUS_NOT_FOUND;
     if (expected_layout_revision != host->layout.revision)
@@ -492,10 +634,22 @@ static void on_canvas_drag_begin(
 {
     CanvasEntry *entry = (CanvasEntry *)user_data;
     UmiGtk4WorkspaceLayoutHost *host = entry->host;
-    const int resizing = GTK_GESTURE(gesture) == entry->resize_gesture;
+    UmiApplicationSuiteLayoutCanvasGesture kind = UMI_APPLICATION_SUITE_LAYOUT_CANVAS_MOVE;
+    size_t edge;
+    for (edge = 0U; edge < CANVAS_RESIZE_HANDLES; ++edge) {
+        if (GTK_GESTURE(gesture) == entry->resize_gestures[edge]) {
+            kind = canvas_resize_edges[edge].kind;
+            break;
+        }
+    }
+    /* Switching from an unfinished keyboard preview to a pointer operation
+     * cancels the preview; it cannot implicitly publish its geometry. */
+    if (host != NULL && host->active_canvas_entry != NULL &&
+        host->active_canvas_entry->keyboard_preview)
+        restore_canvas_previews(host);
 
-    if (host == NULL || host->layout.locked || entry->pinned ||
-        (resizing && !entry->resizable) ||
+    if (host == NULL || host->maximise_mode.active || host->layout.locked || entry->pinned ||
+        (kind != UMI_APPLICATION_SUITE_LAYOUT_CANVAS_MOVE && !entry->resizable) ||
         host->canvas_geometry_handler == NULL ||
         host->pending_geometry_id != 0U || host->active_canvas_entry != NULL ||
         host->canvas_layer == NULL) return;
@@ -505,9 +659,9 @@ static void on_canvas_drag_begin(
     entry->start_rect = entry->model_rect;
     entry->preview_rect = entry->model_rect;
     entry->source_revision = host->layout.revision;
-    entry->gesture_kind = resizing
-        ? UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_SOUTH_EAST
-        : UMI_APPLICATION_SUITE_LAYOUT_CANVAS_MOVE;
+    entry->gesture_kind = kind;
+    entry->active_gesture = GTK_GESTURE(gesture);
+    entry->keyboard_preview = 0;
     entry->pointer_origin_valid = canvas_pointer_position(entry,
         GTK_GESTURE(gesture), start_x, start_y,
         &entry->pointer_start_x, &entry->pointer_start_y);
@@ -529,7 +683,8 @@ static void on_canvas_drag_update(
     double canvas_x;
     double canvas_y;
 
-    if (entry->host == NULL || !entry->active ||
+    if (entry->host == NULL || !entry->active || entry->keyboard_preview ||
+        entry->active_gesture != GTK_GESTURE(gesture) ||
         entry->host->active_canvas_entry != entry) return;
     if (entry->pointer_origin_valid &&
         gtk_gesture_get_point(GTK_GESTURE(gesture),
@@ -568,7 +723,8 @@ static void on_canvas_drag_end(
     uint64_t expected_revision;
     char window_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
 
-    if (host == NULL || !entry->active || host->active_canvas_entry != entry)
+    if (host == NULL || !entry->active || entry->keyboard_preview ||
+        entry->active_gesture != GTK_GESTURE(gesture) || host->active_canvas_entry != entry)
         return;
     on_canvas_drag_update(gesture, delta_x, delta_y, user_data);
     if (!entry->motion_seen) {
@@ -596,9 +752,8 @@ static void on_canvas_drag_cancel(
 {
     CanvasEntry *entry = (CanvasEntry *)user_data;
 
-    (void)gesture;
     (void)sequence;
-    if (entry->host != NULL && entry->active)
+    if (entry->host != NULL && entry->active && entry->active_gesture == gesture)
         restore_canvas_previews(entry->host);
 }
 
@@ -619,6 +774,91 @@ static GtkGesture *attach_canvas_gesture(GtkWidget *handle, CanvasEntry *entry)
     return gesture;
 }
 
+/* Keyboard editing belongs only to the focusable title, never to the editor
+ * body. Arrows preview a grid step; Shift resizes the bottom/right edges.
+ * Enter submits through the same deferred, revision-checked owner request.
+ * Escape or leaving the title cancels, so Tab cannot accidentally save a move. */
+static gboolean on_canvas_key_pressed(GtkEventControllerKey *controller,
+    guint keyval, guint keycode, GdkModifierType state, gpointer user_data)
+{
+    CanvasEntry *entry = user_data;
+    UmiGtk4WorkspaceLayoutHost *host = entry->host;
+    UmiApplicationSuiteLayoutRect projected;
+    UmiApplicationSuiteLayoutCanvasGesture kind;
+    double delta_x = 0.0;
+    double delta_y = 0.0;
+    (void)controller;
+    (void)keycode;
+
+    if (host == NULL) return FALSE;
+    if (keyval == GDK_KEY_Escape && entry->keyboard_preview) {
+        restore_canvas_previews(host);
+        return TRUE;
+    }
+    if ((state & (GDK_CONTROL_MASK | GDK_ALT_MASK | GDK_SUPER_MASK |
+                  GDK_HYPER_MASK | GDK_META_MASK)) != 0U) return FALSE;
+    if (host->maximise_mode.active || host->layout.locked || entry->pinned || host->canvas_geometry_handler == NULL ||
+        host->pending_geometry_id != 0U || host->canvas_layer == NULL ||
+        (host->active_canvas_entry != NULL && host->active_canvas_entry != entry) ||
+        (entry->active && !entry->keyboard_preview)) return FALSE;
+
+    if (keyval == GDK_KEY_Return || keyval == GDK_KEY_KP_Enter) {
+        uint64_t expected_revision;
+        if (!entry->keyboard_preview) return FALSE;
+        projected = entry->preview_rect;
+        expected_revision = entry->source_revision;
+        restore_canvas_previews(host);
+        if (projected.x != entry->model_rect.x || projected.y != entry->model_rect.y ||
+            projected.width != entry->model_rect.width || projected.height != entry->model_rect.height)
+            (void)umi_gtk4_workspace_layout_host_request_canvas_geometry(
+                host, entry->window_id, &projected, expected_revision);
+        return TRUE;
+    }
+    switch (keyval) {
+    case GDK_KEY_Left: delta_x = -CANVAS_GRID_STEP; break;
+    case GDK_KEY_Right: delta_x = CANVAS_GRID_STEP; break;
+    case GDK_KEY_Up: delta_y = -CANVAS_GRID_STEP; break;
+    case GDK_KEY_Down: delta_y = CANVAS_GRID_STEP; break;
+    default: return FALSE;
+    }
+    kind = (state & GDK_SHIFT_MASK) != 0U
+        ? UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_SOUTH_EAST
+        : UMI_APPLICATION_SUITE_LAYOUT_CANVAS_MOVE;
+    if (kind != UMI_APPLICATION_SUITE_LAYOUT_CANVAS_MOVE && !entry->resizable)
+        return FALSE;
+    if (!entry->keyboard_preview) {
+        entry->viewport_width = gtk_widget_get_width(host->canvas_layer);
+        entry->viewport_height = gtk_widget_get_height(host->canvas_layer);
+        if (entry->viewport_width <= 0.0 || entry->viewport_height <= 0.0) return FALSE;
+        entry->start_rect = entry->model_rect;
+        entry->preview_rect = entry->model_rect;
+        entry->source_revision = host->layout.revision;
+        entry->keyboard_preview = 1;
+        entry->active = 1;
+        entry->active_gesture = NULL;
+        host->active_canvas_entry = entry;
+        gtk_widget_add_css_class(entry->panel, "canvas-keyboard-edit");
+    }
+    if (umi_application_suite_layout_project_canvas_gesture(
+            &entry->preview_rect, kind,
+            delta_x * entry->viewport_width, delta_y * entry->viewport_height,
+            entry->viewport_width, entry->viewport_height,
+            CANVAS_MIN_WIDTH, CANVAS_MIN_HEIGHT, CANVAS_GRID_STEP, &projected) == UMI_STATUS_OK) {
+        entry->preview_rect = projected;
+        gtk_widget_queue_allocate(host->canvas_layer);
+    }
+    return TRUE;
+}
+
+/* Losing focus is cancellation, not implicit acceptance of an unfinished edit. */
+static void on_canvas_title_focus_leave(GtkEventControllerFocus *controller, gpointer user_data)
+{
+    CanvasEntry *entry = user_data;
+    (void)controller;
+    if (entry->host != NULL && entry->keyboard_preview)
+        restore_canvas_previews(entry->host);
+}
+
 /* Adopt a normal Framework frame as one genuine free-positioned canvas panel. */
 static CanvasEntry *create_canvas_entry(
     UmiGtk4WorkspaceLayoutHost *host,
@@ -630,6 +870,7 @@ static CanvasEntry *create_canvas_entry(
     GtkWidget *frame;
     GtkWidget *frame_box;
     GtkWidget *header;
+    size_t edge;
     char automation_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY + 48U];
 
     if (entry == NULL) return NULL;
@@ -643,11 +884,23 @@ static CanvasEntry *create_canvas_entry(
     g_object_ref_sink(entry->panel);
     panel->content = frame;
     gtk_widget_set_parent(frame, entry->panel);
-    panel->resize_handle = gtk_label_new("\342\227\242");
-    gtk_widget_set_parent(panel->resize_handle, entry->panel);
-    gtk_widget_add_css_class(panel->resize_handle, "umicom-canvas-resize-grip");
-    gtk_widget_set_tooltip_text(panel->resize_handle, "Resize panel");
-    entry->resize_handle = panel->resize_handle;
+    for (edge = 0U; edge < CANVAS_RESIZE_HANDLES; ++edge) {
+        UmiWorkspaceCanvasGrip *grip = g_object_new(umi_workspace_canvas_grip_get_type(), NULL);
+        GtkWidget *handle = GTK_WIDGET(grip);
+        grip->edge_index = edge;
+        if (edge == 0U) {
+            grip->glyph = gtk_label_new("\342\227\242");
+            gtk_widget_set_can_target(grip->glyph, FALSE);
+            gtk_widget_set_parent(grip->glyph, handle);
+        }
+        panel->resize_handles[edge] = handle;
+        entry->resize_handles[edge] = handle;
+        gtk_widget_set_parent(handle, entry->panel);
+        gtk_widget_add_css_class(handle, "umicom-canvas-resize-grip");
+        gtk_widget_set_tooltip_text(handle, canvas_resize_edges[edge].description);
+        gtk_accessible_update_property(GTK_ACCESSIBLE(handle),
+            GTK_ACCESSIBLE_PROPERTY_LABEL, canvas_resize_edges[edge].description, -1);
+    }
     /* Shared panel_frame owns this header structure. Attach only to its title
      * area so context, pin, detach and settings buttons keep their clicks. */
     frame_box = gtk_frame_get_child(GTK_FRAME(frame));
@@ -667,12 +920,29 @@ static CanvasEntry *create_canvas_entry(
     (void)snprintf(automation_id, sizeof(automation_id),
         "workstation.canvas.drag.%s", window->window_id);
     (void)umi_gtk4_automation_tag_widget(entry->drag_handle, automation_id);
-    (void)snprintf(automation_id, sizeof(automation_id),
-        "workstation.canvas.resize.%s", window->window_id);
-    (void)umi_gtk4_automation_tag_widget(entry->resize_handle, automation_id);
-    gtk_widget_set_tooltip_text(entry->drag_handle, "Move panel in Edit Layout");
+    for (edge = 0U; edge < CANVAS_RESIZE_HANDLES; ++edge) {
+        (void)snprintf(automation_id, sizeof(automation_id),
+            "workstation.canvas.resize.%s%s", canvas_resize_edges[edge].suffix, window->window_id);
+        (void)umi_gtk4_automation_tag_widget(entry->resize_handles[edge], automation_id);
+        entry->resize_gestures[edge] = attach_canvas_gesture(entry->resize_handles[edge], entry);
+    }
+    gtk_widget_set_tooltip_text(entry->drag_handle,
+        "Edit Layout: drag to move, or focus this title and use arrows to move; "
+        "Shift+arrows resize; Enter applies; Escape or Tab cancels the preview.");
+    gtk_widget_add_css_class(entry->drag_handle, "umicom-canvas-title-handle");
+    gtk_accessible_update_property(GTK_ACCESSIBLE(entry->drag_handle),
+        GTK_ACCESSIBLE_PROPERTY_DESCRIPTION,
+        "In Edit Layout, arrow keys move this panel. Shift and arrows resize it. "
+        "Enter applies the preview. Escape or leaving the title cancels.", -1);
     entry->move_gesture = attach_canvas_gesture(entry->drag_handle, entry);
-    entry->resize_gesture = attach_canvas_gesture(entry->resize_handle, entry);
+    entry->keys = gtk_event_controller_key_new();
+    g_signal_connect(entry->keys, "key-pressed", G_CALLBACK(on_canvas_key_pressed), entry);
+    g_object_ref(entry->keys);
+    gtk_widget_add_controller(entry->drag_handle, entry->keys);
+    entry->focus = gtk_event_controller_focus_new();
+    g_signal_connect(entry->focus, "leave", G_CALLBACK(on_canvas_title_focus_leave), entry);
+    g_object_ref(entry->focus);
+    gtk_widget_add_controller(entry->drag_handle, entry->focus);
     return entry;
 }
 
@@ -729,6 +999,8 @@ static int workspace_layout_text_valid(const UmiUiWorkspaceLayout *layout)
 
     if (memchr(layout->layout_id, '\0', sizeof(layout->layout_id)) == NULL ||
         memchr(layout->name, '\0', sizeof(layout->name)) == NULL) return 0;
+    if (!g_utf8_validate(layout->layout_id, -1, NULL) ||
+        !g_utf8_validate(layout->name, -1, NULL)) return 0;
     for (index = 0U; index < layout->window_count; ++index) {
         const UmiUiWorkspaceWindow *window = &layout->windows[index];
 
@@ -739,6 +1011,13 @@ static int workspace_layout_text_valid(const UmiUiWorkspaceLayout *layout)
             memchr(window->placement_id, '\0', sizeof(window->placement_id)) == NULL ||
             memchr(window->stack_id, '\0', sizeof(window->stack_id)) == NULL ||
             memchr(window->context_group_id, '\0', sizeof(window->context_group_id)) == NULL)
+            return 0;
+        if (!g_utf8_validate(window->window_id, -1, NULL) ||
+            !g_utf8_validate(window->title, -1, NULL)) return 0;
+        /* An auto-hide member has exactly one renderer. Reject contradictory
+         * imported records before a dock and drawer could share one body. */
+        if (strncmp(window->placement_id, "auto-hide:", 10U) == 0 &&
+            (window->visible || window->floating || tool_window_edge_index(window) < 0))
             return 0;
     }
     return 1;

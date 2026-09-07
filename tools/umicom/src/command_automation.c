@@ -21,6 +21,9 @@
 
 #include "cli.h"
 
+#include "umicom/runtime/application_manifest.h"
+#include "umicom/application/portfolio.h"
+
 #include <errno.h>
 #include <limits.h>
 #include <signal.h>
@@ -309,6 +312,7 @@ static UmiStatus automation_manifest_visitor(const UmiFileInfo *info,
     UmiCliAutomationApplicationScan *scan =
         (UmiCliAutomationApplicationScan *)user_data;
     UmiApplicationManifest manifest;
+    UmiApplicationLaunchSpec launch_spec;
     UmiBuildAutomationScope scope;
     char path[UMI_PATH_CAPACITY];
     char slug[UMI_BUILD_ID_CAPACITY];
@@ -349,9 +353,20 @@ static UmiStatus automation_manifest_visitor(const UmiFileInfo *info,
     (void)memcpy(slug, relative, slug_length);
     slug[slug_length] = '\0';
 
-    status = umi_application_manifest_load(info->path, &manifest);
+    status = umi_application_manifest_load_with_launch_spec(
+        info->path, &manifest, &launch_spec);
     if (status != UMI_STATUS_OK) {
         return status;
+    }
+    /* The portable parser does not depend on the application portfolio. This
+     * product-aware boundary validates declarations without changing legacy
+     * external manifests or claiming that any executable has been built. */
+    if (launch_spec.native_executable[0] != '\0' &&
+        umi_application_portfolio_find(manifest.id) != NULL) {
+        const char *canonical = umi_application_portfolio_gui_executable(manifest.id);
+        if (canonical == NULL ||
+            strcmp(canonical, launch_spec.native_executable) != 0)
+            return UMI_STATUS_INVALID_STATE;
     }
     {
         const int prefix_length = snprintf(prefix,

@@ -122,6 +122,7 @@ static const char *action_token(UmiWsPanelAction action)
     case UMI_WS_PANEL_ACTION_MAXIMISE_TOGGLE: return "maximise";
     case UMI_WS_PANEL_ACTION_SETTINGS: return "settings";
     case UMI_WS_PANEL_ACTION_CLOSE: return "close";
+    case UMI_WS_PANEL_ACTION_AUTO_HIDE_TOGGLE: return "auto-hide";
     default: return "unknown";
     }
 }
@@ -351,7 +352,9 @@ static GtkWidget *make_overflow_menu(
     action_count += append_menu_action(
         menu_box, "view-fullscreen-symbolic", chrome,
         UMI_WS_PANEL_ACTION_MAXIMISE_TOGGLE,
-        chrome->show_maximise, editing_enabled, handler, user_data);
+        chrome->show_maximise,
+        !chrome->pinned && (editing_enabled || chrome->allow_maximise_locked),
+        handler, user_data);
     action_count += append_menu_action(
         menu_box, "emblem-system-symbolic", chrome,
         UMI_WS_PANEL_ACTION_SETTINGS,
@@ -562,6 +565,20 @@ GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
         }
     }
 
+    /* Dock/auto-hide is normal tool presentation, distinct from the protected
+     * geometry pin in the overflow menu. Keep this control beside Close. */
+    if (action_handler != NULL && chrome->show_auto_hide) {
+        button = make_action_button(
+            "view-pin-symbolic", chrome,
+            UMI_WS_PANEL_ACTION_AUTO_HIDE_TOGGLE, !chrome->pinned,
+            action_handler, user_data);
+        if (button != NULL) {
+            gtk_widget_set_tooltip_text(button, chrome->auto_hidden
+                ? "Dock this tool window" : "Auto-hide this tool window");
+            gtk_box_append(GTK_BOX(header), button);
+        }
+    }
+
     /* Normal mode uses one overflow control. Edit mode expands all geometry
      * actions so panel movement remains direct and discoverable. */
     if (action_handler != NULL && chrome->show_menu) {
@@ -593,7 +610,8 @@ GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
         if (chrome->show_maximise) {
             button = make_action_button(
                 "view-fullscreen-symbolic", chrome,
-                UMI_WS_PANEL_ACTION_MAXIMISE_TOGGLE, editing_enabled,
+                UMI_WS_PANEL_ACTION_MAXIMISE_TOGGLE,
+                !chrome->pinned && (editing_enabled || chrome->allow_maximise_locked),
                 action_handler, user_data);
             if (button != NULL) gtk_box_append(GTK_BOX(header), button);
         }
@@ -606,12 +624,13 @@ GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
             if (button != NULL) gtk_box_append(GTK_BOX(header), button);
         }
     }
-    /* Closing changes layout membership and is therefore enabled only while
-     * the layout owns an active edit transaction. */
+    /* A capable owner can hide a recoverable tool while layout movement is
+     * locked. Other frame clients retain the existing edit-only policy. */
     if (action_handler != NULL && chrome->show_close) {
         button = make_action_button(
             "window-close-symbolic", chrome,
-            UMI_WS_PANEL_ACTION_CLOSE, editing_enabled,
+            UMI_WS_PANEL_ACTION_CLOSE,
+            !chrome->pinned && (editing_enabled || chrome->allow_close_locked),
             action_handler, user_data);
         if (button != NULL) gtk_box_append(GTK_BOX(header), button);
     }

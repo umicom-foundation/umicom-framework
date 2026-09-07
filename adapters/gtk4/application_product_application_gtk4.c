@@ -22,6 +22,7 @@
 typedef struct ProductApplicationState {
     UmiApplicationProductGtk4WorkstationConfig config;
     GtkWindow *window;
+    GtkWindow *startup_window;
     UmiApplicationProductGtk4Workstation *workstation;
     UmiGtk4WorkstationStartupSplash *splash;
     guint startup_source;
@@ -70,11 +71,76 @@ static void product_window_finalized(gpointer data, GObject *object)
 {
     ProductApplicationState *state = data;
     (void)object;
-    state->window = NULL;
+    if ((GObject *)state->window == object) {
+        state->window = NULL;
+        if (state->startup_window != NULL) gtk_window_destroy(state->startup_window);
+    }
+    if ((GObject *)state->startup_window == object) {
+        state->startup_window = NULL;
+        if (state->startup_source != 0U) {
+            g_source_remove(state->startup_source);
+            state->startup_source = 0U;
+        }
+        if (state->window != NULL) gtk_window_destroy(state->window);
+    }
+}
+
+/* Each GTK application window is borrowed; disconnect observers before
+ * destruction so callback state never escapes the application loop. */
+static void product_release_window(ProductApplicationState *state, GtkWindow **slot)
+{
+    GtkWindow *window = *slot;
+    if (window == NULL) return;
+    *slot = NULL;
+    g_signal_handlers_disconnect_by_data(window, state);
+    g_object_weak_unref(G_OBJECT(window), product_window_finalized, state);
+    gtk_window_destroy(window);
+}
+
+/* A retained GtkWindow can be destroyed without finalizing. Invalidate its
+ * observers now, so deferred startup cannot later present the final window. */
+static void product_window_destroyed(GtkWidget *widget, gpointer data)
+{
+    ProductApplicationState *state = data;
+    g_signal_handlers_disconnect_by_data(widget, state);
+    g_object_weak_unref(G_OBJECT(widget), product_window_finalized, state);
     if (state->startup_source != 0U) {
         g_source_remove(state->startup_source);
         state->startup_source = 0U;
     }
+    if ((GtkWidget *)state->startup_window == widget) state->startup_window = NULL;
+    if ((GtkWidget *)state->window == widget) state->window = NULL;
+    product_release_window(state, &state->startup_window);
+    product_release_window(state, &state->window);
+}
+
+/* Closing startup cancels deferred construction and the hidden final window. */
+static gboolean product_cancel_startup(GtkWindow *window, gpointer data)
+{
+    ProductApplicationState *state = data;
+    (void)window;
+    if (state->startup_source != 0U) {
+        g_source_remove(state->startup_source);
+        state->startup_source = 0U;
+    }
+    product_release_window(state, &state->startup_window);
+    product_release_window(state, &state->window);
+    return TRUE;
+}
+
+/* Finish with one visible surface. Errors retain the existing status content
+ * in the final window; the temporary startup window is always released. */
+static void product_finish_startup_window(ProductApplicationState *state, int failed)
+{
+    if (state->window == NULL) return;
+    if (failed && state->splash != NULL) {
+        if (state->startup_window != NULL)
+            gtk_window_set_child(state->startup_window, NULL);
+        gtk_window_set_child(state->window,
+            umi_gtk4_ws_startup_splash_widget(state->splash));
+    }
+    product_release_window(state, &state->startup_window);
+    gtk_window_present(state->window);
 }
 
 /* Release presentation controllers only after their host is detached. */
@@ -87,16 +153,21 @@ static void product_content_dispose(ProductApplicationState *state)
 }
 
 /* Construct the heavier workspace after the startup surface can be drawn.
- * An error stays visible in the same branded window and is also sent to stderr. */
+ * An error moves to the final window and is also sent to stderr. */
 static gboolean product_complete_startup(gpointer data)
 {
     ProductApplicationState *state = data;
     UmiStatus status;
     GtkWidget *content;
     state->startup_source = 0U;
-    if (state->window == NULL) return G_SOURCE_REMOVE;
+    if (state->window == NULL || state->startup_window == NULL) return G_SOURCE_REMOVE;
     status = umi_application_product_gtk4_workstation_create(
         &state->config, &state->workstation);
+    /* The final main window stays un-realized until the original Suite
+     * identity has been transferred into its topmost titlebar. */
+    if (status == UMI_STATUS_OK)
+        status = umi_application_product_gtk4_workstation_bind_window(
+            state->workstation, state->window);
     /* Native launch explicitly opts in; no controller constructor creates storage. */
     if (status == UMI_STATUS_OK) {
         UmiStatus storage_status =
@@ -117,9 +188,11 @@ static gboolean product_complete_startup(gpointer data)
             message, "Action required");
         (void)umi_gtk4_ws_startup_splash_set_progress(state->splash, 1.0, 0);
         (void)fprintf(stderr, "%s: %s\n", state->config.title, message);
+        product_finish_startup_window(state, 1);
         return G_SOURCE_REMOVE;
     }
     gtk_window_set_child(state->window, content);
+    product_finish_startup_window(state, 0);
     umi_gtk4_ws_startup_splash_destroy(state->splash);
     state->splash = NULL;
     return G_SOURCE_REMOVE;
@@ -133,7 +206,7 @@ static void product_activate(GtkApplication *application, gpointer data)
     UmiGtk4WorkstationStartupSplashConfig splash_config;
     UmiStatus status;
     if (state->window != NULL) {
-        gtk_window_present(state->window);
+        gtk_window_present(state->startup_window != NULL ? state->startup_window : state->window);
         return;
     }
     product_content_dispose(state);
@@ -142,6 +215,7 @@ static void product_activate(GtkApplication *application, gpointer data)
     (void)umi_gtk4_ws_apply_window_identity(state->window);
     (void)umi_gtk4_ws_window_fit(state->window, 1180, 760, 720, 480);
     g_object_weak_ref(G_OBJECT(state->window), product_window_finalized, state);
+    g_signal_connect(state->window, "destroy", G_CALLBACK(product_window_destroyed), state);
     splash_config = umi_gtk4_ws_startup_splash_config_default(
         state->config.application_id, state->config.title);
     splash_config.subtitle = "Customisable application workspace";
@@ -155,10 +229,20 @@ static void product_activate(GtkApplication *application, gpointer data)
         gtk_window_destroy(state->window);
         return;
     }
-    gtk_window_set_child(state->window,
+    state->startup_window = GTK_WINDOW(gtk_application_window_new(application));
+    gtk_window_set_title(state->startup_window, state->config.title);
+    (void)umi_gtk4_ws_apply_window_identity(state->startup_window);
+    (void)umi_gtk4_ws_window_fit(state->startup_window, 680, 440, 400, 280);
+    g_object_weak_ref(G_OBJECT(state->startup_window), product_window_finalized, state);
+    g_signal_connect(state->startup_window, "destroy", G_CALLBACK(product_window_destroyed), state);
+    g_signal_connect(state->startup_window, "close-request",
+        G_CALLBACK(product_cancel_startup), state);
+    gtk_window_set_child(state->startup_window,
         umi_gtk4_ws_startup_splash_widget(state->splash));
-    gtk_window_present(state->window);
+    gtk_window_present(state->startup_window);
     state->startup_source = g_idle_add(product_complete_startup, state);
+    if (state->startup_source == 0U)
+        (void)product_cancel_startup(state->startup_window, state);
 }
 
 /* Keep callbacks, controllers and GTK ownership in one place so every product
@@ -198,12 +282,12 @@ int umi_application_product_gtk4_run(
     g_signal_connect(application, "activate", G_CALLBACK(product_activate), &state);
     result = g_application_run(G_APPLICATION(application), argc, argv);
     /* Cancel every callback borrowing stack state before returning to main. */
-    if (state.startup_source != 0U) g_source_remove(state.startup_source);
-    if (state.window != NULL) {
-        g_object_weak_unref(G_OBJECT(state.window), product_window_finalized, &state);
-        gtk_window_destroy(state.window);
-        state.window = NULL;
+    if (state.startup_source != 0U) {
+        g_source_remove(state.startup_source);
+        state.startup_source = 0U;
     }
+    product_release_window(&state, &state.startup_window);
+    product_release_window(&state, &state.window);
     product_content_dispose(&state);
     g_object_unref(application);
     return result != 0 ? result : state.startup_failed;

@@ -25,7 +25,7 @@
 static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "resource-explorer", "Resource Explorer",
       "Project, folders and resources", "umicom.workspace", "development.blue", "left",
-      UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_FLOATABLE | UMI_EXPERIENCE_PANEL_CONTEXT_LINKED },
+      UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_FLOATABLE | UMI_EXPERIENCE_PANEL_AUTO_HIDE | UMI_EXPERIENCE_PANEL_CONTEXT_LINKED },
     { sizeof(UmiExperiencePanelDefinition), "editor", "Editor",
       "Source and document editing", "umicom.editor", "development.blue", "centre",
       UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_FLOATABLE | UMI_EXPERIENCE_PANEL_MULTI_MONITOR | UMI_EXPERIENCE_PANEL_CONTEXT_LINKED },

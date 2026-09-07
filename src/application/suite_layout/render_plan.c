@@ -138,8 +138,19 @@ UmiStatus umi_application_suite_layout_render_plan_build(
     for (index = 0U; index < layout->window_count; ++index) {
         const UmiUiWorkspaceWindow *window = &layout->windows[index];
         if (memchr(window->window_id, '\0', sizeof(window->window_id)) == NULL ||
-            memchr(window->tool_id, '\0', sizeof(window->tool_id)) == NULL)
+            memchr(window->tool_id, '\0', sizeof(window->tool_id)) == NULL ||
+            memchr(window->placement_id, '\0', sizeof(window->placement_id)) == NULL)
             return UMI_STATUS_INVALID_STATE;
+        /* Auto-hide is a docked-only saved presentation. Validate hidden
+         * records too: otherwise an imported tool could be mounted twice or
+         * saved with an edge that no native renderer can display. */
+        if (strncmp(window->placement_id, "auto-hide:", sizeof("auto-hide:") - 1U) == 0) {
+            const char *edge = window->placement_id + sizeof("auto-hide:") - 1U;
+            if (window->visible || window->floating ||
+                (strcmp(edge, "left") != 0 && strcmp(edge, "right") != 0 &&
+                 strcmp(edge, "top") != 0 && strcmp(edge, "bottom") != 0))
+                return UMI_STATUS_INVALID_ARGUMENT;
+        }
         if (window->window_id[0] == '\0') continue;
         for (size_t previous = 0U; previous < index; ++previous) {
             if (strcmp(layout->windows[previous].window_id, window->window_id) == 0)

@@ -43,6 +43,11 @@ int main(void) {
     /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(umi_ws_panel_action_text(UMI_WS_PANEL_ACTION_CLOSE),
                "Close panel") != 0) return 7;
+    /* A docking preference must not be routed as geometry protection merely
+     * because both actions happen to use pin-shaped visual affordances. */
+    if (UMI_WS_PANEL_ACTION_AUTO_HIDE_TOGGLE == UMI_WS_PANEL_ACTION_PIN_TOGGLE ||
+        strcmp(umi_ws_panel_action_text(UMI_WS_PANEL_ACTION_AUTO_HIDE_TOGGLE),
+               "Dock or auto-hide panel") != 0) return 8;
     puts("panel chrome: ok");
     return 0;
 }

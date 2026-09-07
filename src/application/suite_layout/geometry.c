@@ -78,6 +78,31 @@ static double canvas_available_size(double origin)
     return remaining;
 }
 
+/* Resize one moving axis from its original opposite anchor. The named low
+ * edge is west/north; high edges keep the original x/y coordinate instead. */
+static void canvas_resize_axis(
+    double origin, double size, double delta, int low_edge,
+    double minimum_pixels, double viewport_pixels, double grid,
+    double *out_origin, double *out_size)
+{
+    double anchor = low_edge ? canvas_clamp(origin + size, 0.0, 1.0) : origin;
+    double maximum = low_edge ? anchor : canvas_available_size(origin);
+    double minimum = minimum_pixels >= viewport_pixels
+        ? 1.0 : minimum_pixels / viewport_pixels;
+    /* A very small viewport can make the requested minimum impossible. The
+     * available space wins; retain positive subnormal space when even DBL_MIN
+     * would extend beyond a north/west gesture's fixed opposite edge. */
+    double positive_floor = maximum < DBL_MIN ? maximum : DBL_MIN;
+    minimum = canvas_clamp(minimum, positive_floor, maximum);
+    *out_size = canvas_clamp(canvas_snap(size + (low_edge ? -delta : delta), grid),
+        minimum, maximum);
+    /* Subtraction preserves the opposite edge, except a sub-precision size
+     * at coordinate one needs the established tiny inward boundary limit. */
+    *out_origin = low_edge
+        ? canvas_clamp(anchor - *out_size, 0.0, canvas_available_size(*out_size))
+        : origin;
+}
+
 /* Project a gesture into portable geometry; saving remains the host's job. */
 UmiStatus umi_application_suite_layout_project_canvas_gesture(
     const UmiApplicationSuiteLayoutRect *start,
@@ -94,11 +119,13 @@ UmiStatus umi_application_suite_layout_project_canvas_gesture(
     UmiApplicationSuiteLayoutRect projected;
     double dx;
     double dy;
+    int horizontal_edge = 0;
+    int vertical_edge = 0;
     /* Validate before writing output, so callers can keep their last preview
      * when a viewport is not allocated yet or a motion event is malformed. */
     if (out_rect == NULL || !umi_application_suite_layout_canvas_rect_valid(start) ||
-        (gesture != UMI_APPLICATION_SUITE_LAYOUT_CANVAS_MOVE &&
-         gesture != UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_SOUTH_EAST) ||
+        (gesture < UMI_APPLICATION_SUITE_LAYOUT_CANVAS_MOVE ||
+         gesture > UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH_WEST) ||
         !isfinite(delta_x_pixels) || !isfinite(delta_y_pixels) ||
         !isfinite(viewport_width_pixels) || viewport_width_pixels <= 0.0 ||
         !isfinite(viewport_height_pixels) || viewport_height_pixels <= 0.0 ||
@@ -109,28 +136,38 @@ UmiStatus umi_application_suite_layout_project_canvas_gesture(
     projected = *start;
     dx = canvas_delta(delta_x_pixels, viewport_width_pixels);
     dy = canvas_delta(delta_y_pixels, viewport_height_pixels);
+    /* Signed edge directions share one axis rule instead of maintaining eight
+     * separate geometry implementations. Zero means that axis must not move. */
+    switch (gesture) {
+        case UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_SOUTH_EAST: horizontal_edge = 1; vertical_edge = 1; break;
+        case UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH: vertical_edge = -1; break;
+        case UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH_EAST: horizontal_edge = 1; vertical_edge = -1; break;
+        case UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_EAST: horizontal_edge = 1; break;
+        case UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_SOUTH: vertical_edge = 1; break;
+        case UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_SOUTH_WEST: horizontal_edge = -1; vertical_edge = 1; break;
+        case UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_WEST: horizontal_edge = -1; break;
+        case UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH_WEST: horizontal_edge = -1; vertical_edge = -1; break;
+        default: break;
+    }
     /* Dragging changes only the top-left corner, retaining the saved size. */
     if (gesture == UMI_APPLICATION_SUITE_LAYOUT_CANVAS_MOVE) {
-        projected.x = canvas_clamp(canvas_snap(start->x + dx, grid_size),
-                                    0.0, canvas_available_size(start->width));
-        projected.y = canvas_clamp(canvas_snap(start->y + dy, grid_size),
-                                    0.0, canvas_available_size(start->height));
+        if (dx != 0.0)
+            projected.x = canvas_clamp(canvas_snap(start->x + dx, grid_size),
+                                        0.0, canvas_available_size(start->width));
+        if (dy != 0.0)
+            projected.y = canvas_clamp(canvas_snap(start->y + dy, grid_size),
+                                        0.0, canvas_available_size(start->height));
     } else {
-        double max_width = canvas_available_size(start->x);
-        double max_height = canvas_available_size(start->y);
-        double min_width = min_width_pixels >= viewport_width_pixels
-            ? 1.0 : min_width_pixels / viewport_width_pixels;
-        double min_height = min_height_pixels >= viewport_height_pixels
-            ? 1.0 : min_height_pixels / viewport_height_pixels;
-        /* Very small viewports may not have enough room for the requested
-         * minimum. Keep the corner fixed and use the available space. DBL_MIN
-         * prevents a positive pixel minimum underflowing to an empty panel. */
-        min_width = canvas_clamp(min_width, DBL_MIN, max_width);
-        min_height = canvas_clamp(min_height, DBL_MIN, max_height);
-        projected.width = canvas_clamp(
-            canvas_snap(start->width + dx, grid_size), min_width, max_width);
-        projected.height = canvas_clamp(
-            canvas_snap(start->height + dy, grid_size), min_height, max_height);
+        /* Pointer-down and motion along an unrelated axis must not snap or
+         * enlarge an imported panel before that edge has actually moved. */
+        if (horizontal_edge != 0 && dx != 0.0)
+            canvas_resize_axis(start->x, start->width, dx, horizontal_edge < 0,
+                min_width_pixels, viewport_width_pixels, grid_size,
+                &projected.x, &projected.width);
+        if (vertical_edge != 0 && dy != 0.0)
+            canvas_resize_axis(start->y, start->height, dy, vertical_edge < 0,
+                min_height_pixels, viewport_height_pixels, grid_size,
+                &projected.y, &projected.height);
     }
     *out_rect = projected;
     return UMI_STATUS_OK;

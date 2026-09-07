@@ -317,6 +317,8 @@ static int test_codec_compatibility(void)
         "UMILAYOUT3 3\t42\tid\tName\t1\t0\t1\n",
         "UMILAYOUT3\t3\t42\tid\tName\t1\t0\t1\textra\n",
         "UMILAYOUT3\t3\t42\tid\tName\t1\t0\t1\n\n",
+        "UMILAYOUT3\t3\t42\tid\tNa\rme\t1\t0\t1\r\n",
+        "UMILAYOUT3\t3\t42\tid\tName\t1\t0\t1\r\r\n",
         "UMILAYOUT3\t3\t42\tid\tName\t1\t1\t1\n"
         "W\teditor\tEditor\teditor\teditor\tcanvas\teditor\t-\t0\t0\t0.5\t0.5\t2\t0\t0\t1\t0\t1\t0\n",
         "UMILAYOUT3\t3\t42\tid\tName\t1\t1\t1\n"
@@ -336,6 +338,19 @@ static int test_codec_compatibility(void)
     memcpy(text, legacy, sizeof(legacy));
     text[strlen(text) - 1U] = '\0';
     UMI_TEST_REQUIRE(umi_ui_layout_persistence_decode(text, record) == UMI_STATUS_OK);
+    /* CRLF exports from native Windows text tools retain the exact same
+     * legacy numeric fields. No other embedded CR is treated as whitespace. */
+    {
+        size_t source, destination = 0U;
+        for (source = 0U; legacy[source] != '\0'; ++source) {
+            UMI_TEST_REQUIRE(destination + 2U < UMI_UI_LAYOUT_ENCODED_CAPACITY);
+            if (legacy[source] == '\n') text[destination++] = '\r';
+            text[destination++] = legacy[source];
+        }
+        text[destination] = '\0';
+        UMI_TEST_REQUIRE(umi_ui_layout_persistence_decode(text, record) == UMI_STATUS_OK);
+        UMI_TEST_REQUIRE(record->layout.windows[0].x == 0.125);
+    }
     for (index = 0U; index < sizeof(invalid) / sizeof(invalid[0]); ++index)
         UMI_TEST_REQUIRE(umi_ui_layout_persistence_decode(invalid[index], record) == UMI_STATUS_PARSE_ERROR);
     UMI_TEST_REQUIRE(umi_data_server_create_memory(&server) == UMI_STATUS_OK);

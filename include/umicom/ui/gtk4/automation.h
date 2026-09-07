@@ -33,7 +33,18 @@ UmiStatus umi_gtk4_automation_driver_create(
     void *native_root,
     UmiGtk4AutomationDriver **out_driver);
 
-/** Release the retained GTK root and the driver itself. */
+/** Add one separate titlebar/container scope, retained until driver destruction.
+ * GtkWindow scopes are rejected to avoid window-owned-controller reference
+ * cycles. Duplicate/second scopes return ALREADY_EXISTS; overlapping trees or
+ * scopes already rooted in another window return INVALID_ARGUMENT. No prior
+ * scope is replaced or silently dropped. Later nested trees are visited once.
+ * With an explicit scope, resolution is confined to these trees and related
+ * transient windows; an unparented pair never searches unrelated top levels.
+ * GTK owning thread only; this does not present or activate any widget.
+ */
+UmiStatus umi_gtk4_automation_driver_add_observed_scope(
+    UmiGtk4AutomationDriver *driver, void *native_scope);
+/** Release the retained GTK root, optional observed scope and driver itself. */
 void umi_gtk4_automation_driver_destroy(UmiGtk4AutomationDriver *driver);
 
 /** Return the toolkit-neutral callback interface consumed by the UAT runner. */

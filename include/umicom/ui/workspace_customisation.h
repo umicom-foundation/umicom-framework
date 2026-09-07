@@ -172,11 +172,24 @@ UmiStatus umi_ui_workspace_customisation_float_window(
     double y,
     double width,
     double height);
-/* Collapse or restore a docked panel without removing it from the layout. */
+/* Collapse or restore a docked panel during an explicit layout edit. The
+ * existing prefix denotes a rail even when visible=false. Protected pinning
+ * is independent of docking and is never changed by this operation. */
 UmiStatus umi_ui_workspace_customisation_set_auto_hidden(
     UmiUiWorkspaceCustomisation *customisation,
     const char *window_id,
     bool auto_hidden);
+/* Change ordinary tool presentation without unlocking the layout manually.
+ * A heap candidate opens/commits a short edit outside an existing edit session;
+ * inside an edit it joins that session and its original Cancel baseline.
+ * visible controls docked/floating presentation. auto_hidden=true always
+ * stores visible=false and the existing auto-hide edge prefix; transient
+ * reveal/collapse belongs to the adapter and must not mutate this model.
+ * Geometry, tab stack, contexts and protected pinning are preserved. Changes
+ * to pinned tools or hiding a non-closable tool are rejected atomically. */
+UmiStatus umi_ui_workspace_customisation_set_tool_presentation(
+    UmiUiWorkspaceCustomisation *customisation,
+    const char *window_id, bool visible, bool auto_hidden);
 /* Report whether a window is currently represented by an auto-hide strip. */
 bool umi_ui_workspace_customisation_window_is_auto_hidden(
     const UmiUiWorkspaceCustomisation *customisation,

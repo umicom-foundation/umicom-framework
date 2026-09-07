@@ -54,6 +54,19 @@ UmiStatus umi_gtk4_ws_apply_window_identity(GtkWindow *window);
 typedef struct UmiGtk4WorkstationShellHeader
     UmiGtk4WorkstationShellHeader;
 
+/** A managed native titlebar, installed in GtkWindow's titlebar slot rather
+ * than appended to the document/content hierarchy. */
+typedef struct UmiGtk4WorkstationWindowTitlebar UmiGtk4WorkstationWindowTitlebar;
+
+/** Copied titlebar identity and document/project context for native acceptance. */
+typedef struct UmiGtk4WorkstationWindowTitlebarSnapshot {
+    char title[UMI_UI_TEXT_CAPACITY];
+    char context[768];
+    char icon_resource[UMI_UI_APPEARANCE_RESOURCE_CAPACITY];
+    int icon_visible;
+    int installed;
+} UmiGtk4WorkstationWindowTitlebarSnapshot;
+
 /**
  * Describe how a Framework host should open a selected Umicom application.
  *
@@ -153,6 +166,54 @@ typedef struct UmiGtk4WorkstationStartupSplashSnapshot {
     int progress_visible;
     uint64_t revision;
 } UmiGtk4WorkstationStartupSplashSnapshot;
+
+/** Install a compact topmost GtkHeaderBar before the window is realized.
+ * Reuses the canonical SVG identity at the left, centres document/project
+ * context, and places the existing application catalogue and new-window
+ * actions at right before GTK-managed minimise/maximise/close controls.
+ * GTK's window handle owns drag/double-click behaviour; platform close guards
+ * still run through GtkWindow. Native OS-drawn controls depend on the backend.
+ * The optional context_title_prefix names an established window-title product
+ * prefix (for example "Umicom Studio"). notify::title strips only that exact
+ * prefix or config->title plus an em-dash separator; the actual window title
+ * is never modified. Config strings are copied; compact mode is forced and
+ * subtitle and badge are omitted. Application actions reuse the same managed
+ * identity controller; no second inner identity or launcher model is created.
+ * The managed close button stays hidden because GTK supplies native Close.
+ * The controller retains its widget and weakly observes the window. It must
+ * be destroyed on the GTK owning thread. Existing titlebars/realized windows
+ * return INVALID_STATE rather than being replaced. No window is presented.
+ */
+UmiStatus umi_gtk4_ws_window_titlebar_create(
+    GtkWindow *window, const UmiGtk4WorkstationShellHeaderConfig *config,
+    const char *context_title_prefix, UmiGtk4WorkstationWindowTitlebar **out_titlebar);
+/** Transfer one existing managed identity into a topmost titlebar before
+ * window realization. The header must be unparented or in a GtkBox belonging
+ * to this un-realized window/unparented composition. No new catalogue,
+ * selection, appearance or operational-mode state is created or reset.
+ * Success transfers header ownership to the titlebar; callers may retain only
+ * a borrowed alias and must not separately destroy it. Failure changes neither
+ * the header nor its parent and retains caller ownership. A header may be
+ * transferred only once; in-flight application operations return BUSY.
+ * Existing compact presentation is preserved. No window is presented.
+ */
+UmiStatus umi_gtk4_ws_window_titlebar_create_from_header(
+    GtkWindow *window, UmiGtk4WorkstationShellHeader *identity,
+    const char *context_title_prefix, UmiGtk4WorkstationWindowTitlebar **out_titlebar);
+/** Disconnect title/identity and moved application-control callbacks before
+ * releasing owned references, including externally retained buttons. An
+ * attached widget remains parent-owned; its GTK window controls keep their
+ * ordinary window lifetime and never borrow this released controller. */
+void umi_gtk4_ws_window_titlebar_destroy(UmiGtk4WorkstationWindowTitlebar *titlebar);
+/** Borrow the actual GtkHeaderBar installed as the window's titlebar. */
+GtkWidget *umi_gtk4_ws_window_titlebar_widget(UmiGtk4WorkstationWindowTitlebar *titlebar);
+/** Follow the existing Framework appearance profile without changing artwork
+ * geometry, user fonts, or the document hierarchy. Missing marks stay hidden. */
+UmiStatus umi_gtk4_ws_window_titlebar_apply_appearance(
+    UmiGtk4WorkstationWindowTitlebar *titlebar, const UmiUiAppearanceProfile *profile);
+/** Copy observations without exposing mutable identity or native window state. */
+UmiGtk4WorkstationWindowTitlebarSnapshot umi_gtk4_ws_window_titlebar_snapshot(
+    const UmiGtk4WorkstationWindowTitlebar *titlebar);
 
 /** Return safe creation values for one named Umicom application. */
 UmiGtk4WorkstationShellHeaderConfig

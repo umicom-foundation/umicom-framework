@@ -21,15 +21,18 @@
  * applications.
  */
 UmiStatus umi_ws_maximize_mode_activate(UmiWsMaximizeMode *mode, const char *surface_id) {
+    UmiWsMaximizeMode candidate = {0};
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
     if (mode == NULL || !umi_ws_id_valid(surface_id)) return UMI_STATUS_INVALID_ARGUMENT;
-    *mode = (UmiWsMaximizeMode){0};
+    /* Stage the identity before publication so mode->surface_id is a valid
+     * input alias and invalid activation preserves the previous mode. */
     /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (umi_ws_copy_text(mode->surface_id, sizeof(mode->surface_id), surface_id) != UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;
-    mode->active = true;
+    if (umi_ws_copy_text(candidate.surface_id, sizeof(candidate.surface_id), surface_id) != UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;
+    candidate.active = true;
+    *mode = candidate;
     return UMI_STATUS_OK;
 }
 
@@ -50,5 +53,6 @@ void umi_ws_maximize_mode_restore(UmiWsMaximizeMode *mode) {
  * applications.
  */
 bool umi_ws_maximize_mode_matches(const UmiWsMaximizeMode *mode, const char *surface_id) {
-    return mode != NULL && mode->active && umi_ws_id_valid(surface_id) && strcmp(mode->surface_id, surface_id) == 0;
+    return mode != NULL && mode->active && umi_ws_id_valid(mode->surface_id) &&
+        umi_ws_id_valid(surface_id) && strcmp(mode->surface_id, surface_id) == 0;
 }

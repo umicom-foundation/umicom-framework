@@ -104,6 +104,45 @@ int main(void)
                    sizeof(layout->windows[0].context_group_id), "market-red");
     UMI_TEST_REQUIRE(umi_application_suite_layout_render_plan_build(
         layout, plan) == UMI_STATUS_OK);
+    /* An auto-hide record belongs only to an edge rail, never also to a
+     * visible dock stack or native floating window. Every supported hidden
+     * edge remains valid, while malformed imported records fail early. */
+    layout->window_count = 1U;
+    layout->windows[0].visible = false;
+    layout->windows[0].floating = false;
+    const char *const hidden_edges[] = {
+        "auto-hide:left", "auto-hide:right", "auto-hide:top", "auto-hide:bottom"
+    };
+    for (size_t edge = 0U; edge < sizeof(hidden_edges) / sizeof(hidden_edges[0]); ++edge) {
+        (void)snprintf(layout->windows[0].placement_id,
+            sizeof(layout->windows[0].placement_id), "%s", hidden_edges[edge]);
+        UMI_TEST_REQUIRE(umi_application_suite_layout_render_plan_build(
+            layout, plan) == UMI_STATUS_OK);
+        UMI_TEST_REQUIRE(plan->visible_window_count == 0U &&
+            plan->stack_count == 0U && plan->canvas_item_count == 0U);
+        layout->windows[0].visible = true;
+        UMI_TEST_REQUIRE(umi_application_suite_layout_render_plan_build(
+            layout, plan) == UMI_STATUS_INVALID_ARGUMENT);
+        layout->windows[0].visible = false;
+        layout->windows[0].floating = true;
+        UMI_TEST_REQUIRE(umi_application_suite_layout_render_plan_build(
+            layout, plan) == UMI_STATUS_INVALID_ARGUMENT);
+        layout->windows[0].floating = false;
+    }
+    const char *const invalid_edges[] = {
+        "auto-hide:", "auto-hide:centre", "auto-hide:floating", "auto-hide:left-extra"
+    };
+    for (size_t edge = 0U; edge < sizeof(invalid_edges) / sizeof(invalid_edges[0]); ++edge) {
+        (void)snprintf(layout->windows[0].placement_id,
+            sizeof(layout->windows[0].placement_id), "%s", invalid_edges[edge]);
+        UMI_TEST_REQUIRE(umi_application_suite_layout_render_plan_build(
+            layout, plan) == UMI_STATUS_INVALID_ARGUMENT);
+    }
+    /* A hidden unterminated placement must never reach the prefix comparison. */
+    (void)memset(layout->windows[0].placement_id, 'x',
+        sizeof(layout->windows[0].placement_id));
+    UMI_TEST_REQUIRE(umi_application_suite_layout_render_plan_build(
+        layout, plan) == UMI_STATUS_INVALID_STATE);
     free(plan);
     free(layout);
     return 0;

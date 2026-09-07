@@ -47,7 +47,8 @@ typedef struct UmiGtk4WorkstationCommandBarSnapshot {
     uint64_t revision;
 } UmiGtk4WorkstationCommandBarSnapshot;
 
-/** Called after the user chooses one enabled action from the result list. */
+/** Called with a copied action after the result popover is closed. The copy
+ * is valid during this callback; replacing or destroying the bar is allowed. */
 typedef void (*UmiGtk4WorkstationCommandBarActivatedHandler)(
     const UmiWsCommandBarItem *item,
     void *user_data);

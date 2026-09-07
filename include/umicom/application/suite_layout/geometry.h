@@ -37,11 +37,20 @@ typedef struct UmiApplicationSuiteLayoutRect {
 
 /**
  * Choose which part of a canvas rectangle follows a pointer gesture.
- * Moving keeps the size; south-east resizing keeps the top-left corner.
+ * Moving keeps the size. Resizing moves only the named edge or corner while
+ * keeping the opposite edge or corner fixed. Existing numeric values stay
+ * unchanged for adapters which already use south-east resizing.
  */
 typedef enum UmiApplicationSuiteLayoutCanvasGesture {
     UMI_APPLICATION_SUITE_LAYOUT_CANVAS_MOVE = 1,
-    UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_SOUTH_EAST = 2
+    UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_SOUTH_EAST = 2,
+    UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH = 3,
+    UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH_EAST = 4,
+    UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_EAST = 5,
+    UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_SOUTH = 6,
+    UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_SOUTH_WEST = 7,
+    UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_WEST = 8,
+    UMI_APPLICATION_SUITE_LAYOUT_CANVAS_RESIZE_NORTH_WEST = 9
 } UmiApplicationSuiteLayoutCanvasGesture;
 
 /**
@@ -61,13 +70,18 @@ int umi_application_suite_layout_canvas_rect_valid(
  * captured at gesture start and uses the total pointer delta since that start.
  * This avoids rounding drift when a frontend receives many motion events.
  *
- * Moving preserves size. Resizing keeps x/y fixed and limits each requested
- * minimum to the space remaining beside that corner. A grid below floating
- * point precision is treated as disabled. The caller remains responsible for
- * layout locks, permissions and saving through its workspace transaction.
+ * Moving preserves size and snaps the moving origin coordinates. Resizing
+ * snaps the affected dimensions, preserving the existing south-east behavior,
+ * and limits each requested minimum to the space beside its opposite anchor.
+ * Bounds and minimum sizes take precedence over the grid. An untouched axis
+ * remains exactly unchanged, even for an off-grid or undersized saved panel;
+ * a zero-delta gesture never jumps. Tiny inward rounding may be necessary at
+ * a viewport boundary. A grid below floating point precision is disabled.
+ * The caller remains responsible for layout locks, permissions and saving
+ * through its workspace transaction; projection grants no edit permission.
  *
  * @param start Borrowed valid normalized rectangle at gesture start.
- * @param gesture Move the panel or resize its south-east corner.
+ * @param gesture Move the panel or resize one of its eight edges/corners.
  * @param delta_x_pixels Total horizontal pointer movement; negative goes left.
  * @param delta_y_pixels Total vertical pointer movement; negative goes up.
  * @param viewport_width_pixels Positive finite width of the canvas viewport.

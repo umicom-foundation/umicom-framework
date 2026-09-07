@@ -104,6 +104,28 @@ typedef struct UmiApplicationSuiteGtk4Workstation
 UmiStatus umi_application_suite_gtk4_workstation_create(
     const UmiApplicationSuiteGtk4WorkstationConfig *config,
     UmiApplicationSuiteGtk4Workstation **out_workstation);
+/** Move this workstation's existing identity and catalogue into the native
+ * GtkWindow titlebar before realization/presentation. Standalone create/widget
+ * use remains unchanged unless this explicit binding succeeds. No panel,
+ * selection, appearance or checkpoint state is recreated. Active layout text
+ * is projected to the native title's centred context; mode remains visible.
+ * The window is weakly observed and may be destroyed first. The workstation
+ * owns the resulting titlebar controller. Binding the same live window twice
+ * is harmless; another window, existing titlebar or realized window is rejected.
+ * GTK owning thread only. This operation never presents a window.
+ */
+UmiStatus umi_application_suite_gtk4_workstation_bind_window(
+    UmiApplicationSuiteGtk4Workstation *workstation, GtkWindow *window);
+/** Focus an existing visible panel, reveal an auto-hide tool, or reopen a
+ * hidden ordinary dock tool at its existing position. This does not add a new
+ * instance, change its placement, save a checkpoint or unlock the layout.
+ * Reopening uses the existing customisation owner and its protection checks.
+ * Hidden canvas/detached instances return PERMISSION_DENIED; an unknown ID
+ * returns NOT_FOUND. An existing detached window may be presented by focus.
+ * GTK owning thread only. The caller's ID is copied before model publication.
+ */
+UmiStatus umi_application_suite_gtk4_workstation_show_window(
+    UmiApplicationSuiteGtk4Workstation *workstation, const char *window_id);
 /**
  * Releases workstation widgets, services and owned memory.
  *

@@ -25,6 +25,7 @@
 
 struct UmiGtk4AutomationDriver {
     GtkWidget *root;
+    GtkWidget *observed_scope;
     uint64_t revision;
 };
 
@@ -42,12 +43,13 @@ static int automation_copy_text(
 }
 
 /* Walk the GTK child tree until the requested stable automation ID is found. */
-static GtkWidget *automation_find_widget(GtkWidget *widget, const char *target_id)
+static GtkWidget *automation_find_widget_excluding(
+    GtkWidget *widget, const char *target_id, GtkWidget *excluded)
 {
     GtkWidget *child;
     const char *widget_id;
 
-    if (widget == NULL || target_id == NULL) return NULL;
+    if (widget == NULL || widget == excluded || target_id == NULL) return NULL;
 
     widget_id = (const char *)g_object_get_data(
         G_OBJECT(widget),
@@ -58,11 +60,17 @@ static GtkWidget *automation_find_widget(GtkWidget *widget, const char *target_i
     for (child = gtk_widget_get_first_child(widget);
          child != NULL;
          child = gtk_widget_get_next_sibling(child)) {
-        GtkWidget *match = automation_find_widget(child, target_id);
+        GtkWidget *match = automation_find_widget_excluding(child, target_id, excluded);
         if (match != NULL) return match;
     }
 
     return NULL;
+}
+
+/* Legacy callers continue to search their primary tree without exclusions. */
+static GtkWidget *automation_find_widget(GtkWidget *widget, const char *target_id)
+{
+    return automation_find_widget_excluding(widget, target_id, NULL);
 }
 
 /* Check whether a top-level window belongs to the driver's window family. */
@@ -99,16 +107,32 @@ static GtkWidget *automation_resolve_widget(
 
     if (driver == NULL || driver->root == NULL) return NULL;
 
+    /* Explicit scopes must stay within one window family after reparenting.
+     * A detached pair does not license searching other application windows. */
+    if (driver->observed_scope != NULL) {
+        GtkRoot *primary_window = gtk_widget_get_root(driver->root);
+        GtkRoot *scope_window = gtk_widget_get_root(driver->observed_scope);
+        if (primary_window != NULL && scope_window != NULL && primary_window != scope_window)
+            return NULL;
+    }
     match = automation_find_widget(driver->root, target_id);
     if (match != NULL) return match;
+    if (driver->observed_scope != NULL &&
+        !gtk_widget_is_ancestor(driver->observed_scope, driver->root)) {
+        match = automation_find_widget_excluding(driver->observed_scope, target_id, driver->root);
+        if (match != NULL) return match;
+    }
 
     native_root = gtk_widget_get_root(driver->root);
+    if (native_root == NULL && driver->observed_scope != NULL)
+        native_root = gtk_widget_get_root(driver->observed_scope);
     if (native_root != NULL && GTK_IS_WINDOW(native_root)) {
         driver_window = GTK_WINDOW(native_root);
     } else if (GTK_IS_WINDOW(driver->root)) {
         driver_window = GTK_WINDOW(driver->root);
     }
 
+    if (driver->observed_scope != NULL && driver_window == NULL) return NULL;
     top_levels = gtk_window_get_toplevels();
     if (top_levels == NULL) return NULL;
 
@@ -117,8 +141,9 @@ static GtkWidget *automation_resolve_widget(
 
         if (window == NULL) continue;
         /* A parented root searches only its own window and transient dialogs. */
-        if (driver_window == NULL ||
-            automation_window_is_related(window, driver_window)) {
+        if ((driver_window == NULL ||
+             automation_window_is_related(window, driver_window)) &&
+            (driver->observed_scope == NULL || window != driver_window)) {
             match = automation_find_widget(GTK_WIDGET(window), target_id);
         }
         g_object_unref(window);
@@ -397,11 +422,34 @@ UmiStatus umi_gtk4_automation_driver_create(
     return UMI_STATUS_OK;
 }
 
+/* Observe one separate non-window scope without replacing the primary root.
+ * Adding is transactional and additive; an existing scope is never dropped. */
+UmiStatus umi_gtk4_automation_driver_add_observed_scope(
+    UmiGtk4AutomationDriver *driver, void *native_scope)
+{
+    GtkWidget *scope = native_scope;
+    GtkRoot *primary_window;
+    GtkRoot *scope_window;
+    if (driver == NULL || driver->root == NULL || scope == NULL ||
+        !GTK_IS_WIDGET(scope) || GTK_IS_WINDOW(scope)) return UMI_STATUS_INVALID_ARGUMENT;
+    if (driver->observed_scope != NULL || scope == driver->root)
+        return UMI_STATUS_ALREADY_EXISTS;
+    if (gtk_widget_is_ancestor(scope, driver->root) ||
+        gtk_widget_is_ancestor(driver->root, scope)) return UMI_STATUS_INVALID_ARGUMENT;
+    primary_window = gtk_widget_get_root(driver->root);
+    scope_window = gtk_widget_get_root(scope);
+    if (primary_window != NULL && scope_window != NULL && primary_window != scope_window)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    driver->observed_scope = g_object_ref(scope);
+    return UMI_STATUS_OK;
+}
+
 /* Release the retained GTK root before freeing the small driver object. */
 void umi_gtk4_automation_driver_destroy(UmiGtk4AutomationDriver *driver)
 {
     if (driver == NULL) return;
 
+    if (driver->observed_scope != NULL) g_object_unref(driver->observed_scope);
     if (driver->root != NULL) g_object_unref(driver->root);
     free(driver);
 }

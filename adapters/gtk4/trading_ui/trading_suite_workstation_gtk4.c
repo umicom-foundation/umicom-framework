@@ -283,6 +283,15 @@ fail:
     return status;
 }
 
+/* Forward explicit native titlebar adoption to the existing Framework owner. */
+UmiStatus umi_gtk4_trading_suite_workstation_bind_window(
+    UmiGtk4TradingSuiteWorkstation *workstation, GtkWindow *window)
+{
+    return workstation != NULL
+        ? umi_application_suite_gtk4_workstation_bind_window(workstation->suite, window)
+        : UMI_STATUS_INVALID_ARGUMENT;
+}
+
 /* Delegate explicit persistence to the existing shared layout owner. */
 UmiStatus umi_gtk4_trading_suite_workstation_enable_checkpoint_storage(
     UmiGtk4TradingSuiteWorkstation *workstation, int restore_saved)

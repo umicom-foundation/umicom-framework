@@ -28,4 +28,16 @@ GtkWidget *umi_gtk4_ws_tool_rail_create(GtkOrientation orientation);
  */
 GtkWidget *umi_gtk4_ws_tool_rail_append(GtkWidget *rail, const char *icon_name, const char *tooltip, gboolean active);
 
+/**
+ * Append a named edge tab and return its rail-owned GtkToggleButton. The caller
+ * connects selection handling; this helper does not change workspace state.
+ * Vertical captions rotate the whole line clockwise, rather than stacking
+ * letters. Both orientations inherit the theme font and foreground colour and
+ * ellipsize captions beyond 240 logical pixels. The full UTF-8 title remains
+ * available through the tooltip and accessible label. Invalid rails, empty
+ * titles and invalid UTF-8 return NULL without adding a child.
+ */
+GtkWidget *umi_gtk4_ws_tool_rail_append_label(
+    GtkWidget *rail, const char *title, gboolean vertical, gboolean active);
+
 #endif
