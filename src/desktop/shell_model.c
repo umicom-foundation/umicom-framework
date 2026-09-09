@@ -343,6 +343,7 @@ UmiStatus umi_desktop_shell_model_project_application(
     UmiDesktopTaskbarItem *item;
     UmiDesktopTaskbarItem candidate;
     UmiDesktopApplicationState state;
+    size_t executable_name_length;
     if (model == NULL || record == NULL ||
         memchr(record->application_id, '\0', sizeof(record->application_id)) == NULL ||
         memchr(record->executable_name, '\0', sizeof(record->executable_name)) == NULL)
@@ -358,9 +359,13 @@ UmiStatus umi_desktop_shell_model_project_application(
     default: state = UMI_DESKTOP_APPLICATION_STOPPED; break;
     }
     candidate = *item;
-    if (strlen(record->executable_name) >= sizeof(candidate.executable_name))
+    executable_name_length = strlen(record->executable_name);
+    if (executable_name_length >= sizeof(candidate.executable_name))
         return UMI_STATUS_CAPACITY_EXCEEDED;
-    (void)snprintf(candidate.executable_name, sizeof(candidate.executable_name), "%s", record->executable_name);
+    /* The record is terminated and fits; copy its exact bytes, including NUL.
+     * Keep an empty name valid and never truncate an executable identifier. */
+    (void)memcpy(candidate.executable_name, record->executable_name,
+                 executable_name_length + 1U);
     candidate.state = state;
     candidate.installed = record->installed;
     candidate.compatible = record->compatible;
