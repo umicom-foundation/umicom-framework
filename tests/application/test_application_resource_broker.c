@@ -86,7 +86,7 @@ int main(void)
     assert(presentation != NULL);
     assert(presentation->pinned_by_default);
     assert(presentation->entry_kind == UMI_APPLICATION_ENTRY_WORKBENCH);
-    assert(strcmp(presentation->default_layout_id, "develop") == 0);
+    assert(strcmp(presentation->default_layout_id, "development") == 0);
     assert(strcmp(umi_application_entry_kind_text(presentation->entry_kind),
                   "workbench") == 0);
 
