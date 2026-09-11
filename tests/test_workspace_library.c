@@ -3,7 +3,7 @@
  * File: tests/test_workspace_library.c
  * PURPOSE: Exercise copied named-layout observations and atomic actions using
  * real customisation/window/context contracts, without files or native UI.
- * AUTHOR: Sammy Hegab, Umicom Foundation
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/workspace_library.h"
