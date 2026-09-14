@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/test_platform_executable_path.c
- * Purpose: Reject truncated process paths before they become installation roots.
- * Author: Sammy Hegab, Umicom Foundation
- * Licence: MIT
+ * PURPOSE: Reject truncated process paths before they become installation roots.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/platform/filesystem.h"
 

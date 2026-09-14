@@ -3,7 +3,7 @@
  * File: src/ui/workspace_library_checkpoint.c
  * PURPOSE: Save and recover the complete ordered named-layout list using
  * framed existing layout codec records and transactional Data Server chunks.
- * AUTHOR: Sammy Hegab, Umicom Foundation
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/workspace_library_checkpoint.h"

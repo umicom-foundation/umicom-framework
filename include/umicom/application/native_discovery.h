@@ -3,7 +3,7 @@
  * File: include/umicom/application/native_discovery.h
  * PURPOSE: Reconcile trusted built-in GUI installation evidence into the
  * existing application runtime catalogue, without loading or launching code.
- * AUTHOR: Sammy Hegab, Umicom Foundation
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_APPLICATION_NATIVE_DISCOVERY_H

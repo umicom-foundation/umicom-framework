@@ -3,7 +3,7 @@
  * File: include/umicom/ui/workspace_library.h
  * PURPOSE: Copied named-layout views and atomic library actions over the
  * existing workspace customisation owner. No second registry or persistence.
- * AUTHOR: Sammy Hegab, Umicom Foundation
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_WORKSPACE_LIBRARY_H

@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/workstation/workspace_tool_windows_gtk4.inc
- * Purpose: Render named edge tabs and transient, reusable tool-window flyouts.
- * Author: Sammy Hegab, Umicom Foundation
- * Licence: MIT
+ * PURPOSE: Render named edge tabs and transient, reusable tool-window flyouts.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 
 /* Preferred flyout size is not a minimum size. GtkOverlay may allocate this

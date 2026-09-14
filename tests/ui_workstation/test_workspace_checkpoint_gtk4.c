@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/ui_workstation/test_workspace_checkpoint_gtk4.c
- * Purpose: Verify explicit Suite layout checkpoints across native host restart.
- * Author: Sammy Hegab, Umicom Foundation
- * Licence: MIT
+ * PURPOSE: Verify explicit Suite layout checkpoints across native host restart.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/suite_layout/gtk4_workstation.h"
 #include "umicom/data/data_server.h"

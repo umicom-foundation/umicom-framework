@@ -3,7 +3,7 @@
  * File: src/ui/workspace_library.c
  * PURPOSE: Atomic named-layout operations over the existing customisation
  * object, with copied observations and no persistent parallel catalogue.
- * AUTHOR: Sammy Hegab, Umicom Foundation
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/workspace_library.h"

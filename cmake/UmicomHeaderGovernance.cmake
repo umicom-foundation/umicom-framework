@@ -14,14 +14,18 @@
 #   MIT
 #-----------------------------------------------------------------------------
 
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSourceContracts.cmake")
+
 function(umicom_register_header_governance_test test_name header_root owner)
     # Create this optional product surface only when its build option is enabled.
     if(NOT BUILD_TESTING)
         return()
     endif()
+    umicom_enable_source_contracts()
     add_test(
         NAME "${test_name}"
         COMMAND "${CMAKE_COMMAND}"
+            "-DUMICOM_SOURCE_CONTRACT_TOOL=$<TARGET_FILE:umicom-source-contracts>"
             "-DUMICOM_HEADER_ROOT=${header_root}"
             "-DUMICOM_HEADER_OWNER=${owner}"
             -P "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/UmicomPublicHeaderAudit.cmake")
@@ -43,9 +47,11 @@ function(umicom_register_header_portfolio_governance_test test_name owner)
             "${test_name} requires at least one public include directory.")
     endif()
     string(JOIN "|" UMICOM_HEADER_ROOT_ARGUMENT ${UMICOM_HEADER_ROOTS})
+    umicom_enable_source_contracts()
     add_test(
         NAME "${test_name}"
         COMMAND "${CMAKE_COMMAND}"
+            "-DUMICOM_SOURCE_CONTRACT_TOOL=$<TARGET_FILE:umicom-source-contracts>"
             "-DUMICOM_HEADER_ROOTS=${UMICOM_HEADER_ROOT_ARGUMENT}"
             "-DUMICOM_HEADER_OWNER=${owner}"
             -P "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/UmicomPublicHeaderAudit.cmake")
@@ -67,9 +73,11 @@ function(umicom_register_source_comment_governance_test test_name owner)
             "${test_name} requires at least one implementation directory.")
     endif()
     string(JOIN "|" UMICOM_SOURCE_ROOT_ARGUMENT ${UMICOM_SOURCE_ROOTS})
+    umicom_enable_source_contracts()
     add_test(
         NAME "${test_name}"
         COMMAND "${CMAKE_COMMAND}"
+            "-DUMICOM_SOURCE_CONTRACT_TOOL=$<TARGET_FILE:umicom-source-contracts>"
             "-DUMICOM_SOURCE_ROOTS=${UMICOM_SOURCE_ROOT_ARGUMENT}"
             "-DUMICOM_SOURCE_OWNER=${owner}"
             -P "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/UmicomSourceCommentAudit.cmake")

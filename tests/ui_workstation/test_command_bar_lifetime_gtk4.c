@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/ui_workstation/test_command_bar_lifetime_gtk4.c
- * Purpose: Verify search dispatch survives model replacement and owner teardown.
- * Author: Sammy Hegab, Umicom Foundation
- * Licence: MIT
+ * PURPOSE: Verify search dispatch survives model replacement and owner teardown.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/workstation/command_bar.h"
 

@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/ui_workstation/test_product_startup_lifetime_gtk4.c
- * Purpose: Check startup cancellation without constructing or presenting products.
- * Author: Sammy Hegab, Umicom Foundation
- * Licence: MIT
+ * PURPOSE: Check startup cancellation without constructing or presenting products.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 /* Compile the production private callbacks into this fixture translation unit.
  * Rename only its public runner: the fixture never calls activation, completion

@@ -3,7 +3,7 @@
  * File: include/umicom/ui/workspace_library_checkpoint.h
  * PURPOSE: Explicit ordered named-layout archives through the existing Data
  * Server chunk store, separate from the active-layout checkpoint namespace.
- * AUTHOR: Sammy Hegab, Umicom Foundation
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_WORKSPACE_LIBRARY_CHECKPOINT_H

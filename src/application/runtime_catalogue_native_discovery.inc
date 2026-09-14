@@ -2,7 +2,7 @@
  * Umicom Framework
  * File: src/application/runtime_catalogue_native_discovery.inc
  * PURPOSE: Transactional native presence reconciliation in the existing owner.
- * AUTHOR: Sammy Hegab, Umicom Foundation
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include <errno.h>

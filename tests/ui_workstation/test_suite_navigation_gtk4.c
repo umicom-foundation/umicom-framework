@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/ui_workstation/test_suite_navigation_gtk4.c
- * Purpose: Check normal tool navigation and named-layout search in shared clients.
- * Author: Sammy Hegab, Umicom Foundation
- * Licence: MIT
+ * PURPOSE: Check normal tool navigation and named-layout search in shared clients.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/suite_layout/gtk4_workstation.h"
 #include "umicom/application/suite_layout/suite_layout.h"

@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/workstation/workspace_content_gtk4.inc
- * Purpose: Preserve live provider widgets while workspace wrappers are rebuilt.
- * Author: Sammy Hegab, Umicom Foundation
- * Licence: MIT
+ * PURPOSE: Preserve live provider widgets while workspace wrappers are rebuilt.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 
 /* The mount is a disposable, strongly held box. The body is the provider's

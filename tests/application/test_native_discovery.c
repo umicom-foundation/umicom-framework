@@ -3,7 +3,7 @@
  * File: tests/application/test_native_discovery.c
  * PURPOSE: Verify atomic trusted GUI discovery and launch-time revalidation
  * with injected evidence only: no filesystem writes or child processes.
- * AUTHOR: Sammy Hegab, Umicom Foundation
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/native_discovery.h"

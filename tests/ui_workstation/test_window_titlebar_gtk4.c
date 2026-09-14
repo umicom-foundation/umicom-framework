@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/ui_workstation/test_window_titlebar_gtk4.c
- * Purpose: Check topmost canonical identity and native titlebar ownership.
- * Author: Sammy Hegab, Umicom Foundation
- * Licence: MIT
+ * PURPOSE: Check topmost canonical identity and native titlebar ownership.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/workstation/shell_header.h"
 #include "umicom/ui/appearance_catalogue.h"
