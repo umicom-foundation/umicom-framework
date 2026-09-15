@@ -37,7 +37,21 @@ void umi_editor_document_registry_destroy(UmiEditorDocumentRegistry*r){free(r);}
  * Provide the editor document registry upsert operation used by this module and its client
  * applications.
  */
-UmiStatus umi_editor_document_registry_upsert(UmiEditorDocumentRegistry*r,const UmiEditorDocumentSnapshot*item){size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||item==NULL||item->id[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;i=find_index(r,item->id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i==SIZE_MAX){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r->count>=UMI_EDITOR_DOCUMENT_CAPACITY)return UMI_STATUS_CAPACITY_EXCEEDED;i=r->count++;}r->items[i]=*item;r->items[i].struct_size=(uint32_t)sizeof(UmiEditorDocumentSnapshot);r->items[i].api_version=1U;r->items[i].revision=++r->revision;return UMI_STATUS_OK;}
+UmiStatus umi_editor_document_registry_upsert(UmiEditorDocumentRegistry*r,const UmiEditorDocumentSnapshot*item){size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||item==NULL||item->id[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;
+    /*
+     * These are fixed-capacity fields, not trusted C strings. Check each whole
+     * field before find_index can compare the identifier or any registry state
+     * is changed. Empty optional metadata remains valid; unterminated metadata
+     * does not. A rejected replacement leaves the old snapshot and revision
+     * untouched, exactly like a rejected insertion leaves the count unchanged.
+     */
+    if (memchr(item->id, '\0', sizeof(item->id)) == NULL ||
+        memchr(item->uri, '\0', sizeof(item->uri)) == NULL ||
+        memchr(item->language_id, '\0', sizeof(item->language_id)) == NULL ||
+        memchr(item->title, '\0', sizeof(item->title)) == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    i=find_index(r,item->id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i==SIZE_MAX){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r->count>=UMI_EDITOR_DOCUMENT_CAPACITY)return UMI_STATUS_CAPACITY_EXCEEDED;i=r->count++;}r->items[i]=*item;r->items[i].struct_size=(uint32_t)sizeof(UmiEditorDocumentSnapshot);r->items[i].api_version=1U;r->items[i].revision=++r->revision;return UMI_STATUS_OK;}
 /*
  * Remove editor document registry while keeping the remaining records in a valid and
  * discoverable state.

@@ -467,3 +467,7 @@ umicom_add_teacher_test(
 endif()
 
 message(STATUS "Umicom AI Teacher curriculum, assessment and adaptive learning platform enabled")
+
+
+# Add published lessons and optional exercises without another teacher runtime.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomLearningWorkshop.cmake")

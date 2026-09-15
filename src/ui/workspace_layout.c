@@ -28,16 +28,39 @@ static bool rectangle_valid(double x,double y,double width,double height) { retu
  */
 static UmiStatus copy_optional_text(char *destination,size_t capacity,const char *source)
 {
-    int written;
+    size_t length = 0U;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
     if (destination == NULL || capacity == 0U || source == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
-    written = snprintf(destination,capacity,"%s",source);
-    return written < 0 || (size_t)written >= capacity
-        ? UMI_STATUS_CAPACITY_EXCEEDED : UMI_STATUS_OK;
+    /* Measure before writing: a rejected value must not truncate live state.
+     * The bounded scan also rejects a full fixed field with no terminator.
+     * memmove permits callers to reuse the destination or one of its suffixes. */
+    while (length < capacity && source[length] != '\0') ++length;
+    if (length == capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+    (void)memmove(destination, source, length + 1U);
+    return UMI_STATUS_OK;
+}
+
+/* Group and stack describe the same legacy tab association. Stage once before
+ * publishing either field, including when the argument aliases either field. */
+static UmiStatus CopyStackText(UmiUiWorkspaceWindow *window, const char *source)
+{
+    char staged[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    size_t capacity = sizeof(window->group_id) < sizeof(window->stack_id)
+        ? sizeof(window->group_id) : sizeof(window->stack_id);
+    size_t length;
+    UmiStatus status;
+
+    if (capacity > sizeof(staged)) capacity = sizeof(staged);
+    status = copy_optional_text(staged, capacity, source);
+    if (status != UMI_STATUS_OK) return status;
+    length = strlen(staged) + 1U;
+    (void)memmove(window->group_id, staged, length);
+    (void)memmove(window->stack_id, staged, length);
+    return UMI_STATUS_OK;
 }
 /*
  * Initialise ui workspace layout from caller-provided values so later operations receive a
@@ -45,16 +68,23 @@ static UmiStatus copy_optional_text(char *destination,size_t capacity,const char
  */
 UmiStatus umi_ui_workspace_layout_init(UmiUiWorkspaceLayout *layout,const char *layout_id,const char *name)
 {
-    int first; int second;
+    char layoutId[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    char layoutName[UMI_UI_WORKSPACE_LAYOUT_NAME_CAPACITY];
+    UmiStatus first; UmiStatus second;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
     if (layout == NULL || layout_id == NULL || name == NULL || layout_id[0] == '\0' || name[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
-    (void)memset(layout,0,sizeof(*layout));
-    first = snprintf(layout->layout_id,sizeof(layout->layout_id),"%s",layout_id); second = snprintf(layout->name,sizeof(layout->name),"%s",name);
+    /* Inputs may belong to this layout. Stage them before clearing any state. */
+    first = copy_optional_text(layoutId, sizeof(layoutId), layout_id);
+    second = copy_optional_text(layoutName, sizeof(layoutName), name);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (first < 0 || second < 0 || (size_t)first >= sizeof(layout->layout_id) || (size_t)second >= sizeof(layout->name)) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (first != UMI_STATUS_OK || second != UMI_STATUS_OK)
+        return first != UMI_STATUS_OK ? first : second;
+    (void)memset(layout,0,sizeof(*layout));
+    (void)memcpy(layout->layout_id, layoutId, strlen(layoutId) + 1U);
+    (void)memcpy(layout->name, layoutName, strlen(layoutName) + 1U);
     layout->locked = true; layout->revision = 1U; return UMI_STATUS_OK;
 }
 /*
@@ -225,7 +255,7 @@ UmiStatus umi_ui_workspace_layout_set_group(
     const char *group_id)
 {
     UmiUiWorkspaceWindow *window;
-    int written;
+    UmiStatus written;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -242,15 +272,11 @@ UmiStatus umi_ui_workspace_layout_set_group(
      * used.
      */
     if (window == NULL) return UMI_STATUS_NOT_FOUND;
-    written = snprintf(window->group_id, sizeof(window->group_id), "%s", group_id);
+    written = CopyStackText(window, group_id);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (written < 0 || (size_t)written >= sizeof(window->group_id))
-        return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (written != UMI_STATUS_OK) return written;
     /* Keep the explicit stack in step with the legacy field.  New code reads
      * stack_id; old saved layouts and callers can continue using group_id. */
-    if (copy_optional_text(window->stack_id, sizeof(window->stack_id),
-                           group_id) != UMI_STATUS_OK)
-        return UMI_STATUS_CAPACITY_EXCEEDED;
     layout->revision += 1U;
     return UMI_STATUS_OK;
 }
@@ -312,13 +338,8 @@ UmiStatus umi_ui_workspace_layout_set_stack(
      * used.
      */
     if (window == NULL) return UMI_STATUS_NOT_FOUND;
-    status = copy_optional_text(window->stack_id, sizeof(window->stack_id),
-                                stack_id);
+    status = CopyStackText(window, stack_id);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status == UMI_STATUS_OK) {
-        status = copy_optional_text(window->group_id, sizeof(window->group_id),
-                                    stack_id);
-    }
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) layout->revision += 1U;
     return status;
@@ -394,7 +415,7 @@ UmiStatus umi_ui_workspace_layout_rename(
     UmiUiWorkspaceLayout *layout,
     const char *name)
 {
-    int written;
+    UmiStatus written;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -403,10 +424,9 @@ UmiStatus umi_ui_workspace_layout_rename(
         return UMI_STATUS_INVALID_ARGUMENT;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
-    written = snprintf(layout->name, sizeof(layout->name), "%s", name);
+    written = copy_optional_text(layout->name, sizeof(layout->name), name);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (written < 0 || (size_t)written >= sizeof(layout->name))
-        return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (written != UMI_STATUS_OK) return written;
     layout->revision += 1U;
     return UMI_STATUS_OK;
 }
@@ -477,7 +497,9 @@ UmiStatus umi_ui_workspace_layout_validate(const UmiUiWorkspaceLayout *layout,ch
  */
 UmiStatus umi_ui_workspace_layout_clone(const UmiUiWorkspaceLayout *source,const char *layout_id,const char *name,UmiUiWorkspaceLayout *out_layout)
 {
-    int first; int second;
+    char layoutId[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    char layoutName[UMI_UI_WORKSPACE_LAYOUT_NAME_CAPACITY];
+    UmiStatus first; UmiStatus second;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -486,8 +508,15 @@ UmiStatus umi_ui_workspace_layout_clone(const UmiUiWorkspaceLayout *source,const
     /* Do not clone malformed state into another object where it could fail later. */
     if (source->window_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS)
         return UMI_STATUS_INVALID_STATE;
-    *out_layout = *source; first = snprintf(out_layout->layout_id,sizeof(out_layout->layout_id),"%s",layout_id); second = snprintf(out_layout->name,sizeof(out_layout->name),"%s",name);
+    /* Clone into the destination only after both replacement fields fit.
+     * Capture arguments first: they may refer to source or destination fields. */
+    first = copy_optional_text(layoutId, sizeof(layoutId), layout_id);
+    second = copy_optional_text(layoutName, sizeof(layoutName), name);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (first < 0 || second < 0 || (size_t)first >= sizeof(out_layout->layout_id) || (size_t)second >= sizeof(out_layout->name)) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (first != UMI_STATUS_OK || second != UMI_STATUS_OK)
+        return first != UMI_STATUS_OK ? first : second;
+    (void)memmove(out_layout, source, sizeof(*out_layout));
+    (void)memcpy(out_layout->layout_id, layoutId, strlen(layoutId) + 1U);
+    (void)memcpy(out_layout->name, layoutName, strlen(layoutName) + 1U);
     out_layout->revision = 1U; return UMI_STATUS_OK;
 }

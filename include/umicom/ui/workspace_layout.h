@@ -53,6 +53,17 @@ typedef struct UmiUiWorkspaceWindow {
  */
 typedef struct UmiUiWorkspaceLayout { char layout_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY]; char name[UMI_UI_WORKSPACE_LAYOUT_NAME_CAPACITY]; UmiUiWorkspaceWindow windows[UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS]; size_t window_count; bool locked; uint64_t revision; } UmiUiWorkspaceLayout;
 /**
+ * Text-mutation contract:
+ * init, clone, rename, set_group, set_stack, set_placement and set_context_group
+ * leave their destination byte-for-byte unchanged when an error is returned.
+ * Replacement text can alias a destination field (including an interior suffix)
+ * provided it is readable through its terminator or the field capacity.
+ * ID and name limits count UTF-8 bytes, not characters. Text is never truncated.
+ * Successful init still clears the previous layout; successful clone still
+ * resets its revision to one. Existing lock and revision policies are retained.
+ * This is single-owner failure atomicity, not concurrent/thread atomicity.
+ */
+/**
  * Initialise ui workspace layout from caller-provided values so later operations receive a
  * known state.
  */

@@ -18,12 +18,17 @@
 #include <limits.h>
 #include <string.h>
 
+/* Lesson identity is persistent state. Keep the established identifiers even
+ * where the public title now teaches the main-only contribution workflow.
+ * resource_path remains relative to the Applications source root, as consumed
+ * by the existing Studio documentation surface. Standalone reading is through
+ * docs/learning/index.html in Framework or the installed learning directory. */
 static const UmiTeacherFoundationsLesson FOUNDATIONS_LESSONS[] = {
     {
         "foundations.welcome", "Welcome to building software",
         "Learn what a program, source file, compiler, repository and application are.",
         "Match five everyday explanations to the correct software words.",
-        "docs/learning/01-welcome.md", UMI_TEACHER_FOUNDATIONS_ORIENTATION,
+        "framework/docs/learning/welcome.html", UMI_TEACHER_FOUNDATIONS_ORIENTATION,
         UMI_TEACHER_LANGUAGE_GENERAL, UMI_TEACHER_LEVEL_FOUNDATION,
         1U, 20U, 70U, 0, 0, 0
     },
@@ -31,7 +36,7 @@ static const UmiTeacherFoundationsLesson FOUNDATIONS_LESSONS[] = {
         "foundations.files", "Folders, files and safe paths",
         "Create a practice folder, recognise a file extension and use an absolute path.",
         "Create a folder named umicom-practice and explain where it lives.",
-        "docs/learning/02-files-and-folders.md", UMI_TEACHER_FOUNDATIONS_ORIENTATION,
+        "framework/docs/learning/files-and-folders.html", UMI_TEACHER_FOUNDATIONS_ORIENTATION,
         UMI_TEACHER_LANGUAGE_GENERAL, UMI_TEACHER_LEVEL_FOUNDATION,
         2U, 25U, 70U, 0, 0, 0
     },
@@ -39,15 +44,15 @@ static const UmiTeacherFoundationsLesson FOUNDATIONS_LESSONS[] = {
         "foundations.terminal", "Your first terminal commands",
         "Open PowerShell or a Linux terminal, change folder and list its contents.",
         "Move into the practice folder, list it, then return to its parent.",
-        "docs/learning/03-terminal.md", UMI_TEACHER_FOUNDATIONS_TOOLS,
+        "framework/docs/learning/terminal.html", UMI_TEACHER_FOUNDATIONS_TOOLS,
         UMI_TEACHER_LANGUAGE_GENERAL, UMI_TEACHER_LEVEL_FOUNDATION,
         3U, 30U, 70U, 0, 0, 0
     },
     {
         "foundations.toolchain", "Check the development tools",
-        "Use the Umicom bootstrap doctor and understand each OK or MISSING result.",
-        "Run the doctor action and write down what Git, CMake, Ninja and GCC do.",
-        "docs/learning/04-development-tools.md", UMI_TEACHER_FOUNDATIONS_TOOLS,
+        "Check a C compiler, Git, CMake and Ninja before creating a build.",
+        "Run each version command and identify the tool that reports a missing program.",
+        "framework/docs/learning/development-tools.html", UMI_TEACHER_FOUNDATIONS_TOOLS,
         UMI_TEACHER_LANGUAGE_GENERAL, UMI_TEACHER_LEVEL_FOUNDATION,
         4U, 35U, 75U, 0, 0, 0
     },
@@ -55,7 +60,7 @@ static const UmiTeacherFoundationsLesson FOUNDATIONS_LESSONS[] = {
         "foundations.c-hello", "A tiny C program",
         "Read main, include a header, print a message and return a success code.",
         "Create, compile and run a program that prints Hello from Umicom.",
-        "framework/docs/learning/c-language-and-safety.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        "framework/docs/learning/first-c-program.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
         UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_FOUNDATION,
         5U, 45U, 75U, 1, 0, 0
     },
@@ -63,7 +68,7 @@ static const UmiTeacherFoundationsLesson FOUNDATIONS_LESSONS[] = {
         "foundations.c-data", "Names, values and decisions in C",
         "Use meaningful variables, basic data types, if statements and loops.",
         "Write a loop that labels scores as ready or needs more practice.",
-        "framework/docs/learning/c-language-and-safety.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        "framework/docs/learning/values-and-decisions.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
         UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
         6U, 60U, 75U, 1, 0, 0
     },
@@ -71,7 +76,7 @@ static const UmiTeacherFoundationsLesson FOUNDATIONS_LESSONS[] = {
         "foundations.c-functions", "Functions and clear contracts",
         "Split work into small functions with inputs, outputs and useful names.",
         "Extract score validation into a function and test three inputs.",
-        "framework/docs/learning/c-language-and-safety.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        "framework/docs/learning/functions.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
         UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
         7U, 60U, 75U, 1, 0, 0
     },
@@ -79,7 +84,7 @@ static const UmiTeacherFoundationsLesson FOUNDATIONS_LESSONS[] = {
         "foundations.c-memory", "Pointers, arrays and memory safety",
         "Understand addresses, NULL, array bounds, ownership and cleanup.",
         "Find and repair three deliberately unsafe pointer examples.",
-        "framework/docs/learning/c-language-and-safety.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        "framework/docs/learning/arrays-and-pointers.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
         UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
         8U, 75U, 80U, 1, 0, 0
     },
@@ -87,7 +92,7 @@ static const UmiTeacherFoundationsLesson FOUNDATIONS_LESSONS[] = {
         "foundations.c-modules", "Headers, source files and tests",
         "Create a small public contract, keep implementation private and verify behavior.",
         "Build one header, one source file and one focused test without warnings.",
-        "framework/docs/learning/c-language-and-safety.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        "framework/docs/learning/headers-and-tests.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
         UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
         9U, 75U, 80U, 1, 0, 0
     },
@@ -95,57 +100,89 @@ static const UmiTeacherFoundationsLesson FOUNDATIONS_LESSONS[] = {
         "foundations.git", "Git without mystery",
         "Learn working tree, staging area, commit, branch, remote and push.",
         "Make a practice change, inspect it, stage it and create a local commit.",
-        "docs/learning/10-git-basics.md", UMI_TEACHER_FOUNDATIONS_TOOLS,
+        "framework/docs/learning/git-first-comment.html", UMI_TEACHER_FOUNDATIONS_TOOLS,
         UMI_TEACHER_LANGUAGE_GENERAL, UMI_TEACHER_LEVEL_BEGINNER,
         10U, 60U, 75U, 0, 1, 0
     },
     {
         "foundations.clone", "Clone Umicom and its submodules",
-        "Download the parent repository and understand why applications are pinned submodules.",
-        "Clone with the bootstrap script, then inspect the parent and Framework status.",
-        "docs/learning/11-clone-umicom.md", UMI_TEACHER_FOUNDATIONS_FRAMEWORK,
+        "Clone the suite and read the exact revisions recorded for Framework and the applications.",
+        "Clone with Git, initialise submodules and compare their recorded and checked-out revisions.",
+        "framework/docs/learning/clone-and-update.html", UMI_TEACHER_FOUNDATIONS_FRAMEWORK,
         UMI_TEACHER_LANGUAGE_GENERAL, UMI_TEACHER_LEVEL_BEGINNER,
         11U, 45U, 80U, 0, 1, 0
     },
     {
-        "foundations.framework", "How Umicom Framework fits together",
-        "Follow a reusable contract from public header through implementation, test and application use.",
-        "Trace one Studio panel back to its Framework-owned component contract.",
-        "docs/learning/12-framework-architecture.md", UMI_TEACHER_FOUNDATIONS_FRAMEWORK,
+        "foundations.cmake", "Build with CMake and Ninja",
+        "Separate source, configure, compile, test and install steps.",
+        "Build the lesson examples in a new build directory and run their tests.",
+        "framework/docs/learning/cmake.html", UMI_TEACHER_FOUNDATIONS_TOOLS,
         UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
-        12U, 75U, 80U, 1, 1, 0
+        12U, 60U, 80U, 1, 0, 0
     },
     {
-        "foundations.components", "Build applications like Lego",
-        "Compose panels, commands, layouts and services instead of copying product logic.",
-        "Sketch a small application from existing component recipe slots.",
-        "docs/learning/13-components-and-layouts.md", UMI_TEACHER_FOUNDATIONS_FRAMEWORK,
+        "foundations.framework", "How Umicom Framework fits together",
+        "Follow a public C contract through its implementation, tests and consuming application.",
+        "Find the shared window constructor and explain which repository owns it.",
+        "framework/docs/learning/framework-architecture.html", UMI_TEACHER_FOUNDATIONS_FRAMEWORK,
         UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
         13U, 75U, 80U, 1, 1, 0
     },
     {
-        "foundations.change", "Make one quality Framework change",
-        "Write a stable contract, implementation, comments, focused test and beginner documentation.",
-        "Implement a small additive component and pass its focused checks.",
-        "docs/learning/14-first-framework-change.md", UMI_TEACHER_FOUNDATIONS_CONTRIBUTION,
+        "foundations.gtk", "GTK widgets and events",
+        "Read the event loop, the widget tree and a button callback.",
+        "Trace a click from the signal connection to the displayed message.",
+        "framework/docs/learning/gtk-events.html", UMI_TEACHER_FOUNDATIONS_FRAMEWORK,
         UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
-        14U, 120U, 85U, 1, 1, 0
+        14U, 60U, 80U, 1, 0, 0
     },
     {
-        "foundations.branch", "Prepare a contribution branch",
-        "Create a short-lived branch, review the diff and write a meaningful commit.",
-        "Create feature/learning-practice and prepare one clean commit.",
-        "docs/learning/15-branches-and-commits.md", UMI_TEACHER_FOUNDATIONS_CONTRIBUTION,
-        UMI_TEACHER_LANGUAGE_GENERAL, UMI_TEACHER_LEVEL_BEGINNER,
-        15U, 45U, 80U, 0, 1, 1
+        "foundations.components", "Build a window with Framework components",
+        "Use Framework component specifications and GTK adapters to compose a working window.",
+        "Build the learning window, click its button, resize it and close it cleanly.",
+        "framework/docs/learning/framework-window.html", UMI_TEACHER_FOUNDATIONS_FRAMEWORK,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        15U, 75U, 80U, 1, 1, 0
     },
     {
-        "foundations.pull-request", "Open and improve a pull request",
-        "Fork, push, explain the change, request review and respond to feedback.",
-        "Open a practice pull request with purpose, evidence and test results.",
-        "docs/learning/16-pull-requests.md", UMI_TEACHER_FOUNDATIONS_CONTRIBUTION,
+        "foundations.change", "Make one quality Framework change",
+        "Make one small, reviewable change with a focused test and a clear explanation.",
+        "Change the learning window message without changing the shared component implementation.",
+        "framework/docs/learning/first-framework-change.html", UMI_TEACHER_FOUNDATIONS_CONTRIBUTION,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        16U, 120U, 85U, 1, 1, 0
+    },
+    {
+        "foundations.branch", "Work safely on main",
+        "Inspect the current branch, preserve detached work and make a local checkpoint.",
+        "Confirm main before editing; review the staged diff without discarding local work.",
+        "framework/docs/learning/working-on-main.html", UMI_TEACHER_FOUNDATIONS_CONTRIBUTION,
         UMI_TEACHER_LANGUAGE_GENERAL, UMI_TEACHER_LEVEL_BEGINNER,
-        16U, 60U, 85U, 0, 1, 1
+        17U, 45U, 80U, 0, 1, 0
+    },
+    {
+        "foundations.pull-request", "Publish a change and update Linux",
+        "Push a reviewed commit, record child revisions in the parent and update a second checkout.",
+        "Publish to a repository you own, then pull and test its recorded revisions in Linux.",
+        "framework/docs/learning/publish-and-pull.html", UMI_TEACHER_FOUNDATIONS_CONTRIBUTION,
+        UMI_TEACHER_LANGUAGE_GENERAL, UMI_TEACHER_LEVEL_BEGINNER,
+        18U, 60U, 85U, 0, 1, 1
+    },
+    {
+        "foundations.bits", "Bits, bytes and hexadecimal",
+        "Read small unsigned values in binary, decimal and hexadecimal.",
+        "Print the same value in three forms and explain its individual bits.",
+        "framework/docs/learning/bits-and-bytes.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_FOUNDATION,
+        19U, 45U, 75U, 1, 0, 0
+    },
+    {
+        "foundations.assembly", "Read and call Assembly",
+        "Compare C with compiler output and call a small architecture-specific function.",
+        "Build the C and Assembly comparison, then explain the argument and return registers.",
+        "framework/docs/learning/assembly.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_ASSEMBLY, UMI_TEACHER_LEVEL_BEGINNER,
+        20U, 90U, 80U, 1, 0, 0
     }
 };
 
