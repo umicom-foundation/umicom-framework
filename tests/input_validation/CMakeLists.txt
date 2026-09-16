@@ -1,6 +1,6 @@
 #-----------------------------------------------------------------------------
 # Umicom Framework
-# File: tests/studio_trader_contracts/CMakeLists.txt
+# File: tests/input_validation/CMakeLists.txt
 #
 # PURPOSE:
 #   Register the shared input-contract regressions in Applications, or compile
@@ -16,23 +16,30 @@
 #-----------------------------------------------------------------------------
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     cmake_minimum_required(VERSION 3.24)
-    project(UmicomStudioTraderContracts LANGUAGES C)
+    project(UmicomInputValidation LANGUAGES C)
     enable_testing()
-    set(UMICOM_STUDIO_TRADER_STANDALONE ON)
+    set(UMICOM_INPUT_VALIDATION_STANDALONE ON)
 else()
-    set(UMICOM_STUDIO_TRADER_STANDALONE OFF)
+    set(UMICOM_INPUT_VALIDATION_STANDALONE OFF)
+endif()
+
+# A ZIP overlay alone cannot remove the previous directory. Stop rather than
+# leaving two competing copies available to source discovery or future builds.
+if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/../studio_trader_contracts/CMakeLists.txt" OR
+   EXISTS "${CMAKE_CURRENT_LIST_DIR}/../studio_trader_contracts/test_input_validation.c")
+    message(FATAL_ERROR "Retired tests/studio_trader_contracts files remain. Perform the documented git mv migration before building tests/input_validation.")
 endif()
 
 # Avoid duplicate targets when a parent also registers this source directory.
-if(TARGET umicom-studio-trader-contract-tests)
+if(TARGET umicom-input-validation-tests)
     return()
 endif()
 
-add_executable(umicom-studio-trader-contract-tests test_input_validation.c)
-set_target_properties(umicom-studio-trader-contract-tests PROPERTIES
+add_executable(umicom-input-validation-tests test_input_validation.c)
+set_target_properties(umicom-input-validation-tests PROPERTIES
     C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
 
-if(UMICOM_STUDIO_TRADER_STANDALONE)
+if(UMICOM_INPUT_VALIDATION_STANDALONE)
     # An explicit override is useful for running the same tests on an untouched
     # baseline checkout. Never select a replacement implementation or mock ABI.
     set(UMICOM_CONTRACT_FRAMEWORK_ROOT "${CMAKE_CURRENT_LIST_DIR}/../.."
@@ -58,18 +65,18 @@ if(UMICOM_STUDIO_TRADER_STANDALONE)
             message(FATAL_ERROR "Missing production contract source: ${source}")
         endif()
     endforeach()
-    add_library(umicom-studio-trader-contract-subjects STATIC
+    add_library(umicom-input-validation-subjects STATIC
         ${UMICOM_CONTRACT_SUBJECT_SOURCES})
-    set_target_properties(umicom-studio-trader-contract-subjects PROPERTIES
+    set_target_properties(umicom-input-validation-subjects PROPERTIES
         C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
-    target_include_directories(umicom-studio-trader-contract-subjects PUBLIC
+    target_include_directories(umicom-input-validation-subjects PUBLIC
         "${UMICOM_CONTRACT_FRAMEWORK_ROOT}/include")
-    target_link_libraries(umicom-studio-trader-contract-tests PRIVATE
-        umicom-studio-trader-contract-subjects)
+    target_link_libraries(umicom-input-validation-tests PRIVATE
+        umicom-input-validation-subjects)
 
     option(UMICOM_CONTRACT_SANITIZERS "Use AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
-    foreach(target IN ITEMS umicom-studio-trader-contract-subjects
-                            umicom-studio-trader-contract-tests)
+    foreach(target IN ITEMS umicom-input-validation-subjects
+                            umicom-input-validation-tests)
         if(CMAKE_C_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
             target_compile_options(${target} PRIVATE
                 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror)
@@ -85,7 +92,7 @@ if(UMICOM_STUDIO_TRADER_STANDALONE)
         if(NOT CMAKE_C_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
             message(FATAL_ERROR "This sanitizer configuration requires GCC or Clang")
         endif()
-        target_link_options(umicom-studio-trader-contract-tests PRIVATE
+        target_link_options(umicom-input-validation-tests PRIVATE
             -fsanitize=address,undefined)
     endif()
 else()
@@ -97,20 +104,20 @@ else()
             message(FATAL_ERROR "Shared contract tests require ${dependency}")
         endif()
     endforeach()
-    target_link_libraries(umicom-studio-trader-contract-tests PRIVATE
+    target_link_libraries(umicom-input-validation-tests PRIVATE
         Umicom::editor Umicom::developer Umicom::trading Umicom::finance)
     if(COMMAND umicom_apply_warnings)
-        umicom_apply_warnings(umicom-studio-trader-contract-tests)
+        umicom_apply_warnings(umicom-input-validation-tests)
     endif()
     if(COMMAND umicom_apply_sanitizers)
-        umicom_apply_sanitizers(umicom-studio-trader-contract-tests)
+        umicom_apply_sanitizers(umicom-input-validation-tests)
     endif()
     if(COMMAND umicom_register_validation_target)
-        umicom_register_validation_target(umicom-studio-trader-contract-tests)
+        umicom_register_validation_target(umicom-input-validation-tests)
     endif()
 endif()
 
-set(UMICOM_STUDIO_TRADER_CONTRACT_GROUPS
+set(UMICOM_INPUT_VALIDATION_GROUPS
     editor_metadata_insert
     editor_rejected_replacement
     financial_identifier_bounds
@@ -125,9 +132,9 @@ set(UMICOM_STUDIO_TRADER_CONTRACT_GROUPS
     quote_arithmetic
     risk_input_validation
     risk_arithmetic)
-foreach(group IN LISTS UMICOM_STUDIO_TRADER_CONTRACT_GROUPS)
-    add_test(NAME "framework.studio_trader_contracts.${group}"
-        COMMAND umicom-studio-trader-contract-tests "${group}")
-    set_tests_properties("framework.studio_trader_contracts.${group}" PROPERTIES
+foreach(group IN LISTS UMICOM_INPUT_VALIDATION_GROUPS)
+    add_test(NAME "framework.input_validation.${group}"
+        COMMAND umicom-input-validation-tests "${group}")
+    set_tests_properties("framework.input_validation.${group}" PROPERTIES
         LABELS "framework;regression;contracts;input-validation" TIMEOUT 30)
 endforeach()

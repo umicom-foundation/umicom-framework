@@ -100,7 +100,7 @@ static const UmiTeacherFoundationsLesson FOUNDATIONS_LESSONS[] = {
         "foundations.git", "Git without mystery",
         "Learn working tree, staging area, commit, branch, remote and push.",
         "Make a practice change, inspect it, stage it and create a local commit.",
-        "framework/docs/learning/git-first-comment.html", UMI_TEACHER_FOUNDATIONS_TOOLS,
+        "framework/docs/learning/git-first-commit.html", UMI_TEACHER_FOUNDATIONS_TOOLS,
         UMI_TEACHER_LANGUAGE_GENERAL, UMI_TEACHER_LEVEL_BEGINNER,
         10U, 60U, 75U, 0, 1, 0
     },

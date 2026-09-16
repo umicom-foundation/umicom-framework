@@ -25,6 +25,12 @@ if(BUILD_TESTING)
         COMMAND umicom-teacher-foundations-resources-test "${UMICOM_LEARNING_ROOT}")
     set_tests_properties(framework.teacher.foundations.resources PROPERTIES
         LABELS "framework;learning;resources;regression")
+    foreach(check IN ITEMS markup links bounds)
+        add_test(NAME "framework.teacher.foundations.resources.${check}"
+            COMMAND umicom-teacher-foundations-resources-test --self-test "${check}")
+        set_tests_properties("framework.teacher.foundations.resources.${check}" PROPERTIES
+            LABELS "framework;learning;resources;regression;negative" TIMEOUT 30)
+    endforeach()
 endif()
 
 if(UMICOM_BUILD_LEARNING_EXAMPLES)

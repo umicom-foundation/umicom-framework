@@ -93,5 +93,17 @@ int main(void)
         umi_teacher_foundations_curriculum_find("missing.lesson") != NULL ||
         umi_teacher_foundations_curriculum_plan(NULL) != UMI_STATUS_INVALID_ARGUMENT)
         return EXIT_FAILURE;
+    /* Display/resource naming can evolve without resetting persisted IDs. */
+    const UmiTeacherFoundationsLesson *gitLesson =
+        umi_teacher_foundations_curriculum_find("foundations.git");
+    const UmiTeacherFoundationsLesson *mainLesson =
+        umi_teacher_foundations_curriculum_find("foundations.branch");
+    const UmiTeacherFoundationsLesson *publishLesson =
+        umi_teacher_foundations_curriculum_find("foundations.pull-request");
+    if (gitLesson == NULL || mainLesson == NULL || publishLesson == NULL ||
+        strcmp(gitLesson->resource_path, "framework/docs/learning/git-first-commit.html") != 0 ||
+        strcmp(mainLesson->title, "Work safely on main") != 0 ||
+        strcmp(publishLesson->title, "Publish a change and update Linux") != 0)
+        return EXIT_FAILURE;
     return EXIT_SUCCESS;
 }

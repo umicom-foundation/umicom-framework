@@ -18,7 +18,7 @@ Use C23 and Assembly for Umicom-owned executable work. CMake describes the build
 
 Compile console examples as separate small targets. Add boundary and failure cases where they demonstrate the contract. Keep checks active in Release builds. GUI examples must call actual supported Framework interfaces and distinguish compilation, execution and interaction evidence.
 
-Run the catalogue test and the resource test after changing a lesson. The resource test rejects a missing page, wrong lesson identity or incomplete HTML. Preserve the original C reference and other existing documentation. Check all links in the published reading copy.
+Run the catalogue test and the resource test after changing a lesson. The resource test rejects a missing page, wrong or duplicate lesson identity, mismatched title or heading, incomplete document envelope, duplicate local anchors and broken same-directory navigation. It reads actual tags rather than accepting an identity hidden in a comment or script. Preserve the original C reference and other existing documentation. Check all links in the published reading copy.
 
 ## What remains to develop
 
@@ -32,3 +32,32 @@ Run the catalogue test and the resource test after changing a lesson. The resour
 | Further architecture lessons | Add ARM64 and RISC-V runtime exercises without copying platform services | Native or explicitly emulated execution evidence per ABI |
 
 The supplied progress file is a manual record. Browser checklists do not update code, run tests or certify mastery. Keep private learner data outside the public repository.
+
+## Canonical naming and compatibility
+
+Use `git-first-commit.html` for the Git lesson. `git-first-comment.html` remains
+only as a small bookmark-compatibility page. Do not add that compatibility page
+to the lesson catalogue or give it a new progress identifier. The 20 catalogue
+IDs, order and exercises remain unchanged by the naming correction.
+
+`naming-and-ownership.html` is an additional reference for contributors, not a
+21st assessed lesson. The course index and architecture/change lessons link to
+it without changing any learner's sequence or progress.
+
+The resource test intentionally supports our authored lesson subset: quoted
+attributes, a plain-text title and h1 (with amp/lt/gt/quot/apos named entities),
+and filename-only local navigation with optional fragment IDs. It checks the 20 catalogue pages plus the course index, workshop guide, naming
+reference and compatibility page. It checks anchor and canonical links, not all
+image/CSS/script assets. HTTP, HTTPS and mailto links
+are classified as external and never fetched. Unsupported local URL forms,
+malformed inputs, oversized documents and embedded zero bytes fail qualification;
+they are not silently skipped. Resource parsing is a test, not a browser or a
+security sandbox. Keep the checkout trusted and do not use it to scan secrets.
+
+Run `framework.teacher.foundations.resources` and its `markup`, `links` and
+`bounds` checks. The same tests can be built without the full GUI dependency
+graph using `tests/release_qualification`. The independent naming, catalogue
+and resource checks keep their assertions and setup active in Release builds.
+A passing static resource check does not establish that Studio can resolve an
+installed resource from an unrelated working directory; that runtime work stays
+in the outstanding table above.

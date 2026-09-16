@@ -30,10 +30,20 @@ extern "C" {
 typedef enum UmiCodeGuardSourceNameIssue {
     UMI_CODEGUARD_SOURCE_NAME_OK = 0,
     UMI_CODEGUARD_SOURCE_NAME_VERSION_LABEL,
-    UMI_CODEGUARD_SOURCE_NAME_BATCH_LABEL
+    UMI_CODEGUARD_SOURCE_NAME_BATCH_LABEL,
+    /* Append values: established numeric values and public functions stay stable. */
+    UMI_CODEGUARD_SOURCE_NAME_CONSUMER_LABEL,
+    UMI_CODEGUARD_SOURCE_NAME_COPY_LABEL,
+    UMI_CODEGUARD_SOURCE_NAME_NON_PORTABLE
 } UmiCodeGuardSourceNameIssue;
 
 /* Classify one path without opening or changing the referenced file. */
+/* The final component is checked for version/batch labels, numbered download
+ * copies and ASCII Windows portability conflicts. The specifically retired
+ * studio_trader_contracts directory is also recognised. Product names in
+ * legitimate profiles, adapters, examples and integration tests are allowed.
+ * NULL/empty classification keeps the legacy no-finding behaviour; the audit
+ * entry point requires a nonempty path. Callers provide a valid C string. */
 UmiCodeGuardSourceNameIssue umi_codeguard_source_name_classify(
     const char *path);
 
@@ -42,6 +52,9 @@ const char *umi_codeguard_source_name_issue_text(
     UmiCodeGuardSourceNameIssue issue);
 
 /* Add a quality finding when a filename contains a version or batch label. */
+/* The same finding pipeline handles the additional naming rules above.
+ * An overlong finding path returns CAPACITY_EXCEEDED without adding truncated
+ * evidence. No source, directory, public API or saved identifier is renamed. */
 UmiStatus umi_codeguard_source_name_audit(const char *path,
                                           UmiCodeGuardResult *result);
 

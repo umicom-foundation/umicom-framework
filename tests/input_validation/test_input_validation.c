@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
- * File: tests/studio_trader_contracts/test_input_validation.c
+ * File: tests/input_validation/test_input_validation.c
  *
  * PURPOSE:
  *   Regress shared editor, learning, financial and trading input contracts
