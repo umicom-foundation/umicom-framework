@@ -146,10 +146,14 @@ UmiStatus umi_build_project_session_submit(UmiBuildProjectSession *session,
     status = umi_task_create(&task_config, &session->task);
     if (status != UMI_STATUS_OK) return status;
     session->profile = *profile;
+    if (phase == UMI_BUILD_PHASE_TEST || phase == UMI_BUILD_PHASE_INSTALL)
+        session->profile.build_target[0] = '\0';
     session->phase_count = 0U;
-    if (phase == UMI_BUILD_PHASE_BUILD || phase == UMI_BUILD_PHASE_RUN)
+    if (phase == UMI_BUILD_PHASE_BUILD || phase == UMI_BUILD_PHASE_RUN ||
+        phase == UMI_BUILD_PHASE_TEST || phase == UMI_BUILD_PHASE_INSTALL)
         session->phases[session->phase_count++] = UMI_BUILD_PHASE_CONFIGURE;
-    if (phase == UMI_BUILD_PHASE_RUN)
+    if (phase == UMI_BUILD_PHASE_RUN || phase == UMI_BUILD_PHASE_TEST ||
+        phase == UMI_BUILD_PHASE_INSTALL)
         session->phases[session->phase_count++] = UMI_BUILD_PHASE_BUILD;
     session->phases[session->phase_count++] = phase;
     umi_cancellation_token_reset(session->cancellation);

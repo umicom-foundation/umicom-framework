@@ -26,6 +26,11 @@ static UmiStatus ctest_command(const UmiBuildProfile *profile,
         return UMI_STATUS_NOT_IMPLEMENTED;
     }
     umi_build_command_init(out_command, "ctest");
+    /* An empty test tree is not a passed test run. */
+    if (!umi_build_command_add_argument(out_command, "--no-tests=error") ||
+        !umi_build_command_add_argument(out_command, "--build-config") ||
+        !umi_build_command_add_argument(out_command, profile->configuration))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
     if (profile->preset[0] != '\0') {
         if (!umi_build_command_add_argument(out_command, "--preset") ||
             !umi_build_command_add_argument(out_command, profile->preset) ||

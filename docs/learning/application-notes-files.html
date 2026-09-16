@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+
+<html lang="en-GB"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><meta content="foundations.application-notes-files" name="umicom-lesson-id"/><title>Save a note without overwriting someone else’s work | Umicom</title><style>
+:root{--ink:#182b3a;--muted:#516474;--line:#dbe4eb;--accent:#006f73;--paper:#fff;--code:#152635}*{box-sizing:border-box}body{margin:0;background:#f1f5f8;color:var(--ink);font:17px/1.7 system-ui,"Segoe UI",sans-serif}header,main,footer{max-width:1050px;margin:auto}header{padding:34px 40px 24px}header a{font-weight:650}main{background:var(--paper);padding:36px 56px 56px;border:1px solid var(--line);border-radius:14px;margin-bottom:28px}h1{font-size:clamp(30px,4vw,45px);line-height:1.15;margin:12px 0 22px}h2{font-size:25px;line-height:1.3;margin:38px 0 14px;color:#173f56}h3{font-size:20px;margin-top:27px}.lede{font-size:20px;color:#355264}.kicker{font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:var(--accent)}a{color:#006b82}p{margin:15px 0}code{font:0.88em/1.6 Consolas,"Liberation Mono",monospace;background:#edf3f6;padding:.12em .3em;border-radius:4px}pre{background:var(--code);color:#eff9ff;padding:22px;border-radius:9px;overflow:auto;font:14px/1.6 Consolas,monospace}pre code{background:none;color:inherit;padding:0;font:inherit}.note{background:#edf8f6;border-left:4px solid var(--accent);padding:16px 22px;margin:24px 0}.exercise{background:#fff7e6;border-left:4px solid #b78629;padding:16px 22px;margin-top:28px}table{border-collapse:collapse;width:100%;margin:22px 0;font-size:15px}td,th{text-align:left;padding:12px;border:1px solid var(--line);vertical-align:top}th{background:#edf4f8}details{border:1px solid var(--line);border-radius:8px;padding:14px;margin:18px 0}summary{cursor:pointer;font-weight:650}.platform{border-top:1px solid var(--line);padding-top:8px}.navigation{display:flex;justify-content:space-between;gap:20px;border-top:1px solid var(--line);padding-top:22px;margin-top:35px}footer{padding:0 40px 35px;color:var(--muted);font-size:14px}li{margin:.5em 0}@media(max-width:700px){main{padding:26px 22px;margin:0 10px 20px}header{padding:24px}table{display:block;overflow:auto}}@media print{body{background:white}main{border:0;padding:0}header{padding:0}.navigation{display:none}pre{white-space:pre-wrap;background:#f0f3f5;color:black}details{break-inside:auto}}
+p,li,h1,h2,h3,summary,.navigation{overflow-wrap:anywhere}pre{max-width:100%}pre code{overflow-wrap:normal;word-break:normal}</style></head><body><header><a href="index.html">Umicom Learning</a> · <a href="application-development.html">Build applications</a></header><main><div class="kicker">Umicom · application development</div><h1>Save a note without overwriting someone else’s work</h1><p>A note stored only in memory disappears when its process ends. Saving gives it a place on disk. We will use the Notes command-line program to write a file, then examine the difference between a new destination and a file that already belongs to someone else.</p><h2>Use a destination you can identify</h2><p>Create a practice directory outside the application source tree. On Windows, a suitable location is <code>C:\umicom\practice-notes</code>. On Linux, use <code>$HOME/umicom/practice-notes</code>. You must be able to say where the file will be written before executing the save.</p><p>An absolute path starts from a filesystem root. A relative path starts from the process’s current working directory. The Notes model resolves its requested destination to an absolute path before comparing it with the current document path.</p><h2>Run the Notes model</h2><p>Build <code>umicom-learning-notes-session</code> using the commands below. Without an argument, it edits a note in memory, undoes the latest change and prints the remaining text. With one path argument, it also asks the <code>notes.save</code> command to save the note.</p><pre><code>Umicom Notes: review the build.</code></pre><p>Use a new filename for the first run. The model refuses to overwrite an unrelated existing file. A successful return means the save operation succeeded; a failure prints the status and returns a nonzero process exit code.</p><h2>Follow the save boundary</h2><p>The command handler resolves the path and reads the current document state. If this is the same file already opened by the document, it uses the coordinator’s normal Save operation. Otherwise it checks that the destination is new and uses Save As.</p><p>The coordinator owns the relationship between the working copy, its disk identity and its view. Its saver performs the file-writing work. The command-line frontend does not independently reopen the file and write bytes around the coordinator. That keeps the same conflict rules available to the graphical application.</p><h2>Recognise an external change</h2><p>Suppose another editor changes a note after we loaded it. Saving our older copy could erase that person’s work. The Framework coordinator compares the file with the version it originally loaded and reports a conflict rather than silently accepting the overwrite.</p><p>The included Notes model test deliberately creates this situation. It writes an external change, attempts to save a local draft and then confirms that the external text is still present. This is a behaviour worth testing, not just describing in a comment.</p><h2>A mistake to avoid</h2><pre><code>/* Do not bypass the document owner to make an error disappear. */
+FILE *file = fopen(path, "w");
+/* Opening this way can truncate an existing file immediately. */</code></pre><p>The problem is not that file APIs are forbidden. It is that this call bypasses the application’s chosen ownership and conflict policy. Low-level I/O belongs inside the service responsible for applying those rules.</p><h2>Practise the failure path</h2><p>Save a note to a new file and read it back with your usual editor. Run a fresh Notes session against the same destination. Explain why it refuses that destination rather than treating it as the previous session’s owned document.</p><h2>Build and run the supplied example</h2><p>Configure the learning targets once using the <a href="application-development.html#setup">course setup</a>. Run the commands below one at a time. Stop when a command reports a failure; do not continue to run an older executable.</p><div class="platform"><h3>Windows · PowerShell</h3><pre><code>Set-Location "C:\umicom\Umicom-Applications"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake --build --preset windows-ucrt64-all-debug --target umicom-learning-notes-session --parallel 2
+&amp; ".\build\windows-ucrt64-all-debug\bin\umicom-learning-notes-session.exe"</code></pre></div><div class="platform"><h3>Linux · terminal</h3><pre><code>cd "$HOME/umicom/Umicom-Applications"
+cmake --build --preset linux-gcc-all-headless-debug --target umicom-learning-notes-session --parallel 2
+./build/linux-gcc-all-headless-debug/bin/umicom-learning-notes-session</code></pre></div><h2>Source to study and edit</h2><p>These are the supplied files for this lesson. Open them in Studio to follow the code. The Notes model is shared by the terminal example and the window; keep one implementation while trying different frontends.</p><details open=""><summary>notes_session.c</summary><p><code>framework/examples/learning/projects/notes_session.c</code></p><pre><code>/*-----------------------------------------------------------------------------
+ * Umicom Framework — application development lessons
+ * File: examples/learning/projects/notes_session.c
+ * PURPOSE: Run the Notes model from a terminal using the same commands as its window.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+#include "notes_model.h"
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int main(int argc, char **argv)
+{
+    UmiLearningNotes *notes = NULL;
+    char *text = NULL;
+    UmiStatus status = UmiLearningNotesCreate(&amp;notes);
+    if (status == UMI_STATUS_OK) status = UmiLearningNotesSetText(notes, "Umicom Notes: review the build.\n");
+    if (status == UMI_STATUS_OK) status = UmiLearningNotesSetText(notes, "Umicom Notes: review the build and tests.\n");
+    if (status == UMI_STATUS_OK) status = UmiLearningNotesExecute(notes, "notes.undo", NULL);
+    if (status == UMI_STATUS_OK) status = UmiLearningNotesCopyText(notes, &amp;text);
+    if (status == UMI_STATUS_OK) fputs(text, stdout);
+    umi_document_store_free_text(text);
+    if (status == UMI_STATUS_OK &amp;&amp; argc == 2) status = UmiLearningNotesExecute(notes, "notes.save", argv[1]);
+    if (status != UMI_STATUS_OK) fprintf(stderr, "Notes operation failed: %s\n", umi_status_text(status));
+    UmiLearningNotesDestroy(notes);
+    return status == UMI_STATUS_OK ? EXIT_SUCCESS : EXIT_FAILURE;
+}</code></pre></details><details><summary>notes_model.c</summary><p><code>framework/examples/learning/projects/notes_model.c</code></p><pre><code>/*-----------------------------------------------------------------------------
+ * Umicom Framework — application development lessons
+ * File: examples/learning/projects/notes_model.c
+ * PURPOSE: Reuse Framework documents and commands; keep GTK out of the model.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+#include "notes_model.h"
+#include "umicom/base/text.h"
+#include "umicom/platform/filesystem.h"
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+struct UmiLearningNotes {
+    UmiCommandRegistry *commands;
+    UmiUiWorkbench *workbench;
+    UmiDocumentStore *store;
+    UmiDocumentCoordinator *documents;
+};
+
+/* A save uses the coordinator's atomic writer and external-change checks. */
+static UmiStatus SaveNote(void *context, const char *argument, char *message, size_t capacity)
+{
+    UmiLearningNotes *notes = context;
+    UmiDocumentWorkingCopySnapshot state;
+    char current[UMI_PATH_CAPACITY], destination[UMI_PATH_CAPACITY];
+    UmiStatus status;
+    (void)message; (void)capacity;
+    if (argument == NULL || argument[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_fs_current_directory(current, sizeof(current));
+    if (status == UMI_STATUS_OK)
+        status = umi_path_absolute(argument, current, destination, sizeof(destination));
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_document_coordinator_active_snapshot(notes-&gt;documents, &amp;state);
+    if (status != UMI_STATUS_OK) return status;
+    if (state.has_path &amp;&amp; umi_path_equal(state.path, destination))
+        return umi_document_coordinator_save_active(notes-&gt;documents);
+    /* Do not overwrite an unrelated existing note in a beginner exercise. */
+    if (umi_fs_exists(destination)) return UMI_STATUS_ALREADY_EXISTS;
+    return umi_document_coordinator_save_active_as(notes-&gt;documents, destination);
+}
+
+static UmiStatus NewNote(void *context, const char *argument, char *message, size_t capacity)
+{
+    UmiLearningNotes *notes = context;
+    UmiDocumentWorkingCopySnapshot state;
+    UmiStatus status = umi_document_coordinator_active_snapshot(notes-&gt;documents, &amp;state);
+    (void)argument; (void)message; (void)capacity;
+    if (status == UMI_STATUS_OK) {
+        if (state.dirty &amp;&amp; (state.has_path || state.text_length != 0U)) return UMI_STATUS_INVALID_STATE;
+        status = umi_document_coordinator_close_active(notes-&gt;documents, 1);
+        if (status != UMI_STATUS_OK) return status;
+    } else if (status != UMI_STATUS_NOT_FOUND) return status;
+    return umi_document_coordinator_new(notes-&gt;documents, "UmicomNote.txt", NULL, 0U);
+}
+
+static UmiStatus UndoNote(void *context, const char *argument, char *message, size_t capacity)
+{
+    UmiLearningNotes *notes = context;
+    (void)argument; (void)message; (void)capacity;
+    return umi_document_coordinator_undo(notes-&gt;documents);
+}
+
+UmiStatus UmiLearningNotesCreate(UmiLearningNotes **outNotes)
+{
+    UmiLearningNotes *notes;
+    UmiStatus status;
+    if (outNotes == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outNotes = NULL;
+    notes = calloc(1U, sizeof(*notes));
+    if (notes == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = umi_command_registry_create(&amp;notes-&gt;commands);
+    if (status == UMI_STATUS_OK)
+        status = umi_ui_workbench_create("learning.notes", notes-&gt;commands, &amp;notes-&gt;workbench);
+    if (status == UMI_STATUS_OK) status = umi_document_store_create(&amp;notes-&gt;store);
+    if (status == UMI_STATUS_OK)
+        status = umi_document_coordinator_create(notes-&gt;store, notes-&gt;workbench, NULL, &amp;notes-&gt;documents);
+    UmiCommandDescriptor commands[] = {
+        {sizeof(UmiCommandDescriptor), "notes.new", "New Note", "File", "Create an empty note without discarding changes.", "", UMI_COMMAND_MUTATES_STATE, NewNote, NULL, notes},
+        {sizeof(UmiCommandDescriptor), "notes.save", "Save Note", "File", "Save through the Framework document coordinator.", "", UMI_COMMAND_MUTATES_STATE, SaveNote, NULL, notes},
+        {sizeof(UmiCommandDescriptor), "notes.undo", "Undo", "Edit", "Restore the previous document text.", "", UMI_COMMAND_MUTATES_STATE, UndoNote, NULL, notes}
+    };
+    for (size_t index = 0U; status == UMI_STATUS_OK &amp;&amp; index &lt; sizeof(commands)/sizeof(commands[0]); ++index)
+        status = umi_command_registry_register(notes-&gt;commands, &amp;commands[index]);
+    if (status == UMI_STATUS_OK) status = NewNote(notes, NULL, NULL, 0U);
+    if (status != UMI_STATUS_OK) { UmiLearningNotesDestroy(notes); return status; }
+    *outNotes = notes;
+    return UMI_STATUS_OK;
+}
+
+void UmiLearningNotesDestroy(UmiLearningNotes *notes)
+{
+    if (notes == NULL) return;
+    umi_document_coordinator_destroy(notes-&gt;documents);
+    umi_document_store_destroy(notes-&gt;store);
+    umi_ui_workbench_destroy(notes-&gt;workbench);
+    umi_command_registry_destroy(notes-&gt;commands);
+    free(notes);
+}
+
+UmiStatus UmiLearningNotesSetText(UmiLearningNotes *notes, const char *text)
+{
+    UmiDocumentWorkingCopySnapshot state;
+    UmiUiDocumentViewSnapshot *view;
+    UmiStatus status;
+    if (notes == NULL || text == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (strlen(text) &gt;= UMI_UI_DOCUMENT_CONTENT_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = UmiLearningNotesSnapshot(notes, &amp;state);
+    if (status != UMI_STATUS_OK) return status;
+    view = calloc(1U, sizeof(*view));
+    if (view == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = umi_ui_document_view_model_find(umi_ui_workbench_documents(notes-&gt;workbench), state.view_id, view);
+    if (status == UMI_STATUS_OK) status = umi_text_copy(view-&gt;source_text, sizeof(view-&gt;source_text), text);
+    if (status == UMI_STATUS_OK) {
+        view-&gt;dirty = 1;
+        status = umi_ui_document_view_model_upsert(umi_ui_workbench_documents(notes-&gt;workbench), view);
+    }
+    if (status == UMI_STATUS_OK) status = umi_document_coordinator_sync_active(notes-&gt;documents);
+    free(view);
+    return status;
+}
+
+UmiStatus UmiLearningNotesCopyText(UmiLearningNotes *notes, char **outText)
+{
+    UmiDocumentWorkingCopySnapshot state;
+    if (notes == NULL || outText == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outText = NULL;
+    UmiStatus status = UmiLearningNotesSnapshot(notes, &amp;state);
+    return status == UMI_STATUS_OK ? umi_document_store_copy_text(notes-&gt;store, state.document_id, outText, NULL) : status;
+}
+
+UmiStatus UmiLearningNotesSnapshot(UmiLearningNotes *notes, UmiDocumentWorkingCopySnapshot *outState)
+{
+    return notes != NULL ? umi_document_coordinator_active_snapshot(notes-&gt;documents, outState) : UMI_STATUS_INVALID_ARGUMENT;
+}
+
+UmiStatus UmiLearningNotesExecute(UmiLearningNotes *notes, const char *command, const char *argument)
+{
+    return notes != NULL ? umi_command_registry_execute(notes-&gt;commands, command, argument, NULL, 0U) : UMI_STATUS_INVALID_ARGUMENT;
+}</code></pre></details><div class="exercise"><strong>Your practical task</strong><p>Save to a new path, attempt to reuse it from another session and inspect the rejection.</p></div><div class="navigation"><a href="application-notes-memory.html">Previous</a><a href="application-notes-commands.html">Continue</a></div></main><footer>Sammy Hegab · Umicom Foundation<br/>Practice source: Framework / examples / learning / projects</footer></body></html>
+

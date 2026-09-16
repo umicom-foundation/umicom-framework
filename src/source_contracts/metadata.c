@@ -70,11 +70,16 @@ int UmiSourceContractReadAttribution(const char *source, size_t length,
     if (end + 1U >= length) return 2;
     out->leading_comment = true;
     ScField field = FIELD_NONE;
+    size_t fieldIndent = 0U;
     for (size_t i = begin + 2U; i < end;) {
         size_t finish = i;
         while (finish < end && source[finish] != '\n' && source[finish] != '\r') ++finish;
         const char *a = source + i, *b = source + finish;
-        while (a < b && (isspace((unsigned char)*a) || *a == '*')) ++a;
+        size_t indent = 0U;
+        while (a < b && (isspace((unsigned char)*a) || *a == '*')) {
+            indent = *a == '*' ? 0U : indent + 1U;
+            ++a;
+        }
         while (b > a && isspace((unsigned char)b[-1])) --b;
         const char *colon = memchr(a, ':', (size_t)(b - a));
         bool label = colon != NULL;
@@ -83,8 +88,15 @@ int UmiSourceContractReadAttribution(const char *source, size_t length,
             for (const char *p = a; p < colon; ++p)
                 if (!isalpha((unsigned char)*p) && !isspace((unsigned char)*p) && *p != '-' && *p != '_') label = false;
         }
+        /* A more-indented continuation may contain prose such as
+         * "Validate behaviour: acceptance pending". It is a value, not an
+         * unknown heading. Recognised labels still start a new field; an
+         * unknown heading at the current margin still ends attribution. */
+        if (label && field != FIELD_NONE && indent > fieldIndent &&
+            fieldFor(a, (size_t)(colon - a)) == FIELD_NONE) label = false;
         if (label) {
             field = fieldFor(a, (size_t)(colon - a));
+            fieldIndent = indent;
             recordValue(out, field, colon + 1, b);
         } else recordValue(out, field, a, b);
         i = finish;

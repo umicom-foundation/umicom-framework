@@ -97,7 +97,22 @@ UmiStatus umi_build_profile_validate(const UmiBuildProfile *profile,
     if (profile == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
-    if (profile->profile_id[0] == '\0') {
+    /* The profile can arrive from a plug-in or edited settings. Never use a
+     * fixed-size member as a C string until its terminator is inside the field. */
+    if (memchr(profile->profile_id, '\0', sizeof(profile->profile_id)) == NULL ||
+        memchr(profile->source_directory, '\0', sizeof(profile->source_directory)) == NULL ||
+        memchr(profile->build_directory, '\0', sizeof(profile->build_directory)) == NULL ||
+        memchr(profile->generator, '\0', sizeof(profile->generator)) == NULL ||
+        memchr(profile->compiler, '\0', sizeof(profile->compiler)) == NULL ||
+        memchr(profile->configuration, '\0', sizeof(profile->configuration)) == NULL ||
+        memchr(profile->preset, '\0', sizeof(profile->preset)) == NULL ||
+        memchr(profile->build_target, '\0', sizeof(profile->build_target)) == NULL ||
+        memchr(profile->run_program, '\0', sizeof(profile->run_program)) == NULL ||
+        memchr(profile->run_argument, '\0', sizeof(profile->run_argument)) == NULL ||
+        memchr(profile->install_directory, '\0', sizeof(profile->install_directory)) == NULL) {
+        status = UMI_STATUS_INVALID_ARGUMENT;
+        message = "A build-profile text field is not terminated";
+    } else if (profile->profile_id[0] == '\0') {
         status = UMI_STATUS_INVALID_ARGUMENT;
         message = "Build profile identifier is empty";
     } else if (profile->source_directory[0] == '\0') {
@@ -128,7 +143,8 @@ UmiStatus umi_build_profile_validate(const UmiBuildProfile *profile,
 int umi_build_profile_equal(const UmiBuildProfile *left,
                             const UmiBuildProfile *right)
 {
-    if (left == NULL || right == NULL) {
+    if (umi_build_profile_validate(left, NULL, 0U) != UMI_STATUS_OK ||
+        umi_build_profile_validate(right, NULL, 0U) != UMI_STATUS_OK) {
         return 0;
     }
     return strcmp(left->profile_id, right->profile_id) == 0 &&

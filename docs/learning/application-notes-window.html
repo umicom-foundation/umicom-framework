@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+
+<html lang="en-GB"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><meta content="foundations.application-notes-window" name="umicom-lesson-id"/><title>Create the Umicom Notes window and panels | Umicom</title><style>
+:root{--ink:#182b3a;--muted:#516474;--line:#dbe4eb;--accent:#006f73;--paper:#fff;--code:#152635}*{box-sizing:border-box}body{margin:0;background:#f1f5f8;color:var(--ink);font:17px/1.7 system-ui,"Segoe UI",sans-serif}header,main,footer{max-width:1050px;margin:auto}header{padding:34px 40px 24px}header a{font-weight:650}main{background:var(--paper);padding:36px 56px 56px;border:1px solid var(--line);border-radius:14px;margin-bottom:28px}h1{font-size:clamp(30px,4vw,45px);line-height:1.15;margin:12px 0 22px}h2{font-size:25px;line-height:1.3;margin:38px 0 14px;color:#173f56}h3{font-size:20px;margin-top:27px}.lede{font-size:20px;color:#355264}.kicker{font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:var(--accent)}a{color:#006b82}p{margin:15px 0}code{font:0.88em/1.6 Consolas,"Liberation Mono",monospace;background:#edf3f6;padding:.12em .3em;border-radius:4px}pre{background:var(--code);color:#eff9ff;padding:22px;border-radius:9px;overflow:auto;font:14px/1.6 Consolas,monospace}pre code{background:none;color:inherit;padding:0;font:inherit}.note{background:#edf8f6;border-left:4px solid var(--accent);padding:16px 22px;margin:24px 0}.exercise{background:#fff7e6;border-left:4px solid #b78629;padding:16px 22px;margin-top:28px}table{border-collapse:collapse;width:100%;margin:22px 0;font-size:15px}td,th{text-align:left;padding:12px;border:1px solid var(--line);vertical-align:top}th{background:#edf4f8}details{border:1px solid var(--line);border-radius:8px;padding:14px;margin:18px 0}summary{cursor:pointer;font-weight:650}.platform{border-top:1px solid var(--line);padding-top:8px}.navigation{display:flex;justify-content:space-between;gap:20px;border-top:1px solid var(--line);padding-top:22px;margin-top:35px}footer{padding:0 40px 35px;color:var(--muted);font-size:14px}li{margin:.5em 0}@media(max-width:700px){main{padding:26px 22px;margin:0 10px 20px}header{padding:24px}table{display:block;overflow:auto}}@media print{body{background:white}main{border:0;padding:0}header{padding:0}.navigation{display:none}pre{white-space:pre-wrap;background:#f0f3f5;color:black}details{break-inside:auto}}
+p,li,h1,h2,h3,summary,.navigation{overflow-wrap:anywhere}pre{max-width:100%}pre code{overflow-wrap:normal;word-break:normal}</style></head><body><header><a href="index.html">Umicom Learning</a> · <a href="application-development.html">Build applications</a></header><main><div class="kicker">Umicom · application development</div><h1>Create the Umicom Notes window and panels</h1><p>We now have a Notes model that can be tested from a terminal. The next step is a window that lets a person use it. We will arrange a heading, two resizable panels, a text editor and a status message. The window calls the same Notes commands that you have already used.</p><h2>Understand a widget and its container</h2><p>A widget is a visible interface element such as a label, button or text editor. A container arranges other widgets. In this example a vertical box holds the main sections, and a horizontal paned container divides the details panel from the editor.</p><p>The editor sits inside a scrolled container so that long notes can be navigated without enlarging the whole window. A status label reports the result of the last operation. These are useful application components, not decoration.</p><h2>Describe a Framework component</h2><p>The helper <code>Component</code> creates a <code>UmiUiComponentSpec</code>, assigns an identifier and text, then calls <code>umi_gtk4_component_create</code>. Framework owns the widget factory. The example supplies the application-specific arrangement.</p><p>The kind chooses the component: window, box, paned layout, entry, button, text view or scrolled container. The identifier gives the component a stable name, such as <code>notes.editor</code>. A visible caption and an identifier serve different purposes; do not use a changeable caption as the only way to locate a control.</p><h2>Connect the text buffer</h2><p>A text view displays a text buffer. When its text changes, our callback gets the new text and calls <code>UmiLearningNotesSetText</code>. It releases the temporary GTK string afterwards. The model is still responsible for the saved note and its undo history.</p><p>When Undo changes the model, the window reads the accepted text and updates the buffer. A <code>refreshing</code> flag prevents that programmatic buffer update from being mistaken for another user edit. Without that distinction, a refresh can create unwanted undo entries or a feedback loop.</p><h2>Run the window</h2><p>Use the graphical build configuration described in the course introduction. Build <code>umicom-learning-notes-window</code> and launch it. The window should show a details panel on the left and the editor on the right. Enter a few lines, drag the divider and make the window smaller.</p><p>Choose a new save destination whose parent directory already exists. Click Save Note. Change the note and try closing the window. It should ask you to save, or use the explicitly named Discard and Close control. Closing a window must not silently erase a draft.</p><h2>Inspect the boundary</h2><p>The source file contains GTK calls because it is the graphical adapter. The model header contains no GTK types. That is the boundary to preserve when adding another frontend. The next lesson adds menus and explains how they use the same commands.</p><h2>Build and run the supplied example</h2><p>Configure the learning targets once using the <a href="application-development.html#setup">course setup</a>. Run the commands below one at a time. Stop when a command reports a failure; do not continue to run an older executable.</p><div class="platform"><h3>Windows · PowerShell</h3><pre><code>Set-Location "C:\umicom\Umicom-Applications"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake --build --preset windows-ucrt64-all-debug --target umicom-learning-notes-window --parallel 2
+&amp; ".\build\windows-ucrt64-all-debug\bin\umicom-learning-notes-window.exe"</code></pre></div><div class="platform"><h3>Linux · terminal</h3><pre><code>cd "$HOME/umicom/Umicom-Applications"
+cmake --build --preset linux-all-gtk4-debug --target umicom-learning-notes-window --parallel 2
+./build/linux-all-gtk4-debug/bin/umicom-learning-notes-window</code></pre></div><h2>Source to study and edit</h2><p>These are the supplied files for this lesson. Open them in Studio to follow the code. The Notes model is shared by the terminal example and the window; keep one implementation while trying different frontends.</p><details><summary>notes_window.c</summary><p><code>framework/examples/learning/projects/notes_window.c</code></p><pre><code>/*-----------------------------------------------------------------------------
+ * Umicom Framework — application development lessons
+ * File: examples/learning/projects/notes_window.c
+ * PURPOSE: Compose Framework widgets around the shared Notes model with menus and close protection.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+#include &lt;gtk/gtk.h&gt;
+#include &lt;string.h&gt;
+#include "umicom/ui/gtk4/component_factory.h"
+#include "notes_model.h"
+
+typedef struct NotesWindow {
+    UmiLearningNotes *model;
+    GtkWindow *window;
+    GtkWidget *editor;
+    GtkWidget *path;
+    GtkWidget *status;
+    int editRejected;
+    int refreshing;
+    int discardConfirmed;
+} NotesWindow;
+
+/* Reuse Framework specifications; the adapter only arranges GTK widgets. */
+static GtkWidget *Component(UmiUiComponentKind kind, const char *id, const char *text)
+{
+    UmiUiComponentSpec spec = umi_ui_component_spec_default(kind);
+    if (umi_ui_component_spec_set_id(&amp;spec, id) != UMI_STATUS_OK ||
+        umi_ui_component_spec_set_text(&amp;spec, text) != UMI_STATUS_OK) return NULL;
+    spec.orientation = UMI_UI_VERTICAL;
+    spec.spacing = 8;
+    spec.hexpand = true;
+    spec.visible = kind != UMI_UI_COMPONENT_WINDOW;
+    return umi_gtk4_component_create(&amp;spec);
+}
+
+static void DestroyState(gpointer data)
+{
+    NotesWindow *state = data;
+    UmiLearningNotesDestroy(state-&gt;model);
+    g_free(state);
+}
+
+static void ShowStatus(NotesWindow *state, UmiStatus status)
+{
+    const char *message = status == UMI_STATUS_OK ? "Ready. Changes are kept in the document model." :
+        status == UMI_STATUS_ALREADY_EXISTS ? "That file already exists. Choose a new filename." :
+        status == UMI_STATUS_INVALID_STATE ? "Save the current note first, or resolve an external file change." :
+        umi_status_text(status);
+    gtk_label_set_text(GTK_LABEL(state-&gt;status), message);
+}
+
+static void RefreshText(NotesWindow *state)
+{
+    char *text = NULL;
+    UmiStatus status = UmiLearningNotesCopyText(state-&gt;model, &amp;text);
+    if (status == UMI_STATUS_OK) {
+        state-&gt;refreshing = 1;
+        gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(state-&gt;editor)), text, -1);
+        state-&gt;refreshing = 0;
+    }
+    umi_document_store_free_text(text);
+    ShowStatus(state, status);
+}
+
+static void TextChanged(GtkTextBuffer *buffer, gpointer userData)
+{
+    NotesWindow *state = userData;
+    GtkTextIter first, last;
+    if (state-&gt;refreshing) return;
+    gtk_text_buffer_get_bounds(buffer, &amp;first, &amp;last);
+    char *text = gtk_text_buffer_get_text(buffer, &amp;first, &amp;last, FALSE);
+    UmiStatus status = UmiLearningNotesSetText(state-&gt;model, text);
+    g_free(text);
+    state-&gt;editRejected = status != UMI_STATUS_OK;
+    ShowStatus(state, status);
+}
+
+static void ExecuteAction(GSimpleAction *action, GVariant *parameter, gpointer userData)
+{
+    NotesWindow *state = userData;
+    const char *name = g_action_get_name(G_ACTION(action));
+    const char *command = strcmp(name, "save") == 0 ? "notes.save" :
+        strcmp(name, "undo") == 0 ? "notes.undo" : "notes.new";
+    (void)parameter;
+    if (strcmp(name, "close") == 0) { gtk_window_close(state-&gt;window); return; }
+    if (state-&gt;editRejected) {
+        gtk_label_set_text(GTK_LABEL(state-&gt;status),
+            "The last edit could not be stored. Shorten or repair the text before saving or replacing it.");
+        return;
+    }
+    UmiStatus status = UmiLearningNotesExecute(state-&gt;model, command,
+        strcmp(name, "save") == 0 ? gtk_editable_get_text(GTK_EDITABLE(state-&gt;path)) : NULL);
+    if (status == UMI_STATUS_OK &amp;&amp; strcmp(name, "save") != 0) RefreshText(state);
+    else ShowStatus(state, status);
+    if (status == UMI_STATUS_OK &amp;&amp; strcmp(name, "save") == 0)
+        gtk_label_set_text(GTK_LABEL(state-&gt;status), "Note saved.");
+}
+
+static gboolean CloseRequested(GtkWindow *window, gpointer userData)
+{
+    NotesWindow *state = userData;
+    UmiDocumentWorkingCopySnapshot snapshot;
+    (void)window;
+    UmiStatus status = UmiLearningNotesSnapshot(state-&gt;model, &amp;snapshot);
+    if (!state-&gt;discardConfirmed &amp;&amp; (state-&gt;editRejected || status != UMI_STATUS_OK ||
+        (snapshot.dirty &amp;&amp; (snapshot.has_path || snapshot.text_length != 0U)))) {
+        gtk_label_set_text(GTK_LABEL(state-&gt;status),
+            "This note has unsaved changes. Save it, or use Discard and Close.");
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static void DiscardAndClose(GtkButton *button, gpointer userData)
+{
+    NotesWindow *state = userData;
+    (void)button;
+    state-&gt;discardConfirmed = 1;
+    gtk_window_close(state-&gt;window);
+}
+
+static void Activate(GtkApplication *application, gpointer userData)
+{
+    int *startupFailed = userData;
+    GtkWindow *existing = gtk_application_get_active_window(application);
+    if (existing != NULL) { gtk_window_present(existing); return; }
+    NotesWindow *state = g_new0(NotesWindow, 1);
+    if (UmiLearningNotesCreate(&amp;state-&gt;model) != UMI_STATUS_OK) {
+        *startupFailed = 1; g_free(state); g_application_quit(G_APPLICATION(application)); return;
+    }
+    GtkWidget *window = Component(UMI_UI_COMPONENT_WINDOW, "notes.window", "Umicom Notes");
+    if (window == NULL) { *startupFailed = 1; DestroyState(state); g_application_quit(G_APPLICATION(application)); return; }
+    state-&gt;window = GTK_WINDOW(window);
+    gtk_window_set_application(state-&gt;window, application);
+    gtk_window_set_default_size(state-&gt;window, 900, 600);
+    g_object_set_data_full(G_OBJECT(window), "notes-state", state, DestroyState);
+    GtkWidget *root = Component(UMI_UI_COMPONENT_BOX, "notes.root", "");
+    gtk_window_set_child(state-&gt;window, root);
+    GtkWidget *header = Component(UMI_UI_COMPONENT_LABEL, "notes.heading", "Umicom Notes — project notebook");
+    gtk_box_append(GTK_BOX(root), header);
+
+    const char *names[] = {"new", "save", "undo", "close"};
+    GSimpleActionGroup *actions = g_simple_action_group_new();
+    for (size_t index = 0U; index &lt; sizeof(names)/sizeof(names[0]); ++index) {
+        GSimpleAction *action = g_simple_action_new(names[index], NULL);
+        g_signal_connect(action, "activate", G_CALLBACK(ExecuteAction), state);
+        g_action_map_add_action(G_ACTION_MAP(actions), G_ACTION(action));
+        g_object_unref(action);
+    }
+    gtk_widget_insert_action_group(root, "notes", G_ACTION_GROUP(actions));
+    g_object_unref(actions);
+    GMenu *menu = g_menu_new();
+    GMenu *file = g_menu_new(); GMenu *edit = g_menu_new();
+    g_menu_append(file, "New Note", "notes.new"); g_menu_append(file, "Save Note", "notes.save");
+    g_menu_append(file, "Close", "notes.close"); g_menu_append(edit, "Undo", "notes.undo");
+    g_menu_append_submenu(menu, "File", G_MENU_MODEL(file));
+    g_menu_append_submenu(menu, "Edit", G_MENU_MODEL(edit));
+    gtk_box_append(GTK_BOX(root), gtk_popover_menu_bar_new_from_model(G_MENU_MODEL(menu)));
+    g_object_unref(file); g_object_unref(edit); g_object_unref(menu);
+
+    GtkWidget *split = Component(UMI_UI_COMPONENT_PANED, "notes.panels", "");
+    gtk_orientable_set_orientation(GTK_ORIENTABLE(split), GTK_ORIENTATION_HORIZONTAL);
+    gtk_widget_set_vexpand(split, TRUE); gtk_box_append(GTK_BOX(root), split);
+    GtkWidget *details = Component(UMI_UI_COMPONENT_BOX, "notes.details", "");
+    gtk_paned_set_start_child(GTK_PANED(split), details);
+    gtk_box_append(GTK_BOX(details), Component(UMI_UI_COMPONENT_LABEL, "notes.path-label", "Save destination"));
+    state-&gt;path = Component(UMI_UI_COMPONENT_ENTRY, "notes.path", "");
+    char *destination = g_build_filename(g_get_home_dir(), "UmicomNote.txt", NULL);
+    gtk_editable_set_text(GTK_EDITABLE(state-&gt;path), destination); g_free(destination);
+    gtk_box_append(GTK_BOX(details), state-&gt;path);
+    GtkWidget *save = Component(UMI_UI_COMPONENT_BUTTON, "notes.save", "Save Note");
+    gtk_actionable_set_action_name(GTK_ACTIONABLE(save), "notes.save");
+    gtk_box_append(GTK_BOX(details), save);
+    GtkWidget *discard = Component(UMI_UI_COMPONENT_BUTTON, "notes.discard-close", "Discard and Close");
+    g_signal_connect(discard, "clicked", G_CALLBACK(DiscardAndClose), state);
+    gtk_box_append(GTK_BOX(details), discard);
+    state-&gt;editor = Component(UMI_UI_COMPONENT_TEXT_VIEW, "notes.editor", "");
+    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(state-&gt;editor), GTK_WRAP_WORD_CHAR);
+    GtkWidget *scroll = Component(UMI_UI_COMPONENT_SCROLLED, "notes.scroll", "");
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), state-&gt;editor);
+    gtk_paned_set_end_child(GTK_PANED(split), scroll);
+    state-&gt;status = Component(UMI_UI_COMPONENT_LABEL, "notes.status", "Write a note, choose a new filename and save it.");
+    gtk_box_append(GTK_BOX(root), state-&gt;status);
+    g_signal_connect(gtk_text_view_get_buffer(GTK_TEXT_VIEW(state-&gt;editor)), "changed", G_CALLBACK(TextChanged), state);
+    g_signal_connect(window, "close-request", G_CALLBACK(CloseRequested), state);
+    gtk_window_present(state-&gt;window);
+}
+
+int main(int argc, char **argv)
+{
+    GtkApplication *application = gtk_application_new("org.umicom.learning.notes", G_APPLICATION_DEFAULT_FLAGS);
+    int startupFailed = 0;
+    g_signal_connect(application, "activate", G_CALLBACK(Activate), &amp;startupFailed);
+    int result = g_application_run(G_APPLICATION(application), argc, argv);
+    g_object_unref(application);
+    return startupFailed ? 1 : result;
+}</code></pre></details><div class="exercise"><strong>Your practical task</strong><p>Build the graphical example, resize its panels and confirm that typed text reaches the Notes model.</p></div><div class="navigation"><a href="application-notes-session.html">Previous</a><a href="application-notes-menus.html">Continue</a></div></main><footer>Sammy Hegab · Umicom Foundation<br/>Practice source: Framework / examples / learning / projects</footer></body></html>
+

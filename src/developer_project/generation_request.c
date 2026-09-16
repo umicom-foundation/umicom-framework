@@ -80,6 +80,12 @@ UmiStatus umi_developer_project_generation_request_validate(
      * used.
      */
     if (request == NULL ||
+        memchr(request->template_id, '\0', sizeof(request->template_id)) == NULL ||
+        memchr(request->application_name, '\0', sizeof(request->application_name)) == NULL ||
+        memchr(request->application_id, '\0', sizeof(request->application_id)) == NULL ||
+        memchr(request->repository_name, '\0', sizeof(request->repository_name)) == NULL ||
+        memchr(request->target_name, '\0', sizeof(request->target_name)) == NULL ||
+        memchr(request->project_root, '\0', sizeof(request->project_root)) == NULL ||
         request->template_id[0] == '\0' ||
         request->application_name[0] == '\0' ||
         request->application_id[0] == '\0' ||
@@ -89,6 +95,24 @@ UmiStatus umi_developer_project_generation_request_validate(
         message =
             "Template, identity, repository, target and project root are required.";
         status = UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (status == UMI_STATUS_OK) {
+        const char *fields[] = {request->application_name, request->application_id,
+            request->repository_name, request->target_name};
+        for (size_t field = 0U; field < sizeof(fields) / sizeof(fields[0]); ++field) {
+            for (const unsigned char *value = (const unsigned char *)fields[field];
+                 *value != 0U; ++value) {
+                if (!((*value >= 'A' && *value <= 'Z') ||
+                      (*value >= 'a' && *value <= 'z') ||
+                      (*value >= '0' && *value <= '9') || *value == '_' ||
+                      *value == '-' || *value == '.' || (field == 0U && *value == ' '))) {
+                    status = UMI_STATUS_INVALID_ARGUMENT;
+                    message = "Use letters, numbers, dots, hyphens and underscores; spaces are allowed in the display name.";
+                    break;
+                }
+            }
+        }
     }
 
     /*

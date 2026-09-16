@@ -46,12 +46,13 @@ int main(void)
            UMI_STATUS_OK);
     assert(strcmp(command.arguments[2], "--target") == 0);
     assert(strcmp(command.arguments[3], profile.build_target) == 0);
-    assert(strcmp(command.arguments[5], "32") == 0);
+    assert(strcmp(command.arguments[7], "32") == 0);
 
     assert(umi_build_provider_create_command(
                &ctest, &profile, UMI_BUILD_PHASE_TEST, &command) ==
            UMI_STATUS_OK);
-    assert(strcmp(command.arguments[0], "--preset") == 0);
+    assert(strcmp(command.arguments[0], "--no-tests=error") == 0);
+    assert(strcmp(command.arguments[3], "--preset") == 0);
 
     (void)strcpy(profile.run_program, "umicom-studio-console");
     (void)strcpy(profile.run_argument, "--version");

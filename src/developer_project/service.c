@@ -271,6 +271,7 @@ UmiStatus umi_developer_project_service_generate(
     /* Apply this branch only when its contract condition is satisfied. */
     if (project_template->build_system ==
         UMI_DEVELOPER_PROJECT_BUILD_CMAKE) {
+#ifdef _WIN32
         (void)snprintf(
             model.preset,
             sizeof(model.preset),
@@ -295,6 +296,14 @@ UmiStatus umi_developer_project_service_generate(
                 "build/windows-ucrt64-debug/bin/%s.exe",
                 request->target_name);
         }
+#else
+        (void)snprintf(model.preset, sizeof(model.preset), "%s", "linux-debug");
+        (void)snprintf(model.build_directory, sizeof(model.build_directory), "%s", "build/linux-debug");
+        (void)snprintf(model.install_prefix, sizeof(model.install_prefix), "%s", "install/linux-debug");
+        if (project_template->kind == UMI_DEVELOPER_PROJECT_EXECUTABLE)
+            (void)snprintf(model.executable, sizeof(model.executable),
+                "build/linux-debug/bin/%s", request->target_name);
+#endif
     }
 
     /* Apply this branch only when its contract condition is satisfied. */

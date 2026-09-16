@@ -26,6 +26,7 @@ struct UmiBuildHistory {
     size_t count;
     size_t head;
     UmiMutex *mutex;
+    uint64_t next_operation_id;
 };
 
 UmiStatus umi_build_history_create(size_t capacity,
@@ -49,6 +50,7 @@ UmiStatus umi_build_history_create(size_t capacity,
         return UMI_STATUS_OUT_OF_MEMORY;
     }
     history->capacity = capacity;
+    history->next_operation_id = 1U;
     *out_history = history;
     return UMI_STATUS_OK;
 }
@@ -79,6 +81,8 @@ UmiStatus umi_build_history_append(UmiBuildHistory *history,
         history->count += 1U;
     }
     history->items[index] = *result;
+    if (history->next_operation_id != 0U && result->operation_id >= history->next_operation_id)
+        history->next_operation_id = result->operation_id == UINT64_MAX ? 0U : result->operation_id + 1U;
     (void)umi_mutex_unlock(history->mutex);
     return UMI_STATUS_OK;
 }
@@ -144,4 +148,19 @@ void umi_build_history_clear(UmiBuildHistory *history)
                  0,
                  history->capacity * sizeof(history->items[0]));
     (void)umi_mutex_unlock(history->mutex);
+}
+
+/* Reserve under the same mutex as imported/appended records. Zero is the
+ * exhausted sentinel, not a valid new operation identity. */
+UmiStatus UmiBuildHistoryReserveOperationId(UmiBuildHistory *history, uint64_t *outId)
+{
+    if (history == NULL || outId == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)umi_mutex_lock(history->mutex);
+    if (history->next_operation_id == 0U) {
+        (void)umi_mutex_unlock(history->mutex);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    *outId = history->next_operation_id++;
+    (void)umi_mutex_unlock(history->mutex);
+    return UMI_STATUS_OK;
 }

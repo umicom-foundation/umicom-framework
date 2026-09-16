@@ -153,6 +153,8 @@ UmiStatus umi_developer_project_generation_plan_validate(
      * used.
      */
     if (plan == NULL ||
+        memchr(plan->project_root, '\0', sizeof(plan->project_root)) == NULL ||
+        memchr(plan->template_id, '\0', sizeof(plan->template_id)) == NULL ||
         plan->project_root[0] == '\0' ||
         plan->template_id[0] == '\0' ||
         plan->file_count == 0U ||
@@ -160,12 +162,21 @@ UmiStatus umi_developer_project_generation_plan_validate(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Validate every member before pairwise comparisons read a later record. */
+    for (index = 0U; index < plan->file_count; ++index) {
+        if (memchr(plan->files[index].relative_path, '\0', sizeof(plan->files[index].relative_path)) == NULL ||
+            memchr(plan->files[index].content, '\0', sizeof(plan->files[index].content)) == NULL)
+            return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < plan->file_count; ++index) {
         const char *path = plan->files[index].relative_path;
 
         /* Apply this branch only when its contract condition is satisfied. */
-        if (path[0] == '\0' ||
+        if (memchr(path, '\0', sizeof(plan->files[index].relative_path)) == NULL ||
+            memchr(plan->files[index].content, '\0', sizeof(plan->files[index].content)) == NULL ||
+            strchr(path, ':') != NULL || path[0] == '\0' ||
             path[0] == '/' || path[0] == '\\' ||
             strstr(path, "..") != NULL) {
             return UMI_STATUS_PERMISSION_DENIED;

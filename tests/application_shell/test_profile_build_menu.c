@@ -28,7 +28,7 @@ int main(void)
     UmiApplicationShellContribution contribution;
 
     assert(profile != NULL);
-    assert(profile->contribution_count == 9U);
+    assert(profile->contribution_count == 11U);
     assert(umi_application_shell_profile_validate(profile) == UMI_STATUS_OK);
 
     assert(umi_application_shell_registry_create(&registry) == UMI_STATUS_OK);

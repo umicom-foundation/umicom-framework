@@ -426,7 +426,7 @@ int main(int argc, char **argv)
      * envelope and links too, without assigning new progress identities. */
     const char *const references[] = {
         "index.html", "workshop-build.html", "naming-and-ownership.html",
-        "git-first-comment.html", "programming-workshop.html"
+        "git-first-comment.html", "programming-workshop.html", "application-development.html"
     };
     size_t referencesChecked = 0U;
     for (size_t index = 0U; result == EXIT_SUCCESS && index < sizeof(references)/sizeof(references[0]); ++index) {

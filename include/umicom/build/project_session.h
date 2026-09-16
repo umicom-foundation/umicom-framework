@@ -59,7 +59,8 @@ UmiStatus umi_build_project_session_create(const UmiBuildProjectSessionConfig *c
 void umi_build_project_session_destroy(UmiBuildProjectSession *session);
 /** Copy a validated profile. Trusted must reflect the owner's explicit current
  * workspace trust decision. Build runs Configure then Build; Run runs Configure,
- * Build then the configured program. Other phases run once. No shell is used.
+ * Build then the configured program. Test/Install run Configure, Build-all, then
+ * Test/Install. Configure and Clean run once. No shell is used.
  * A nonempty Run program is required; no default executable is guessed. */
 UmiStatus umi_build_project_session_submit(UmiBuildProjectSession *session,
     const UmiBuildProfile *profile, UmiBuildPhase phase, bool trusted);

@@ -29,16 +29,16 @@ int main(void)
     const UmiTeacherFoundationsLesson *last;
 
     /* Apply this branch only when its contract condition is satisfied. */
-    if (umi_teacher_foundations_curriculum_count() != 53U) return EXIT_FAILURE;
+    if (umi_teacher_foundations_curriculum_count() != 64U) return EXIT_FAILURE;
     first = umi_teacher_foundations_curriculum_at(0U);
     last = umi_teacher_foundations_curriculum_find(
-        "foundations.assembly-loops");
+        "foundations.application-delivery");
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
     if (first == NULL || last == NULL || first->sequence != 1U ||
-        last->sequence != 53U) return EXIT_FAILURE;
+        last->sequence != 64U) return EXIT_FAILURE;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -59,7 +59,7 @@ int main(void)
     }
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_teacher_foundations_curriculum_plan(&plan) != UMI_STATUS_OK ||
-        umi_teacher_learning_plan_count(&plan) != 53U ||
+        umi_teacher_learning_plan_count(&plan) != 64U ||
         strcmp(umi_teacher_learning_plan_current(&plan), first->id) != 0) {
         return EXIT_FAILURE;
     }
@@ -88,7 +88,7 @@ int main(void)
                 return EXIT_FAILURE;
         }
     }
-    if (umi_teacher_foundations_curriculum_at(53U) != NULL ||
+    if (umi_teacher_foundations_curriculum_at(64U) != NULL ||
         umi_teacher_foundations_curriculum_find(NULL) != NULL ||
         umi_teacher_foundations_curriculum_find("missing.lesson") != NULL ||
         umi_teacher_foundations_curriculum_plan(NULL) != UMI_STATUS_INVALID_ARGUMENT)
@@ -141,6 +141,10 @@ int main(void)
             umi_teacher_foundations_curriculum_find(addedIds[index]);
         if (added == NULL || added->sequence != index + 21U) return EXIT_FAILURE;
     }
+    /* The original programming track still ends at its established position. */
+    const UmiTeacherFoundationsLesson *previousEnd =
+        umi_teacher_foundations_curriculum_find("foundations.assembly-loops");
+    if (previousEnd == NULL || previousEnd->sequence != 53U) return EXIT_FAILURE;
     /* Display/resource naming can evolve without resetting persisted IDs. */
     const UmiTeacherFoundationsLesson *gitLesson =
         umi_teacher_foundations_curriculum_find("foundations.git");

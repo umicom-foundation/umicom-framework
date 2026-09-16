@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+
+<html lang="en-GB"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><meta content="foundations.application-binary-flags" name="umicom-lesson-id"/><title>Read binary settings in a real application | Umicom</title><style>
+:root{--ink:#182b3a;--muted:#516474;--line:#dbe4eb;--accent:#006f73;--paper:#fff;--code:#152635}*{box-sizing:border-box}body{margin:0;background:#f1f5f8;color:var(--ink);font:17px/1.7 system-ui,"Segoe UI",sans-serif}header,main,footer{max-width:1050px;margin:auto}header{padding:34px 40px 24px}header a{font-weight:650}main{background:var(--paper);padding:36px 56px 56px;border:1px solid var(--line);border-radius:14px;margin-bottom:28px}h1{font-size:clamp(30px,4vw,45px);line-height:1.15;margin:12px 0 22px}h2{font-size:25px;line-height:1.3;margin:38px 0 14px;color:#173f56}h3{font-size:20px;margin-top:27px}.lede{font-size:20px;color:#355264}.kicker{font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:var(--accent)}a{color:#006b82}p{margin:15px 0}code{font:0.88em/1.6 Consolas,"Liberation Mono",monospace;background:#edf3f6;padding:.12em .3em;border-radius:4px}pre{background:var(--code);color:#eff9ff;padding:22px;border-radius:9px;overflow:auto;font:14px/1.6 Consolas,monospace}pre code{background:none;color:inherit;padding:0;font:inherit}.note{background:#edf8f6;border-left:4px solid var(--accent);padding:16px 22px;margin:24px 0}.exercise{background:#fff7e6;border-left:4px solid #b78629;padding:16px 22px;margin-top:28px}table{border-collapse:collapse;width:100%;margin:22px 0;font-size:15px}td,th{text-align:left;padding:12px;border:1px solid var(--line);vertical-align:top}th{background:#edf4f8}details{border:1px solid var(--line);border-radius:8px;padding:14px;margin:18px 0}summary{cursor:pointer;font-weight:650}.platform{border-top:1px solid var(--line);padding-top:8px}.navigation{display:flex;justify-content:space-between;gap:20px;border-top:1px solid var(--line);padding-top:22px;margin-top:35px}footer{padding:0 40px 35px;color:var(--muted);font-size:14px}li{margin:.5em 0}@media(max-width:700px){main{padding:26px 22px;margin:0 10px 20px}header{padding:24px}table{display:block;overflow:auto}}@media print{body{background:white}main{border:0;padding:0}header{padding:0}.navigation{display:none}pre{white-space:pre-wrap;background:#f0f3f5;color:black}details{break-inside:auto}}
+p,li,h1,h2,h3,summary,.navigation{overflow-wrap:anywhere}pre{max-width:100%}pre code{overflow-wrap:normal;word-break:normal}</style></head><body><header><a href="index.html">Umicom Learning</a> · <a href="application-development.html">Build applications</a></header><main><div class="kicker">Umicom · application development</div><h1>Read binary settings in a real application</h1><p>Umicom Notes can show line numbers, wrap long lines and display a preview. Each setting has two states: on or off. A bit mask lets one integer represent several independent settings. We will inspect the binary value rather than treating it as a mysterious number.</p><h2>Give each option its own bit</h2><p>Our constants have values 1, 2 and 4. In three-bit binary notation these are <code>001</code>, <code>010</code> and <code>100</code>. Each value occupies a different bit position. Combining options therefore preserves the identity of every selected option.</p><pre><code>Bit position:     2 1 0
+Line numbers:     0 0 1
+Word wrap:        0 1 0
+Preview:          1 0 0</code></pre><h2>Combine, test and clear</h2><p>The bitwise OR operator <code>|</code> turns on every bit present in either operand. Line numbers OR word wrap produces <code>011</code>. The AND operator <code>&amp;</code> can test whether a selected bit is present. A result of zero means that the tested bit is off.</p><p>To turn off word wrap without changing the other options, use <code>settings &amp;= ~NOTES_WORD_WRAP;</code>. The complement <code>~</code> creates a mask with that bit cleared and the other bits set. AND then preserves those other positions.</p><p>Do not confuse bitwise <code>&amp;</code> with logical <code>&amp;&amp;</code>. Logical operators answer true-or-false questions; bitwise operators work on the separate bits in integer values. This difference matters when reading conditions.</p><h2>Read the printing loop</h2><p><code>PrintBinary</code> starts at the highest of our three display positions and works downwards. The shift expression moves a single set bit to the position being examined. We use an unsigned value and keep every shift within its valid range. Shifting by the width of a type or more is not a safe way to request another digit.</p><pre><code>Umicom Notes settings: 011
+Preview on, wrapping off: 101</code></pre><h2>Connect bits to system architecture</h2><p>The variable is stored in the program’s memory. The processor loads integer values into registers when performing operations. A compiler can turn these expressions into machine instructions that manipulate those bits. The C expression describes the operation; the instruction encoding depends on the processor architecture.</p><p>Open the existing Assembly lessons after this exercise and compare the compiler’s output with the source. Keep the display-setting behaviour as the reference. A shorter Assembly listing is useful only when it still produces the correct result.</p><h2>Use masks for the right job</h2><p>Display settings are a good place to learn this representation. A local integer is not, by itself, a secure permission system. An application must still ask the Framework security service whether a protected operation is allowed. Changing a visible checkbox must not bypass that decision.</p><h2>Try a new option</h2><p>Add a fourth flag for showing the status panel. Give it its own bit, print four positions and test combinations that include and exclude it. Explain why choosing the value 3 for this new flag would be wrong.</p><h2>Build and run the supplied example</h2><p>Configure the learning targets once using the <a href="application-development.html#setup">course setup</a>. Run the commands below one at a time. Stop when a command reports a failure; do not continue to run an older executable.</p><div class="platform"><h3>Windows · PowerShell</h3><pre><code>Set-Location "C:\umicom\Umicom-Applications"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake --build --preset windows-ucrt64-all-debug --target umicom-learning-binary-flags --parallel 2
+&amp; ".\build\windows-ucrt64-all-debug\bin\umicom-learning-binary-flags.exe"</code></pre></div><div class="platform"><h3>Linux · terminal</h3><pre><code>cd "$HOME/umicom/Umicom-Applications"
+cmake --build --preset linux-gcc-all-headless-debug --target umicom-learning-binary-flags --parallel 2
+./build/linux-gcc-all-headless-debug/bin/umicom-learning-binary-flags</code></pre></div><h2>Source to study and edit</h2><p>These are the supplied files for this lesson. Open them in Studio to follow the code. The Notes model is shared by the terminal example and the window; keep one implementation while trying different frontends.</p><details open=""><summary>binary_flags.c</summary><p><code>framework/examples/learning/projects/binary_flags.c</code></p><pre><code>/*-----------------------------------------------------------------------------
+ * Umicom Framework — application development lessons
+ * File: examples/learning/projects/binary_flags.c
+ * PURPOSE: Inspect independent display settings as binary flags.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+#include &lt;stdint.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+#define NOTES_SHOW_LINE_NUMBERS UINT32_C(1)
+#define NOTES_WORD_WRAP UINT32_C(2)
+#define NOTES_SHOW_PREVIEW UINT32_C(4)
+
+static void PrintBinary(uint32_t value)
+{
+    for (unsigned position = 3U; position &gt; 0U; --position)
+        putchar((value &amp; (UINT32_C(1) &lt;&lt; (position - 1U))) != 0U ? '1' : '0');
+    putchar('\n');
+}
+
+int main(void)
+{
+    uint32_t settings = NOTES_SHOW_LINE_NUMBERS | NOTES_WORD_WRAP;
+    fputs("Umicom Notes settings: ", stdout);
+    PrintBinary(settings);
+    settings |= NOTES_SHOW_PREVIEW;
+    settings &amp;= ~NOTES_WORD_WRAP;
+    fputs("Preview on, wrapping off: ", stdout);
+    PrintBinary(settings);
+    return settings == UINT32_C(5) ? EXIT_SUCCESS : EXIT_FAILURE;
+}</code></pre></details><div class="exercise"><strong>Your practical task</strong><p>Add a fourth display flag without changing the meaning of the existing three flags.</p></div><div class="navigation"><a href="application-account-totals.html">Previous</a><a href="application-notes-memory.html">Continue</a></div></main><footer>Sammy Hegab · Umicom Foundation<br/>Practice source: Framework / examples / learning / projects</footer></body></html>
+

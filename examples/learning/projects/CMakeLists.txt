@@ -1,0 +1,45 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework — practical application lessons
+# Author: Sammy Hegab, Umicom Foundation | Licence: MIT
+#-----------------------------------------------------------------------------
+# These examples consume the same targets as the applications. Configure them
+# through the Applications superbuild; no copied Framework is embedded here.
+if(NOT TARGET Umicom::developer)
+    message(STATUS "Practical Framework projects require the Applications build or installed Framework targets")
+    return()
+endif()
+foreach(example IN ITEMS work_log account_totals binary_flags notes_memory project_creator)
+    string(REPLACE "_" "-" name "${example}")
+    add_executable(umicom-learning-${name} ${example}.c)
+    target_link_libraries(umicom-learning-${name} PRIVATE Umicom::Framework)
+    umicom_learning_target(umicom-learning-${name})
+    install(TARGETS umicom-learning-${name} RUNTIME DESTINATION bin COMPONENT Learning)
+endforeach()
+add_library(umicom_learning_notes STATIC notes_model.c)
+target_include_directories(umicom_learning_notes PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(umicom_learning_notes PUBLIC Umicom::document)
+umicom_learning_target(umicom_learning_notes)
+add_executable(umicom-learning-notes-session notes_session.c)
+target_link_libraries(umicom-learning-notes-session PRIVATE umicom_learning_notes)
+umicom_learning_target(umicom-learning-notes-session)
+install(TARGETS umicom-learning-notes-session RUNTIME DESTINATION bin COMPONENT Learning)
+if(BUILD_TESTING)
+    foreach(example IN ITEMS work-log account-totals binary-flags notes-memory notes-session)
+        add_test(NAME framework.learning.projects.${example} COMMAND umicom-learning-${example})
+        set_tests_properties(framework.learning.projects.${example} PROPERTIES
+            LABELS "learning;ide-workflow;projects" TIMEOUT 30)
+    endforeach()
+    add_executable(umicom-learning-notes-model-test test_notes_model.c)
+    target_link_libraries(umicom-learning-notes-model-test PRIVATE umicom_learning_notes)
+    umicom_learning_target(umicom-learning-notes-model-test)
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/model-test")
+    add_test(NAME framework.learning.projects.notes-model COMMAND umicom-learning-notes-model-test)
+    set_tests_properties(framework.learning.projects.notes-model PROPERTIES
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/model-test" TIMEOUT 30 LABELS "learning;ide-workflow;projects")
+endif()
+if(UMICOM_LEARNING_BUILD_GUI)
+    add_executable(umicom-learning-notes-window notes_window.c)
+    target_link_libraries(umicom-learning-notes-window PRIVATE umicom_learning_notes Umicom::ui_gtk4)
+    umicom_learning_target(umicom-learning-notes-window)
+    install(TARGETS umicom-learning-notes-window RUNTIME DESTINATION bin COMPONENT Learning)
+endif()

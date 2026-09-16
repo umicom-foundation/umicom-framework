@@ -172,6 +172,13 @@ UmiStatus umi_document_coordinator_at(
 size_t umi_document_coordinator_count(
     const UmiDocumentCoordinator *coordinator);
 
+/** Save dirty working copies through their existing conflict-aware saver.
+ * Reject a dirty untitled copy before writing any file. outSaved is optional
+ * and reports completed saves, including when a subsequent save fails.
+ * Call on the document owner's thread; no UI selection is changed. */
+UmiStatus UmiDocumentCoordinatorSaveAll(UmiDocumentCoordinator *coordinator,
+    size_t *outSaved);
+
 #ifdef __cplusplus
 }
 #endif

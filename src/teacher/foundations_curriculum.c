@@ -448,6 +448,95 @@ static const UmiTeacherFoundationsLesson FOUNDATIONS_LESSONS[] = {
         UMI_TEACHER_LANGUAGE_ASSEMBLY, UMI_TEACHER_LEVEL_BEGINNER,
         53U, 90U, 80U, 1, 0, 0
     },
+    {
+        "foundations.application-work-log", "Write an activity report for Umicom Notes",
+        "Create a C source file, build it and explain how named values become useful output.",
+        "Change the saved and pending counts, rebuild and check the new report.",
+        "framework/docs/learning/application-work-log.html", UMI_TEACHER_FOUNDATIONS_FRAMEWORK,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_FOUNDATION,
+        54U, 50U, 80U, 1, 1, 0
+    },
+    {
+        "foundations.application-account-totals", "Calculate a training account balance",
+        "Use integers, structures, arrays and checked Framework money operations for GBP amounts.",
+        "Add one deposit and calculate the expected balance before running the program.",
+        "framework/docs/learning/application-account-totals.html", UMI_TEACHER_FOUNDATIONS_FRAMEWORK,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        55U, 50U, 80U, 1, 1, 0
+    },
+    {
+        "foundations.application-binary-flags", "Read binary settings in a real application",
+        "Represent independent Notes display options with bit masks and inspect each operation.",
+        "Add a fourth display flag without changing the meaning of the existing three flags.",
+        "framework/docs/learning/application-binary-flags.html", UMI_TEACHER_FOUNDATIONS_FRAMEWORK,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        56U, 50U, 80U, 1, 1, 0
+    },
+    {
+        "foundations.application-notes-memory", "Understand who owns a note in memory",
+        "Follow copied and borrowed data, pointer lifetime and cleanup in a Framework document.",
+        "Change the input after copying it and verify that the document still owns its original text.",
+        "framework/docs/learning/application-notes-memory.html", UMI_TEACHER_FOUNDATIONS_FRAMEWORK,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        57U, 50U, 80U, 1, 1, 0
+    },
+    {
+        "foundations.application-notes-files", "Save a note without overwriting someone else\u2019s work",
+        "Use paths, error results and the Framework document saver to preserve user files.",
+        "Save to a new path, attempt to reuse it from another session and inspect the rejection.",
+        "framework/docs/learning/application-notes-files.html", UMI_TEACHER_FOUNDATIONS_FRAMEWORK,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        58U, 90U, 80U, 1, 1, 0
+    },
+    {
+        "foundations.application-notes-commands", "Connect actions through a command registry",
+        "Give New, Save and Undo stable command names and route them to the existing document owner.",
+        "Invoke New, Save and Undo from the terminal model and explain the role of user_data.",
+        "framework/docs/learning/application-notes-commands.html", UMI_TEACHER_FOUNDATIONS_FRAMEWORK,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_INTERMEDIATE,
+        59U, 90U, 80U, 1, 1, 0
+    },
+    {
+        "foundations.application-notes-session", "Build a document workflow with Model, View and Controller",
+        "Follow one note through a store, view model, coordinator and undo history.",
+        "Run the Notes model tests and trace a rejected New request while a draft is unsaved.",
+        "framework/docs/learning/application-notes-session.html", UMI_TEACHER_FOUNDATIONS_FRAMEWORK,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_INTERMEDIATE,
+        60U, 90U, 80U, 1, 1, 0
+    },
+    {
+        "foundations.application-notes-window", "Create the Umicom Notes window and panels",
+        "Use Framework component specifications to arrange a window, split panels and a text editor.",
+        "Build the graphical example, resize its panels and confirm that typed text reaches the Notes model.",
+        "framework/docs/learning/application-notes-window.html", UMI_TEACHER_FOUNDATIONS_FRAMEWORK,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_INTERMEDIATE,
+        61U, 90U, 80U, 1, 1, 0
+    },
+    {
+        "foundations.application-notes-menus", "Add menus, actions and clear error feedback",
+        "Connect File and Edit menus to the same Notes commands as buttons and terminal clients.",
+        "Save from the button and menu, then compare the resulting document state.",
+        "framework/docs/learning/application-notes-menus.html", UMI_TEACHER_FOUNDATIONS_FRAMEWORK,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_INTERMEDIATE,
+        62U, 90U, 80U, 1, 1, 0
+    },
+    {
+        "foundations.application-project-build", "Create and build another application with Framework",
+        "Generate a project, inspect its build profile and understand background build sequencing.",
+        "Create a new project through the native example and build it on Windows or Linux.",
+        "framework/docs/learning/application-project-build.html", UMI_TEACHER_FOUNDATIONS_FRAMEWORK,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_INTERMEDIATE,
+        63U, 90U, 80U, 1, 1, 0
+    },
+    {
+        "foundations.application-delivery", "Test, install and publish your application",
+        "Distinguish a successful compile, a passing test, an installation and a published source revision.",
+        "Run the Notes model checks, install to a new folder and publish only the reviewed source changes.",
+        "framework/docs/learning/application-delivery.html", UMI_TEACHER_FOUNDATIONS_FRAMEWORK,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_INTERMEDIATE,
+        64U, 90U, 80U, 1, 1, 0
+    }
+
 };
 
 /* Appending lessons must not silently exceed the existing bounded plan. */

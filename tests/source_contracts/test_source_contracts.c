@@ -31,6 +31,9 @@ static size_t assertions;
 static int metadata(void)
 {
     const char *valid[] = {
+        "/* File: a.c\n * PURPOSE:\n *   Validate behaviour: acceptance pending.\n * Author: Alice\n * Licence: MIT\n */",
+        "/* File: a.c\r\n * Purpose:\r\n *   Route events: keep ownership explicit.\r\n * Organisation: Team\r\n * Licence: MIT\r\n */",
+        "/* File: a.c\nPurpose:\n  Keep data: do not overwrite it.\nAuthor: Alice\nLicence: MIT\n*/",
         "/* File: a.c\nPurpose: Explain.\nAuthor: Alice\nLicence: MIT\n*/",
         "/* File: a.c\nPurpose: Explain.\nOrganisation: Example team\nLicence: BSD-2-Clause\n*/",
         "/* File: a.c\nPurpose: Explain.\nAuthor: Sammy Hegab\nOrganisation: Umicom Foundation\nLicence: MIT\n*/",

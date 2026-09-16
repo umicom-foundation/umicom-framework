@@ -101,6 +101,16 @@ UmiStatus umi_developer_project_model_validate(
     if (model == NULL ||
         model->structure_size != sizeof(*model) ||
         model->api_version != UMI_DEVELOPER_PROJECT_API_VERSION ||
+        memchr(model->project_id, '\0', sizeof(model->project_id)) == NULL ||
+        memchr(model->display_name, '\0', sizeof(model->display_name)) == NULL ||
+        memchr(model->root, '\0', sizeof(model->root)) == NULL ||
+        memchr(model->template_id, '\0', sizeof(model->template_id)) == NULL ||
+        memchr(model->primary_language_id, '\0', sizeof(model->primary_language_id)) == NULL ||
+        memchr(model->entry_point, '\0', sizeof(model->entry_point)) == NULL ||
+        memchr(model->preset, '\0', sizeof(model->preset)) == NULL ||
+        memchr(model->build_directory, '\0', sizeof(model->build_directory)) == NULL ||
+        memchr(model->executable, '\0', sizeof(model->executable)) == NULL ||
+        memchr(model->install_prefix, '\0', sizeof(model->install_prefix)) == NULL ||
         model->project_id[0] == '\0' ||
         model->display_name[0] == '\0' ||
         model->root[0] == '\0' ||
@@ -113,6 +123,17 @@ UmiStatus umi_developer_project_model_validate(
             UMI_DEVELOPER_PROJECT_LANGUAGE_CAPACITY) {
         message = "Project model is incomplete or invalid.";
         status = UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (status == UMI_STATUS_OK) {
+        for (size_t index = 0U; index < model->secondary_language_count; ++index) {
+            if (memchr(model->secondary_language_ids[index], '\0',
+                sizeof(model->secondary_language_ids[index])) == NULL) {
+                status = UMI_STATUS_INVALID_ARGUMENT;
+                message = "A secondary language identifier is not terminated.";
+                break;
+            }
+        }
     }
 
     /*

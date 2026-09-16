@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+
+<html lang="en-GB"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><meta content="foundations.application-project-build" name="umicom-lesson-id"/><title>Create and build another application with Framework | Umicom</title><style>
+:root{--ink:#182b3a;--muted:#516474;--line:#dbe4eb;--accent:#006f73;--paper:#fff;--code:#152635}*{box-sizing:border-box}body{margin:0;background:#f1f5f8;color:var(--ink);font:17px/1.7 system-ui,"Segoe UI",sans-serif}header,main,footer{max-width:1050px;margin:auto}header{padding:34px 40px 24px}header a{font-weight:650}main{background:var(--paper);padding:36px 56px 56px;border:1px solid var(--line);border-radius:14px;margin-bottom:28px}h1{font-size:clamp(30px,4vw,45px);line-height:1.15;margin:12px 0 22px}h2{font-size:25px;line-height:1.3;margin:38px 0 14px;color:#173f56}h3{font-size:20px;margin-top:27px}.lede{font-size:20px;color:#355264}.kicker{font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:var(--accent)}a{color:#006b82}p{margin:15px 0}code{font:0.88em/1.6 Consolas,"Liberation Mono",monospace;background:#edf3f6;padding:.12em .3em;border-radius:4px}pre{background:var(--code);color:#eff9ff;padding:22px;border-radius:9px;overflow:auto;font:14px/1.6 Consolas,monospace}pre code{background:none;color:inherit;padding:0;font:inherit}.note{background:#edf8f6;border-left:4px solid var(--accent);padding:16px 22px;margin:24px 0}.exercise{background:#fff7e6;border-left:4px solid #b78629;padding:16px 22px;margin-top:28px}table{border-collapse:collapse;width:100%;margin:22px 0;font-size:15px}td,th{text-align:left;padding:12px;border:1px solid var(--line);vertical-align:top}th{background:#edf4f8}details{border:1px solid var(--line);border-radius:8px;padding:14px;margin:18px 0}summary{cursor:pointer;font-weight:650}.platform{border-top:1px solid var(--line);padding-top:8px}.navigation{display:flex;justify-content:space-between;gap:20px;border-top:1px solid var(--line);padding-top:22px;margin-top:35px}footer{padding:0 40px 35px;color:var(--muted);font-size:14px}li{margin:.5em 0}@media(max-width:700px){main{padding:26px 22px;margin:0 10px 20px}header{padding:24px}table{display:block;overflow:auto}}@media print{body{background:white}main{border:0;padding:0}header{padding:0}.navigation{display:none}pre{white-space:pre-wrap;background:#f0f3f5;color:black}details{break-inside:auto}}
+p,li,h1,h2,h3,summary,.navigation{overflow-wrap:anywhere}pre{max-width:100%}pre code{overflow-wrap:normal;word-break:normal}</style></head><body><header><a href="index.html">Umicom Learning</a> · <a href="application-development.html">Build applications</a></header><main><div class="kicker">Umicom · application development</div><h1>Create and build another application with Framework</h1><p>Studio’s New Project window is a frontend to a Framework service. We can call that same service from a small native program. This is useful for learning the API and for proving that project generation is not hidden inside a button callback.</p><h2>Supply a generation request</h2><p>Open <code>project_creator.c</code>. It supplies a template ID, display name, application ID, repository name, target name and destination. These fields have different roles: the display name is for readers, the target name is for CMake, and the application ID provides a stable identity.</p><p>The request uses fixed-capacity fields. The example checks the destination length before copying it. Framework validates the complete request before generating files. Names that would inject quotes or new commands into generated C, CMake or YAML are rejected instead of being inserted as executable syntax.</p><h2>Plan before writing</h2><p>The existing Framework template service renders a file plan, and the generator applies it. <code>UmiDeveloperProjectCreateNew</code> adds the specific rule for creating a new project: the destination must be absolute and must not already exist. It does not overwrite an established project.</p><p>An I/O failure can leave part of a newly created directory. Read the error and inspect that directory before retrying. Do not repeatedly delete folders from a helper script. The report tells the caller what generation completed; it is not a substitute for checking the filesystem.</p><h2>Read the build profile</h2><p>After creation, the returned profile names the source, build directory, preset, executable and installation directory. The Linux model uses a Linux preset and an executable without a Windows suffix. The Windows model uses the UCRT64 preset.</p><p>An imported folder is different from a generated project. Framework can set its source directory, but must not guess that its executable is <code>umicom-studio-ide</code>. Select the actual target and program in Project Settings. A profile is a description of one build, not permission to run arbitrary code.</p><h2>Understand the background sequence</h2><p>A build runs Configure followed by Build. Run adds the selected program after those phases succeed. Test and Install configure and build the project before their final operation. If compilation fails, later phases stop. This prevents Run from silently executing an old binary after a failed build.</p><p>The worker receives a copy of the profile. The UI reads completed results on its own thread rather than sharing mutable GTK objects with the worker. Cancellation is a request to stop the operation; it is not the same thing as freeing the worker’s memory immediately. Shutdown waits for the owned work to finish before releasing its inputs.</p><h2>Try both entry points</h2><p>Run the native creator with a new absolute directory. Read its printed preset and launch path. Open the resulting folder in Studio, inspect Project Settings and build it. Compare this with using File → New Project. Both should generate through Framework, not through separate file-writing implementations.</p><h2>Build and run the supplied example</h2><p>Configure the learning targets once using the <a href="application-development.html#setup">course setup</a>. Run the commands below one at a time. Stop when a command reports a failure; do not continue to run an older executable.</p><div class="platform"><h3>Windows · PowerShell</h3><pre><code>Set-Location "C:\umicom\Umicom-Applications"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake --build --preset windows-ucrt64-all-debug --target umicom-learning-project-creator --parallel 2
+&amp; ".\build\windows-ucrt64-all-debug\bin\umicom-learning-project-creator.exe" --help</code></pre></div><div class="platform"><h3>Linux · terminal</h3><pre><code>cd "$HOME/umicom/Umicom-Applications"
+cmake --build --preset linux-gcc-all-headless-debug --target umicom-learning-project-creator --parallel 2
+./build/linux-gcc-all-headless-debug/bin/umicom-learning-project-creator --help</code></pre></div><h2>Source to study and edit</h2><p>These are the supplied files for this lesson. Open them in Studio to follow the code. The Notes model is shared by the terminal example and the window; keep one implementation while trying different frontends.</p><details open=""><summary>project_creator.c</summary><p><code>framework/examples/learning/projects/project_creator.c</code></p><pre><code>/*-----------------------------------------------------------------------------
+ * Umicom Framework — application development lessons
+ * File: examples/learning/projects/project_creator.c
+ * PURPOSE: Create a fresh CMake project through the same Framework service as Studio.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+#include "umicom/developer_project/new_project.h"
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+int main(int argc, char **argv)
+{
+    UmiDeveloperProjectService *service = NULL;
+    UmiDeveloperProjectGenerationRequest request;
+    UmiDeveloperProjectGeneratorReport report;
+    UmiDeveloperProjectModel model;
+    UmiBuildProfile profile;
+    if (argc != 2 || strcmp(argv[1], "--help") == 0) {
+        puts("Usage: umicom-learning-project-creator &lt;absolute-new-directory&gt;");
+        puts("Creates a C23 project named Umicom Notes. Existing directories are refused.");
+        return argc == 2 ? EXIT_SUCCESS : EXIT_FAILURE;
+    }
+    if (strlen(argv[1]) &gt;= sizeof(request.project_root)) return EXIT_FAILURE;
+    umi_developer_project_generation_request_init(&amp;request);
+    strcpy(request.application_name, "Umicom Notes");
+    strcpy(request.application_id, "org.umicom.notes");
+    strcpy(request.repository_name, "umicom-notes");
+    strcpy(request.target_name, "umicom_notes");
+    strcpy(request.template_id, "developer.template.c23-console");
+    strcpy(request.project_root, argv[1]);
+    UmiStatus status = umi_developer_project_service_create(&amp;service);
+    if (status == UMI_STATUS_OK)
+        status = UmiDeveloperProjectCreateNew(service, &amp;request, &amp;report, &amp;model, &amp;profile);
+    if (status == UMI_STATUS_OK)
+        printf("Created %zu files in %s\nConfigure preset: %s\nRun program: %s\n",
+            report.files_created, model.root, profile.preset, profile.run_program);
+    else fprintf(stderr, "Project was not created: %s\n", umi_status_text(status));
+    umi_developer_project_service_destroy(service);
+    return status == UMI_STATUS_OK ? EXIT_SUCCESS : EXIT_FAILURE;
+}</code></pre></details><div class="exercise"><strong>Your practical task</strong><p>Create a new project through the native example and build it on Windows or Linux.</p></div><div class="navigation"><a href="application-notes-menus.html">Previous</a><a href="application-delivery.html">Continue</a></div></main><footer>Sammy Hegab · Umicom Foundation<br/>Practice source: Framework / examples / learning / projects</footer></body></html>
+

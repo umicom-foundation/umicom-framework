@@ -23,6 +23,8 @@
 #include "umicom/build/ctest_provider.h"
 #include "umicom/build/parser.h"
 #include "umicom/platform/process.h"
+#include "umicom/platform/filesystem.h"
+#include "umicom/platform/path.h"
 #include "umicom/platform/threading.h"
 
 struct UmiBuildRunner {
@@ -121,7 +123,24 @@ UmiStatus umi_build_runner_run(UmiBuildRunner *runner,
 
     (void)umi_mutex_lock(runner->mutex);
     profile = runner->profile;
-    operation_id = runner->next_operation_id++;
+    if (runner->history != NULL) {
+        status = UmiBuildHistoryReserveOperationId(runner->history, &operation_id);
+        if (status != UMI_STATUS_OK) {
+            (void)umi_mutex_unlock(runner->mutex);
+            umi_build_result_init(out_result, 0U, phase, profile.profile_id);
+            umi_build_result_finish(out_result, status, -1, 0U);
+            return status;
+        }
+        runner->next_operation_id = operation_id == UINT64_MAX ? 0U : operation_id + 1U;
+    } else {
+        if (runner->next_operation_id == 0U) {
+            (void)umi_mutex_unlock(runner->mutex);
+            umi_build_result_init(out_result, 0U, phase, profile.profile_id);
+            umi_build_result_finish(out_result, UMI_STATUS_CAPACITY_EXCEEDED, -1, 0U);
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        operation_id = runner->next_operation_id++;
+    }
     (void)umi_mutex_unlock(runner->mutex);
 
     umi_build_result_init(out_result,
@@ -129,6 +148,30 @@ UmiStatus umi_build_runner_run(UmiBuildRunner *runner,
                           phase,
                           profile.profile_id);
     out_result->state = UMI_BUILD_STATE_RUNNING;
+    /* Studio's working directory is not necessarily the open project. Resolve
+     * paths once per operation and launch without changing the host's cwd. */
+    {
+        UmiBuildProfile input = profile;
+        char currentDirectory[UMI_BUILD_PATH_CAPACITY];
+        status = umi_fs_current_directory(currentDirectory, sizeof(currentDirectory));
+        if (status == UMI_STATUS_OK)
+            status = umi_path_absolute(input.source_directory, currentDirectory,
+                profile.source_directory, sizeof(profile.source_directory));
+        if (status == UMI_STATUS_OK)
+            status = umi_path_absolute(input.build_directory, profile.source_directory,
+                profile.build_directory, sizeof(profile.build_directory));
+        if (status == UMI_STATUS_OK)
+            status = umi_path_absolute(input.install_directory, profile.source_directory,
+                profile.install_directory, sizeof(profile.install_directory));
+        if (status == UMI_STATUS_OK && (strchr(input.run_program, '/') != NULL ||
+            strchr(input.run_program, '\\') != NULL))
+            status = umi_path_absolute(input.run_program, profile.source_directory,
+                profile.run_program, sizeof(profile.run_program));
+        if (status != UMI_STATUS_OK) {
+            umi_build_result_finish(out_result, status, -1, 0U);
+            return status;
+        }
+    }
     provider = provider_for_phase(phase);
     status = umi_build_provider_create_command(&provider,
                                                &profile,
@@ -137,6 +180,11 @@ UmiStatus umi_build_runner_run(UmiBuildRunner *runner,
     if (status != UMI_STATUS_OK) {
         umi_build_result_finish(out_result, status, -1, 0U);
         return status;
+    }
+    if (command.working_directory[0] == '\0' &&
+        !umi_build_command_set_working_directory(&command, profile.source_directory)) {
+        umi_build_result_finish(out_result, UMI_STATUS_CAPACITY_EXCEEDED, -1, 0U);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     (void)umi_build_command_format(&command,
                                    out_result->command,
@@ -150,6 +198,8 @@ UmiStatus umi_build_runner_run(UmiBuildRunner *runner,
         command.working_directory[0] != '\0'
             ? command.working_directory
             : NULL;
+    request.window_mode = phase == UMI_BUILD_PHASE_RUN
+        ? UMI_PROCESS_WINDOW_INHERIT : UMI_PROCESS_WINDOW_HIDDEN;
     request.capture_stdout = 1;
     request.capture_stderr = 1;
     request.timeout_ms = profile.timeout_ms;

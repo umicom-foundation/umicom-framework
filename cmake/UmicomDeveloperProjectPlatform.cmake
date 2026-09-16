@@ -28,6 +28,7 @@ if(NOT TARGET umicom_developer)
 endif()
 
 target_sources(umicom_developer PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/build/project_profile.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/build_plan.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/builtin_languages.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/builtin_providers.c"
@@ -36,6 +37,7 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/generation_plan.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/generation_request.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/generator.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/new_project.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/language_health.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/language_pack.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/language_provider.c"
@@ -419,3 +421,72 @@ endif()
 
 message(STATUS
     "Umicom project models, language packs and generator platform enabled")
+
+# Generic developer dialogs live in Framework's existing GTK adapter. Defer only
+# when that optional target has not yet been declared by the parent build.
+function(umicom_attach_developer_dialogs_gtk4)
+    if(NOT TARGET umicom_ui_gtk4)
+        return()
+    endif()
+    get_target_property(attached umicom_ui_gtk4 UMICOM_DEVELOPER_DIALOGS_ATTACHED)
+    if(attached)
+        return()
+    endif()
+    target_sources(umicom_ui_gtk4 PRIVATE
+        "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../adapters/gtk4/developer_dialog_gtk4.c")
+    target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::developer)
+    set_property(TARGET umicom_ui_gtk4 PROPERTY UMICOM_DEVELOPER_DIALOGS_ATTACHED TRUE)
+    if(BUILD_TESTING)
+        add_executable(umicom-developer-dialog-gtk4-test
+            "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../tests/developer_project/test_developer_dialog_gtk4.c")
+        target_link_libraries(umicom-developer-dialog-gtk4-test PRIVATE Umicom::ui_gtk4)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(umicom-developer-dialog-gtk4-test)
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(umicom-developer-dialog-gtk4-test)
+        endif()
+        set(dialogTestDirectory "${CMAKE_CURRENT_BINARY_DIR}/qualification/developer_dialog")
+        file(MAKE_DIRECTORY "${dialogTestDirectory}")
+        add_test(NAME framework.ide_workflow.developer_dialog.gtk4 COMMAND umicom-developer-dialog-gtk4-test)
+        set_tests_properties(framework.ide_workflow.developer_dialog.gtk4 PROPERTIES
+            WORKING_DIRECTORY "${dialogTestDirectory}" SKIP_RETURN_CODE 77
+            TIMEOUT 60 LABELS "framework;ide-workflow;gtk4;acceptance")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-developer-dialog-gtk4-test)
+        endif()
+    endif()
+endfunction()
+umicom_attach_developer_dialogs_gtk4()
+if(NOT TARGET umicom_ui_gtk4)
+    cmake_language(DEFER CALL umicom_attach_developer_dialogs_gtk4)
+endif()
+
+# Focused real-service qualification. Each filesystem test owns its CTest cwd.
+if(BUILD_TESTING)
+    foreach(case IN ITEMS project_input_boundaries project_session money_boundaries save_all history_identity)
+        set(target "umicom-project-${case}-test")
+        add_executable(${target} "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_project/test_${case}.c")
+        target_link_libraries(${target} PRIVATE Umicom::Framework)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(${target})
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(${target})
+        endif()
+        set(testDirectory "${CMAKE_CURRENT_BINARY_DIR}/qualification/${case}")
+        file(MAKE_DIRECTORY "${testDirectory}")
+        add_test(NAME framework.ide_workflow.${case} COMMAND ${target})
+        set_tests_properties(framework.ide_workflow.${case} PROPERTIES
+            WORKING_DIRECTORY "${testDirectory}" TIMEOUT 30 LABELS "framework;ide-workflow;regression")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(${target})
+        endif()
+    endforeach()
+    foreach(case IN ITEMS cancel failure)
+        add_test(NAME framework.ide_workflow.project_session.${case}
+            COMMAND umicom-project-project_session-test ${case})
+        set_tests_properties(framework.ide_workflow.project_session.${case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;ide-workflow;regression")
+    endforeach()
+endif()

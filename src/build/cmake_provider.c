@@ -103,6 +103,10 @@ static UmiStatus cmake_command(const UmiBuildProfile *profile,
                                              profile->build_target))) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
+        if (!umi_build_command_add_argument(out_command, "--config") ||
+            !umi_build_command_add_argument(out_command, profile->configuration)) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
         (void)snprintf(jobs, sizeof(jobs), "%u",
                        umi_build_policy_safe_parallel_jobs(
                            profile->parallel_jobs, 0U, 0U));

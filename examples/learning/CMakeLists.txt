@@ -114,3 +114,6 @@ endif()
 
 # The extended programming course uses the same source/install ownership.
 add_subdirectory(programming)
+
+# Application-focused lessons share the real Framework contracts.
+add_subdirectory(projects)

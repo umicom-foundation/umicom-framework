@@ -39,6 +39,7 @@ typedef struct UmiDocumentCoordinatorEntry {
     size_t undo_count;
     char *redo[UMI_DOCUMENT_COORDINATOR_HISTORY_CAPACITY];
     size_t redo_count;
+    int pristine_virtual;
 } UmiDocumentCoordinatorEntry;
 
 struct UmiDocumentCoordinator {
@@ -163,6 +164,7 @@ static UmiStatus refresh_view(UmiDocumentCoordinator *coordinator, size_t index)
     char *text = NULL;
     size_t length = 0U;
     UmiStatus status;
+    int existingView;
     status = umi_document_store_snapshot(coordinator->store,
                                          entry->document_id,
                                          &store_snapshot);
@@ -176,17 +178,22 @@ static UmiStatus refresh_view(UmiDocumentCoordinator *coordinator, size_t index)
         umi_document_store_free_text(text);
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
-    (void)memset(&view, 0, sizeof(view));
+    existingView = umi_ui_document_view_model_find(
+        umi_ui_workbench_documents(coordinator->workbench), entry->view_id, &view) == UMI_STATUS_OK;
+    if (!existingView) (void)memset(&view, 0, sizeof(view));
     (void)snprintf(view.view_id, sizeof(view.view_id), "%s", entry->view_id);
     (void)snprintf(view.document_id, sizeof(view.document_id),
                    "document.%llu", (unsigned long long)entry->document_id);
     (void)snprintf(view.title, sizeof(view.title), "%s", store_snapshot.display_name);
     (void)snprintf(view.source_text, sizeof(view.source_text), "%s", text);
     view.dirty = store_snapshot.dirty || !store_snapshot.has_path;
-    view.active = 1;
-    view.pinned = 1;
-    view.cursor_offset = 0U;
-    view.selection_length = 0U;
+    if (!existingView) {
+        view.active = 1;
+        view.pinned = 1;
+    }
+    if (view.cursor_offset > length) view.cursor_offset = length;
+    if (view.selection_length > length - view.cursor_offset)
+        view.selection_length = length - view.cursor_offset;
     /* Apply this branch only when its contract condition is satisfied. */
     if (store_snapshot.has_path) {
         (void)umi_document_uri_from_path(store_snapshot.path, view.uri, sizeof(view.uri));
@@ -202,7 +209,7 @@ static UmiStatus refresh_view(UmiDocumentCoordinator *coordinator, size_t index)
     status = umi_ui_document_view_model_upsert(
         umi_ui_workbench_documents(coordinator->workbench), &view);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status == UMI_STATUS_OK) {
+    if (status == UMI_STATUS_OK && !existingView) {
         status = umi_ui_workbench_activate_document(coordinator->workbench,
                                                     entry->view_id);
     }
@@ -283,6 +290,11 @@ static UmiStatus import_existing_views(UmiDocumentCoordinator *coordinator)
                                 NULL, view.view_id, &entry_index);
         /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Built-in umicom:// welcome/reference text is not an unsaved user
+         * file until the learner actually edits it. Restored dirty drafts are
+         * never exempted from saving. */
+        coordinator->entries[entry_index].pristine_virtual =
+            !view.dirty && strncmp(view.uri, "umicom://", 9U) == 0;
         (void)umi_ui_document_view_model_upsert(views, &view);
     }
     return UMI_STATUS_OK;
@@ -485,6 +497,8 @@ static UmiStatus sync_index(UmiDocumentCoordinator *coordinator, size_t index)
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (view.dirty || strcmp(stored, view.source_text) != 0)
+        coordinator->entries[index].pristine_virtual = 0;
     if (strcmp(stored, view.source_text) != 0) {
         status = history_push(coordinator->entries[index].undo,
                               &coordinator->entries[index].undo_count,
@@ -603,6 +617,37 @@ UmiStatus umi_document_coordinator_save_active(
     return save_index_as(coordinator, index, snapshot.path);
 }
 
+/* Save All uses the same working-copy and conflict boundary as Save. There is
+ * no cross-file transaction: a later I/O failure preserves earlier successful
+ * saves and reports their count. Unsaved names are rejected before any write. */
+UmiStatus UmiDocumentCoordinatorSaveAll(UmiDocumentCoordinator *coordinator,
+    size_t *outSaved)
+{
+    UmiDocumentSnapshot snapshot;
+    UmiStatus status;
+    if (outSaved != NULL) *outSaved = 0U;
+    if (coordinator == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t index = 0U; index < coordinator->count; ++index) {
+        status = sync_index(coordinator, index);
+        if (status != UMI_STATUS_OK) return status;
+        status = umi_document_store_snapshot(coordinator->store,
+            coordinator->entries[index].document_id, &snapshot);
+        if (status != UMI_STATUS_OK) return status;
+        if (coordinator->entries[index].pristine_virtual) continue;
+        if (snapshot.dirty && !snapshot.has_path) return UMI_STATUS_INVALID_STATE;
+    }
+    for (size_t index = 0U; index < coordinator->count; ++index) {
+        status = umi_document_store_snapshot(coordinator->store,
+            coordinator->entries[index].document_id, &snapshot);
+        if (status != UMI_STATUS_OK) return status;
+        if (!snapshot.dirty || coordinator->entries[index].pristine_virtual) continue;
+        status = save_index_as(coordinator, index, snapshot.path);
+        if (status != UMI_STATUS_OK) return status;
+        if (outSaved != NULL) ++*outSaved;
+    }
+    return UMI_STATUS_OK;
+}
+
 /*
  * Provide the document coordinator save active as operation used by this module and its
  * client applications.
@@ -653,10 +698,11 @@ UmiStatus umi_document_coordinator_close_active(
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (!force && (snapshot.dirty || !snapshot.has_path)) return UMI_STATUS_INVALID_STATE;
+    if (!force && !coordinator->entries[index].pristine_virtual &&
+        (snapshot.dirty || !snapshot.has_path)) return UMI_STATUS_INVALID_STATE;
     status = umi_document_store_close(coordinator->store,
                                       coordinator->entries[index].document_id,
-                                      force);
+                                      force || coordinator->entries[index].pristine_virtual);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)umi_ui_document_view_model_remove(
@@ -994,7 +1040,8 @@ static UmiStatus snapshot_index(const UmiDocumentCoordinator *coordinator,
     out_snapshot->undo_count = entry->undo_count;
     out_snapshot->redo_count = entry->redo_count;
     out_snapshot->revision = store_snapshot.revision;
-    out_snapshot->dirty = store_snapshot.dirty || !store_snapshot.has_path;
+    out_snapshot->dirty = !entry->pristine_virtual &&
+        (store_snapshot.dirty || !store_snapshot.has_path);
     out_snapshot->has_path = store_snapshot.has_path;
     return UMI_STATUS_OK;
 }

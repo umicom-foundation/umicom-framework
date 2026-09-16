@@ -39,6 +39,10 @@ UmiStatus umi_build_history_at(const UmiBuildHistory *history,
 UmiStatus umi_build_history_latest(const UmiBuildHistory *history,
                                    UmiBuildResult *out_result);
 void umi_build_history_clear(UmiBuildHistory *history);
+/** Reserve an identity shared by every producer of this history. Clearing the
+ * retained records does not reuse old operation IDs. Output is unchanged when
+ * the 64-bit identity space is exhausted. */
+UmiStatus UmiBuildHistoryReserveOperationId(UmiBuildHistory *history, uint64_t *outId);
 
 #ifdef __cplusplus
 }

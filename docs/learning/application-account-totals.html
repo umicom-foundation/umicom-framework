@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+
+<html lang="en-GB"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><meta content="foundations.application-account-totals" name="umicom-lesson-id"/><title>Calculate a training account balance | Umicom</title><style>
+:root{--ink:#182b3a;--muted:#516474;--line:#dbe4eb;--accent:#006f73;--paper:#fff;--code:#152635}*{box-sizing:border-box}body{margin:0;background:#f1f5f8;color:var(--ink);font:17px/1.7 system-ui,"Segoe UI",sans-serif}header,main,footer{max-width:1050px;margin:auto}header{padding:34px 40px 24px}header a{font-weight:650}main{background:var(--paper);padding:36px 56px 56px;border:1px solid var(--line);border-radius:14px;margin-bottom:28px}h1{font-size:clamp(30px,4vw,45px);line-height:1.15;margin:12px 0 22px}h2{font-size:25px;line-height:1.3;margin:38px 0 14px;color:#173f56}h3{font-size:20px;margin-top:27px}.lede{font-size:20px;color:#355264}.kicker{font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:var(--accent)}a{color:#006b82}p{margin:15px 0}code{font:0.88em/1.6 Consolas,"Liberation Mono",monospace;background:#edf3f6;padding:.12em .3em;border-radius:4px}pre{background:var(--code);color:#eff9ff;padding:22px;border-radius:9px;overflow:auto;font:14px/1.6 Consolas,monospace}pre code{background:none;color:inherit;padding:0;font:inherit}.note{background:#edf8f6;border-left:4px solid var(--accent);padding:16px 22px;margin:24px 0}.exercise{background:#fff7e6;border-left:4px solid #b78629;padding:16px 22px;margin-top:28px}table{border-collapse:collapse;width:100%;margin:22px 0;font-size:15px}td,th{text-align:left;padding:12px;border:1px solid var(--line);vertical-align:top}th{background:#edf4f8}details{border:1px solid var(--line);border-radius:8px;padding:14px;margin:18px 0}summary{cursor:pointer;font-weight:650}.platform{border-top:1px solid var(--line);padding-top:8px}.navigation{display:flex;justify-content:space-between;gap:20px;border-top:1px solid var(--line);padding-top:22px;margin-top:35px}footer{padding:0 40px 35px;color:var(--muted);font-size:14px}li{margin:.5em 0}@media(max-width:700px){main{padding:26px 22px;margin:0 10px 20px}header{padding:24px}table{display:block;overflow:auto}}@media print{body{background:white}main{border:0;padding:0}header{padding:0}.navigation{display:none}pre{white-space:pre-wrap;background:#f0f3f5;color:black}details{break-inside:auto}}
+p,li,h1,h2,h3,summary,.navigation{overflow-wrap:anywhere}pre{max-width:100%}pre code{overflow-wrap:normal;word-break:normal}</style></head><body><header><a href="index.html">Umicom Learning</a> · <a href="application-development.html">Build applications</a></header><main><div class="kicker">Umicom · application development</div><h1>Calculate a training account balance</h1><p>A banking screen needs more than a number with a currency symbol. The program must know what currency the amount belongs to, how its units are represented and whether an operation can be completed safely. We will use a small training account to practise these decisions. No bank connection or real payment is involved.</p><h2>Choose a clear representation</h2><p>For this GBP example, an amount is stored in pence. <code>10000</code> means £100.00. The scale is <code>2</code>, meaning that two decimal places are used when displaying the amount. This keeps our example calculations in whole-number arithmetic; we do not use a floating-point approximation for settled cash.</p><p><code>UmiMoney</code> is a Framework structure. A structure groups related fields: here, the minor-unit amount, scale and currency. The currency array contains <code>G</code>, <code>B</code>, <code>P</code> and a terminating zero byte. The terminator marks the end of a C string; it is not another displayed character.</p><h2>Follow the deposits</h2><p>The array <code>deposits</code> contains three amounts: £25.00, £5.00 and £12.50. The loop visits each array element once. <code>sizeof(deposits) / sizeof(deposits[0])</code> calculates the number of elements in this array. Indexing starts at zero, so a three-element array has positions zero, one and two.</p><p>For each deposit, we create a matching <code>UmiMoney</code> value and call <code>umi_money_add</code>. The function checks currency compatibility and whether the result fits in its integer representation. The expression <code>&amp;balance</code> passes the address of the balance object, allowing the function to write the accepted result back to it.</p><h2>Separate arithmetic from banking policy</h2><p>The example next requests a £32.50 payment. Before subtracting, it checks that this payment does not exceed the training balance. This is an application rule. It is separate from checking that integer subtraction is representable. Correct arithmetic alone does not prove that a payment is authorised.</p><p>Framework owns the reusable money operation. A real account service would also own permissions, limits, reservations, ledger entries and persistence. A button should request a payment through that service; it should not write a new account balance directly.</p><h2>Work out the expected result</h2><pre><code>Starting balance: 10000 pence
+Deposits:          2500 + 500 + 1250 pence
+Payment:           3250 pence
+Final balance:    11000 pence = GBP 110.00</code></pre><p>The program prints <code>GBP 110.00</code> and returns success only when the calculated balance is 11000 pence. That final comparison gives us a small executable check. In a larger test suite, we would also check rejected inputs and boundary values.</p><h2>Bad code and a safer approach</h2><pre><code>/* Do not use this as the account update. */
+balance.minor_units += deposit.minor_units;</code></pre><p>This line has no currency check and can overflow a signed integer. Use the shared checked operation and handle its result. A failure must leave the previous account value intact. Do not display “payment complete” merely because a button callback ran.</p><h2>Extend the exercise</h2><p>Add a fourth deposit of 200 pence and predict the new output. Then change the payment to more than the available amount and trace the rejection. Keep each experiment separate so that a changed result has an understandable cause.</p><h2>Build and run the supplied example</h2><p>Configure the learning targets once using the <a href="application-development.html#setup">course setup</a>. Run the commands below one at a time. Stop when a command reports a failure; do not continue to run an older executable.</p><div class="platform"><h3>Windows · PowerShell</h3><pre><code>Set-Location "C:\umicom\Umicom-Applications"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake --build --preset windows-ucrt64-all-debug --target umicom-learning-account-totals --parallel 2
+&amp; ".\build\windows-ucrt64-all-debug\bin\umicom-learning-account-totals.exe"</code></pre></div><div class="platform"><h3>Linux · terminal</h3><pre><code>cd "$HOME/umicom/Umicom-Applications"
+cmake --build --preset linux-gcc-all-headless-debug --target umicom-learning-account-totals --parallel 2
+./build/linux-gcc-all-headless-debug/bin/umicom-learning-account-totals</code></pre></div><h2>Source to study and edit</h2><p>These are the supplied files for this lesson. Open them in Studio to follow the code. The Notes model is shared by the terminal example and the window; keep one implementation while trying different frontends.</p><details open=""><summary>account_totals.c</summary><p><code>framework/examples/learning/projects/account_totals.c</code></p><pre><code>/*-----------------------------------------------------------------------------
+ * Umicom Framework — application development lessons
+ * File: examples/learning/projects/account_totals.c
+ * PURPOSE: Use shared money operations for a GBP training account, without real payments.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+#include &lt;inttypes.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include "umicom/finance/money.h"
+
+/* This is training data, not an account connected to a bank. */
+int main(void)
+{
+    UmiMoney balance = {10000, 2U, {{'G', 'B', 'P', '\0'}}};
+    const int64_t deposits[] = {2500, 500, 1250};
+    UmiMoney payment = {3250, 2U, {{'G', 'B', 'P', '\0'}}};
+
+    for (size_t index = 0U; index &lt; sizeof(deposits) / sizeof(deposits[0]); ++index) {
+        UmiMoney deposit = {deposits[index], 2U, {{'G', 'B', 'P', '\0'}}};
+        if (umi_money_add(&amp;balance, &amp;deposit, &amp;balance) != UMI_STATUS_OK) {
+            fputs("Deposit cannot be represented. Balance was not changed.\n", stderr);
+            return EXIT_FAILURE;
+        }
+    }
+    /* Application policy is checked before the shared arithmetic. */
+    if (payment.minor_units &gt; balance.minor_units) {
+        fputs("Payment rejected: insufficient training balance.\n", stderr);
+        return EXIT_FAILURE;
+    }
+    if (umi_money_subtract(&amp;balance, &amp;payment, &amp;balance) != UMI_STATUS_OK)
+        return EXIT_FAILURE;
+    printf("Umicom training account: GBP %" PRId64 ".%02" PRId64 "\n",
+        balance.minor_units / 100, balance.minor_units % 100);
+    return balance.minor_units == 11000 ? EXIT_SUCCESS : EXIT_FAILURE;
+}</code></pre></details><div class="exercise"><strong>Your practical task</strong><p>Add one deposit and calculate the expected balance before running the program.</p></div><div class="navigation"><a href="application-work-log.html">Previous</a><a href="application-binary-flags.html">Continue</a></div></main><footer>Sammy Hegab · Umicom Foundation<br/>Practice source: Framework / examples / learning / projects</footer></body></html>
+

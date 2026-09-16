@@ -352,5 +352,7 @@ install(DIRECTORY "${UMICOM_TEST_RUNTIME_FRAMEWORK_ROOT}/include/umicom/test_run
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom")
 message(STATUS "Umicom test runtime and regression execution platform enabled")
 
-install(FILES "${UMICOM_TEST_RUNTIME_FRAMEWORK_ROOT}/resources/testing/execution-profiles.json"
-    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/resources/testing")
+# Execution-profile contracts are installed with the public headers above.
+# This source tree supplies neither execution-profiles.json nor a JSON profile
+# loader. Do not advertise an absent configuration file as an install artifact;
+# a future resource implementation must add its reader, schema and tests together.
