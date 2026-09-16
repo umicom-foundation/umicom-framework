@@ -1,0 +1,180 @@
+<!doctype html>
+<!-- Umicom Framework | Purpose: Executable beginner learning resource.
+Author: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT -->
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="umicom-lesson-id" content="foundations.assembly-branches"><title>Assembly registers, comparisons and branches | Umicom</title><style>*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#f3f6fa;color:#162838;font:17px/1.7 system-ui,Segoe UI,sans-serif}a{color:#075d87;overflow-wrap:anywhere}header{padding:38px max(5vw,22px);background:#102e44;color:white}header a{color:#bcf3ef}header h1{max-width:1000px;font-size:clamp(30px,4vw,48px);line-height:1.13;margin:12px 0}header p{max-width:930px}.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#b8ece5}.layout{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1380px;margin:auto}nav{padding:25px 18px;position:sticky;top:0;max-height:100vh;overflow:auto}nav a{display:block;padding:7px 10px;text-decoration:none;font-size:13px;line-height:1.35;border-radius:6px}nav a.current{background:#d9eeed;font-weight:700}main{min-width:0;padding:24px 32px 70px}section{background:white;border:1px solid #d8e2eb;padding:26px 30px;margin:0 0 22px;border-radius:12px}h2{font-size:26px;margin-top:0;line-height:1.25}h3{font-size:20px;margin-top:24px}.note,.warning{padding:16px 20px;margin:20px 0;border-left:4px solid #177d77;background:#eaf6f3}.warning{border-color:#9d6810;background:#fff6e6}pre{padding:20px;background:#0d2131;color:#eaf6fa;border-radius:8px;overflow:auto;font:14px/1.55 ui-monospace,Consolas,monospace}code{font-family:ui-monospace,Consolas,monospace;overflow-wrap:anywhere}pre code{overflow-wrap:normal}p code,li code{background:#eef3f6;padding:2px 4px;border-radius:3px}.code-label{font-size:12px;font-weight:700;color:#34546e;letter-spacing:.02em;margin:16px 0 5px}.bad{border:2px solid #bc641d}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:13px}.card{padding:15px;border:1px solid #d8e2eb;border-radius:8px}.small{font-size:14px;color:#4a6172}table{border-collapse:collapse;width:100%;font-size:15px}th,td{padding:10px;border:1px solid #d8e2eb;text-align:left;vertical-align:top}th{background:#edf5f6}li{margin:9px 0}.pager{display:flex;gap:20px;flex-wrap:wrap;justify-content:space-between}.answer{margin-top:12px}summary{cursor:pointer;font-weight:650}footer{padding:30px;text-align:center;font-size:13px;color:#527085}@media(max-width:800px){.layout{display:block}nav{position:static;max-height:none;padding:14px}nav details{max-height:240px;overflow:auto}nav details a{display:block}main{padding:12px}section{padding:21px}header{padding:28px 20px}}@media print{nav{display:none}.layout{display:block}main{padding:0}header{background:white;color:#162838}pre{white-space:pre-wrap;background:#f4f6f8;color:black}section{break-inside:auto;border:0}a{color:inherit}}</style></head><body><header><div class="eyebrow">Umicom Framework · Programming workshop</div><h1>Assembly registers, comparisons and branches</h1><p>Read one idea. Write the example. Run it. Explain the result. Shared lessons for Studio and Education.</p><a href="programming-workshop.html">Course overview</a></header><div class="layout"><nav aria-label="Course contents"><details open><summary>Lessons</summary><a href="index.html">Original foundations: lessons 1–20</a><a href="programming-workshop.html">Programming workshop overview</a><a href="git-workflow.html">21. Git: clone to publication</a><a href="binary-arithmetic.html">22. Binary arithmetic from first principles</a><a href="boolean-masks.html">23. Boolean decisions and bit masks</a><a href="integer-ranges.html">24. Integer ranges and checked conversions</a><a href="byte-order.html">25. Bytes, endianness and explicit encoding</a><a href="cpu-model.html">26. A tiny fetch-decode-execute machine</a><a href="memory-lifetimes.html">27. Object lifetime, stack and heap</a><a href="types-formatting.html">28. C values, types and output formats</a><a href="control-flow.html">29. Decisions, loops and early returns</a><a href="functions-contracts.html">30. Functions with explicit contracts</a><a href="array-bounds.html">31. Array boundaries and empty collections</a><a href="bounded-strings.html">32. Bounded text and null termination</a><a href="numeric-parsing.html">33. Parsing numbers without accepting junk</a><a href="records-enums.html">34. Structures, enumerations and state</a><a href="pointer-contracts.html">35. Pointers, borrowing and const</a><a href="dynamic-memory.html">36. Allocation, resizing and ownership</a><a href="checked-arithmetic.html">37. Check arithmetic before overflow</a><a href="finite-numbers.html">38. Floating-point values and finite input</a><a href="resource-cleanup.html">39. Files, errors and one cleanup path</a><a href="modules-build.html">40. Headers, linking and separate compilation</a><a href="callbacks.html">41. Callbacks and dependency injection</a><a href="controller-architecture.html">42. Master Controller and Slave Controllers</a><a href="state-machines.html">43. State machines and rejected transitions</a><a href="bounded-queue.html">44. A bounded queue and backpressure</a><a href="search-sort.html">45. Search, sorting and algorithm cost</a><a href="test-design.html">46. Tests that remain active in Release</a><a href="coding-conventions.html">47. Readable names and coding conventions</a><a href="macro-hazards.html">48. Macros, precedence and repeated evaluation</a><a href="binary-records.html">49. Serialisation without dumping structures</a><a href="recursion.html">50. Recursion with a bound and base case</a><a href="atomic-basics.html">51. Atomic operations and concurrency boundaries</a><a href="assembly-branches.html">52. Assembly registers, comparisons and branches</a><a href="assembly-loops.html">53. Assembly loops, memory and empty input</a></details></nav><main><section id="idea"><p class="small">Lesson 52 · 45–90 minutes · ID: <code>foundations.assembly-branches</code></p><h2>1. Understand the idea</h2><p>Assembly exposes register-level operations and control flow. The calling convention decides where arguments and results live; it differs between Windows x64, Linux x86-64 and RISC-V.</p><table><tr><th>Term</th><th>Plain meaning</th></tr><tr><td>ABI</td><td>The binary-level calling and representation agreement.</td></tr><tr><td>Leaf function</td><td>A function that does not call another function.</td></tr><tr><td>Unsigned branch</td><td>A branch interpreting comparison flags as unsigned ordering.</td></tr></table><p>Review <a href="first-c-program.html">the first C programme</a>, <a href="functions.html">functions</a> and <a href="arrays-and-pointers.html">memory basics</a>. The workshop setup creates a separate build directory; it does not replace your application build.</p><div class="note">Before writing code, say what counts as valid input, who owns each object, and what must remain unchanged when an operation fails.</div></section>
+<section id="code"><h2>2. Write and inspect the complete example</h2><p>Open <code>framework/examples/learning/programming/assembly_branches/main.c</code>. The supplied file is the reference solution. Read it once, then type your own copy in a disposable practice workspace. For a first run you may build the supplied reference unchanged. Do not put deliberately broken examples into the shared Framework source.</p><p>The lines beginning with <code>#include</code> provide declarations. <code>main</code> is the programme entry point. <code>EXIT_FAILURE</code> reports a failed check; <code>EXIT_SUCCESS</code> reports success. The helper functions above <code>main</code> implement this lesson’s contract.</p><div class="code-label">examples/learning/programming/assembly_branches/main.c</div><pre><code>/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/learning/programming/assembly_branches/main.c
+ *
+ * PURPOSE:
+ *   Assembly registers, comparisons and branches.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+#include &lt;stdint.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &quot;../assembly_contract.h&quot;
+
+static uint64_t MaximumC(uint64_t left, uint64_t right)
+{
+    return left&gt;=right?left:right;
+}
+int main(void)
+{
+    const uint64_t pairs[][2]={{0U,0U},{4U,9U},{9U,4U},{UINT64_MAX,1U},{1U,UINT64_MAX}};
+    for (size_t index=0U; index&lt;sizeof(pairs)/sizeof(pairs[0]); ++index) {
+        uint64_t expected=MaximumC(pairs[index][0],pairs[index][1]);
+#ifdef UMICOM_LAB_NATIVE_ASSEMBLY
+        if (LabMaximumAsm(pairs[index][0],pairs[index][1])!=expected) return EXIT_FAILURE;
+#else
+        if (expected!=pairs[index][0] &amp;&amp; expected!=pairs[index][1]) return EXIT_FAILURE;
+#endif
+    }
+#ifdef UMICOM_LAB_NATIVE_ASSEMBLY
+    puts(&quot;native Assembly matched C for five unsigned comparisons&quot;);
+#else
+    puts(&quot;C-only mode: enable UMICOM_LEARNING_BUILD_ASSEMBLY for native comparison&quot;);
+#endif
+    puts(&quot;PASS: assembly_branches&quot;);
+    return EXIT_SUCCESS;
+}
+</code></pre><div class="code-label">Shared declaration: ../assembly_contract.h</div><pre><code>/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/learning/programming/assembly_contract.h
+ *
+ * PURPOSE:
+ *   Describe the native Assembly teaching ABI without toolkit types.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_LEARNING_ASSEMBLY_CONTRACT_H
+#define UMICOM_LEARNING_ASSEMBLY_CONTRACT_H
+#include &lt;stddef.h&gt;
+#include &lt;stdint.h&gt;
+/* Leaf functions; no ownership transfer. Native functions are optional. */
+uint64_t LabMaximumAsm(uint64_t left, uint64_t right);
+/* values may be NULL only when count is zero; addition is modulo 2^64. */
+uint64_t LabSumAsm(const uint64_t *values, size_t count);
+#endif
+</code></pre><div class="code-label">Native source: ../basics_x86_64.S (Windows / Linux x86-64)</div><pre><code>/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/learning/programming/basics_x86_64.S
+ *
+ * PURPOSE:
+ *   Teach unsigned comparison and a zero-safe loop on Windows/ELF x86-64.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+/* GCC/Clang preprocessed Assembly, AT&amp;T syntax: source operand first. */
+#ifdef _WIN32
+#define FIRST %rcx
+#define SECOND %rdx
+#else
+#define FIRST %rdi
+#define SECOND %rsi
+#endif
+.text
+.globl LabMaximumAsm
+#ifndef _WIN32
+.type LabMaximumAsm, @function
+#endif
+LabMaximumAsm:
+    movq FIRST, %rax
+    cmpq SECOND, %rax
+    jae .Lmaximum_done
+    movq SECOND, %rax
+.Lmaximum_done:
+    ret
+#ifndef _WIN32
+.size LabMaximumAsm, .-LabMaximumAsm
+#endif
+
+.globl LabSumAsm
+#ifndef _WIN32
+.type LabSumAsm, @function
+#endif
+LabSumAsm:
+    xorq %rax, %rax
+    testq SECOND, SECOND
+    je .Lsum_done
+.Lsum_next:
+    addq (FIRST), %rax
+    addq $8, FIRST
+    subq $1, SECOND
+    jne .Lsum_next
+.Lsum_done:
+    ret
+#ifndef _WIN32
+.size LabSumAsm, .-LabSumAsm
+.section .note.GNU-stack,&quot;&quot;,@progbits
+#endif
+</code></pre><div class="code-label">Native source: ../basics_riscv64.S (RISC-V LP64)</div><pre><code>/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/learning/programming/basics_riscv64.S
+ *
+ * PURPOSE:
+ *   Teach leaf functions with the RISC-V LP64 integer calling convention.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+.text
+.globl LabMaximumAsm
+.type LabMaximumAsm, @function
+LabMaximumAsm:
+    bgeu a0, a1, .Lmaximum_done
+    mv a0, a1
+.Lmaximum_done:
+    ret
+.size LabMaximumAsm, .-LabMaximumAsm
+
+.globl LabSumAsm
+.type LabSumAsm, @function
+LabSumAsm:
+    mv t0, a0
+    li a0, 0
+    beqz a1, .Lsum_done
+.Lsum_next:
+    ld t1, 0(t0)
+    add a0, a0, t1
+    addi t0, t0, 8
+    addi a1, a1, -1
+    bnez a1, .Lsum_next
+.Lsum_done:
+    ret
+.size LabSumAsm, .-LabSumAsm
+.section .note.GNU-stack,&quot;&quot;,@progbits
+</code></pre></section>
+<section id="walk"><h2>3. Follow the values through the code</h2><p>The C contract uses uint64_t, so the native implementation must compare unsigned values. The final two pairs distinguish an unsigned branch from a signed one. Windows x64 passes the arguments in RCX and RDX; the Linux System V x86-64 convention uses RDI and RSI; RISC-V LP64 uses a0 and a1. The source files select the appropriate contract at build time.</p><p>Place your cursor at the first statement in <code>main</code>. Write down the input and expected output of each helper call. When you reach a rejection, check both the return value and any caller-owned output. Do not assume “no crash” means the result is correct.</p><div class="warning"><strong>Bad example — inspect only.</strong> The following fragment illustrates a defect or unclear contract. It is not part of the built targets. Examples with invalid memory access, mismatched formats or undefined behaviour must not be run.</div><div class="code-label">Bad pattern: not compiled or executed</div><pre><code>/* Signed branches compare unsigned high-bit values incorrectly. Choose the correct comparison. */</code></pre><p><strong>Good pattern:</strong> use the complete checked implementation above. Explain which precondition or comparison prevents the defect. A naming change alone cannot repair an ownership or bounds error.</p></section>
+<section id="run"><h2>4. Build and run it</h2><p>First complete <a href="programming-workshop.html#setup">the workshop configuration</a> once. Then run the following commands one line at a time. Stop on an error instead of continuing with an old executable. The two operating systems use different paths, but compile the same C sources.</p><div class="code-label">Windows · PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+$env:Path = &quot;C:\msys64\ucrt64\bin;$env:Path&quot;
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; --build &quot;.\build\learning-programming&quot; --target umicom-learning-assembly-branches
+&amp; &quot;.\build\learning-programming\bin\umicom-learning-assembly-branches.exe&quot;
+&amp; &quot;C:\msys64\ucrt64\bin\ctest.exe&quot; --test-dir &quot;.\build\learning-programming&quot; --no-tests=error --output-on-failure -R &#x27;^framework\.learning\.programming\.assembly_branches$&#x27;</code></pre><div class="code-label">Linux · terminal</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications&quot;
+cmake --build build/learning-programming --target umicom-learning-assembly-branches
+./build/learning-programming/bin/umicom-learning-assembly-branches
+ctest --test-dir build/learning-programming --no-tests=error --output-on-failure -R &#x27;^framework\.learning\.programming\.assembly_branches$&#x27;</code></pre><p>You should see the lesson’s explanatory output followed by:</p><div class="code-label">Expected final line</div><pre><code>PASS: assembly_branches</code></pre><p>CTest should report one passing test for this exact filter. “No tests were found” is not success. Compilation errors concern C syntax or declarations; undefined references concern linking; a non-zero test exit concerns observed behaviour.</p><div class="note">Use <code>-DUMICOM_LEARNING_BUILD_ASSEMBLY=ON</code> during configuration to execute the native comparison. With it OFF, the programme explicitly prints “C-only mode”; that result does not qualify the Assembly implementation. The supplied native sources support x86-64 Windows/ELF and RISC-V LP64 ELF, not every CPU.</div></section><section id="practice"><h2>5. Change one thing and test again</h2><p>Read the matching .S file. Annotate the argument registers, result register, comparison and branch. Compile in native Assembly mode and explain why UINT64_MAX catches a signed-branch mistake.</p><p>Before editing, record your prediction. Rebuild the changed target and run it again; a previously built binary does not contain new source edits. Add at least one successful case, one rejected case and one boundary case. Preserve the original reference solution so a teacher can compare your attempt with known behaviour.</p><h3>Review questions</h3><p><strong>Why test UINT64_MAX against one?</strong></p><details class="answer"><summary>Read the explanation after answering</summary><p>Its high bit distinguishes unsigned ordering from signed ordering and exposes the wrong branch condition.</p></details><p><strong>What evidence did you produce?</strong> Record the source revision or the exact files you changed, compiler, build directory, command, observed output and any failure. Passing the supplied tests is not automatic proof that a new variation is safe.</p><p><strong>Where does this belong in Umicom?</strong> The exercise is a teaching example under Framework. A real reusable feature belongs in an existing Framework module with public contracts and tests. Studio and Education consume those modules rather than copy this laboratory as an application-local implementation.</p></section>
+<section id="sources"><h2>6. References and next step</h2><p>This is newly authored teaching material and executable example code, not a claim that a historical book’s prototype APIs are present in today’s repository. Use the <a href="programming-workshop.html#sources">official language, compiler and ABI references</a> for deeper study. The Master Controller / Slave Controller terminology follows this project’s established architecture.</p><div class="pager"><a href="atomic-basics.html">Previous lesson</a><a href="assembly-loops.html">Next lesson / overview</a></div></section></main></div><footer>Sammy Hegab · Umicom Foundation · Framework-owned learning content · No code executes from this page.</footer></body></html>

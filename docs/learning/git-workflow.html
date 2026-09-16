@@ -1,0 +1,658 @@
+<!doctype html>
+<!--
+Umicom Foundation
+File: docs/learning/git-workflow.html
+Purpose: Teach Git publication and cross-machine checkout for Umicom repositories.
+Prepared for: Sammy Hegab and the Umicom Foundation.
+Scope: Educational documentation only; no repository operations are executed by this page.
+-->
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Git for absolute beginners: individual Windows and Linux instructions for Framework, 24 application submodules and the Umicom Applications parent."><title>Git from clone to publication | Umicom</title><style>
+:root{--ink:#1c3042;--muted:#576a7c;--nav:#112c40;--paper:#fff;--bg:#f1f5f7;--line:#d6e1e6;--accent:#086c74;--accent-light:#e9f6f4;--amber:#885518;--amber-bg:#fff6e8;--code:#132c3b;--code-ink:#f0f6fb}*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:88px}body{margin:0;color:var(--ink);background:var(--bg);font:17px/1.72 system-ui,-apple-system,"Segoe UI",sans-serif}a{color:#006d83}a:hover{text-decoration-thickness:2px}a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #c0781b;outline-offset:3px}.skip{position:absolute;left:-9999px}.skip:focus{left:8px;top:8px;z-index:100;background:white;padding:8px}.top{position:sticky;top:0;z-index:20;display:flex;gap:20px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px 24px;background:var(--paper);border-bottom:1px solid var(--line)}.brand{font-weight:800;letter-spacing:.07em;font-size:14px;color:var(--accent)}.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.controls small{color:var(--muted)}button{font:inherit;font-size:14px;border:1px solid var(--line);background:#fff;border-radius:6px;padding:6px 12px;cursor:pointer}.controls button[aria-pressed="true"]{background:var(--accent);color:white;border-color:var(--accent)}.layout{max-width:1560px;margin:auto;display:grid;grid-template-columns:265px minmax(0,1fr)}nav.sidebar{position:sticky;top:68px;height:calc(100vh - 68px);overflow:auto;background:var(--nav);padding:24px 18px;color:#d7e5ee}nav p{font-size:13px;color:#b6ccd8}nav a{display:block;color:#deedf5;text-decoration:none;font-size:14px;padding:9px 8px;border-left:2px solid transparent;margin:4px 0;line-height:1.4}nav a:hover{background:#1c3d53;border-left-color:#81d4c8}.main{min-width:0;padding:32px clamp(18px,4vw,65px) 70px}.hero{padding:34px 0 38px;border-bottom:3px solid var(--accent)}.hero .kicker{color:var(--accent)}h1{font-size:clamp(36px,4.8vw,63px);line-height:1.08;margin:10px 0 20px;max-width:900px;letter-spacing:-.035em}.hero p{max-width:760px;font-size:20px}.meta{display:flex;gap:8px;flex-wrap:wrap;font-size:13px}.meta span{padding:5px 9px;border:1px solid #b9cfd5;border-radius:4px;color:var(--accent)}.chapter{background:#fff;border:1px solid var(--line);border-radius:9px;padding:clamp(20px,4vw,46px);margin:30px 0;box-shadow:0 4px 12px #112c4005;min-width:0}.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:12px;font-weight:800;color:var(--accent);margin:0 0 8px}h2{font-size:clamp(25px,3vw,34px);line-height:1.23;margin:6px 0 24px;letter-spacing:-.02em}h3{font-size:21px;line-height:1.3;margin:32px 0 14px}p{margin:14px 0}.callout{border-left:4px solid var(--accent);background:var(--accent-light);padding:17px 21px;margin:22px 0}.callout.warning{border-color:var(--amber);background:var(--amber-bg)}.callout.important{border-color:#24529b;background:#edf3fd}.refs{font-size:12px;white-space:normal}.refs a{text-decoration:none;margin:0 2px;color:#50667a}code{font: .91em/1.6 Consolas,"Liberation Mono",monospace;overflow-wrap:anywhere;background:#eef3f6;border-radius:3px;padding:.08em .3em}.codebox{margin:19px 0;border:1px solid #224659;border-radius:6px;overflow:hidden;min-width:0}.code-label{font-size:12px;letter-spacing:.035em;padding:8px 14px;background:#24475b;color:#e8f2fa;font-weight:700}pre{margin:0;padding:17px 18px;overflow:auto;background:var(--code);color:var(--code-ink);tab-size:4;font:14px/1.75 Consolas,"Liberation Mono",monospace}pre code{font:inherit;background:none;color:inherit;padding:0;white-space:pre;overflow-wrap:normal}.output .code-label{background:#e5edf1;color:#365469}.output pre{background:#f5f8fa;color:#213f53}.output{border-color:#ccdae3}.table-scroll{overflow:auto;margin:20px 0}table{border-collapse:collapse;width:100%;font-size:15px}th,td{border:1px solid var(--line);padding:12px 14px;text-align:left;vertical-align:top}th{background:#eef4f6;font-size:13px}td:first-child{font-weight:600;width:30%}.repo-filter{display:block;font-size:14px;font-weight:700;margin:22px 0}.repo-filter input{display:block;padding:11px 12px;width:100%;border:1px solid #b7ccd6;border-radius:5px;margin-top:8px;font:inherit}.repo-index{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 28px}.repo-index a{font-size:13px;text-decoration:none;background:#eff5f7;padding:5px 9px;border:1px solid var(--line);border-radius:4px}.repo{border-top:2px solid var(--line);padding:27px 0 17px;scroll-margin-top:95px}.repo-heading{display:flex;gap:15px;align-items:flex-start}.repo-heading h3{margin:0}.repo-heading p{margin:8px 0}.repo-number{background:var(--accent);color:white;font-size:14px;font-weight:800;min-width:38px;height:38px;display:grid;place-items:center;border-radius:5px}.recipe-foot{font-size:13px;color:var(--muted)}.answer{border:1px solid var(--line);border-radius:5px;padding:13px 17px;margin:13px 0}summary{cursor:pointer;font-weight:700;line-height:1.5}.source-list{padding-left:24px}.source-list li{padding:8px 0;font-size:15px;overflow-wrap:anywhere}.source-list small{font-size:12px;color:var(--muted)}footer{color:var(--muted);font-size:13px;padding:18px 0}.platform-hidden,.repo-hidden{display:none!important}body[data-platform="windows"] [data-os="linux"],body[data-platform="linux"] [data-os="windows"]{display:none}.nostyle{font-size:13px}.print-hint{color:var(--muted);font-size:13px}
+@media(max-width:1000px){.layout{grid-template-columns:210px minmax(0,1fr)}.main{padding:24px 20px}.chapter{padding:25px}.top{gap:8px;padding:10px 14px}nav.sidebar{top:81px;height:calc(100vh - 81px)}pre{font-size:13px}}
+@media(max-width:740px){.layout{display:block}nav.sidebar{position:static;height:auto;padding:15px 18px}nav.sidebar .toc{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}nav a{font-size:13px}.main{padding:20px 12px}.chapter{padding:21px 17px}.top{position:static}.hero{padding:20px 10px 28px}.codebox{margin-left:-4px;margin-right:-4px}.meta{font-size:12px}td:first-child{width:35%}}
+@media print{html{scroll-behavior:auto}body{background:white;font-size:10pt;line-height:1.5}.top,.sidebar,.repo-filter,.repo-index,.skip{display:none!important}.layout{display:block}.main{padding:0}.chapter{border:0;box-shadow:none;border-radius:0;padding:0;margin:22pt 0;break-before:page}.chapter h2{font-size:23pt;break-after:avoid}.chapter h3{break-after:avoid}.hero{padding:0 0 15pt}.hero h1{font-size:33pt}.hero p{font-size:13pt}.codebox{break-inside:avoid}.codebox pre{white-space:pre-wrap;background:#f4f6f7;color:#122d3d;font-size:8pt}.codebox pre code{white-space:pre-wrap;overflow-wrap:anywhere}.code-label{background:#dde7eb;color:#142f3f}.repo{break-before:page;border:0}.repo-heading{break-after:avoid}.callout{break-inside:avoid}body[data-platform] [data-os],.repo-hidden{display:block!important}details p{display:block!important}.source-list li{font-size:9pt}a{color:#193e53}table{font-size:9pt}}
+</style><meta name="umicom-lesson-id" content="foundations.git-workflow"></head>
+<body data-platform="both"><a class="skip" href="#main">Skip to the guide</a><header class="top"><div class="brand">UMICOM · DEVELOPER LEARNING</div><div class="controls"><small>Show commands:</small><button type="button" data-platform-button="windows" aria-pressed="false">Windows</button><button type="button" data-platform-button="linux" aria-pressed="false">Linux</button><button type="button" data-platform-button="both" aria-pressed="true">Both</button><button type="button" id="print-guide">Print</button></div></header><div class="layout"><nav class="sidebar" aria-label="Guide contents"><strong>From your first file<br>to a published project</strong><p>Read the lesson once.<br>Use the recipes every day.</p><div class="toc"><a href="#start">Start here: one repository at a time</a><a href="#words">1. What the Git words mean</a><a href="#setup">2. Prepare Git and sign in once per machine</a><a href="#branch">3. Check the branch before switching</a><a href="#practice">4. Practice: create, change, commit and push one file</a><a href="#clone">5. Clone the complete Umicom project</a><a href="#real-change">6. Make one small Framework documentation change</a><a href="#routine">7. The daily routine and the commit message</a><a href="#repositories">8. Every Umicom submodule: individual commands</a><a href="#parent">9. Publish the parent repository last</a><a href="#machines">10. Clone or update on another machine</a><a href="#trouble">11. Read the result: continue or stop</a><a href="#quiz">12. Check your understanding</a><a href="#quick">13. The short reminder</a><a href="#sources">Sources, scope and validation</a></div></nav><main class="main" id="main"><div class="hero"><p class="kicker">Git for absolute beginners</p><h1>Git from clone to publication</h1><p>A step-by-step guide to Git, Framework, application submodules and the Umicom Applications parent — on Windows and Linux.</p><div class="meta"><span>25 child repositories</span><span>Parent published last</span><span>Main-only development</span><span>One command at a time</span></div><p class="print-hint">Prepared for Sammy Hegab · Umicom Foundation · 16 September 2026<br>Works offline. References require internet access. Printing includes both platforms.</p><noscript><p>JavaScript is disabled: both Windows and Linux examples are shown. All commands and lessons remain readable.</p></noscript></div><section class="chapter" id="start"><p class="kicker">Umicom Git learning guide</p><h2>Start here: one repository at a time</h2><p>This guide teaches how to save and publish source changes without helper scripts. Use <strong>Windows PowerShell</strong> or <strong>Linux Bash</strong>; the platform buttons change the path examples. Read the lesson once, then use the <a href="#repositories">individual repository recipes</a> as a daily reference.</p><p><strong>The working rule for this project is development on <code>main</code>.</strong> Check the current state first, switch safely when needed, review the files, then add, commit and push. Finish Framework and the affected application repositories before the parent. This follows your requested Umicom workflow; it is not a claim that every Git project uses the same branching policy.</p><aside class="callout note"><strong>Copy one command line, press Enter, read the result.</strong> Stop on an error. These are manual instructions, not a block to paste and run unattended. Never copy a terminal prompt such as <code>PS C:\...&gt;</code>, <code>&gt;&gt;</code> or <code>$</code>. A leading <code>$HOME</code> in a command is different: it is part of the path.</aside><div class="table-scroll"><table><thead><tr><th>Your task</th><th>Where to start</th></tr></thead><tbody><tr><td>You have never used Git</td><td><a href="#words">Lesson 1</a>, then the private practice exercise.</td></tr><tr><td>You have already edited or merged a batch</td><td><a href="#branch">Branch checkpoint</a>, then the <a href="#repositories">repository recipes</a>. Do not automatically pull over pending work.</td></tr><tr><td>You need a fresh checkout</td><td><a href="#clone">Clone Umicom</a>.</td></tr><tr><td>You are moving to a second machine</td><td><a href="#machines">Receive the published snapshot</a>.</td></tr><tr><td>A command stopped or Git looks unfamiliar</td><td><a href="#trouble">Troubleshooting</a>. Preserve the current work.</td></tr></tbody></table></div><p><strong>Reading the guide changes nothing in Git.</strong> Publishing happens only when you run the commands yourself. A successful Git push is not a successful build, test, installation or release qualification.</p></section><section class="chapter" id="words"><p class="kicker">Lesson</p><h2>1. What the Git words mean</h2><p>Think of editing a recipe. Saving the file changes the copy on your desk. Staging selects what belongs in the next recorded revision. Committing creates that revision in your local history. Pushing shares committed history with the remote. These are separate actions; saving in an editor does not upload anything. <span class="refs"><a href="#ref-record">[record]</a> <a href="#ref-commit">[commit]</a></span></p><div class="table-scroll"><table><thead><tr><th>Word</th><th>Plain-English meaning</th></tr></thead><tbody><tr><td>Repository / repo</td><td>A project with Git history. Your computer has a local repository; GitHub can host a remote copy.</td></tr><tr><td>Working tree</td><td>The files and directories you are currently editing.</td></tr><tr><td>Staging area / index</td><td>The selected file content for the next commit. <code>git add -A</code> updates this selection.</td></tr><tr><td>Commit</td><td>A recorded project snapshot with a message, author and identifier.</td></tr><tr><td><code>main</code></td><td>The branch used for Umicom development in this guide. Spell it in lowercase.</td></tr><tr><td><code>HEAD</code></td><td>Git’s reference to the currently checked-out position in history.</td></tr><tr><td><code>origin</code></td><td>The remote name normally created when you clone. It is a name, not a password.</td></tr><tr><td><code>origin/main</code></td><td>Your local record of the remote branch, refreshed by fetching. It is not a live network lookup.</td></tr><tr><td>Submodule</td><td>A separate repository checked out inside a parent directory.</td></tr><tr><td>Parent / superproject</td><td>The repository recording which submodule commits belong together.</td></tr></tbody></table></div><div class="codebox output"><div class="code-label">The four stages — illustration, not commands</div><pre><code>Edit and save a file
+        | git add -A
+Staged file content
+        | git commit -m &quot;Describe the change&quot;
+Local committed history
+        | git push origin main
+Remote main on GitHub</code></pre></div><p><code>git add -A</code> includes new files, modified tracked files and deletions in the current repository. It normally respects ignored untracked files. Review before staging: <code>build/</code> output, credentials, <code>secrets/secrets.env</code> and personal data do not belong in a source commit. Adding a tracked secret to an ignore file does not remove it from history. <span class="refs"><a href="#ref-add">[add]</a> <a href="#ref-ignore">[ignore]</a></span></p><h3>Why Umicom needs a child commit and a parent commit</h3><p>Your checkout contains <strong>one parent plus 25 directly configured submodules</strong>: Framework and 24 applications. The parent stores references to child commits, not a second copy of each child’s staged files. Changing Framework therefore requires a Framework commit/push and a later parent commit/push recording that new reference. <span class="refs"><a href="#ref-gitmodules">[gitmodules]</a> <a href="#ref-submodules-book">[submodules-book]</a></span></p><div class="codebox output"><div class="code-label">Repository ownership — a folder can be a separate repository</div><pre><code>Umicom-Applications/              parent repository
+  .gitmodules                    names and locations of child repositories
+  framework/                     separate Framework repository
+  applications/
+    studio/                      separate Studio repository
+    trader/                      separate Trader repository
+    ...                          other application repositories
+  tests/                         tests owned by the parent
+  docs/                          documentation owned by the parent</code></pre></div><p>For this lesson, reusable services belong in Framework; application-specific composition belongs in the respective application. Put a change in its actual owning repository, then publish that repository. Do not create parallel validation or learning implementations merely to make a product-specific commit.</p></section><section class="chapter" id="setup"><p class="kicker">Lesson</p><h2>2. Prepare Git and sign in once per machine</h2><h3>Step 1 — open your terminal and check the tools</h3><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git --version
+gh --version</code></pre></div><p>If a command is not found, install Git from the official Windows/Linux instructions and install GitHub CLI separately. Reopen the terminal afterwards. Git handles version control; <code>gh</code> is used below for browser sign-in and the private practice repository. <span class="refs"><a href="#ref-git-install-win">[git-install-win]</a> <a href="#ref-git-install-linux">[git-install-linux]</a> <a href="#ref-gh">[gh]</a></span></p><h3>Step 2 — give commits your own name and email</h3><p>Replace both example values before running these commands. Use your own identity, not Sammy’s. The author name is not your GitHub sign-in, and the email becomes part of commit metadata. Use your GitHub-provided no-reply email when you need email privacy. <code>--global</code> applies to repositories for your user account on this machine; it does not change other developers’ settings. <span class="refs"><a href="#ref-identity">[identity]</a> <a href="#ref-commit">[commit]</a></span></p><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git config --global user.name &quot;Your Name&quot;
+git config --global user.email &quot;YOUR-COMMIT-EMAIL&quot;
+git config --global --get user.name
+git config --global --get user.email</code></pre></div><h3>Step 3 — authenticate through your browser</h3><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>gh auth login --hostname github.com --git-protocol https --web
+gh auth setup-git
+gh auth status</code></pre></div><p>Follow the device-code/browser instructions, sign in to the correct GitHub account and approve the connection. <code>gh auth setup-git</code> connects Git to the CLI credential helper. Your account still needs permission to each repository you intend to push. Do not paste tokens into source files, remote URLs, screenshots or this guide. <span class="refs"><a href="#ref-auth">[auth]</a> <a href="#ref-auth-setup">[auth-setup]</a></span></p><aside class="callout note">GitHub account passwords are not used for Git HTTPS password authentication. The browser sign-in above is the teaching route here. If your organisation requires extra authorisation or access approval, finish that before cloning private submodules or pushing. <span class="refs"><a href="#ref-github-auth">[github-auth]</a></span></aside><h3>Step 4 — recognise the two path conventions</h3><div class="table-scroll"><table><thead><tr><th>System</th><th>Umicom checkout used throughout</th></tr></thead><tbody><tr><td>Windows PowerShell</td><td><code>C:\umicom\Umicom-Applications</code></td></tr><tr><td>Linux Bash</td><td><code>$HOME/umicom/Umicom-Applications</code></td></tr></tbody></table></div><p>On Linux, preserve the exact capital letters in <code>Umicom-Applications</code>. <code>$HOME</code> means your home directory; do not replace it with the word “HOME”. The Git operations are the same on both systems. Only directory navigation, file editing and the native executable path differ.</p></section><section class="chapter" id="branch"><p class="kicker">Lesson</p><h2>3. Check the branch before switching</h2><aside class="callout important"><strong>Yes: include <code>git switch main</code> in the normal workflow.</strong> But first inspect the checkout. Switching selects a branch; it does not merge detached work into that branch or publish it. Do this preparation <strong>before editing, merging a batch or qualifying a build</strong> whenever possible. <span class="refs"><a href="#ref-switch">[switch]</a></span></aside><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git status
+git branch --show-current</code></pre></div><p>Run those commands inside the repository you are about to change. If you are unsure which repository owns the current directory, use <code>git rev-parse --show-toplevel</code>. Its path must match the repository you intended. <span class="refs"><a href="#ref-rev-parse">[rev-parse]</a></span></p><div class="table-scroll"><table><thead><tr><th>What you see</th><th>What to do</th></tr></thead><tbody><tr><td><code>On branch main</code></td><td>Proceed. Already being on <code>main</code> is fine; <code>git switch main</code> does not create another branch.</td></tr><tr><td><code>HEAD detached at ...</code> and a clean working tree</td><td>Use the detached-HEAD check below before switching.</td></tr><tr><td>Detached HEAD or another branch, with modified/untracked files</td><td>Stop before switching. Preserve and review those files first; do not force the switch.</td></tr><tr><td>A different branch with a clean working tree</td><td>Use the same history comparison below; do not leave unmerged commits behind.</td></tr><tr><td>Conflicts or an unfinished Git operation</td><td>Stop. Resolve that existing operation before beginning this recipe.</td></tr></tbody></table></div><h3>Detached HEAD, explained using Trader</h3><p>A normal submodule checkout can select the parent’s exact commit without attaching to a branch. That is useful for reproducing a build. It is not a failure. Before making development commits, attach the relevant Umicom repository to <code>main</code>. You do not need to switch untouched dependencies merely to read or build them. <span class="refs"><a href="#ref-submodule">[submodule]</a></span></p><div class="codebox"><div class="code-label">When a local main branch exists</div><pre><code>git branch --list main
+git log --oneline main..HEAD</code></pre></div><p>The second command asks, “Does my current checkout contain commits that local main does not contain?” <strong>No output</strong> means no such commits were found. If it prints any commits, or reports an error, stop before switching and keep the current checkout intact. A clean working tree alone does not prove that detached commits are safely included in a branch. <span class="refs"><a href="#ref-log">[log]</a></span></p><p>When that comparison is empty and your working tree is clean, continue:</p><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git switch main
+git branch --show-current
+git status</code></pre></div><p>The branch command should now print <code>main</code>. If the detached commit was older than main, switching can change the checked-out source. Review and rerun the relevant tests before calling that different source qualified. If both commits were identical, only the branch attachment changes. <span class="refs"><a href="#ref-switch">[switch]</a></span></p><h3>Only when local main does not exist</h3><p>If <code>git branch --list main</code> prints nothing, fetch the remote record and compare against it:</p><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git fetch origin
+git log --oneline origin/main..HEAD</code></pre></div><p>Continue only when the comparison succeeds with no output and the working tree is clean:</p><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git switch --track origin/main
+git branch --show-current
+git status</code></pre></div><p>This creates a local <code>main</code> tracking the existing remote branch, not a feature branch. If <code>origin/main</code> is missing, or the comparison lists detached work, stop; do not recreate or reset main blindly. <span class="refs"><a href="#ref-switch">[switch]</a> <a href="#ref-fetch">[fetch]</a></span></p><h3>Update before starting new work, not in the middle of unknown edits</h3><p>Once you are on main and have no pending edits or unfinished child work, this moves forward only when the remote history permits it:</p><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git pull --ff-only --no-recurse-submodules origin main
+git status</code></pre></div><p>A fast-forward-only pull refuses divergent history instead of inventing a merge. If it refuses, use the troubleshooting lesson. If your current source already contains an uncommitted batch on main, do not insert a pull into the middle of staging it. Review, test and commit that work first; resolve any later push rejection explicitly. <span class="refs"><a href="#ref-pull">[pull]</a></span></p></section><section class="chapter" id="practice"><p class="kicker">Lesson</p><h2>4. Practice: create, change, commit and push one file</h2><p>Use a <strong>personal private practice repository outside Umicom</strong>. This makes the first exercise independent of the real Framework and application histories. All publishing commands in this exercise target your practice repository. Do not run <code>git init</code> inside an existing Umicom repository or submodule.</p><h3>Step 1 — create a new practice folder</h3><p>Run this once on the first machine. If the folder already exists, stop and inspect it rather than overwriting it. To repeat the lesson, choose a new unused practice name consistently.</p><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>New-Item -ItemType Directory -Path &quot;$HOME\umicom-git-practice&quot;
+Set-Location &quot;$HOME\umicom-git-practice&quot;</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>mkdir &quot;$HOME/umicom-git-practice&quot;
+cd &quot;$HOME/umicom-git-practice&quot;</code></pre></div><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git init -b main
+git status</code></pre></div><p>The new local repository starts on main. It has no commits yet. <span class="refs"><a href="#ref-init">[init]</a></span></p><h3>Step 2 — create a harmless text file</h3><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>&quot;My first Git lesson.&quot; | Set-Content -Path &quot;learning-note.txt&quot; -Encoding utf8
+Get-Content &quot;learning-note.txt&quot;</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>printf &#x27;%s\n&#x27; &#x27;My first Git lesson.&#x27; &gt; learning-note.txt
+cat learning-note.txt</code></pre></div><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git status</code></pre></div><p>Look for <code>learning-note.txt</code> under untracked files. Git sees the file, but it has not yet been selected for a commit. <span class="refs"><a href="#ref-status">[status]</a></span></p><h3>Step 3 — stage and inspect it</h3><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git add -A
+git status
+git --no-pager diff --cached</code></pre></div><p>Now the file should appear under changes to be committed. Read the staged text. For this tiny exercise, the note should be the only selected file. <span class="refs"><a href="#ref-add">[add]</a> <a href="#ref-diff">[diff]</a></span></p><h3>Step 4 — create the first local commit</h3><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git commit -m &quot;docs: add my first Git practice note&quot;
+git log -1 --oneline
+git status</code></pre></div><p>The message explains the change. The displayed commit ID is generated by Git; your ID will differ from any teaching illustration. Nothing has been uploaded yet. <span class="refs"><a href="#ref-commit">[commit]</a> <a href="#ref-log">[log]</a></span></p><h3>Step 5 — create a private remote under your own GitHub account</h3><p>Check <code>gh auth status</code> to confirm the account. The next command creates a new private repository called <code>umicom-git-practice</code> for that account and adds it as origin. Do not use an Umicom organisation path for this exercise. If the name already exists, stop; use the existing practice repo or choose a different unused name. <span class="refs"><a href="#ref-gh-create">[gh-create]</a></span></p><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>gh auth status
+gh repo create umicom-git-practice --private --source . --remote origin
+git remote -v
+git push -u origin main</code></pre></div><p>The first push sets main’s upstream with <code>-u</code>. Later pushes can use <code>git push origin main</code>. Visit your practice repository on GitHub and confirm the note and commit are visible. <span class="refs"><a href="#ref-push">[push]</a></span></p><h3>Step 6 — change the file</h3><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>&quot;I can now add, commit and push.&quot; | Add-Content -Path &quot;learning-note.txt&quot; -Encoding utf8
+Get-Content &quot;learning-note.txt&quot;</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>printf &#x27;%s\n&#x27; &#x27;I can now add, commit and push.&#x27; &gt;&gt; learning-note.txt
+cat learning-note.txt</code></pre></div><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git status
+git --no-pager diff
+git add -A
+git --no-pager diff --cached
+git commit -m &quot;docs: expand my Git practice note&quot;
+git push origin main
+git status</code></pre></div><p>The first diff shows unstaged edits; the cached diff shows the staged version. If you edit again after staging, run <code>git add -A</code> again before committing the new content. Staging is not a live link to your editor. <span class="refs"><a href="#ref-record">[record]</a> <a href="#ref-diff">[diff]</a></span></p><h3>Step 7 — learn one safe correction</h3><p>If you accidentally stage the note too early, this removes it from the next commit without discarding its working-file edits:</p><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git restore --staged learning-note.txt
+git status</code></pre></div><p>This exercise has existing commits, which the command uses as its reference. Restage it when ready. Do not remove <code>--staged</code>: restoring a working file is a different operation. <span class="refs"><a href="#ref-restore">[restore]</a></span></p></section><section class="chapter" id="clone"><p class="kicker">Lesson</p><h2>5. Clone the complete Umicom project</h2><p>Cloning creates a new local checkout from an existing remote. You need read access to the parent and its private child repositories. Use an unused destination. If your existing checkout is already present, use <a href="#machines">the update instructions</a> instead. <span class="refs"><a href="#ref-clone">[clone]</a></span></p><h3 data-os="windows">Windows — first checkout</h3><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>New-Item -ItemType Directory -Path &quot;C:\umicom&quot; -Force
+Set-Location &quot;C:\umicom&quot;
+git clone --branch main --recurse-submodules https://github.com/umicom-foundation/umicom-applications.git Umicom-Applications
+Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+git status
+git submodule status --recursive</code></pre></div><h3 data-os="linux">Linux — first checkout</h3><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>mkdir -p &quot;$HOME/umicom&quot;
+cd &quot;$HOME/umicom&quot;
+git clone --branch main --recurse-submodules https://github.com/umicom-foundation/umicom-applications.git Umicom-Applications
+cd &quot;$HOME/umicom/Umicom-Applications&quot;
+git status
+git submodule status --recursive</code></pre></div><p><code>--recurse-submodules</code> also initialises the submodule checkouts. It does not mean “put every child on its latest main”. The parent’s recorded revisions are the starting snapshot. Detached child checkouts are therefore expected. <span class="refs"><a href="#ref-clone">[clone]</a> <a href="#ref-submodule">[submodule]</a></span></p><h3>If you cloned without the submodule option</h3><p>From the clean parent checkout, complete the missing children with:</p><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git submodule update --init --recursive --checkout</code></pre></div><p>Do not use this as a repair for a checkout containing uncommitted or unpublished child work. <code>--checkout</code> requests the recorded commits and may detach children that were previously on branches. <span class="refs"><a href="#ref-submodule">[submodule]</a></span></p><h3>See the actual list, not a guessed list</h3><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git config --file .gitmodules --get-regexp &quot;^submodule\..*\.path$&quot;</code></pre></div><p>The catalogue in this guide follows the 25 direct paths currently in the parent’s <code>.gitmodules</code>. A future module must be added to the guide when it is added to that file. The catalogue does not claim to enumerate unrelated repositories elsewhere on your computer. <span class="refs"><a href="#ref-gitmodules">[gitmodules]</a></span></p></section><section class="chapter" id="real-change"><p class="kicker">Lesson</p><h2>6. Make one small Framework documentation change</h2><p>Use this optional exercise only with the maintainer’s agreement: unlike the personal practice exercise, it changes the real Framework repository. It demonstrates why you later publish the parent as well. To avoid unnecessary project files, you can instead apply the same steps to a genuine small documentation correction.</p><h3>Step 1 — prepare Framework before editing</h3><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\framework&quot;
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/framework&quot;
+git status</code></pre></div><p>Complete <a href="#branch">the branch checkpoint</a> if the checkout is detached or on another branch. When safe:</p><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git switch main
+git status</code></pre></div><p>If clean and starting new work, update with the fast-forward-only pull from lesson 3. If you already have an intentional batch on main, review that batch instead of pulling first.</p><h3>Step 2 — create a note in your editor</h3><p>Use an unused filename <code>docs/git-practice-note.md</code>. If it already exists, read it first and choose a different name rather than replacing someone else’s file. On Windows, open it in Notepad; on Linux, use Nano or your preferred text editor.</p><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>notepad &quot;.\docs\git-practice-note.md&quot;</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>nano docs/git-practice-note.md</code></pre></div><div class="codebox output"><div class="code-label">Text to save in the note — not terminal commands</div><pre><code># Git practice note
+
+I check the repository and branch before committing.
+I publish Framework before the parent repository.</code></pre></div><p>In Notepad, save the file and close the window. In Nano, use Ctrl+O, Enter, then Ctrl+X. Confirm that the file is saved as <code>.md</code>, not <code>.md.txt</code>. Open the saved file to check it.</p><h3>Step 3 — inspect, stage, commit and push Framework</h3><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git status
+git --no-pager diff
+git add -A
+git --no-pager diff --cached
+git diff --cached --check
+git commit -m &quot;docs(framework): add Git practice note&quot;
+git push origin main
+git status</code></pre></div><p>Before the commit, only the agreed changes should be staged. A new untracked file does not appear in ordinary <code>git diff</code>; review it in your editor and in the cached diff after staging. Stop on any failure except the no-change case explained below. <span class="refs"><a href="#ref-diff">[diff]</a> <a href="#ref-status">[status]</a></span></p><h3>Step 4 — record the child revision in the parent</h3><p>Follow <a href="#parent">the parent publication lesson</a>. A parent status of <code>framework (new commits)</code> is expected after the Framework commit; it means the parent has not yet recorded the newer revision. It does not mean your Framework push failed. <span class="refs"><a href="#ref-submodules-book">[submodules-book]</a></span></p></section><section class="chapter" id="routine"><p class="kicker">Lesson</p><h2>7. The daily routine and the commit message</h2><p>The same routine applies in each repository. Inspect first, attach to main safely, review the intended changes, stage, commit and push. There is no need to create empty commits in unchanged repositories. Use a default message when saving a mixed development update, and a more specific message when the change is known.</p><div class="table-scroll"><table><thead><tr><th>Message</th><th>Use it for</th></tr></thead><tbody><tr><td><code>chore(framework): save current development changes</code></td><td>A general Framework development update.</td></tr><tr><td><code>chore(studio): save current development changes</code></td><td>A general Studio update. Replace the scope with the actual repository.</td></tr><tr><td><code>fix(framework): reject invalid input</code></td><td>A real defect correction.</td></tr><tr><td><code>docs(framework): explain Git publication</code></td><td>A documentation change.</td></tr><tr><td><code>test(trader): cover invalid order input</code></td><td>A test change.</td></tr><tr><td><code>chore(applications): update repository lock and submodule revisions</code></td><td>The parent’s integration and revision update.</td></tr></tbody></table></div><p>These prefixes are a suggested message convention, not special Git commands. Do not say “tests passed”, “qualified” or “released” in a message unless the relevant evidence exists. For one feature spread across repositories, keep the messages related but explain what each repository actually changed.</p><aside class="callout note"><strong>Two normal results:</strong> <code>nothing to commit, working tree clean</code> means there is no new snapshot to create; continue to the push if main may have unpublished commits. <code>Everything up-to-date</code> means the specified push needed no remote update. Neither result by itself checks a detached checkout against the branch you pushed. <span class="refs"><a href="#ref-commit">[commit]</a> <a href="#ref-push">[push]</a></span></aside><p>For this guide, clean read-only children can remain at the parent’s pinned commits. Use the recipes below for repositories you intend to publish from main. Switching every untouched child to a different main revision can itself change the parent’s dependency selection and requires review and qualification.</p></section><section class="chapter" id="repositories"><p class="kicker">Daily reference • 25 child repositories</p><h2>8. Every Umicom submodule: individual commands</h2><p>Work through Framework first, then the applications you changed. All 25 direct submodules are listed so none needs to be guessed. Each recipe includes a starting status check, <code>git switch main</code>, another status check and a default message. These commands assume the repository exists and has passed the <a href="#branch">branch checkpoint</a>. <span class="refs"><a href="#ref-gitmodules">[gitmodules]</a></span></p><aside class="callout warning"><strong>Pause after the first status command.</strong> If it says detached HEAD or names another branch, use lesson 3 before executing <code>git switch main</code>. If a directory change fails, stop: the following Git commands would otherwise run in the old directory.</aside><p>At the second status, expect <code>On branch main</code>. At the status after staging, check every filename. If <code>git diff --cached --check</code> prints an error, do not commit. If it prints nothing, that check succeeded; it is not a compiler or test run. Only push changes you have reviewed and qualified as required. <span class="refs"><a href="#ref-diff">[diff]</a></span></p><label class="repo-filter">Find a repository <input id="repo-filter" type="search" placeholder="Framework, Studio, Trader, security…" autocomplete="off"></label><div class="repo-index"><a href="#repo-framework">Framework</a><a href="#repo-studio">Studio</a><a href="#repo-trader">Trader</a><a href="#repo-tms">TMS</a><a href="#repo-llm">LLM</a><a href="#repo-bank">Bank</a><a href="#repo-exchange">Exchange</a><a href="#repo-desktop">Desktop / Desk</a><a href="#repo-os">OS</a><a href="#repo-music">Music Studio</a><a href="#repo-media">Media Studio</a><a href="#repo-accountant">Accountant</a><a href="#repo-rag">RAG</a><a href="#repo-games">Games</a><a href="#repo-creator">AI Creator</a><a href="#repo-kitchen">Kitchen Designer</a><a href="#repo-cad">CAD</a><a href="#repo-web-studio">Web Studio</a><a href="#repo-mobile-studio">Mobile Studio</a><a href="#repo-database-studio">Database Studio</a><a href="#repo-integration-studio">Integration Studio</a><a href="#repo-operations">Operations</a><a href="#repo-security-centre">Security Centre</a><a href="#repo-marketplace">Marketplace</a><a href="#repo-education">Education</a></div><article class="repo" id="repo-framework" data-find="Framework framework umicom-framework"><div class="repo-heading"><span class="repo-number">01</span><div><h3>Framework</h3><p><code>framework</code><br><small>Remote repository: <code>umicom-framework</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\framework&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(framework): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/framework&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(framework): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-studio" data-find="Studio applications/studio umicom-studio-ide-module"><div class="repo-heading"><span class="repo-number">02</span><div><h3>Studio</h3><p><code>applications/studio</code><br><small>Remote repository: <code>umicom-studio-ide-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\studio&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(studio): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/studio&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(studio): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-trader" data-find="Trader applications/trader umicom-trader-module"><div class="repo-heading"><span class="repo-number">03</span><div><h3>Trader</h3><p><code>applications/trader</code><br><small>Remote repository: <code>umicom-trader-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\trader&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(trader): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/trader&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(trader): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-tms" data-find="TMS applications/tms umicom-tms-module"><div class="repo-heading"><span class="repo-number">04</span><div><h3>TMS</h3><p><code>applications/tms</code><br><small>Remote repository: <code>umicom-tms-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\tms&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(tms): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/tms&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(tms): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-llm" data-find="LLM applications/llm umicom-llm-module"><div class="repo-heading"><span class="repo-number">05</span><div><h3>LLM</h3><p><code>applications/llm</code><br><small>Remote repository: <code>umicom-llm-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\llm&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(llm): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/llm&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(llm): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-bank" data-find="Bank applications/bank umicom-bank-module"><div class="repo-heading"><span class="repo-number">06</span><div><h3>Bank</h3><p><code>applications/bank</code><br><small>Remote repository: <code>umicom-bank-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\bank&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(bank): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/bank&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(bank): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-exchange" data-find="Exchange applications/exchange umicom-exchange-module"><div class="repo-heading"><span class="repo-number">07</span><div><h3>Exchange</h3><p><code>applications/exchange</code><br><small>Remote repository: <code>umicom-exchange-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\exchange&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(exchange): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/exchange&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(exchange): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-desktop" data-find="Desktop / Desk applications/desktop umicom-desktop-module"><div class="repo-heading"><span class="repo-number">08</span><div><h3>Desktop / Desk</h3><p><code>applications/desktop</code><br><small>Remote repository: <code>umicom-desktop-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\desktop&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(desktop): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/desktop&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(desktop): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-os" data-find="OS applications/os umicom-os-module"><div class="repo-heading"><span class="repo-number">09</span><div><h3>OS</h3><p><code>applications/os</code><br><small>Remote repository: <code>umicom-os-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\os&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(os): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/os&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(os): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-music" data-find="Music Studio applications/music umicom-music-studio-module"><div class="repo-heading"><span class="repo-number">10</span><div><h3>Music Studio</h3><p><code>applications/music</code><br><small>Remote repository: <code>umicom-music-studio-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\music&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(music): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/music&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(music): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-media" data-find="Media Studio applications/media umicom-media-studio-module"><div class="repo-heading"><span class="repo-number">11</span><div><h3>Media Studio</h3><p><code>applications/media</code><br><small>Remote repository: <code>umicom-media-studio-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\media&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(media): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/media&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(media): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-accountant" data-find="Accountant applications/accountant umicom-accountant-module"><div class="repo-heading"><span class="repo-number">12</span><div><h3>Accountant</h3><p><code>applications/accountant</code><br><small>Remote repository: <code>umicom-accountant-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\accountant&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(accountant): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/accountant&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(accountant): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-rag" data-find="RAG applications/rag umicom-rag-module"><div class="repo-heading"><span class="repo-number">13</span><div><h3>RAG</h3><p><code>applications/rag</code><br><small>Remote repository: <code>umicom-rag-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\rag&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(rag): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/rag&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(rag): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-games" data-find="Games applications/games umicom-games-module"><div class="repo-heading"><span class="repo-number">14</span><div><h3>Games</h3><p><code>applications/games</code><br><small>Remote repository: <code>umicom-games-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\games&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(games): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/games&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(games): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-creator" data-find="AI Creator applications/creator umicom-ai-creator-module"><div class="repo-heading"><span class="repo-number">15</span><div><h3>AI Creator</h3><p><code>applications/creator</code><br><small>Remote repository: <code>umicom-ai-creator-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\creator&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(creator): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/creator&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(creator): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-kitchen" data-find="Kitchen Designer applications/kitchen umicom-kitchen-designer-module"><div class="repo-heading"><span class="repo-number">16</span><div><h3>Kitchen Designer</h3><p><code>applications/kitchen</code><br><small>Remote repository: <code>umicom-kitchen-designer-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\kitchen&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(kitchen): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/kitchen&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(kitchen): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-cad" data-find="CAD applications/cad umicom-cad-module"><div class="repo-heading"><span class="repo-number">17</span><div><h3>CAD</h3><p><code>applications/cad</code><br><small>Remote repository: <code>umicom-cad-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\cad&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(cad): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/cad&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(cad): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-web-studio" data-find="Web Studio applications/web-studio umicom-web-studio-module"><div class="repo-heading"><span class="repo-number">18</span><div><h3>Web Studio</h3><p><code>applications/web-studio</code><br><small>Remote repository: <code>umicom-web-studio-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\web-studio&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(web-studio): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/web-studio&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(web-studio): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-mobile-studio" data-find="Mobile Studio applications/mobile-studio umicom-mobile-studio-module"><div class="repo-heading"><span class="repo-number">19</span><div><h3>Mobile Studio</h3><p><code>applications/mobile-studio</code><br><small>Remote repository: <code>umicom-mobile-studio-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\mobile-studio&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(mobile-studio): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/mobile-studio&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(mobile-studio): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-database-studio" data-find="Database Studio applications/database-studio umicom-database-studio-module"><div class="repo-heading"><span class="repo-number">20</span><div><h3>Database Studio</h3><p><code>applications/database-studio</code><br><small>Remote repository: <code>umicom-database-studio-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\database-studio&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(database-studio): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/database-studio&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(database-studio): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-integration-studio" data-find="Integration Studio applications/integration-studio umicom-integration-studio-module"><div class="repo-heading"><span class="repo-number">21</span><div><h3>Integration Studio</h3><p><code>applications/integration-studio</code><br><small>Remote repository: <code>umicom-integration-studio-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\integration-studio&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(integration-studio): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/integration-studio&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(integration-studio): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-operations" data-find="Operations applications/operations umicom-operations-module"><div class="repo-heading"><span class="repo-number">22</span><div><h3>Operations</h3><p><code>applications/operations</code><br><small>Remote repository: <code>umicom-operations-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\operations&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(operations): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/operations&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(operations): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-security-centre" data-find="Security Centre applications/security-centre umicom-security-centre-module"><div class="repo-heading"><span class="repo-number">23</span><div><h3>Security Centre</h3><p><code>applications/security-centre</code><br><small>Remote repository: <code>umicom-security-centre-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\security-centre&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(security-centre): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/security-centre&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(security-centre): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-marketplace" data-find="Marketplace applications/marketplace umicom-marketplace-module"><div class="repo-heading"><span class="repo-number">24</span><div><h3>Marketplace</h3><p><code>applications/marketplace</code><br><small>Remote repository: <code>umicom-marketplace-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\marketplace&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(marketplace): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/marketplace&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(marketplace): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><article class="repo" id="repo-education" data-find="Education applications/education umicom-education-studio-module"><div class="repo-heading"><span class="repo-number">25</span><div><h3>Education</h3><p><code>applications/education</code><br><small>Remote repository: <code>umicom-education-studio-module</code></small></p></div></div><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\education&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(education): save current development changes&quot;
+git push origin main
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications/applications/education&quot;
+git status
+# If detached or on another branch, complete lesson 3 before continuing.
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore(education): save current development changes&quot;
+git push origin main
+git status</code></pre></div><p class="recipe-foot">Stop on an error. No changes to commit? Skip making a new commit; push any existing main commits. Finish this child before the parent.</p></article><p>These recipes are not an instruction to commit everything you find. Omit unrelated work from the publication. If a child itself contains registered submodules, finish and push the innermost changed dependency before its containing repository. Leave third-party pinned dependencies on their prescribed revisions; do not invent a main branch for them. Use <code>git submodule status --recursive</code> to see such nested checkouts. <span class="refs"><a href="#ref-submodules-book">[submodules-book]</a></span></p></section><section class="chapter" id="parent"><p class="kicker">Lesson</p><h2>9. Publish the parent repository last</h2><p>Only start after every changed child repository has been committed and successfully pushed. The parent must record published child revisions. Finish the required build and tests for the exact source combination you intend to record. <span class="refs"><a href="#ref-submodules-book">[submodules-book]</a></span></p><h3>Step 1 — check the parent and child working trees</h3><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+git status</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications&quot;
+git status</code></pre></div><p>The parent is normally already on main. If it is not, use the branch checkpoint before switching, especially when it already contains intended edits. Then:</p><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git switch main
+git status
+git submodule foreach --recursive &#x27;git status --short&#x27;</code></pre></div><p>The last command prints each initialised child name and any pending file changes. Child file changes must be finished first. A different recorded revision in a containing repository also needs a containing commit; work from the inside out. This is a built-in Git inspection command, not an automatic commit loop. <span class="refs"><a href="#ref-submodule">[submodule]</a></span></p><h3>Step 2 — update the Umicom repository lock</h3><p>The following is an <strong>Umicom command, not a Git command</strong>. Use the native tool from your successful local build. It must finish successfully before the next step. The dot means the current parent directory. Do not replace a missing tool with a hand-edited lock file. <span class="refs"><a href="#ref-lock">[lock]</a></span></p><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell — run from the parent directory</div><pre><code>$env:Path = &quot;C:\msys64\ucrt64\bin;$env:Path&quot;
+&amp; &quot;.\build\windows-ucrt64-all-debug\bin\umicom.exe&quot; repo lock .</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash — run from the parent directory</div><pre><code>./build/headless-debug/bin/umicom repo lock .</code></pre></div><p>The Linux command above assumes you used the existing <code>headless-debug</code> preset. If your successful build used a different preset, use that build directory’s <code>bin/umicom</code>. Do not run a Windows executable on Linux or copy a Windows build cache there. The build-tool path is separate from Git’s own submodule references. <span class="refs"><a href="#ref-presets">[presets]</a></span></p><details class="answer"><summary>Native tool not built yet?</summary><p>Complete the project’s toolchain setup and build qualification first. The optional commands below show the named build locations; they are not a replacement for installing the required compilers, dependencies and GUI libraries. A failure means stop, not skip the lock.</p></details><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell — only if the required native tool is missing; run one line at a time</div><pre><code>&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; --preset windows-ucrt64-all-debug -DUMICOM_BUILD_NATIVE_TOOL=ON
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; --build --preset windows-ucrt64-all-debug --parallel 2</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash — only if the required native tool is missing; run one line at a time</div><pre><code>cmake --preset headless-debug -DUMICOM_BUILD_NATIVE_TOOL=ON
+cmake --build --preset headless-debug --parallel 2</code></pre></div><h3>Step 3 — stage and review parent changes</h3><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git add -A
+git status
+git --no-pager diff --cached --submodule=log
+git diff --cached --check</code></pre></div><p>You should see the intended parent files and the changed child references. For example, the earlier naming update changed the parent test integration, its qualification guide and the Framework reference. Do not expect the entire Framework source diff to be duplicated in the parent commit.</p><h3>Step 4 — commit and push</h3><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git commit -m &quot;chore(applications): update repository lock and submodule revisions&quot;
+git push --recurse-submodules=check origin main
+git status</code></pre></div><p><code>--recurse-submodules=check</code> refuses the parent push if required changed child commits cannot be found through the child remotes it checks. It does <strong>not</strong> commit or push the children for you, and it is not a guarantee that every future recipient has permission to those remotes. <span class="refs"><a href="#ref-push">[push]</a></span></p><h3>Step 5 — final checks</h3><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git status
+git submodule status --recursive
+git submodule foreach --recursive &#x27;git status --short --branch&#x27;</code></pre></div><p>No changed-file entries should remain for the work just published. In <code>git submodule status</code>, a leading space means the checked-out child matches its recorded revision; <code>+</code> means it differs, <code>-</code> means it is uninitialised, and <code>U</code> indicates a conflict. Any unexpected marker needs investigation. <span class="refs"><a href="#ref-submodule">[submodule]</a></span></p><p>Branch ahead/behind information uses locally stored remote-tracking information. For a direct remote comparison, run these inside the particular repository being checked:</p><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git branch --show-current
+git rev-parse HEAD
+git ls-remote origin refs/heads/main</code></pre></div><p>The first command must print main for this main-publication check. Compare the full hash from the second command with the first field of the final command’s output. Equal hashes mean the checked-out main and the remote main agree at that moment. No remote output or an error is not confirmation. <span class="refs"><a href="#ref-ls-remote">[ls-remote]</a> <a href="#ref-rev-parse">[rev-parse]</a></span></p></section><section class="chapter" id="machines"><p class="kicker">Lesson</p><h2>10. Clone or update on another machine</h2><p>Think of the handover as two separate actions: <strong>send from machine A, receive on machine B</strong>. Publishing only Framework is not enough for a second machine to reproduce the suite; publish the parent’s recorded selection too. Do not copy <code>build/</code>, credentials or your entire <code>.git</code> directory between systems.</p><h3>Machine A — finish publication</h3><p>Commit and push the changed child repositories, run the native lock command, commit and push the parent, and check the final statuses using lessons 8–9. Record the parent identifier:</p><div class="codebox"><div class="code-label">Run from the parent repository on machine A</div><pre><code>git rev-parse HEAD</code></pre></div><p>A later authorised push by somebody else may make remote main newer. Matching this exact recorded parent hash is how you identify the particular handover snapshot, rather than assuming that “latest” never changes.</p><h3>Machine B, with no checkout yet</h3><p>Install/sign in on that machine using lesson 2, then use the complete Windows or Linux clone in lesson 5. A fresh clone’s recursive child revisions follow its parent. Compare the parent hash with machine A; if newer upstream work has arrived, investigate the intended snapshot rather than forcing a branch backwards. <span class="refs"><a href="#ref-clone">[clone]</a></span></p><h3>Machine B, with an existing checkout — inspect before updating</h3><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications&quot;</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications&quot;</code></pre></div><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git status
+git submodule foreach --recursive &#x27;git status --short --branch&#x27;
+git submodule status --recursive</code></pre></div><aside class="callout warning"><strong>Receiving-checkout condition:</strong> all earlier local work must already be saved and published. Stop if there are edited/untracked files, unfinished operations, unpushed commits or an unexplained <code>+</code> child revision. A clean detached child can still contain a commit you created; do not assume clean means published. If you have only used this checkout to receive/build and never made local changes, continue.</aside><h3>Machine B — update the parent, then the recorded children</h3><p>After the branch checkpoint and the receiving-checkout condition, run one line at a time. The examples are repeated for both systems so the correct root is visible.</p><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+git switch main
+git status
+git pull --ff-only --no-recurse-submodules origin main
+git submodule sync --recursive
+git submodule update --init --recursive --checkout
+git status
+git submodule status --recursive</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME/umicom/Umicom-Applications&quot;
+git switch main
+git status
+git pull --ff-only --no-recurse-submodules origin main
+git submodule sync --recursive
+git submodule update --init --recursive --checkout
+git status
+git submodule status --recursive</code></pre></div><p>The pull advances the parent only when it can fast-forward. Sync refreshes registered child URL settings from the current <code>.gitmodules</code>; it does not download source changes by itself. Update selects the commits recorded by the parent. Stop if either operation fails. <span class="refs"><a href="#ref-pull">[pull]</a> <a href="#ref-submodule">[submodule]</a></span></p><aside class="callout important"><strong>Do not add <code>--remote</code> to the update command for this handover.</strong> That asks for child remote-branch tips instead of the parent’s recorded selection. Likewise, switching every child to main afterwards may change the just-reproduced snapshot. Leave read/build-only children pinned; switch only the repositories you are about to develop in, using lesson 3. <span class="refs"><a href="#ref-submodule">[submodule]</a></span></aside><h3>Confirm the received snapshot</h3><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git rev-parse HEAD
+git submodule status --recursive</code></pre></div><p>Compare the parent identifier and child identifiers with machine A’s intended snapshot. If both match and the working trees are clean, the tracked source selection matches. Ignored build files, local configuration and machine-specific runtime dependencies are not transported by this comparison.</p><p>Reconfigure and rebuild on machine B using its own toolchain and build directory. A source update is not an installation. Do not run <code>repo lock .</code> just to receive an existing snapshot: the parent already carries the published lock. Changing dependency revisions for development is a separate, reviewed change.</p><h3>Optional: receive the personal practice repository instead</h3><p>Replace <code>YOUR-GITHUB-USER</code> in the URL with your account name. Use a new destination on the receiving machine. These examples create a local practice checkout, not another Umicom submodule.</p><div class="codebox" data-os="windows"><div class="code-label">Windows PowerShell</div><pre><code>Set-Location &quot;$HOME&quot;
+git clone https://github.com/YOUR-GITHUB-USER/umicom-git-practice.git umicom-git-practice
+Set-Location &quot;$HOME\umicom-git-practice&quot;
+git status
+Get-Content &quot;learning-note.txt&quot;</code></pre></div><div class="codebox" data-os="linux"><div class="code-label">Linux Bash</div><pre><code>cd &quot;$HOME&quot;
+git clone https://github.com/YOUR-GITHUB-USER/umicom-git-practice.git umicom-git-practice
+cd &quot;$HOME/umicom-git-practice&quot;
+git status
+cat learning-note.txt</code></pre></div><p>For later practice updates, while that repository is clean and on main:</p><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git pull --ff-only origin main
+git status</code></pre></div></section><section class="chapter" id="trouble"><p class="kicker">Lesson</p><h2>11. Read the result: continue or stop</h2><div class="table-scroll"><table><thead><tr><th>Message or situation</th><th>Meaning and next action</th></tr></thead><tbody><tr><td><code>Already on main</code></td><td>Normal. Continue after checking the intended changes.</td></tr><tr><td><code>nothing to commit, working tree clean</code></td><td>No new commit is needed. Push existing main commits if necessary.</td></tr><tr><td><code>Everything up-to-date</code></td><td>The specified branch push required no change. A detached checkout is not validated by that message.</td></tr><tr><td><code>HEAD detached at ...</code></td><td>Use lesson 3 before development. It is normal for receiving/build-only submodules.</td></tr><tr><td>Directory does not exist / <code>not a git repository</code></td><td>Stop immediately. Check the path and clone/initialisation status. Do not continue in the previous directory.</td></tr><tr><td>Unknown author identity</td><td>Set your own Git name and email in lesson 2, then retry the commit.</td></tr><tr><td>Authentication failed / permission denied</td><td>Use <code>gh auth status</code>, confirm account and repository access. A web password is not the Git HTTPS authentication method.</td></tr><tr><td>Push rejected / non-fast-forward</td><td>Fetch and inspect as below. Never force-push to make the error disappear.</td></tr><tr><td>Changes would be overwritten by checkout or merge</td><td>Stop. Preserve the current files. Do not force-switch, reset or clean the directory.</td></tr><tr><td><code>framework (new commits)</code> in the parent</td><td>Record the intended child commit after its successful push. Use the parent lesson.</td></tr><tr><td>A child shows modified content</td><td>Commit inside that child first. Parent staging cannot turn child file edits into a child commit.</td></tr><tr><td>Native <code>umicom</code> tool not found</td><td>Complete the required build or use the actual successfully built native-tool path. Do not skip the Umicom lock step when publishing changed revisions.</td></tr><tr><td>Remote protection requires a different workflow</td><td>Stop and ask the maintainer. Do not bypass required reviews, checks or permissions.</td></tr><tr><td>A test or build fails</td><td>A Git commit does not fix or certify it. Keep the failure evidence and correct the source before qualified publication.</td></tr></tbody></table></div><p>These are interpretation rules, not an automatic recovery script. The relevant command contracts are linked here. <span class="refs"><a href="#ref-status">[status]</a> <a href="#ref-commit">[commit]</a> <a href="#ref-push">[push]</a> <a href="#ref-github-auth">[github-auth]</a></span></p><h3>Rejected push: inspect before choosing a repair</h3><div class="codebox"><div class="code-label">Git commands — either system</div><pre><code>git fetch origin
+git status
+git log --oneline --left-right main...origin/main</code></pre></div><p>In this comparison, <code>&lt;</code> marks commits found only on local main; <code>&gt;</code> marks commits found only on origin/main. If both appear, history has diverged: preserve both sides and ask for a reviewed integration. If only remote commits exist and there are no pending local changes, the fast-forward-only pull can advance your branch. If local commits exist, do not reset them away. <span class="refs"><a href="#ref-log">[log]</a> <a href="#ref-pull">[pull]</a></span></p><h3>Avoid the earlier folder-move problem</h3><p>A Git folder rename is not required just to publish files already at their correct paths. If you use <code>git mv</code>, confirm that the source exists and the intended destination does not already exist as a directory. Otherwise the source may be placed inside that directory, producing an unintended nested folder. Do not repeat a migration command after merging its replacement files. <span class="refs"><a href="#ref-mv">[mv]</a></span></p><p>Review actual paths with <code>git status --short</code> and your file manager. Keep any backup outside the repositories. Once the working tree contains the reviewed final arrangement, <code>git add -A</code> stages that arrangement. Git’s rename display is based on change detection; a separate rename command is not the only way to record a move. <span class="refs"><a href="#ref-add">[add]</a> <a href="#ref-diff">[diff]</a></span></p><h3>Commands deliberately excluded from this beginner workflow</h3><p>Do not use force-push, a hard reset, forced switching, branch deletion or destructive cleaning as a default response to an error. There is no script here that commits every directory automatically, no case-sensitive confirmation word to type, and no assumption that “no output” always means success: read the preceding command result.</p></section><section class="chapter" id="quiz"><p class="kicker">Lesson</p><h2>12. Check your understanding</h2><details class="answer"><summary>1. You saved a file in an editor. Is it on GitHub?</summary><p>No. Save changes the working file. Stage, commit and push are separate steps.</p></details><details class="answer"><summary>2. Framework was pushed, but the parent still shows “new commits”. Is the push broken?</summary><p>Not necessarily. The parent still needs to record the new Framework revision and publish its own commit.</p></details><details class="answer"><summary>3. Trader is clean but detached. Is it safe to assume main contains its commit?</summary><p>No. Compare history using the branch checkpoint before switching. Clean means no pending file edits, not necessarily no unpublished commits.</p></details><details class="answer"><summary>4. When does the default commit message create an empty commit?</summary><p>It does not. Ordinary git commit refuses to create a new commit when nothing is staged; do not add an empty-commit option just to make every repository show a new hash.</p></details><details class="answer"><summary>5. Should the second machine use submodule update --remote to reproduce the first machine?</summary><p>No. Use the parent’s recorded child revisions for reproduction. Remote-branch tips are a different dependency selection.</p></details><details class="answer"><summary>6. What belongs last in the publishing order?</summary><p>The parent, after changed children and their own changed dependencies are published.</p></details><details class="answer"><summary>7. Does main matching GitHub prove the applications work?</summary><p>No. Version-control synchronisation and runtime qualification are separate checks.</p></details><details class="answer"><summary>8. You edited a file after staging it. What should you review?</summary><p>Review the final file and stage it again if that new content belongs in the commit; inspect the cached diff before committing.</p></details><p>Practice completion: create two commits in your personal repository, confirm them on GitHub, and read the second revision on another checkout. Then explain in your own words why a Framework change requires a parent integration commit. Do not mark a real application release complete merely because this exercise passed.</p></section><section class="chapter" id="quick"><p class="kicker">Lesson</p><h2>13. The short reminder</h2><p><strong>Before editing:</strong> correct directory → status → safe switch to main → status → update only when clean. <strong>After editing:</strong> review/test → add → inspect → commit → push. <strong>For Umicom:</strong> changed children first → native lock → parent last.</p><div class="codebox"><div class="code-label">Inside one repository, after the branch checkpoint</div><pre><code>git status
+git switch main
+git status
+git add -A
+git status
+git diff --cached --check
+git commit -m &quot;chore: save current development changes&quot;
+git push origin main
+git status</code></pre></div><p>The default message above is a fallback. Use the scoped defaults in lesson 8 for Umicom. The parent uses its own lock and push-check steps in lesson 9. Do not treat this short reminder as permission to skip an error or an unknown detached state.</p></section><section class="chapter" id="sources"><p class="kicker">Reference notes</p><h2>Sources, scope and validation</h2><p>Prepared on <strong>16 September 2026</strong> for Sammy Hegab and the Umicom Foundation. This is a new supplementary Git lesson, not a replacement for an existing assessed lesson or a source-code batch. It does not rename project files, change lesson IDs, install scripts, commit code or push to your repositories.</p><p>The Umicom path catalogue comes from the connected parent repository’s current <code>.gitmodules</code>, Git blob <code>c9fefdce944f5bbff7dbb8a36b734758ccded47c</code>. That file lists Framework plus 24 applications. The main-only publishing preference and the Windows workspace path come from your instructions. Native build locations are examples tied to the inspected preset names; your compiled tool must actually exist.</p><p>Git command behaviour and GitHub sign-in instructions were checked against the official references below. The text, examples and teaching order are written for this guide; historical Calypso books and older alternative branching recommendations are not its command authority.</p><p><strong>Local validation:</strong> 14 named Git checks passed in disposable Linux repositories with local bare remotes, including the 25-repository command catalogue. The lab did not contact or modify the real Umicom remotes.</p><p>The Windows PowerShell navigation/file-edit commands, live GitHub browser authentication, hosted access controls and native Umicom lock/build commands were not executed in that Linux lab. The guide does not claim Windows build or application qualification. HTML structure and browser checks are recorded separately in the accompanying Markdown validation note.</p><ol class="source-list"><li id="ref-gitmodules"><a href="https://github.com/umicom-foundation/umicom-applications/blob/main/.gitmodules">Umicom Applications — current submodule map</a><br><small>https://github.com/umicom-foundation/umicom-applications/blob/main/.gitmodules</small></li><li id="ref-presets"><a href="https://github.com/umicom-foundation/umicom-applications/blob/main/CMakePresets.json">Umicom Applications — CMake presets</a><br><small>https://github.com/umicom-foundation/umicom-applications/blob/main/CMakePresets.json</small></li><li id="ref-lock"><a href="https://github.com/umicom-foundation/umicom-framework/blob/01f5bd8174507756f2232eea0d189888d2eef66a/tools/umicom/src/command_repository.c">Umicom Framework — native repository command</a><br><small>https://github.com/umicom-foundation/umicom-framework/blob/01f5bd8174507756f2232eea0d189888d2eef66a/tools/umicom/src/command_repository.c</small></li><li id="ref-init"><a href="https://git-scm.com/docs/git-init">Git reference — git init</a><br><small>https://git-scm.com/docs/git-init</small></li><li id="ref-clone"><a href="https://git-scm.com/docs/git-clone">Git reference — git clone</a><br><small>https://git-scm.com/docs/git-clone</small></li><li id="ref-switch"><a href="https://git-scm.com/docs/git-switch">Git reference — git switch</a><br><small>https://git-scm.com/docs/git-switch</small></li><li id="ref-status"><a href="https://git-scm.com/docs/git-status">Git reference — git status</a><br><small>https://git-scm.com/docs/git-status</small></li><li id="ref-add"><a href="https://git-scm.com/docs/git-add">Git reference — git add</a><br><small>https://git-scm.com/docs/git-add</small></li><li id="ref-commit"><a href="https://git-scm.com/docs/git-commit">Git reference — git commit</a><br><small>https://git-scm.com/docs/git-commit</small></li><li id="ref-diff"><a href="https://git-scm.com/docs/git-diff">Git reference — git diff</a><br><small>https://git-scm.com/docs/git-diff</small></li><li id="ref-fetch"><a href="https://git-scm.com/docs/git-fetch">Git reference — git fetch</a><br><small>https://git-scm.com/docs/git-fetch</small></li><li id="ref-pull"><a href="https://git-scm.com/docs/git-pull">Git reference — git pull</a><br><small>https://git-scm.com/docs/git-pull</small></li><li id="ref-push"><a href="https://git-scm.com/docs/git-push">Git reference — git push</a><br><small>https://git-scm.com/docs/git-push</small></li><li id="ref-submodule"><a href="https://git-scm.com/docs/git-submodule">Git reference — git submodule</a><br><small>https://git-scm.com/docs/git-submodule</small></li><li id="ref-submodules-book"><a href="https://git-scm.com/book/en/v2/Git-Tools-Submodules">Pro Git — Submodules</a><br><small>https://git-scm.com/book/en/v2/Git-Tools-Submodules</small></li><li id="ref-record"><a href="https://git-scm.com/book/en/v2/Git-Basics-Recording-Changes-to-the-Repository">Pro Git — Recording changes</a><br><small>https://git-scm.com/book/en/v2/Git-Basics-Recording-Changes-to-the-Repository</small></li><li id="ref-log"><a href="https://git-scm.com/docs/git-log">Git reference — git log</a><br><small>https://git-scm.com/docs/git-log</small></li><li id="ref-rev-parse"><a href="https://git-scm.com/docs/git-rev-parse">Git reference — git rev-parse</a><br><small>https://git-scm.com/docs/git-rev-parse</small></li><li id="ref-ls-remote"><a href="https://git-scm.com/docs/git-ls-remote">Git reference — git ls-remote</a><br><small>https://git-scm.com/docs/git-ls-remote</small></li><li id="ref-ignore"><a href="https://git-scm.com/docs/gitignore">Git reference — gitignore</a><br><small>https://git-scm.com/docs/gitignore</small></li><li id="ref-restore"><a href="https://git-scm.com/docs/git-restore">Git reference — git restore</a><br><small>https://git-scm.com/docs/git-restore</small></li><li id="ref-mv"><a href="https://git-scm.com/docs/git-mv">Git reference — git mv</a><br><small>https://git-scm.com/docs/git-mv</small></li><li id="ref-git-install-win"><a href="https://git-scm.com/install/windows">Git — installation on Windows</a><br><small>https://git-scm.com/install/windows</small></li><li id="ref-git-install-linux"><a href="https://git-scm.com/install/linux">Git — installation on Linux</a><br><small>https://git-scm.com/install/linux</small></li><li id="ref-gh"><a href="https://cli.github.com/">GitHub CLI — installation and manual</a><br><small>https://cli.github.com/</small></li><li id="ref-auth"><a href="https://cli.github.com/manual/gh_auth_login">GitHub CLI — browser sign-in</a><br><small>https://cli.github.com/manual/gh_auth_login</small></li><li id="ref-auth-setup"><a href="https://cli.github.com/manual/gh_auth_setup-git">GitHub CLI — Git credential setup</a><br><small>https://cli.github.com/manual/gh_auth_setup-git</small></li><li id="ref-gh-create"><a href="https://cli.github.com/manual/gh_repo_create">GitHub CLI — create a repository</a><br><small>https://cli.github.com/manual/gh_repo_create</small></li><li id="ref-identity"><a href="https://docs.github.com/en/get-started/git-basics/setting-your-username-in-git">GitHub Docs — Git author name</a><br><small>https://docs.github.com/en/get-started/git-basics/setting-your-username-in-git</small></li><li id="ref-github-auth"><a href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/about-authentication-to-github">GitHub Docs — authentication</a><br><small>https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/about-authentication-to-github</small></li></ol></section><footer>Umicom Foundation · Git learning resource · This page never executes terminal commands.</footer></main></div><script>
+(() => {
+  const buttons = document.querySelectorAll('[data-platform-button]');
+  function platform(value) {
+    document.body.dataset.platform = value;
+    buttons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.platformButton === value)));
+  }
+  buttons.forEach(b => b.addEventListener('click', () => platform(b.dataset.platformButton)));
+  platform('windows');
+  const filter = document.getElementById('repo-filter');
+  filter.addEventListener('input', () => {
+    const q = filter.value.toLowerCase().trim();
+    document.querySelectorAll('.repo').forEach(r => r.classList.toggle('repo-hidden', !r.dataset.find.toLowerCase().includes(q)));
+  });
+  document.querySelectorAll('.repo-index a').forEach(a => a.addEventListener('click', () => {
+    filter.value = ''; document.querySelectorAll('.repo').forEach(r => r.classList.remove('repo-hidden'));
+  }));
+  document.getElementById('print-guide').addEventListener('click', () => { document.querySelectorAll('details.answer').forEach(d => d.open = true); window.print(); });
+})();
+</script><p style="padding:24px"><a href="programming-workshop.html">Programming workshop</a> · <a href="binary-arithmetic.html">Next: binary arithmetic</a></p></body></html>

@@ -111,3 +111,6 @@ install(TARGETS umicom-learning-hello umicom-learning-scores
 if(TARGET umicom-learning-assembly)
     install(TARGETS umicom-learning-assembly RUNTIME DESTINATION bin COMPONENT Learning)
 endif()
+
+# The extended programming course uses the same source/install ownership.
+add_subdirectory(programming)

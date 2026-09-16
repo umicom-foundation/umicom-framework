@@ -29,16 +29,16 @@ int main(void)
     const UmiTeacherFoundationsLesson *last;
 
     /* Apply this branch only when its contract condition is satisfied. */
-    if (umi_teacher_foundations_curriculum_count() != 20U) return EXIT_FAILURE;
+    if (umi_teacher_foundations_curriculum_count() != 53U) return EXIT_FAILURE;
     first = umi_teacher_foundations_curriculum_at(0U);
     last = umi_teacher_foundations_curriculum_find(
-        "foundations.assembly");
+        "foundations.assembly-loops");
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
     if (first == NULL || last == NULL || first->sequence != 1U ||
-        last->sequence != 20U) return EXIT_FAILURE;
+        last->sequence != 53U) return EXIT_FAILURE;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -59,7 +59,7 @@ int main(void)
     }
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_teacher_foundations_curriculum_plan(&plan) != UMI_STATUS_OK ||
-        umi_teacher_learning_plan_count(&plan) != 20U ||
+        umi_teacher_learning_plan_count(&plan) != 53U ||
         strcmp(umi_teacher_learning_plan_current(&plan), first->id) != 0) {
         return EXIT_FAILURE;
     }
@@ -88,11 +88,59 @@ int main(void)
                 return EXIT_FAILURE;
         }
     }
-    if (umi_teacher_foundations_curriculum_at(20U) != NULL ||
+    if (umi_teacher_foundations_curriculum_at(53U) != NULL ||
         umi_teacher_foundations_curriculum_find(NULL) != NULL ||
         umi_teacher_foundations_curriculum_find("missing.lesson") != NULL ||
         umi_teacher_foundations_curriculum_plan(NULL) != UMI_STATUS_INVALID_ARGUMENT)
         return EXIT_FAILURE;
+    const UmiTeacherFoundationsLesson *oldLast =
+        umi_teacher_foundations_curriculum_find("foundations.assembly");
+    const UmiTeacherFoundationsLesson *gitWorkflow =
+        umi_teacher_foundations_curriculum_next("foundations.assembly");
+    if (oldLast == NULL || oldLast->sequence != 20U || gitWorkflow == NULL ||
+        strcmp(gitWorkflow->id, "foundations.git-workflow") != 0)
+        return EXIT_FAILURE;
+    /* All newly registered lesson names are independent test expectations. */
+    const char *const addedIds[] = {
+        "foundations.git-workflow",
+        "foundations.binary-arithmetic",
+        "foundations.boolean-masks",
+        "foundations.integer-ranges",
+        "foundations.byte-order",
+        "foundations.cpu-model",
+        "foundations.memory-lifetimes",
+        "foundations.types-formatting",
+        "foundations.control-flow",
+        "foundations.functions-contracts",
+        "foundations.array-bounds",
+        "foundations.bounded-strings",
+        "foundations.numeric-parsing",
+        "foundations.records-enums",
+        "foundations.pointer-contracts",
+        "foundations.dynamic-memory",
+        "foundations.checked-arithmetic",
+        "foundations.finite-numbers",
+        "foundations.resource-cleanup",
+        "foundations.modules-build",
+        "foundations.callbacks",
+        "foundations.controller-architecture",
+        "foundations.state-machines",
+        "foundations.bounded-queue",
+        "foundations.search-sort",
+        "foundations.test-design",
+        "foundations.coding-conventions",
+        "foundations.macro-hazards",
+        "foundations.binary-records",
+        "foundations.recursion",
+        "foundations.atomic-basics",
+        "foundations.assembly-branches",
+        "foundations.assembly-loops",
+    };
+    for (size_t index = 0U; index < sizeof(addedIds)/sizeof(addedIds[0]); ++index) {
+        const UmiTeacherFoundationsLesson *added =
+            umi_teacher_foundations_curriculum_find(addedIds[index]);
+        if (added == NULL || added->sequence != index + 21U) return EXIT_FAILURE;
+    }
     /* Display/resource naming can evolve without resetting persisted IDs. */
     const UmiTeacherFoundationsLesson *gitLesson =
         umi_teacher_foundations_curriculum_find("foundations.git");

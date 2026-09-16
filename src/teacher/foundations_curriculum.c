@@ -183,8 +183,276 @@ static const UmiTeacherFoundationsLesson FOUNDATIONS_LESSONS[] = {
         "framework/docs/learning/assembly.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
         UMI_TEACHER_LANGUAGE_ASSEMBLY, UMI_TEACHER_LEVEL_BEGINNER,
         20U, 90U, 80U, 1, 0, 0
-    }
+    },
+    {
+        "foundations.git-workflow", "Git from clone to publication",
+        "Practise Git on main, publish child repositories first and reproduce the parent snapshot on another machine.",
+        "Create and modify a file in a disposable Git repository; add, commit, push, clone and verify the second checkout.",
+        "framework/docs/learning/git-workflow.html", UMI_TEACHER_FOUNDATIONS_CONTRIBUTION,
+        UMI_TEACHER_LANGUAGE_GENERAL, UMI_TEACHER_LEVEL_BEGINNER,
+        21U, 180U, 80U, 0, 1, 1
+    },
+    {
+        "foundations.binary-arithmetic", "Binary arithmetic from first principles",
+        "A bit is a position with two possible values.",
+        "Build umicom-learning-binary-arithmetic; run its checks, change one input and explain the result.",
+        "framework/docs/learning/binary-arithmetic.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        22U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.boolean-masks", "Boolean decisions and bit masks",
+        "A Boolean decision answers yes or no.",
+        "Build umicom-learning-boolean-masks; run its checks, change one input and explain the result.",
+        "framework/docs/learning/boolean-masks.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        23U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.integer-ranges", "Integer ranges and checked conversions",
+        "A type has a range.",
+        "Build umicom-learning-integer-ranges; run its checks, change one input and explain the result.",
+        "framework/docs/learning/integer-ranges.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        24U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.byte-order", "Bytes, endianness and explicit encoding",
+        "An integer value and its byte representation are different things.",
+        "Build umicom-learning-byte-order; run its checks, change one input and explain the result.",
+        "framework/docs/learning/byte-order.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        25U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.cpu-model", "A tiny fetch-decode-execute machine",
+        "A CPU fetches an instruction, decodes its meaning and changes state.",
+        "Build umicom-learning-cpu-model; run its checks, change one input and explain the result.",
+        "framework/docs/learning/cpu-model.html", UMI_TEACHER_FOUNDATIONS_FRAMEWORK,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        26U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.memory-lifetimes", "Object lifetime, stack and heap",
+        "A pointer is usable only while the object it names is alive.",
+        "Build umicom-learning-memory-lifetimes; run its checks, change one input and explain the result.",
+        "framework/docs/learning/memory-lifetimes.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        27U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.types-formatting", "C values, types and output formats",
+        "A value has a type, and printf needs a format matching the argument after default promotions.",
+        "Build umicom-learning-types-formatting; run its checks, change one input and explain the result.",
+        "framework/docs/learning/types-formatting.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        28U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.control-flow", "Decisions, loops and early returns",
+        "Control flow determines which statement executes next.",
+        "Build umicom-learning-control-flow; run its checks, change one input and explain the result.",
+        "framework/docs/learning/control-flow.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        29U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.functions-contracts", "Functions with explicit contracts",
+        "A function should state valid input, ownership, result and failure behaviour.",
+        "Build umicom-learning-functions-contracts; run its checks, change one input and explain the result.",
+        "framework/docs/learning/functions-contracts.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        30U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.array-bounds", "Array boundaries and empty collections",
+        "An array of N elements has indexes 0 through N minus one.",
+        "Build umicom-learning-array-bounds; run its checks, change one input and explain the result.",
+        "framework/docs/learning/array-bounds.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        31U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.bounded-strings", "Bounded text and null termination",
+        "A C string is terminated by a zero byte.",
+        "Build umicom-learning-bounded-strings; run its checks, change one input and explain the result.",
+        "framework/docs/learning/bounded-strings.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        32U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.numeric-parsing", "Parsing numbers without accepting junk",
+        "Text input must satisfy a syntax and a range.",
+        "Build umicom-learning-numeric-parsing; run its checks, change one input and explain the result.",
+        "framework/docs/learning/numeric-parsing.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        33U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.records-enums", "Structures, enumerations and state",
+        "A structure groups related fields.",
+        "Build umicom-learning-records-enums; run its checks, change one input and explain the result.",
+        "framework/docs/learning/records-enums.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        34U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.pointer-contracts", "Pointers, borrowing and const",
+        "A pointer permits access to an object; it does not automatically convey ownership, lifetime or array length.",
+        "Build umicom-learning-pointer-contracts; run its checks, change one input and explain the result.",
+        "framework/docs/learning/pointer-contracts.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        35U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.dynamic-memory", "Allocation, resizing and ownership",
+        "Dynamic memory is useful when sizes are chosen at runtime.",
+        "Build umicom-learning-dynamic-memory; run its checks, change one input and explain the result.",
+        "framework/docs/learning/dynamic-memory.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        36U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.checked-arithmetic", "Check arithmetic before overflow",
+        "Unsigned arithmetic wraps modulo its range; signed overflow is undefined behaviour.",
+        "Build umicom-learning-checked-arithmetic; run its checks, change one input and explain the result.",
+        "framework/docs/learning/checked-arithmetic.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        37U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.finite-numbers", "Floating-point values and finite input",
+        "Floating-point calculations are approximate and may involve NaN or infinities on the supported hosts.",
+        "Build umicom-learning-finite-numbers; run its checks, change one input and explain the result.",
+        "framework/docs/learning/finite-numbers.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        38U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.resource-cleanup", "Files, errors and one cleanup path",
+        "Files and memory both have lifetimes.",
+        "Build umicom-learning-resource-cleanup; run its checks, change one input and explain the result.",
+        "framework/docs/learning/resource-cleanup.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        39U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.modules-build", "Headers, linking and separate compilation",
+        "A header declares a contract; a source file defines it.",
+        "Build umicom-learning-modules-build; run its checks, change one input and explain the result.",
+        "framework/docs/learning/modules-build.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        40U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.callbacks", "Callbacks and dependency injection",
+        "A callback supplies behaviour through a function pointer.",
+        "Build umicom-learning-callbacks; run its checks, change one input and explain the result.",
+        "framework/docs/learning/callbacks.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        41U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.controller-architecture", "Master Controller and Slave Controllers",
+        "The Master Controller coordinates work.",
+        "Build umicom-learning-controller-architecture; run its checks, change one input and explain the result.",
+        "framework/docs/learning/controller-architecture.html", UMI_TEACHER_FOUNDATIONS_FRAMEWORK,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        42U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.state-machines", "State machines and rejected transitions",
+        "A state machine lists legal transitions rather than accepting arbitrary field assignments.",
+        "Build umicom-learning-state-machines; run its checks, change one input and explain the result.",
+        "framework/docs/learning/state-machines.html", UMI_TEACHER_FOUNDATIONS_FRAMEWORK,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        43U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.bounded-queue", "A bounded queue and backpressure",
+        "A queue preserves first-in, first-out order.",
+        "Build umicom-learning-bounded-queue; run its checks, change one input and explain the result.",
+        "framework/docs/learning/bounded-queue.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        44U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.search-sort", "Search, sorting and algorithm cost",
+        "An algorithm is a method for solving a problem.",
+        "Build umicom-learning-search-sort; run its checks, change one input and explain the result.",
+        "framework/docs/learning/search-sort.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        45U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.test-design", "Tests that remain active in Release",
+        "A test must actually execute its checks in every configuration it claims to validate.",
+        "Build umicom-learning-test-design; run its checks, change one input and explain the result.",
+        "framework/docs/learning/test-design.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        46U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.coding-conventions", "Readable names and coding conventions",
+        "Conventions make intent consistent; they do not replace contracts or tests.",
+        "Build umicom-learning-coding-conventions; run its checks, change one input and explain the result.",
+        "framework/docs/learning/coding-conventions.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        47U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.macro-hazards", "Macros, precedence and repeated evaluation",
+        "The preprocessor performs token substitution before C compilation.",
+        "Build umicom-learning-macro-hazards; run its checks, change one input and explain the result.",
+        "framework/docs/learning/macro-hazards.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        48U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.binary-records", "Serialisation without dumping structures",
+        "A durable record needs a specified format.",
+        "Build umicom-learning-binary-records; run its checks, change one input and explain the result.",
+        "framework/docs/learning/binary-records.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        49U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.recursion", "Recursion with a bound and base case",
+        "A recursive function calls itself on a smaller problem.",
+        "Build umicom-learning-recursion; run its checks, change one input and explain the result.",
+        "framework/docs/learning/recursion.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        50U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.atomic-basics", "Atomic operations and concurrency boundaries",
+        "Concurrent access needs a documented rule.",
+        "Build umicom-learning-atomic-basics; run its checks, change one input and explain the result.",
+        "framework/docs/learning/atomic-basics.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
+        51U, 60U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.assembly-branches", "Assembly registers, comparisons and branches",
+        "Assembly exposes register-level operations and control flow.",
+        "Build umicom-learning-assembly-branches; run its checks, change one input and explain the result.",
+        "framework/docs/learning/assembly-branches.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_ASSEMBLY, UMI_TEACHER_LEVEL_BEGINNER,
+        52U, 90U, 80U, 1, 0, 0
+    },
+    {
+        "foundations.assembly-loops", "Assembly loops, memory and empty input",
+        "A memory loop must handle zero length before loading an element.",
+        "Build umicom-learning-assembly-loops; run its checks, change one input and explain the result.",
+        "framework/docs/learning/assembly-loops.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        UMI_TEACHER_LANGUAGE_ASSEMBLY, UMI_TEACHER_LEVEL_BEGINNER,
+        53U, 90U, 80U, 1, 0, 0
+    },
 };
+
+/* Appending lessons must not silently exceed the existing bounded plan. */
+_Static_assert(sizeof(FOUNDATIONS_LESSONS) / sizeof(FOUNDATIONS_LESSONS[0]) <= UMI_TEACHER_MEDIUM_CAPACITY,
+               "Foundations curriculum exceeds learning-plan capacity");
 
 /*
  * Return the number of records represented by teacher foundations curriculum without

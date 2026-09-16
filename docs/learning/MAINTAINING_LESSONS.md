@@ -61,3 +61,13 @@ and resource checks keep their assertions and setup active in Release builds.
 A passing static resource check does not establish that Studio can resolve an
 installed resource from an unrelated working directory; that runtime work stays
 in the outstanding table above.
+
+## Extended programming workshop
+
+The catalogue now has 53 assessed entries: the original 20, the incorporated Git workflow, and 32 programming labs. New IDs are appended; do not rewrite the original twenty IDs or overwrite learner progress.
+
+`programming-workshop.html` is a reference/index, not another scored lesson. Each programming page names a real CMake target in `examples/learning/programming/CMakeLists.txt`; its executable has explicit checks active in Release. Keep the displayed code consistent with that source. Unsafe examples remain discussion-only HTML snippets.
+
+Run the resource checker, curriculum checks and the 32 lab tests whenever a lesson or source changes. Test native Assembly separately from C-only mode. The existing teaching score fields are metadata; this batch does not automatically mark exercises passed or create another progress database.
+
+Studio reads the enlarged Framework catalogue through its existing Learning Centre projection. Education exposes the same catalogue through its verification console. Code execution is through the documented compiler/CMake commands; no new unchecked browser or application Run button is added.
