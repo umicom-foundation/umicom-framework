@@ -91,6 +91,21 @@ typedef struct UmiProcessResult {
  */
 UmiStatus umi_process_execute(const UmiProcessRequest *request,
                               UmiProcessResult *out_result);
+/** Observe a coherent captured-output snapshot on the executing thread.
+ * The pointer is borrowed only during the callback. Copy anything to retain;
+ * do not update GUI objects here. Keep callbacks bounded and do not destroy
+ * objects needed by the running process. No callback is made from the child.
+ */
+typedef void (*UmiProcessResultObserver)(const UmiProcessResult *result,
+    void *context);
+/** Execute through the same platform runner, with an optional observer after
+ * each captured output chunk. Final status remains in outResult/the return
+ * value. The existing umi_process_execute is the no-observer entry point.
+ * Request layout, argument rules, cancellation and capture limits are unchanged.
+ */
+UmiStatus UmiProcessExecuteObserved(const UmiProcessRequest *request,
+    UmiProcessResultObserver observer, void *context, UmiProcessResult *outResult);
+
 /**
  * Provide the process capture operation used by this module and its client applications.
  */

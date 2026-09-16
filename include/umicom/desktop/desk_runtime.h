@@ -177,6 +177,12 @@ UmiStatus umi_desk_runtime_reconcile_application_exit(
     const char *application_id,
     int exit_code,
     const char *message);
+/** Reconcile only the currently tracked instance. INVALID_STATE means the
+ * token belongs to an older/stopped instance; no current product state changes.
+ * The caller may still acknowledge and release that old process job. */
+UmiStatus UmiDeskRuntimeReconcileProcessExit(UmiDeskRuntime *runtime,
+    const char *applicationId, uint64_t processToken, int exitCode,
+    const char *message);
 /**
  * Provide the desk runtime activate layout operation used by this module and its client
  * applications.

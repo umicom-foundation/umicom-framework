@@ -65,7 +65,9 @@ typedef enum UmiQuoteSide { UMI_QUOTE_MID=0, UMI_QUOTE_BID=1, UMI_QUOTE_ASK=2, U
 /* Copy text into a bounded caller-owned buffer. */ UmiStatus umi_financial_core_copy(char *dst,size_t cap,const char *src);
 /* Assign a reusable existing financial identifier. */ UmiStatus umi_financial_id_assign(UmiFinancialId *id,const char *value);
 /* Test whether a reusable financial identifier is populated. */ bool umi_financial_id_is_valid(const UmiFinancialId *id);
-/* Compare reusable financial identifiers lexically. */ int umi_financial_id_compare(const UmiFinancialId *a,const UmiFinancialId *b);
+/* Compare reusable financial identifiers lexically within their fixed capacity.
+ * NULL sorts before non-NULL. Call is_valid separately before accepting a record;
+ * equal comparison results do not make malformed identifiers valid. */ int umi_financial_id_compare(const UmiFinancialId *a,const UmiFinancialId *b);
 /* Validate a Gregorian financial date. */ bool umi_financial_date_is_valid(UmiFinancialDate d);
 /* Compare two financial dates. */ int umi_financial_date_compare(UmiFinancialDate a,UmiFinancialDate b);
 #ifdef __cplusplus

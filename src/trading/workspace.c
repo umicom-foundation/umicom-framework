@@ -23,6 +23,7 @@
 #include "umicom/trading/workspace.h"
 
 #include <ctype.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -644,7 +645,8 @@ UmiStatus umi_trading_workspace_update_bar(
      * used.
      */
     if (workspace == NULL || bar == NULL || !umi_bar_valid(bar) ||
-        previous_close < 0.0)
+        !umi_financial_id_valid(&bar->instrument.instrument_id) ||
+        !isfinite(previous_close) || previous_close < 0.0)
         return UMI_STATUS_INVALID_ARGUMENT;
     index = market_index(workspace, bar->instrument.instrument_id.value);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
@@ -1046,7 +1048,7 @@ UmiStatus umi_trading_workspace_set_draft_quantity(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (workspace == NULL || quantity <= 0.0)
+    if (workspace == NULL || !isfinite(quantity) || quantity <= 0.0)
         return UMI_STATUS_INVALID_ARGUMENT;
     workspace->draft_order.quantity = quantity;
     workspace->has_draft_risk = 0;
@@ -1067,7 +1069,8 @@ UmiStatus umi_trading_workspace_set_draft_prices(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (workspace == NULL || limit_price < 0.0 || stop_price < 0.0)
+    if (workspace == NULL || !isfinite(limit_price) || !isfinite(stop_price) ||
+        limit_price < 0.0 || stop_price < 0.0)
         return UMI_STATUS_INVALID_ARGUMENT;
     workspace->draft_order.limit_price = limit_price;
     workspace->draft_order.stop_price = stop_price;

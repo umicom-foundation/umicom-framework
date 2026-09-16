@@ -674,11 +674,16 @@ UmiStatus umi_application_runtime_catalogue_mark_exit(
     UmiApplicationRuntimeRecord *record =
         find_mutable(catalogue, application_id);
     UmiStatus status;
+    char nextMessage[sizeof(record->last_error)];
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
     if (record == NULL) return UMI_STATUS_NOT_FOUND;
+    /* Validate the message before clearing a running process or its selection.
+     * A rejected exit report must preserve the complete previous catalogue. */
+    status = copy_text(nextMessage, sizeof(nextMessage), message, true);
+    if (status != UMI_STATUS_OK) return status;
     record->last_exit_code = exit_code;
     record->process_token = 0U;
     record->running = false;
@@ -692,7 +697,7 @@ UmiStatus umi_application_runtime_catalogue_mark_exit(
         catalogue->active_application_id[0] = '\0';
     }
     status = copy_text(record->last_error, sizeof(record->last_error),
-                       message, true);
+                       nextMessage, true);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     update_visibility(record);

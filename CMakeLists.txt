@@ -1028,6 +1028,7 @@ umicom_apply_sanitizers(umicom_compiler)
 add_library(umicom_build STATIC
     src/build/types.c
     src/build/profile.c
+    src/build/profile_store.c
     src/build/preset.c
     src/build/diagnostic.c
     src/build/parser.c
@@ -1052,6 +1053,7 @@ target_link_libraries(umicom_build PUBLIC
     Umicom::base
     Umicom::diagnostics
     Umicom::platform
+    Umicom::data
 )
 target_include_directories(umicom_build PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -5034,6 +5036,8 @@ install(FILES
 # use the same icon and appearance files as the complete source superbuild.
 install(DIRECTORY resources/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/framework/resources)
+
+include(cmake/UmicomOperationalStateQualification.cmake)
 
 message(STATUS "Umicom Framework version: ${PROJECT_VERSION}")
 message(STATUS "C standard: C${CMAKE_C_STANDARD}")

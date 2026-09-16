@@ -299,7 +299,10 @@ static UmiStatus walk_directory(const char *directory,
         name_list_dispose(&names);
         return status;
     }
-    qsort(names.items, names.count, sizeof(*names.items), compare_names);
+    /* An empty folder has no allocated name array. qsort still requires a
+     * valid base pointer; zero or one entry already has deterministic order. */
+    if (names.count > 1U)
+        qsort(names.items, names.count, sizeof(*names.items), compare_names);
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < names.count; ++index) {
         char path[UMI_PATH_CAPACITY];

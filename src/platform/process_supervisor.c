@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "umicom/platform/cancellation.h"
+#include "umicom/platform/clock.h"
 #include "umicom/platform/threading.h"
 
 #define UMI_JOB_STRING_CAPACITY 2048U
@@ -48,6 +49,7 @@ typedef struct UmiProcessJob {
     UmiThread *thread;
     UmiProcessResult result;
     int joined;
+    size_t waiters; /* A waiting caller pins the slot until it has observed completion. */
 } UmiProcessJob;
 
 struct UmiProcessSupervisor {
@@ -173,13 +175,23 @@ static UmiProcessJob *find_job(UmiProcessSupervisor *supervisor,
 {
     size_t index;
     /* Visit each bounded item once so every record receives the same rule. */
-    for (index = 0U; index < supervisor->count; ++index) {
+    for (index = 0U; index < supervisor->capacity; ++index) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (supervisor->jobs[index].job_id == job_id) {
+        if (job_id != 0U && supervisor->jobs[index].job_id == job_id) {
             return &supervisor->jobs[index];
         }
     }
     return NULL;
+}
+
+/* Preserve live captured output without sharing the executor's mutable buffer.
+ * The observer runs on the job worker; readers copy under this same mutex. */
+static void PublishProcessOutput(const UmiProcessResult *result, void *context)
+{
+    UmiProcessJob *job = context;
+    (void)umi_mutex_lock(job->owner->mutex);
+    job->result = *result;
+    (void)umi_mutex_unlock(job->owner->mutex);
 }
 
 /*
@@ -190,15 +202,21 @@ static int process_job_thread(void *user_data)
 {
     UmiProcessJob *job = (UmiProcessJob *)user_data;
     UmiStatus status;
+    UmiProcessResult result = {0};
     (void)umi_mutex_lock(job->owner->mutex);
     job->state = UMI_PROCESS_JOB_RUNNING;
     job->owner->stats.running += 1U;
     (void)umi_condition_broadcast(job->owner->condition);
     (void)umi_mutex_unlock(job->owner->mutex);
 
-    status = umi_process_execute(&job->owned.request, &job->result);
+    /* The executor writes a worker-owned result and publishes coherent live
+     * copies through its observer. Publish completion and terminal state under
+     * the same mutex, retaining both live output and the final result. */
+    status = UmiProcessExecuteObserved(&job->owned.request,
+        PublishProcessOutput, job, &result);
 
     (void)umi_mutex_lock(job->owner->mutex);
+    job->result = result;
     job->owner->stats.running -= 1U;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_CANCELLED || job->result.cancelled) {
@@ -293,7 +311,7 @@ void umi_process_supervisor_destroy(UmiProcessSupervisor *supervisor)
     if (supervisor == NULL) return;
     (void)umi_process_supervisor_shutdown(supervisor);
     /* Visit each bounded item once so every record receives the same rule. */
-    for (index = 0U; index < supervisor->count; ++index) {
+    for (index = 0U; index < supervisor->capacity; ++index) {
         umi_thread_destroy(supervisor->jobs[index].thread);
         umi_cancellation_token_destroy(supervisor->jobs[index].cancellation);
     }
@@ -312,7 +330,9 @@ UmiStatus umi_process_supervisor_submit(UmiProcessSupervisor *supervisor,
                                         const UmiProcessRequest *request,
                                         UmiProcessJobId *out_job_id)
 {
-    UmiProcessJob *job;
+    UmiProcessJob *job = NULL;
+    size_t index;
+    UmiProcessJobId assignedId;
     UmiCancellationToken *cancellation = NULL;
     UmiStatus status;
     /*
@@ -337,7 +357,7 @@ UmiStatus umi_process_supervisor_submit(UmiProcessSupervisor *supervisor,
         return UMI_STATUS_INVALID_STATE;
     }
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (supervisor->count >= supervisor->capacity) {
+    if (supervisor->count >= supervisor->capacity || supervisor->next_job_id == UINT64_MAX) {
         (void)umi_mutex_unlock(supervisor->mutex);
         umi_cancellation_token_destroy(cancellation);
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -346,10 +366,23 @@ UmiStatus umi_process_supervisor_submit(UmiProcessSupervisor *supervisor,
      * section.  This prevents a second submitter from being inserted between
      * the reservation and a failed copy, which previously left a ghost job
      * occupying capacity. */
-    job = &supervisor->jobs[supervisor->count];
+    /* Released slots may be reused, but a live job never moves in memory:
+     * its worker and its copied argv pointers refer to this exact address. */
+    for (index = 0U; index < supervisor->capacity; ++index) {
+        if (supervisor->jobs[index].job_id == 0U) {
+            job = &supervisor->jobs[index];
+            break;
+        }
+    }
+    if (job == NULL) {
+        (void)umi_mutex_unlock(supervisor->mutex);
+        umi_cancellation_token_destroy(cancellation);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
     (void)memset(job, 0, sizeof(*job));
     job->owner = supervisor;
-    job->job_id = supervisor->next_job_id++;
+    assignedId = supervisor->next_job_id++;
+    job->job_id = assignedId;
     job->state = UMI_PROCESS_JOB_CREATED;
     job->cancellation = cancellation;
     status = copy_string(job->label,
@@ -361,29 +394,22 @@ UmiStatus umi_process_supervisor_submit(UmiProcessSupervisor *supervisor,
     }
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
-        supervisor->count += 1U;
-        supervisor->stats.jobs = supervisor->count;
-        supervisor->stats.submitted += 1U;
         status = umi_thread_start(process_job_thread, job, &job->thread);
     }
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
-        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (supervisor->count > 0U &&
-            &supervisor->jobs[supervisor->count - 1U] == job) {
-            supervisor->count -= 1U;
-            supervisor->stats.jobs = supervisor->count;
-            supervisor->stats.submitted -= 1U;
-            (void)memset(job, 0, sizeof(*job));
-        }
-        (void)umi_mutex_unlock(supervisor->mutex);
         /* The thread-start contract leaves out_thread NULL on failure, so no
          * worker can still reference this token when it is released here. */
+        (void)memset(job, 0, sizeof(*job));
+        (void)umi_mutex_unlock(supervisor->mutex);
         umi_cancellation_token_destroy(cancellation);
         return status;
     }
+    supervisor->count += 1U;
+    supervisor->stats.jobs = supervisor->count;
+    supervisor->stats.submitted += 1U;
+    *out_job_id = assignedId;
     (void)umi_mutex_unlock(supervisor->mutex);
-    *out_job_id = job->job_id;
     return UMI_STATUS_OK;
 }
 
@@ -425,44 +451,71 @@ UmiStatus umi_process_supervisor_wait(UmiProcessSupervisor *supervisor,
 {
     UmiProcessJob *job;
     UmiStatus status = UMI_STATUS_OK;
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (supervisor == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiClock clock = umi_clock_system();
+    uint64_t started = clock.monotonic_nanoseconds(&clock);
+    if (supervisor == NULL || job_id == 0U) return UMI_STATUS_INVALID_ARGUMENT;
     (void)umi_mutex_lock(supervisor->mutex);
     job = find_job(supervisor, job_id);
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
     if (job == NULL) {
         (void)umi_mutex_unlock(supervisor->mutex);
         return UMI_STATUS_NOT_FOUND;
     }
-    /*
-     * Continue only while work remains available; the loop body advances the state on each
-     * pass.
-     */
+    ++job->waiters;
+    /* Continue only while work remains available. Notifications from other
+     * jobs must not restart this caller's timeout budget. */
     while (job->state == UMI_PROCESS_JOB_CREATED ||
            job->state == UMI_PROCESS_JOB_RUNNING) {
+        uint32_t remaining = timeout_ms;
+        if (timeout_ms != 0U) {
+            uint64_t now = clock.monotonic_nanoseconds(&clock);
+            uint64_t elapsed = now >= started ? (now - started) / UINT64_C(1000000) : 0U;
+            if (elapsed >= timeout_ms) { status = UMI_STATUS_TIMEOUT; break; }
+            remaining = timeout_ms - (uint32_t)elapsed;
+        }
         status = timeout_ms == 0U
             ? umi_condition_wait(supervisor->condition, supervisor->mutex)
-            : umi_condition_wait_for(supervisor->condition,
-                                     supervisor->mutex,
-                                     timeout_ms);
-        /* Preserve the original failure result so the caller can respond to the correct cause. */
+            : umi_condition_wait_for(supervisor->condition, supervisor->mutex, remaining);
         if (status != UMI_STATUS_OK) break;
     }
-    (void)umi_mutex_unlock(supervisor->mutex);
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
+    /* A terminal worker has already published its result and released this
+     * mutex. Serialising join here prevents two waiters joining one thread,
+     * and pins the slot against explicit release until this call completes. */
     if (status == UMI_STATUS_OK && job->thread != NULL && !job->joined) {
-        (void)umi_thread_join(job->thread, NULL);
-        job->joined = 1;
+        status = umi_thread_join(job->thread, NULL);
+        if (status == UMI_STATUS_OK) job->joined = 1;
     }
+    --job->waiters;
+    (void)umi_mutex_unlock(supervisor->mutex);
+    return status;
+}
+
+/* Release only acknowledged, terminal work. No compaction is allowed while
+ * another slot still contains a worker or self-referencing request pointers. */
+UmiStatus UmiProcessSupervisorReleaseJob(UmiProcessSupervisor *supervisor,
+    UmiProcessJobId jobId)
+{
+    UmiProcessJob *job;
+    UmiStatus status = UMI_STATUS_OK;
+    if (supervisor == NULL || jobId == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)umi_mutex_lock(supervisor->mutex);
+    job = find_job(supervisor, jobId);
+    if (supervisor->shutting_down) status = UMI_STATUS_INVALID_STATE;
+    else if (job == NULL) status = UMI_STATUS_NOT_FOUND;
+    else if (job->state == UMI_PROCESS_JOB_CREATED ||
+             job->state == UMI_PROCESS_JOB_RUNNING || job->waiters != 0U)
+        status = UMI_STATUS_BUSY;
+    else {
+        if (job->thread != NULL && !job->joined)
+            status = umi_thread_join(job->thread, NULL);
+        if (status == UMI_STATUS_OK) {
+            umi_thread_destroy(job->thread);
+            umi_cancellation_token_destroy(job->cancellation);
+            (void)memset(job, 0, sizeof(*job));
+            --supervisor->count;
+            supervisor->stats.jobs = supervisor->count;
+        }
+    }
+    (void)umi_mutex_unlock(supervisor->mutex);
     return status;
 }
 
@@ -545,7 +598,11 @@ UmiStatus umi_process_supervisor_at(const UmiProcessSupervisor *supervisor,
         (void)umi_mutex_unlock(mutable_supervisor->mutex);
         return UMI_STATUS_NOT_FOUND;
     }
-    copy_snapshot(&supervisor->jobs[index], out_snapshot);
+    for (size_t slot = 0U; slot < supervisor->capacity; ++slot) {
+        if (supervisor->jobs[slot].job_id == 0U) continue;
+        if (index == 0U) { copy_snapshot(&supervisor->jobs[slot], out_snapshot); break; }
+        --index;
+    }
     (void)umi_mutex_unlock(mutable_supervisor->mutex);
     return UMI_STATUS_OK;
 }
@@ -570,24 +627,22 @@ UmiStatus umi_process_supervisor_shutdown(UmiProcessSupervisor *supervisor)
     }
     supervisor->shutting_down = 1;
     /* Visit each bounded item once so every record receives the same rule. */
-    for (index = 0U; index < supervisor->count; ++index) {
+    for (index = 0U; index < supervisor->capacity; ++index) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (supervisor->jobs[index].state == UMI_PROCESS_JOB_CREATED ||
-            supervisor->jobs[index].state == UMI_PROCESS_JOB_RUNNING) {
+        if (supervisor->jobs[index].job_id != 0U &&
+            (supervisor->jobs[index].state == UMI_PROCESS_JOB_CREATED ||
+             supervisor->jobs[index].state == UMI_PROCESS_JOB_RUNNING)) {
             umi_cancellation_token_request(supervisor->jobs[index].cancellation);
         }
     }
     (void)umi_mutex_unlock(supervisor->mutex);
-    /* Visit each bounded item once so every record receives the same rule. */
-    for (index = 0U; index < supervisor->count; ++index) {
-        /*
-         * Protect caller-owned memory by checking that required state is available before it is
-         * used.
-         */
-        if (supervisor->jobs[index].thread != NULL &&
-            !supervisor->jobs[index].joined) {
-            (void)umi_thread_join(supervisor->jobs[index].thread, NULL);
-            supervisor->jobs[index].joined = 1;
+    /* Shutdown rejects release/submission, so occupied slot identities stay
+     * stable while wait performs the existing completion and join sequence. */
+    for (index = 0U; index < supervisor->capacity; ++index) {
+        if (supervisor->jobs[index].job_id != 0U) {
+            UmiStatus status = umi_process_supervisor_wait(
+                supervisor, supervisor->jobs[index].job_id, 0U);
+            if (status != UMI_STATUS_OK) return status;
         }
     }
     return UMI_STATUS_OK;

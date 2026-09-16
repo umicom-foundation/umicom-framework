@@ -139,6 +139,16 @@ UmiStatus umi_process_supervisor_snapshot(
 UmiStatus umi_process_supervisor_at(const UmiProcessSupervisor *supervisor,
                                     size_t index,
                                     UmiProcessJobSnapshot *out_snapshot);
+/** Release one completed job after its owner has consumed the result.
+ * Running jobs and jobs with active waiters return BUSY. Cumulative submitted,
+ * succeeded, failed, cancelled and timed-out counters are preserved. The ID is
+ * never reused; later lookups of a released ID return NOT_FOUND. at() enumerates
+ * the retained slots; ordering can change after release. No result is removed
+ * automatically. Destruction still requires exclusive lifecycle ownership.
+ */
+UmiStatus UmiProcessSupervisorReleaseJob(UmiProcessSupervisor *supervisor,
+    UmiProcessJobId jobId);
+
 /**
  * Provide the process supervisor shutdown operation used by this module and its client
  * applications.

@@ -28,14 +28,14 @@ const UmiBankingDepositAccount *umi_banking_deposit_account_book_find(const UmiB
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if(registry==NULL||id==NULL) return NULL;
+    if(registry==NULL||id==NULL||registry->count>UMI_BANKING_MAX_ITEMS) return NULL;
     UmiFinancialId key;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if(umi_financial_id_assign(&key,id)!=UMI_STATUS_OK) return NULL;
+    if(umi_financial_id_assign(&key,id)!=UMI_STATUS_OK || !umi_financial_id_is_valid(&key)) return NULL;
     /* Visit each bounded item once so every record receives the same rule. */
     for(size_t i=0U;i<registry->count;++i) {
         /* Use the stable identifier comparison to choose the matching record or policy. */
-        if(umi_financial_id_compare(&registry->items[i].id,&key)==0) return &registry->items[i];
+        if(umi_financial_id_is_valid(&registry->items[i].id) && umi_financial_id_compare(&registry->items[i].id,&key)==0) return &registry->items[i];
     }
     return NULL;
 }

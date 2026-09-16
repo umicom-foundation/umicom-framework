@@ -28,23 +28,26 @@ UmiStatus umi_banking_account_hold_init(UmiBankingAccountHold *value,
      * used.
      */
     if(value==NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    memset(value,0,sizeof *value);
-    UmiStatus rc=umi_banking_id_assign(&value->id,id);
+    UmiBankingAccountHold candidate = {0};
+    UmiStatus rc=umi_banking_id_assign(&candidate.id,id);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(rc!=UMI_STATUS_OK) return rc;
-    rc=umi_banking_id_assign(&value->account_id,account_id);
+    rc=umi_banking_id_assign(&candidate.account_id,account_id);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(rc!=UMI_STATUS_OK) return rc;
-    value->amount_minor=amount_minor;
-    value->active=active;
-    return umi_banking_account_hold_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+    candidate.amount_minor=amount_minor;
+    candidate.active=active;
+    if (!umi_banking_account_hold_valid(&candidate)) return UMI_STATUS_INVALID_ARGUMENT;
+    *value = candidate;
+    return UMI_STATUS_OK;
 }
 /*
  * Check that banking account hold satisfies its contract before another service relies on
  * it.
  */
 bool umi_banking_account_hold_valid(const UmiBankingAccountHold *value) {
-    return value!=NULL && (value->amount_minor>0);
+    return value!=NULL && umi_financial_id_is_valid(&value->id) &&
+        umi_financial_id_is_valid(&value->account_id) && value->amount_minor>0;
 }
 
 /*
@@ -57,5 +60,5 @@ bool umi_banking_account_hold_releasable(const UmiBankingAccountHold *value) {
      * used.
      */
     if(value==NULL) return (bool)0;
-    return value->active;
+    return umi_banking_account_hold_valid(value) && value->active;
 }

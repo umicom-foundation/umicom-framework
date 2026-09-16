@@ -52,6 +52,10 @@ bool umi_banking_deposit_account_valid(const UmiBankingDepositAccount *value);
  * client applications.
  */
 int64_t umi_banking_deposit_account_reserved_minor(const UmiBankingDepositAccount *value);
+/** Checked reservation calculation. Invalid identifiers, currency, account state
+ * or unrepresentable ledger-minus-available leave outReserved unchanged. */
+UmiStatus UmiBankingDepositAccountReserved(const UmiBankingDepositAccount *value,
+    int64_t *outReserved);
 #ifdef __cplusplus
 }
 #endif

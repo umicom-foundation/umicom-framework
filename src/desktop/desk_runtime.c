@@ -550,6 +550,24 @@ UmiStatus umi_desk_runtime_reconcile_application_exit(
     return status;
 }
 
+/* Match exit evidence to the process that produced it. A delayed callback
+ * from an old instance must not stop a newly started instance of that product. */
+UmiStatus UmiDeskRuntimeReconcileProcessExit(UmiDeskRuntime *runtime,
+    const char *applicationId, uint64_t processToken, int exitCode,
+    const char *message)
+{
+    UmiApplicationRuntimeRecord record;
+    UmiStatus status;
+    if (runtime == NULL || applicationId == NULL || processToken == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_application_runtime_catalogue_find(
+        umi_desk_runtime_applications(runtime), applicationId, &record);
+    if (status != UMI_STATUS_OK) return status;
+    if (record.process_token != processToken) return UMI_STATUS_INVALID_STATE;
+    return umi_desk_runtime_reconcile_application_exit(
+        runtime, applicationId, exitCode, message);
+}
+
 /*
  * Provide the desk runtime activate layout operation used by this module and its client
  * applications.

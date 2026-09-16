@@ -29,24 +29,26 @@ UmiStatus umi_banking_deposit_transaction_init(UmiBankingDepositTransaction *val
      * used.
      */
     if(value==NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    memset(value,0,sizeof *value);
-    UmiStatus rc=umi_banking_id_assign(&value->id,id);
+    UmiBankingDepositTransaction candidate = {0};
+    UmiStatus rc=umi_banking_id_assign(&candidate.id,id);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(rc!=UMI_STATUS_OK) return rc;
-    rc=umi_banking_id_assign(&value->account_id,account_id);
+    rc=umi_banking_id_assign(&candidate.account_id,account_id);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(rc!=UMI_STATUS_OK) return rc;
-    value->amount_minor=amount_minor;
-    value->booking_date=booking_date;
-    value->value_date=value_date;
-    return umi_banking_deposit_transaction_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+    candidate.amount_minor=amount_minor;
+    candidate.booking_date=booking_date;
+    candidate.value_date=value_date;
+    if (!umi_banking_deposit_transaction_valid(&candidate)) return UMI_STATUS_INVALID_ARGUMENT;
+    *value = candidate;
+    return UMI_STATUS_OK;
 }
 /*
  * Check that banking deposit transaction satisfies its contract before another service
  * relies on it.
  */
 bool umi_banking_deposit_transaction_valid(const UmiBankingDepositTransaction *value) {
-    return value!=NULL && (umi_financial_id_is_valid(&value->account_id) && value->amount_minor!=0 && umi_financial_date_is_valid(value->booking_date) && umi_financial_date_is_valid(value->value_date));
+    return value!=NULL && (umi_financial_id_is_valid(&value->id) && umi_financial_id_is_valid(&value->account_id) && value->amount_minor!=0 && umi_financial_date_is_valid(value->booking_date) && umi_financial_date_is_valid(value->value_date));
 }
 
 /*
