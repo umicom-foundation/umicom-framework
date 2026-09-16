@@ -1,7 +1,7 @@
 # Umicom Framework
 
 Umicom Framework is the reusable C23 application foundation for Umicom Studio
-IDE, Umicom Designer, Umicom Trader, Umicom Treasury Management System, Yuma
+IDE, Umicom Designer, Umicom Trader, Umicom Treasury Management System, Umicom
 Media Studio and future Umicom applications.
 
 ## Major foundation 0.9.0
@@ -133,3 +133,11 @@ only after the complete major feature train passes all acceptance gates.
 - Author: Sammy Hegab
 - Organisation: Umicom Foundation
 - Licence: MIT
+
+## Guides for learners and contributors
+
+[Working copies, search and safe document changes](docs/guides/WORKING_WITH_DOCUMENTS.html)
+explains how applications use the shared document and editor services. Its
+complete Notes search example builds against the installed Framework SDK.
+[Writing useful documentation](docs/WRITING_DOCUMENTATION.md) gives contributors
+practical guidance for public, beginner-friendly lessons and reference pages.

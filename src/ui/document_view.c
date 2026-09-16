@@ -28,6 +28,21 @@ struct UmiUiDocumentViewModel {
     UmiMutex *mutex;
 };
 
+/* Validate fixed-size presentation fields before copying them into the model.
+ * A rejected update must not replace a valid tab or advance its revision. */
+static int DocumentViewTextValid(const UmiUiDocumentViewSnapshot *item)
+{
+    return item != NULL &&
+        memchr(item->view_id, '\0', sizeof item->view_id) != NULL &&
+        memchr(item->document_id, '\0', sizeof item->document_id) != NULL &&
+        memchr(item->title, '\0', sizeof item->title) != NULL &&
+        memchr(item->icon_name, '\0', sizeof item->icon_name) != NULL &&
+        memchr(item->uri, '\0', sizeof item->uri) != NULL &&
+        memchr(item->language_id, '\0', sizeof item->language_id) != NULL &&
+        memchr(item->source_text, '\0', sizeof item->source_text) != NULL &&
+        memchr(item->group_id, '\0', sizeof item->group_id) != NULL;
+}
+
 /* Provide the find item operation used by this module and its client applications. */
 static size_t find_item(const UmiUiDocumentViewModel *model, const char *id)
 {
@@ -180,7 +195,7 @@ UmiStatus umi_ui_document_view_model_upsert(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (model == NULL || item == NULL ||
+    if (model == NULL || !DocumentViewTextValid(item) ||
         !umi_ui_id_is_valid(item->view_id)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -337,7 +352,7 @@ UmiStatus umi_ui_document_view_model_open_preview(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (model == NULL || item == NULL ||
+    if (model == NULL || !DocumentViewTextValid(item) ||
         !umi_ui_id_is_valid(item->view_id)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

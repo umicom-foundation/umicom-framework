@@ -4892,6 +4892,16 @@ endif()
 # -----------------------------------------------------------------------------
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(DIRECTORY templates/ DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/templates)
+# Public guides and the SDK example travel with the Framework installation.
+install(DIRECTORY docs/guides/
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides
+    COMPONENT Framework)
+install(FILES docs/WRITING_DOCUMENTATION.md
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs
+    COMPONENT Framework)
+install(DIRECTORY examples/editor_workflow/
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/editor_workflow
+    COMPONENT Framework)
 install(DIRECTORY examples/sdk_consumer/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/examples/sdk_consumer)
 # Install the offline learning reference with the Framework so packaged IDEs
@@ -5040,6 +5050,7 @@ install(DIRECTORY resources/
 include(cmake/UmicomOperationalStateQualification.cmake)
 include(cmake/UmicomTradingExecutionQualification.cmake)
 include(cmake/UmicomDocumentSaveQualification.cmake)
+include(cmake/UmicomEditorWorkflowTests.cmake)
 
 message(STATUS "Umicom Framework version: ${PROJECT_VERSION}")
 message(STATUS "C standard: C${CMAKE_C_STANDARD}")

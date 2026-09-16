@@ -161,3 +161,99 @@ UmiStatus umi_editor_search_literal(const char *haystack,
     }
     return UMI_STATUS_OK;
 }
+
+/* Keep whole-word and case behaviour identical for result lists, navigation
+ * and replacement. ASCII case folding leaves UTF-8 bytes unchanged. */
+static int SearchMatchAt(const char *text, size_t length, size_t offset,
+    const char *needle, size_t needleLength, int sensitive, int wholeWord)
+{
+    if (!is_match(text, offset, needle, needleLength, sensitive)) return 0;
+    return !wholeWord || ((offset == 0U || !is_word_byte((unsigned char)text[offset - 1U])) &&
+        (offset + needleLength == length || !is_word_byte((unsigned char)text[offset + needleLength])));
+}
+
+/* Navigation does not materialise a bounded result list, so the next match
+ * remains reachable even when a document contains more than 4,096 matches. */
+UmiStatus UmiEditorSearchNavigate(const char *haystack, size_t haystackBytes,
+    const char *needle, size_t needleBytes, const UmiEditorSearchOptions *options,
+    size_t start, int backwards, int wrap, UmiEditorSearchMatch *outMatch,
+    int *outWrapped)
+{
+    UmiEditorSearchOptions effective = {UMI_EDITOR_SEARCH_CASE_SENSITIVE, 0, 0, 0};
+    size_t selected = (size_t)-1;
+    size_t fallback = (size_t)-1;
+    if ((haystack == NULL && haystackBytes != 0U) || needle == NULL ||
+        needleBytes == 0U || start > haystackBytes || outMatch == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (options != NULL) effective = *options;
+    if (effective.case_mode < UMI_EDITOR_SEARCH_CASE_SENSITIVE ||
+        effective.case_mode > UMI_EDITOR_SEARCH_CASE_SMART) return UMI_STATUS_INVALID_ARGUMENT;
+    if (needleBytes > haystackBytes) return UMI_STATUS_NOT_FOUND;
+    int sensitive = effective.case_mode == UMI_EDITOR_SEARCH_CASE_SENSITIVE ||
+        (effective.case_mode == UMI_EDITOR_SEARCH_CASE_SMART && needle_has_upper(needle, needleBytes));
+    size_t limit = haystackBytes - needleBytes;
+    for (size_t offset = 0U; offset <= limit; ++offset) {
+        if (!SearchMatchAt(haystack, haystackBytes, offset, needle, needleBytes, sensitive, effective.whole_word)) continue;
+        if (backwards) {
+            fallback = offset;
+            if (offset < start) selected = offset;
+        } else {
+            if (fallback == (size_t)-1) fallback = offset;
+            if (offset >= start) { selected = offset; break; }
+        }
+    }
+    int wrapped = selected == (size_t)-1;
+    if (wrapped) {
+        if (!wrap || fallback == (size_t)-1) return UMI_STATUS_NOT_FOUND;
+        selected = fallback;
+    }
+    outMatch->offset = selected;
+    outMatch->byte_count = needleBytes;
+    if (outWrapped != NULL) *outWrapped = wrapped;
+    return UMI_STATUS_OK;
+}
+
+/* The first pass proves the complete result fits. No caller-visible byte is
+ * written until that pass succeeds; replacement never searches its own output. */
+UmiStatus UmiEditorSearchReplaceAll(const char *text, size_t textBytes,
+    const char *needle, size_t needleBytes, const char *replacement,
+    size_t replacementBytes, const UmiEditorSearchOptions *options,
+    char *outText, size_t capacity, size_t *outCount)
+{
+    UmiEditorSearchOptions effective = {UMI_EDITOR_SEARCH_CASE_SENSITIVE, 0, 0, 0};
+    size_t resultLength = textBytes;
+    size_t count = 0U;
+    if ((text == NULL && textBytes != 0U) || needle == NULL || needleBytes == 0U ||
+        (replacement == NULL && replacementBytes != 0U) || outText == NULL || capacity == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (options != NULL) effective = *options;
+    if (effective.case_mode < UMI_EDITOR_SEARCH_CASE_SENSITIVE ||
+        effective.case_mode > UMI_EDITOR_SEARCH_CASE_SMART) return UMI_STATUS_INVALID_ARGUMENT;
+    int sensitive = effective.case_mode == UMI_EDITOR_SEARCH_CASE_SENSITIVE ||
+        (effective.case_mode == UMI_EDITOR_SEARCH_CASE_SMART && needle_has_upper(needle, needleBytes));
+    for (size_t offset = 0U; offset < textBytes;) {
+        if (needleBytes <= textBytes - offset &&
+            SearchMatchAt(text, textBytes, offset, needle, needleBytes, sensitive, effective.whole_word)) {
+            if (replacementBytes > needleBytes) {
+                size_t growth = replacementBytes - needleBytes;
+                if (growth > (size_t)-1 - resultLength) return UMI_STATUS_CAPACITY_EXCEEDED;
+                resultLength += growth;
+            } else resultLength -= needleBytes - replacementBytes;
+            ++count;
+            offset += needleBytes;
+        } else ++offset;
+    }
+    if (resultLength >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+    size_t used = 0U;
+    for (size_t offset = 0U; offset < textBytes;) {
+        if (needleBytes <= textBytes - offset &&
+            SearchMatchAt(text, textBytes, offset, needle, needleBytes, sensitive, effective.whole_word)) {
+            if (replacementBytes > 0U) memcpy(outText + used, replacement, replacementBytes);
+            used += replacementBytes;
+            offset += needleBytes;
+        } else outText[used++] = text[offset++];
+    }
+    outText[used] = '\0';
+    if (outCount != NULL) *outCount = count;
+    return UMI_STATUS_OK;
+}

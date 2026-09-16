@@ -59,11 +59,9 @@ UmiStatus umi_studio_close_guard_evaluate(
         UmiDocumentWorkingCopySnapshot document;
 
         /* Apply this branch only when its contract condition is satisfied. */
-        if (umi_document_coordinator_at(
-                documents,
-                index,
-                &document) == UMI_STATUS_OK &&
-            document.dirty) {
+        UmiStatus status = umi_document_coordinator_at(documents, index, &document);
+        if (status != UMI_STATUS_OK) return status;
+        if (document.dirty) {
             out_report->dirty_document_count += 1U;
         }
     }
@@ -111,5 +109,36 @@ UmiStatus umi_studio_close_guard_evaluate(
     }
 
     out_report->revision = context->revision + 1U;
+    return UMI_STATUS_OK;
+}
+
+/* A host can report work not yet represented by the existing active context
+ * without changing the layout of the public context or close-report structs. */
+UmiStatus UmiStudioCloseGuardEvaluateWithActivity(
+    UmiDocumentCoordinator *documents,
+    const UmiIdeActiveContext *context,
+    int additionalActivityRunning,
+    UmiStudioRuntimeCloseReport *outReport)
+{
+    UmiStudioRuntimeCloseReport candidate;
+    UmiStatus status;
+    int written;
+    if (outReport == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_studio_close_guard_evaluate(documents, context, &candidate);
+    if (status != UMI_STATUS_OK) return status;
+    if (additionalActivityRunning) {
+        candidate.decision = candidate.dirty_document_count > 0U
+            ? UMI_STUDIO_CLOSE_CONFIRM_DIRTY_AND_RUNNING
+            : UMI_STUDIO_CLOSE_CONFIRM_RUNNING;
+        written = snprintf(candidate.summary, sizeof(candidate.summary),
+            "openDocuments=%zu dirtyDocuments=%zu testsRunning=%d "
+            "debugRunning=%d aiRunning=%d additionalActivityRunning=1 decision=%s",
+            candidate.open_document_count, candidate.dirty_document_count,
+            candidate.tests_running, candidate.debug_running, candidate.ai_running,
+            umi_studio_runtime_close_decision_text(candidate.decision));
+        if (written < 0 || (size_t)written >= sizeof(candidate.summary))
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    *outReport = candidate;
     return UMI_STATUS_OK;
 }

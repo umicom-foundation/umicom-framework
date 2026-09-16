@@ -73,6 +73,27 @@ UmiStatus umi_editor_search_literal(const char *haystack,
                                      const UmiEditorSearchOptions *options,
                                      UmiEditorSearchResults *out_results);
 
+/** Find one literal match from a byte offset. Forward searches include start;
+ * backward searches select a match strictly before start. When wrap is nonzero,
+ * search the opposite end after reaching a boundary. Case/word rules are shared
+ * with umi_editor_search_literal; maximum_matches/allow_overlapping do not limit
+ * navigation. Outputs are written only on success. Buffers are borrowed. */
+UmiStatus UmiEditorSearchNavigate(const char *haystack, size_t haystackBytes,
+    const char *needle, size_t needleBytes, const UmiEditorSearchOptions *options,
+    size_t start, int backwards, int wrap, UmiEditorSearchMatch *outMatch,
+    int *outWrapped);
+
+/** Replace all non-overlapping literal matches into a separate output buffer.
+ * Input and output storage must not overlap. Invalid arguments and insufficient
+ * capacity leave the output and outCount unchanged. A successful no-match call
+ * copies the original text. The output capacity includes its terminating zero.
+ * Case and whole_word apply. maximum_matches and allow_overlapping do not limit
+ * Replace All: every original, non-overlapping match is considered. */
+UmiStatus UmiEditorSearchReplaceAll(const char *text, size_t textBytes,
+    const char *needle, size_t needleBytes, const char *replacement,
+    size_t replacementBytes, const UmiEditorSearchOptions *options,
+    char *outText, size_t capacity, size_t *outCount);
+
 #ifdef __cplusplus
 }
 #endif

@@ -47,6 +47,18 @@ UmiStatus umi_studio_close_guard_evaluate(
     const UmiIdeActiveContext *context,
     UmiStudioRuntimeCloseReport *out_report);
 
+/**
+ * Include a host-owned activity, such as a background build, in the same close
+ * decision. Existing Test/Debug/AI fields retain their meanings; additional
+ * activity is reflected in decision and summary, not disguised as a test.
+ * Inspect the result only on success. No document or running task is changed.
+ */
+UmiStatus UmiStudioCloseGuardEvaluateWithActivity(
+    UmiDocumentCoordinator *documents,
+    const UmiIdeActiveContext *context,
+    int additionalActivityRunning,
+    UmiStudioRuntimeCloseReport *outReport);
+
 #ifdef __cplusplus
 }
 #endif

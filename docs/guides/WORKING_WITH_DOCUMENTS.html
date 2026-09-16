@@ -1,0 +1,119 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Working copies, search and safe document changes</title><style>*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#f2f5f8;color:#1a2936;font:17px/1.75 system-ui,-apple-system,Segoe UI,sans-serif}header{background:#153b51;color:white;padding:42px max(5vw,24px)}header small{letter-spacing:.08em;text-transform:uppercase}header h1{font-size:clamp(28px,4vw,44px);line-height:1.2;max-width:1050px;margin:12px 0}.layout{max-width:1400px;margin:auto;display:grid;grid-template-columns:290px minmax(0,1fr);gap:30px;padding:28px}nav{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;background:white;border:1px solid #d7e2ea;padding:20px;border-radius:10px}nav a{display:block;font-size:14px;line-height:1.4;margin:0 0 13px;text-decoration:none}main{min-width:0;background:white;padding:36px 44px;border:1px solid #d7e2ea;border-radius:10px}h2{font-size:27px;line-height:1.3;margin-top:50px;padding-top:16px;border-top:1px solid #d7e2ea}h3{font-size:21px;margin-top:30px}a{color:#086680}pre{overflow:auto;max-width:100%;padding:22px;background:#12212e;color:#edf5fa;border-radius:9px;line-height:1.6;font-size:14px}code{font-family:Consolas,Liberation Mono,monospace;word-break:normal}p code,li code{background:#edf2f6;padding:2px 4px;border-radius:3px;font-size:15px;overflow-wrap:anywhere}table{width:100%;border-collapse:collapse}td,th{border:1px solid #d7e2ea;padding:10px;text-align:left}blockquote{border-left:4px solid #167a89;background:#f0f8f9;margin:24px 0;padding:8px 22px}details{border:1px solid #d7e2ea;border-radius:7px;padding:15px;margin:16px 0}summary{font-weight:650;cursor:pointer}footer{max-width:1300px;margin:20px auto 40px;padding:20px;color:#536776;font-size:14px}@media(max-width:960px){.layout{grid-template-columns:1fr;padding:16px}nav{position:static;max-height:none}main{padding:22px}header{padding:30px 22px}}@media print{nav{display:none}.layout{display:block;padding:0}main{border:0;padding:0}header{background:white;color:black;padding:0}pre{white-space:pre-wrap;overflow-wrap:anywhere;color:black;background:#f2f2f2;font-size:10pt}body{background:white;font-size:11pt}h2,h3{break-after:avoid}details{break-inside:avoid}a{color:black}}</style></head><body><header><small>Umicom · Developer guides</small><h1>Working copies, search and safe document changes</h1></header><div class="layout"><nav aria-label="Contents"><a href="#understand-the-three-versions-of-a-document">Understand the three versions of a document</a><a href="#follow-one-editing-operation">Follow one editing operation</a><a href="#keep-identity-separate-from-selection">Keep identity separate from selection</a><a href="#search-without-saving">Search without saving</a><a href="#replace-only-after-checking-the-complete-result">Replace only after checking the complete result</a><a href="#build-a-search-preview-with-framework">Build a search preview with Framework</a><a href="#configure-and-run-the-example-on-windows">Configure and run the example on Windows</a><a href="#configure-and-run-the-example-on-linux">Configure and run the example on Linux</a><a href="#try-a-controlled-failure">Try a controlled failure</a><a href="#respect-the-current-presentation-boundary">Respect the current presentation boundary</a><a href="#check-before-closing-a-window">Check before closing a window</a><a href="#continue-learning">Continue learning</a></nav><main>
+<p>A note-taking application and a source-code editor have much in common. Both display text, keep changes while the user works, save named files and ask before discarding unsaved work. Umicom Framework provides shared services for these tasks so that applications do not need to invent their own file-saving rules.</p>
+<p>This guide explains how the editor view and document store work together. It also includes a complete program that uses Framework's search service to preview a name change in an Umicom Notes source file.</p>
+<h2 id="understand-the-three-versions-of-a-document">Understand the three versions of a document</h2>
+<p>The <strong>file on disk</strong> is the saved version. The <strong>document store</strong> holds an in-memory record with a stable document ID, path, text and revision. The <strong>editor view</strong> holds the text currently displayed by the simple editor adapter, along with its caret, selection and modified marker.</p>
+<p>These are not three independent owners that may overwrite each other freely. <code>UmiDocumentCoordinator</code> connects the store and view. It synchronises edits, maintains document-level history, checks external file changes and performs saves through the existing document provider.</p>
+<p>The distinction matters while a person is typing. A visible draft can differ from the store before the next synchronisation. Code deciding whether it is safe to close a document must inspect the coordinator's working-copy snapshot, not just the store's saved state.</p>
+<p>A snapshot is a description of current state. Reading one does not save or commit the draft. Its text length and dirty state include the visible draft, while its revision identifies the store record. A client must not interpret that revision alone as a fingerprint of every unsynchronised keystroke.</p>
+<h2 id="follow-one-editing-operation">Follow one editing operation</h2>
+<p>Suppose a developer opens <code>notes.c</code>, changes <code>noteCount</code> to <code>savedCount</code>, then saves.</p>
+<ol>
+<li>The coordinator opens a document and returns its view ID. Opening the same normalised path again selects the existing working copy rather than creating another record.</li>
+<li>The editor publishes the accepted draft through the view model. A modified working-copy snapshot can now warn about unsaved work even before synchronisation.</li>
+<li>A replacement operation prepares its complete result before updating the store. The previous text is retained for Undo.</li>
+<li>Save synchronises the working copy and checks the destination. If another process changed the file, the caller receives a conflict rather than silently overwriting it.</li>
+<li>After a successful write, the stored and displayed state describe the saved version.</li>
+</ol>
+<p>Applications should call these services rather than writing the file directly behind the coordinator. Otherwise, the baseline used for external-change detection can become inconsistent with the file.</p>
+<h2 id="keep-identity-separate-from-selection">Keep identity separate from selection</h2>
+<p>The active tab is a selection, not a permanent identity. It can change while a file dialog, confirmation or background action is pending.</p>
+<p>Capture a <code>UmiDocumentId</code> when an action begins. Use <code>UmiDocumentCoordinatorSaveAs</code> to save that document to a selected path, or <code>UmiDocumentCoordinatorClose</code> to close it after an explicit discard decision. A document that has already closed returns <code>UMI_STATUS_NOT_FOUND</code>. It must not be replaced by whichever tab is now active.</p>
+<p>Use the existing active-document convenience functions for operations that genuinely mean “the active document now”. Captured asynchronous requests need the targeted functions instead. The coordinator is used on its owner's thread; worker threads should deliver results back to that thread rather than modifying its tables concurrently.</p>
+<h2 id="search-without-saving">Search without saving</h2>
+<p><code>UmiDocumentCoordinatorFindNext</code> searches the visible draft. Pass zero for the <code>backwards</code> argument to find the next occurrence, or a nonzero value to find the previous occurrence. Both directions wrap once. The operation changes caret and selection, but not document history or the file on disk.</p>
+<p>The original <code>umi_document_coordinator_find</code> function remains available with its first-occurrence behaviour. Existing callers do not need to change simply because a graphical editor now provides next/previous navigation.</p>
+<p>For a tool that works directly with a text buffer, use <code>UmiEditorSearchNavigate</code>. Its offsets and lengths are <strong>byte offsets</strong>, not displayed character positions. The GTK adapter is responsible for converting between these byte positions and the positions used by its text widget.</p>
+<p>The shared literal search supports case-sensitive, ASCII-insensitive and smart ASCII-case modes. Smart case becomes case-sensitive when the search text contains an uppercase ASCII letter. Whole-word matching treats letters, digits, underscore and non-ASCII bytes as word bytes. It is useful for straightforward source-text searches, but it is not a parser or a full Unicode word-segmentation service.</p>
+<h2 id="replace-only-after-checking-the-complete-result">Replace only after checking the complete result</h2>
+<p><code>UmiDocumentCoordinatorReplaceNext</code> replaces a matching selection, or the next occurrence when no matching selection exists. Its caret advances past the replacement, so repeatedly replacing <code>note</code> with <code>NOTE</code> does not stay on the same occurrence.</p>
+<p><code>UmiDocumentCoordinatorReplaceAll</code> changes every original, non-overlapping match in one document-level operation. The new text is not searched again during that operation. Replacing <code>a</code> with <code>aa</code>, for example, finishes after considering the original text; it does not keep expanding its own output.</p>
+<p>An empty replacement string deletes a match. A null replacement pointer is rejected by the coordinator. Read-only views reject editing. An oversized result is rejected before changing the draft, store or replacement history.</p>
+<p>Undo and Redo use the coordinator's existing bounded history. Replace All adds one replacement step. If the user had typed a pending draft beforehand, synchronising that draft is a separate earlier history step. This is document-level history, not a claim that every toolkit's keystroke-level Undo stack has been unified.</p>
+<h2 id="build-a-search-preview-with-framework">Build a search preview with Framework</h2>
+<p>The complete example is in <code>framework/examples/editor_workflow</code>. It previews a rename in source text without writing a file. That makes it useful for understanding search and replacement before adding a Save command to an application.</p>
+<p>The program borrows its input strings. It writes the result into a separate array that it owns. The array's capacity includes room for a final zero byte, which marks the end of a C string.</p>
+<pre><code class="language-c">/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/editor_workflow/main.c
+ * PURPOSE: Preview a literal rename in a small Umicom Notes source document.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/editor/search_engine.h"
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+/* All input is borrowed; replacement is written into separate caller storage.
+ * This example previews text only. It does not modify a file on disk. */
+int main(void)
+{
+    const char *source = "int noteCount = 3;\nint total = noteCount;\n";
+    const char *needle = "noteCount";
+    const char *replacement = "savedCount";
+    UmiEditorSearchOptions options = {UMI_EDITOR_SEARCH_CASE_SENSITIVE, 1, 0, 0U};
+    UmiEditorSearchMatch match;
+    char preview[256];
+    size_t replacements = 0U;
+    UmiStatus status = UmiEditorSearchNavigate(source, strlen(source),
+        needle, strlen(needle), &amp;options, 0U, 0, 0, &amp;match, NULL);
+    if (status != UMI_STATUS_OK) {
+        fputs("The requested name was not found.\n", stderr);
+        return 1;
+    }
+    printf("First name begins at byte %zu.\n", match.offset);
+    status = UmiEditorSearchReplaceAll(source, strlen(source), needle,
+        strlen(needle), replacement, strlen(replacement), &amp;options,
+        preview, sizeof preview, &amp;replacements);
+    if (status != UMI_STATUS_OK) {
+        fputs("The complete preview could not be prepared.\n", stderr);
+        return 1;
+    }
+    printf("Replaced %zu occurrences. Preview:\n%s", replacements, preview);
+    /* A deterministic check also makes the example suitable for CTest. */
+    return replacements == 2U &amp;&amp; strcmp(preview,
+        "int savedCount = 3;\nint total = savedCount;\n") == 0 ? 0 : 1;
+}
+
+</code></pre>
+<p>The first function locates an occurrence. The second prepares the replacement preview. Both return a <code>UmiStatus</code>; a non-success result is handled before the program uses their outputs.</p>
+<p>The example deliberately uses whole-word, case-sensitive matching. The <code>maximum_matches</code> field limits collected result lists in the older list API. It does not limit navigation or Replace All, so a document with more than 4,096 occurrences can still be searched and fully processed.</p>
+<p>The program checks its expected result before returning zero. This gives CTest a useful success or failure signal without relying on an <code>assert</code> that a Release build may remove.</p>
+<h2 id="configure-and-run-the-example-on-windows">Configure and run the example on Windows</h2>
+<p>First build and install the updated Framework SDK using the Applications build guide. In this example it has been installed at <code>C:\umicom\installed\studio-editor</code>. Use your actual installation directory if it is different.</p>
+<pre><code class="language-powershell">Set-Location "C:\umicom\Umicom-Applications"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake -S ".\framework\examples\editor_workflow" -B ".\build\notes-search" -G Ninja -DCMAKE_C_COMPILER="C:/msys64/ucrt64/bin/gcc.exe" -DCMAKE_MAKE_PROGRAM="C:/msys64/ucrt64/bin/ninja.exe" -DCMAKE_PREFIX_PATH="C:/umicom/installed/studio-editor"
+cmake --build ".\build\notes-search" --parallel 2
+ctest --test-dir ".\build\notes-search" --no-tests=error --output-on-failure
+&amp; ".\build\notes-search\umicom-notes-search.exe"
+</code></pre>
+<p>Run one command at a time. If configuration cannot find <code>UmicomFramework</code>, check the installation prefix and confirm that it contains the exported CMake package. Pointing at the source directory is not the same as providing an installed SDK.</p>
+<h2 id="configure-and-run-the-example-on-linux">Configure and run the example on Linux</h2>
+<p>This example assumes the SDK is installed at <code>$HOME/umicom/installed/studio-editor</code>:</p>
+<pre><code class="language-bash">cd "$HOME/umicom/Umicom-Applications"
+cmake -S framework/examples/editor_workflow -B build/notes-search -G Ninja -DCMAKE_PREFIX_PATH="$HOME/umicom/installed/studio-editor"
+cmake --build build/notes-search --parallel 2
+ctest --test-dir build/notes-search --no-tests=error --output-on-failure
+./build/notes-search/umicom-notes-search
+</code></pre>
+<p>The expected output is:</p>
+<pre><code class="language-text">First name begins at byte 4.
+Replaced 2 occurrences. Preview:
+int savedCount = 3;
+int total = savedCount;
+</code></pre>
+<p>The example's <code>CMakeLists.txt</code> links <code>Umicom::editor</code>. It does not include Framework's private source files or build a second search implementation.</p>
+<h2 id="try-a-controlled-failure">Try a controlled failure</h2>
+<p>Change <code>char preview[256]</code> to <code>char preview[8]</code> in your practice copy and rebuild. The new text will not fit. The program should report that it could not prepare the complete preview and return a failure status. Restore the original capacity afterwards.</p>
+<p>Now change the replacement string to <code>numberOfSavedNotes</code>. Predict how many replacements there will be and whether the complete result still fits. Update the deterministic expected string and rerun the test. This connects a capacity rule to a real editing operation rather than treating bounds checking as an unrelated exercise.</p>
+<p>Do not pass overlapping input and output storage to <code>UmiEditorSearchReplaceAll</code>. It needs an unchanged original input for both passes. The public header documents this ownership requirement.</p>
+<h2 id="respect-the-current-presentation-boundary">Respect the current presentation boundary</h2>
+<p>The simple <code>UmiUiDocumentViewSnapshot</code> contains a fixed-size <code>source_text</code> array. Its current text limit is 16,383 bytes plus a terminating zero. Search and replacement in the coordinator respect that boundary; they do not silently crop longer text.</p>
+<p>Other Framework editor and store facilities support different representations. A larger store record must not be copied unchecked into this smaller view, including during Undo. Increasing a public array size is not a complete large-file editor design: it affects memory use and binary compatibility. Applications needing larger documents should use a properly integrated dynamic-buffer path rather than bypassing the check.</p>
+<h2 id="check-before-closing-a-window">Check before closing a window</h2>
+<p><code>umi_studio_close_guard_evaluate</code> checks documents and the existing Test, Debug and AI activity snapshots. A host with an additional background operation can use <code>UmiStudioCloseGuardEvaluateWithActivity</code>. A running build is then included in the decision without being misreported as a running test or changing existing public structure layouts.</p>
+<p>A failed state query is not evidence that there is no unsaved work. The graphical host should leave the window open, explain the problem and let the user return to their work. Only an explicit, successful close decision should proceed.</p>
+<h2 id="continue-learning">Continue learning</h2>
+<p>The <a href="../learning/application-development.html">application-development lessons</a> develop the Notes model, memory ownership, session handling and a window using Framework services. The <a href="../WRITING_DOCUMENTATION.md">documentation contributor guide</a> explains how to add clear examples and instructions for future readers.</p>
+</main></div><footer>Umicom Foundation · Learning through practical applications</footer></body></html>

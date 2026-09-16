@@ -187,6 +187,28 @@ UmiStatus UmiDocumentCoordinatorSaveAll(UmiDocumentCoordinator *coordinator,
 UmiStatus UmiDocumentCoordinatorSaveAs(UmiDocumentCoordinator *coordinator,
     UmiDocumentId documentId, const char *path);
 
+/** Close a captured working copy without changing another tab's selection.
+ * force must reflect an explicit discard decision. A closed ID is NOT_FOUND.
+ * Like the coordinator's other operations, call on the document owner's thread. */
+UmiStatus UmiDocumentCoordinatorClose(UmiDocumentCoordinator *coordinator,
+    UmiDocumentId documentId, int force);
+
+/** Navigate literal matches in visible editor text. A nonzero backwards flag
+ * selects the previous match; both directions wrap once. Outputs are optional
+ * and change only on success. Search does not synchronise or save a draft. */
+UmiStatus UmiDocumentCoordinatorFindNext(UmiDocumentCoordinator *coordinator,
+    const char *needle, int backwards, size_t *outOffset, int *outWrapped);
+/** Replace the selected literal match, or the next match when no match is
+ * selected. Reject null replacement; an empty string deletes the match.
+ * Uses the existing smart ASCII-case rule; no regular expressions are evaluated. */
+UmiStatus UmiDocumentCoordinatorReplaceNext(UmiDocumentCoordinator *coordinator,
+    const char *needle, const char *replacement, size_t *outOffset);
+/** Replace all non-overlapping matches in one undoable operation. Insufficient
+ * presentation capacity leaves the draft, store and history unchanged. Read-only
+ * documents reject editing. outCount is optional and changes only on success. */
+UmiStatus UmiDocumentCoordinatorReplaceAll(UmiDocumentCoordinator *coordinator,
+    const char *needle, const char *replacement, size_t *outCount);
+
 #ifdef __cplusplus
 }
 #endif
