@@ -273,6 +273,13 @@ UmiStatus umi_trading_simulation_market_step(
     if (snapshot.environment != UMI_TRADING_SIMULATION)
         return UMI_STATUS_INVALID_STATE;
 
+    /* Reject invalid fixed-size state and overflow before publishing anything. */
+    if (market->instrument_count > UMI_TRADING_SIMULATION_MARKET_MAX_INSTRUMENTS ||
+        market->event_time_ms < 0) return UMI_STATUS_INVALID_STATE;
+    if (elapsed_ms > INT64_MAX - market->event_time_ms ||
+        market->sequence == UINT64_MAX ||
+        market->trade_sequence > UINT64_MAX - market->instrument_count)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
     market->event_time_ms += elapsed_ms;
     market->sequence += 1U;
     /* Visit each bounded item once so every record receives the same rule. */
@@ -309,4 +316,17 @@ uint64_t umi_trading_simulation_market_sequence(
     const UmiTradingSimulationMarket *market)
 {
     return market != NULL ? market->sequence : 0U;
+}
+
+/* Clock selection belongs to the host. Deterministic tests can still advance
+ * by fixed intervals through the original step function. */
+UmiStatus UmiTradingSimulationMarketAdvanceTo(UmiTradingSimulationMarket *market,
+    int64_t nowMs)
+{
+    if (market == NULL || market->workspace == NULL || nowMs < 0)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (!market->seeded || market->event_time_ms < 0 || nowMs < market->event_time_ms)
+        return UMI_STATUS_INVALID_STATE;
+    if (nowMs == market->event_time_ms) return UMI_STATUS_OK;
+    return umi_trading_simulation_market_step(market, nowMs - market->event_time_ms);
 }

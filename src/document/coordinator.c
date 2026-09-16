@@ -533,6 +533,24 @@ UmiStatus umi_document_coordinator_sync_active(
     return index == SIZE_MAX ? UMI_STATUS_NOT_FOUND : sync_index(coordinator, index);
 }
 
+/* A Save As destination cannot also be owned by another open working copy.
+ * This checks normalised path identity, not symlink or hard-link aliases. */
+static UmiStatus CheckSaveDestination(UmiDocumentCoordinator *coordinator,
+    UmiDocumentId documentId, const char *path)
+{
+    char normalised[UMI_PATH_CAPACITY];
+    UmiStatus status = umi_path_normalise(path, normalised, sizeof normalised);
+    if (status != UMI_STATUS_OK) return status;
+    for (size_t index = 0U; index < umi_document_store_count(coordinator->store); ++index) {
+        UmiDocumentSnapshot snapshot;
+        status = umi_document_store_at(coordinator->store, index, &snapshot);
+        if (status != UMI_STATUS_OK) return status;
+        if (snapshot.document_id != documentId && snapshot.has_path &&
+            umi_path_equal(snapshot.path, normalised)) return UMI_STATUS_ALREADY_EXISTS;
+    }
+    return UMI_STATUS_OK;
+}
+
 /* Provide the save index as operation used by this module and its client applications. */
 static UmiStatus save_index_as(UmiDocumentCoordinator *coordinator,
                                size_t index,
@@ -544,7 +562,9 @@ static UmiStatus save_index_as(UmiDocumentCoordinator *coordinator,
     char *text = NULL;
     size_t length = 0U;
     int changed = 0;
-    UmiStatus status = sync_index(coordinator, index);
+    UmiStatus status = CheckSaveDestination(coordinator, entry->document_id, path);
+    if (status != UMI_STATUS_OK) return status;
+    status = sync_index(coordinator, index);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     /* Apply this operation only while the related capability or state is available. */
@@ -553,7 +573,7 @@ static UmiStatus save_index_as(UmiDocumentCoordinator *coordinator,
         /* Use the stable identifier comparison to choose the matching record or policy. */
         if (umi_document_store_snapshot(coordinator->store, entry->document_id,
                                         &snapshot) == UMI_STATUS_OK &&
-            snapshot.has_path && strcmp(snapshot.path, path) == 0) {
+            snapshot.has_path && umi_path_equal(snapshot.path, path)) {
             UmiStatus check = umi_document_file_changed(path, &entry->baseline,
                                                         &changed, NULL);
             /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -564,6 +584,9 @@ static UmiStatus save_index_as(UmiDocumentCoordinator *coordinator,
                     coordinator->store, entry->document_id, 1);
                 return UMI_STATUS_INVALID_STATE;
             }
+            /* Failure to inspect the existing file is not permission to
+             * overwrite it without the external-change check. */
+            if (check != UMI_STATUS_OK) return check;
         }
     }
     status = copy_store_text(coordinator, index, &text, &length);
@@ -667,6 +690,20 @@ UmiStatus umi_document_coordinator_save_active_as(
     index = active_index(coordinator);
     return index == SIZE_MAX ? UMI_STATUS_NOT_FOUND
                              : save_index_as(coordinator, index, path);
+}
+
+/* Resolve stable document identity directly. Changing the active tab just to
+ * perform a save would create selection events and could target a newer tab. */
+UmiStatus UmiDocumentCoordinatorSaveAs(UmiDocumentCoordinator *coordinator,
+    UmiDocumentId documentId, const char *path)
+{
+    if (coordinator == NULL || documentId == 0U || path == NULL || path[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t index = 0U; index < coordinator->count; ++index) {
+        if (coordinator->entries[index].document_id == documentId)
+            return save_index_as(coordinator, index, path);
+    }
+    return UMI_STATUS_NOT_FOUND;
 }
 
 /*

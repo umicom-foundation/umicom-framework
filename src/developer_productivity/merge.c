@@ -132,7 +132,8 @@ UmiStatus umi_developer_merge_document_create(
     size_t right_count = 0U;
     size_t count;
     size_t index;
-    UmiDeveloperMergeDocument *document;
+    /* Early parse/allocation failures reach cleanup before allocation. */
+    UmiDeveloperMergeDocument *document = NULL;
     UmiStatus status;
 
     /*

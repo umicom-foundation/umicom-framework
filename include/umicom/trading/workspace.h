@@ -531,6 +531,17 @@ const char *umi_trading_market_state_text(UmiMarketState state);
 const char *umi_trading_workspace_order_filter_text(
     UmiTradingWorkspaceOrderFilter order_filter);
 
+
+/** Preview with an explicit evaluation time; suitable for provider and replay clocks. */
+UmiStatus UmiTradingWorkspacePreviewOrderAt(UmiTradingWorkspace *workspace,
+    int64_t nowMs, UmiRiskDecision *outDecision);
+/** Copy a reviewed risk-price policy; changing it invalidates the old preview. */
+UmiStatus UmiTradingWorkspaceSetRiskPricePolicy(UmiTradingWorkspace *workspace,
+    const UmiRiskPricePolicy *policy);
+/** Copy the last calculation without exposing private mutable workspace state. */
+UmiStatus UmiTradingWorkspaceRiskEvidence(const UmiTradingWorkspace *workspace,
+    UmiPretradeRiskEvidence *outEvidence);
+
 #ifdef __cplusplus
 }
 #endif

@@ -39,6 +39,11 @@ void umi_execution_store_init(UmiExecutionStore *store);
  * Add execution store only after its inputs and available capacity have been checked.
  */
 UmiStatus umi_execution_store_add(UmiExecutionStore *store, const UmiExecutionReport *report);
+
+/** Find a retained report without creating or changing it. */
+UmiStatus UmiExecutionStoreFind(const UmiExecutionStore *store,
+    const UmiFinancialId *executionId, const UmiExecutionReport **outReport);
+
 #ifdef __cplusplus
 }
 #endif

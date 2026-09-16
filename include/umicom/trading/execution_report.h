@@ -30,6 +30,11 @@ extern "C" {
  * Check that execution report satisfies its contract before another service relies on it.
  */
 int umi_execution_report_valid(const UmiExecutionReport *report);
+
+/** Compare validated reports for exact replay; pointers are borrowed. */
+int UmiExecutionReportEqual(const UmiExecutionReport *left,
+                            const UmiExecutionReport *right);
+
 #ifdef __cplusplus
 }
 #endif

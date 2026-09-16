@@ -514,6 +514,12 @@ static int RiskArithmetic(void)
     request.type = UMI_ORDER_MARKET; request.limit_price = 0.0;
     decision = umi_pretrade_risk_evaluate(&request, &limit, DBL_MAX, 0.0);
     CHECK(!decision.allowed);
+    /* Unpriced orders now stop at the missing-quote gate. Keep the arithmetic
+     * overflow check by supplying a priced order instead of a synthetic 1.0. */
+    CHECK(strcmp(decision.reason, "market and stop orders require a current quote") == 0);
+    request.type = UMI_ORDER_LIMIT; request.limit_price = 1.0;
+    decision = umi_pretrade_risk_evaluate(&request, &limit, DBL_MAX, 0.0);
+    CHECK(!decision.allowed);
     CHECK(strcmp(decision.reason, "non-finite risk calculation") == 0);
     request.side = UMI_SIDE_SELL;
     CHECK(!umi_pretrade_risk_evaluate(&request, &limit, -DBL_MAX, 0.0).allowed);
@@ -530,10 +536,11 @@ static int RiskArithmetic(void)
     CHECK(umi_pretrade_risk_evaluate(&request, &limit, 0.0, -1000.0).allowed);
     request.side = UMI_SIDE_SELL;
     CHECK(umi_pretrade_risk_evaluate(&request, &limit, 10.0, 0.0).allowed);
-    /* Explicitly document, rather than silently change, the 1.0 fallback. */
+    /* Missing market prices are deliberately rejected rather than valued at
+     * 1.0. A generous notional limit does not supply the missing evidence. */
     request = MakeOrder(); request.type = UMI_ORDER_MARKET; request.limit_price = 0.0;
     limit.max_order_notional = 2.0;
-    CHECK(umi_pretrade_risk_evaluate(&request, &limit, 0.0, 0.0).allowed);
+    CHECK(!umi_pretrade_risk_evaluate(&request, &limit, 0.0, 0.0).allowed);
     limit.max_order_notional = 1.0;
     CHECK(!umi_pretrade_risk_evaluate(&request, &limit, 0.0, 0.0).allowed);
     return 0;

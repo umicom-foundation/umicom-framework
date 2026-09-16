@@ -237,10 +237,20 @@ static void set_feedback(UmiGtk4TradingPanelState *state,
     if (state == NULL || state->risk_label == NULL || state->context == NULL ||
         state->context->controller == NULL) return;
     snapshot = umi_trading_ui_controller_snapshot(state->context->controller);
-    gtk_label_set_text(GTK_LABEL(state->risk_label),
-        snapshot.last_message[0] != '\0'
-            ? snapshot.last_message
-            : (fallback != NULL ? fallback : ""));
+    UmiPretradeRiskEvidence evidence;
+    char details[512];
+    const char *message = snapshot.last_message[0] != '\0'
+        ? snapshot.last_message : (fallback != NULL ? fallback : "");
+    if (UmiTradingWorkspaceRiskEvidence(state->context->workspace, &evidence) == UMI_STATUS_OK &&
+        evidence.hasValuation) {
+        (void)snprintf(details, sizeof details,
+            "%s\nReference: %.8g (%s); notional: %.8g; quote age at check: %lld ms.",
+            message, evidence.referencePrice, UmiRiskPriceSourceText(evidence.priceSource),
+            evidence.notional, (long long)evidence.quoteAgeMs);
+        gtk_label_set_text(GTK_LABEL(state->risk_label), details);
+    } else {
+        gtk_label_set_text(GTK_LABEL(state->risk_label), message);
+    }
 }
 
 /* Rebuild the chart scene after either study control changes. The chart widget
@@ -1111,8 +1121,8 @@ static void on_preview_clicked(GtkButton *button, gpointer data)
     status = apply_order_controls(state);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
-        status = umi_trading_ui_controller_preview_order(
-            state->context->controller, &decision);
+        status = UmiTradingUiControllerPreviewOrderAt(
+            state->context->controller, (int64_t)(g_get_real_time() / 1000), &decision);
     (void)status;
     set_feedback(state, decision.reason);
 }
@@ -1135,9 +1145,24 @@ static void on_submit_clicked(GtkButton *button, gpointer data)
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return;
     /* Apply this branch only when its contract condition is satisfied. */
-    if (!snapshot.has_draft_risk || !snapshot.can_submit_order) {
+    if (!snapshot.has_draft_risk || !snapshot.draft_risk.allowed || !snapshot.can_submit_order) {
         gtk_label_set_text(GTK_LABEL(state->risk_label),
                            "Preview and pass risk controls before submission.");
+        return;
+    }
+    /* The displayed controls must still describe the reviewed draft. Do not
+     * silently submit the old quantity after the user edits a spin button. */
+    if (gtk_drop_down_get_selected(GTK_DROP_DOWN(state->side_dropdown)) !=
+            (guint)(snapshot.draft_order.side == UMI_SIDE_SELL ? 1U : 0U) ||
+        gtk_drop_down_get_selected(GTK_DROP_DOWN(state->type_dropdown)) !=
+            (guint)snapshot.draft_order.type ||
+        gtk_drop_down_get_selected(GTK_DROP_DOWN(state->tif_dropdown)) !=
+            (guint)snapshot.draft_order.tif ||
+        gtk_spin_button_get_value(GTK_SPIN_BUTTON(state->quantity_spin)) != snapshot.draft_order.quantity ||
+        gtk_spin_button_get_value(GTK_SPIN_BUTTON(state->limit_spin)) != snapshot.draft_order.limit_price ||
+        gtk_spin_button_get_value(GTK_SPIN_BUTTON(state->stop_spin)) != snapshot.draft_order.stop_price) {
+        gtk_label_set_text(GTK_LABEL(state->risk_label),
+            "The ticket changed. Preview Risk again before submitting.");
         return;
     }
     now_ms = (int64_t)(g_get_real_time() / 1000);

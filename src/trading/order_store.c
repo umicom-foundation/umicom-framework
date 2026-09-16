@@ -19,6 +19,7 @@
 
 #include <string.h>
 #include "umicom/trading/order_store.h"
+#include "umicom/finance/identifier.h"
 
 /*
  * Initialise order store from caller-provided values so later operations receive a known
@@ -45,6 +46,17 @@ UmiStatus umi_order_store_add(UmiOrderStore *store, const UmiOrder *order)
     if (store == NULL || order == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    if (store->count > UMI_TRADING_MAX_ORDERS) return UMI_STATUS_INVALID_STATE;
+    if (!umi_financial_id_valid(&order->request.client_order_id))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t index = 0U; index < store->count; ++index) {
+        if (!umi_financial_id_valid(&store->orders[index].request.client_order_id))
+            return UMI_STATUS_INVALID_STATE;
+        if (umi_financial_id_equal(&store->orders[index].request.client_order_id,
+                                   &order->request.client_order_id))
+            return UMI_STATUS_ALREADY_EXISTS;
+    }
+
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (store->count >= UMI_TRADING_MAX_ORDERS) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -69,9 +81,12 @@ UmiStatus umi_order_store_find(UmiOrderStore *store,
     }
 
     *out_order = NULL;
+    if (store->count > UMI_TRADING_MAX_ORDERS) return UMI_STATUS_INVALID_STATE;
     /* Visit each bounded item once so every record receives the same rule. */
     for (size_t index = 0U; index < store->count; ++index) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (!umi_financial_id_valid(&store->orders[index].request.client_order_id))
+            return UMI_STATUS_INVALID_STATE;
         if (strcmp(store->orders[index].request.client_order_id.value,
                    client_order_id) == 0) {
             *out_order = &store->orders[index];

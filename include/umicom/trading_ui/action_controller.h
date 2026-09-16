@@ -253,6 +253,11 @@ UmiStatus umi_trading_ui_controller_dispatch(
 UmiTradingUiControllerSnapshot umi_trading_ui_controller_snapshot(
     const UmiTradingUiController *controller);
 
+
+/** Preview current market evidence using an explicit UI or replay clock. */
+UmiStatus UmiTradingUiControllerPreviewOrderAt(UmiTradingUiController *controller,
+    int64_t nowMs, UmiRiskDecision *outDecision);
+
 #ifdef __cplusplus
 }
 #endif

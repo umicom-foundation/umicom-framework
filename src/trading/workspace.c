@@ -33,6 +33,7 @@
 #include "umicom/trading/depth.h"
 #include "umicom/trading/environment.h"
 #include "umicom/trading/execution_report.h"
+#include "umicom/trading/fill.h"
 #include "umicom/trading/health.h"
 #include "umicom/trading/instrument.h"
 #include "umicom/trading/market_state.h"
@@ -70,6 +71,8 @@ struct UmiTradingWorkspace {
     UmiChartWorkspace *charts;
     UmiOrderRequest draft_order;
     UmiRiskDecision draft_risk;
+    UmiRiskPricePolicy pricePolicy;
+    UmiPretradeRiskEvidence riskEvidence;
     char instrument_filter[UMI_TRADING_WORKSPACE_FILTER_CAPACITY];
     UmiTradingWorkspaceOrderFilter order_filter;
     UmiTradingChartStudy chart_study;
@@ -426,6 +429,7 @@ UmiStatus umi_trading_workspace_create(
     workspace->next_order_sequence = 1U;
     workspace->revision = 1U;
     workspace->risk_ready = 1;
+    workspace->pricePolicy = UmiRiskPricePolicyDefault();
     umi_watchlist_init(&workspace->watchlist);
     umi_oms_init(&workspace->oms, effective.risk_limit);
     umi_execution_store_init(&workspace->executions);
@@ -596,11 +600,20 @@ UmiStatus umi_trading_workspace_update_quote(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (workspace == NULL || quote == NULL || !umi_quote_valid(quote))
+    if (workspace == NULL || quote == NULL || !umi_quote_valid(quote) ||
+        !umi_instrument_valid(&quote->instrument))
         return UMI_STATUS_INVALID_ARGUMENT;
     index = market_index(workspace, quote->instrument.instrument_id.value);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    if (!UmiRiskInstrumentMatches(&workspace->markets[index].instrument, &quote->instrument))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Display-only legacy quotes may omit time. Once timestamped evidence is
+     * present, an older event must not roll it back or fire alerts again. */
+    if (workspace->markets[index].has_quote &&
+        quote->event_time_ms < workspace->markets[index].quote.event_time_ms)
+        return UMI_STATUS_INVALID_STATE;
+
     /*
      * Alerts observe the neutral quote midpoint. A legacy provider may omit a
      * timestamp, so zero is used instead of rejecting otherwise valid prices.
@@ -1097,12 +1110,15 @@ UmiStatus umi_trading_workspace_preview_order(
     status = umi_order_request_validate(&workspace->draft_order);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
+        memset(&workspace->riskEvidence, 0, sizeof workspace->riskEvidence);
         umi_risk_decision_deny(&workspace->draft_risk,
                                "invalid order request");
+        workspace->riskEvidence.decision = workspace->draft_risk;
     } /* Use this fallback path when the earlier condition does not apply. */ else {
-        workspace->draft_risk = umi_pretrade_risk_evaluate(
+        workspace->draft_risk = UmiPretradeRiskEvaluateQuoted(
             &workspace->draft_order, &workspace->oms.risk_limit,
-            current_position_quantity(workspace), realised_pnl(workspace));
+            current_position_quantity(workspace), realised_pnl(workspace),
+            NULL, 0, &workspace->pricePolicy, &workspace->riskEvidence);
         status = workspace->draft_risk.allowed
             ? UMI_STATUS_OK : UMI_STATUS_PERMISSION_DENIED;
     }
@@ -1110,6 +1126,49 @@ UmiStatus umi_trading_workspace_preview_order(
     workspace->revision += 1U;
     *out_decision = workspace->draft_risk;
     return status;
+}
+
+/* Price/time policy is copied into the workspace; it does not grant trust,
+ * broker readiness, live arming or any additional permission. */
+UmiStatus UmiTradingWorkspaceSetRiskPricePolicy(UmiTradingWorkspace *workspace,
+    const UmiRiskPricePolicy *policy)
+{
+    if (workspace == NULL || !UmiRiskPricePolicyValid(policy))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    workspace->pricePolicy = *policy;
+    workspace->has_draft_risk = 0;
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiTradingWorkspaceRiskEvidence(const UmiTradingWorkspace *workspace,
+    UmiPretradeRiskEvidence *outEvidence)
+{
+    if (workspace == NULL || outEvidence == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!workspace->has_draft_risk) return UMI_STATUS_NOT_FOUND;
+    *outEvidence = workspace->riskEvidence;
+    outEvidence->decision = workspace->draft_risk;
+    return UMI_STATUS_OK;
+}
+
+/* The same timestamp used by a live provider or replay must be supplied by
+ * the caller. A preview is retained evidence, never a cached submit approval. */
+UmiStatus UmiTradingWorkspacePreviewOrderAt(UmiTradingWorkspace *workspace,
+    int64_t nowMs, UmiRiskDecision *outDecision)
+{
+    if (workspace == NULL || outDecision == NULL || nowMs < 0)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    const size_t index = market_index(workspace, workspace->selected_instrument_id);
+    const UmiQuote *quote = index != SIZE_MAX && workspace->markets[index].has_quote
+        ? &workspace->markets[index].quote : NULL;
+    workspace->draft_risk = UmiPretradeRiskEvaluateQuoted(&workspace->draft_order,
+        &workspace->oms.risk_limit, current_position_quantity(workspace),
+        realised_pnl(workspace), quote, nowMs, &workspace->pricePolicy,
+        &workspace->riskEvidence);
+    workspace->has_draft_risk = 1;
+    workspace->revision += 1U;
+    *outDecision = workspace->draft_risk;
+    return outDecision->allowed ? UMI_STATUS_OK : UMI_STATUS_PERMISSION_DENIED;
 }
 
 /*
@@ -1130,6 +1189,7 @@ UmiStatus umi_trading_workspace_submit_order(
      */
     if (workspace == NULL || out_decision == NULL || now_ms < 0)
         return UMI_STATUS_INVALID_ARGUMENT;
+    memset(&workspace->riskEvidence, 0, sizeof workspace->riskEvidence);
     ready = umi_trading_health_ready(
         workspace->market_data_ready, workspace->broker_ready,
         workspace->risk_ready, workspace->environment);
@@ -1155,9 +1215,12 @@ UmiStatus umi_trading_workspace_submit_order(
                    "umi-order-%llu",
                    (unsigned long long)workspace->next_order_sequence++);
     workspace->draft_order.environment = workspace->environment;
-    status = umi_oms_submit(&workspace->oms, &workspace->draft_order,
-                            current_position_quantity(workspace),
-                            realised_pnl(workspace), now_ms, out_decision);
+    const size_t marketPosition = market_index(workspace, workspace->selected_instrument_id);
+    const UmiQuote *quote = marketPosition != SIZE_MAX && workspace->markets[marketPosition].has_quote
+        ? &workspace->markets[marketPosition].quote : NULL;
+    status = UmiOmsSubmitQuoted(&workspace->oms, &workspace->draft_order,
+        current_position_quantity(workspace), realised_pnl(workspace), now_ms,
+        quote, &workspace->pricePolicy, out_decision, &workspace->riskEvidence);
     workspace->draft_risk = *out_decision;
     workspace->has_draft_risk = 1;
     workspace->revision += 1U;
@@ -1209,49 +1272,59 @@ UmiStatus umi_trading_workspace_record_execution(
     size_t index;
     UmiOrder *order;
     UmiPosition *position = NULL;
-    double remaining;
-    double old_filled;
+    const UmiExecutionReport *retained = NULL;
+    UmiOrder candidateOrder;
+    UmiPosition candidatePosition;
+    int createPosition = 0;
     UmiStatus status;
 
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
+    /* Validate before comparing IDs or inspecting any mutable order state. */
     if (workspace == NULL || !umi_execution_report_valid(report))
         return UMI_STATUS_INVALID_ARGUMENT;
+    status = UmiExecutionStoreFind(&workspace->executions, &report->execution_id, &retained);
+    if (status == UMI_STATUS_OK) {
+        /* An exact replay remains harmless even after the order is filled or
+         * cancelled. Reuse of an ID for different economics is a conflict. */
+        return UmiExecutionReportEqual(retained, report)
+            ? UMI_STATUS_OK : UMI_STATUS_ALREADY_EXISTS;
+    }
+    if (status != UMI_STATUS_NOT_FOUND) return status;
+    if (workspace->executions.count >= UMI_TRADING_MAX_ORDERS)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
     index = order_index(workspace, report->client_order_id.value);
-    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     order = &workspace->oms.orders.orders[index];
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (order->status != UMI_ORDER_ACCEPTED &&
-        order->status != UMI_ORDER_PARTIALLY_FILLED)
-        return UMI_STATUS_INVALID_STATE;
-    remaining = order->request.quantity - order->filled_quantity;
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (report->fill_quantity > remaining) return UMI_STATUS_INVALID_ARGUMENT;
+    if (report->fill_quantity > order->request.quantity - order->filled_quantity)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    candidateOrder = *order;
+    status = umi_order_apply_execution(&candidateOrder, report);
+    if (status != UMI_STATUS_OK) return status;
     status = umi_position_book_get(&workspace->positions,
-                                   &order->request.instrument, 1, &position);
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
+        &order->request.instrument, 0, &position);
+    if (status == UMI_STATUS_NOT_FOUND) {
+        if (workspace->positions.count >= UMI_TRADING_MAX_POSITIONS)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        candidatePosition = (UmiPosition){0};
+        candidatePosition.instrument = order->request.instrument;
+        createPosition = 1;
+    } else if (status == UMI_STATUS_OK) {
+        if (!UmiRiskInstrumentMatches(&position->instrument, &order->request.instrument))
+            return UMI_STATUS_INVALID_STATE;
+        candidatePosition = *position;
+    } else {
+        return status;
+    }
+    status = umi_position_apply_fill(&candidatePosition, order->request.side,
+        report->fill_quantity, report->fill_price);
     if (status != UMI_STATUS_OK) return status;
     status = umi_execution_store_add(&workspace->executions, report);
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
-    status = umi_position_apply_fill(position, order->request.side,
-                                     report->fill_quantity,
-                                     report->fill_price);
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status != UMI_STATUS_OK) return status;
-    old_filled = order->filled_quantity;
-    order->filled_quantity += report->fill_quantity;
-    order->average_fill_price = order->filled_quantity > 0.0
-        ? ((order->average_fill_price * old_filled) +
-           (report->fill_price * report->fill_quantity)) /
-              order->filled_quantity
-        : 0.0;
-    order->status = order->filled_quantity >= order->request.quantity
-        ? UMI_ORDER_FILLED : UMI_ORDER_PARTIALLY_FILLED;
-    order->version += 1U;
+    /* No fallible work remains. One workspace owner commits this in-memory
+     * transaction; cross-process persistence remains a Data Server concern. */
+    if (createPosition) position = &workspace->positions.positions[workspace->positions.count++];
+    *position = candidatePosition;
+    *order = candidateOrder;
+    workspace->has_draft_risk = 0;
     workspace->revision += 1U;
     return UMI_STATUS_OK;
 }

@@ -670,6 +670,28 @@ UmiStatus umi_trading_ui_order_ticket_view_create(
     if (status == UMI_STATUS_OK)
         status = set_string(*out_view, "risk.reason",
                             snapshot.draft_risk.reason);
+    /* The shared view reports the exact evidence used by the most recent
+     * preview. An absent valuation is explicit, not a displayed price of 1. */
+    UmiPretradeRiskEvidence evidence = {0};
+    UmiStatus evidenceStatus = UmiTradingWorkspaceRiskEvidence(workspace, &evidence);
+    if (status == UMI_STATUS_OK && evidenceStatus != UMI_STATUS_OK &&
+        evidenceStatus != UMI_STATUS_NOT_FOUND) status = evidenceStatus;
+    if (status == UMI_STATUS_OK)
+        status = set_boolean(*out_view, "risk.has-valuation", evidence.hasValuation);
+    if (status == UMI_STATUS_OK)
+        status = set_string(*out_view, "risk.price-source", UmiRiskPriceSourceText(evidence.priceSource));
+    if (status == UMI_STATUS_OK)
+        status = set_number(*out_view, "risk.reference-price", evidence.referencePrice);
+    if (status == UMI_STATUS_OK)
+        status = set_number(*out_view, "risk.notional", evidence.notional);
+    if (status == UMI_STATUS_OK)
+        status = set_number(*out_view, "risk.projected-position", evidence.projectedPosition);
+    if (status == UMI_STATUS_OK)
+        status = set_integer(*out_view, "risk.quote-time-ms", evidence.quoteTimeMs);
+    if (status == UMI_STATUS_OK)
+        status = set_integer(*out_view, "risk.evaluated-at-ms", evidence.evaluatedAtMs);
+    if (status == UMI_STATUS_OK)
+        status = set_integer(*out_view, "risk.quote-age-ms", evidence.quoteAgeMs);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_boolean(*out_view, "order.can-submit",

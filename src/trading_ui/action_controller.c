@@ -385,6 +385,29 @@ UmiStatus umi_trading_ui_controller_preview_order(
         1);
 }
 
+/* Native and replay callers use an explicit time, while the original preview
+ * entry point remains available for priced orders without a clock. */
+UmiStatus UmiTradingUiControllerPreviewOrderAt(UmiTradingUiController *controller,
+    int64_t nowMs, UmiRiskDecision *outDecision)
+{
+    UmiRiskDecision decision = {0};
+    if (controller == NULL || controller->workspace == NULL || nowMs < 0)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = UmiTradingWorkspacePreviewOrderAt(controller->workspace, nowMs, &decision);
+    if (outDecision != NULL) *outDecision = decision;
+    status = finish_action(controller, status, &decision,
+        decision.allowed ? "Risk preview passed. Submission will check the current quote again."
+                         : decision.reason, 1);
+    /* A rejection is visible state too: do not leave the previous green
+     * preview on screen merely because the domain operation was denied. */
+    if (status != UMI_STATUS_OK) {
+        controller->state.revision += 1U;
+        if (controller->changed_handler != NULL)
+            controller->changed_handler(controller->state.revision, controller->changed_user_data);
+    }
+    return status;
+}
+
 /*
  * Provide the trading ui controller submit order operation used by this module and its
  * client applications.
@@ -408,7 +431,8 @@ UmiStatus umi_trading_ui_controller_submit_order(
     if (status != UMI_STATUS_OK)
         return finish_action(controller, status, NULL, NULL, 0);
     /* Apply this branch only when its contract condition is satisfied. */
-    if (!snapshot.has_draft_risk || !snapshot.can_submit_order) {
+    if (!snapshot.has_draft_risk || !snapshot.draft_risk.allowed ||
+        !snapshot.can_submit_order) {
         return finish_action(controller, UMI_STATUS_INVALID_STATE, NULL,
             "Preview and pass risk controls before submitting the order.", 0);
     }
@@ -702,7 +726,9 @@ UmiStatus umi_trading_ui_controller_dispatch(
         return umi_trading_ui_controller_set_draft_prices(
             controller, payload->primary_number, payload->secondary_number);
     case UMI_TRADING_UI_ACTION_KIND_PREVIEW_ORDER:
-        return umi_trading_ui_controller_preview_order(controller, out_decision);
+        return payload != NULL
+            ? UmiTradingUiControllerPreviewOrderAt(controller, payload->event_time_ms, out_decision)
+            : umi_trading_ui_controller_preview_order(controller, out_decision);
     case UMI_TRADING_UI_ACTION_KIND_SUBMIT_ORDER:
         return umi_trading_ui_controller_submit_order(
             controller, payload != NULL ? payload->event_time_ms : 0, out_decision);

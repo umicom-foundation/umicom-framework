@@ -27,6 +27,7 @@
 #include "umicom/trading/kill_switch.h"
 #include "umicom/trading/order_throttle.h"
 #include "umicom/trading/risk_limit.h"
+#include "umicom/trading/pretrade_risk.h"
 #include "umicom/trading/risk_decision.h"
 #ifdef __cplusplus
 extern "C" {
@@ -43,6 +44,14 @@ void umi_oms_init(UmiOms *oms, UmiRiskLimit risk_limit);
  * Provide the oms submit operation used by this module and its client applications.
  */
 UmiStatus umi_oms_submit(UmiOms *oms, const UmiOrderRequest *request, double current_position, double daily_pnl, int64_t now_ms, UmiRiskDecision *decision);
+
+/** Submit with explicit price evidence; kill switch and throttle still apply.
+ * This reference OMS accepts a record, not a broker execution instruction. */
+UmiStatus UmiOmsSubmitQuoted(UmiOms *oms, const UmiOrderRequest *request,
+    double currentPosition, double dailyPnl, int64_t nowMs,
+    const UmiQuote *quote, const UmiRiskPricePolicy *policy,
+    UmiRiskDecision *decision, UmiPretradeRiskEvidence *outEvidence);
+
 #ifdef __cplusplus
 }
 #endif

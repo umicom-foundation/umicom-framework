@@ -26,6 +26,7 @@
 int main(void){
     UmiPosition p={0};p.instrument=test_instrument();assert(umi_position_apply_fill(&p,UMI_SIDE_BUY,2,25000)==UMI_STATUS_OK);
     assert(p.quantity==2);assert(p.average_price==25000);assert(umi_position_unrealised_pnl(&p,25010)==400);
-    assert(umi_position_apply_fill(&p,UMI_SIDE_SELL,1,25020)==UMI_STATUS_OK);assert(p.realised_pnl==20);
+    assert(umi_position_apply_fill(&p,UMI_SIDE_SELL,1,25020)==UMI_STATUS_OK);assert(p.realised_pnl==400);
+    /* 20 price points x one closed contract x multiplier 20 = 400 currency units. */
     return 0;
 }

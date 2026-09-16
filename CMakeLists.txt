@@ -5038,6 +5038,8 @@ install(DIRECTORY resources/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/framework/resources)
 
 include(cmake/UmicomOperationalStateQualification.cmake)
+include(cmake/UmicomTradingExecutionQualification.cmake)
+include(cmake/UmicomDocumentSaveQualification.cmake)
 
 message(STATUS "Umicom Framework version: ${PROJECT_VERSION}")
 message(STATUS "C standard: C${CMAKE_C_STANDARD}")

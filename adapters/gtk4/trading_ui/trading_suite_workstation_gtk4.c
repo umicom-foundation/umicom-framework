@@ -132,9 +132,10 @@ static gboolean simulation_tick(gpointer data)
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK &&
         snapshot.environment == UMI_TRADING_SIMULATION) {
-        status = umi_trading_simulation_market_step(
-            &workstation->simulation,
-            (int64_t)workstation->config.simulation_step_interval_ms);
+        /* A delayed timer must generate events at the current host time, not
+         * fall further behind on each nominal one-second increment. */
+        status = UmiTradingSimulationMarketAdvanceTo(
+            &workstation->simulation, (int64_t)(g_get_real_time() / 1000));
         /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) schedule_rebuild(workstation);
     }

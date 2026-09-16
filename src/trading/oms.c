@@ -39,18 +39,21 @@ void umi_oms_init(UmiOms *oms, UmiRiskLimit limit)
 }
 
 /* Provide the oms submit operation used by this module and its client applications. */
-UmiStatus umi_oms_submit(UmiOms *oms,
+static UmiStatus SubmitOrder(UmiOms *oms,
                          const UmiOrderRequest *request,
                          double current_position,
                          double daily_pnl,
                          int64_t now_ms,
-                         UmiRiskDecision *decision)
+                         UmiRiskDecision *decision,
+                         const UmiQuote *quote,
+                         const UmiRiskPricePolicy *pricePolicy,
+                         UmiPretradeRiskEvidence *outEvidence)
 {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (oms == NULL || request == NULL || decision == NULL) {
+    if (oms == NULL || request == NULL || decision == NULL || now_ms < 0) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
@@ -73,10 +76,8 @@ UmiStatus umi_oms_submit(UmiOms *oms,
         return validation;
     }
 
-    *decision = umi_pretrade_risk_evaluate(request,
-                                           &oms->risk_limit,
-                                           current_position,
-                                           daily_pnl);
+    *decision = UmiPretradeRiskEvaluateQuoted(request, &oms->risk_limit,
+        current_position, daily_pnl, quote, now_ms, pricePolicy, outEvidence);
     /* Apply this operation only while the related capability or state is available. */
     if (!decision->allowed) {
         return UMI_STATUS_PERMISSION_DENIED;
@@ -86,5 +87,39 @@ UmiStatus umi_oms_submit(UmiOms *oms,
     order.request = *request;
     order.status = UMI_ORDER_ACCEPTED;
     order.version = 1U;
-    return umi_order_store_add(&oms->orders, &order);
+    const UmiStatus stored = umi_order_store_add(&oms->orders, &order);
+    if (stored != UMI_STATUS_OK) {
+        umi_risk_decision_deny(decision,
+            stored == UMI_STATUS_ALREADY_EXISTS
+                ? "client order identifier already exists" : "order could not be stored");
+        if (outEvidence != NULL) outEvidence->decision = *decision;
+    }
+    return stored;
+}
+
+/* Existing priced-order callers retain their entry point and safeguards. */
+UmiStatus umi_oms_submit(UmiOms *oms, const UmiOrderRequest *request,
+                         double current_position, double daily_pnl,
+                         int64_t now_ms, UmiRiskDecision *decision)
+{
+    return SubmitOrder(oms, request, current_position, daily_pnl, now_ms,
+        decision, NULL, NULL, NULL);
+}
+
+/* Quote and policy are borrowed only for this submission. They are never
+ * substituted into the order's economic limit_price or stop_price fields. */
+UmiStatus UmiOmsSubmitQuoted(UmiOms *oms, const UmiOrderRequest *request,
+    double currentPosition, double dailyPnl, int64_t nowMs,
+    const UmiQuote *quote, const UmiRiskPricePolicy *policy,
+    UmiRiskDecision *decision, UmiPretradeRiskEvidence *outEvidence)
+{
+    UmiPretradeRiskEvidence evidence = {0};
+    UmiRiskDecision local = {0};
+    UmiRiskDecision *result = decision != NULL ? decision : &local;
+    umi_risk_decision_deny(result, "invalid order submission");
+    const UmiStatus status = SubmitOrder(oms, request, currentPosition,
+        dailyPnl, nowMs, result, quote, policy, &evidence);
+    evidence.decision = *result;
+    if (outEvidence != NULL) *outEvidence = evidence;
+    return status;
 }

@@ -179,6 +179,14 @@ size_t umi_document_coordinator_count(
 UmiStatus UmiDocumentCoordinatorSaveAll(UmiDocumentCoordinator *coordinator,
     size_t *outSaved);
 
+
+/** Save the document identified when an asynchronous action began, regardless
+ * of which tab is now active. A closed ID returns NOT_FOUND. The active tab
+ * is not switched, and another open document's destination is rejected.
+ * Use from the coordinator's owning thread. No input pointer is retained. */
+UmiStatus UmiDocumentCoordinatorSaveAs(UmiDocumentCoordinator *coordinator,
+    UmiDocumentId documentId, const char *path);
+
 #ifdef __cplusplus
 }
 #endif

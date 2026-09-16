@@ -18,6 +18,8 @@
  */
 
 #include "umicom/trading/position.h"
+#include "umicom/trading/instrument.h"
+#include <math.h>
 
 /* Provide the absolute quantity operation used by this module and its client applications. */
 static double absolute_quantity(double value)
@@ -38,13 +40,20 @@ UmiStatus umi_position_apply_fill(UmiPosition *position,
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (position == NULL || quantity <= 0.0 || price <= 0.0) {
+    if (position == NULL || !umi_instrument_valid(&position->instrument) ||
+        (side != UMI_SIDE_BUY && side != UMI_SIDE_SELL) ||
+        !isfinite(quantity) || !isfinite(price) || quantity <= 0.0 || price <= 0.0 ||
+        !isfinite(position->quantity) || !isfinite(position->average_price) ||
+        !isfinite(position->realised_pnl) || position->average_price < 0.0 ||
+        (position->quantity != 0.0 && position->average_price == 0.0)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
-
+    UmiPosition candidate = *position;
     const double signed_quantity =
         side == UMI_SIDE_BUY ? quantity : -quantity;
     const double old_quantity = position->quantity;
+    const double next_quantity = old_quantity + signed_quantity;
+    if (!isfinite(next_quantity)) return UMI_STATUS_CAPACITY_EXCEEDED;
 
     const int same_direction =
         old_quantity == 0.0 ||
@@ -57,13 +66,16 @@ UmiStatus umi_position_apply_fill(UmiPosition *position,
         const double added_absolute = absolute_quantity(signed_quantity);
         const double total_absolute = old_absolute + added_absolute;
 
-        position->average_price =
-            total_absolute > 0.0
-                ? ((position->average_price * old_absolute) +
-                   (price * added_absolute)) /
-                      total_absolute
-                : 0.0;
-        position->quantity = old_quantity + signed_quantity;
+        /* Interpolate positive endpoints instead of multiplying price by
+         * quantity first. Their difference cannot overflow. */
+        const double old_price = position->average_price;
+        candidate.average_price = old_absolute == 0.0 ? price :
+            (old_price <= price
+                ? old_price + (price - old_price) * (added_absolute / total_absolute)
+                : price + (old_price - price) * (old_absolute / total_absolute));
+        candidate.quantity = next_quantity;
+        if (!isfinite(candidate.average_price)) return UMI_STATUS_CAPACITY_EXCEEDED;
+        *position = candidate;
         return UMI_STATUS_OK;
     }
 
@@ -75,17 +87,21 @@ UmiStatus umi_position_apply_fill(UmiPosition *position,
     }
 
     const double direction = old_quantity > 0.0 ? 1.0 : -1.0;
-    position->realised_pnl +=
-        (price - position->average_price) * closing_quantity * direction;
-    position->quantity = old_quantity + signed_quantity;
+    const double realised = (price - position->average_price) * closing_quantity *
+        direction * position->instrument.multiplier;
+    candidate.realised_pnl += realised;
+    candidate.quantity = next_quantity;
+    if (!isfinite(realised) || !isfinite(candidate.realised_pnl))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
 
     /* Apply this branch only when its contract condition is satisfied. */
-    if (position->quantity == 0.0) {
-        position->average_price = 0.0;
-    } else /* Apply this branch only when its contract condition is satisfied. */ if ((old_quantity > 0.0 && position->quantity < 0.0) ||
-               (old_quantity < 0.0 && position->quantity > 0.0)) {
-        position->average_price = price;
+    if (candidate.quantity == 0.0) {
+        candidate.average_price = 0.0;
+    } else /* Apply this branch only when its contract condition is satisfied. */ if ((old_quantity > 0.0 && candidate.quantity < 0.0) ||
+               (old_quantity < 0.0 && candidate.quantity > 0.0)) {
+        candidate.average_price = price;
     }
+    *position = candidate;
 
     return UMI_STATUS_OK;
 }

@@ -50,6 +50,8 @@ UmiStatus umi_position_book_get(UmiPositionBook *book,
     }
 
     *out_position = NULL;
+    if (book->count > UMI_TRADING_MAX_POSITIONS) return UMI_STATUS_INVALID_STATE;
+    if (!umi_instrument_valid(instrument)) return UMI_STATUS_INVALID_ARGUMENT;
     /* Visit each bounded item once so every record receives the same rule. */
     for (size_t index = 0U; index < book->count; ++index) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */

@@ -19,6 +19,7 @@
 
 #include "umicom/trading/execution_store.h"
 #include "umicom/trading/execution_report.h"
+#include "umicom/finance/identifier.h"
 
 /*
  * Initialise execution store from caller-provided values so later operations receive a
@@ -47,6 +48,11 @@ UmiStatus umi_execution_store_add(UmiExecutionStore *store,
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    const UmiExecutionReport *existing = NULL;
+    const UmiStatus found = UmiExecutionStoreFind(store, &report->execution_id, &existing);
+    if (found == UMI_STATUS_OK) return UMI_STATUS_ALREADY_EXISTS;
+    if (found != UMI_STATUS_NOT_FOUND) return found;
+
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (store->count >= UMI_TRADING_MAX_ORDERS) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -55,4 +61,25 @@ UmiStatus umi_execution_store_add(UmiExecutionStore *store,
     store->reports[store->count] = *report;
     store->count++;
     return UMI_STATUS_OK;
+}
+
+/* A const borrowed view into the retained store, valid until the owner mutates
+ * or destroys it. The count is checked before scanning fixed-size storage. */
+UmiStatus UmiExecutionStoreFind(const UmiExecutionStore *store,
+    const UmiFinancialId *executionId, const UmiExecutionReport **outReport)
+{
+    if (outReport == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outReport = NULL;
+    if (store == NULL || !umi_financial_id_valid(executionId))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (store->count > UMI_TRADING_MAX_ORDERS) return UMI_STATUS_INVALID_STATE;
+    for (size_t index = 0U; index < store->count; ++index) {
+        if (!umi_execution_report_valid(&store->reports[index]))
+            return UMI_STATUS_INVALID_STATE;
+        if (umi_financial_id_equal(&store->reports[index].execution_id, executionId)) {
+            *outReport = &store->reports[index];
+            return UMI_STATUS_OK;
+        }
+    }
+    return UMI_STATUS_NOT_FOUND;
 }

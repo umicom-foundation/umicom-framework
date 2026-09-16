@@ -78,6 +78,12 @@ UmiStatus umi_trading_simulation_market_seed_default(
 UmiStatus umi_trading_simulation_market_step(
     UmiTradingSimulationMarket *market,
     int64_t elapsed_ms);
+/** Publish one simulation step at the caller's current clock time. Equal time
+ * is a no-op; a backwards clock is rejected. This creates fresh simulated
+ * events after a delayed GUI timer without relabelling an old quote. */
+UmiStatus UmiTradingSimulationMarketAdvanceTo(UmiTradingSimulationMarket *market,
+    int64_t nowMs);
+
 /**
  * Return the number of records represented by trading simulation market instrument without
  * changing their state.
