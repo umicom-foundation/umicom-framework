@@ -5057,3 +5057,5 @@ message(STATUS "C standard: C${CMAKE_C_STANDARD}")
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "SQLite adapter available: ${SQLite3_FOUND}")
 message(STATUS "Native umicom command: ${UMICOM_BUILD_NATIVE_TOOL}")
+
+include(cmake/UmicomDocumentContentTests.cmake)

@@ -21,8 +21,20 @@
 #include "umicom/platform/threading.h"
 #include "ui_internal.h"
 
+/* One owned draft accompanies each tab. Small drafts use the existing inline
+ * snapshot; larger drafts allocate only when needed. No editor algorithm or
+ * disk persistence is implemented here: this remains a presentation model. */
+typedef struct UmiUiDocumentContent {
+    char *bytes;
+    size_t capacity;
+    size_t length;
+    uint64_t revision;
+} UmiUiDocumentContent;
+
 struct UmiUiDocumentViewModel {
     UmiUiDocumentViewSnapshot items[UMI_UI_DOCUMENT_VIEW_MAX];
+    UmiUiDocumentContent content[UMI_UI_DOCUMENT_VIEW_MAX];
+    size_t allocated_bytes;
     size_t count;
     uint64_t revision;
     UmiMutex *mutex;
@@ -73,28 +85,91 @@ static int same_group(const UmiUiDocumentViewSnapshot *left,
 /* Find erase while leaving the underlying catalogue or model owned by this module. */
 static void erase_at(UmiUiDocumentViewModel *model, size_t index)
 {
-    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    model->allocated_bytes -= model->content[index].capacity;
+    free(model->content[index].bytes);
     if (index + 1U < model->count) {
-        (void)memmove(&model->items[index],
-                      &model->items[index + 1U],
-                      (model->count - index - 1U) * sizeof(model->items[0]));
+        memmove(&model->items[index], &model->items[index + 1U],
+            (model->count - index - 1U) * sizeof(model->items[0]));
+        memmove(&model->content[index], &model->content[index + 1U],
+            (model->count - index - 1U) * sizeof(model->content[0]));
     }
-    model->count -= 1U;
+    --model->count;
+    memset(&model->items[model->count], 0, sizeof(model->items[0]));
+    memset(&model->content[model->count], 0, sizeof(model->content[0]));
 }
 
-/* Find insert while leaving the underlying catalogue or model owned by this module. */
-static void insert_at(UmiUiDocumentViewModel *model,
-                      size_t index,
-                      const UmiUiDocumentViewSnapshot *item)
+/* Inserting a tab creates an empty ownership slot. A move transfers the old
+ * slot back after insertion; it must not free the draft it is moving. */
+static void insert_at(UmiUiDocumentViewModel *model, size_t index,
+    const UmiUiDocumentViewSnapshot *item)
 {
-    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index < model->count) {
-        (void)memmove(&model->items[index + 1U],
-                      &model->items[index],
-                      (model->count - index) * sizeof(model->items[0]));
+        memmove(&model->items[index + 1U], &model->items[index],
+            (model->count - index) * sizeof(model->items[0]));
+        memmove(&model->content[index + 1U], &model->content[index],
+            (model->count - index) * sizeof(model->content[0]));
     }
     model->items[index] = *item;
-    model->count += 1U;
+    memset(&model->content[index], 0, sizeof(model->content[0]));
+    model->content[index].length = strlen(item->source_text);
+    model->content[index].revision = 1U;
+    ++model->count;
+}
+
+/* Read only while holding the model mutex. */
+static const char *ContentBytes(const UmiUiDocumentViewModel *model, size_t index)
+{
+    return model->content[index].bytes != NULL
+        ? model->content[index].bytes : model->items[index].source_text;
+}
+
+/* Capacity is an implementation detail; reserving does not report an edit.
+ * Growth is amortised and both additions are bounded before allocation. */
+static UmiStatus ReserveContent(UmiUiDocumentViewModel *model, size_t index,
+    size_t length)
+{
+    UmiUiDocumentContent *content = &model->content[index];
+    if (length > UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (length < UMI_UI_DOCUMENT_CONTENT_CAPACITY && content->bytes == NULL)
+        return UMI_STATUS_OK;
+    size_t required = length + 1U;
+    if (required <= content->capacity) return UMI_STATUS_OK;
+    size_t capacity = content->capacity != 0U
+        ? content->capacity : UMI_UI_DOCUMENT_CONTENT_CAPACITY;
+    while (capacity < required) {
+        if (capacity > (UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES + 1U) / 2U) {
+            capacity = UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES + 1U;
+            break;
+        }
+        capacity *= 2U;
+    }
+    size_t growth = capacity - content->capacity;
+    if (growth > UMI_UI_DOCUMENT_TEXT_BUDGET_BYTES - model->allocated_bytes)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    int wasInline = content->bytes == NULL;
+    char *replacement = realloc(content->bytes, capacity);
+    if (replacement == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    if (wasInline)
+        memcpy(replacement, model->items[index].source_text, content->length + 1U);
+    content->bytes = replacement;
+    content->capacity = capacity;
+    model->allocated_bytes += growth;
+    return UMI_STATUS_OK;
+}
+
+/* Keep the legacy snapshot readable without cutting a UTF-8 sequence in half.
+ * Full content is always read from its owned storage, never from this preview. */
+static void SetContentPreview(UmiUiDocumentViewSnapshot *item,
+    const char *text, size_t length)
+{
+    size_t preview = length < sizeof item->source_text
+        ? length : sizeof item->source_text - 1U;
+    if (preview < length) {
+        while (preview > 0U && ((unsigned char)text[preview] & 0xc0U) == 0x80U)
+            --preview;
+    }
+    memmove(item->source_text, text, preview);
+    item->source_text[preview] = '\0';
 }
 
 /* Provide the resequence orders operation used by this module and its client applications. */
@@ -178,6 +253,8 @@ void umi_ui_document_view_model_destroy(UmiUiDocumentViewModel *model)
      * used.
      */
     if (model == NULL) return;
+    for (size_t index = 0U; index < model->count; ++index)
+        free(model->content[index].bytes);
     umi_mutex_destroy(model->mutex);
     free(model);
 }
@@ -187,31 +264,146 @@ void umi_ui_document_view_model_destroy(UmiUiDocumentViewModel *model)
  * applications.
  */
 UmiStatus umi_ui_document_view_model_upsert(
-    UmiUiDocumentViewModel *model,
-    const UmiUiDocumentViewSnapshot *item)
+    UmiUiDocumentViewModel *model, const UmiUiDocumentViewSnapshot *item)
 {
-    size_t index;
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
     if (model == NULL || !DocumentViewTextValid(item) ||
-        !umi_ui_id_is_valid(item->view_id)) {
-        return UMI_STATUS_INVALID_ARGUMENT;
-    }
+        !umi_ui_id_is_valid(item->view_id)) return UMI_STATUS_INVALID_ARGUMENT;
     (void)umi_mutex_lock(model->mutex);
-    index = find_item(model, item->view_id);
-    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    size_t index = find_item(model, item->view_id);
+    if (index != SIZE_MAX && model->content[index].length >= UMI_UI_DOCUMENT_CONTENT_CAPACITY &&
+        strcmp(item->document_id, model->items[index].document_id) == 0) {
+        /* Legacy metadata changes must not replace a full draft with a prefix. */
+        if (strcmp(item->source_text, model->items[index].source_text) != 0) {
+            (void)umi_mutex_unlock(model->mutex);
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        model->items[index] = *item;
+        model->revision = umi_ui_next_revision(model->revision);
+        (void)umi_mutex_unlock(model->mutex);
+        return UMI_STATUS_OK;
+    }
     if (index == SIZE_MAX) {
-        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (model->count >= UMI_UI_DOCUMENT_VIEW_MAX) {
             (void)umi_mutex_unlock(model->mutex);
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
         index = model->count++;
     }
+    size_t length = strlen(item->source_text);
+    int changed = model->content[index].revision == 0U ||
+        strcmp(model->items[index].document_id, item->document_id) != 0 ||
+        model->content[index].length != length ||
+        memcmp(ContentBytes(model, index), item->source_text, length) != 0;
+    if (model->content[index].bytes != NULL)
+        memcpy(model->content[index].bytes, item->source_text, length + 1U);
     model->items[index] = *item;
+    model->content[index].length = length;
+    if (changed) model->content[index].revision = umi_ui_next_revision(model->content[index].revision);
     model->revision = umi_ui_next_revision(model->revision);
+    (void)umi_mutex_unlock(model->mutex);
+    return UMI_STATUS_OK;
+}
+
+/* Full-text publication copies borrowed input only after every bound check. */
+UmiStatus UmiUiDocumentViewModelUpsertText(UmiUiDocumentViewModel *model,
+    const UmiUiDocumentViewSnapshot *item, const char *text, size_t length)
+{
+    if (model == NULL || !DocumentViewTextValid(item) ||
+        !umi_ui_id_is_valid(item->view_id) || text == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (length > UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (memchr(text, '\0', length) != NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiUiDocumentViewSnapshot updated = *item;
+    /* Do this before changing model storage: item may be a caller's snapshot. */
+    SetContentPreview(&updated, text, length);
+    (void)umi_mutex_lock(model->mutex);
+    size_t index = find_item(model, item->view_id);
+    int newItem = index == SIZE_MAX;
+    if (newItem) {
+        if (model->count >= UMI_UI_DOCUMENT_VIEW_MAX) {
+            (void)umi_mutex_unlock(model->mutex);
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        index = model->count;
+    }
+    UmiStatus status = ReserveContent(model, index, length);
+    if (status == UMI_STATUS_OK) {
+        int changed = newItem || strcmp(model->items[index].document_id, item->document_id) != 0 ||
+            model->content[index].length != length ||
+            memcmp(ContentBytes(model, index), text, length) != 0;
+        if (model->content[index].bytes != NULL) {
+            memcpy(model->content[index].bytes, text, length);
+            model->content[index].bytes[length] = '\0';
+        }
+        model->items[index] = updated;
+        model->content[index].length = length;
+        if (changed) model->content[index].revision = umi_ui_next_revision(model->content[index].revision);
+        if (newItem) ++model->count;
+        model->revision = umi_ui_next_revision(model->revision);
+    }
+    (void)umi_mutex_unlock(model->mutex);
+    return status;
+}
+
+/* Reserve under the same mutex used for publication. */
+UmiStatus UmiUiDocumentViewModelReserveText(UmiUiDocumentViewModel *model,
+    const char *viewId, size_t length)
+{
+    if (model == NULL || viewId == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)umi_mutex_lock(model->mutex);
+    size_t index = find_item(model, viewId);
+    UmiStatus status = index == SIZE_MAX ? UMI_STATUS_NOT_FOUND
+        : ReserveContent(model, index, length);
+    (void)umi_mutex_unlock(model->mutex);
+    return status;
+}
+
+/* Return independent storage; no borrowed pointer escapes the model mutex. */
+UmiStatus UmiUiDocumentViewModelCopyText(const UmiUiDocumentViewModel *model,
+    const char *viewId, char **outText, size_t *outLength)
+{
+    if (model == NULL || viewId == NULL || outText == NULL || outLength == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    (void)umi_mutex_lock(model->mutex);
+    size_t index = find_item(model, viewId);
+    if (index == SIZE_MAX) {
+        (void)umi_mutex_unlock(model->mutex);
+        return UMI_STATUS_NOT_FOUND;
+    }
+    size_t length = model->content[index].length;
+    char *copy = malloc(length + 1U);
+    if (copy == NULL) {
+        (void)umi_mutex_unlock(model->mutex);
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    memcpy(copy, ContentBytes(model, index), length);
+    copy[length] = '\0';
+    *outText = copy;
+    *outLength = length;
+    (void)umi_mutex_unlock(model->mutex);
+    return UMI_STATUS_OK;
+}
+
+/* Pair allocation and release within the same Framework runtime. */
+void UmiUiDocumentViewModelFreeText(char *text)
+{
+    free(text);
+}
+
+/* Navigation can inspect the length/revision without copying the document. */
+UmiStatus UmiUiDocumentViewModelTextInfo(const UmiUiDocumentViewModel *model,
+    const char *viewId, UmiUiDocumentTextInfo *outInfo)
+{
+    if (model == NULL || viewId == NULL || outInfo == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)umi_mutex_lock(model->mutex);
+    size_t index = find_item(model, viewId);
+    if (index == SIZE_MAX) {
+        (void)umi_mutex_unlock(model->mutex);
+        return UMI_STATUS_NOT_FOUND;
+    }
+    *outInfo = (UmiUiDocumentTextInfo){model->content[index].length,
+        model->content[index].revision,
+        model->content[index].length < UMI_UI_DOCUMENT_CONTENT_CAPACITY};
     (void)umi_mutex_unlock(model->mutex);
     return UMI_STATUS_OK;
 }
@@ -403,6 +595,11 @@ UmiStatus umi_ui_document_view_model_open_preview(
             model->items[index].active = 0;
         }
     }
+    model->allocated_bytes -= model->content[target].capacity;
+    free(model->content[target].bytes);
+    model->content[target] = (UmiUiDocumentContent){0};
+    model->content[target].length = strlen(preview.source_text);
+    model->content[target].revision = 1U;
     model->items[target] = preview;
     model->revision = umi_ui_next_revision(model->revision);
     (void)umi_mutex_unlock(model->mutex);
@@ -589,11 +786,14 @@ UmiStatus umi_ui_document_view_model_place(
         return UMI_STATUS_NOT_FOUND;
     }
     item = model->items[index];
+    UmiUiDocumentContent movingContent = model->content[index];
+    memset(&model->content[index], 0, sizeof(model->content[index]));
     erase_at(model, index);
     status = copy_identifier(item.group_id, sizeof(item.group_id), group_id);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         insert_at(model, index, &item);
+        model->content[index] = movingContent;
         (void)umi_mutex_unlock(model->mutex);
         return status;
     }
@@ -616,6 +816,7 @@ UmiStatus umi_ui_document_view_model_place(
         insert_index = last_group_index + 1U;
     }
     insert_at(model, insert_index, &item);
+    model->content[insert_index] = movingContent;
 
     /* Apply this operation only while the related capability or state is available. */
     if (item.active) {

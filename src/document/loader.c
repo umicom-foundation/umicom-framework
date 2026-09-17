@@ -68,6 +68,15 @@ UmiStatus umi_document_load(const UmiDocumentProvider *provider,
     if (options != NULL) effective = *options;
     /* Apply this branch only when its contract condition is satisfied. */
     if (effective.maximum_bytes == 0U) effective.maximum_bytes = UMI_DOCUMENT_DEFAULT_MAXIMUM_BYTES;
+    /* Reject an already oversized resource before the provider allocates a
+     * whole read buffer. Providers without stat retain the read-and-check
+     * route. Recheck the returned size below: the resource can change. */
+    UmiDocumentFileInfo info = {0};
+    status = umi_document_provider_stat(provider, resource, &info);
+    if (status == UMI_STATUS_OK && info.byte_count > effective.maximum_bytes)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (status != UMI_STATUS_OK && status != UMI_STATUS_NOT_IMPLEMENTED)
+        return status;
     status = umi_document_provider_read(provider, resource, &bytes, &byte_count);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;

@@ -81,8 +81,7 @@ static void prune_notebook(UmiGtk4Adapter *adapter, GtkWidget *notebook,
             ? g_object_get_data(G_OBJECT(gtk_text_view_get_buffer(GTK_TEXT_VIEW(view))), "umicom-editor-snapshot") : NULL;
         if (id == NULL || view == NULL ||
             umi_ui_document_view_model_find(documents, id, &current) != UMI_STATUS_OK ||
-            (previous != NULL && (strcmp(previous->document_id, current.document_id) != 0 ||
-                                 strcmp(previous->uri, current.uri) != 0))) {
+            (previous != NULL && strcmp(previous->document_id, current.document_id) != 0)) {
             if (id != NULL) invalidate_editor_identity(adapter, id);
             gtk_notebook_remove_page(GTK_NOTEBOOK(notebook), page_index);
         } else {
@@ -299,13 +298,36 @@ static void editor_action_free(gpointer data)
     if (action != NULL) { g_free(action->text); g_free(action); }
 }
 
-/* Report the actual public snapshot capacity without hard-coding its size. */
+/* A text revision avoids copying large drafts during unrelated status ticks.
+ * The snapshot key keeps its original public type for existing integrations. */
+static uint64_t EditorContentRevision(GtkTextBuffer *buffer)
+{
+    const uint64_t *revision = g_object_get_data(G_OBJECT(buffer), "umicom-editor-text-revision");
+    return revision != NULL ? *revision : 0U;
+}
+
+/* Keep native typing in sync without resetting the GtkTextBuffer undo stack. */
+static void EditorRememberRevision(GtkTextBuffer *buffer, UmiUiDocumentViewModel *model,
+    const char *viewId)
+{
+    UmiUiDocumentTextInfo info;
+    if (UmiUiDocumentViewModelTextInfo(model, viewId, &info) != UMI_STATUS_OK) return;
+    uint64_t *revision = g_object_get_data(G_OBJECT(buffer), "umicom-editor-text-revision");
+    if (revision == NULL) {
+        revision = g_try_new(uint64_t, 1);
+        if (revision == NULL) return; /* A later refresh compares the full text. */
+        g_object_set_data_full(G_OBJECT(buffer), "umicom-editor-text-revision", revision, g_free);
+    }
+    *revision = info.text_revision;
+}
+
+/* Report the shared document limit rather than the legacy preview size. */
 static void report_editor_capacity(UmiGtk4Adapter *adapter)
 {
     char message[160];
     (void)g_snprintf(message, sizeof(message),
         "Insertion not applied: this editor supports up to %zu UTF-8 bytes per document",
-        (size_t)UMI_UI_DOCUMENT_CONTENT_CAPACITY - 1U);
+        (size_t)UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES);
     gtk_label_set_text(GTK_LABEL(adapter->status_label), message);
 }
 
@@ -363,12 +385,15 @@ static void on_editor_end_user_action(GtkTextBuffer *buffer, gpointer user_data)
         gtk_text_buffer_get_iter_at_offset(buffer, &insert, action->insert_offset);
         gtk_text_buffer_get_iter_at_offset(buffer, &bound, action->bound_offset);
         gtk_text_buffer_select_range(buffer, &insert, &bound);
-        (void)g_strlcpy(current.source_text, action->document.source_text, sizeof(current.source_text));
         current.dirty = action->document.dirty;
         current.preview = action->document.preview;
         current.cursor_offset = action->document.cursor_offset;
         current.selection_length = action->document.selection_length;
-        (void)umi_ui_document_view_model_upsert(umi_ui_workbench_documents(workbench), &current);
+        (void)UmiUiDocumentViewModelUpsertText(umi_ui_workbench_documents(workbench),
+            &current, action->text, strlen(action->text));
+        (void)umi_ui_document_view_model_find(umi_ui_workbench_documents(workbench),
+            current.view_id, &current);
+        EditorRememberRevision(buffer, umi_ui_workbench_documents(workbench), current.view_id);
         cached = g_object_get_data(G_OBJECT(buffer), "umicom-editor-snapshot");
         if (cached != NULL) {
             (void)g_strlcpy(cached->source_text, current.source_text, sizeof(cached->source_text));
@@ -381,11 +406,9 @@ static void on_editor_end_user_action(GtkTextBuffer *buffer, gpointer user_data)
     editor_action_free(action);
 }
 
-/* The reference adapter currently edits a bounded presentation snapshot.
- * Reject an oversized insertion before GTK changes its working copy rather
- * than allowing a later Save operation to silently persist a truncated draft.
- * Deletions are unaffected, and authoritative model refreshes bypass this
- * native-input guard while applying_document_state is set. */
+/* Reject an oversized insertion before GTK changes its working copy. The
+ * bound applies to the complete draft, not to the small ABI preview. Grouped
+ * paste rollback retains any text deleted before this insertion was checked. */
 static void on_editor_insert_text(GtkTextBuffer *buffer, GtkTextIter *location,
                                   char *text, int length, gpointer user_data)
 {
@@ -393,7 +416,7 @@ static void on_editor_insert_text(GtkTextBuffer *buffer, GtkTextIter *location,
     GtkTextIter start, end;
     char *current;
     size_t existing_length, inserted_length;
-    const size_t maximum = UMI_UI_DOCUMENT_CONTENT_CAPACITY - 1U;
+    const size_t maximum = UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES;
     (void)location;
     if (binding == NULL || binding->adapter == NULL ||
         binding->adapter->applying_document_state) return;
@@ -412,7 +435,7 @@ static void on_editor_insert_text(GtkTextBuffer *buffer, GtkTextIter *location,
     }
 }
 
-/* Publish accepted native edits without truncating the bounded document copy.
+/* Publish accepted native edits without truncating the complete document.
  * The last applied source is remembered so status refreshes preserve the
  * existing buffer, selection, scroll position and undo history. */
 static void on_editor_buffer_changed(GtkTextBuffer *text_buffer,
@@ -445,22 +468,36 @@ static void on_editor_buffer_changed(GtkTextBuffer *text_buffer,
     if (text == NULL) return;
     /* Defensive recovery for a buffer producer that bypassed insert-text.
      * Restore the complete last accepted snapshot, never a truncated prefix. */
-    if (strlen(text) >= sizeof(document.source_text) || !g_utf8_validate(text, -1, NULL)) {
-        binding->adapter->applying_document_state = 1;
-        gtk_text_buffer_set_text(text_buffer, document.source_text, -1);
-        binding->adapter->applying_document_state = 0;
+    UmiUiDocumentViewModel *documents = umi_ui_workbench_documents(workbench);
+    size_t length = strlen(text);
+    UmiStatus status = document.read_only ? UMI_STATUS_PERMISSION_DENIED :
+        (length > UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES ? UMI_STATUS_CAPACITY_EXCEEDED :
+        (!g_utf8_validate(text, -1, NULL) ? UMI_STATUS_INVALID_ARGUMENT : UMI_STATUS_OK));
+    document.dirty = 1;
+    document.preview = 0;
+    if (status == UMI_STATUS_OK)
+        status = UmiUiDocumentViewModelUpsertText(documents, &document, text, length);
+    if (status != UMI_STATUS_OK) {
+        char *accepted = NULL;
+        size_t acceptedLength = 0U;
+        UmiGtk4EditorAction *action = g_object_get_data(G_OBJECT(text_buffer), "umicom-editor-action");
+        if (action != NULL) action->rejected = true;
+        if (UmiUiDocumentViewModelCopyText(documents, document.view_id,
+                &accepted, &acceptedLength) == UMI_STATUS_OK) {
+            binding->adapter->applying_document_state = 1;
+            gtk_text_buffer_set_text(text_buffer, accepted, (int)acceptedLength);
+            binding->adapter->applying_document_state = 0;
+            UmiUiDocumentViewModelFreeText(accepted);
+        }
         gtk_label_set_text(GTK_LABEL(binding->adapter->status_label),
-            "Edit not applied: the document exceeds the editor's supported UTF-8 size");
+            "Edit not applied: check the document size, read-only state and available memory");
         g_free(text);
         return;
     }
-    (void)g_strlcpy(document.source_text, text, sizeof(document.source_text));
-    document.dirty = 1;
-    document.preview = 0;
-    (void)umi_ui_document_view_model_upsert(
-        umi_ui_workbench_documents(workbench), &document);
-    /* Native typing is already present in this buffer. Remember that source
-     * copy so a later status refresh cannot mistake it for an external edit. */
+    /* Keep the inline preview for metadata consumers, and record the complete
+     * draft revision so a timer cannot replace a tail edit with old text. */
+    (void)umi_ui_document_view_model_find(documents, document.view_id, &document);
+    EditorRememberRevision(text_buffer, documents, document.view_id);
     UmiUiDocumentViewSnapshot *cached = g_object_get_data(G_OBJECT(text_buffer), "umicom-editor-snapshot");
     if (cached != NULL) (void)g_strlcpy(cached->source_text, document.source_text, sizeof(cached->source_text));
     gtk_label_set_text(GTK_LABEL(binding->adapter->status_label),
@@ -750,16 +787,38 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
         adapter->editor_notebooks_initialised = 1;
     }
     documents = umi_ui_workbench_documents(workbench);
-    /* Reject malformed presentation text before touching any existing page.
-     * Full documents are owned elsewhere; this adapter accepts only a complete
-     * UTF-8 snapshot that fits the public presentation capacity. */
+    /* Stage only changed text/selection before touching pages. Routine status
+     * refreshes read metadata and revisions, not every full source file. */
+    char *fullTexts[UMI_UI_DOCUMENT_VIEW_MAX] = {0};
+    size_t fullLengths[UMI_UI_DOCUMENT_VIEW_MAX] = {0};
     for (index = 0U; index < umi_ui_document_view_model_count(documents); ++index) {
         UmiUiDocumentViewSnapshot document;
+        UmiUiDocumentTextInfo info;
+        GtkWidget *notebook = NULL;
         UmiStatus status = umi_ui_document_view_model_at(documents, index, &document);
-        if (status != UMI_STATUS_OK) return status;
-        if (memchr(document.source_text, '\0', sizeof(document.source_text)) == NULL ||
-            !g_utf8_validate(document.source_text, -1, NULL))
-            return UMI_STATUS_INVALID_ARGUMENT;
+        if (status == UMI_STATUS_OK)
+            status = UmiUiDocumentViewModelTextInfo(documents, document.view_id, &info);
+        GtkWidget *page = status == UMI_STATUS_OK
+            ? find_document_page(adapter, document.view_id, &notebook) : NULL;
+        GtkWidget *view = page != NULL ? g_object_get_data(G_OBJECT(page), "umicom-editor-view") : NULL;
+        GtkTextBuffer *buffer = view != NULL ? gtk_text_view_get_buffer(GTK_TEXT_VIEW(view)) : NULL;
+        const UmiUiDocumentViewSnapshot *previous = buffer != NULL
+            ? g_object_get_data(G_OBJECT(buffer), "umicom-editor-snapshot") : NULL;
+        if (status == UMI_STATUS_OK && (previous == NULL ||
+            strcmp(previous->document_id, document.document_id) != 0 ||
+            EditorContentRevision(buffer) != info.text_revision ||
+            previous->cursor_offset != document.cursor_offset ||
+            previous->selection_length != document.selection_length)) {
+            status = UmiUiDocumentViewModelCopyText(documents, document.view_id,
+                &fullTexts[index], &fullLengths[index]);
+            if (status == UMI_STATUS_OK && !g_utf8_validate(fullTexts[index], (gssize)fullLengths[index], NULL))
+                status = UMI_STATUS_INVALID_ARGUMENT;
+        }
+        if (status != UMI_STATUS_OK) {
+            for (size_t release = 0U; release <= index; ++release)
+                UmiUiDocumentViewModelFreeText(fullTexts[release]);
+            return status;
+        }
     }
     adapter->applying_document_state = 1;
     prune_notebook(adapter, adapter->document_notebook, documents);
@@ -895,35 +954,36 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
             }
             /* Compare the last applied model copy, not unrelated workbench
              * revisions. Native typing already updated its existing buffer. */
-            if (previous == NULL || strcmp(previous->source_text, document.source_text) != 0) {
+            if (fullTexts[index] != NULL) {
                 GtkTextIter start, end;
                 char *current_text;
                 gtk_text_buffer_get_bounds(text_buffer, &start, &end);
                 current_text = gtk_text_buffer_get_text(text_buffer, &start, &end, TRUE);
-                if (current_text == NULL || strcmp(current_text, document.source_text) != 0) {
+                if (current_text == NULL || strcmp(current_text, fullTexts[index]) != 0) {
                     /* An authoritative external edit supersedes a pending
                      * native action; its old draft must not be replayed. */
                     g_object_set_data(G_OBJECT(text_buffer), "umicom-editor-action", NULL);
-                    gtk_text_buffer_set_text(text_buffer, document.source_text, -1);
+                    gtk_text_buffer_set_text(text_buffer, fullTexts[index], (int)fullLengths[index]);
                     text_changed = true;
                 }
                 g_free(current_text);
             }
-            if (previous == NULL || text_changed || previous->cursor_offset != document.cursor_offset ||
-                previous->selection_length != document.selection_length)
+            if (fullTexts[index] != NULL && (previous == NULL || text_changed ||
+                previous->cursor_offset != document.cursor_offset ||
+                previous->selection_length != document.selection_length))
             {
                 GtkTextIter cursor;
                 GtkTextIter selection_end;
-                size_t text_length = strlen(document.source_text);
+                size_t text_length = fullLengths[index];
                 size_t cursor_offset = document.cursor_offset <= text_length
                     ? document.cursor_offset : text_length;
                 size_t selection_length = document.selection_length <=
                     text_length - cursor_offset
                     ? document.selection_length : text_length - cursor_offset;
                 gtk_text_buffer_get_iter_at_offset(text_buffer, &cursor,
-                    editor_byte_character_offset(document.source_text, cursor_offset));
+                    editor_byte_character_offset(fullTexts[index], cursor_offset));
                 gtk_text_buffer_get_iter_at_offset(text_buffer, &selection_end,
-                    editor_byte_character_offset(document.source_text, cursor_offset + selection_length));
+                    editor_byte_character_offset(fullTexts[index], cursor_offset + selection_length));
                 gtk_text_buffer_select_range(text_buffer, &cursor, &selection_end);
             }
             gtk_text_view_set_editable(GTK_TEXT_VIEW(view),
@@ -1000,6 +1060,7 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
                 g_object_set_data_full(G_OBJECT(text_buffer), "umicom-editor-snapshot", previous, g_free);
             }
             *previous = document;
+            EditorRememberRevision(text_buffer, documents, document.view_id);
             /* Apply this operation only while the related capability or state is available. */
             if (document.active) {
                 gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook),
@@ -1007,6 +1068,8 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
             }
         }
     }
+    for (size_t release = 0U; release < UMI_UI_DOCUMENT_VIEW_MAX; ++release)
+        UmiUiDocumentViewModelFreeText(fullTexts[release]);
     adapter->document_page_switch_handler =
         g_signal_connect(adapter->document_notebook,
                          "switch-page",

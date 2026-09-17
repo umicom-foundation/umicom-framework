@@ -94,6 +94,14 @@ UmiStatus UmiEditorSearchReplaceAll(const char *text, size_t textBytes,
     size_t replacementBytes, const UmiEditorSearchOptions *options,
     char *outText, size_t capacity, size_t *outCount);
 
+/** Measure a complete non-overlapping replacement without allocating or
+ * writing text. The returned byte count excludes the terminating zero. This
+ * uses the same case/word rules as ReplaceAll. Outputs remain unchanged on
+ * failure; callers must check byte-count + 1 before allocating. */
+UmiStatus UmiEditorSearchReplaceAllSize(const char *text, size_t textBytes,
+    const char *needle, size_t needleBytes, size_t replacementBytes,
+    const UmiEditorSearchOptions *options, size_t *outBytes, size_t *outCount);
+
 #ifdef __cplusplus
 }
 #endif

@@ -27,6 +27,9 @@ extern "C" {
 #define UMI_UI_DOCUMENT_VIEW_MAX 256U
 #define UMI_UI_DOCUMENT_URI_CAPACITY 1024U
 #define UMI_UI_DOCUMENT_CONTENT_CAPACITY 16384U
+/* The ABI snapshot remains small. Full UTF-8 drafts are owned by the model. */
+#define UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES (8U * 1024U * 1024U)
+#define UMI_UI_DOCUMENT_TEXT_BUDGET_BYTES (64U * 1024U * 1024U)
 #define UMI_UI_PRIMARY_EDITOR_GROUP_ID "editor.primary"
 #define UMI_UI_SECONDARY_EDITOR_GROUP_ID "editor.secondary"
 
@@ -48,7 +51,9 @@ typedef struct UmiUiDocumentViewSnapshot {
     char language_id[UMI_UI_ID_CAPACITY];
     /*
      * A bounded presentation copy used by simple adapters and welcome pages.
-     * Full documents remain owned by the editor text-buffer service.
+     * This is a preview, not a file-size limit. Use the complete-text APIs
+     * below for reading or replacing real documents; never save this preview
+     * as the contents of a large file.
      */
     char source_text[UMI_UI_DOCUMENT_CONTENT_CAPACITY];
     /* Adapter-independent caret and selection state used by Find and Go To. */
@@ -124,6 +129,42 @@ size_t umi_ui_document_view_model_count(const UmiUiDocumentViewModel *model);
  * applications.
  */
 uint64_t umi_ui_document_view_model_revision(const UmiUiDocumentViewModel *model);
+
+/** Describe the complete draft, not just source_text in the legacy snapshot.
+ * text_revision changes only when the text or document identity changes.
+ * byte_count excludes the terminating zero; preview_complete is false when
+ * source_text contains only the UTF-8-safe beginning of the draft. */
+typedef struct UmiUiDocumentTextInfo {
+    size_t byte_count;
+    uint64_t text_revision;
+    int preview_complete;
+} UmiUiDocumentTextInfo;
+
+/** Atomically publish metadata and complete text. The caller keeps ownership.
+ * Text may contain UTF-8 bytes but not embedded zero bytes. The per-document
+ * size and aggregate model allocation budgets are enforced before mutation.
+ * Ordinary upsert still handles small documents. For a large document it may
+ * change metadata only: a changed bounded preview is rejected, not saved as
+ * a truncated replacement. Use this operation for intentional full edits. */
+UmiStatus UmiUiDocumentViewModelUpsertText(UmiUiDocumentViewModel *model,
+    const UmiUiDocumentViewSnapshot *item, const char *text, size_t length);
+
+/** Reserve a draft's storage without changing its text or semantic revision.
+ * Coordinators reserve before changing their document store so publication
+ * of an accepted replacement cannot subsequently fail for lack of memory.
+ * Mutations spanning multiple services run on their common owner's thread. */
+UmiStatus UmiUiDocumentViewModelReserveText(UmiUiDocumentViewModel *model,
+    const char *viewId, size_t length);
+
+/** Obtain an owned, zero-terminated copy of the complete draft. Outputs are
+ * written only on success. Release it with UmiUiDocumentViewModelFreeText. */
+UmiStatus UmiUiDocumentViewModelCopyText(const UmiUiDocumentViewModel *model,
+    const char *viewId, char **outText, size_t *outLength);
+void UmiUiDocumentViewModelFreeText(char *text);
+
+/** Read inexpensive complete-text metadata without copying the draft. */
+UmiStatus UmiUiDocumentViewModelTextInfo(const UmiUiDocumentViewModel *model,
+    const char *viewId, UmiUiDocumentTextInfo *outInfo);
 
 /* Open a replaceable preview without disturbing dirty or pinned editors. */
 UmiStatus umi_ui_document_view_model_open_preview(

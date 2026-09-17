@@ -25,6 +25,10 @@ extern "C" {
 #endif
 
 #define UMI_DOCUMENT_COORDINATOR_HISTORY_CAPACITY 32U
+/* Each undo or redo stack retains at most this many owned text bytes,
+ * including terminators. Oldest entries are evicted only after a successful
+ * edit. The snapshot reports the number of steps still available. */
+#define UMI_DOCUMENT_COORDINATOR_HISTORY_BYTE_BUDGET (16U * 1024U * 1024U)
 
 /**
  * Represent the document working copy snapshot data shared with callers of this public

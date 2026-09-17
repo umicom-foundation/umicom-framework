@@ -182,10 +182,14 @@ static int Navigation(Fixture *fixture, const char *name)
         return 0;
     }
     if (strcmp(name, "nav-replace-all-capacity") == 0) {
-        char replacement[UMI_UI_DOCUMENT_CONTENT_CAPACITY];
-        memset(replacement, 'x', sizeof replacement - 1U); replacement[sizeof replacement - 1U] = '\0';
+        char *replacement = malloc(UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES + 1U);
+        CHECK(replacement != NULL);
+        memset(replacement, 'x', UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES);
+        replacement[UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES] = '\0';
         CHECK(ReadView(fixture, &before) == 0);
-        CHECK(UmiDocumentCoordinatorReplaceAll(fixture->documents, "note", replacement, &count) == UMI_STATUS_CAPACITY_EXCEEDED && count == 999U);
+        UmiStatus rejected = UmiDocumentCoordinatorReplaceAll(fixture->documents, "note", replacement, &count);
+        free(replacement);
+        CHECK(rejected == UMI_STATUS_CAPACITY_EXCEEDED && count == 999U);
         CHECK(ReadView(fixture, &view) == 0 && memcmp(&view, &before, sizeof view) == 0);
         CHECK(umi_document_coordinator_active_snapshot(fixture->documents, &after) == UMI_STATUS_OK && after.revision == original.revision && after.undo_count == 0);
         return 0;
@@ -231,9 +235,14 @@ static int Navigation(Fixture *fixture, const char *name)
         return 0;
     }
     if (strcmp(name, "nav-history-capacity") == 0) {
-        char large[UMI_UI_DOCUMENT_CONTENT_CAPACITY + 1U];
-        memset(large, 'x', sizeof large - 1U); large[sizeof large - 1U] = '\0';
-        CHECK(umi_document_store_replace_text(fixture->store, original.document_id, large, strlen(large)) == UMI_STATUS_OK);
+        char *large = malloc(UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES + 2U);
+        CHECK(large != NULL);
+        memset(large, 'x', UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES + 1U);
+        large[UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES + 1U] = '\0';
+        UmiStatus stored = umi_document_store_replace_text(fixture->store, original.document_id,
+            large, UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES + 1U);
+        free(large);
+        CHECK(stored == UMI_STATUS_OK);
         CHECK(umi_document_coordinator_sync_active(fixture->documents) == UMI_STATUS_OK);
         CHECK(umi_document_coordinator_active_snapshot(fixture->documents, &original) == UMI_STATUS_OK);
         CHECK(umi_document_coordinator_undo(fixture->documents) == UMI_STATUS_CAPACITY_EXCEEDED);
@@ -384,10 +393,14 @@ static int Run(Fixture *fixture, const char *name)
         return 0;
     }
     if (strcmp(name, "replace-capacity") == 0) {
-        char replacement[UMI_UI_DOCUMENT_CONTENT_CAPACITY];
+        char *replacement = malloc(UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES + 1U);
         char *text = NULL; size_t length;
-        memset(replacement, 'a', sizeof replacement - 1U); replacement[sizeof replacement - 1U] = '\0';
-        CHECK(umi_document_coordinator_replace(fixture->documents, "notes", replacement, NULL) == UMI_STATUS_CAPACITY_EXCEEDED);
+        CHECK(replacement != NULL);
+        memset(replacement, 'a', UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES);
+        replacement[UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES] = '\0';
+        UmiStatus rejected = umi_document_coordinator_replace(fixture->documents, "notes", replacement, NULL);
+        free(replacement);
+        CHECK(rejected == UMI_STATUS_CAPACITY_EXCEEDED);
         CHECK(umi_document_store_copy_text(fixture->store, first.document_id, &text, &length) == UMI_STATUS_OK);
         int unchanged = strcmp(text, "int notes = 1;\n") == 0;
         umi_document_store_free_text(text);

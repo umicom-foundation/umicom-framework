@@ -213,18 +213,17 @@ UmiStatus UmiEditorSearchNavigate(const char *haystack, size_t haystackBytes,
     return UMI_STATUS_OK;
 }
 
-/* The first pass proves the complete result fits. No caller-visible byte is
- * written until that pass succeeds; replacement never searches its own output. */
-UmiStatus UmiEditorSearchReplaceAll(const char *text, size_t textBytes,
-    const char *needle, size_t needleBytes, const char *replacement,
-    size_t replacementBytes, const UmiEditorSearchOptions *options,
-    char *outText, size_t capacity, size_t *outCount)
+/* Count the original matches once before allocating a complete replacement.
+ * The calculation is shared with the bounded-output API below. */
+UmiStatus UmiEditorSearchReplaceAllSize(const char *text, size_t textBytes,
+    const char *needle, size_t needleBytes, size_t replacementBytes,
+    const UmiEditorSearchOptions *options, size_t *outBytes, size_t *outCount)
 {
     UmiEditorSearchOptions effective = {UMI_EDITOR_SEARCH_CASE_SENSITIVE, 0, 0, 0};
     size_t resultLength = textBytes;
     size_t count = 0U;
     if ((text == NULL && textBytes != 0U) || needle == NULL || needleBytes == 0U ||
-        (replacement == NULL && replacementBytes != 0U) || outText == NULL || capacity == 0U)
+        outBytes == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     if (options != NULL) effective = *options;
     if (effective.case_mode < UMI_EDITOR_SEARCH_CASE_SENSITIVE ||
@@ -243,7 +242,30 @@ UmiStatus UmiEditorSearchReplaceAll(const char *text, size_t textBytes,
             offset += needleBytes;
         } else ++offset;
     }
+    *outBytes = resultLength;
+    if (outCount != NULL) *outCount = count;
+    return UMI_STATUS_OK;
+}
+
+/* The first pass proves the complete result fits. No caller-visible byte is
+ * written until that pass succeeds; replacement never searches its own output. */
+UmiStatus UmiEditorSearchReplaceAll(const char *text, size_t textBytes,
+    const char *needle, size_t needleBytes, const char *replacement,
+    size_t replacementBytes, const UmiEditorSearchOptions *options,
+    char *outText, size_t capacity, size_t *outCount)
+{
+    UmiEditorSearchOptions effective = {UMI_EDITOR_SEARCH_CASE_SENSITIVE, 0, 0, 0};
+    size_t resultLength = 0U;
+    size_t count = 0U;
+    if ((replacement == NULL && replacementBytes != 0U) || outText == NULL || capacity == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = UmiEditorSearchReplaceAllSize(text, textBytes, needle,
+        needleBytes, replacementBytes, options, &resultLength, &count);
+    if (status != UMI_STATUS_OK) return status;
     if (resultLength >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (options != NULL) effective = *options;
+    int sensitive = effective.case_mode == UMI_EDITOR_SEARCH_CASE_SENSITIVE ||
+        (effective.case_mode == UMI_EDITOR_SEARCH_CASE_SMART && needle_has_upper(needle, needleBytes));
     size_t used = 0U;
     for (size_t offset = 0U; offset < textBytes;) {
         if (needleBytes <= textBytes - offset &&

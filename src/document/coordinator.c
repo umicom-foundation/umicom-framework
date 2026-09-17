@@ -60,6 +60,8 @@ static void history_clear(char **items, size_t *count)
     *count = 0U;
 }
 
+static void HistoryPushOwned(char **items, size_t *count, char *text);
+
 /* Provide the history push operation used by this module and its client applications. */
 static UmiStatus history_push(char **items, size_t *count, const char *text)
 {
@@ -71,6 +73,8 @@ static UmiStatus history_push(char **items, size_t *count, const char *text)
      */
     if (items == NULL || count == NULL || text == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     length = strlen(text);
+    if (length >= UMI_DOCUMENT_COORDINATOR_HISTORY_BYTE_BUDGET)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
     copy = (char *)malloc(length + 1U);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -78,21 +82,20 @@ static UmiStatus history_push(char **items, size_t *count, const char *text)
      */
     if (copy == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     (void)memcpy(copy, text, length + 1U);
-    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (*count == UMI_DOCUMENT_COORDINATOR_HISTORY_CAPACITY) {
-        free(items[0]);
-        (void)memmove(&items[0], &items[1],
-                      (UMI_DOCUMENT_COORDINATOR_HISTORY_CAPACITY - 1U) * sizeof(items[0]));
-        *count -= 1U;
-    }
-    items[(*count)++] = copy;
+    HistoryPushOwned(items, count, copy);
     return UMI_STATUS_OK;
 }
 
 /* History takes ownership only after an edit has committed successfully. */
 static void HistoryPushOwned(char **items, size_t *count, char *text)
 {
-    if (*count == UMI_DOCUMENT_COORDINATOR_HISTORY_CAPACITY) {
+    size_t incoming = strlen(text) + 1U;
+    size_t bytes = 0U;
+    for (size_t index = 0U; index < *count; ++index)
+        bytes += strlen(items[index]) + 1U;
+    while (*count != 0U && (*count == UMI_DOCUMENT_COORDINATOR_HISTORY_CAPACITY ||
+            incoming > UMI_DOCUMENT_COORDINATOR_HISTORY_BYTE_BUDGET - bytes)) {
+        bytes -= strlen(items[0]) + 1U;
         free(items[0]);
         memmove(items, items + 1U, (*count - 1U) * sizeof *items);
         --*count;
@@ -184,11 +187,6 @@ static UmiStatus refresh_view(UmiDocumentCoordinator *coordinator, size_t index)
     status = copy_store_text(coordinator, index, &text, &length);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
-    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (length >= UMI_UI_DOCUMENT_CONTENT_CAPACITY) {
-        umi_document_store_free_text(text);
-        return UMI_STATUS_CAPACITY_EXCEEDED;
-    }
     existingView = umi_ui_document_view_model_find(
         umi_ui_workbench_documents(coordinator->workbench), entry->view_id, &view) == UMI_STATUS_OK;
     if (!existingView) (void)memset(&view, 0, sizeof(view));
@@ -196,7 +194,6 @@ static UmiStatus refresh_view(UmiDocumentCoordinator *coordinator, size_t index)
     (void)snprintf(view.document_id, sizeof(view.document_id),
                    "document.%llu", (unsigned long long)entry->document_id);
     (void)snprintf(view.title, sizeof(view.title), "%s", store_snapshot.display_name);
-    (void)snprintf(view.source_text, sizeof(view.source_text), "%s", text);
     view.dirty = store_snapshot.dirty || !store_snapshot.has_path;
     if (!existingView) {
         view.active = 1;
@@ -216,9 +213,9 @@ static UmiStatus refresh_view(UmiDocumentCoordinator *coordinator, size_t index)
     (void)snprintf(view.language_id, sizeof(view.language_id), "%s", language.language_id);
     (void)snprintf(view.icon_name, sizeof(view.icon_name), "%.*s",
                    (int)sizeof(view.icon_name) - 1, language.icon_name);
+    status = UmiUiDocumentViewModelUpsertText(
+        umi_ui_workbench_documents(coordinator->workbench), &view, text, length);
     umi_document_store_free_text(text);
-    status = umi_ui_document_view_model_upsert(
-        umi_ui_workbench_documents(coordinator->workbench), &view);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && !existingView) {
         status = umi_ui_workbench_activate_document(coordinator->workbench,
@@ -289,18 +286,27 @@ static UmiStatus import_existing_views(UmiDocumentCoordinator *coordinator)
                                         &document_id);
         /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
-        status = umi_document_store_replace_text(coordinator->store,
-                                                 document_id,
-                                                 view.source_text,
-                                                 strlen(view.source_text));
+        char *importedText = NULL;
+        size_t importedLength = 0U;
+        status = UmiUiDocumentViewModelCopyText(views, view.view_id, &importedText, &importedLength);
+        if (status == UMI_STATUS_OK)
+            status = umi_document_store_replace_text(coordinator->store,
+                document_id, importedText, importedLength);
+        UmiUiDocumentViewModelFreeText(importedText);
         /* Preserve the original failure result so the caller can respond to the correct cause. */
-        if (status != UMI_STATUS_OK) return status;
+        if (status != UMI_STATUS_OK) {
+            (void)umi_document_store_close(coordinator->store, document_id, 1);
+            return status;
+        }
         status = register_entry(coordinator, document_id,
                                 UMI_DOCUMENT_ENCODING_UTF8,
                                 UMI_DOCUMENT_LINE_ENDING_LF,
                                 NULL, view.view_id, &entry_index);
         /* Preserve the original failure result so the caller can respond to the correct cause. */
-        if (status != UMI_STATUS_OK) return status;
+        if (status != UMI_STATUS_OK) {
+            (void)umi_document_store_close(coordinator->store, document_id, 1);
+            return status;
+        }
         /* Built-in umicom:// welcome/reference text is not an unsaved user
          * file until the learner actually edits it. Restored dirty drafts are
          * never exempted from saving. */
@@ -346,6 +352,10 @@ UmiStatus umi_document_coordinator_create(
     if (status == UMI_STATUS_OK) status = import_existing_views(coordinator);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
+        /* A failed import owns only the records it just created. Existing
+         * caller records and contributed views remain available for retry. */
+        for (size_t index = 0U; index < coordinator->count; ++index)
+            (void)umi_document_store_close(store, coordinator->entries[index].document_id, 1);
         umi_document_coordinator_destroy(coordinator);
         return status;
     }
@@ -501,7 +511,7 @@ UmiStatus umi_document_coordinator_open(UmiDocumentCoordinator *coordinator,
     if (coordinator->count >= UMI_DOCUMENT_MAX_WORKING_COPIES ||
         umi_ui_document_view_model_count(umi_ui_workbench_documents(coordinator->workbench)) >= UMI_UI_DOCUMENT_VIEW_MAX)
         return UMI_STATUS_CAPACITY_EXCEEDED;
-    options.maximum_bytes = UMI_UI_DOCUMENT_CONTENT_CAPACITY - 1U;
+    options.maximum_bytes = UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES;
     options.normalise_to = UMI_DOCUMENT_LINE_ENDING_LF;
     status = umi_document_load(&coordinator->provider, path, &options, &loaded);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -517,6 +527,10 @@ UmiStatus umi_document_coordinator_open(UmiDocumentCoordinator *coordinator,
         if (backslash != NULL && (separator == NULL || backslash > separator)) separator = backslash;
     }
 #endif
+    if (loaded.text_length > UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES) {
+        umi_document_load_result_dispose(&loaded);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
     name = separator != NULL ? separator + 1U : path;
     status = umi_document_store_create_loaded(coordinator->store, name, path,
                                               loaded.text, loaded.text_length,
@@ -539,39 +553,37 @@ static UmiStatus sync_index(UmiDocumentCoordinator *coordinator, size_t index)
 {
     UmiUiDocumentViewSnapshot view;
     char *stored = NULL;
+    char *draft = NULL;
     size_t length = 0U;
-    UmiStatus status;
-    status = umi_ui_document_view_model_find(
-        umi_ui_workbench_documents(coordinator->workbench),
+    size_t draftLength = 0U;
+    UmiUiDocumentViewModel *views = umi_ui_workbench_documents(coordinator->workbench);
+    UmiStatus status = umi_ui_document_view_model_find(views,
         coordinator->entries[index].view_id, &view);
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = UmiUiDocumentViewModelCopyText(views, view.view_id, &draft, &draftLength);
     if (status != UMI_STATUS_OK) return status;
     status = copy_store_text(coordinator, index, &stored, &length);
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status != UMI_STATUS_OK) return status;
-    if (strcmp(stored, view.source_text) != 0) {
+    if (status == UMI_STATUS_OK &&
+        (length != draftLength || memcmp(stored, draft, length) != 0)) {
         char *prepared[UMI_DOCUMENT_COORDINATOR_HISTORY_CAPACITY] = {0};
         size_t preparedCount = 0U;
         /* Allocate before changing either the store or the existing history. */
         status = history_push(prepared, &preparedCount, stored);
-        if (status == UMI_STATUS_OK) {
-            status = umi_document_store_replace_text(
-                coordinator->store, coordinator->entries[index].document_id,
-                view.source_text, strlen(view.source_text));
-        }
+        if (status == UMI_STATUS_OK)
+            status = umi_document_store_replace_text(coordinator->store,
+                coordinator->entries[index].document_id, draft, draftLength);
         if (status == UMI_STATUS_OK) {
             HistoryPushOwned(coordinator->entries[index].undo,
-                &coordinator->entries[index].undo_count,
-                history_pop(prepared, &preparedCount));
-            history_clear(coordinator->entries[index].redo,
-                &coordinator->entries[index].redo_count);
+                &coordinator->entries[index].undo_count, history_pop(prepared, &preparedCount));
+            history_clear(coordinator->entries[index].redo, &coordinator->entries[index].redo_count);
             coordinator->entries[index].pristine_virtual = 0;
         }
         history_clear(prepared, &preparedCount);
-    } else if (view.dirty) {
+    } else if (status == UMI_STATUS_OK && view.dirty) {
         coordinator->entries[index].pristine_virtual = 0;
     }
     umi_document_store_free_text(stored);
+    UmiUiDocumentViewModelFreeText(draft);
     return status;
 }
 
@@ -874,9 +886,12 @@ static UmiStatus apply_history(UmiDocumentCoordinator *coordinator,
     size_t count = redo_direction ? entry->redo_count : entry->undo_count;
     if (count == 0U) return UMI_STATUS_NOT_FOUND;
     target = redo_direction ? entry->redo[count - 1U] : entry->undo[count - 1U];
-    /* A different service can hold a larger store record. Never copy a history
-     * entry into the bounded view until its complete text is known to fit. */
-    if (strlen(target) >= sizeof(view.source_text)) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Reserve the full projection first. A failed allocation leaves the store
+     * and both history stacks unchanged. This runs on the document owner. */
+    size_t targetLength = strlen(target);
+    status = UmiUiDocumentViewModelReserveText(umi_ui_workbench_documents(coordinator->workbench),
+        view.view_id, targetLength);
+    if (status != UMI_STATUS_OK) return status;
     status = copy_store_text(coordinator, index, &current, &current_length);
     if (status != UMI_STATUS_OK) return status;
     status = umi_document_store_replace_text(coordinator->store, entry->document_id,
@@ -887,13 +902,13 @@ static UmiStatus apply_history(UmiDocumentCoordinator *coordinator,
         if (redo_direction) HistoryPushOwned(entry->undo, &entry->undo_count, current);
         else HistoryPushOwned(entry->redo, &entry->redo_count, current);
         current = NULL;
-        strcpy(view.source_text, target);
-        free(target);
         view.dirty = 1;
-        size_t length = strlen(view.source_text);
-        if (view.cursor_offset > length) view.cursor_offset = length;
-        if (view.selection_length > length - view.cursor_offset) view.selection_length = length - view.cursor_offset;
-        status = umi_ui_document_view_model_upsert(umi_ui_workbench_documents(coordinator->workbench), &view);
+        if (view.cursor_offset > targetLength) view.cursor_offset = targetLength;
+        if (view.selection_length > targetLength - view.cursor_offset)
+            view.selection_length = targetLength - view.cursor_offset;
+        status = UmiUiDocumentViewModelUpsertText(umi_ui_workbench_documents(coordinator->workbench),
+            &view, target, targetLength);
+        free(target);
     }
     umi_document_store_free_text(current);
     return status;
@@ -950,8 +965,14 @@ UmiStatus umi_document_coordinator_find(UmiDocumentCoordinator *coordinator,
         coordinator->entries[index].view_id, &view);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
-    status = umi_editor_search_literal(view.source_text, strlen(view.source_text),
-                                       needle, strlen(needle), &options, &results);
+    char *draft = NULL;
+    size_t draftLength = 0U;
+    status = UmiUiDocumentViewModelCopyText(umi_ui_workbench_documents(coordinator->workbench),
+        view.view_id, &draft, &draftLength);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_editor_search_literal(draft, draftLength,
+        needle, strlen(needle), &options, &results);
+    UmiUiDocumentViewModelFreeText(draft);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (status != UMI_STATUS_OK || results.count == 0U) return UMI_STATUS_NOT_FOUND;
     view.cursor_offset = results.matches[0].offset;
@@ -969,26 +990,35 @@ UmiStatus umi_document_coordinator_find(UmiDocumentCoordinator *coordinator,
 /* Prepare the complete new text before changing the store. History entries
  * are preallocated, then transferred only after the store accepts the edit. */
 static UmiStatus CommitViewText(UmiDocumentCoordinator *coordinator, size_t index,
-    const UmiUiDocumentViewSnapshot *before, UmiUiDocumentViewSnapshot *after)
+    const UmiUiDocumentViewSnapshot *before, UmiUiDocumentViewSnapshot *after,
+    const char *beforeText, size_t beforeLength, const char *afterText, size_t afterLength)
 {
     char *stored = NULL;
     char *visible = NULL;
     size_t storedLength = 0U;
     UmiDocumentCoordinatorEntry *entry = &coordinator->entries[index];
+    UmiUiDocumentViewModel *views = umi_ui_workbench_documents(coordinator->workbench);
     if (before->read_only) return UMI_STATUS_PERMISSION_DENIED;
-    if (strcmp(before->source_text, after->source_text) == 0)
-        return umi_ui_document_view_model_upsert(umi_ui_workbench_documents(coordinator->workbench), after);
+    if (afterLength > UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (beforeLength == afterLength && memcmp(beforeText, afterText, beforeLength) == 0)
+        return umi_ui_document_view_model_upsert(views, after);
     UmiStatus status = copy_store_text(coordinator, index, &stored, &storedLength);
     if (status != UMI_STATUS_OK) return status;
-    int pendingDraft = strcmp(stored, before->source_text) != 0;
-    if (pendingDraft) {
-        size_t length = strlen(before->source_text);
-        visible = malloc(length + 1U);
-        if (visible == NULL) { umi_document_store_free_text(stored); return UMI_STATUS_OUT_OF_MEMORY; }
-        memcpy(visible, before->source_text, length + 1U);
+    int pendingDraft = storedLength != beforeLength || memcmp(stored, beforeText, storedLength) != 0;
+    if (storedLength >= UMI_DOCUMENT_COORDINATOR_HISTORY_BYTE_BUDGET) {
+        umi_document_store_free_text(stored);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
     }
-    status = umi_document_store_replace_text(coordinator->store, entry->document_id,
-        after->source_text, strlen(after->source_text));
+    if (pendingDraft) {
+        visible = malloc(beforeLength + 1U);
+        if (visible == NULL) { umi_document_store_free_text(stored); return UMI_STATUS_OUT_OF_MEMORY; }
+        memcpy(visible, beforeText, beforeLength + 1U);
+    }
+    /* Reservation changes storage only. Publication below then needs no
+     * allocation after the authoritative store has accepted the replacement. */
+    status = UmiUiDocumentViewModelReserveText(views, before->view_id, afterLength);
+    if (status == UMI_STATUS_OK)
+        status = umi_document_store_replace_text(coordinator->store, entry->document_id, afterText, afterLength);
     if (status == UMI_STATUS_OK) {
         HistoryPushOwned(entry->undo, &entry->undo_count, stored);
         stored = NULL;
@@ -999,7 +1029,7 @@ static UmiStatus CommitViewText(UmiDocumentCoordinator *coordinator, size_t inde
         history_clear(entry->redo, &entry->redo_count);
         entry->pristine_virtual = 0;
         after->dirty = 1;
-        status = umi_ui_document_view_model_upsert(umi_ui_workbench_documents(coordinator->workbench), after);
+        status = UmiUiDocumentViewModelUpsertText(views, after, afterText, afterLength);
     }
     umi_document_store_free_text(stored);
     free(visible);
@@ -1015,46 +1045,57 @@ static UmiStatus ReplaceOne(UmiDocumentCoordinator *coordinator, const char *nee
     UmiUiDocumentViewSnapshot after;
     UmiEditorSearchOptions options = {UMI_EDITOR_SEARCH_CASE_SMART, 0, 0, 1U};
     UmiEditorSearchMatch match;
+    char *text = NULL;
+    char *updated = NULL;
+    size_t length = 0U;
     if (coordinator == NULL || needle == NULL || needle[0] == '\0' || replacement == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     size_t index = active_index(coordinator);
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
-    UmiStatus status = umi_ui_document_view_model_find(umi_ui_workbench_documents(coordinator->workbench),
-        coordinator->entries[index].view_id, &before);
+    UmiUiDocumentViewModel *views = umi_ui_workbench_documents(coordinator->workbench);
+    UmiStatus status = umi_ui_document_view_model_find(views, coordinator->entries[index].view_id, &before);
     if (status != UMI_STATUS_OK) return status;
     if (before.read_only) return UMI_STATUS_PERMISSION_DENIED;
-    size_t length = strlen(before.source_text);
+    status = UmiUiDocumentViewModelCopyText(views, before.view_id, &text, &length);
+    if (status != UMI_STATUS_OK) return status;
     size_t needleLength = strlen(needle);
     size_t replacementLength = strlen(replacement);
     size_t cursor = before.cursor_offset <= length ? before.cursor_offset : length;
     size_t selection = before.selection_length <= length - cursor ? before.selection_length : length - cursor;
     int useSelection = 0;
     if (fromSelection && selection == needleLength &&
-        UmiEditorSearchNavigate(before.source_text + cursor, selection, needle, needleLength,
+        UmiEditorSearchNavigate(text + cursor, selection, needle, needleLength,
             &options, 0U, 0, 0, &match, NULL) == UMI_STATUS_OK) {
         match.offset = cursor;
         useSelection = 1;
     }
-    if (!useSelection) {
-        status = UmiEditorSearchNavigate(before.source_text, length, needle, needleLength,
-            &options, fromSelection ? cursor + selection : 0U, 0, fromSelection, &match, NULL);
-        if (status != UMI_STATUS_OK) return status;
+    if (!useSelection)
+        status = UmiEditorSearchNavigate(text, length, needle, needleLength, &options,
+            fromSelection ? cursor + selection : 0U, 0, fromSelection, &match, NULL);
+    if (status == UMI_STATUS_OK) {
+        size_t remaining = length - match.byte_count;
+        if (replacementLength > UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES - remaining)
+            status = UMI_STATUS_CAPACITY_EXCEEDED;
+        else {
+            size_t updatedLength = remaining + replacementLength;
+            updated = malloc(updatedLength + 1U);
+            if (updated == NULL) status = UMI_STATUS_OUT_OF_MEMORY;
+            else {
+                memcpy(updated, text, match.offset);
+                memcpy(updated + match.offset, replacement, replacementLength);
+                memcpy(updated + match.offset + replacementLength,
+                    text + match.offset + match.byte_count, length - match.offset - match.byte_count + 1U);
+                after = before;
+                after.cursor_offset = fromSelection ? match.offset + replacementLength : match.offset;
+                after.selection_length = fromSelection ? 0U : replacementLength;
+                status = CommitViewText(coordinator, index, &before, &after,
+                    text, length, updated, updatedLength);
+                if (status == UMI_STATUS_OK && outOffset != NULL) *outOffset = match.offset;
+            }
+        }
     }
-    size_t remaining = length - match.byte_count;
-    if (replacementLength >= UMI_UI_DOCUMENT_CONTENT_CAPACITY ||
-        remaining >= UMI_UI_DOCUMENT_CONTENT_CAPACITY - replacementLength)
-        return UMI_STATUS_CAPACITY_EXCEEDED;
-    after = before;
-    memmove(after.source_text + match.offset + replacementLength,
-        after.source_text + match.offset + match.byte_count,
-        length - match.offset - match.byte_count + 1U);
-    if (replacementLength != 0U) memcpy(after.source_text + match.offset, replacement, replacementLength);
-    /* Move past an interactive replacement so another click reaches the next
-     * occurrence even when the replacement also matches the search text. */
-    after.cursor_offset = fromSelection ? match.offset + replacementLength : match.offset;
-    after.selection_length = fromSelection ? 0U : replacementLength;
-    status = CommitViewText(coordinator, index, &before, &after);
-    if (status == UMI_STATUS_OK && outOffset != NULL) *outOffset = match.offset;
+    free(updated);
+    UmiUiDocumentViewModelFreeText(text);
     return status;
 }
 
@@ -1072,11 +1113,16 @@ UmiStatus UmiDocumentCoordinatorFindNext(UmiDocumentCoordinator *coordinator,
     UmiStatus status = umi_ui_document_view_model_find(umi_ui_workbench_documents(coordinator->workbench),
         coordinator->entries[index].view_id, &view);
     if (status != UMI_STATUS_OK) return status;
-    size_t length = strlen(view.source_text);
+    char *text = NULL;
+    size_t length = 0U;
+    status = UmiUiDocumentViewModelCopyText(umi_ui_workbench_documents(coordinator->workbench),
+        view.view_id, &text, &length);
+    if (status != UMI_STATUS_OK) return status;
     size_t cursor = view.cursor_offset <= length ? view.cursor_offset : length;
     size_t selection = view.selection_length <= length - cursor ? view.selection_length : length - cursor;
-    status = UmiEditorSearchNavigate(view.source_text, length, needle, strlen(needle), &options,
+    status = UmiEditorSearchNavigate(text, length, needle, strlen(needle), &options,
         backwards ? cursor : cursor + selection, backwards, 1, &match, &wrapped);
+    UmiUiDocumentViewModelFreeText(text);
     if (status != UMI_STATUS_OK) return status;
     view.cursor_offset = match.offset;
     view.selection_length = match.byte_count;
@@ -1104,24 +1150,41 @@ UmiStatus UmiDocumentCoordinatorReplaceAll(UmiDocumentCoordinator *coordinator,
     UmiUiDocumentViewSnapshot after;
     UmiEditorSearchOptions options = {UMI_EDITOR_SEARCH_CASE_SMART, 0, 0, 0};
     size_t count = 0U;
+    size_t length = 0U;
+    size_t resultLength = 0U;
+    char *text = NULL;
+    char *updated = NULL;
     if (coordinator == NULL || needle == NULL || needle[0] == '\0' || replacement == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     size_t index = active_index(coordinator);
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
-    UmiStatus status = umi_ui_document_view_model_find(umi_ui_workbench_documents(coordinator->workbench),
-        coordinator->entries[index].view_id, &before);
+    UmiUiDocumentViewModel *views = umi_ui_workbench_documents(coordinator->workbench);
+    UmiStatus status = umi_ui_document_view_model_find(views, coordinator->entries[index].view_id, &before);
     if (status != UMI_STATUS_OK) return status;
     if (before.read_only) return UMI_STATUS_PERMISSION_DENIED;
-    after = before;
-    status = UmiEditorSearchReplaceAll(before.source_text, strlen(before.source_text),
-        needle, strlen(needle), replacement, strlen(replacement), &options,
-        after.source_text, sizeof after.source_text, &count);
+    status = UmiUiDocumentViewModelCopyText(views, before.view_id, &text, &length);
     if (status != UMI_STATUS_OK) return status;
-    if (count != 0U) {
-        if (after.cursor_offset > strlen(after.source_text)) after.cursor_offset = strlen(after.source_text);
-        after.selection_length = 0U;
-        status = CommitViewText(coordinator, index, &before, &after);
+    status = UmiEditorSearchReplaceAllSize(text, length, needle, strlen(needle),
+        strlen(replacement), &options, &resultLength, &count);
+    if (status == UMI_STATUS_OK && resultLength > UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES)
+        status = UMI_STATUS_CAPACITY_EXCEEDED;
+    if (status == UMI_STATUS_OK && count != 0U) {
+        updated = malloc(resultLength + 1U);
+        if (updated == NULL) status = UMI_STATUS_OUT_OF_MEMORY;
+        else {
+            status = UmiEditorSearchReplaceAll(text, length, needle, strlen(needle),
+                replacement, strlen(replacement), &options, updated, resultLength + 1U, &count);
+            if (status == UMI_STATUS_OK) {
+                after = before;
+                if (after.cursor_offset > resultLength) after.cursor_offset = resultLength;
+                after.selection_length = 0U;
+                status = CommitViewText(coordinator, index, &before, &after,
+                    text, length, updated, resultLength);
+            }
+        }
     }
+    free(updated);
+    UmiUiDocumentViewModelFreeText(text);
     if (status == UMI_STATUS_OK && outCount != NULL) *outCount = count;
     return status;
 }
@@ -1169,10 +1232,15 @@ UmiStatus umi_document_coordinator_go_to_line(
      * Continue only while work remains available; the loop body advances the state on each
      * pass.
      */
-    while (view.source_text[offset] != '\0' && line < one_based_line) {
-        /* Apply this branch only when its contract condition is satisfied. */
-        if (view.source_text[offset++] == '\n') line += 1U;
+    char *text = NULL;
+    size_t length = 0U;
+    status = UmiUiDocumentViewModelCopyText(umi_ui_workbench_documents(coordinator->workbench),
+        view.view_id, &text, &length);
+    if (status != UMI_STATUS_OK) return status;
+    while (offset < length && line < one_based_line) {
+        if (text[offset++] == '\n') line += 1U;
     }
+    UmiUiDocumentViewModelFreeText(text);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (line != one_based_line) return UMI_STATUS_NOT_FOUND;
     view.cursor_offset = offset;
@@ -1270,12 +1338,16 @@ static UmiStatus snapshot_index(const UmiDocumentCoordinator *coordinator,
     {
         char *stored = NULL;
         size_t storedLength = 0U;
-        visibleLength = strlen(view.source_text);
-        status = umi_document_store_copy_text(coordinator->store, entry->document_id,
-            &stored, &storedLength);
+        char *visible = NULL;
+        status = UmiUiDocumentViewModelCopyText(umi_ui_workbench_documents(coordinator->workbench),
+            view.view_id, &visible, &visibleLength);
         if (status != UMI_STATUS_OK) return status;
-        pendingDraft = visibleLength != storedLength || strcmp(stored, view.source_text) != 0;
+        status = umi_document_store_copy_text(coordinator->store, entry->document_id, &stored, &storedLength);
+        if (status == UMI_STATUS_OK)
+            pendingDraft = visibleLength != storedLength || memcmp(stored, visible, storedLength) != 0;
         umi_document_store_free_text(stored);
+        UmiUiDocumentViewModelFreeText(visible);
+        if (status != UMI_STATUS_OK) return status;
         (void)snprintf(out_snapshot->language_id,
                        sizeof(out_snapshot->language_id), "%.*s",
                        (int)sizeof(out_snapshot->language_id) - 1,
