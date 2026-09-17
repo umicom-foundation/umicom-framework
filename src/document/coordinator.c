@@ -1255,6 +1255,44 @@ UmiStatus umi_document_coordinator_go_to_line(
     return status;
 }
 
+/* Positioning is shared by compiler navigation and other source viewers. */
+UmiStatus UmiDocumentCoordinatorGoToPosition(UmiDocumentCoordinator *coordinator,
+    size_t oneBasedLine, size_t oneBasedByteColumn, size_t *outOffset)
+{
+    UmiUiDocumentViewSnapshot view;
+    char *text = NULL;
+    size_t length = 0U, line = 1U, offset = 0U, end;
+    size_t index;
+    UmiStatus status;
+    if (coordinator == NULL || oneBasedLine == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    index = active_index(coordinator);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    status = umi_ui_document_view_model_find(umi_ui_workbench_documents(coordinator->workbench),
+        coordinator->entries[index].view_id, &view);
+    if (status != UMI_STATUS_OK) return status;
+    status = UmiUiDocumentViewModelCopyText(umi_ui_workbench_documents(coordinator->workbench),
+        view.view_id, &text, &length);
+    if (status != UMI_STATUS_OK) return status;
+    while (offset < length && line < oneBasedLine) if (text[offset++] == '\n') ++line;
+    if (line != oneBasedLine) {
+        UmiUiDocumentViewModelFreeText(text); return UMI_STATUS_NOT_FOUND;
+    }
+    end = offset;
+    while (end < length && text[end] != '\n' && text[end] != '\r') ++end;
+    if (oneBasedByteColumn != 0U) {
+        size_t delta = oneBasedByteColumn - 1U;
+        size_t start = offset;
+        offset += delta < end - offset ? delta : end - offset;
+        while (offset > start && offset < length &&
+            ((unsigned char)text[offset] & 0xc0U) == 0x80U) --offset;
+    }
+    UmiUiDocumentViewModelFreeText(text);
+    view.cursor_offset = offset; view.selection_length = 0U;
+    status = umi_ui_document_view_model_upsert(umi_ui_workbench_documents(coordinator->workbench), &view);
+    if (status == UMI_STATUS_OK && outOffset != NULL) *outOffset = offset;
+    return status;
+}
+
 /*
  * Provide the document coordinator check external change operation used by this module and
  * its client applications.

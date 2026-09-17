@@ -101,7 +101,35 @@ UmiStatus umi_diagnostic_build_result_ingest(UmiDiagnosticPipeline *pipeline,
      * used.
      */
     if (pipeline == NULL || result == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (result->diagnostics.count > UMI_BUILD_MAX_DIAGNOSTICS ||
+        memchr(result->output, '\0', sizeof result->output) == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t i = 0U; i < result->diagnostics.count; ++i) {
+        const UmiBuildDiagnostic *item = &result->diagnostics.items[i];
+        if (memchr(item->file, '\0', sizeof item->file) == NULL ||
+            memchr(item->code, '\0', sizeof item->code) == NULL ||
+            memchr(item->message, '\0', sizeof item->message) == NULL ||
+            item->severity < UMI_BUILD_DIAGNOSTIC_NOTE || item->severity > UMI_BUILD_DIAGNOSTIC_FATAL)
+            return UMI_STATUS_INVALID_ARGUMENT;
+    }
     source = source != NULL && source[0] != '\0' ? source : "build";
+    /* Replace active compiler findings from the same build producer only when
+     * a new compile result arrives. Other tools' findings remain independent. */
+    if (result->phase == UMI_BUILD_PHASE_BUILD) {
+        UmiDiagnosticModel *model = umi_diagnostic_pipeline_model(pipeline);
+        size_t count = umi_diagnostic_model_count(model);
+        for (size_t i = 0U; i < count; ++i) {
+            UmiDiagnosticSnapshot old;
+            status = umi_diagnostic_model_at(model, i, &old);
+            if (status != UMI_STATUS_OK) return status;
+            if (old.kind == UMI_DIAGNOSTIC_KIND_COMPILER && !old.resolved &&
+                old.correlation_id != result->operation_id && strcmp(old.source, source) == 0 &&
+                strncmp(old.id, "build-", 6U) == 0) {
+                status = umi_diagnostic_model_resolve(model, old.id, 1);
+                if (status != UMI_STATUS_OK) return status;
+            }
+        }
+    }
     status = ingest_output_lines(pipeline, result, source);
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < result->diagnostics.count && status == UMI_STATUS_OK; ++index) {
@@ -117,10 +145,15 @@ UmiStatus umi_diagnostic_build_result_ingest(UmiDiagnosticPipeline *pipeline,
         /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         (void)snprintf(diagnostic.code, sizeof(diagnostic.code), "%s", item->code);
-        (void)snprintf(diagnostic.uri, sizeof(diagnostic.uri), "%.*s",
-                       (int)(sizeof(diagnostic.uri) - 1U), item->file);
-        diagnostic.line = item->line <= UINT32_MAX ? (uint32_t)item->line : UINT32_MAX;
-        diagnostic.column = item->column <= UINT32_MAX ? (uint32_t)item->column : UINT32_MAX;
+        if (strlen(item->file) < sizeof diagnostic.uri &&
+            item->line <= UINT32_MAX && item->column <= UINT32_MAX) {
+            strcpy(diagnostic.uri, item->file);
+            diagnostic.line = (uint32_t)item->line;
+            diagnostic.column = (uint32_t)item->column;
+        } else {
+            /* Keep the diagnostic message, but do not offer a cropped location. */
+            strcpy(diagnostic.detail, "The source location exceeds the Problems record capacity. Consult the complete build output.");
+        }
         diagnostic.correlation_id = result->operation_id;
         diagnostic.timestamp_ns = result->started_ns;
         status = umi_diagnostic_pipeline_ingest_diagnostic(pipeline, &diagnostic);

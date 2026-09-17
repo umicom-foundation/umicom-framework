@@ -215,6 +215,19 @@ UmiStatus umi_build_runner_run(UmiBuildRunner *runner,
                    process_result.output);
     (void)umi_build_parse_output(out_result->output,
                                  &out_result->diagnostics);
+    /* CMake runs its compiler from the build tree. Configure diagnostics refer
+     * to source files from the source tree. Do not use Studio's process cwd. */
+    for (size_t i = 0U; i < out_result->diagnostics.count; ++i) {
+        UmiBuildDiagnostic *item = &out_result->diagnostics.items[i];
+        char resolved[UMI_BUILD_PATH_CAPACITY];
+        if (item->file[0] == '\0' || item->file[0] == '<' ||
+            strstr(item->file, "://") != NULL || umi_path_is_absolute(item->file)) continue;
+        const char *base = phase == UMI_BUILD_PHASE_BUILD || phase == UMI_BUILD_PHASE_CLEAN ||
+            phase == UMI_BUILD_PHASE_TEST ? profile.build_directory : profile.source_directory;
+        UmiStatus resolveStatus = umi_path_absolute(item->file, base, resolved, sizeof resolved);
+        if (resolveStatus == UMI_STATUS_OK) strcpy(item->file, resolved);
+        else { item->file[0] = '\0'; item->line = 0U; item->column = 0U; ++out_result->diagnostics.dropped; }
+    }
     out_result->started_ns = start_ns;
     umi_build_result_finish(out_result,
                             status,

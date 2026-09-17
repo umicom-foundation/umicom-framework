@@ -1094,6 +1094,7 @@ add_library(umicom_diagnostic_ui STATIC
 add_library(Umicom::diagnostic_ui ALIAS umicom_diagnostic_ui)
 set_target_properties(umicom_diagnostic_ui PROPERTIES EXPORT_NAME diagnostic_ui)
 target_link_libraries(umicom_diagnostic_ui PUBLIC
+    Umicom::document
     Umicom::diagnostics
     Umicom::ui
     Umicom::build
@@ -4899,6 +4900,9 @@ install(DIRECTORY docs/guides/
 install(FILES docs/WRITING_DOCUMENTATION.md
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs
     COMPONENT Framework)
+install(DIRECTORY examples/build_diagnostics/
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/build_diagnostics
+)
 install(DIRECTORY examples/editor_workflow/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/editor_workflow
     COMPONENT Framework)
@@ -5059,3 +5063,17 @@ message(STATUS "SQLite adapter available: ${SQLite3_FOUND}")
 message(STATUS "Native umicom command: ${UMICOM_BUILD_NATIVE_TOOL}")
 
 include(cmake/UmicomDocumentContentTests.cmake)
+
+# Compiler diagnostics use the same Framework parser and source-document services
+# in the graphical IDE and headless regression tests.
+if(BUILD_TESTING)
+    add_executable(umicom-build-diagnostics-test tests/test_compiler_source_workflow.c)
+    target_link_libraries(umicom-build-diagnostics-test PRIVATE Umicom::diagnostic_ui)
+    umicom_apply_warnings(umicom-build-diagnostics-test)
+    umicom_apply_sanitizers(umicom-build-diagnostics-test)
+    foreach(_diagnostic_case IN ITEMS
+        gcc windows-slashes windows-backslashes unc gnu-line-only gnu-parentheses msvc msvc-line-only msvc-parentheses ansi note fatal tool ninja cmake cmake-dev leading-space noise malformed capacity list-bound null-input navigation projection positions)
+        add_test(NAME framework.build_diagnostics.${_diagnostic_case}
+            COMMAND umicom-build-diagnostics-test ${_diagnostic_case})
+    endforeach()
+endif()

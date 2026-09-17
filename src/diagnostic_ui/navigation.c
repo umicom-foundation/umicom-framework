@@ -14,6 +14,9 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/diagnostic_ui/navigation.h"
+#include "umicom/document/uri.h"
+#include "umicom/platform/path.h"
+#include <string.h>
 
 /*
  * Initialise diagnostic navigation from caller-provided values so later operations receive
@@ -111,4 +114,76 @@ UmiStatus umi_diagnostic_navigation_previous(UmiDiagnosticNavigation *navigation
                                              UmiDiagnosticSnapshot *out_diagnostic)
 {
     return navigate(navigation, model, filter, 0, out_diagnostic);
+}
+
+/* Diagnostic selection is separate from opening a file. Hosts may restore the
+ * navigation cursor after a failed open without changing any document. */
+static int SourceAvailable(const UmiDiagnosticSnapshot *diagnostic)
+{
+    return diagnostic->resolved == 0 && diagnostic->line != 0U &&
+        diagnostic->uri[0] != '\0' && diagnostic->uri[0] != '<' &&
+        (strstr(diagnostic->uri, "://") == NULL ||
+         strncmp(diagnostic->uri, "file:///", 8U) == 0);
+}
+
+UmiStatus UmiDiagnosticNavigationSource(UmiDiagnosticNavigation *navigation,
+    const UmiDiagnosticModel *model, const UmiDiagnosticFilter *filter,
+    int backwards, UmiDiagnosticSnapshot *outDiagnostic)
+{
+    UmiDiagnosticSnapshot chosen, edge;
+    int found = 0, haveEdge = 0;
+    if (navigation == NULL || model == NULL || filter == NULL || outDiagnostic == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    size_t count = umi_diagnostic_model_count(model);
+    for (size_t i = 0U; i < count; ++i) {
+        UmiDiagnosticSnapshot item;
+        UmiStatus status = umi_diagnostic_model_at(model, i, &item);
+        if (status != UMI_STATUS_OK) return status;
+        if (!SourceAvailable(&item) || !umi_diagnostic_filter_matches(filter, &item)) continue;
+        if (!haveEdge || (backwards ? item.sequence > edge.sequence : item.sequence < edge.sequence)) {
+            edge = item; haveEdge = 1;
+        }
+        int eligible = backwards
+            ? (navigation->current_sequence == 0U || item.sequence < navigation->current_sequence)
+            : item.sequence > navigation->current_sequence;
+        if (eligible && (!found || (backwards ? item.sequence > chosen.sequence : item.sequence < chosen.sequence))) {
+            chosen = item; found = 1;
+        }
+    }
+    if (!found && navigation->wrap && haveEdge) { chosen = edge; found = 1; }
+    if (!found) return UMI_STATUS_NOT_FOUND;
+    *outDiagnostic = chosen; navigation->current_sequence = chosen.sequence;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiDiagnosticOpenSource(UmiDocumentCoordinator *documents,
+    const UmiDiagnosticSnapshot *diagnostic, const char *baseDirectory,
+    size_t *outOffset)
+{
+    char decoded[UMI_PATH_CAPACITY], absolute[UMI_PATH_CAPACITY], viewId[UMI_UI_ID_CAPACITY];
+    const char *path;
+    UmiStatus status;
+    if (documents == NULL || diagnostic == NULL ||
+        umi_diagnostic_snapshot_validate(diagnostic, NULL, 0U) != UMI_STATUS_OK)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (!SourceAvailable(diagnostic)) return UMI_STATUS_NOT_FOUND;
+    path = diagnostic->uri;
+    if (strncmp(path, "file:///", 8U) == 0) {
+        /* Encoded zero bytes must never crop the selected destination. */
+        if (strstr(path, "%00") != NULL) return UMI_STATUS_INVALID_ARGUMENT;
+        status = umi_document_uri_to_path(path, decoded, sizeof decoded);
+        if (status != UMI_STATUS_OK) return status;
+        path = decoded;
+    }
+    if (umi_path_is_absolute(path)) {
+        status = umi_path_normalise(path, absolute, sizeof absolute);
+    } else {
+        if (baseDirectory == NULL || !umi_path_is_absolute(baseDirectory)) return UMI_STATUS_INVALID_ARGUMENT;
+        status = umi_path_absolute(path, baseDirectory, absolute, sizeof absolute);
+    }
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_document_coordinator_open(documents, absolute, viewId, sizeof viewId);
+    if (status != UMI_STATUS_OK) return status;
+    return UmiDocumentCoordinatorGoToPosition(documents, diagnostic->line,
+        diagnostic->column, outOffset);
 }

@@ -147,6 +147,14 @@ UmiStatus umi_document_coordinator_go_to_line(
     UmiDocumentCoordinator *coordinator,
     size_t one_based_line,
     size_t *out_offset);
+/** Move the caret within the visible complete draft without saving it.
+ * Line is one-based; column is a one-based UTF-8 byte column (zero means
+ * unspecified). Columns past the line end clamp there; a column inside a
+ * multibyte character moves to its first byte. Missing lines return NOT_FOUND
+ * without changing the caret or outOffset. Use from the document owner's thread. */
+UmiStatus UmiDocumentCoordinatorGoToPosition(UmiDocumentCoordinator *coordinator,
+    size_t oneBasedLine, size_t oneBasedByteColumn, size_t *outOffset);
+
 /**
  * Provide the document coordinator check external change operation used by this module and
  * its client applications.
