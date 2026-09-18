@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Review saved content and reload a document through Framework ownership and revision checks."><title>Reloading documents · Umicom</title>
+<link rel="stylesheet" href="../assets/site.css"><script defer src="../assets/site.js"></script>
+@UMICOM_SITE_ICONS@
+</head><body><a class="skip" href="#content">Skip to content</a>
+<header class="top">@UMICOM_SITE_BRAND@
+<nav aria-label="Main navigation"><a href="../getting-started.html">Start learning</a><a href="../wiki/index.html">Wiki</a><a href="../source-map.html">Source map</a><a href="../products.html">Applications</a><a href="../downloads.html">Downloads</a><a href="https://github.com/umicom-foundation">GitHub</a></nav></header>
+<main id="content"><header class="hero"><p class="eyebrow">Umicom Framework</p><h1>Reload a saved document through a reviewed plan</h1><p class="lead">Keep document identity, saved bytes and editor drafts separate while choosing which version to display.</p></header>
+<p>A Notes editor can show text that is newer than the saved file. The file can also be newer than the editor after another program writes it. A reload operation must therefore identify both versions before it changes either the document store or its presentation.</p>
+<p>Framework splits this into preparation and application. Preparation reads the saved resource and captures the current draft. The caller displays a question using the resulting summary. Application checks that the review is still current, requires explicit permission to replace unsaved text, and publishes the loaded version into the existing document. It never writes that resource.</p>
+<h2>Find the implementation</h2><div class="table-wrap"><table><tr><th>Responsibility</th><th>Public interface and implementation</th></tr>
+<tr><td>Prepared plans, explicit approval, Undo</td><td><code>include/umicom/document/coordinator.h</code><br><code>src/document/coordinator.c</code></td></tr>
+<tr><td>Loaded text and encoding</td><td><code>include/umicom/document/loader.h</code><br><code>src/document/loader.c</code></td></tr>
+<tr><td>Selected provider and content fingerprints</td><td><code>include/umicom/document/provider.h</code>, <code>fingerprint.h</code><br><code>src/document/provider.c</code>, <code>fingerprint.c</code></td></tr>
+<tr><td>Store publication with revision checking</td><td><code>include/umicom/platform/document_store.h</code><br><code>src/platform/document_store.c</code></td></tr>
+<tr><td>Complete draft storage</td><td><code>include/umicom/ui/document_view.h</code><br><code>src/ui/document_view.c</code></td></tr>
+<tr><td>Command registration</td><td><code>include/umicom/document/commands.h</code><br><code>src/document/commands.c</code></td></tr>
+<tr><td>Examples and tests</td><td><code>examples/editor_workflow/reload.c</code><br><code>tests/document/test_reload.c</code></td></tr></table></div>
+<p>Consumers link the existing <code>Umicom::document</code> target. The implementation reuses the existing loader, provider, view model, document store and history. There is no second file format or application-local persistence service.</p>
+<h2>Use the public operations</h2><div class="table-wrap"><table><tr><th>Operation</th><th>Caller responsibilities</th></tr>
+<tr><td><code>UmiDocumentCoordinatorPrepareReload(documents, documentId, &amp;plan)</code></td><td>Use the ID of a named, open document. On success you own the opaque plan. No draft or saved file is changed.</td></tr>
+<tr><td><code>UmiDocumentReloadPlanSummary(plan, &amp;summary)</code></td><td>Read the captured document name, text sizes, unsaved flag, text-change flag and incoming encoding/line endings. The summary does not grant permission.</td></tr>
+<tr><td><code>UmiDocumentCoordinatorApplyReload(documents, plan, discardUnsaved)</code></td><td>Pass zero for a clean-only operation. Pass one only after approval to replace the captured unsaved draft. Other values are rejected.</td></tr>
+<tr><td><code>UmiDocumentReloadPlanDestroy(plan)</code></td><td>Release the plan after success, cancellation or failure. A consumed plan cannot be applied again.</td></tr>
+<tr><td><code>UmiDocumentCoordinatorCheckExternalChange(documents, documentId, &amp;changed)</code></td><td>Check a specific open document through its selected provider. A missing file reports Not Found and changed=1; an inconclusive read returns its error.</td></tr></table></div>
+<p>The original active-document external-check entry point remains available. It uses the same comparison. Successful equality clears a previous changed/deleted indication; a missing resource is distinguished from a denied or failed read.</p>
+<h2>What makes a plan stale?</h2>
+<p>The plan captures the coordinator owner, document and view IDs, path, store revision, saved revision, baseline fingerprint, visible text revision and dirty marker. Changing one of those protected values makes the old approval invalid. Switching the active tab or moving the caret alone does not change the reviewed text. A successful reload updates the intended tab without making it the active tab.</p>
+<p>Before applying, Framework reads the resource again and compares its fingerprint with the prepared incoming bytes. It then rechecks the draft because a provider may dispatch a callback during I/O. Closing the target or modifying it in such a callback cannot redirect the plan into another document.</p>
+<p>The fingerprint is the existing non-cryptographic content hash plus byte count. It helps detect ordinary changes; it is not an authenticity check or a file lock. Another process may still change the file after verification. A later external check compares it again. Do not use this mechanism as hostile-filesystem isolation.</p>
+<h2>Ownership, ordering and failure</h2>
+<p>Call the coordinator, view model and reload plan on the same owner thread. Do not apply a plan after its coordinator is destroyed, even if another coordinator has reused an address. Destroying an unused plan is safe because that operation releases only its own allocations and does not dereference the old owner.</p>
+<p>The plan owns copies of the previous visible draft and decoded incoming text. Keep the number of pending plans bounded: the native presenter normally owns one modal question. Each plan can hold roughly two document-sized text copies, in addition to loader buffers, the store, the presentation model and bounded history.</p>
+<p>Application reserves presentation storage first, then <code>UmiDocumentStoreReplaceLoaded</code> checks the captured path and revisions under the store mutex. Failed allocation or a stale store leaves text and history unchanged. After successful publication, the previous draft enters the existing document Undo stack only when the displayed text actually changes. The document identity, language, title and other tab metadata remain in place.</p>
+<p>The store operation is a lower-level contract for coordinator authors, not a shortcut around user approval. It accepts validated loaded text and expected revisions. Ordinary application code should use the coordinator plan rather than independently changing the store and view.</p>
+<p>Incoming text is capped at 8 MiB before and after decoding. Existing view-allocation and history budgets still apply. Earlier history may be evicted under those budgets. Undo restores memory, not the disk; there is no durable recovery promise. The selected provider may allocate before returning its bytes, so the accepted-content bound is not an allocation ceiling for arbitrary providers.</p>
+<div class="table-wrap"><table><tr><th>Result</th><th>Meaning</th></tr>
+<tr><td><code>INVALID_STATE</code></td><td>Unsaved text was not approved, the plan is stale/consumed, or the target is untitled. Prepare a new review where appropriate.</td></tr>
+<tr><td><code>NOT_FOUND</code></td><td>The target was closed or the saved resource is missing. Do not infer that a draft has been lost.</td></tr>
+<tr><td><code>PERMISSION_DENIED</code></td><td>Access was denied, or a dirty read-only view cannot be replaced.</td></tr>
+<tr><td><code>CAPACITY_EXCEEDED</code></td><td>The input or decoded text is too large, or the view cannot reserve the required draft storage.</td></tr>
+<tr><td>Loader/provider error</td><td>Unsupported/binary/invalid text or an I/O failure prevents replacement. Keep the current draft.</td></tr></table></div>
+<h2>Build a complete Notes reload exercise</h2>
+<p>The following program creates its own temporary directory. It gives a Notes document an unsaved draft, changes the saved file as a second editor would, rejects an unapproved reload, approves its own disposable data, and uses Undo. It checks that neither Reload nor Undo writes over the saved version.</p>
+<pre><code class="language-c">@UMICOM_SITE_RELOAD_EXAMPLE@</code></pre>
+<p><code>TRY</code> records an error and jumps to one cleanup block. Services are released in reverse order, and the owned plan is released before its document services. <code>CheckText</code> copies text through the public API and frees it through the matching Framework function.</p>
+<h3>Windows PowerShell</h3><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+$env:Path = &quot;C:\msys64\ucrt64\bin;$env:Path&quot;
+cmake -S framework/examples/editor_workflow -B build/notes-editor -G Ninja -DCMAKE_PREFIX_PATH=&quot;C:/umicom/installed/development&quot;
+cmake --build build/notes-editor
+ctest --test-dir build/notes-editor --no-tests=error --output-on-failure
+.\build\notes-editor\umicom-notes-reload.exe</code></pre>
+<h3>Linux shell</h3><pre><code>cd &quot;$HOME/umicom/Umicom-Applications&quot;
+cmake -S framework/examples/editor_workflow -B build/notes-editor -G Ninja -DCMAKE_PREFIX_PATH=&quot;$HOME/umicom/installed/development&quot;
+cmake --build build/notes-editor
+ctest --test-dir build/notes-editor --no-tests=error --output-on-failure
+./build/notes-editor/umicom-notes-reload</code></pre>
+<p>Use an installed SDK built from the source containing these APIs. An older SDK will not supply the reload symbols. The example's automatic approval is appropriate only for its own disposable test data. A real editor must obtain the user's decision first.</p>
+<h2>Extend the exercise</h2>
+<p>Prepare a plan, modify the saved file again, then try to apply. Check that the old plan is refused and the draft is preserved. Next, open a second unsaved document and verify that reloading the first does not replace or activate the second. Explain why both the saved revision and visible-draft revision matter.</p>
+<p>Continue with <a href="working-copies.html">documents and memory</a>, <a href="find-in-files.html">saved-file search</a>, or the <a href="../studio/RELOADING_FILES.html">Studio reload lesson</a>. Automatic monitoring, background reload I/O, three-way conflict merging and crash recovery are separate capabilities.</p></main><footer><strong>Umicom Foundation</strong><p>Learn from the source. Build with shared components.</p><a href="../contributing.html">Improve these guides</a> · <a href="https://github.com/umicom-foundation">GitHub organisation</a></footer></body></html>

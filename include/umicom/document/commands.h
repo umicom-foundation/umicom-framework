@@ -34,7 +34,9 @@ extern "C" {
 #define UMI_DOCUMENT_COMMAND_REPLACE "umicom.document.replace"
 #define UMI_DOCUMENT_COMMAND_GO_TO_LINE "umicom.document.go-to-line"
 
-#define UMI_DOCUMENT_COMMAND_COUNT 10U
+#define UMI_DOCUMENT_COMMAND_REVERT "umicom.document.revert"
+
+#define UMI_DOCUMENT_COMMAND_COUNT 11U
 
 /**
  * Add document commands only after its inputs and available capacity have been checked.

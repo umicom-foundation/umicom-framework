@@ -171,6 +171,17 @@ UmiStatus umi_document_store_mark_external_change(
     int changed
 );
 
+/** Adopt freshly loaded text without writing the file or changing its identity.
+ * The revision, saved revision and canonical path must still equal the values
+ * in the caller's snapshot. All validation/allocation precedes publication.
+ * A successful reload advances the revision and marks that revision saved.
+ * The caller retains text ownership. This operation does not decode bytes;
+ * pass validated, zero-free UTF-8 from the document loader. */
+UmiStatus UmiDocumentStoreReplaceLoaded(UmiDocumentStore *store,
+    UmiDocumentId documentId, uint64_t expectedRevision,
+    uint64_t expectedSavedRevision, const char *expectedPath,
+    const char *text, size_t length);
+
 #ifdef __cplusplus
 }
 #endif

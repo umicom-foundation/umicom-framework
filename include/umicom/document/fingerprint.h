@@ -18,6 +18,7 @@
 
 #include "umicom/base/status.h"
 #include "umicom/document/types.h"
+#include "umicom/document/provider.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,6 +53,16 @@ int umi_document_fingerprint_equal(const UmiDocumentFingerprint *left,
  * applications.
  */
 const char *umi_document_fingerprint_backend(void);
+
+/** Read a fingerprint through the selected provider, not a local-file bypass.
+ * maximumBytes must be nonzero. Stat-capable providers reject an oversized
+ * resource before reading; the returned size is also checked. Providers that
+ * lack stat use read-and-check. This bounds accepted bytes, not allocations
+ * internal to an arbitrary provider. The output is written only on success.
+ * Fingerprints detect ordinary changes; they are not cryptographic proofs. */
+UmiStatus UmiDocumentFingerprintRead(const UmiDocumentProvider *provider,
+    const char *resource, size_t maximumBytes,
+    UmiDocumentFingerprint *outFingerprint);
 
 #ifdef __cplusplus
 }

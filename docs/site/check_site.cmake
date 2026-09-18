@@ -42,7 +42,8 @@ elseif(CASE STREQUAL "examples")
             "editor_workflow/complete_document.c|working-copies.html"
             "project_files/main.c|project-files.html"
             "project_files/refresh.c|file-refresh.html"
-            "project_files/search.c|find-in-files.html")
+            "project_files/search.c|find-in-files.html"
+            "editor_workflow/reload.c|reloading-files.html")
         string(REPLACE "|" ";" _parts "${_pair}")
         list(GET _parts 0 _source)
         list(GET _parts 1 _page)

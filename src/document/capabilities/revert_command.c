@@ -27,10 +27,10 @@ umi_document_capability_revert_command(void)
         .capability_id = UMI_DOCUMENT_CAPABILITY_REVERT_COMMAND,
         .title = "Revert Command",
         .category = UMI_DOCUMENT_CAPABILITY_CATEGORY_COMMAND,
-        .maturity = UMI_DOCUMENT_CAPABILITY_MATURITY_PLANNED,
-        .summary = "Defines a canonical document command consumable by menus, keybindings, automation and headless clients.",
-        .provider_role = "framework-extension",
-        .flags = UMI_DOCUMENT_CAPABILITY_FLAG_HEADLESS | UMI_DOCUMENT_CAPABILITY_FLAG_GUI,
+        .maturity = UMI_DOCUMENT_CAPABILITY_MATURITY_PREVIEW,
+        .summary = "Reloads a saved document through its provider; unsaved drafts require an explicit prepared-plan confirmation and remain recoverable through Undo.",
+        .provider_role = "framework-core",
+        .flags = UMI_DOCUMENT_CAPABILITY_FLAG_HEADLESS | UMI_DOCUMENT_CAPABILITY_FLAG_GUI | UMI_DOCUMENT_CAPABILITY_FLAG_IMPLEMENTED,
         .priority = 630
     };
     return &descriptor;

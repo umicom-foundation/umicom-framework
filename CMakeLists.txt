@@ -5212,3 +5212,72 @@ if(BUILD_TESTING)
         umicom_register_validation_target(umicom-notes-file-search-example)
     endif()
 endif()
+
+# Reload is tested on real documents with independent per-case temporary roots.
+if(BUILD_TESTING)
+    add_executable(umicom-document-reload-test tests/document/test_reload.c)
+    target_link_libraries(umicom-document-reload-test PRIVATE Umicom::document)
+    umicom_apply_warnings(umicom-document-reload-test)
+    umicom_apply_sanitizers(umicom-document-reload-test)
+    foreach(_reload_case IN ITEMS clean dirty-refused dirty-approved undo-redo
+            target-tab cancel draft-stale store-stale save-stale save-as-stale
+            file-stale closed used destroy-plan read-only dirty-read-only utf8-caret
+            utf16 crlf empty large oversized binary invalid-encoding aggregate-budget
+            check-missing check-restored provider-check provider-failure
+            reentry-prepare reentry-apply reentry-check-close reentry-check-store reentry-check-draft
+            command-clean command-dirty invalid
+            fingerprint-limits cas same-text)
+        add_test(NAME "framework.document_reload.${_reload_case}"
+            COMMAND umicom-document-reload-test "${_reload_case}")
+        set_tests_properties("framework.document_reload.${_reload_case}" PROPERTIES
+            TIMEOUT 30 LABELS "framework;document;reload")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-document-reload-test)
+    endif()
+    # Allocation and stat failures are injected at the Linux linker boundary.
+    # These fixtures are not presented as Windows fault-injection acceptance.
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        add_executable(umicom-document-reload-allocation-test tests/document/test_reload.c)
+        target_link_libraries(umicom-document-reload-allocation-test PRIVATE Umicom::document)
+        target_compile_definitions(umicom-document-reload-allocation-test PRIVATE UMI_TEST_ALLOCATION_FAILURE=1)
+        target_link_options(umicom-document-reload-allocation-test PRIVATE
+            -Wl,--wrap=malloc -Wl,--wrap=calloc -Wl,--wrap=realloc)
+        umicom_apply_warnings(umicom-document-reload-allocation-test)
+        umicom_apply_sanitizers(umicom-document-reload-allocation-test)
+        foreach(_reload_fault IN ITEMS allocation-prepare allocation-apply)
+            add_test(NAME "framework.document_reload.${_reload_fault}"
+                COMMAND umicom-document-reload-allocation-test "${_reload_fault}")
+            set_tests_properties("framework.document_reload.${_reload_fault}" PROPERTIES
+                TIMEOUT 30 LABELS "framework;document;reload;fault-injection")
+        endforeach()
+        add_executable(umicom-document-stat-error-test tests/document/test_reload.c)
+        target_link_libraries(umicom-document-stat-error-test PRIVATE Umicom::document)
+        target_compile_definitions(umicom-document-stat-error-test PRIVATE UMI_TEST_STAT_FAILURE=1)
+        target_link_options(umicom-document-stat-error-test PRIVATE -Wl,--wrap=stat)
+        umicom_apply_warnings(umicom-document-stat-error-test)
+        umicom_apply_sanitizers(umicom-document-stat-error-test)
+        add_test(NAME framework.document_reload.stat-errors
+            COMMAND umicom-document-stat-error-test stat-errors)
+        set_tests_properties(framework.document_reload.stat-errors PROPERTIES
+            TIMEOUT 30 LABELS "framework;document;reload;fault-injection")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-document-reload-allocation-test)
+            umicom_register_validation_target(umicom-document-stat-error-test)
+        endif()
+    endif()
+endif()
+
+# The public reload example uses the same library as Studio, not a test double.
+if(BUILD_TESTING)
+    add_executable(umicom-notes-reload-example examples/editor_workflow/reload.c)
+    target_link_libraries(umicom-notes-reload-example PRIVATE Umicom::document)
+    umicom_apply_warnings(umicom-notes-reload-example)
+    umicom_apply_sanitizers(umicom-notes-reload-example)
+    add_test(NAME framework.document_reload.example COMMAND umicom-notes-reload-example)
+    set_tests_properties(framework.document_reload.example PROPERTIES
+        TIMEOUT 30 LABELS "framework;document;reload;example")
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-notes-reload-example)
+    endif()
+endif()

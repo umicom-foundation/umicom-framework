@@ -229,6 +229,55 @@ UmiStatus UmiDocumentCoordinatorOpenSearchMatch(UmiDocumentCoordinator *coordina
     const UmiSearchMatch *match, const char *query, int caseSensitive,
     size_t *outOffset);
 
+/** A prepared reload owns both the incoming text and the previous visible
+ * draft. It never owns the coordinator. Destroy it on acceptance, cancellation
+ * or failure. Calls that prepare/apply use the document owner's thread; the
+ * coordinator must still be alive when applying. Destroying a plan itself
+ * does not access the coordinator. Keep outstanding plans bounded in the UI. */
+typedef struct UmiDocumentReloadPlan UmiDocumentReloadPlan;
+
+typedef struct UmiDocumentReloadSummary {
+    UmiDocumentId document_id;
+    char display_name[UMI_DOCUMENT_NAME_CAPACITY];
+    size_t previous_bytes;
+    size_t incoming_bytes;
+    int has_unsaved_changes;
+    int text_changes;
+    UmiDocumentTextEncoding incoming_encoding;
+    UmiDocumentLineEnding incoming_line_ending;
+} UmiDocumentReloadSummary;
+
+/** Read and decode a saved file without altering its draft, caret, history,
+ * store, active tab or disk contents. Untitled documents are not reloadable.
+ * The plan captures document identity, path and text/store revisions.
+ * The incoming decoded text must fit the complete-document limit. */
+UmiStatus UmiDocumentCoordinatorPrepareReload(UmiDocumentCoordinator *coordinator,
+    UmiDocumentId documentId, UmiDocumentReloadPlan **outPlan);
+UmiStatus UmiDocumentReloadPlanSummary(const UmiDocumentReloadPlan *plan,
+    UmiDocumentReloadSummary *outSummary);
+void UmiDocumentReloadPlanDestroy(UmiDocumentReloadPlan *plan);
+
+/** Adopt the prepared text only when the captured document and provider bytes
+ * are still current. Changing another tab is permitted. Editing, saving or
+ * Save As of the target invalidates an older plan. discardUnsaved must be 0
+ * or 1; only explicit approval should pass 1. Success is one Undo step when
+ * text differs, marks the incoming text saved, and does not write the file.
+ * The caret is clamped to a UTF-8 boundary; another active tab stays active.
+ * Allocation, decoding, limit and stale-plan failures preserve visible text
+ * and history. Storage reservations may grow without a semantic change.
+ * A file can still change after the final read; the new baseline ensures a
+ * later save checks again. This is not a cross-process file lock. */
+UmiStatus UmiDocumentCoordinatorApplyReload(UmiDocumentCoordinator *coordinator,
+    UmiDocumentReloadPlan *plan, int discardUnsaved);
+
+/** Targeted external-change inspection. outChanged is initialised to zero.
+ * Missing saved files set the deleted conflict and return Not Found with 1;
+ * access/read errors are propagated, not interpreted as deletion. A file
+ * restored to its baseline clears a previously recorded external conflict.
+ * The existing active-document function delegates to the same implementation. */
+UmiStatus UmiDocumentCoordinatorCheckExternalChange(UmiDocumentCoordinator *coordinator,
+    UmiDocumentId documentId, int *outChanged);
+
 #ifdef __cplusplus
 }
 #endif

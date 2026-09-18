@@ -103,3 +103,37 @@ const char *umi_document_fingerprint_backend(void)
     return "portable C23";
 #endif
 }
+
+/* All document frontends use the provider selected by the coordinator. */
+UmiStatus UmiDocumentFingerprintRead(const UmiDocumentProvider *provider,
+    const char *resource, size_t maximumBytes,
+    UmiDocumentFingerprint *outFingerprint)
+{
+    UmiDocumentFileInfo info = {0};
+    unsigned char *bytes = NULL;
+    size_t length = 0U;
+    if (provider == NULL || resource == NULL || resource[0] == '\0' ||
+        maximumBytes == 0U || outFingerprint == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = umi_document_provider_stat(provider, resource, &info);
+    if (status == UMI_STATUS_OK) {
+        if (!info.exists) return UMI_STATUS_NOT_FOUND;
+        if (!info.regular_file) return UMI_STATUS_NOT_IMPLEMENTED;
+        if (info.byte_count > maximumBytes) return UMI_STATUS_CAPACITY_EXCEEDED;
+    } else if (status != UMI_STATUS_NOT_IMPLEMENTED) return status;
+    status = umi_document_provider_read(provider, resource, &bytes, &length);
+    if (status == UMI_STATUS_OK && length > maximumBytes)
+        status = UMI_STATUS_CAPACITY_EXCEEDED;
+    if (status == UMI_STATUS_OK && length != 0U && bytes == NULL)
+        status = UMI_STATUS_IO_ERROR;
+    if (status == UMI_STATUS_OK) {
+        UmiDocumentFingerprint result = {0};
+        result.content_hash = umi_document_hash_bytes(bytes, length);
+        result.byte_count = length;
+        result.modified_time_seconds = info.modified_time_seconds;
+        result.valid = 1;
+        *outFingerprint = result;
+    }
+    umi_document_provider_release_bytes(provider, bytes);
+    return status;
+}

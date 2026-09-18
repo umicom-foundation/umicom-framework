@@ -247,6 +247,30 @@ static UmiStatus go_to_line_command(void *user_data,
     return status;
 }
 
+/* Automation gets the non-destructive default. A GUI that offers to replace
+ * unsaved text uses the prepared-plan API and its explicit confirmation. */
+static UmiStatus revert_command(void *user_data, const char *argument,
+    char *out_message, size_t capacity)
+{
+    UmiDocumentCoordinator *coordinator = user_data;
+    UmiDocumentWorkingCopySnapshot active;
+    UmiDocumentReloadPlan *plan = NULL;
+    if (argument != NULL && argument[0] != '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = umi_document_coordinator_active_snapshot(coordinator, &active);
+    if (status == UMI_STATUS_OK && active.dirty) {
+        if (out_message != NULL && capacity != 0U)
+            (void)snprintf(out_message, capacity,
+                "Document has unsaved changes. Use Reload from disk and review the confirmation, or Save As to keep a copy.");
+        return UMI_STATUS_INVALID_STATE;
+    }
+    if (status == UMI_STATUS_OK)
+        status = UmiDocumentCoordinatorPrepareReload(coordinator, active.document_id, &plan);
+    if (status == UMI_STATUS_OK) status = UmiDocumentCoordinatorApplyReload(coordinator, plan, 0);
+    UmiDocumentReloadPlanDestroy(plan);
+    command_message(out_message, capacity, "Saved file reloaded; no file was written", status);
+    return status;
+}
+
 /* Add document commands only after its inputs and available capacity have been checked. */
 UmiStatus umi_document_commands_register(UmiCommandRegistry *registry,
                                           UmiDocumentCoordinator *coordinator)
@@ -266,7 +290,8 @@ UmiStatus umi_document_commands_register(UmiCommandRegistry *registry,
         {UMI_DOCUMENT_COMMAND_REDO, "Redo", "Redo the latest working-copy state", redo_command},
         {UMI_DOCUMENT_COMMAND_FIND, "Find", "Find text in the active document", find_command},
         {UMI_DOCUMENT_COMMAND_REPLACE, "Replace", "Replace the first matching text", replace_command},
-        {UMI_DOCUMENT_COMMAND_GO_TO_LINE, "Go to Line", "Select a one-based document line", go_to_line_command}
+        {UMI_DOCUMENT_COMMAND_GO_TO_LINE, "Go to Line", "Select a one-based document line", go_to_line_command},
+        {UMI_DOCUMENT_COMMAND_REVERT, "Reload from Disk", "Reload a saved document; unsaved text requires explicit review", revert_command}
     };
     UmiCommandDescriptor descriptor;
     size_t index;

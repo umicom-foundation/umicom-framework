@@ -1036,3 +1036,45 @@ UmiStatus umi_document_store_mark_external_change(
     (void)umi_mutex_unlock(store->mutex);
     return UMI_STATUS_OK;
 }
+
+/* Reload changes one existing entry, never closes and recreates its identity. */
+UmiStatus UmiDocumentStoreReplaceLoaded(UmiDocumentStore *store,
+    UmiDocumentId documentId, uint64_t expectedRevision,
+    uint64_t expectedSavedRevision, const char *expectedPath,
+    const char *text, size_t length)
+{
+    if (store == NULL || documentId == 0U || expectedRevision == 0U ||
+        expectedSavedRevision > expectedRevision || expectedPath == NULL ||
+        expectedPath[0] == '\0' || strlen(expectedPath) >= UMI_PATH_CAPACITY ||
+        (text == NULL && length != 0U) || length == SIZE_MAX ||
+        (length != 0U && memchr(text, '\0', length) != NULL))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    (void)umi_mutex_lock(store->mutex);
+    size_t index = umi_document_store_find_index(store, documentId);
+    if (index == SIZE_MAX) {
+        (void)umi_mutex_unlock(store->mutex);
+        return UMI_STATUS_NOT_FOUND;
+    }
+    UmiDocumentEntry *entry = &store->entries[index];
+    if (entry->revision != expectedRevision ||
+        entry->saved_revision != expectedSavedRevision ||
+        strcmp(entry->path, expectedPath) != 0) {
+        (void)umi_mutex_unlock(store->mutex);
+        return UMI_STATUS_INVALID_STATE;
+    }
+    if (entry->revision == UINT64_MAX) {
+        (void)umi_mutex_unlock(store->mutex);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    UmiStatus status = umi_document_entry_reserve(entry, length + 1U);
+    if (status == UMI_STATUS_OK) {
+        if (length != 0U) (void)memcpy(entry->text, text, length);
+        entry->text[length] = '\0';
+        entry->length = length;
+        ++entry->revision;
+        entry->saved_revision = entry->revision;
+        entry->external_change = 0;
+    }
+    (void)umi_mutex_unlock(store->mutex);
+    return status;
+}

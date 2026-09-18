@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "umicom/document/file_identity.h"
+#include "umicom/document/fingerprint.h"
 #include "umicom/document/language_detection.h"
 #include "umicom/document/line_endings.h"
 #include "umicom/document/loader.h"
@@ -50,6 +51,68 @@ struct UmiDocumentCoordinator {
     size_t count;
     uint64_t next_untitled;
 };
+
+/* Inspection is a provider read; it must never bypass that provider with a
+ * local fopen. Publish conflict state only for a conclusive comparison. */
+static UmiStatus CheckExternalIndex(UmiDocumentCoordinator *coordinator,
+    size_t index, int *outChanged)
+{
+    UmiDocumentSnapshot snapshot;
+    UmiDocumentFingerprint current = {0};
+    UmiDocumentCoordinatorEntry *entry = &coordinator->entries[index];
+    *outChanged = 0;
+    UmiStatus status = umi_document_store_snapshot(coordinator->store,
+        entry->document_id, &snapshot);
+    if (status != UMI_STATUS_OK) return status;
+    if (!snapshot.has_path || !entry->baseline.valid) return UMI_STATUS_OK;
+    UmiDocumentFingerprint baseline = entry->baseline;
+    char viewId[UMI_UI_ID_CAPACITY];
+    (void)snprintf(viewId, sizeof viewId, "%s", entry->view_id);
+    UmiUiDocumentViewModel *views = umi_ui_workbench_documents(coordinator->workbench);
+    UmiUiDocumentTextInfo expectedText, latestText;
+    status = UmiUiDocumentViewModelTextInfo(views, viewId, &expectedText);
+    if (status != UMI_STATUS_OK) return status;
+    status = UmiDocumentFingerprintRead(&coordinator->provider, snapshot.path,
+        UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES, &current);
+    /* A provider callback may close or rename a document. Never publish its
+     * old comparison into the entry that has since taken the same slot. */
+    size_t currentIndex = SIZE_MAX;
+    for (size_t candidate = 0U; candidate < coordinator->count; ++candidate) {
+        if (coordinator->entries[candidate].document_id == snapshot.document_id &&
+            strcmp(coordinator->entries[candidate].view_id, viewId) == 0) {
+            currentIndex = candidate;
+            break;
+        }
+    }
+    if (currentIndex == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    UmiDocumentSnapshot latest;
+    UmiStatus latestStatus = umi_document_store_snapshot(coordinator->store,
+        snapshot.document_id, &latest);
+    if (latestStatus != UMI_STATUS_OK) return latestStatus;
+    latestStatus = UmiUiDocumentViewModelTextInfo(views, viewId, &latestText);
+    if (latestStatus != UMI_STATUS_OK) return latestStatus;
+    if (latestText.text_revision != expectedText.text_revision)
+        return UMI_STATUS_INVALID_STATE;
+    entry = &coordinator->entries[currentIndex];
+    if (latest.revision != snapshot.revision ||
+        latest.saved_revision != snapshot.saved_revision || !latest.has_path ||
+        strcmp(latest.path, snapshot.path) != 0 ||
+        !umi_document_fingerprint_equal(&entry->baseline, &baseline))
+        return UMI_STATUS_INVALID_STATE;
+    if (status == UMI_STATUS_NOT_FOUND) {
+        entry->conflict = UMI_DOCUMENT_CONFLICT_DELETED_EXTERNALLY;
+        *outChanged = 1;
+        (void)umi_document_store_mark_external_change(coordinator->store,
+            entry->document_id, 1);
+    } else if (status == UMI_STATUS_OK) {
+        *outChanged = !umi_document_fingerprint_equal(&entry->baseline, &current);
+        entry->conflict = *outChanged ? UMI_DOCUMENT_CONFLICT_EXTERNAL_CHANGE
+                                     : UMI_DOCUMENT_CONFLICT_NONE;
+        status = umi_document_store_mark_external_change(coordinator->store,
+            entry->document_id, *outChanged);
+    }
+    return status;
+}
 
 /* Release or reset state held by history so the same storage can be reused safely. */
 static void history_clear(char **items, size_t *count)
@@ -645,12 +708,12 @@ static UmiStatus save_index_as(UmiDocumentCoordinator *coordinator,
         if (umi_document_store_snapshot(coordinator->store, entry->document_id,
                                         &snapshot) == UMI_STATUS_OK &&
             snapshot.has_path && umi_path_equal(snapshot.path, path)) {
-            UmiStatus check = umi_document_file_changed(path, &entry->baseline,
-                                                        &changed, NULL);
+            UmiStatus check = CheckExternalIndex(coordinator, index, &changed);
             /* Preserve the original failure result so the caller can respond to the correct cause. */
             if ((check == UMI_STATUS_OK && changed) || check == UMI_STATUS_NOT_FOUND) {
-                entry->conflict = changed ? UMI_DOCUMENT_CONFLICT_EXTERNAL_CHANGE
-                                          : UMI_DOCUMENT_CONFLICT_DELETED_EXTERNALLY;
+                entry->conflict = check == UMI_STATUS_NOT_FOUND
+                    ? UMI_DOCUMENT_CONFLICT_DELETED_EXTERNALLY
+                    : UMI_DOCUMENT_CONFLICT_EXTERNAL_CHANGE;
                 (void)umi_document_store_mark_external_change(
                     coordinator->store, entry->document_id, 1);
                 return UMI_STATUS_INVALID_STATE;
@@ -1301,37 +1364,23 @@ UmiStatus umi_document_coordinator_check_external_change(
     UmiDocumentCoordinator *coordinator,
     int *out_changed)
 {
-    size_t index;
-    UmiDocumentSnapshot snapshot;
-    UmiStatus status;
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
+    if (out_changed != NULL) *out_changed = 0;
     if (coordinator == NULL || out_changed == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    index = active_index(coordinator);
-    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    size_t index = active_index(coordinator);
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
-    status = umi_document_store_snapshot(coordinator->store,
-                                         coordinator->entries[index].document_id,
-                                         &snapshot);
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status != UMI_STATUS_OK) return status;
-    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (!snapshot.has_path || !coordinator->entries[index].baseline.valid) {
-        *out_changed = 0;
-        return UMI_STATUS_OK;
-    }
-    status = umi_document_file_changed(snapshot.path,
-                                       &coordinator->entries[index].baseline,
-                                       out_changed, NULL);
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status == UMI_STATUS_OK && *out_changed) {
-        coordinator->entries[index].conflict = UMI_DOCUMENT_CONFLICT_EXTERNAL_CHANGE;
-        (void)umi_document_store_mark_external_change(
-            coordinator->store, coordinator->entries[index].document_id, 1);
-    }
-    return status;
+    return CheckExternalIndex(coordinator, index, out_changed);
+}
+
+UmiStatus UmiDocumentCoordinatorCheckExternalChange(UmiDocumentCoordinator *coordinator,
+    UmiDocumentId documentId, int *outChanged)
+{
+    if (outChanged != NULL) *outChanged = 0;
+    if (coordinator == NULL || documentId == 0U || outChanged == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t index = 0U; index < coordinator->count; ++index)
+        if (coordinator->entries[index].document_id == documentId)
+            return CheckExternalIndex(coordinator, index, outChanged);
+    return UMI_STATUS_NOT_FOUND;
 }
 
 /* Provide the snapshot index operation used by this module and its client applications. */
@@ -1468,4 +1517,187 @@ UmiStatus UmiDocumentCoordinatorOpenSearchMatch(UmiDocumentCoordinator *coordina
     if (status != UMI_STATUS_OK) return status;
     return UmiDocumentCoordinatorGoToPosition(coordinator, match->line,
         match->column, outOffset);
+}
+
+/* A reload is reviewed against two independently changing sources: the visible
+ * draft and the provider resource. Neither is changed during preparation. */
+struct UmiDocumentReloadPlan {
+    const UmiDocumentCoordinator *owner;
+    UmiDocumentSnapshot expected;
+    UmiUiDocumentTextInfo expectedText;
+    UmiDocumentFingerprint expectedBaseline;
+    char viewId[UMI_UI_ID_CAPACITY];
+    char viewDocumentId[UMI_UI_ID_CAPACITY];
+    char *previousText;
+    UmiDocumentLoadResult incoming;
+    UmiDocumentReloadSummary summary;
+    int expectedDirtyMarker;
+    int consumed;
+};
+
+void UmiDocumentReloadPlanDestroy(UmiDocumentReloadPlan *plan)
+{
+    if (plan == NULL) return;
+    UmiUiDocumentViewModelFreeText(plan->previousText);
+    umi_document_load_result_dispose(&plan->incoming);
+    free(plan);
+}
+
+UmiStatus UmiDocumentReloadPlanSummary(const UmiDocumentReloadPlan *plan,
+    UmiDocumentReloadSummary *outSummary)
+{
+    if (plan == NULL || outSummary == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (plan->consumed) return UMI_STATUS_INVALID_STATE;
+    *outSummary = plan->summary;
+    return UMI_STATUS_OK;
+}
+
+/* All coordinator and view mutations occur on their common owner thread. The
+ * store still compares its revision under its own mutex when publishing. */
+static UmiStatus ReloadCurrent(UmiDocumentCoordinator *coordinator,
+    const UmiDocumentReloadPlan *plan, size_t *outIndex,
+    UmiUiDocumentViewSnapshot *outView)
+{
+    UmiDocumentSnapshot stored;
+    UmiUiDocumentTextInfo text;
+    if (coordinator == NULL || plan == NULL || plan->owner != coordinator)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (plan->consumed) return UMI_STATUS_INVALID_STATE;
+    size_t index = find_view(coordinator, plan->viewId);
+    if (index == SIZE_MAX || coordinator->entries[index].document_id != plan->expected.document_id)
+        return UMI_STATUS_NOT_FOUND;
+    UmiStatus status = umi_document_store_snapshot(coordinator->store,
+        plan->expected.document_id, &stored);
+    if (status != UMI_STATUS_OK) return status;
+    if (stored.revision != plan->expected.revision ||
+        stored.saved_revision != plan->expected.saved_revision ||
+        !stored.has_path || strcmp(stored.path, plan->expected.path) != 0)
+        return UMI_STATUS_INVALID_STATE;
+    const UmiDocumentFingerprint *baseline = &coordinator->entries[index].baseline;
+    if (baseline->valid != plan->expectedBaseline.valid ||
+        (baseline->valid && !umi_document_fingerprint_equal(baseline, &plan->expectedBaseline)))
+        return UMI_STATUS_INVALID_STATE;
+    UmiUiDocumentViewModel *views = umi_ui_workbench_documents(coordinator->workbench);
+    status = umi_ui_document_view_model_find(views, plan->viewId, outView);
+    if (status != UMI_STATUS_OK) return status;
+    status = UmiUiDocumentViewModelTextInfo(views, plan->viewId, &text);
+    if (status != UMI_STATUS_OK) return status;
+    if (text.text_revision != plan->expectedText.text_revision ||
+        strcmp(outView->document_id, plan->viewDocumentId) != 0 ||
+        outView->dirty != plan->expectedDirtyMarker)
+        return UMI_STATUS_INVALID_STATE;
+    *outIndex = index;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiDocumentCoordinatorPrepareReload(UmiDocumentCoordinator *coordinator,
+    UmiDocumentId documentId, UmiDocumentReloadPlan **outPlan)
+{
+    size_t index = SIZE_MAX;
+    UmiDocumentWorkingCopySnapshot snapshot;
+    UmiUiDocumentViewSnapshot view;
+    UmiDocumentLoadOptions options = umi_document_load_options_default();
+    if (outPlan != NULL) *outPlan = NULL;
+    if (coordinator == NULL || documentId == 0U || outPlan == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t candidate = 0U; candidate < coordinator->count; ++candidate)
+        if (coordinator->entries[candidate].document_id == documentId) { index = candidate; break; }
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    UmiStatus status = snapshot_index(coordinator, index, &snapshot);
+    if (status != UMI_STATUS_OK) return status;
+    if (!snapshot.has_path) return UMI_STATUS_INVALID_STATE;
+    UmiDocumentReloadPlan *plan = calloc(1U, sizeof *plan);
+    if (plan == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    plan->owner = coordinator;
+    plan->expectedBaseline = coordinator->entries[index].baseline;
+    (void)snprintf(plan->viewId, sizeof plan->viewId, "%s", snapshot.view_id);
+    UmiUiDocumentViewModel *views = umi_ui_workbench_documents(coordinator->workbench);
+    status = umi_document_store_snapshot(coordinator->store, documentId, &plan->expected);
+    if (status == UMI_STATUS_OK)
+        status = umi_ui_document_view_model_find(views, plan->viewId, &view);
+    if (status == UMI_STATUS_OK) {
+        plan->expectedDirtyMarker = view.dirty;
+        (void)snprintf(plan->viewDocumentId, sizeof plan->viewDocumentId, "%s", view.document_id);
+        status = UmiUiDocumentViewModelTextInfo(views, plan->viewId, &plan->expectedText);
+    }
+    if (status == UMI_STATUS_OK)
+        status = UmiUiDocumentViewModelCopyText(views, plan->viewId,
+            &plan->previousText, &plan->summary.previous_bytes);
+    options.maximum_bytes = UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES;
+    options.normalise_to = UMI_DOCUMENT_LINE_ENDING_LF;
+    if (status == UMI_STATUS_OK)
+        status = umi_document_load(&coordinator->provider, plan->expected.path, &options, &plan->incoming);
+    if (status == UMI_STATUS_OK && plan->incoming.text_length > UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES)
+        status = UMI_STATUS_CAPACITY_EXCEEDED;
+    /* A provider may dispatch a callback. Verify the target again after I/O. */
+    if (status == UMI_STATUS_OK) status = ReloadCurrent(coordinator, plan, &index, &view);
+    if (status != UMI_STATUS_OK) {
+        UmiDocumentReloadPlanDestroy(plan);
+        return status;
+    }
+    plan->summary.document_id = documentId;
+    (void)snprintf(plan->summary.display_name, sizeof plan->summary.display_name, "%s", snapshot.display_name);
+    plan->summary.incoming_bytes = plan->incoming.text_length;
+    plan->summary.has_unsaved_changes = snapshot.dirty;
+    plan->summary.incoming_encoding = plan->incoming.detected_encoding;
+    plan->summary.incoming_line_ending = plan->incoming.detected_line_ending;
+    plan->summary.text_changes = plan->summary.previous_bytes != plan->incoming.text_length ||
+        memcmp(plan->previousText, plan->incoming.text, plan->summary.previous_bytes) != 0;
+    *outPlan = plan;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiDocumentCoordinatorApplyReload(UmiDocumentCoordinator *coordinator,
+    UmiDocumentReloadPlan *plan, int discardUnsaved)
+{
+    UmiUiDocumentViewSnapshot view;
+    UmiDocumentFingerprint current;
+    size_t index = 0U;
+    if (discardUnsaved != 0 && discardUnsaved != 1) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = ReloadCurrent(coordinator, plan, &index, &view);
+    if (status != UMI_STATUS_OK) return status;
+    if (plan->summary.has_unsaved_changes && !discardUnsaved) return UMI_STATUS_INVALID_STATE;
+    if (view.read_only && plan->summary.has_unsaved_changes) return UMI_STATUS_PERMISSION_DENIED;
+    status = UmiDocumentFingerprintRead(&coordinator->provider, plan->expected.path,
+        UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES, &current);
+    if (status != UMI_STATUS_OK) return status;
+    if (!umi_document_fingerprint_equal(&current, &plan->incoming.fingerprint))
+        return UMI_STATUS_INVALID_STATE;
+    status = ReloadCurrent(coordinator, plan, &index, &view);
+    if (status != UMI_STATUS_OK) return status;
+    if (view.read_only && plan->summary.has_unsaved_changes) return UMI_STATUS_PERMISSION_DENIED;
+    UmiUiDocumentViewModel *views = umi_ui_workbench_documents(coordinator->workbench);
+    size_t length = plan->incoming.text_length;
+    /* No allocation is needed in view publication after the store commits. */
+    status = UmiUiDocumentViewModelReserveText(views, plan->viewId, length);
+    if (status != UMI_STATUS_OK) return status;
+    status = UmiDocumentStoreReplaceLoaded(coordinator->store, plan->expected.document_id,
+        plan->expected.revision, plan->expected.saved_revision, plan->expected.path,
+        plan->incoming.text, length);
+    if (status != UMI_STATUS_OK) return status;
+    UmiDocumentCoordinatorEntry *entry = &coordinator->entries[index];
+    if (plan->summary.text_changes) {
+        HistoryPushOwned(entry->undo, &entry->undo_count, plan->previousText);
+        plan->previousText = NULL;
+        history_clear(entry->redo, &entry->redo_count);
+    }
+    entry->baseline = plan->incoming.fingerprint;
+    entry->encoding = plan->incoming.detected_encoding;
+    entry->line_ending = plan->incoming.detected_line_ending;
+    if (entry->line_ending == UMI_DOCUMENT_LINE_ENDING_NONE ||
+        entry->line_ending == UMI_DOCUMENT_LINE_ENDING_MIXED)
+        entry->line_ending = UMI_DOCUMENT_LINE_ENDING_LF;
+    entry->conflict = UMI_DOCUMENT_CONFLICT_NONE;
+    entry->pristine_virtual = 0;
+    view.dirty = 0;
+    if (view.cursor_offset > length) view.cursor_offset = length;
+    while (view.cursor_offset > 0U && view.cursor_offset < length &&
+        ((unsigned char)plan->incoming.text[view.cursor_offset] & 0xc0U) == 0x80U)
+        --view.cursor_offset;
+    if (plan->summary.text_changes) view.selection_length = 0U;
+    if (view.selection_length > length - view.cursor_offset)
+        view.selection_length = length - view.cursor_offset;
+    status = UmiUiDocumentViewModelUpsertText(views, &view, plan->incoming.text, length);
+    plan->consumed = 1;
+    return status;
 }

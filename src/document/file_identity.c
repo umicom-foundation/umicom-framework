@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/file_identity.h"
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -46,7 +47,15 @@ UmiStatus umi_document_file_info(const char *path,
     if (strlen(path) >= sizeof(out_info->path)) return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)snprintf(out_info->path, sizeof(out_info->path), "%s", path);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (stat(path, &information) != 0) return UMI_STATUS_NOT_FOUND;
+    if (stat(path, &information) != 0) {
+        /* Missing, inaccessible and failed storage are different outcomes.
+         * A permission error must never authorise recreating a supposedly
+         * missing document. Preserve errno before another library call. */
+        int error = errno;
+        if (error == ENOENT || error == ENOTDIR) return UMI_STATUS_NOT_FOUND;
+        if (error == EACCES || error == EPERM) return UMI_STATUS_PERMISSION_DENIED;
+        return UMI_STATUS_IO_ERROR;
+    }
     out_info->exists = 1;
     out_info->regular_file = S_ISREG(information.st_mode);
     out_info->byte_count = (uint64_t)information.st_size;
