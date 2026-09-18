@@ -127,6 +127,27 @@ UmiStatus umi_file_index_find(const UmiFileIndex *index,
  */
 UmiFileIndexStats umi_file_index_stats(const UmiFileIndex *index);
 
+/** One coherent page of the index. Counts refer to files, not directories.
+ * matched is the total number matching query; count is the number copied.
+ * offset is measured in matching rows. A zero-capacity query returns counts.
+ * Revision changes describe row/root changes, not repeated no-change scans. */
+typedef struct UmiFileIndexPage {
+    UmiFileIndexStats stats;
+    size_t matched;
+    size_t offset;
+    size_t count;
+    int has_more;
+} UmiFileIndexPage;
+
+/** Copy a filtered page while holding one reader lock. No pointers are retained.
+ * A nonzero expectedRevision rejects stale navigation with BUSY; on failure,
+ * neither entries nor page is changed. Offset beyond the end returns no rows.
+ * Rebuild may return BUSY if another writer changed the index during its scan.
+ * Keep the index alive until every concurrent operation has returned. */
+UmiStatus UmiFileIndexReadPage(const UmiFileIndex *index, const char *query,
+    int caseSensitive, size_t offset, uint64_t expectedRevision,
+    UmiFileIndexEntry *entries, size_t capacity, UmiFileIndexPage *page);
+
 #ifdef __cplusplus
 }
 #endif

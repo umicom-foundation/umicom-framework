@@ -339,6 +339,7 @@ add_library(umicom_platform STATIC
     src/platform/document.c
     src/platform/document_store.c
     src/platform/workspace_graph.c
+    src/platform/workspace_files.c
     src/platform/file_index.c
     src/platform/search.c
     src/platform/session_store.c
@@ -4900,6 +4901,9 @@ install(DIRECTORY docs/guides/
 install(FILES docs/WRITING_DOCUMENTATION.md
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs
     COMPONENT Framework)
+install(DIRECTORY examples/project_files/
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/project_files
+    FILES_MATCHING PATTERN "*.c" PATTERN "CMakeLists.txt")
 install(DIRECTORY examples/build_diagnostics/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/build_diagnostics
 )
@@ -5076,4 +5080,32 @@ if(BUILD_TESTING)
         add_test(NAME framework.build_diagnostics.${_diagnostic_case}
             COMMAND umicom-build-diagnostics-test ${_diagnostic_case})
     endforeach()
+endif()
+
+# Project file creation and coherent file-index pages use real owned directories.
+if(BUILD_TESTING)
+    add_executable(umicom-project-files-test tests/test_project_files.c)
+    target_link_libraries(umicom-project-files-test PRIVATE Umicom::platform)
+    umicom_apply_warnings(umicom-project-files-test)
+    umicom_apply_sanitizers(umicom-project-files-test)
+    set(_project_creation_cases create-file create-directory no-overwrite
+        parent-required untrusted stale closed path-rules metadata invalid-input
+        symlink-parent symlink-leaf parallel-create)
+    set(_project_index_cases refresh-rollback empty no-change page-boundaries
+        filter-pages stale-page page-input read-write budget)
+    foreach(_project_group IN ITEMS creation index)
+        foreach(_project_case IN LISTS _project_${_project_group}_cases)
+            set(_project_test "framework.project_files.${_project_group}.${_project_case}")
+            set(_project_directory "${CMAKE_CURRENT_BINARY_DIR}/qualification/${_project_test}")
+            file(MAKE_DIRECTORY "${_project_directory}")
+            add_test(NAME "${_project_test}" COMMAND umicom-project-files-test
+                "${_project_group}" "${_project_case}")
+            set_tests_properties("${_project_test}" PROPERTIES
+                WORKING_DIRECTORY "${_project_directory}"
+                TIMEOUT 60 SKIP_RETURN_CODE 77 LABELS "framework;project-files;filesystem")
+        endforeach()
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-project-files-test)
+    endif()
 endif()

@@ -29,6 +29,7 @@ struct UmiFileIndex {
     char root[UMI_PATH_CAPACITY];
     UmiFileIndexEntry *entries;
     size_t count;
+    size_t allocated;
     UmiMutex *mutex;
     UmiFileIndexStats stats;
 };
@@ -69,6 +70,27 @@ static int compare_entries(const void *left, const void *right)
 #else
     return strcmp(a->relative_path, b->relative_path);
 #endif
+}
+
+/* Grow only the private storage actually needed by the index. The configured
+ * maximum remains a hard limit, not a request to allocate every possible row. */
+static UmiStatus ReserveEntries(UmiFileIndexEntry **entries, size_t *allocated,
+                                size_t required, size_t maximum)
+{
+    size_t capacity = *allocated;
+    UmiFileIndexEntry *candidate;
+    if (required > maximum || maximum > SIZE_MAX / sizeof(**entries))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (required <= capacity) return UMI_STATUS_OK;
+    if (capacity == 0U) capacity = maximum < 128U ? maximum : 128U;
+    while (capacity < required) {
+        capacity = capacity > maximum / 2U ? maximum : capacity * 2U;
+    }
+    candidate = realloc(*entries, capacity * sizeof(**entries));
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    *entries = candidate;
+    *allocated = capacity;
+    return UMI_STATUS_OK;
 }
 
 /* Provide the contains text operation used by this module and its client applications. */
@@ -169,15 +191,11 @@ UmiStatus umi_file_index_create(const UmiFileIndexConfig *config,
         return status != UMI_STATUS_OK ? status : UMI_STATUS_OUT_OF_MEMORY;
     }
     index->config.root = index->root;
-    index->entries = (UmiFileIndexEntry *)calloc(effective.maximum_files,
-                                                  sizeof(*index->entries));
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (index->entries == NULL) {
+    /* An empty index needs no row allocation. Reject impossible bounds now,
+     * before any watcher or refresh can use them in allocation arithmetic. */
+    if (effective.maximum_files > SIZE_MAX / sizeof(*index->entries)) {
         umi_file_index_destroy(index);
-        return UMI_STATUS_OUT_OF_MEMORY;
+        return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     (void)snprintf(index->stats.root,
                    sizeof(index->stats.root),
@@ -256,35 +274,46 @@ UmiStatus umi_file_index_clear(UmiFileIndex *index)
 }
 
 typedef struct BuildContext {
-    UmiFileIndex *index;
+    char root[UMI_PATH_CAPACITY];
+    UmiFileIndexEntry *entries;
+    size_t maximum;
     size_t count;
+    size_t allocated;
 } BuildContext;
+
+/* Construct a row before publishing it; a failed relative-path conversion must
+ * not put an incomplete row into a snapshot. Names remain display previews. */
+static UmiStatus BuildEntry(const char *root, const UmiFileInfo *info,
+                            UmiFileIndexEntry *entry)
+{
+    UmiStatus status;
+    (void)memset(entry, 0, sizeof(*entry));
+    status = umi_path_copy(entry->path, sizeof(entry->path), info->path);
+    if (status == UMI_STATUS_OK)
+        status = umi_path_relative(root, info->path, entry->relative_path,
+                                    sizeof(entry->relative_path));
+    if (status != UMI_STATUS_OK) return status;
+    copy_bounded(entry->name, sizeof(entry->name), info->name);
+    (void)umi_path_extension(info->path, entry->extension, sizeof(entry->extension));
+    entry->size = info->size;
+    entry->modified_nanoseconds = info->modified_nanoseconds;
+    return UMI_STATUS_OK;
+}
 
 /* Provide the build visitor operation used by this module and its client applications. */
 static UmiStatus build_visitor(const UmiFileInfo *info, void *user_data)
 {
-    BuildContext *context = (BuildContext *)user_data;
-    UmiFileIndexEntry *entry;
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    BuildContext *context = user_data;
+    UmiStatus status;
     if (info->kind != UMI_FILE_KIND_REGULAR) return UMI_STATUS_OK;
-    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (context->count >= context->index->config.maximum_files) {
-        return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (context->count >= context->maximum) return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = ReserveEntries(&context->entries, &context->allocated,
+                             context->count + 1U, context->maximum);
+    if (status == UMI_STATUS_OK) {
+        status = BuildEntry(context->root, info, &context->entries[context->count]);
+        if (status == UMI_STATUS_OK) ++context->count;
     }
-    entry = &context->index->entries[context->count++];
-    (void)memset(entry, 0, sizeof(*entry));
-    (void)snprintf(entry->path, sizeof(entry->path), "%s", info->path);
-    (void)umi_path_relative(context->index->root,
-                            info->path,
-                            entry->relative_path,
-                            sizeof(entry->relative_path));
-    copy_bounded(entry->name, sizeof(entry->name), info->name);
-    (void)umi_path_extension(info->path,
-                             entry->extension,
-                             sizeof(entry->extension));
-    entry->size = info->size;
-    entry->modified_nanoseconds = info->modified_nanoseconds;
-    return UMI_STATUS_OK;
+    return status;
 }
 
 /*
@@ -294,37 +323,49 @@ static UmiStatus build_visitor(const UmiFileInfo *info, void *user_data)
 UmiStatus umi_file_index_rebuild(UmiFileIndex *index)
 {
     UmiDirectoryWalkOptions options;
-    BuildContext context;
+    BuildContext context = {0};
     UmiStatus status;
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
+    uint64_t revision;
     if (index == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)umi_mutex_lock(index->mutex);
-    context.index = index;
-    context.count = 0U;
+    (void)memcpy(context.root, index->root, sizeof(context.root));
+    context.maximum = index->config.maximum_files;
+    revision = index->stats.revision;
     options = umi_directory_walk_options_default();
     options.max_depth = index->config.maximum_depth;
     options.include_hidden = index->config.include_hidden;
     options.include_files = 1;
     options.include_directories = 0;
-    status = umi_directory_walk(index->root,
-                                &options,
-                                build_visitor,
-                                &context);
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status == UMI_STATUS_OK) {
-        index->count = context.count;
-        qsort(index->entries,
-              index->count,
-              sizeof(*index->entries),
-              compare_entries);
-        index->stats.files = index->count;
-        index->stats.revision += 1U;
-        index->stats.rebuilds += 1U;
-    }
     (void)umi_mutex_unlock(index->mutex);
+
+    /* Walking a large tree does not hold the reader mutex or overwrite the
+     * published rows. Failed scans leave the last usable snapshot untouched. */
+    status = umi_directory_walk(context.root, &options, build_visitor, &context);
+    if (status == UMI_STATUS_OK && context.count > 1U)
+        qsort(context.entries, context.count, sizeof(*context.entries), compare_entries);
+    if (status == UMI_STATUS_OK) {
+        (void)umi_mutex_lock(index->mutex);
+        /* A watcher or a workspace switch wins over an older in-flight scan. */
+        if (index->stats.revision != revision) {
+            status = UMI_STATUS_BUSY;
+        } else {
+            const int changed = index->count != context.count ||
+                (context.count != 0U && memcmp(index->entries, context.entries,
+                    context.count * sizeof(*context.entries)) != 0);
+            if (changed) {
+                UmiFileIndexEntry *oldEntries = index->entries;
+                index->entries = context.entries;
+                index->allocated = context.allocated;
+                index->count = context.count;
+                index->stats.files = context.count;
+                ++index->stats.revision;
+                context.entries = oldEntries;
+            }
+            ++index->stats.rebuilds;
+        }
+        (void)umi_mutex_unlock(index->mutex);
+    }
+    free(context.entries);
     return status;
 }
 
@@ -358,23 +399,19 @@ UmiStatus umi_file_index_update(UmiFileIndex *index, const char *path)
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     /* Apply this branch only when its contract condition is satisfied. */
+    /* Root, relative-path calculation and publication share one lock. A
+     * concurrent root change cannot admit a row belonging to the old project. */
+    (void)umi_mutex_lock(index->mutex);
     if (info.kind != UMI_FILE_KIND_REGULAR ||
         !umi_path_is_within(index->root, info.path)) {
+        (void)umi_mutex_unlock(index->mutex);
         return UMI_STATUS_INVALID_ARGUMENT;
     }
-    (void)memset(&entry, 0, sizeof(entry));
-    (void)snprintf(entry.path, sizeof(entry.path), "%s", info.path);
-    (void)umi_path_relative(index->root,
-                            info.path,
-                            entry.relative_path,
-                            sizeof(entry.relative_path));
-    copy_bounded(entry.name, sizeof(entry.name), info.name);
-    (void)umi_path_extension(info.path,
-                             entry.extension,
-                             sizeof(entry.extension));
-    entry.size = info.size;
-    entry.modified_nanoseconds = info.modified_nanoseconds;
-    (void)umi_mutex_lock(index->mutex);
+    status = BuildEntry(index->root, &info, &entry);
+    if (status != UMI_STATUS_OK) {
+        (void)umi_mutex_unlock(index->mutex);
+        return status;
+    }
     position = find_path(index, info.path);
     /* Apply this branch only when its contract condition is satisfied. */
     if (position == SIZE_MAX) {
@@ -383,7 +420,18 @@ UmiStatus umi_file_index_update(UmiFileIndex *index, const char *path)
             (void)umi_mutex_unlock(index->mutex);
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
+        status = ReserveEntries(&index->entries, &index->allocated,
+                                 index->count + 1U, index->config.maximum_files);
+        if (status != UMI_STATUS_OK) {
+            (void)umi_mutex_unlock(index->mutex);
+            return status;
+        }
         position = index->count++;
+    } else if (memcmp(&index->entries[position], &entry, sizeof(entry)) == 0) {
+        /* Duplicate watcher notifications should not steal native row focus. */
+        ++index->stats.updates;
+        (void)umi_mutex_unlock(index->mutex);
+        return UMI_STATUS_OK;
     }
     index->entries[position] = entry;
     qsort(index->entries,
@@ -501,4 +549,38 @@ UmiFileIndexStats umi_file_index_stats(const UmiFileIndex *index)
     stats = index->stats;
     (void)umi_mutex_unlock(mutable_index->mutex);
     return stats;
+}
+
+/* Copy one coherent filtered page. An expected revision makes paging across
+ * asynchronous refreshes explicit; zero requests whichever snapshot is current. */
+UmiStatus UmiFileIndexReadPage(const UmiFileIndex *index, const char *query,
+    int caseSensitive, size_t offset, uint64_t expectedRevision,
+    UmiFileIndexEntry *entries, size_t capacity, UmiFileIndexPage *page)
+{
+    UmiFileIndex *mutableIndex = (UmiFileIndex *)index;
+    UmiFileIndexPage result = {0};
+    size_t position;
+    if (index == NULL || query == NULL || page == NULL ||
+        (capacity != 0U && entries == NULL)) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)umi_mutex_lock(mutableIndex->mutex);
+    if (expectedRevision != 0U && expectedRevision != index->stats.revision) {
+        (void)umi_mutex_unlock(mutableIndex->mutex);
+        return UMI_STATUS_BUSY;
+    }
+    result.stats = index->stats;
+    result.offset = offset;
+    for (position = 0U; position < index->count; ++position) {
+        const UmiFileIndexEntry *entry = &index->entries[position];
+        if (contains_text(entry->relative_path, query, caseSensitive)) {
+            if (result.matched >= offset && result.count < capacity)
+                entries[result.count++] = *entry;
+            ++result.matched;
+        }
+    }
+    (void)umi_mutex_unlock(mutableIndex->mutex);
+    /* Subtract after checking offset; an arbitrarily large offset never wraps. */
+    result.has_more = offset < result.matched &&
+        result.count < result.matched - offset;
+    *page = result;
+    return UMI_STATUS_OK;
 }

@@ -15,9 +15,9 @@ endfunction()
 if(CASE STREQUAL "pages")
     foreach(_path IN ITEMS index.html getting-started.html products.html downloads.html
             publishing.html contributing.html source-map.html wiki/index.html
-            wiki/working-copies.html wiki/compiler-diagnostics.html wiki/components.html
+            wiki/working-copies.html wiki/compiler-diagnostics.html wiki/components.html wiki/project-files.html
             studio/index.html trader/index.html desktop/index.html bank/index.html
-            studio/EDITING_FILES.html studio/READING_BUILD_ERRORS.html build-and-publish.html
+            studio/EDITING_FILES.html studio/READING_BUILD_ERRORS.html studio/PROJECT_FILES.html build-and-publish.html
             assets/site.css assets/site.js reference/html/index.html)
         if(NOT EXISTS "${SITE}/${_path}")
             message(FATAL_ERROR "Missing assembled file: ${_path}")
@@ -39,7 +39,8 @@ elseif(CASE STREQUAL "catalogue")
     RequireText("${_map}" "include/umicom/ui/components/component.h")
 elseif(CASE STREQUAL "examples")
     foreach(_pair IN ITEMS "build_diagnostics/main.c|compiler-diagnostics.html"
-            "editor_workflow/complete_document.c|working-copies.html")
+            "editor_workflow/complete_document.c|working-copies.html"
+            "project_files/main.c|project-files.html")
         string(REPLACE "|" ";" _parts "${_pair}")
         list(GET _parts 0 _source)
         list(GET _parts 1 _page)
