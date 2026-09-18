@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="From a clean checkout to your first Framework example."><title>Start developing with Umicom · Umicom</title>
+<link rel="stylesheet" href="assets/site.css"><script defer src="assets/site.js"></script>
+</head><body><a class="skip" href="#content">Skip to content</a>
+<header class="top"><a class="brand" href="index.html">&lt;&gt; <span>Umicom</span></a>
+<nav aria-label="Main navigation"><a href="getting-started.html">Start learning</a><a href="wiki/index.html">Wiki</a><a href="source-map.html">Source map</a><a href="products.html">Applications</a><a href="downloads.html">Downloads</a><a href="https://github.com/umicom-foundation">GitHub</a></nav></header>
+<main id="content"><header class="hero"><p class="eyebrow">Umicom Framework &amp; Applications</p><h1>Start developing with Umicom</h1><p class="lead">From a clean checkout to your first Framework example.</p></header>
+<h2>Choose a starting point</h2><p>To use an application, begin with its <a href="products.html">user guide</a>. To build with Framework, keep the complete Applications checkout available: its submodules contain Framework and the product repositories. A GitHub source archive for the parent alone does not include the contents of those separate repositories.</p>
+<h2>1. Get the source</h2><p>Git is the version-control tool. GitHub hosts a remote copy. Open a terminal in the directory that should contain your checkout and use a new, empty destination.</p><h3>Windows PowerShell</h3><pre><code>Set-Location "C:\umicom"
+git clone --recurse-submodules https://github.com/umicom-foundation/umicom-applications.git Umicom-Applications
+Set-Location ".\Umicom-Applications"
+git status</code></pre><h3>Linux shell</h3><pre><code>mkdir -p "$HOME/umicom"
+cd "$HOME/umicom"
+git clone --recurse-submodules https://github.com/umicom-foundation/umicom-applications.git Umicom-Applications
+cd Umicom-Applications
+git status</code></pre><p>Run one line at a time and stop on an error. If the destination already contains your work, update that checkout instead of cloning over it. Use GitHub's supported authentication; never place a token in these URLs or in a public guide.</p>
+<h2>2. Select the development branches before editing</h2><p>Submodules may initially be detached at the exact commits recorded by the parent. For a reproducible build of that snapshot, leave those commits selected. For the project's main-only development workflow, first inspect each clean repository and check that its current work is included in its remote main branch.</p><pre><code>git status
+git fetch origin
+git --no-pager log --oneline origin/main..HEAD
+git submodule foreach --recursive 'git status --short --branch'
+git submodule foreach --recursive 'git fetch origin'
+git submodule foreach --recursive 'git --no-pager log --oneline origin/main..HEAD'</code></pre><p>Continue only when there are no uncommitted changes and the log commands print no commits (the submodule headings are normal). Output containing commits needs review before switching. Then:</p><pre><code>git switch main
+git submodule foreach --recursive 'git switch main'
+git merge --ff-only origin/main
+git submodule foreach --recursive 'git merge --ff-only origin/main'
+git branch --show-current
+git submodule foreach --recursive 'git branch --show-current'</code></pre><p>Each branch check should print <code>main</code>. Stop if a branch is missing or a fast-forward fails; do not force a switch or reset. Selecting newer child branches changes the parent's recorded source combination. Build and review that combination before updating its lock. A Git setting cannot prevent a later command from detaching HEAD, so repeat this check before each development session.</p>
+<h2>3. Build the development environment</h2><p>The maintained <a href="build-and-publish.html">build and publication guide</a> explains dependencies, Windows and Linux presets, tests, installation into a separate directory and Git publication. Follow that guide before compiling the examples. Installing a Framework SDK gives an independent project headers, libraries and CMake package information.</p>
+<h2>4. Read and run one example</h2><p>Start with <a href="wiki/compiler-diagnostics.html">the compiler-message reader</a>. It is small enough to inspect in one file but solves a real IDE task. Then use <a href="wiki/working-copies.html">working copies</a> to understand text ownership and Undo. Finally, follow <a href="wiki/components.html">the Notes window</a> to connect the same document operations to buttons, menus and panels.</p><p>For each example, predict its output, run it, make one controlled change and check the result. A successful compilation proves the compiler accepted the program; its test and actual behaviour tell you whether it does what you intended.</p>
+<h2>5. Find the next component</h2><p>Search the <a href="source-map.html">source map</a> for a feature name such as <code>document</code>, <code>build</code> or <code>component</code>. Open the public header first, identify its types and ownership rules, then follow the implementation and tests. Do not include a private source file directly in an application to avoid learning its library boundary.</p>
+</main><footer><strong>Umicom Foundation</strong><p>Learn from the source. Build with shared components.</p><a href="contributing.html">Improve these guides</a> · <a href="https://github.com/umicom-foundation">GitHub organisation</a></footer></body></html>

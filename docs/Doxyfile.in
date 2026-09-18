@@ -22,9 +22,12 @@ ALLOW_UNICODE_NAMES    = YES
 OUTPUT_LANGUAGE        = English
 
 INPUT                  = @UMICOM_DOCUMENTATION_INPUT@
-FILE_PATTERNS          = *.h *.c *.md
+FILE_PATTERNS          = *.h *.c *.inc *.md
+EXTENSION_MAPPING      = inc=C
 RECURSIVE              = YES
-EXCLUDE_PATTERNS       = */build/* */.git/* */generated/*
+# Exclude the actual generated build root, not source families such as src/build.
+EXCLUDE                = "@CMAKE_BINARY_DIR@" "@CMAKE_SOURCE_DIR@/build"
+EXCLUDE_PATTERNS       = */.git/* */generated/*
 USE_MDFILE_AS_MAINPAGE = "@UMICOM_DOCUMENTATION_MAIN_PAGE@"
 
 EXTRACT_ALL            = YES

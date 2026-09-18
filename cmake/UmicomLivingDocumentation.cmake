@@ -37,6 +37,7 @@ if(UMICOM_BUILD_LIVING_DOCUMENTATION)
         set(_umicom_documentation_roots
             "${CMAKE_CURRENT_SOURCE_DIR}/include"
             "${CMAKE_CURRENT_SOURCE_DIR}/src"
+            "${CMAKE_CURRENT_SOURCE_DIR}/adapters"
             "${CMAKE_CURRENT_SOURCE_DIR}/docs")
 
         # A suite build includes thin application contracts as well as
@@ -68,12 +69,13 @@ if(UMICOM_BUILD_LIVING_DOCUMENTATION)
         # Build one glob pattern per source root. Appending a suffix directly
         # to a CMake list would otherwise apply it to only the last entry.
         set(_umicom_documentation_patterns)
-        # Each root contributes all three documented source formats.
+        # Each root contributes all four documented source formats.
         foreach(_umicom_documentation_root IN LISTS
                 _umicom_documentation_roots)
             list(APPEND _umicom_documentation_patterns
                 "${_umicom_documentation_root}/*.c"
                 "${_umicom_documentation_root}/*.h"
+                "${_umicom_documentation_root}/*.inc"
                 "${_umicom_documentation_root}/*.md")
         endforeach()
 
