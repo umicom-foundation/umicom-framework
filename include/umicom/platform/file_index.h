@@ -20,6 +20,7 @@
 #include <stdint.h>
 
 #include "umicom/base/status.h"
+#include "umicom/platform/cancellation.h"
 #include "umicom/platform/path.h"
 
 #ifdef __cplusplus
@@ -147,6 +148,63 @@ typedef struct UmiFileIndexPage {
 UmiStatus UmiFileIndexReadPage(const UmiFileIndex *index, const char *query,
     int caseSensitive, size_t offset, uint64_t expectedRevision,
     UmiFileIndexEntry *entries, size_t capacity, UmiFileIndexPage *page);
+
+/** Counts are candidates scanned so far, not published rows or a percentage.
+ * The callback runs on the scanning thread, outside the index lock. It may read
+ * the index or request cancellation, but must not destroy borrowed state. */
+typedef void (*UmiFileIndexScanProgress)(size_t filesScanned, void *userData);
+
+typedef struct UmiFileIndexScanOptions {
+    uint64_t expectedRevision; /* Zero accepts the current revision at scan start. */
+    const UmiCancellationToken *cancellation; /* Borrowed; NULL disables cancellation. */
+    UmiFileIndexScanProgress progress; /* Optional, called at start and in batches. */
+    void *userData;
+} UmiFileIndexScanOptions;
+
+/** Synchronous scan with explicit cancellation and stale-request protection.
+ * NULL options preserve umi_file_index_rebuild behaviour. A cancelled, failed
+ * or stale scan does not publish its candidate. Existing watcher updates are
+ * not rolled back. Cancellation is cooperative; a request after publication
+ * cannot undo a successful refresh. Callbacks and options are not retained. */
+UmiStatus UmiFileIndexRebuildWithOptions(UmiFileIndex *index,
+    const UmiFileIndexScanOptions *options);
+
+/** A copied snapshot of the index's single background refresh request.
+ * active includes queue finalisation; status is final only when active is zero.
+ * requestId is zero before the first request. Published rows remain separately
+ * available through the existing index/page APIs while this request is active. */
+typedef struct UmiFileIndexRefreshSnapshot {
+    char sourceRoot[UMI_PATH_CAPACITY]; /* Absolute root captured at submission. */
+    uint64_t requestId;
+    uint64_t sourceRevision;
+    size_t filesScanned;
+    UmiStatus status;
+    int active;
+    int cancellationRequested;
+} UmiFileIndexRefreshSnapshot;
+
+/** Submit one refresh to a lazily created, single-worker Framework task queue.
+ * The index root must be absolute, so later process cwd changes cannot redirect
+ * a queued request. Relative roots remain supported by synchronous rebuilding.
+ * Nonzero expectedRevision rejects a stale caller. A second outstanding request
+ * returns BUSY; it is not accumulated. Success means accepted, not completed.
+ * No caller-owned options or UI pointers are retained. Changing root or clearing
+ * the index cancels the pending refresh and invalidates its publication revision. */
+UmiStatus UmiFileIndexRefreshStart(UmiFileIndex *index, uint64_t expectedRevision);
+
+/** Request cancellation without waiting. A completed refresh stays completed. */
+UmiStatus UmiFileIndexRefreshCancel(UmiFileIndex *index);
+
+/** Copy status without waiting for disk enumeration or worker completion. */
+UmiStatus UmiFileIndexRefreshRead(const UmiFileIndex *index,
+    UmiFileIndexRefreshSnapshot *snapshot);
+
+/** Wait for the owned refresh queue to become idle; zero timeout means wait
+ * indefinitely. Do not call from a UI event handler. Read the snapshot for the
+ * scan result; successful waiting does not imply a successful scan. Do not start
+ * another refresh concurrently with this wait. Destruction cancels and joins
+ * the worker before freeing index memory; it may wait for an OS call to return. */
+UmiStatus UmiFileIndexRefreshWait(UmiFileIndex *index, uint32_t timeoutMilliseconds);
 
 #ifdef __cplusplus
 }

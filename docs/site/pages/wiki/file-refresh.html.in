@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Create project entries and browse indexed files through shared Framework contracts."><title>Project files · Umicom</title>
+<link rel="stylesheet" href="../assets/site.css"><script defer src="../assets/site.js"></script>
+@UMICOM_SITE_ICONS@
+</head><body><a class="skip" href="#content">Skip to content</a>
+<header class="top">@UMICOM_SITE_BRAND@
+<nav aria-label="Main navigation"><a href="../getting-started.html">Start learning</a><a href="../wiki/index.html">Wiki</a><a href="../source-map.html">Source map</a><a href="../products.html">Applications</a><a href="../downloads.html">Downloads</a><a href="https://github.com/umicom-foundation">GitHub</a></nav></header>
+<main id="content"><header class="hero"><p class="eyebrow">Umicom Framework</p><h1>Refreshing project files without blocking the editor</h1><p class="lead">Use the shared file index, a background worker and copied progress to keep a Notes project responsive during refresh.</p></header>
+<p>Suppose you create a header outside Studio while a Notes project is open. Explorer needs to discover the new file, but it should not prevent you from typing while it searches the project. The index therefore separates the list you are using from the candidate list being scanned. A successful scan replaces the list in one publication step. A failed or cancelled scan does not publish half of its work.</p>
+<h2>What runs where?</h2><p>The caller starts a refresh and returns to its normal work. A worker from Framework's existing task queue enumerates directories. The interface periodically asks for a copied snapshot and updates a status label. The worker never receives a widget pointer and never modifies a document.</p><p>This distinction is important: a successful call to <code>UmiFileIndexRefreshStart</code> means the request was accepted. It does not mean the scan finished. Check <code>active</code> first, then inspect <code>status</code> when the request is no longer active.</p>
+<h2>Find the feature in source</h2><div class="table-wrap"><table><tr><th>Responsibility</th><th>Location</th></tr>
+<tr><td>Index, scan options and refresh API</td><td><code>framework/include/umicom/platform/file_index.h</code></td></tr>
+<tr><td>Candidate scan, publication and worker lifetime</td><td><code>framework/src/platform/file_index.c</code></td></tr>
+<tr><td>Cancellable directory enumeration</td><td><code>framework/include/umicom/platform/directory.h</code> and <code>framework/src/platform/directory.c</code></td></tr>
+<tr><td>Studio facade</td><td><code>applications/studio/src/app/ui.c</code></td></tr>
+<tr><td>Explorer presentation</td><td><code>applications/studio/src/gui/workbench/runtime/interaction/explorer.inc</code> and <code>surfaces/explorer.inc</code></td></tr>
+<tr><td>Tests and working example</td><td><code>framework/tests/test_file_index_refresh.c</code> and <code>framework/examples/project_files/refresh.c</code></td></tr>
+</table></div><p>Applications link the existing <code>Umicom::platform</code> target. There is no separate indexing engine to install.</p>
+<h2>The operations you use</h2><div class="table-wrap"><table><tr><th>Function</th><th>Use</th></tr>
+<tr><td><code>UmiFileIndexRefreshStart(index, expectedRevision)</code></td><td>Accept one background refresh. Use a known revision to reject a stale request, or zero to accept the current index. A second outstanding request returns <code>BUSY</code>.</td></tr>
+<tr><td><code>UmiFileIndexRefreshRead(index, &amp;state)</code></td><td>Copy the request ID, source root, source revision, scanned-file count, active flag, cancellation request and result.</td></tr>
+<tr><td><code>UmiFileIndexRefreshCancel(index)</code></td><td>Request cancellation without waiting. It affects this index, not a compiler or an open document.</td></tr>
+<tr><td><code>UmiFileIndexRefreshWait(index, timeout)</code></td><td>Wait outside a graphical event callback. Zero waits indefinitely. Successful waiting means the worker became idle; inspect the snapshot for the scan result.</td></tr>
+<tr><td><code>UmiFileIndexReadPage(...)</code></td><td>Read the current published rows while the scan runs or after it finishes.</td></tr>
+<tr><td><code>UmiFileIndexRebuildWithOptions(index, &amp;options)</code></td><td>Use the synchronous scan with a cancellation token, expected revision and optional progress callback. The existing <code>umi_file_index_rebuild</code> remains available.</td></tr>
+</table></div>
+<h2>Keep ownership explicit</h2><p>The creator owns the index. Its first background request lazily creates a bounded task queue with one worker. Further requests reuse that queue and retain at most one task. The snapshot and page APIs copy values into caller-owned storage; they do not lend you the worker's mutable buffers.</p><p>Configure an absolute project root before starting a background refresh. Otherwise a later change to the process working directory could redirect a queued scan. The asynchronous API rejects relative roots. The original synchronous API still accepts them.</p><p>Destroy the index only after other callers and file watchers have stopped using it. Destruction requests cancellation and joins its owned worker before releasing memory. It may still wait for an operating-system call to return.</p>
+<h2>Cancellation and concurrent changes</h2><p>Cancellation is cooperative. Framework checks the token while collecting names and traversing directories, and again before publishing the candidate. It cannot interrupt an operating-system call or a sort already in progress. A cancellation request that arrives after successful publication cannot undo that refresh.</p><p>A watcher update, clearing the index or changing its root invalidates an older candidate. That scan returns <code>BUSY</code> or <code>CANCELLED</code> instead of replacing newer state. The older published list stays available unless another legitimate operation has changed or cleared it. This is not a filesystem snapshot: files can still change during enumeration.</p><p><code>filesScanned</code> counts candidate regular files accepted so far. It is not a percentage, a directory count or a promise about the final index. The status label should say what the count means instead of displaying an invented completion percentage.</p>
+<h2>Build a read-only Notes file browser</h2><p>The program below takes a project directory, requests a refresh, polls its state and prints the first indexed path. It does not create, save, compile or execute anything in that project. Read the cleanup at the end: it runs even when an earlier operation fails.</p>
+<pre><code class="language-c">@UMICOM_SITE_FILE_REFRESH_EXAMPLE@</code></pre>
+<h3>Windows</h3><p>Use an installed Framework SDK. The prefix below is the same development installation used by the build guide; replace it only when your SDK is installed elsewhere.</p>
+<pre><code class="language-powershell">Set-Location "C:\umicom\Umicom-Applications"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake -S framework/examples/project_files -B build/notes-project-files -G Ninja -DCMAKE_PREFIX_PATH="C:/umicom/installed/development"
+cmake --build build/notes-project-files
+ctest --test-dir build/notes-project-files --no-tests=error --output-on-failure
+.\build\notes-project-files\umicom-notes-file-refresh.exe "C:\umicom\projects\Umicom Notes"</code></pre>
+<h3>Linux</h3><pre><code class="language-bash">cd "$HOME/umicom/Umicom-Applications"
+cmake -S framework/examples/project_files -B build/notes-project-files -G Ninja -DCMAKE_PREFIX_PATH="$HOME/umicom/installed/development"
+cmake --build build/notes-project-files
+ctest --test-dir build/notes-project-files --no-tests=error --output-on-failure
+./build/notes-project-files/umicom-notes-file-refresh "$HOME/umicom/projects/Umicom Notes"</code></pre>
+<h2>Try it in Studio</h2><p>Open the Notes project and leave a source edit unsaved. Create a separate text file in its directory using your normal file manager. In Explorer, choose Refresh. Continue editing while the refresh runs, then filter for the new filename. Your unsaved source text should remain unchanged, and the new file should appear after a successful scan. On a larger disposable project, use Cancel refresh and then retry.</p><p>Explorer refresh updates file metadata only. It does not reload external file contents over an unsaved editor tab or rediscover every project definition. Opening a workspace and the older synchronous workspace-refresh command still have synchronous discovery paths. This feature does not make all filesystem operations asynchronous.</p>
+<h2>Practice and review</h2><p>Change the example to print a page of ten entries, then request the next page using its returned revision. Handle <code>BUSY</code> by rereading the current state rather than assuming a page still describes the same list. Explain why cancelling a scan cannot safely mean freeing the index immediately.</p><p>Return to <a href="project-files.html">project-file creation</a> or continue with <a href="working-copies.html">documents and memory</a>.</p>
+</main><footer><strong>Umicom Foundation</strong><p>Learn from the source. Build with shared components.</p><a href="../contributing.html">Improve these guides</a> · <a href="https://github.com/umicom-foundation">GitHub organisation</a></footer></body></html>

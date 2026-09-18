@@ -23,6 +23,7 @@
 #include "umicom/platform/directory.h"
 #include "umicom/platform/filesystem.h"
 #include "umicom/platform/threading.h"
+#include "umicom/platform/task_queue.h"
 
 struct UmiFileIndex {
     UmiFileIndexConfig config;
@@ -32,6 +33,10 @@ struct UmiFileIndex {
     size_t allocated;
     UmiMutex *mutex;
     UmiFileIndexStats stats;
+    UmiTaskQueue *refreshQueue;
+    UmiTask *refreshTask;
+    UmiCancellationToken *refreshCancellation;
+    UmiFileIndexRefreshSnapshot refresh;
 };
 
 /* Provide the copy bounded operation used by this module and its client applications. */
@@ -215,6 +220,14 @@ void umi_file_index_destroy(UmiFileIndex *index)
      * used.
      */
     if (index == NULL) return;
+    /* The worker borrows this index; join it before freeing any index state.
+     * Construction failure also reaches here before the mutex/queue exists. */
+    umi_cancellation_token_request(index->refreshCancellation);
+    if (index->refreshQueue != NULL)
+        (void)umi_task_queue_shutdown(index->refreshQueue, 0);
+    umi_task_queue_destroy(index->refreshQueue);
+    umi_task_destroy(index->refreshTask);
+    umi_cancellation_token_destroy(index->refreshCancellation);
     umi_mutex_destroy(index->mutex);
     free(index->entries);
     free(index);
@@ -244,6 +257,7 @@ UmiStatus umi_file_index_set_root(UmiFileIndex *index,
     if (!umi_fs_is_directory(normalised)) return UMI_STATUS_NOT_FOUND;
 
     (void)umi_mutex_lock(index->mutex);
+    umi_cancellation_token_request(index->refreshCancellation);
     (void)snprintf(index->root, sizeof(index->root), "%s", normalised);
     index->config.root = index->root;
     index->count = 0U;
@@ -266,6 +280,7 @@ UmiStatus umi_file_index_clear(UmiFileIndex *index)
      */
     if (index == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)umi_mutex_lock(index->mutex);
+    umi_cancellation_token_request(index->refreshCancellation);
     index->count = 0U;
     index->stats.files = 0U;
     index->stats.revision += 1U;
@@ -279,6 +294,7 @@ typedef struct BuildContext {
     size_t maximum;
     size_t count;
     size_t allocated;
+    UmiFileIndexScanOptions options;
 } BuildContext;
 
 /* Construct a row before publishing it; a failed relative-path conversion must
@@ -311,7 +327,11 @@ static UmiStatus build_visitor(const UmiFileInfo *info, void *user_data)
                              context->count + 1U, context->maximum);
     if (status == UMI_STATUS_OK) {
         status = BuildEntry(context->root, info, &context->entries[context->count]);
-        if (status == UMI_STATUS_OK) ++context->count;
+        if (status == UMI_STATUS_OK) {
+            ++context->count;
+            if (context->options.progress != NULL && context->count % 64U == 0U)
+                context->options.progress(context->count, context->options.userData);
+        }
     }
     return status;
 }
@@ -322,12 +342,28 @@ static UmiStatus build_visitor(const UmiFileInfo *info, void *user_data)
  */
 UmiStatus umi_file_index_rebuild(UmiFileIndex *index)
 {
+    return UmiFileIndexRebuildWithOptions(index, NULL);
+}
+
+/* Shared synchronous implementation; the background worker calls this same
+ * path and never owns a second index or a competing publication policy. */
+UmiStatus UmiFileIndexRebuildWithOptions(UmiFileIndex *index,
+    const UmiFileIndexScanOptions *scanOptions)
+{
     UmiDirectoryWalkOptions options;
     BuildContext context = {0};
     UmiStatus status;
     uint64_t revision;
     if (index == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (scanOptions != NULL) context.options = *scanOptions;
+    if (umi_cancellation_token_is_requested(context.options.cancellation))
+        return UMI_STATUS_CANCELLED;
     (void)umi_mutex_lock(index->mutex);
+    if (context.options.expectedRevision != 0U &&
+        context.options.expectedRevision != index->stats.revision) {
+        (void)umi_mutex_unlock(index->mutex);
+        return UMI_STATUS_BUSY;
+    }
     (void)memcpy(context.root, index->root, sizeof(context.root));
     context.maximum = index->config.maximum_files;
     revision = index->stats.revision;
@@ -340,13 +376,23 @@ UmiStatus umi_file_index_rebuild(UmiFileIndex *index)
 
     /* Walking a large tree does not hold the reader mutex or overwrite the
      * published rows. Failed scans leave the last usable snapshot untouched. */
-    status = umi_directory_walk(context.root, &options, build_visitor, &context);
+    if (context.options.progress != NULL)
+        context.options.progress(0U, context.options.userData);
+    status = UmiDirectoryWalkCancellable(context.root, &options, build_visitor,
+        &context, context.options.cancellation);
+    if (status == UMI_STATUS_OK && context.options.progress != NULL)
+        context.options.progress(context.count, context.options.userData);
+    if (status == UMI_STATUS_OK &&
+        umi_cancellation_token_is_requested(context.options.cancellation))
+        status = UMI_STATUS_CANCELLED;
     if (status == UMI_STATUS_OK && context.count > 1U)
         qsort(context.entries, context.count, sizeof(*context.entries), compare_entries);
     if (status == UMI_STATUS_OK) {
         (void)umi_mutex_lock(index->mutex);
         /* A watcher or a workspace switch wins over an older in-flight scan. */
-        if (index->stats.revision != revision) {
+        if (umi_cancellation_token_is_requested(context.options.cancellation)) {
+            status = UMI_STATUS_CANCELLED;
+        } else if (index->stats.revision != revision) {
             status = UMI_STATUS_BUSY;
         } else {
             const int changed = index->count != context.count ||
@@ -583,4 +629,137 @@ UmiStatus UmiFileIndexReadPage(const UmiFileIndex *index, const char *query,
         result.count < result.matched - offset;
     *page = result;
     return UMI_STATUS_OK;
+}
+
+/* Progress describes the private candidate, never changes published row counts. */
+static void RefreshProgress(size_t filesScanned, void *userData)
+{
+    UmiFileIndex *index = userData;
+    (void)umi_mutex_lock(index->mutex);
+    index->refresh.filesScanned = filesScanned;
+    (void)umi_mutex_unlock(index->mutex);
+}
+
+/* The task owns no UI state. Results become visible through copied snapshots. */
+static UmiStatus RefreshWorker(UmiTaskContext *taskContext, void *userData)
+{
+    UmiFileIndex *index = userData;
+    UmiFileIndexScanOptions options = {0};
+    UmiStatus status;
+    (void)taskContext;
+    (void)umi_mutex_lock(index->mutex);
+    options.expectedRevision = index->refresh.sourceRevision;
+    options.cancellation = index->refreshCancellation;
+    options.progress = RefreshProgress;
+    options.userData = index;
+    (void)umi_mutex_unlock(index->mutex);
+    status = UmiFileIndexRebuildWithOptions(index, &options);
+    (void)umi_mutex_lock(index->mutex);
+    index->refresh.status = status;
+    index->refresh.active = 0;
+    (void)umi_mutex_unlock(index->mutex);
+    return status;
+}
+
+/* Submission and polling share the index mutex; queue workers never hold the
+ * queue mutex while entering the index. One retained task bounds repeated use. */
+UmiStatus UmiFileIndexRefreshStart(UmiFileIndex *index, uint64_t expectedRevision)
+{
+    UmiTaskQueueConfig queueConfig = {1U, 1U};
+    UmiTaskConfig taskConfig = {0};
+    UmiTask *task = NULL;
+    UmiStatus status = UMI_STATUS_OK;
+    if (index == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)umi_mutex_lock(index->mutex);
+    /* A worker must not resolve its source against a later process cwd. */
+    if (!umi_path_is_absolute(index->root)) {
+        status = UMI_STATUS_INVALID_ARGUMENT;
+        goto done;
+    }
+    if (expectedRevision != 0U && expectedRevision != index->stats.revision) {
+        status = UMI_STATUS_BUSY;
+        goto done;
+    }
+    if (index->refreshQueue != NULL) {
+        UmiTaskQueueStats queueStats = umi_task_queue_stats(index->refreshQueue);
+        if (queueStats.queued != 0U || queueStats.running != 0U) {
+            status = UMI_STATUS_BUSY;
+            goto done;
+        }
+    }
+    if (index->refresh.requestId == UINT64_MAX) {
+        status = UMI_STATUS_CAPACITY_EXCEEDED;
+        goto done;
+    }
+    /* Initialise lazily: synchronous-only users need no additional thread. */
+    if (index->refreshCancellation == NULL)
+        status = umi_cancellation_token_create(&index->refreshCancellation);
+    if (status == UMI_STATUS_OK && index->refreshQueue == NULL)
+        status = umi_task_queue_create(&queueConfig, &index->refreshQueue);
+    if (status != UMI_STATUS_OK) goto done;
+    taskConfig.label = "Refresh project files";
+    taskConfig.function = RefreshWorker;
+    taskConfig.user_data = index;
+    status = umi_task_create(&taskConfig, &task);
+    if (status != UMI_STATUS_OK) goto done;
+    /* Idleness covers the queue's final task access, not just the worker's
+     * earlier publication of active=0. It is now safe to free the old task. */
+    umi_task_destroy(index->refreshTask);
+    index->refreshTask = task;
+    umi_cancellation_token_reset(index->refreshCancellation);
+    ++index->refresh.requestId;
+    (void)memcpy(index->refresh.sourceRoot, index->root, sizeof(index->root));
+    index->refresh.sourceRevision = index->stats.revision;
+    index->refresh.filesScanned = 0U;
+    index->refresh.status = UMI_STATUS_OK;
+    index->refresh.active = 1;
+    status = umi_task_queue_submit(index->refreshQueue, task);
+    if (status != UMI_STATUS_OK) {
+        index->refresh.status = status;
+        index->refresh.active = 0;
+    }
+done:
+    (void)umi_mutex_unlock(index->mutex);
+    return status;
+}
+
+/* Cancellation never joins a worker and never touches a compiler/build task. */
+UmiStatus UmiFileIndexRefreshCancel(UmiFileIndex *index)
+{
+    if (index == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)umi_mutex_lock(index->mutex);
+    if (index->refresh.active)
+        umi_cancellation_token_request(index->refreshCancellation);
+    (void)umi_mutex_unlock(index->mutex);
+    return UMI_STATUS_OK;
+}
+
+/* Keep active true through the final task bookkeeping, so callers cannot
+ * confuse a published scan result with permission to destroy its task. */
+UmiStatus UmiFileIndexRefreshRead(const UmiFileIndex *index,
+    UmiFileIndexRefreshSnapshot *snapshot)
+{
+    UmiFileIndex *mutableIndex = (UmiFileIndex *)index;
+    if (index == NULL || snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)umi_mutex_lock(mutableIndex->mutex);
+    *snapshot = index->refresh;
+    snapshot->cancellationRequested =
+        umi_cancellation_token_is_requested(index->refreshCancellation);
+    if (index->refreshQueue != NULL) {
+        UmiTaskQueueStats queueStats = umi_task_queue_stats(index->refreshQueue);
+        snapshot->active = snapshot->active || queueStats.queued != 0U || queueStats.running != 0U;
+    }
+    (void)umi_mutex_unlock(mutableIndex->mutex);
+    return UMI_STATUS_OK;
+}
+
+/* Joining is an explicit service/test operation, not a UI refresh operation. */
+UmiStatus UmiFileIndexRefreshWait(UmiFileIndex *index, uint32_t timeoutMilliseconds)
+{
+    UmiTaskQueue *queue;
+    if (index == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)umi_mutex_lock(index->mutex);
+    queue = index->refreshQueue;
+    (void)umi_mutex_unlock(index->mutex);
+    return queue != NULL ? umi_task_queue_wait_idle(queue, timeoutMilliseconds) : UMI_STATUS_OK;
 }

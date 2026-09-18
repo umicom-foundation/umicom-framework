@@ -20,6 +20,7 @@
 #include <stdint.h>
 
 #include "umicom/base/status.h"
+#include "umicom/platform/cancellation.h"
 #include "umicom/platform/path.h"
 
 #ifdef __cplusplus
@@ -81,6 +82,16 @@ UmiStatus umi_directory_walk(const char *root,
                              const UmiDirectoryWalkOptions *options,
                              UmiDirectoryVisitor visitor,
                              void *user_data);
+/** Walk with cooperative cancellation, using the same ordering and options as
+ * umi_directory_walk. NULL cancellation keeps the ordinary synchronous policy.
+ * Checks occur during name collection and traversal, including empty folders.
+ * An in-progress OS call or sort cannot be interrupted. Keep the token and
+ * visitor data alive until this call returns; visitors run on the calling thread.
+ * Visitor side effects are not rolled back when cancellation is observed. */
+UmiStatus UmiDirectoryWalkCancellable(const char *root,
+    const UmiDirectoryWalkOptions *options, UmiDirectoryVisitor visitor,
+    void *userData, const UmiCancellationToken *cancellation);
+
 /**
  * Return the number of records represented by directory without changing their state.
  */

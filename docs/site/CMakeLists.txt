@@ -105,6 +105,13 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_project_files
 file(READ "${_project_files_example}" _example)
 UmiSiteEscape("${_example}" UMICOM_SITE_PROJECT_FILES_EXAMPLE)
 
+# The refresh walkthrough displays the same source compiled by the SDK example.
+set(_file_refresh_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/project_files/refresh.c")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_file_refresh_example}")
+file(READ "${_file_refresh_example}" _example)
+UmiSiteEscape("${_example}" UMICOM_SITE_FILE_REFRESH_EXAMPLE)
+
+
 # This is a file inventory, not a second C parser or a runtime module registry.
 file(GLOB_RECURSE _headers CONFIGURE_DEPENDS LIST_DIRECTORIES FALSE
     RELATIVE "${UMICOM_SITE_FRAMEWORK_ROOT}" "${UMICOM_SITE_FRAMEWORK_ROOT}/include/umicom/*.h")

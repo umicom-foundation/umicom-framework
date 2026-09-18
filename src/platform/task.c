@@ -170,9 +170,12 @@ UmiStatus umi_task_run(UmiTask *task)
         task->state = UMI_TASK_FAILED;
         task->result = result;
     }
+    /* A waiter can release a completed task as soon as this mutex is unlocked.
+     * Copy the final result before waking it; do not access task afterwards. */
+    result = task->result;
     (void)umi_condition_broadcast(task->condition);
     (void)umi_mutex_unlock(task->mutex);
-    return task->result;
+    return result;
 }
 
 /* Provide the task cancel operation used by this module and its client applications. */

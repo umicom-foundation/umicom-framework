@@ -23,3 +23,19 @@ if(BUILD_TESTING)
     set_tests_properties(notes.project_files.create-and-index PROPERTIES
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/practice")
 endif()
+
+# Read-only background refresh example; it shares the same installed API.
+add_executable(umicom-notes-file-refresh refresh.c)
+target_link_libraries(umicom-notes-file-refresh PRIVATE Umicom::platform)
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(umicom-notes-file-refresh PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/refresh-practice")
+    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/refresh-practice/notes.c" "/* Umicom Notes source. */\n")
+    add_test(NAME notes.project_files.background-refresh
+        COMMAND umicom-notes-file-refresh "${CMAKE_CURRENT_BINARY_DIR}/refresh-practice")
+    set_tests_properties(notes.project_files.background-refresh PROPERTIES
+        TIMEOUT 45 PASS_REGULAR_EXPRESSION "Indexed files: 1")
+endif()

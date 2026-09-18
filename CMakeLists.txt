@@ -5109,3 +5109,63 @@ if(BUILD_TESTING)
         umicom_register_validation_target(umicom-project-files-test)
     endif()
 endif()
+
+# Refresh tests exercise the existing worker queue and real filesystem fixtures.
+if(BUILD_TESTING)
+    add_executable(umicom-file-index-refresh-test tests/test_file_index_refresh.c)
+    target_link_libraries(umicom-file-index-refresh-test PRIVATE Umicom::platform)
+    umicom_apply_warnings(umicom-file-index-refresh-test)
+    umicom_apply_sanitizers(umicom-file-index-refresh-test)
+    foreach(_refresh_case IN ITEMS invalid pre-cancel mid-cancel late-cancel
+            stale-request root-during-scan clear-during-scan visitor-cancel
+            empty-cancel success repeat failure cancel-background switch-background
+            destroy-background relative-root)
+        set(_refresh_name "framework.file_index_refresh.${_refresh_case}")
+        set(_refresh_directory "${CMAKE_CURRENT_BINARY_DIR}/qualification/${_refresh_name}")
+        file(MAKE_DIRECTORY "${_refresh_directory}")
+        add_test(NAME "${_refresh_name}" COMMAND umicom-file-index-refresh-test "${_refresh_case}")
+        set_tests_properties("${_refresh_name}" PROPERTIES
+            WORKING_DIRECTORY "${_refresh_directory}" TIMEOUT 60
+            LABELS "framework;filesystem;background-refresh")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-file-index-refresh-test)
+    endif()
+endif()
+
+# GNU-style wrapping is confined to a Linux fault-injection test, not the SDK.
+if(BUILD_TESTING AND CMAKE_SYSTEM_NAME STREQUAL "Linux" AND
+        CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    add_executable(umicom-directory-read-error-test tests/test_file_index_refresh.c)
+    target_link_libraries(umicom-directory-read-error-test PRIVATE Umicom::platform)
+    target_compile_definitions(umicom-directory-read-error-test PRIVATE UMI_TEST_DIRECTORY_FAULTS=1)
+    target_link_options(umicom-directory-read-error-test PRIVATE "-Wl,--wrap=readdir")
+    umicom_apply_warnings(umicom-directory-read-error-test)
+    umicom_apply_sanitizers(umicom-directory-read-error-test)
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/directory-read-error")
+    add_test(NAME framework.file_index_refresh.enumeration-error
+        COMMAND umicom-directory-read-error-test enumeration-error)
+    set_tests_properties(framework.file_index_refresh.enumeration-error PROPERTIES
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/directory-read-error"
+        TIMEOUT 60 LABELS "framework;filesystem;fault-injection;background-refresh")
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-directory-read-error-test)
+    endif()
+endif()
+
+# Completion publication permits a waiter to release its task. Pause the worker
+# at that exact boundary to exercise the final return under sanitizers.
+if(BUILD_TESTING AND CMAKE_SYSTEM_NAME STREQUAL "Linux" AND
+   CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    add_executable(umicom-task-completion-test tests/test_task_completion.c)
+    target_link_libraries(umicom-task-completion-test PRIVATE Umicom::platform)
+    target_link_options(umicom-task-completion-test PRIVATE -Wl,--wrap=umi_mutex_unlock)
+    umicom_apply_warnings(umicom-task-completion-test)
+    umicom_apply_sanitizers(umicom-task-completion-test)
+    add_test(NAME framework.task_completion.release-after-wait COMMAND umicom-task-completion-test)
+    set_tests_properties(framework.task_completion.release-after-wait PROPERTIES
+        TIMEOUT 15 LABELS "framework;ownership;background-refresh")
+    if(TARGET umicom-registered-validation-tests)
+        add_dependencies(umicom-registered-validation-tests umicom-task-completion-test)
+    endif()
+endif()

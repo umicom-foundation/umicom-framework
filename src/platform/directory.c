@@ -19,6 +19,7 @@
 
 #include "umicom/platform/directory.h"
 
+#include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -217,7 +218,8 @@ UmiStatus umi_directory_stat(const char *path, UmiFileInfo *out_info)
 }
 
 /* Provide the collect names operation used by this module and its client applications. */
-static UmiStatus collect_names(const char *directory, UmiNameList *out_list)
+static UmiStatus collect_names(const char *directory, UmiNameList *out_list,
+    const UmiCancellationToken *cancellation)
 {
 #ifdef _WIN32
     char pattern[UMI_PATH_CAPACITY];
@@ -234,6 +236,10 @@ static UmiStatus collect_names(const char *directory, UmiNameList *out_list)
         return UMI_STATUS_IO_ERROR;
     }
     do {
+        if (umi_cancellation_token_is_requested(cancellation)) {
+            FindClose(handle);
+            return UMI_STATUS_CANCELLED;
+        }
         /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(data.cFileName, ".") == 0 ||
             strcmp(data.cFileName, "..") == 0) {
@@ -246,8 +252,11 @@ static UmiStatus collect_names(const char *directory, UmiNameList *out_list)
             return status;
         }
     } /* Continue only while work remains available; the loop body advances the state on each pass. */ while (FindNextFileA(handle, &data));
+    /* FindNextFile reports both exhaustion and errors through FALSE. Do not
+     * publish a partial listing after a failed directory enumeration. */
+    DWORD enumerationError = GetLastError();
     FindClose(handle);
-    return UMI_STATUS_OK;
+    return enumerationError == ERROR_NO_MORE_FILES ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
 #else
     DIR *stream;
     struct dirent *entry;
@@ -264,7 +273,19 @@ static UmiStatus collect_names(const char *directory, UmiNameList *out_list)
      * Continue only while work remains available; the loop body advances the state on each
      * pass.
      */
-    while ((entry = readdir(stream)) != NULL) {
+    for (;;) {
+        if (umi_cancellation_token_is_requested(cancellation)) {
+            (void)closedir(stream);
+            return UMI_STATUS_CANCELLED;
+        }
+        /* Reset errno immediately before readdir: NULL can mean EOF or error. */
+        errno = 0;
+        entry = readdir(stream);
+        if (entry == NULL) {
+            const int enumerationError = errno;
+            (void)closedir(stream);
+            return enumerationError == 0 ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
+        }
         /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(entry->d_name, ".") == 0 ||
             strcmp(entry->d_name, "..") == 0) {
@@ -277,8 +298,6 @@ static UmiStatus collect_names(const char *directory, UmiNameList *out_list)
             return status;
         }
     }
-    (void)closedir(stream);
-    return UMI_STATUS_OK;
 #endif
 }
 
@@ -287,13 +306,15 @@ static UmiStatus walk_directory(const char *directory,
                                 size_t depth,
                                 const UmiDirectoryWalkOptions *options,
                                 UmiDirectoryVisitor visitor,
-                                void *user_data)
+                                void *user_data,
+                                const UmiCancellationToken *cancellation)
 {
     UmiNameList names;
     size_t index;
     UmiStatus status;
     (void)memset(&names, 0, sizeof(names));
-    status = collect_names(directory, &names);
+    if (umi_cancellation_token_is_requested(cancellation)) return UMI_STATUS_CANCELLED;
+    status = collect_names(directory, &names, cancellation);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         name_list_dispose(&names);
@@ -301,12 +322,20 @@ static UmiStatus walk_directory(const char *directory,
     }
     /* An empty folder has no allocated name array. qsort still requires a
      * valid base pointer; zero or one entry already has deterministic order. */
+    if (umi_cancellation_token_is_requested(cancellation)) {
+        name_list_dispose(&names);
+        return UMI_STATUS_CANCELLED;
+    }
     if (names.count > 1U)
         qsort(names.items, names.count, sizeof(*names.items), compare_names);
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < names.count; ++index) {
         char path[UMI_PATH_CAPACITY];
         UmiFileInfo info;
+        if (umi_cancellation_token_is_requested(cancellation)) {
+            status = UMI_STATUS_CANCELLED;
+            break;
+        }
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (!options->include_hidden && is_hidden_name(names.items[index])) {
             continue;
@@ -338,12 +367,15 @@ static UmiStatus walk_directory(const char *directory,
                                     depth + 1U,
                                     options,
                                     visitor,
-                                    user_data);
+                                    user_data,
+                                    cancellation);
             /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) break;
         }
     }
     name_list_dispose(&names);
+    if (status == UMI_STATUS_OK && umi_cancellation_token_is_requested(cancellation))
+        status = UMI_STATUS_CANCELLED;
     return status;
 }
 
@@ -352,6 +384,14 @@ UmiStatus umi_directory_walk(const char *root,
                              const UmiDirectoryWalkOptions *options,
                              UmiDirectoryVisitor visitor,
                              void *user_data)
+{
+    return UmiDirectoryWalkCancellable(root, options, visitor, user_data, NULL);
+}
+
+/* The cancellable route retains the established visitor and ordering contract. */
+UmiStatus UmiDirectoryWalkCancellable(const char *root,
+    const UmiDirectoryWalkOptions *options, UmiDirectoryVisitor visitor,
+    void *user_data, const UmiCancellationToken *cancellation)
 {
     UmiDirectoryWalkOptions effective;
     UmiFileInfo root_info;
@@ -363,6 +403,7 @@ UmiStatus umi_directory_walk(const char *root,
     if (root == NULL || visitor == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    if (umi_cancellation_token_is_requested(cancellation)) return UMI_STATUS_CANCELLED;
     effective = options != NULL
         ? *options
         : umi_directory_walk_options_default();
@@ -373,7 +414,7 @@ UmiStatus umi_directory_walk(const char *root,
     if (root_info.kind != UMI_FILE_KIND_DIRECTORY) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
-    return walk_directory(root, 0U, &effective, visitor, user_data);
+    return walk_directory(root, 0U, &effective, visitor, user_data, cancellation);
 }
 
 typedef struct UmiCountContext { size_t count; } UmiCountContext;
