@@ -4,8 +4,9 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Use one shared site build while keeping product content beside its source."><title>Build and publish the documentation · Umicom</title>
 <link rel="stylesheet" href="assets/site.css"><script defer src="assets/site.js"></script>
+@UMICOM_SITE_ICONS@
 </head><body><a class="skip" href="#content">Skip to content</a>
-<header class="top"><a class="brand" href="index.html">&lt;&gt; <span>Umicom</span></a>
+<header class="top">@UMICOM_SITE_BRAND@
 <nav aria-label="Main navigation"><a href="getting-started.html">Start learning</a><a href="wiki/index.html">Wiki</a><a href="source-map.html">Source map</a><a href="products.html">Applications</a><a href="downloads.html">Downloads</a><a href="https://github.com/umicom-foundation">GitHub</a></nav></header>
 <main id="content"><header class="hero"><p class="eyebrow">Umicom Framework &amp; Applications</p><h1>Build and publish the documentation</h1><p class="lead">Use one shared site build while keeping product content beside its source.</p></header>
 <h2>Build the website without building the applications</h2><p>The documentation project uses CMake to assemble the shared pages, the selected application pages and a public-header catalogue. It does not start an application, create a payment or execute a project build. Run these commands from the complete Applications checkout after merging the documentation sources.</p><h3>Windows PowerShell</h3><pre><code>Set-Location "C:\umicom\Umicom-Applications"

@@ -15,6 +15,7 @@
 #-----------------------------------------------------------------------------
 
 PROJECT_NAME           = "Umicom Framework and Applications"
+PROJECT_LOGO           = "@UMICOM_DOCUMENTATION_PROJECT_LOGO@"
 PROJECT_BRIEF          = "Reusable contracts, components, layouts and application modules"
 OUTPUT_DIRECTORY       = "@UMICOM_DOCUMENTATION_OUTPUT_DIRECTORY@"
 CREATE_SUBDIRS         = NO

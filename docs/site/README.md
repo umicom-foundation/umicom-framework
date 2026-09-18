@@ -53,3 +53,25 @@ static-site host for the output. Link any GitHub Wiki to the same canonical cont
 or publish a one-way generated mirror; do not create another independently edited
 API reference. Future installed Help should consume a version-matched copy of the
 same public documentation through Framework's existing resource services.
+
+## Use the official Umicom identity
+
+The website uses the existing SVG artwork in `resources/brand/`, also used by
+Framework applications. The shared header is `templates/brand.html.in`. It
+loads the supplied wordmark and its companion symbol without altering their
+colours, geometry, lettering or proportions. The original ICO and SVG icon
+supply the browser tab icon. No brand symbol is constructed from text,
+punctuation, emoji or a replacement drawing.
+
+Keep brand assets in their existing authoritative location. The documentation
+build copies them to `site/assets/brand/`; do not maintain a second source
+artwork collection inside the website. Missing assets stop configuration.
+`documentation.site.branding` checks that generated copies match the originals
+and that the shared website headers use them. The optional API reference uses
+the supplied icon through Doxygen's `PROJECT_LOGO` setting.
+
+The wordmark refers to its companion SVG. The builder embeds the existing
+wordmark markup and adjusts only that relative resource URL and the display
+attributes. It does not regenerate paths, lettering or colours. The Home link
+remains the single keyboard-focus target. Both the full wordmark and its symbol
+are retained unchanged in the generated asset directory.

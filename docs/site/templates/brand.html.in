@@ -1,0 +1,4 @@
+<!-- Keep the existing repository artwork; do not typeset or redraw the mark. -->
+<a class="brand" href="@UMICOM_SITE_ROOT_PREFIX@index.html" aria-label="Umicom home">
+@UMICOM_SITE_WORDMARK@
+</a>

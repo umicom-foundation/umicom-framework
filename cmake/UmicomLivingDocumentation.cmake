@@ -60,6 +60,11 @@ if(UMICOM_BUILD_LIVING_DOCUMENTATION)
             "${CMAKE_CURRENT_SOURCE_DIR}/docs/LIVING_CODE_DOCUMENTATION.md")
         set(UMICOM_DOCUMENTATION_STYLESHEET
             "${CMAKE_CURRENT_SOURCE_DIR}/docs/documentation.css")
+        set(UMICOM_DOCUMENTATION_PROJECT_LOGO
+            "${CMAKE_CURRENT_SOURCE_DIR}/resources/brand/umicom-icon.svg")
+        if(NOT EXISTS "${UMICOM_DOCUMENTATION_PROJECT_LOGO}")
+            message(FATAL_ERROR "The official Umicom documentation icon is missing.")
+        endif()
 
         configure_file(
             "${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in"
@@ -100,6 +105,7 @@ if(UMICOM_BUILD_LIVING_DOCUMENTATION)
                 "${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in"
                 "${UMICOM_DOCUMENTATION_MAIN_PAGE}"
                 "${UMICOM_DOCUMENTATION_STYLESHEET}"
+                "${UMICOM_DOCUMENTATION_PROJECT_LOGO}"
             WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
             COMMENT "Generating the navigable Umicom code reference"
             VERBATIM)
