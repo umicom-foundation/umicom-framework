@@ -39,3 +39,20 @@ if(BUILD_TESTING)
     set_tests_properties(notes.project_files.background-refresh PROPERTIES
         TIMEOUT 45 PASS_REGULAR_EXPRESSION "Indexed files: 1")
 endif()
+
+# Find saved source text using the same Framework session consumed by Studio.
+add_executable(umicom-notes-file-search search.c)
+target_link_libraries(umicom-notes-file-search PRIVATE Umicom::platform)
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(umicom-notes-file-search PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/search-practice")
+    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/search-practice/notes.c"
+        "/* Umicom Notes */\nunsigned savedCount = 2U;\n/* savedCount tracks saved notes. */\n")
+    add_test(NAME notes.project_files.find-in-files COMMAND umicom-notes-file-search
+        "${CMAKE_CURRENT_BINARY_DIR}/search-practice" savedCount)
+    set_tests_properties(notes.project_files.find-in-files PROPERTIES
+        TIMEOUT 30 PASS_REGULAR_EXPRESSION "Matches: 2")
+endif()

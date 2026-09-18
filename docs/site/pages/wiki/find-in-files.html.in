@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Search saved project files using Framework tasks and safe document navigation."><title>Find in Files · Umicom</title>
+<link rel="stylesheet" href="../assets/site.css"><script defer src="../assets/site.js"></script>
+@UMICOM_SITE_ICONS@
+</head><body><a class="skip" href="#content">Skip to content</a>
+<header class="top">@UMICOM_SITE_BRAND@
+<nav aria-label="Main navigation"><a href="../getting-started.html">Start learning</a><a href="../wiki/index.html">Wiki</a><a href="../source-map.html">Source map</a><a href="../products.html">Applications</a><a href="../downloads.html">Downloads</a><a href="https://github.com/umicom-foundation">GitHub</a></nav></header>
+<main id="content"><header class="hero"><p class="eyebrow">Umicom Framework</p><h1>Searching project files without changing editor drafts</h1><p class="lead">Build a read-only Notes source search using the existing file index, search engine and task queue.</p></header>
+<p>A project search has two separate responsibilities. The worker reads saved files and identifies matching byte positions. The document service opens a chosen result without replacing an existing draft. Keeping these operations separate lets a command-line tool, Studio and another frontend share the search engine.</p>
+<h2>Source map</h2><div class="table-wrap"><table><tr><th>Responsibility</th><th>Location</th></tr>
+<tr><td>Requests, streaming matches and progress</td><td><code>include/umicom/platform/search.h</code> and <code>src/platform/search.c</code></td></tr>
+<tr><td>Background lifetime and retained results</td><td><code>include/umicom/platform/search_session.h</code> and <code>src/platform/search_session.c</code></td></tr>
+<tr><td>Index pages and source revision</td><td><code>include/umicom/platform/file_index.h</code> and <code>src/platform/file_index.c</code></td></tr>
+<tr><td>Opening a match in a working copy</td><td><code>include/umicom/document/coordinator.h</code> and <code>src/document/coordinator.c</code></td></tr>
+<tr><td>Studio composition</td><td><code>applications/studio/src/app/ui.c</code></td></tr>
+<tr><td>GTK Search panel</td><td><code>applications/studio/src/gui/workbench/runtime/surfaces/search.inc</code></td></tr>
+<tr><td>Tests and example</td><td><code>tests/test_file_search.c</code>, Studio <code>tests/test_project_workflow.c</code> and <code>examples/project_files/search.c</code></td></tr></table></div>
+<p>The search APIs belong to <code>Umicom::platform</code>. A document consumer also links the existing <code>Umicom::document</code> target. Studio does not contain a second text-matching engine.</p>
+<h2>Create, start, read and release</h2><div class="table-wrap"><table><tr><th>Operation</th><th>Meaning</th></tr>
+<tr><td><code>UmiFileSearchCreate(index, &amp;session)</code></td><td>Create the session. It borrows the index, which must outlive it.</td></tr>
+<tr><td><code>UmiFileSearchStart(session, query, matchCase, revision)</code></td><td>Copy the query and accept one worker request. Zero revision captures the current index revision.</td></tr>
+<tr><td><code>UmiFileSearchRead(session, &amp;state)</code></td><td>Copy status and progress. Read <code>active</code>, then <code>ready</code>; an accepted request is not a completed search.</td></tr>
+<tr><td><code>UmiFileSearchMatchAt(session, requestId, row, &amp;match)</code></td><td>Copy a result from the indicated completed request. Old request identities and stale index revisions are rejected.</td></tr>
+<tr><td><code>UmiFileSearchCancel(session)</code></td><td>Request cancellation without waiting. A completed search is not undone.</td></tr>
+<tr><td><code>UmiFileSearchInvalidate(session)</code></td><td>Discard access to old results and request cancellation when the host changes workspace.</td></tr>
+<tr><td><code>UmiFileSearchWait(session, timeout)</code></td><td>Wait for queue idleness in a console program or test, not a GUI callback. Inspect the final status afterwards.</td></tr>
+<tr><td><code>UmiFileSearchDestroy(session)</code></td><td>Cancel and drain the owned worker before freeing its rows. Release the borrowed index afterwards.</td></tr></table></div>
+<h2>Keep the owner and worker apart</h2><p>Call the session lifecycle, snapshot and result operations on one owning thread. The worker receives no widget pointer. It writes private result rows and publishes small statistics under a mutex. The owning thread sees rows only after the task queue has finished its bookkeeping.</p>
+<p>The session lazily creates one worker from Framework's existing task queue and retains one request. It copies up to 1,023 query bytes and at most 1,000 result records. Reads are capped at 8 MiB per file. A second request while the first is outstanding returns <code>BUSY</code>, not another queued scan.</p>
+<h2>Handle changing files honestly</h2><p>Index pages carry a revision. A changed revision returns <code>BUSY</code> and invalidates retained results. Unreadable files fail the search rather than silently presenting a complete list. A cancelled or failed request does not expose its partly collected rows as a successful result set.</p>
+<p>The index is not a filesystem snapshot. Files may change after indexing or after a search. The reader enforces its size bound against the bytes it actually reads, because cached file size alone is not sufficient. A file already recorded as oversized is skipped until refreshed, even if it later shrinks.</p>
+<p>For a selected result, <code>UmiDocumentCoordinatorOpenSearchMatch</code> uses the existing coordinator to open or select the file. <code>UmiSearchMatchLocate</code> checks that the current visible text still matches at the reported line and byte column before the caret is moved. If it does not, the tab remains selected, its text and caret remain intact, and the caller receives <code>NOT_FOUND</code>. This is position checking, not a checksum guarantee that the complete file is unchanged.</p>
+<h2>Use the synchronous API when appropriate</h2><p>The existing <code>umi_search_file_index</code> API remains available. The additive <code>UmiSearchFileIndexWithOptions</code> supplies an expected revision and a progress callback. A streaming sink can receive matches before a later failure; consumers requiring a complete result must discard those matches on failure. The retained session handles that publication rule for Studio.</p>
+<p>Matching is literal and case-insensitive matching folds ASCII letters only. UTF-8 byte-order marks are accounted for in first-line columns. NUL-containing files are skipped, including NUL bytes beyond the first 4 KiB. UTF-16 decoding, regular expressions, unsaved-draft searching and workspace-wide replacement are separate capabilities, not implied by these APIs.</p>
+<h2>Build a read-only project search</h2><p>This program accepts a directory and search text. It reads and prints matches; it neither modifies files nor executes project code. Waiting is appropriate here because it is a console program. A graphical caller starts the operation, returns to its event loop and polls copied state.</p>
+<pre><code class="language-c">@UMICOM_SITE_FILE_SEARCH_EXAMPLE@</code></pre>
+<h3>Windows</h3><pre><code>Set-Location "C:\umicom\Umicom-Applications"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake -S framework/examples/project_files -B build/notes-project-files -G Ninja -DCMAKE_PREFIX_PATH="C:/umicom/installed/development"
+cmake --build build/notes-project-files
+ctest --test-dir build/notes-project-files --no-tests=error --output-on-failure
+.\build\notes-project-files\umicom-notes-file-search.exe "C:\umicom\projects\Umicom Notes" "CountSavedNotes"</code></pre>
+<h3>Linux</h3><pre><code>cd "$HOME/umicom/Umicom-Applications"
+cmake -S framework/examples/project_files -B build/notes-project-files -G Ninja -DCMAKE_PREFIX_PATH="$HOME/umicom/installed/development"
+cmake --build build/notes-project-files
+ctest --test-dir build/notes-project-files --no-tests=error --output-on-failure
+./build/notes-project-files/umicom-notes-file-search "$HOME/umicom/projects/Umicom Notes" "CountSavedNotes"</code></pre>
+<h2>Practice and review</h2><p>Search for a function in a disposable Notes project. Then add a new source file and compare the results before and after refreshing the index. Explain why stopping a search must not immediately free memory that the worker might still be reading.</p><p>Try cancellation while reading a large local project. It is cooperative: a blocking operating-system read must return before the worker can stop. These APIs are not a hostile-filesystem sandbox, a streaming large-file editor or a guarantee of bounded storage latency.</p>
+<p>Continue with <a href="file-refresh.html">background index refresh</a>, <a href="working-copies.html">working copies</a> or <a href="../studio/FIND_IN_FILES.html">Studio's Notes exercise</a>.</p></main><footer><strong>Umicom Foundation</strong><p>Learn from the source. Build with shared components.</p><a href="../contributing.html">Improve these guides</a> · <a href="https://github.com/umicom-foundation">GitHub organisation</a></footer></body></html>

@@ -1445,3 +1445,27 @@ size_t umi_document_coordinator_count(
 {
     return coordinator != NULL ? coordinator->count : 0U;
 }
+
+UmiStatus UmiDocumentCoordinatorOpenSearchMatch(UmiDocumentCoordinator *coordinator,
+    const UmiSearchMatch *match, const char *query, int caseSensitive,
+    size_t *outOffset)
+{
+    char viewId[UMI_UI_ID_CAPACITY];
+    char *text = NULL;
+    size_t length = 0U, offset = 0U;
+    UmiStatus status;
+    if (coordinator == NULL || match == NULL || query == NULL || query[0] == '\0' ||
+        match->line == 0U || match->column == 0U ||
+        memchr(match->path, '\0', sizeof match->path) == NULL ||
+        !umi_path_is_absolute(match->path)) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_document_coordinator_open(coordinator, match->path, viewId, sizeof viewId);
+    if (status != UMI_STATUS_OK) return status;
+    status = UmiUiDocumentViewModelCopyText(
+        umi_ui_workbench_documents(coordinator->workbench), viewId, &text, &length);
+    if (status != UMI_STATUS_OK) return status;
+    status = UmiSearchMatchLocate(match, query, caseSensitive, text, length, &offset);
+    UmiUiDocumentViewModelFreeText(text);
+    if (status != UMI_STATUS_OK) return status;
+    return UmiDocumentCoordinatorGoToPosition(coordinator, match->line,
+        match->column, outOffset);
+}

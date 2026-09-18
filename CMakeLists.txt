@@ -342,6 +342,7 @@ add_library(umicom_platform STATIC
     src/platform/workspace_files.c
     src/platform/file_index.c
     src/platform/search.c
+    src/platform/search_session.c
     src/platform/session_store.c
     src/platform/recovery.c
     src/platform/clock.c
@@ -5167,5 +5168,47 @@ if(BUILD_TESTING AND CMAKE_SYSTEM_NAME STREQUAL "Linux" AND
         TIMEOUT 15 LABELS "framework;ownership;background-refresh")
     if(TARGET umicom-registered-validation-tests)
         add_dependencies(umicom-registered-validation-tests umicom-task-completion-test)
+    endif()
+endif()
+
+# Saved-file search keeps all cases independent and active in Release builds.
+if(BUILD_TESTING)
+    add_executable(umicom-file-search-test tests/test_file_search.c)
+    target_link_libraries(umicom-file-search-test PRIVATE Umicom::platform)
+    umicom_apply_warnings(umicom-file-search-test)
+    umicom_apply_sanitizers(umicom-file-search-test)
+    foreach(_search_case IN ITEMS basic case utf8 bom crlf binary grown-file
+            limit-zero result-cap unreadable cancel-before cancel-empty cancel-during
+            cancel-progress sink-error changed-index stale-revision locate
+            session-complete session-cancel session-invalidate session-destroy
+            session-invalid-input session-stale session-repeat)
+        set(_search_name "framework.file_search.${_search_case}")
+        set(_search_directory "${CMAKE_CURRENT_BINARY_DIR}/qualification/${_search_name}")
+        file(MAKE_DIRECTORY "${_search_directory}")
+        add_test(NAME "${_search_name}" COMMAND umicom-file-search-test "${_search_case}")
+        set_tests_properties("${_search_name}" PROPERTIES
+            WORKING_DIRECTORY "${_search_directory}" TIMEOUT 30
+            LABELS "framework;search;filesystem")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-file-search-test)
+    endif()
+endif()
+
+# Compile the public example from its actual source during normal validation.
+if(BUILD_TESTING)
+    add_executable(umicom-notes-file-search-example examples/project_files/search.c)
+    target_link_libraries(umicom-notes-file-search-example PRIVATE Umicom::platform)
+    umicom_apply_warnings(umicom-notes-file-search-example)
+    umicom_apply_sanitizers(umicom-notes-file-search-example)
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/search-example")
+    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/qualification/search-example/notes.c"
+        "/* Umicom Notes */\nunsigned savedCount = 2U;\n/* savedCount tracks saved notes. */\n")
+    add_test(NAME framework.file_search.example COMMAND umicom-notes-file-search-example
+        "${CMAKE_CURRENT_BINARY_DIR}/qualification/search-example" savedCount)
+    set_tests_properties(framework.file_search.example PROPERTIES
+        TIMEOUT 30 PASS_REGULAR_EXPRESSION "Matches: 2")
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-notes-file-search-example)
     endif()
 endif()

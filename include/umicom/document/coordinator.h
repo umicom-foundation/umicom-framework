@@ -17,6 +17,7 @@
 #define UMICOM_DOCUMENT_COORDINATOR_H
 
 #include "umicom/document/provider.h"
+#include "umicom/platform/search.h"
 #include "umicom/platform/document_store.h"
 #include "umicom/ui/workbench.h"
 
@@ -220,6 +221,13 @@ UmiStatus UmiDocumentCoordinatorReplaceNext(UmiDocumentCoordinator *coordinator,
  * documents reject editing. outCount is optional and changes only on success. */
 UmiStatus UmiDocumentCoordinatorReplaceAll(UmiDocumentCoordinator *coordinator,
     const char *needle, const char *replacement, size_t *outCount);
+
+/** Open a saved-file search match without replacing any visible draft. The
+ * opened/selected file stays open when its text no longer matches the saved
+ * location; NOT_FOUND then leaves its caret unchanged. No file is saved. */
+UmiStatus UmiDocumentCoordinatorOpenSearchMatch(UmiDocumentCoordinator *coordinator,
+    const UmiSearchMatch *match, const char *query, int caseSensitive,
+    size_t *outOffset);
 
 #ifdef __cplusplus
 }

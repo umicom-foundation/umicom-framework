@@ -112,6 +112,12 @@ file(READ "${_file_refresh_example}" _example)
 UmiSiteEscape("${_example}" UMICOM_SITE_FILE_REFRESH_EXAMPLE)
 
 
+# The search lesson displays the same example compiled by the SDK client.
+set(_file_search_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/project_files/search.c")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_file_search_example}")
+file(READ "${_file_search_example}" _example)
+UmiSiteEscape("${_example}" UMICOM_SITE_FILE_SEARCH_EXAMPLE)
+
 # This is a file inventory, not a second C parser or a runtime module registry.
 file(GLOB_RECURSE _headers CONFIGURE_DEPENDS LIST_DIRECTORIES FALSE
     RELATIVE "${UMICOM_SITE_FRAMEWORK_ROOT}" "${UMICOM_SITE_FRAMEWORK_ROOT}/include/umicom/*.h")
@@ -171,6 +177,8 @@ foreach(_product IN LISTS _product_names)
     UmiSiteConfigurePage("${_page}" "${UMICOM_SITE_OUTPUT}/${_product}/index.html")
 endforeach()
 # Reuse established tutorials and the full build/run/install/Git guide in output.
+configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/FIND_IN_FILES.html"
+    "${UMICOM_SITE_OUTPUT}/studio/FIND_IN_FILES.html" COPYONLY)
 configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/PROJECT_FILES.html"
     "${UMICOM_SITE_OUTPUT}/studio/PROJECT_FILES.html" COPYONLY)
 configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/EDITING_FILES.html"
