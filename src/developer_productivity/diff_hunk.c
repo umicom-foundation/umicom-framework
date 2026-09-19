@@ -57,7 +57,7 @@ UmiStatus umi_developer_diff_hunks_build(
                 ? index - context_lines
                 : 0U;
             size_t last =
-                index + context_lines < row_count
+                context_lines < row_count - index
                     ? index + context_lines
                     : row_count - 1U;
             UmiDeveloperDiffHunk *hunk;

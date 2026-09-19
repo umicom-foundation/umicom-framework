@@ -420,50 +420,37 @@ UmiStatus umi_developer_diff_document_create(
             continue;
         }
 
-        /*
-         * If both directions have the same LCS score, present the pair as a
-         * replacement. This produces the side-by-side behaviour expected by
-         * professional compare tools instead of separate delete/insert rows.
-         */
-        if (i < left_count && j < right_count &&
-            matrix[(i + 1U) * width + j] ==
-                matrix[i * width + (j + 1U)]) {
-            status = append_row(
-                document,
-                UMI_DEVELOPER_DIFF_REPLACE,
-                i + 1U,
-                left_lines[i].text,
-                j + 1U,
-                right_lines[j].text);
-            /* Preserve the original failure result so the caller can respond to the correct cause. */
+        /* Walk one optimal LCS path until the next equal line. Only then
+         * pair deletions and insertions within that changed block. Taking a
+         * diagonal step merely because both scores tie can skip an equal
+         * line (for example A,B versus B,A) and report two false replacements. */
+        const size_t leftStart = i;
+        const size_t rightStart = j;
+        while (i < left_count || j < right_count) {
+            if (i < left_count && j < right_count &&
+                line_equal(left_lines[i].text, right_lines[j].text, active_options))
+                break;
+            if (i < left_count && (j >= right_count ||
+                matrix[(i + 1U) * width + j] >= matrix[i * width + j + 1U]))
+                ++i;
+            else
+                ++j;
+        }
+        size_t leftRow = leftStart;
+        size_t rightRow = rightStart;
+        while (leftRow < i || rightRow < j) {
+            const int hasLeft = leftRow < i;
+            const int hasRight = rightRow < j;
+            status = append_row(document,
+                hasLeft && hasRight ? UMI_DEVELOPER_DIFF_REPLACE :
+                    hasLeft ? UMI_DEVELOPER_DIFF_DELETE : UMI_DEVELOPER_DIFF_INSERT,
+                hasLeft ? leftRow + 1U : 0U,
+                hasLeft ? left_lines[leftRow].text : "",
+                hasRight ? rightRow + 1U : 0U,
+                hasRight ? right_lines[rightRow].text : "");
             if (status != UMI_STATUS_OK) goto cleanup;
-            ++i;
-            ++j;
-        } else /* Apply this branch only when its contract condition is satisfied. */ if (j < right_count &&
-                   (i >= left_count ||
-                    matrix[i * width + (j + 1U)] >
-                        matrix[(i + 1U) * width + j])) {
-            status = append_row(
-                document,
-                UMI_DEVELOPER_DIFF_INSERT,
-                0U,
-                "",
-                j + 1U,
-                right_lines[j].text);
-            /* Preserve the original failure result so the caller can respond to the correct cause. */
-            if (status != UMI_STATUS_OK) goto cleanup;
-            ++j;
-        } /* Use this fallback path when the earlier condition does not apply. */ else {
-            status = append_row(
-                document,
-                UMI_DEVELOPER_DIFF_DELETE,
-                i + 1U,
-                left_lines[i].text,
-                0U,
-                "");
-            /* Preserve the original failure result so the caller can respond to the correct cause. */
-            if (status != UMI_STATUS_OK) goto cleanup;
-            ++i;
+            if (hasLeft) ++leftRow;
+            if (hasRight) ++rightRow;
         }
     }
 

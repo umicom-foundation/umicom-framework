@@ -36,7 +36,10 @@ UmiStatus umi_developer_diff_next_change(
     }
 
     /* Visit each bounded item once so every record receives the same rule. */
-    for (index = after_row + 1U; index < count; ++index) {
+    /* SIZE_MAX denotes the position before the first row. Other positions
+     * at or beyond the end have no successor, without integer wraparound. */
+    if (after_row != SIZE_MAX && after_row >= count) return UMI_STATUS_NOT_FOUND;
+    for (index = after_row == SIZE_MAX ? 0U : after_row + 1U; index < count; ++index) {
         UmiDeveloperDiffRow row;
         /* Apply this branch only when its contract condition is satisfied. */
         if (umi_developer_diff_document_row_at(
@@ -69,7 +72,10 @@ UmiStatus umi_developer_diff_previous_change(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
-    index = before_row;
+    /* Clamp an out-of-range starting position before walking backwards.
+     * In particular SIZE_MAX must not cause an effectively unbounded loop. */
+    const size_t count = umi_developer_diff_document_row_count(document);
+    index = before_row < count ? before_row : count;
     /*
      * Continue only while work remains available; the loop body advances the state on each
      * pass.

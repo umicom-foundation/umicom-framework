@@ -124,6 +124,12 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_reload_exampl
 file(READ "${_reload_example}" _example)
 UmiSiteEscape("${_example}" UMICOM_SITE_RELOAD_EXAMPLE)
 
+# The comparison lesson displays the exact compiled example source.
+set(_review_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/editor_workflow/review.c")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_review_example}")
+file(READ "${_review_example}" _example)
+UmiSiteEscape("${_example}" UMICOM_SITE_REVIEW_EXAMPLE)
+
 # This is a file inventory, not a second C parser or a runtime module registry.
 file(GLOB_RECURSE _headers CONFIGURE_DEPENDS LIST_DIRECTORIES FALSE
     RELATIVE "${UMICOM_SITE_FRAMEWORK_ROOT}" "${UMICOM_SITE_FRAMEWORK_ROOT}/include/umicom/*.h")
@@ -183,6 +189,8 @@ foreach(_product IN LISTS _product_names)
     UmiSiteConfigurePage("${_page}" "${UMICOM_SITE_OUTPUT}/${_product}/index.html")
 endforeach()
 # Reuse established tutorials and the full build/run/install/Git guide in output.
+configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/COMPARING_SAVED_FILES.html"
+    "${UMICOM_SITE_OUTPUT}/studio/COMPARING_SAVED_FILES.html" COPYONLY)
 configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/RELOADING_FILES.html"
     "${UMICOM_SITE_OUTPUT}/studio/RELOADING_FILES.html" COPYONLY)
 configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/FIND_IN_FILES.html"

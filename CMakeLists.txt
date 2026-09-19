@@ -782,6 +782,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
         adapters/gtk4/source_control_gtk4.c
         adapters/gtk4/pane_gtk4.c
         adapters/gtk4/editor_gtk4.c
+        adapters/gtk4/text_comparison_gtk4.c
         adapters/gtk4/editor_theme_gtk4.c
         adapters/gtk4/action_dispatch_gtk4.c
         adapters/gtk4/menu_gtk4.c
@@ -834,6 +835,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
         set_source_files_properties(
             adapters/gtk4/keybinding_gtk4.c
             adapters/gtk4/editor_gtk4.c
+        adapters/gtk4/text_comparison_gtk4.c
             adapters/gtk4/editor_theme_gtk4.c
             adapters/gtk4/action_dispatch_gtk4.c
             adapters/gtk4/source_control_gtk4.c
@@ -5219,7 +5221,8 @@ if(BUILD_TESTING)
     target_link_libraries(umicom-document-reload-test PRIVATE Umicom::document)
     umicom_apply_warnings(umicom-document-reload-test)
     umicom_apply_sanitizers(umicom-document-reload-test)
-    foreach(_reload_case IN ITEMS clean dirty-refused dirty-approved undo-redo
+    foreach(_reload_case IN ITEMS review-text review-invalid review-consumed review-stale review-owner-closed
+        clean dirty-refused dirty-approved undo-redo
             target-tab cancel draft-stale store-stale save-stale save-as-stale
             file-stale closed used destroy-plan read-only dirty-read-only utf8-caret
             utf16 crlf empty large oversized binary invalid-encoding aggregate-budget
@@ -5280,4 +5283,59 @@ if(BUILD_TESTING)
     if(COMMAND umicom_register_validation_target)
         umicom_register_validation_target(umicom-notes-reload-example)
     endif()
+endif()
+
+# Read-only document review shares the existing developer comparison engine.
+if(TARGET umicom_ui_gtk4)
+    target_link_libraries(umicom_ui_gtk4 PRIVATE Umicom::developer)
+endif()
+if(BUILD_TESTING)
+    add_executable(umicom-text-comparison-test tests/developer_productivity/test_text_comparison.c)
+    target_link_libraries(umicom-text-comparison-test PRIVATE Umicom::developer)
+    umicom_apply_warnings(umicom-text-comparison-test)
+    umicom_apply_sanitizers(umicom-text-comparison-test)
+    foreach(_comparison_case IN ITEMS alignment repeated-lines lcs-exhaustive owned-text
+        final-newline line-endings empty identical navigation context-overflow
+        line-limit long-line maximum-text invalid options)
+        add_test(NAME "framework.text_comparison.${_comparison_case}"
+            COMMAND umicom-text-comparison-test "${_comparison_case}")
+        set_tests_properties("framework.text_comparison.${_comparison_case}" PROPERTIES
+            TIMEOUT 60 LABELS "framework;comparison;document")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-text-comparison-test)
+    endif()
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        add_executable(umicom-text-comparison-allocation-test tests/developer_productivity/test_text_comparison.c)
+        target_compile_definitions(umicom-text-comparison-allocation-test PRIVATE UMI_TEST_COMPARISON_ALLOCATION=1)
+        target_link_libraries(umicom-text-comparison-allocation-test PRIVATE Umicom::developer)
+        target_link_options(umicom-text-comparison-allocation-test PRIVATE "-Wl,--wrap=malloc" "-Wl,--wrap=calloc")
+        umicom_apply_warnings(umicom-text-comparison-allocation-test)
+        umicom_apply_sanitizers(umicom-text-comparison-allocation-test)
+        add_test(NAME framework.text_comparison.allocation COMMAND umicom-text-comparison-allocation-test allocation)
+        set_tests_properties(framework.text_comparison.allocation PROPERTIES TIMEOUT 60 LABELS "framework;comparison;fault-injection")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-text-comparison-allocation-test)
+        endif()
+    endif()
+endif()
+
+if(BUILD_TESTING)
+    add_executable(umicom-notes-review-example examples/editor_workflow/review.c)
+    target_link_libraries(umicom-notes-review-example PRIVATE Umicom::developer)
+    umicom_apply_warnings(umicom-notes-review-example)
+    umicom_apply_sanitizers(umicom-notes-review-example)
+    add_test(NAME framework.text_comparison.example COMMAND umicom-notes-review-example)
+    set_tests_properties(framework.text_comparison.example PROPERTIES TIMEOUT 30 LABELS "framework;comparison;example")
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-notes-review-example)
+    endif()
+endif()
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-text-comparison-gtk4-test tests/developer_productivity/test_text_comparison_gtk4.c)
+    target_link_libraries(umicom-text-comparison-gtk4-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-text-comparison-gtk4-test)
+    umicom_apply_sanitizers(umicom-text-comparison-gtk4-test)
+    add_test(NAME framework.text_comparison.gtk4 COMMAND umicom-text-comparison-gtk4-test)
+    set_tests_properties(framework.text_comparison.gtk4 PROPERTIES TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;comparison;gtk4;native")
 endif()

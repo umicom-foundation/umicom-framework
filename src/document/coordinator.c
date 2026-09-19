@@ -1552,6 +1552,27 @@ UmiStatus UmiDocumentReloadPlanSummary(const UmiDocumentReloadPlan *plan,
     return UMI_STATUS_OK;
 }
 
+/* A review shows the captured bytes, not a fresh read which could disagree
+ * with the plan the user later approves. The plan keeps ownership throughout. */
+UmiStatus UmiDocumentReloadPlanTexts(const UmiDocumentReloadPlan *plan,
+    const char **outPrevious, size_t *outPreviousLength,
+    const char **outIncoming, size_t *outIncomingLength)
+{
+    if (outPrevious != NULL) *outPrevious = NULL;
+    if (outPreviousLength != NULL) *outPreviousLength = 0U;
+    if (outIncoming != NULL) *outIncoming = NULL;
+    if (outIncomingLength != NULL) *outIncomingLength = 0U;
+    if (plan == NULL || outPrevious == NULL || outPreviousLength == NULL ||
+        outIncoming == NULL || outIncomingLength == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (plan->consumed) return UMI_STATUS_INVALID_STATE;
+    *outPrevious = plan->previousText;
+    *outPreviousLength = plan->summary.previous_bytes;
+    *outIncoming = plan->incoming.text;
+    *outIncomingLength = plan->incoming.text_length;
+    return UMI_STATUS_OK;
+}
+
 /* All coordinator and view mutations occur on their common owner thread. The
  * store still compares its revision under its own mutex when publishing. */
 static UmiStatus ReloadCurrent(UmiDocumentCoordinator *coordinator,

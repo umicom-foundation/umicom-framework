@@ -194,6 +194,41 @@ static int Run(Fixture *f, const char *name)
     UmiDocumentReloadSummary summary;
     int changed = -1;
     CHECK(Snapshot(f, &before) == 0);
+    if (strncmp(name, "review-", 7U) == 0) {
+        const char *previous = NULL, *incoming = NULL;
+        size_t previousLength = 0U, incomingLength = 0U;
+        CHECK(EditStatus(f, DRAFT) == UMI_STATUS_OK);
+        CHECK(External(f, INCOMING) == 0);
+        CHECK(Prepare(f) == 0);
+        CHECK(UmiDocumentReloadPlanTexts(f->plan, &previous, &previousLength, &incoming, &incomingLength) == UMI_STATUS_OK);
+        CHECK(previousLength == strlen(DRAFT) && incomingLength == strlen(INCOMING));
+        CHECK(strcmp(previous, DRAFT) == 0 && strcmp(incoming, INCOMING) == 0);
+        CHECK(IsText(f, DRAFT) == 0 && IsSavedText(f, ORIGINAL) == 0);
+        if (strcmp(name, "review-invalid") == 0) {
+            CHECK(UmiDocumentReloadPlanTexts(NULL, &previous, &previousLength, &incoming, &incomingLength) == UMI_STATUS_INVALID_ARGUMENT);
+            CHECK(!previous && !incoming && !previousLength && !incomingLength);
+            CHECK(UmiDocumentReloadPlanTexts(f->plan, NULL, &previousLength, &incoming, &incomingLength) == UMI_STATUS_INVALID_ARGUMENT);
+            CHECK(UmiDocumentReloadPlanTexts(f->plan, &previous, NULL, &incoming, &incomingLength) == UMI_STATUS_INVALID_ARGUMENT);
+            CHECK(UmiDocumentReloadPlanTexts(f->plan, &previous, &previousLength, NULL, &incomingLength) == UMI_STATUS_INVALID_ARGUMENT);
+            CHECK(UmiDocumentReloadPlanTexts(f->plan, &previous, &previousLength, &incoming, NULL) == UMI_STATUS_INVALID_ARGUMENT);
+        } else if (strcmp(name, "review-consumed") == 0) {
+            CHECK(Apply(f, 1) == 0);
+            CHECK(UmiDocumentReloadPlanTexts(f->plan, &previous, &previousLength, &incoming, &incomingLength) == UMI_STATUS_INVALID_STATE);
+            CHECK(!previous && !incoming && !previousLength && !incomingLength);
+        } else if (strcmp(name, "review-stale") == 0) {
+            CHECK(External(f, "changed again\n") == 0);
+            CHECK(EditStatus(f, "newer draft\n") == UMI_STATUS_OK);
+            CHECK(UmiDocumentReloadPlanTexts(f->plan, &previous, &previousLength, &incoming, &incomingLength) == UMI_STATUS_OK);
+            CHECK(strcmp(previous, DRAFT) == 0 && strcmp(incoming, INCOMING) == 0);
+            CHECK(UmiDocumentCoordinatorApplyReload(f->documents, f->plan, 1) == UMI_STATUS_INVALID_STATE);
+            CHECK(IsText(f, "newer draft\n") == 0);
+        } else if (strcmp(name, "review-owner-closed") == 0) {
+            umi_document_coordinator_destroy(f->documents); f->documents = NULL;
+            CHECK(UmiDocumentReloadPlanTexts(f->plan, &previous, &previousLength, &incoming, &incomingLength) == UMI_STATUS_OK);
+            CHECK(strcmp(previous, DRAFT) == 0 && strcmp(incoming, INCOMING) == 0);
+        }
+        return 0;
+    }
     if (strcmp(name, "invalid") == 0) {
         CHECK(UmiDocumentCoordinatorPrepareReload(NULL, 1U, &f->plan) == UMI_STATUS_INVALID_ARGUMENT);
         CHECK(f->plan == NULL);

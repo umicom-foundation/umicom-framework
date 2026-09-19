@@ -23,7 +23,7 @@ extern "C" {
 
 /**
  * Provide the developer diff next change operation used by this module and its client
- * applications.
+ * applications. SIZE_MAX means before the first row; there is no wrap at the end.
  */
 UmiStatus umi_developer_diff_next_change(
     const UmiDeveloperDiffDocument *document,
@@ -32,7 +32,7 @@ UmiStatus umi_developer_diff_next_change(
 
 /**
  * Provide the developer diff previous change operation used by this module and its client
- * applications.
+ * applications. Positions beyond the end are clamped to the row count.
  */
 UmiStatus umi_developer_diff_previous_change(
     const UmiDeveloperDiffDocument *document,

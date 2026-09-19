@@ -15,9 +15,9 @@ endfunction()
 if(CASE STREQUAL "pages")
     foreach(_path IN ITEMS index.html getting-started.html products.html downloads.html
             publishing.html contributing.html source-map.html wiki/index.html
-            wiki/working-copies.html wiki/compiler-diagnostics.html wiki/components.html wiki/project-files.html wiki/file-refresh.html wiki/find-in-files.html
+            wiki/reloading-files.html wiki/comparing-saved-files.html wiki/working-copies.html wiki/compiler-diagnostics.html wiki/components.html wiki/project-files.html wiki/file-refresh.html wiki/find-in-files.html
             studio/index.html trader/index.html desktop/index.html bank/index.html
-            studio/EDITING_FILES.html studio/READING_BUILD_ERRORS.html studio/PROJECT_FILES.html studio/FIND_IN_FILES.html build-and-publish.html
+            studio/COMPARING_SAVED_FILES.html studio/EDITING_FILES.html studio/READING_BUILD_ERRORS.html studio/PROJECT_FILES.html studio/FIND_IN_FILES.html build-and-publish.html
             assets/site.css assets/site.js reference/html/index.html)
         if(NOT EXISTS "${SITE}/${_path}")
             message(FATAL_ERROR "Missing assembled file: ${_path}")
@@ -43,7 +43,8 @@ elseif(CASE STREQUAL "examples")
             "project_files/main.c|project-files.html"
             "project_files/refresh.c|file-refresh.html"
             "project_files/search.c|find-in-files.html"
-            "editor_workflow/reload.c|reloading-files.html")
+            "editor_workflow/reload.c|reloading-files.html"
+            "editor_workflow/review.c|comparing-saved-files.html")
         string(REPLACE "|" ";" _parts "${_pair}")
         list(GET _parts 0 _source)
         list(GET _parts 1 _page)

@@ -49,6 +49,7 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_productivity/diagnostic_pipeline.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_productivity/diagnostic_registry.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_productivity/diff.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_productivity/text_comparison.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_productivity/diff_hunk.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_productivity/diff_navigation.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_productivity/directory_compare.c"

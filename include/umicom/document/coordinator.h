@@ -257,6 +257,18 @@ UmiStatus UmiDocumentReloadPlanSummary(const UmiDocumentReloadPlan *plan,
     UmiDocumentReloadSummary *outSummary);
 void UmiDocumentReloadPlanDestroy(UmiDocumentReloadPlan *plan);
 
+/** Borrow the exact decoded UTF-8 snapshots captured by preparation, without
+ * rereading the provider or changing a document. Both texts are terminated;
+ * their explicit lengths exclude that terminator. The caller must not modify
+ * or free them. Pointers remain valid only until successful apply or plan
+ * destruction. No coordinator access is needed: an unconsumed plan can be
+ * inspected after its owner has closed. All four output arguments are required
+ * and are cleared before reporting an invalid or consumed plan. */
+UmiStatus UmiDocumentReloadPlanTexts(const UmiDocumentReloadPlan *plan,
+    const char **outPrevious, size_t *outPreviousLength,
+    const char **outIncoming, size_t *outIncomingLength);
+
+
 /** Adopt the prepared text only when the captured document and provider bytes
  * are still current. Changing another tab is permitted. Editing, saving or
  * Save As of the target invalidates an older plan. discardUnsaved must be 0
