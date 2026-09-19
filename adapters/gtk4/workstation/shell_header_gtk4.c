@@ -15,6 +15,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "umicom/ui/gtk4/interaction_recording.h"
 #include "umicom/ui/gtk4/workstation/shell_header.h"
 
 #include "umicom/application/portfolio.h"
@@ -1940,6 +1941,24 @@ static void pack_window_titlebar_application_control(
     g_object_unref(control);
 }
 
+/* Resolve the current native owner when clicked. The button stores no
+ * application/runtime pointer and safely becomes inert after detachment. */
+static void OnReportGuiProblem(GtkButton *button, gpointer data)
+{
+    GtkRoot *root = gtk_widget_get_root(GTK_WIDGET(button));
+    const char *applicationId = data;
+    if (root != NULL && GTK_IS_WINDOW(root)) {
+        UmiStatus status = UmiGtk4RecordingPanelShow(root, applicationId);
+        if (status != UMI_STATUS_OK) {
+            char explanation[256];
+            (void)snprintf(explanation, sizeof(explanation),
+                "GUI recording could not open: %s", umi_status_text(status));
+            gtk_widget_set_tooltip_text(GTK_WIDGET(button), explanation);
+            g_warning("%s", explanation);
+        }
+    }
+}
+
 /* Install before realization so GTK can provide a single real title row,
  * including its internal WindowHandle and guarded native window actions. */
 UmiStatus umi_gtk4_ws_window_titlebar_create_from_header(
@@ -1995,6 +2014,16 @@ UmiStatus umi_gtk4_ws_window_titlebar_create_from_header(
         titlebar->identity->application_catalogue_button);
     pack_window_titlebar_application_control(titlebar,
         titlebar->identity->new_window_button);
+    /* The opt-in recorder is shared by every application using this header. */
+    {
+        GtkWidget *report = gtk_button_new_with_label("Report problem");
+        char *applicationId = g_strdup(identity->state.application_id);
+        gtk_widget_set_tooltip_text(report, "Record GUI interactions, add screenshots and export a local problem report.");
+        (void)umi_gtk4_automation_tag_widget(report, "workstation.report-problem");
+        g_object_set_data_full(G_OBJECT(report), "umicom-recording-application", applicationId, g_free);
+        g_signal_connect(report, "clicked", G_CALLBACK(OnReportGuiProblem), applicationId);
+        gtk_header_bar_pack_end(GTK_HEADER_BAR(titlebar->root), report);
+    }
     gtk_header_bar_set_show_title_buttons(GTK_HEADER_BAR(titlebar->root), TRUE);
     gtk_header_bar_set_decoration_layout(GTK_HEADER_BAR(titlebar->root), ":minimize,maximize,close");
     /* GtkHeaderBar owns a WindowHandle already. Do not nest another gesture

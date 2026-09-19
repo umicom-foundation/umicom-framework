@@ -596,6 +596,7 @@ add_library(umicom_ui STATIC
     src/ui/view_model.c
     src/ui/action.c
     src/ui/automation.c
+    src/ui/interaction_recording.c
     src/ui/menu.c
     src/ui/toolbar.c
     src/ui/status.c
@@ -761,6 +762,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
     add_library(umicom_ui_gtk4 STATIC
         adapters/gtk4/gtk4_adapter.c
         adapters/gtk4/automation_gtk4.c
+        adapters/gtk4/interaction_recording_gtk4.c
         adapters/gtk4/drop_down_gtk4.c
         adapters/gtk4/shell_gtk4.c
         adapters/gtk4/workbench_gtk4.c
@@ -3371,6 +3373,8 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-ui-workspace-profile-designer-tests framework.ui.workspace_profile_designer tests/test_ui_workspace_profile_designer.c)
     umicom_add_framework_test(umicom-ui-appearance-tests framework.ui.appearance tests/test_ui_appearance.c)
     umicom_add_framework_test(umicom-ui-automation-tests framework.ui.automation tests/test_ui_automation.c)
+    add_subdirectory(tests/gui_recording)
+    add_subdirectory(examples/gui_recording)
     umicom_add_framework_test(umicom-ui-appearance-persistence-tests framework.ui.appearance_persistence tests/test_ui_appearance_persistence.c)
     umicom_add_framework_test(umicom-ui-view-presentation-tests framework.ui.view_presentation tests/test_ui_view_presentation.c)
     umicom_add_framework_test(umicom-ui-headless-view-presentation-tests framework.ui.headless_view_presentation tests/test_ui_headless_view_presentation.c)
@@ -4901,7 +4905,7 @@ install(DIRECTORY templates/ DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/templat
 install(DIRECTORY docs/guides/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides
     COMPONENT Framework)
-install(FILES docs/WRITING_DOCUMENTATION.md
+install(FILES docs/WRITING_DOCUMENTATION.md docs/GUI_RECORDING.html
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs
     COMPONENT Framework)
 install(DIRECTORY examples/project_files/
@@ -4910,6 +4914,9 @@ install(DIRECTORY examples/project_files/
 install(DIRECTORY examples/build_diagnostics/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/build_diagnostics
 )
+install(DIRECTORY examples/gui_recording/
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/gui_recording"
+    COMPONENT Framework)
 install(DIRECTORY examples/editor_workflow/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/editor_workflow
     COMPONENT Framework)

@@ -297,3 +297,14 @@ UmiStatus umi_ui_automation_report_at(
     *out_result = report->results[index];
     return UMI_STATUS_OK;
 }
+
+/* Runner completion and application acceptance are deliberately separate. */
+UmiStatus UmiUiAutomationReportRequireSuccess(
+    const UmiUiAutomationReport *report, size_t expectedStepCount)
+{
+    if (report == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (expectedStepCount == 0U || report->total != expectedStepCount ||
+        report->passed != expectedStepCount || report->failed != 0U)
+        return UMI_STATUS_INVALID_STATE;
+    return UMI_STATUS_OK;
+}

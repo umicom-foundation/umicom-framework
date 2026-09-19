@@ -182,6 +182,14 @@ UmiStatus umi_ui_automation_report_at(
     size_t index,
     UmiUiAutomationStepResult *out_result);
 
+/** Require a nonempty, complete run with no failed driver steps. Use this in
+ * a test executable after umi_ui_automation_run. expectedStepCount is the
+ * scenario's count. Success does not replace domain assertions in the test.
+ * Empty reports, partial runs and failures return INVALID_STATE.
+ */
+UmiStatus UmiUiAutomationReportRequireSuccess(
+    const UmiUiAutomationReport *report, size_t expectedStepCount);
+
 #ifdef __cplusplus
 }
 #endif
