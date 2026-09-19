@@ -40,22 +40,21 @@ struct UmiUiAutomationReport {
 /* Check fixed text storage before any string function searches past its end. */
 static int automation_has_terminator(const char *text, size_t capacity)
 {
-    return text != NULL && capacity > 0U &&
-           memchr(text, '\0', capacity) != NULL;
+    return umi_ui_text_is_valid_utf8(text, capacity);
 }
 
 /* Confirm that an operation is one of the public values before a driver sees it. */
 static int automation_operation_is_valid(UmiUiAutomationOperation operation)
 {
     return operation >= UMI_UI_AUTOMATION_FOCUS &&
-           operation <= UMI_UI_AUTOMATION_CAPTURE_EVIDENCE;
+           operation <= UMI_UI_AUTOMATION_ASSERT_SELECTED;
 }
 
 /*
  * Validate a step at the storage boundary. Stable identifiers are mandatory
  * because captions can be translated and screen coordinates move with layout.
  */
-static UmiStatus automation_step_validate(const UmiUiAutomationStep *step)
+UmiStatus UmiUiAutomationStepValidate(const UmiUiAutomationStep *step)
 {
     if (step == NULL ||
         !automation_has_terminator(step->step_id, sizeof(step->step_id)) ||
@@ -69,8 +68,53 @@ static UmiStatus automation_step_validate(const UmiUiAutomationStep *step)
     if (!automation_operation_is_valid(step->operation)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    if (step->operation >= UMI_UI_AUTOMATION_ASSERT_VISIBLE &&
+        strcmp(step->value, "true") != 0 && strcmp(step->value, "false") != 0) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
 
     return UMI_STATUS_OK;
+}
+
+/* A driver returning OK cannot turn a contradictory observation into a pass. */
+UmiStatus UmiUiAutomationObservationCheck(const UmiUiAutomationStep *step,
+    const UmiUiAutomationObservation *observation)
+{
+    int actual = 0;
+    int expected;
+    UmiStatus status = UmiUiAutomationStepValidate(step);
+    if (status != UMI_STATUS_OK || observation == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (step->operation != UMI_UI_AUTOMATION_ASSERT_TEXT &&
+        step->operation != UMI_UI_AUTOMATION_WAIT_VISIBLE &&
+        step->operation != UMI_UI_AUTOMATION_WAIT_ENABLED &&
+        step->operation < UMI_UI_AUTOMATION_ASSERT_VISIBLE) return UMI_STATUS_OK;
+    if (!automation_has_terminator(observation->target_id, sizeof(observation->target_id)) ||
+        !automation_has_terminator(observation->role_name, sizeof(observation->role_name)) ||
+        !automation_has_terminator(observation->text, sizeof(observation->text)) ||
+        observation->visible < 0 || observation->visible > 1 ||
+        observation->enabled < 0 || observation->enabled > 1 ||
+        observation->focused < 0 || observation->focused > 1 ||
+        observation->selected < 0 || observation->selected > 1)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (strcmp(observation->target_id, step->target_id) != 0)
+        return UMI_STATUS_INVALID_STATE;
+    if (step->operation == UMI_UI_AUTOMATION_ASSERT_TEXT)
+        return strcmp(observation->text, step->value) == 0
+            ? UMI_STATUS_OK : UMI_STATUS_INVALID_STATE;
+    switch (step->operation) {
+        case UMI_UI_AUTOMATION_WAIT_VISIBLE:
+        case UMI_UI_AUTOMATION_ASSERT_VISIBLE: actual = observation->visible; break;
+        case UMI_UI_AUTOMATION_WAIT_ENABLED:
+        case UMI_UI_AUTOMATION_ASSERT_ENABLED: actual = observation->enabled; break;
+        case UMI_UI_AUTOMATION_ASSERT_FOCUSED: actual = observation->focused; break;
+        case UMI_UI_AUTOMATION_ASSERT_SELECTED: actual = observation->selected; break;
+        default: return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    expected = step->operation == UMI_UI_AUTOMATION_WAIT_VISIBLE ||
+        step->operation == UMI_UI_AUTOMATION_WAIT_ENABLED ||
+        strcmp(step->value, "true") == 0;
+    return actual == expected ? UMI_STATUS_OK : UMI_STATUS_INVALID_STATE;
 }
 
 /* Allocate one private scenario so its large bounded step list stays off the stack. */
@@ -135,7 +179,7 @@ UmiStatus umi_ui_automation_scenario_add(
 
     if (scenario == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
-    status = automation_step_validate(step);
+    status = UmiUiAutomationStepValidate(step);
     if (status != UMI_STATUS_OK) return status;
 
     if (scenario->step_count >= UMI_UI_AUTOMATION_STEP_MAX) {
@@ -234,6 +278,17 @@ UmiStatus umi_ui_automation_run(
             &result->observation,
             result->message,
             sizeof(result->message));
+        /* Validate before repairing report terminators: otherwise a truncated
+         * or malformed adapter response could falsely satisfy an assertion. */
+        if (result->status == UMI_STATUS_OK) {
+            UmiStatus checked = UmiUiAutomationObservationCheck(
+                &result->step, &result->observation);
+            if (checked != UMI_STATUS_OK) {
+                result->status = checked;
+                (void)umi_ui_copy_text(result->message, sizeof(result->message),
+                    "The reported control state does not satisfy the assertion.");
+            }
+        }
         /* A third-party adapter cannot leave report strings unterminated. */
         result->message[sizeof(result->message) - 1U] = '\0';
         result->observation.target_id[

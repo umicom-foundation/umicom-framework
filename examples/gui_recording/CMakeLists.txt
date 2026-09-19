@@ -19,8 +19,25 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 if(BUILD_TESTING)
     add_test(NAME framework.gui_recording.notes-save COMMAND umicom-recording-example)
-    add_test(NAME framework.gui_recording.notes-no-op COMMAND umicom-recording-example --fail-save)
-    set_tests_properties(framework.gui_recording.notes-no-op PROPERTIES WILL_FAIL TRUE)
+    add_test(NAME framework.gui_recording.notes-no-op COMMAND "${CMAKE_COMMAND}"
+        "-DPROGRAM=$<TARGET_FILE:umicom-recording-example>" -DARGUMENT=--fail-save
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/check_example_failure.cmake")
     set_tests_properties(framework.gui_recording.notes-save framework.gui_recording.notes-no-op
         PROPERTIES TIMEOUT 15 LABELS "framework;gui-recording;example")
+endif()
+
+# The same UI library supplies copied control maps; no GTK dependency is needed.
+add_executable(umicom-control-map-example control_checks.c)
+target_link_libraries(umicom-control-map-example PRIVATE Umicom::ui)
+set_target_properties(umicom-control-map-example PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED ON)
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(umicom-control-map-example PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME framework.gui_control_checks.example COMMAND umicom-control-map-example)
+    add_test(NAME framework.gui_control_checks.example-duplicate COMMAND "${CMAKE_COMMAND}"
+        "-DPROGRAM=$<TARGET_FILE:umicom-control-map-example>" -DARGUMENT=--duplicate
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/check_example_failure.cmake")
+    set_tests_properties(framework.gui_control_checks.example framework.gui_control_checks.example-duplicate
+        PROPERTIES TIMEOUT 15 LABELS "framework;gui-control-checks;example")
 endif()

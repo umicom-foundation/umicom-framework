@@ -596,6 +596,7 @@ add_library(umicom_ui STATIC
     src/ui/view_model.c
     src/ui/action.c
     src/ui/automation.c
+    src/ui/control_inventory.c
     src/ui/interaction_recording.c
     src/ui/menu.c
     src/ui/toolbar.c
@@ -3374,6 +3375,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-ui-appearance-tests framework.ui.appearance tests/test_ui_appearance.c)
     umicom_add_framework_test(umicom-ui-automation-tests framework.ui.automation tests/test_ui_automation.c)
     add_subdirectory(tests/gui_recording)
+    add_subdirectory(tests/gui_control_checks)
     add_subdirectory(examples/gui_recording)
     umicom_add_framework_test(umicom-ui-appearance-persistence-tests framework.ui.appearance_persistence tests/test_ui_appearance_persistence.c)
     umicom_add_framework_test(umicom-ui-view-presentation-tests framework.ui.view_presentation tests/test_ui_view_presentation.c)
@@ -4905,7 +4907,7 @@ install(DIRECTORY templates/ DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/templat
 install(DIRECTORY docs/guides/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides
     COMPONENT Framework)
-install(FILES docs/WRITING_DOCUMENTATION.md docs/GUI_RECORDING.html
+install(FILES docs/WRITING_DOCUMENTATION.md docs/GUI_RECORDING.html docs/GUI_CONTROL_CHECKS.html
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs
     COMPONENT Framework)
 install(DIRECTORY examples/project_files/

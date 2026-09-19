@@ -16,6 +16,7 @@
 #ifndef UMICOM_UI_GTK4_INTERACTION_RECORDING_H
 #define UMICOM_UI_GTK4_INTERACTION_RECORDING_H
 #include "umicom/base/status.h"
+#include "umicom/ui/control_inventory.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -47,6 +48,18 @@ UmiStatus UmiGtk4RecordingCapturePng(void *nativeWidget, const char *path);
  * This supplements built-in password detection; it is not OCR redaction.
  */
 UmiStatus UmiGtk4RecordingSetPrivate(void *nativeWidget, int isPrivate);
+/** Return true when this widget or an ancestor is private, whether visible
+ * or hidden. Automation and inspection use the same privacy policy as capture.
+ * The function does not read control values or change widget state. */
+int UmiGtk4RecordingIsPrivate(void *nativeWidget);
+/** Copy the selected GtkWindow and its related transient windows into one
+ * bounded inventory. No values, captions or action arguments are collected.
+ * Private subtrees become one redacted row. The recorder window is excluded.
+ * A failure destroys the incomplete candidate and clears *outInventory.
+ * Call on the GTK owner thread. Does not pump events, present or activate UI.
+ */
+UmiStatus UmiGtk4ControlInventoryCapture(void *nativeWindow, size_t capacity,
+    UmiUiControlInventory **outInventory);
 /** Test/query whether a visible private control would block an image. */
 int UmiGtk4RecordingContainsPrivate(void *nativeWidget);
 #ifdef __cplusplus

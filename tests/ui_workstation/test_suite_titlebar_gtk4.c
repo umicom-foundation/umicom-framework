@@ -156,7 +156,8 @@ static int check_suite(const char *application_id, const char *title, int window
     (void)g_strlcpy(step.target_id, "workstation.application.catalogue", sizeof(step.target_id));
     step.operation = UMI_UI_AUTOMATION_CAPTURE_EVIDENCE;
     CHECK(driver.perform(driver.context, &step, &observation, message, sizeof(message)) == UMI_STATUS_OK);
-    CHECK(strcmp(observation.role_name, "GtkMenuButton") == 0 && observation.visible);
+    /* The control is present in the tree, but its window is not presented. */
+    CHECK(strcmp(observation.role_name, "GtkMenuButton") == 0 && !observation.visible);
     (void)g_strlcpy(step.target_id, "workstation.application.search", sizeof(step.target_id));
     (void)g_strlcpy(step.value, "Catalogue query through original driver", sizeof(step.value));
     step.operation = UMI_UI_AUTOMATION_TYPE_TEXT;

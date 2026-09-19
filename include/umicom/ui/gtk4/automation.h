@@ -47,7 +47,18 @@ UmiStatus umi_gtk4_automation_driver_add_observed_scope(
 /** Release the retained GTK root, optional observed scope and driver itself. */
 void umi_gtk4_automation_driver_destroy(UmiGtk4AutomationDriver *driver);
 
-/** Return the toolkit-neutral callback interface consumed by the UAT runner. */
+/** Return the toolkit-neutral callback interface consumed by the UAT runner.
+ * Visible observations/waits require effective ancestor visibility and mapping.
+ * Enabled checks use inherited sensitivity. Mutations reject disabled controls;
+ * text assignment also rejects read-only/private fields. Programmatic fixtures
+ * can remain unpresented: add WAIT_VISIBLE before user-facing journeys.
+ * TYPE_TEXT replaces a GtkEditable/GtkTextView value, not OS keyboard input.
+ * It accepts the bounded step text (511 UTF-8 bytes). Exact ASSERT_TEXT rejects
+ * longer observations rather than comparing a truncated prefix. Password and
+ * private values are omitted. Check buttons and switches support TOGGLE.
+ * Waits re-resolve targets after event-loop work and reject ambiguous IDs.
+ * An external process timeout is still needed if a GTK callback itself blocks.
+ */
 UmiUiAutomationDriver umi_gtk4_automation_driver_interface(
     UmiGtk4AutomationDriver *driver);
 

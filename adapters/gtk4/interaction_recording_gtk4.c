@@ -51,6 +51,7 @@ typedef struct RecordingPanel {
     size_t imageBytes;
     unsigned images;
     unsigned exports;
+    unsigned inspections;
     gboolean closing;
     gboolean logFailed;
 } RecordingPanel;
@@ -70,6 +71,15 @@ static gboolean PrivateWidget(GtkWidget *w)
     if (GTK_IS_ENTRY(w) && !gtk_entry_get_visibility(GTK_ENTRY(w))) return TRUE;
     if (GTK_IS_TEXT(w) && !gtk_text_get_visibility(GTK_TEXT(w))) return TRUE;
     return FALSE;
+}
+/* A hidden private field must also be protected from automation reads. */
+int UmiGtk4RecordingIsPrivate(void *nativeWidget)
+{
+    GtkWidget *widget = nativeWidget;
+    if (widget == NULL || !GTK_IS_WIDGET(widget)) return 0;
+    for (; widget != NULL; widget = gtk_widget_get_parent(widget))
+        if (PrivateWidget(widget)) return 1;
+    return 0;
 }
 int UmiGtk4RecordingContainsPrivate(void *nativeWidget)
 {
@@ -230,6 +240,81 @@ static void Target(GtkWidget *widget, char *out, size_t capacity)
     else (void)snprintf(out, capacity, "unidentified.%s", widget != NULL ? G_OBJECT_TYPE_NAME(widget) : "window");
 }
 static gboolean Related(GtkWindow *candidate, GtkWindow *owner);
+
+/* Every record's parent is already stored. Depth and capacity bounds prevent
+ * malformed or enormous trees from becoming a successful partial export. */
+static UmiStatus CaptureControl(GtkWidget *widget, uint32_t scopeId,
+    size_t parentIndex, unsigned depth, UmiUiControlInventory *inventory)
+{
+    UmiUiControlRecord record = {0};
+    GtkWidget *child;
+    const char *id;
+    UmiStatus status;
+    size_t index;
+    if (depth > 256U) return UMI_STATUS_CAPACITY_EXCEEDED;
+    record.scopeId = scopeId; record.parentIndex = parentIndex;
+    record.privateControl = UmiGtk4RecordingIsPrivate(widget);
+    record.visible = gtk_widget_is_visible(widget) != FALSE;
+    record.mapped = gtk_widget_get_mapped(widget) != FALSE;
+    record.enabled = gtk_widget_is_sensitive(widget) != FALSE;
+    record.focused = gtk_widget_has_focus(widget) != FALSE;
+    record.interactive = GTK_IS_BUTTON(widget) || GTK_IS_CHECK_BUTTON(widget) ||
+        GTK_IS_EDITABLE(widget) || GTK_IS_TEXT_VIEW(widget) || GTK_IS_DROP_DOWN(widget) ||
+        GTK_IS_MENU_BUTTON(widget) || GTK_IS_SWITCH(widget) || GTK_IS_RANGE(widget) ||
+        gtk_widget_get_focusable(widget);
+    if (record.privateControl) {
+        (void)g_strlcpy(record.roleName, "private-control", sizeof(record.roleName));
+    } else {
+        if (g_strlcpy(record.roleName, G_OBJECT_TYPE_NAME(widget), sizeof(record.roleName)) >= sizeof(record.roleName))
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        id = g_object_get_data(G_OBJECT(widget), "umicom-automation-id");
+        if (id != NULL && g_strlcpy(record.automationId, id, sizeof(record.automationId)) >= sizeof(record.automationId))
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    index = UmiUiControlInventoryCount(inventory);
+    status = UmiUiControlInventoryAdd(inventory, &record);
+    if (status != UMI_STATUS_OK || record.privateControl) return status;
+    for (child = gtk_widget_get_first_child(widget); child != NULL;
+         child = gtk_widget_get_next_sibling(child)) {
+        status = CaptureControl(child, scopeId, index, depth + 1U, inventory);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiGtk4ControlInventoryCapture(void *nativeWindow, size_t capacity,
+    UmiUiControlInventory **outInventory)
+{
+    GtkWindow *owner = nativeWindow;
+    UmiUiControlInventory *inventory = NULL;
+    UmiStatus status;
+    GListModel *windows;
+    guint i;
+    uint32_t scope = 1U;
+    if (outInventory == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outInventory = NULL;
+    if (owner == NULL || !GTK_IS_WINDOW(owner) ||
+        g_object_get_data(G_OBJECT(owner), "umicom-recorder-window") != NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = UmiUiControlInventoryCreate(capacity, &inventory);
+    if (status != UMI_STATUS_OK) return status;
+    status = CaptureControl(GTK_WIDGET(owner), scope, UMI_UI_CONTROL_NO_PARENT, 0U, inventory);
+    windows = gtk_window_get_toplevels();
+    for (i = 0U; status == UMI_STATUS_OK && windows != NULL && i < g_list_model_get_n_items(windows); ++i) {
+        GtkWindow *window = g_list_model_get_item(windows, i);
+        if (window == NULL) continue;
+        if (window != owner && Related(window, owner) &&
+            g_object_get_data(G_OBJECT(window), "umicom-recorder-window") == NULL) {
+            ++scope;
+            status = CaptureControl(GTK_WIDGET(window), scope, UMI_UI_CONTROL_NO_PARENT, 0U, inventory);
+        }
+        g_object_unref(window);
+    }
+    if (status != UMI_STATUS_OK) { UmiUiControlInventoryDestroy(inventory); return status; }
+    *outInventory = inventory;
+    return UMI_STATUS_OK;
+}
+
 /* Observe input at capture phase without consuming it or emitting commands.
  * A no-op button still leaves an attempted input in the report. */
 static gboolean OnInput(GtkEventControllerLegacy *controller, GdkEvent *event, gpointer data)
@@ -496,22 +581,74 @@ static void OnCapture(GtkButton *button, gpointer data)
         : "Screenshot failed or exceeded its size limit. No successful capture is claimed.");
     g_free(path); g_object_unref(target);
 }
+/* One exclusive, buffered output path serves interaction and control maps. */
+typedef UmiStatus (*ExportDocumentFn)(const void *, UmiUiRecordingWriteFn, void *);
+static UmiStatus RecordingJson(const void *record, UmiUiRecordingWriteFn write, void *context)
+{ return UmiUiRecordingWriteJson(record, write, context); }
+static UmiStatus RecordingHtml(const void *record, UmiUiRecordingWriteFn write, void *context)
+{ return UmiUiRecordingWriteHtml(record, write, context); }
+static UmiStatus InventoryJson(const void *record, UmiUiRecordingWriteFn write, void *context)
+{ return UmiUiControlInventoryWriteJson(record, write, context); }
+static UmiStatus InventoryHtml(const void *record, UmiUiRecordingWriteFn write, void *context)
+{ return UmiUiControlInventoryWriteHtml(record, write, context); }
 /* Export to new files. A failed stream leaves no completed-looking report. */
-static UmiStatus ExportOne(RecordingPanel *p, const char *name, gboolean html)
+static UmiStatus ExportDocument(RecordingPanel *p, const char *name,
+    ExportDocumentFn serialize, const void *document)
 {
-    char *path = g_build_filename(p->directory, name, NULL); GFile *file = g_file_new_for_path(path);
+    char *path = g_build_filename(p->directory, name, NULL);
+    GFile *file = g_file_new_for_path(path);
     GFileOutputStream *raw = g_file_create(file, G_FILE_CREATE_PRIVATE, NULL, NULL);
     GOutputStream *stream = raw != NULL ? g_buffered_output_stream_new_sized(G_OUTPUT_STREAM(raw), 16384U) : NULL;
+    UmiStatus status = UMI_STATUS_IO_ERROR;
     if (raw != NULL) g_object_unref(raw);
-    UmiStatus s = UMI_STATUS_IO_ERROR;
     if (stream != NULL) {
-        s = html ? UmiUiRecordingWriteHtml(p->recording, StreamWrite, stream)
-                 : UmiUiRecordingWriteJson(p->recording, StreamWrite, stream);
-        if (!g_output_stream_close(G_OUTPUT_STREAM(stream), NULL, NULL) && s == UMI_STATUS_OK) s = UMI_STATUS_IO_ERROR;
+        status = serialize(document, StreamWrite, stream);
+        if (!g_output_stream_close(stream, NULL, NULL) && status == UMI_STATUS_OK)
+            status = UMI_STATUS_IO_ERROR;
         g_object_unref(stream);
-        if (s != UMI_STATUS_OK) (void)g_file_delete(file, NULL, NULL);
+        if (status != UMI_STATUS_OK) (void)g_file_delete(file, NULL, NULL);
     }
-    g_object_unref(file); g_free(path); return s;
+    g_object_unref(file); g_free(path); return status;
+}
+static UmiStatus ExportOne(RecordingPanel *p, const char *name, gboolean html)
+{
+    return ExportDocument(p, name, html ? RecordingHtml : RecordingJson, p->recording);
+}
+/* Inspection does not start recording or invoke any application control. */
+static void OnInspectControls(GtkButton *button, gpointer data)
+{
+    RecordingPanel *p = FromPanel(data);
+    GtkWindow *owner;
+    UmiUiControlInventory *inventory = NULL;
+    UmiUiControlInventorySummary summary;
+    UmiStatus status;
+    char name[64];
+    char *message;
+    (void)button;
+    if (p == NULL || p->closing) return;
+    if (p->inspections >= 20U) { Status(p, "Twenty control maps have been requested. Open a new report window to capture more."); return; }
+    owner = g_weak_ref_get(&p->owner);
+    if (owner == NULL) { Status(p, "The application window has closed."); return; }
+    status = UmiGtk4ControlInventoryCapture(owner, UMI_UI_CONTROL_INVENTORY_MAX, &inventory);
+    g_object_unref(owner);
+    if (status == UMI_STATUS_OK) status = UmiUiControlInventorySummarise(inventory, &summary);
+    if (status == UMI_STATUS_OK) status = EnsureDirectory(p);
+    ++p->inspections;
+    (void)snprintf(name, sizeof(name), "controls-%06u.json", p->inspections);
+    if (status == UMI_STATUS_OK) status = ExportDocument(p, name, InventoryJson, inventory);
+    (void)snprintf(name, sizeof(name), "controls-%06u.html", p->inspections);
+    if (status == UMI_STATUS_OK) status = ExportDocument(p, name, InventoryHtml, inventory);
+    (void)snprintf(name, sizeof(name), "controls-%06u-session.json", p->inspections);
+    if (status == UMI_STATUS_OK) status = ExportOne(p, name, FALSE);
+    if (status == UMI_STATUS_OK) {
+        message = g_strdup_printf("Control map saved: %zu controls; %zu interactive controls without a test target; %zu repeated target records. Open folder to inspect the HTML. No control was activated.",
+            summary.controls, summary.unaddressableInteractive, summary.ambiguousTargets);
+        Status(p, message); g_free(message);
+    } else {
+        message = g_strdup_printf("Control inspection failed: %s. No incomplete control map is published as a successful capture.", umi_status_text(status));
+        Status(p, message); g_free(message);
+    }
+    UmiUiControlInventoryDestroy(inventory);
 }
 static void OnExport(GtkButton *button, gpointer data)
 {
@@ -589,6 +726,10 @@ UmiStatus UmiGtk4RecordingPanelShowAt(void *nativeWindow, const char *applicatio
     (void)Button(row, "Pause", "recording.pause", G_CALLBACK(OnPause), p);
     (void)Button(row, "Export report", "recording.export", G_CALLBACK(OnExport), p);
     (void)Button(row, "Open folder", "recording.open-folder", G_CALLBACK(OnOpenFolder), p);
+    row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6); gtk_box_append(GTK_BOX(box), row);
+    text = Button(row, "Inspect controls", "recording.inspect-controls", G_CALLBACK(OnInspectControls), p);
+    gtk_widget_set_tooltip_text(text,
+        "List control types, test identifiers and availability without reading their values or invoking actions.");
     p->consent = gtk_check_button_new_with_label("Allow screenshots of visible application content");
     gtk_widget_set_tooltip_text(p->consent, "Screenshots can contain source code, names and account information. Review every image before sharing.");
     (void)umi_gtk4_automation_tag_widget(p->consent, "recording.screenshot-consent");

@@ -31,9 +31,12 @@ static UmiUiRecordingEntry Entry(void)
 static UmiStatus Drive(void *context, const UmiUiAutomationStep *step,
     UmiUiAutomationObservation *out, char *message, size_t capacity)
 {
-    int *saved = context; (void)out;
+    int *saved = context;
+    (void)snprintf(out->target_id, sizeof(out->target_id), "%s", step->target_id);
+    (void)snprintf(out->role_name, sizeof(out->role_name), "notes-file");
     (void)snprintf(message, capacity, "Fixture operation");
     if (step->operation == UMI_UI_AUTOMATION_CLICK && strcmp(step->value, "no-op") != 0) *saved = 1;
+    (void)snprintf(out->text, sizeof(out->text), "%s", *saved ? "saved" : "unsaved");
     if (step->operation == UMI_UI_AUTOMATION_ASSERT_TEXT && *saved != 1) return UMI_STATUS_INVALID_STATE;
     return UMI_STATUS_OK;
 }
@@ -49,6 +52,7 @@ static int Acceptance(const char *mode)
         if (strcmp(mode, "no-op") == 0) strcpy(step.value, "no-op");
         CHECK(umi_ui_automation_scenario_add(s, &step) == UMI_STATUS_OK);
         strcpy(step.step_id, "check"); step.operation = UMI_UI_AUTOMATION_ASSERT_TEXT;
+        strcpy(step.value, "saved");
         CHECK(umi_ui_automation_scenario_add(s, &step) == UMI_STATUS_OK);
     }
     CHECK(umi_ui_automation_run(&d, s, &r) == UMI_STATUS_OK);

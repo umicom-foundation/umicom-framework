@@ -138,6 +138,14 @@ UmiSiteEscape("${_example}" UMICOM_SITE_GUI_RECORDING_EXAMPLE)
 configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/GUI_RECORDING.html"
     "${UMICOM_SITE_OUTPUT}/GUI_RECORDING.html" COPYONLY)
 
+# Embed the compiled Notes map instead of maintaining another source snippet.
+set(_control_checks_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/gui_recording/control_checks.c")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_control_checks_example}")
+file(READ "${_control_checks_example}" _example)
+UmiSiteEscape("${_example}" UMICOM_SITE_CONTROL_CHECKS_EXAMPLE)
+configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/GUI_CONTROL_CHECKS.html"
+    "${UMICOM_SITE_OUTPUT}/GUI_CONTROL_CHECKS.html" COPYONLY)
+
 # This is a file inventory, not a second C parser or a runtime module registry.
 file(GLOB_RECURSE _headers CONFIGURE_DEPENDS LIST_DIRECTORIES FALSE
     RELATIVE "${UMICOM_SITE_FRAMEWORK_ROOT}" "${UMICOM_SITE_FRAMEWORK_ROOT}/include/umicom/*.h")

@@ -47,7 +47,11 @@ typedef enum UmiUiAutomationOperation {
     UMI_UI_AUTOMATION_WAIT_VISIBLE = 8,
     UMI_UI_AUTOMATION_WAIT_ENABLED = 9,
     UMI_UI_AUTOMATION_ASSERT_TEXT = 10,
-    UMI_UI_AUTOMATION_CAPTURE_EVIDENCE = 11
+    UMI_UI_AUTOMATION_CAPTURE_EVIDENCE = 11,
+    UMI_UI_AUTOMATION_ASSERT_VISIBLE = 12,
+    UMI_UI_AUTOMATION_ASSERT_ENABLED = 13,
+    UMI_UI_AUTOMATION_ASSERT_FOCUSED = 14,
+    UMI_UI_AUTOMATION_ASSERT_SELECTED = 15
 } UmiUiAutomationOperation;
 
 /**
@@ -118,6 +122,23 @@ typedef struct UmiUiAutomationStepResult {
     char message[UMI_UI_AUTOMATION_MESSAGE_CAPACITY];
     UmiUiAutomationObservation observation;
 } UmiUiAutomationStepResult;
+
+/** Validate identifiers, UTF-8 text and an operation before using a step.
+ * Boolean assertions accept exactly "true" or "false" in value. Validation
+ * never changes the step or calls a driver. A step is not a test until its
+ * expected outcome is checked. See examples/gui_recording/control_checks.c.
+ */
+UmiStatus UmiUiAutomationStepValidate(const UmiUiAutomationStep *step);
+
+/** Check a driver's observation independently of its return status.
+ * ASSERT_TEXT compares the full bounded observation text. Visible/enabled/
+ * focused/selected assertions compare a Boolean; wait operations require true.
+ * Assertions require the exact target ID and valid observation strings/flags.
+ * Other operations return OK: a click needs a later explicit outcome check.
+ * This verifies the reported observation, not filesystem or business state.
+ */
+UmiStatus UmiUiAutomationObservationCheck(const UmiUiAutomationStep *step,
+    const UmiUiAutomationObservation *observation);
 
 /** Create an empty scenario that owns copies of every step added to it. */
 UmiStatus umi_ui_automation_scenario_create(

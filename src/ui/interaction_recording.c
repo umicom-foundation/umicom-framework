@@ -14,6 +14,8 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/interaction_recording.h"
+#include "umicom/ui/control_inventory.h"
+#include "ui_internal.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,33 +31,10 @@ struct UmiUiRecording {
     int limitReached;
 };
 
-/* Validate complete UTF-8 scalar values while locating the terminator. This
- * stops at NUL; it never treats a short caller string as a full-size array. */
+/* Reuse the UI text boundary used by scenarios and control inventories. */
 static int ValidText(const char *text, size_t capacity)
 {
-    size_t i = 0U;
-    if (text == NULL) return 0;
-    while (i < capacity) {
-        const unsigned char c = (unsigned char)text[i++];
-        unsigned need;
-        uint32_t value, minimum;
-        if (c == 0U) return 1;
-        if (c < 0x80U) continue;
-        if (c >= 0xc2U && c <= 0xdfU) { need = 1U; value = c & 0x1fU; minimum = 0x80U; }
-        else if (c >= 0xe0U && c <= 0xefU) { need = 2U; value = c & 0x0fU; minimum = 0x800U; }
-        else if (c >= 0xf0U && c <= 0xf4U) { need = 3U; value = c & 0x07U; minimum = 0x10000U; }
-        else return 0;
-        while (need-- != 0U) {
-            unsigned char next;
-            if (i >= capacity) return 0;
-            next = (unsigned char)text[i++];
-            if ((next & 0xc0U) != 0x80U) return 0;
-            value = (value << 6U) | (uint32_t)(next & 0x3fU);
-        }
-        if (value < minimum || value > 0x10ffffU ||
-            (value >= 0xd800U && value <= 0xdfffU)) return 0;
-    }
-    return 0;
+    return umi_ui_text_is_valid_utf8(text, capacity);
 }
 
 /* Reports may link only to a PNG directly beside the report. No path, URL or
@@ -146,7 +125,7 @@ UmiStatus UmiUiRecordingAppendAutomation(UmiUiRecording *r, uint64_t elapsedMs,
     if (result == NULL ||
         !ValidText(result->step.target_id, sizeof(result->step.target_id)) ||
         result->step.operation < UMI_UI_AUTOMATION_FOCUS ||
-        result->step.operation > UMI_UI_AUTOMATION_CAPTURE_EVIDENCE)
+        result->step.operation > UMI_UI_AUTOMATION_ASSERT_SELECTED)
         return UMI_STATUS_INVALID_ARGUMENT;
     e.elapsedMs = elapsedMs; e.kind = UMI_UI_RECORDING_AUTOMATION;
     e.status = result->status; e.outcomeKnown = 1;
@@ -252,4 +231,109 @@ UmiStatus UmiUiRecordingWriteHtml(const UmiUiRecording *r, UmiUiRecordingWriteFn
         Emit(&w, "</td></tr>");
     }
     Emit(&w, "</table></div></html>\n"); return w.status;
+}
+
+/* Control inventories share the recorder's escaping and failure-aware sink.
+ * Their schema is separate: reading a control is not recording a user action. */
+UmiStatus UmiUiControlInventoryWriteJson(const UmiUiControlInventory *inventory,
+    UmiUiRecordingWriteFn write, void *context)
+{
+    Writer w = {write, context, UMI_STATUS_OK};
+    UmiUiControlInventorySummary summary;
+    size_t i;
+    if (inventory == NULL || write == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (UmiUiControlInventorySummarise(inventory, &summary) != UMI_STATUS_OK)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    Emit(&w, "{\"schema\":\"umicom.ui.controls\",\"schema_revision\":1,");
+    Emit(&w, "\"values_recorded\":false,\"summary\":{\"controls\":"); Number(&w, summary.controls);
+    Emit(&w, ",\"windows\":"); Number(&w, summary.windows);
+    Emit(&w, ",\"interactive\":"); Number(&w, summary.interactive);
+    Emit(&w, ",\"tagged\":"); Number(&w, summary.tagged);
+    Emit(&w, ",\"inherited_targets\":"); Number(&w, summary.inheritedTargets);
+    Emit(&w, ",\"missing_targets\":"); Number(&w, summary.unaddressableInteractive);
+    Emit(&w, ",\"ambiguous_targets\":"); Number(&w, summary.ambiguousTargets);
+    Emit(&w, ",\"private_controls\":"); Number(&w, summary.privateControls);
+    Emit(&w, "},\"controls\":[\n");
+    for (i = 0U; i < summary.controls && w.status == UMI_STATUS_OK; ++i) {
+        UmiUiControlRecord record;
+        size_t target;
+        w.status = UmiUiControlInventoryAt(inventory, i, &record);
+        if (w.status != UMI_STATUS_OK) break;
+        if (i != 0U) Emit(&w, ",\n");
+        Emit(&w, "{\"index\":"); Number(&w, i);
+        Emit(&w, ",\"parent_index\":");
+        if (record.parentIndex == UMI_UI_CONTROL_NO_PARENT) Emit(&w, "null");
+        else Number(&w, record.parentIndex);
+        Emit(&w, ",\"scope_id\":"); Number(&w, record.scopeId);
+        Emit(&w, ",\"automation_id\":"); String(&w, record.automationId);
+        Emit(&w, ",\"role\":"); String(&w, record.roleName);
+        Emit(&w, ",\"target_index\":");
+        if (UmiUiControlInventoryTarget(inventory, i, &target) == UMI_STATUS_OK) Number(&w, target);
+        else Emit(&w, "null");
+        Emit(&w, ",\"visible\":"); Emit(&w, record.visible ? "true" : "false");
+        Emit(&w, ",\"mapped\":"); Emit(&w, record.mapped ? "true" : "false");
+        Emit(&w, ",\"enabled\":"); Emit(&w, record.enabled ? "true" : "false");
+        Emit(&w, ",\"focused\":"); Emit(&w, record.focused ? "true" : "false");
+        Emit(&w, ",\"interactive\":"); Emit(&w, record.interactive ? "true" : "false");
+        Emit(&w, ",\"private\":"); Emit(&w, record.privateControl ? "true" : "false");
+        Emit(&w, "}");
+    }
+    Emit(&w, "\n]}\n");
+    return w.status;
+}
+
+UmiStatus UmiUiControlInventoryWriteHtml(const UmiUiControlInventory *inventory,
+    UmiUiRecordingWriteFn write, void *context)
+{
+    Writer w = {write, context, UMI_STATUS_OK};
+    UmiUiControlInventorySummary summary;
+    size_t i;
+    if (inventory == NULL || write == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (UmiUiControlInventorySummarise(inventory, &summary) != UMI_STATUS_OK)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    Emit(&w, "<!doctype html><html lang=\"en-GB\"><meta charset=\"utf-8\">"
+        "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
+        "<title>Window control map</title><style>body{font:16px/1.65 system-ui;margin:24px;"
+        "color:#213440}main{max-width:1200px;margin:auto}.table-wrap{overflow:auto}"
+        "table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccd6df;"
+        "padding:9px;text-align:left;vertical-align:top}code{overflow-wrap:anywhere}"
+        "th{background:#edf3f6}</style><main><h1>Window control map</h1>"
+        "<p>This map lists control types, test identifiers and availability. "
+        "It does not read document text, passwords, labels or clipboard contents. "
+        "A control listed here still needs an action test to show that it works.</p><p>");
+    Number(&w, summary.controls); Emit(&w, " controls in "); Number(&w, summary.windows);
+    Emit(&w, " windows; "); Number(&w, summary.unaddressableInteractive);
+    Emit(&w, " interactive controls without a test target; "); Number(&w, summary.ambiguousTargets);
+    Emit(&w, " tagged records share an identifier in the same window; ");
+    Number(&w, summary.privateControls); Emit(&w, " private subtrees omitted.</p>"
+        "<p>A child of a tagged composite control can use its parent's identifier. "
+        "Missing identifiers are testability gaps, not proof of missing callbacks. "
+        "Disabled or hidden controls may be correct for the current application state. "
+        "Mapped does not mean unobscured by another window.</p>"
+        "<div class=\"table-wrap\"><table><thead><tr><th>Index / parent</th><th>Window</th>"
+        "<th>Type</th><th>Direct test ID</th><th>Input target</th><th>State</th></tr></thead><tbody>");
+    for (i = 0U; i < summary.controls && w.status == UMI_STATUS_OK; ++i) {
+        UmiUiControlRecord record;
+        size_t target;
+        w.status = UmiUiControlInventoryAt(inventory, i, &record);
+        if (w.status != UMI_STATUS_OK) break;
+        Emit(&w, "<tr><td>"); Number(&w, i); Emit(&w, " / ");
+        if (record.parentIndex == UMI_UI_CONTROL_NO_PARENT) Emit(&w, "root");
+        else Number(&w, record.parentIndex);
+        Emit(&w, "</td><td>"); Number(&w, record.scopeId);
+        Emit(&w, "</td><td><code>"); Escape(&w, record.roleName, 1);
+        Emit(&w, "</code></td><td><code>"); Escape(&w, record.automationId, 1);
+        Emit(&w, "</code></td><td>");
+        if (UmiUiControlInventoryTarget(inventory, i, &target) == UMI_STATUS_OK) Number(&w, target);
+        else Emit(&w, record.privateControl ? "Private" : record.interactive ? "No test ID" : "Not assigned");
+        Emit(&w, "</td><td>"); Emit(&w, record.visible ? "Visible; " : "Hidden; ");
+        Emit(&w, record.mapped ? "mapped; " : "unmapped; ");
+        Emit(&w, record.enabled ? "enabled" : "disabled");
+        if (record.focused) Emit(&w, "; focused");
+        Emit(&w, "</td></tr>");
+    }
+    Emit(&w, "</tbody></table></div><p>Keep this map beside the interaction report and "
+        "the expected result. A developer can use its identifiers to reproduce the "
+        "same operation without relying on a button's screen position.</p></main></html>\n");
+    return w.status;
 }

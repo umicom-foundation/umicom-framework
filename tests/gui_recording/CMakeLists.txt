@@ -12,6 +12,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     get_filename_component(_framework "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
     add_library(umicom-recording-check-support STATIC
         "${_framework}/src/ui/interaction_recording.c"
+        "${_framework}/src/ui/control_inventory.c"
         "${_framework}/src/ui/automation.c"
         "${_framework}/src/ui/types.c"
         "${_framework}/src/base/status.c")

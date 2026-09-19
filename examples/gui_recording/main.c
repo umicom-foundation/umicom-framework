@@ -26,7 +26,8 @@ static UmiStatus Perform(void *context, const UmiUiAutomationStep *step,
     UmiUiAutomationObservation *observation, char *message, size_t capacity)
 {
     NotesFixture *fixture = context;
-    (void)observation;
+    (void)snprintf(observation->target_id, sizeof(observation->target_id), "%s", step->target_id);
+    (void)snprintf(observation->role_name, sizeof(observation->role_name), "notes-file");
     if (step->operation == UMI_UI_AUTOMATION_CLICK) {
         /* A no-op click deliberately returns OK to demonstrate why a separate
          * postcondition is essential. It is not a production Save handler. */
@@ -41,6 +42,8 @@ static UmiStatus Perform(void *context, const UmiUiAutomationStep *step,
         if (fseek(fixture->file, 0L, SEEK_SET) != 0) return UMI_STATUS_IO_ERROR;
         size_t length = fread(saved, 1U, sizeof(saved) - 1U, fixture->file);
         if (ferror(fixture->file)) return UMI_STATUS_IO_ERROR;
+        /* Report the bytes actually read, not a copy of the expected value. */
+        (void)snprintf(observation->text, sizeof(observation->text), "%s", saved);
         (void)snprintf(message, capacity, "The saved file must contain the expected Notes text.");
         return length == strlen(NOTES_TEXT) && strcmp(saved, NOTES_TEXT) == 0
             ? UMI_STATUS_OK : UMI_STATUS_INVALID_STATE;
@@ -85,6 +88,7 @@ int main(int argc, char **argv)
     (void)snprintf(step.step_id, sizeof(step.step_id), "saved-file-check");
     (void)snprintf(step.target_id, sizeof(step.target_id), "notes.saved-file");
     step.operation = UMI_UI_AUTOMATION_ASSERT_TEXT;
+    (void)snprintf(step.value, sizeof(step.value), "%s", NOTES_TEXT);
     status = umi_ui_automation_scenario_add(scenario, &step);
     if (status != UMI_STATUS_OK) goto cleanup;
     status = umi_ui_automation_run(&driver, scenario, &report);

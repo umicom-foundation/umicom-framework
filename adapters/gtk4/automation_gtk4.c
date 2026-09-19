@@ -15,6 +15,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/automation.h"
+#include "umicom/ui/gtk4/interaction_recording.h"
 
 #include <gtk/gtk.h>
 #include <stdio.h>
@@ -42,35 +43,33 @@ static int automation_copy_text(
     return written >= 0 && (size_t)written < capacity;
 }
 
-/* Walk the GTK child tree until the requested stable automation ID is found. */
-static GtkWidget *automation_find_widget_excluding(
-    GtkWidget *widget, const char *target_id, GtkWidget *excluded)
+/* Retain the first matching object while checking for ambiguous identifiers.
+ * A partial or ambiguous tree is not a licence to activate its first match. */
+typedef struct AutomationSearch {
+    GtkWidget *found;
+    size_t matches;
+    size_t visited;
+    UmiStatus status;
+} AutomationSearch;
+static void automation_find_widgets(GtkWidget *widget, const char *target_id,
+    GtkWidget *excluded, unsigned depth, AutomationSearch *search)
 {
     GtkWidget *child;
-    const char *widget_id;
-
-    if (widget == NULL || widget == excluded || target_id == NULL) return NULL;
-
-    widget_id = (const char *)g_object_get_data(
-        G_OBJECT(widget),
-        UMI_GTK4_AUTOMATION_ID_KEY);
-    if (widget_id != NULL && strcmp(widget_id, target_id) == 0) return widget;
-
-    /* GTK4 exposes children through sibling navigation rather than GtkContainer. */
-    for (child = gtk_widget_get_first_child(widget);
-         child != NULL;
-         child = gtk_widget_get_next_sibling(child)) {
-        GtkWidget *match = automation_find_widget_excluding(child, target_id, excluded);
-        if (match != NULL) return match;
+    const char *id;
+    if (widget == NULL || widget == excluded || search->status != UMI_STATUS_OK) return;
+    if (depth > 256U || search->visited >= 16384U) {
+        search->status = UMI_STATUS_CAPACITY_EXCEEDED;
+        return;
     }
-
-    return NULL;
-}
-
-/* Legacy callers continue to search their primary tree without exclusions. */
-static GtkWidget *automation_find_widget(GtkWidget *widget, const char *target_id)
-{
-    return automation_find_widget_excluding(widget, target_id, NULL);
+    ++search->visited;
+    id = g_object_get_data(G_OBJECT(widget), UMI_GTK4_AUTOMATION_ID_KEY);
+    if (id != NULL && strcmp(id, target_id) == 0 && search->found != widget) {
+        ++search->matches;
+        if (search->found == NULL) search->found = g_object_ref(widget);
+    }
+    for (child = gtk_widget_get_first_child(widget); child != NULL;
+         child = gtk_widget_get_next_sibling(child))
+        automation_find_widgets(child, target_id, excluded, depth + 1U, search);
 }
 
 /* Check whether a top-level window belongs to the driver's window family. */
@@ -95,74 +94,84 @@ static int automation_window_is_related(
  * are separate GTK top levels, so checking only normal children would make a
  * click-then-type journey stop immediately after opening its dialog.
  */
-static GtkWidget *automation_resolve_widget(
-    UmiGtk4AutomationDriver *driver,
-    const char *target_id)
+static UmiStatus automation_resolve_widget(
+    UmiGtk4AutomationDriver *driver, const char *target_id, GtkWidget **out_widget)
 {
-    GtkWidget *match;
+    AutomationSearch search = {0};
     GtkRoot *native_root;
     GtkWindow *driver_window = NULL;
     GListModel *top_levels;
     guint index;
-
-    if (driver == NULL || driver->root == NULL) return NULL;
-
-    /* Explicit scopes must stay within one window family after reparenting.
-     * A detached pair does not license searching other application windows. */
+    *out_widget = NULL;
+    if (driver == NULL || driver->root == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Explicit scopes remain confined after a host reparents one of them. */
     if (driver->observed_scope != NULL) {
         GtkRoot *primary_window = gtk_widget_get_root(driver->root);
         GtkRoot *scope_window = gtk_widget_get_root(driver->observed_scope);
         if (primary_window != NULL && scope_window != NULL && primary_window != scope_window)
-            return NULL;
+            return UMI_STATUS_INVALID_STATE;
     }
-    match = automation_find_widget(driver->root, target_id);
-    if (match != NULL) return match;
+    automation_find_widgets(driver->root, target_id, NULL, 0U, &search);
     if (driver->observed_scope != NULL &&
-        !gtk_widget_is_ancestor(driver->observed_scope, driver->root)) {
-        match = automation_find_widget_excluding(driver->observed_scope, target_id, driver->root);
-        if (match != NULL) return match;
-    }
-
+        !gtk_widget_is_ancestor(driver->observed_scope, driver->root))
+        automation_find_widgets(driver->observed_scope, target_id, driver->root, 0U, &search);
     native_root = gtk_widget_get_root(driver->root);
     if (native_root == NULL && driver->observed_scope != NULL)
         native_root = gtk_widget_get_root(driver->observed_scope);
-    if (native_root != NULL && GTK_IS_WINDOW(native_root)) {
-        driver_window = GTK_WINDOW(native_root);
-    } else if (GTK_IS_WINDOW(driver->root)) {
-        driver_window = GTK_WINDOW(driver->root);
-    }
+    if (native_root != NULL && GTK_IS_WINDOW(native_root)) driver_window = GTK_WINDOW(native_root);
+    else if (GTK_IS_WINDOW(driver->root)) driver_window = GTK_WINDOW(driver->root);
 
-    if (driver->observed_scope != NULL && driver_window == NULL) return NULL;
-    top_levels = gtk_window_get_toplevels();
-    if (top_levels == NULL) return NULL;
-
-    for (index = 0U; index < g_list_model_get_n_items(top_levels); ++index) {
-        GtkWindow *window = GTK_WINDOW(g_list_model_get_item(top_levels, index));
-
+    /* An unparented fixture can search its explicit trees, never every other
+     * window in the process. This keeps independent document hosts isolated. */
+    top_levels = driver_window != NULL ? gtk_window_get_toplevels() : NULL;
+    for (index = 0U; search.status == UMI_STATUS_OK && top_levels != NULL &&
+         index < g_list_model_get_n_items(top_levels); ++index) {
+        GtkWindow *window = g_list_model_get_item(top_levels, index);
         if (window == NULL) continue;
-        /* A parented root searches only its own window and transient dialogs. */
-        if ((driver_window == NULL ||
-             automation_window_is_related(window, driver_window)) &&
+        if (automation_window_is_related(window, driver_window) &&
             (driver->observed_scope == NULL || window != driver_window)) {
-            match = automation_find_widget(GTK_WIDGET(window), target_id);
+            automation_find_widgets(GTK_WIDGET(window), target_id,
+                window == driver_window ? driver->root : NULL, 0U, &search);
         }
         g_object_unref(window);
-        if (match != NULL) return match;
     }
-
-    return NULL;
+    if (search.status == UMI_STATUS_OK && search.matches > 1U)
+        search.status = UMI_STATUS_ALREADY_EXISTS;
+    if (search.status != UMI_STATUS_OK) { g_clear_object(&search.found); return search.status; }
+    if (search.found == NULL) return UMI_STATUS_NOT_FOUND;
+    *out_widget = search.found;
+    return UMI_STATUS_OK;
 }
 
-/* Read the human-visible text supported by common interactive GTK4 controls. */
-static const char *automation_widget_text(GtkWidget *widget)
+/* Copy only bounded, explicitly requested test text. Private fields never
+ * expose values. TextView covers the source editor as well as single-line UI. */
+static UmiStatus automation_widget_text(GtkWidget *widget, char *out_text, size_t capacity)
 {
-    if (GTK_IS_EDITABLE(widget)) return gtk_editable_get_text(GTK_EDITABLE(widget));
-    if (GTK_IS_LABEL(widget)) return gtk_label_get_text(GTK_LABEL(widget));
-    if (GTK_IS_BUTTON(widget)) return gtk_button_get_label(GTK_BUTTON(widget));
-    if (GTK_IS_MENU_BUTTON(widget)) {
-        return gtk_menu_button_get_label(GTK_MENU_BUTTON(widget));
-    }
-    return "";
+    const char *text = "";
+    char *owned = NULL;
+    UmiStatus status;
+    out_text[0] = '\0';
+    if (UmiGtk4RecordingIsPrivate(widget)) return UMI_STATUS_PERMISSION_DENIED;
+    if (GTK_IS_TEXT_VIEW(widget)) {
+        GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget));
+        GtkTextIter start, end;
+        if ((size_t)gtk_text_buffer_get_char_count(buffer) >= capacity)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        gtk_text_buffer_get_bounds(buffer, &start, &end);
+        owned = gtk_text_buffer_get_text(buffer, &start, &end, TRUE);
+        text = owned;
+    } else if (GTK_IS_EDITABLE(widget)) text = gtk_editable_get_text(GTK_EDITABLE(widget));
+    else if (GTK_IS_LABEL(widget)) text = gtk_label_get_text(GTK_LABEL(widget));
+    else if (GTK_IS_BUTTON(widget)) text = gtk_button_get_label(GTK_BUTTON(widget));
+    else if (GTK_IS_CHECK_BUTTON(widget)) text = gtk_check_button_get_label(GTK_CHECK_BUTTON(widget));
+    else if (GTK_IS_MENU_BUTTON(widget)) text = gtk_menu_button_get_label(GTK_MENU_BUTTON(widget));
+    if (text == NULL) text = "";
+    if (!g_utf8_validate(text, -1, NULL)) status = UMI_STATUS_PARSE_ERROR;
+    else status = automation_copy_text(out_text, capacity, text)
+        ? UMI_STATUS_OK : UMI_STATUS_CAPACITY_EXCEEDED;
+    if (status != UMI_STATUS_OK) out_text[0] = '\0';
+    g_free(owned);
+    return status;
 }
 
 /* Capture a consistent post-action state for reports and later HTML rendering. */
@@ -183,18 +192,21 @@ static void automation_observe(
         out_observation->role_name,
         sizeof(out_observation->role_name),
         G_OBJECT_TYPE_NAME(widget));
-    (void)automation_copy_text(
-        out_observation->text,
-        sizeof(out_observation->text),
-        automation_widget_text(widget));
-    out_observation->visible = gtk_widget_get_visible(widget) != FALSE;
-    out_observation->enabled = gtk_widget_get_sensitive(widget) != FALSE;
+    /* Oversized/private values are omitted from metadata observations. An
+     * explicit ASSERT_TEXT handles the read error separately below. */
+    (void)automation_widget_text(widget, out_observation->text, sizeof(out_observation->text));
+    out_observation->visible = gtk_widget_is_visible(widget) && gtk_widget_get_mapped(widget);
+    out_observation->enabled = gtk_widget_is_sensitive(widget) != FALSE;
     out_observation->focused = gtk_widget_has_focus(widget) != FALSE;
 
     /* Toggle state and drop-down selection both represent a selected control. */
     if (GTK_IS_TOGGLE_BUTTON(widget)) {
         out_observation->selected =
             gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)) != FALSE;
+    } else if (GTK_IS_CHECK_BUTTON(widget)) {
+        out_observation->selected = gtk_check_button_get_active(GTK_CHECK_BUTTON(widget)) != FALSE;
+    } else if (GTK_IS_SWITCH(widget)) {
+        out_observation->selected = gtk_switch_get_active(GTK_SWITCH(widget)) != FALSE;
     } else if (GTK_IS_DROP_DOWN(widget)) {
         out_observation->selected =
             gtk_drop_down_get_selected(GTK_DROP_DOWN(widget)) !=
@@ -213,38 +225,41 @@ static int automation_wait_condition(
     UmiUiAutomationOperation operation)
 {
     if (operation == UMI_UI_AUTOMATION_WAIT_VISIBLE) {
-        return gtk_widget_get_visible(widget) != FALSE;
+        return gtk_widget_is_visible(widget) && gtk_widget_get_mapped(widget);
     }
-    return gtk_widget_get_sensitive(widget) != FALSE;
+    return gtk_widget_is_sensitive(widget) != FALSE;
 }
 
 /*
  * Process pending GTK work while waiting for a visible or enabled state. This
  * loop has a caller-supplied deadline and therefore cannot wait forever.
  */
-static UmiStatus automation_wait(
-    GtkWidget *widget,
-    UmiUiAutomationOperation operation,
-    uint32_t timeout_ms)
+static UmiStatus automation_wait(UmiGtk4AutomationDriver *driver,
+    const UmiUiAutomationStep *step, GtkWidget **out_widget)
 {
     const gint64 started = g_get_monotonic_time();
-    const gint64 timeout_us = (gint64)timeout_ms * 1000;
-
-    while (!automation_wait_condition(widget, operation)) {
-        gint64 elapsed;
-
-        while (g_main_context_pending(NULL)) {
+    const gint64 timeout_us = (gint64)step->timeout_ms * 1000;
+    *out_widget = NULL;
+    for (;;) {
+        GtkWidget *widget = NULL;
+        UmiStatus status = automation_resolve_widget(driver, step->target_id, &widget);
+        if (status == UMI_STATUS_OK) {
+            if (automation_wait_condition(widget, step->operation)) {
+                *out_widget = widget;
+                return UMI_STATUS_OK;
+            }
+            g_object_unref(widget);
+        } else if (status != UMI_STATUS_NOT_FOUND) return status;
+        if (g_get_monotonic_time() - started >= timeout_us) return UMI_STATUS_TIMEOUT;
+        /* A recurring idle source must not trap the driver in an unbounded
+         * inner loop. Re-resolve after pumping: callbacks can remove a widget
+         * or create the dialog which this step is waiting to observe. */
+        for (unsigned work = 0U; work < 16U && g_main_context_pending(NULL); ++work) {
+            if (g_get_monotonic_time() - started >= timeout_us) return UMI_STATUS_TIMEOUT;
             (void)g_main_context_iteration(NULL, FALSE);
         }
-
-        elapsed = g_get_monotonic_time() - started;
-        if (elapsed >= timeout_us) return UMI_STATUS_TIMEOUT;
-
-        /* A one-millisecond pause prevents a wait from consuming a CPU core. */
         g_usleep(1000U);
     }
-
-    return UMI_STATUS_OK;
 }
 
 /* Parse an explicit true, false or toggle request for a GTK toggle button. */
@@ -252,9 +267,10 @@ static UmiStatus automation_toggle(GtkWidget *widget, const char *value)
 {
     gboolean active;
 
-    if (!GTK_IS_TOGGLE_BUTTON(widget)) return UMI_STATUS_INVALID_ARGUMENT;
-
-    active = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+    if (GTK_IS_TOGGLE_BUTTON(widget)) active = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+    else if (GTK_IS_CHECK_BUTTON(widget)) active = gtk_check_button_get_active(GTK_CHECK_BUTTON(widget));
+    else if (GTK_IS_SWITCH(widget)) active = gtk_switch_get_active(GTK_SWITCH(widget));
+    else return UMI_STATUS_INVALID_ARGUMENT;
     if (value == NULL || value[0] == '\0' || strcmp(value, "toggle") == 0) {
         active = !active;
     } else if (strcmp(value, "true") == 0 || strcmp(value, "1") == 0) {
@@ -265,7 +281,9 @@ static UmiStatus automation_toggle(GtkWidget *widget, const char *value)
         return UMI_STATUS_PARSE_ERROR;
     }
 
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(widget), active);
+    if (GTK_IS_TOGGLE_BUTTON(widget)) gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(widget), active);
+    else if (GTK_IS_CHECK_BUTTON(widget)) gtk_check_button_set_active(GTK_CHECK_BUTTON(widget), active);
+    else gtk_switch_set_active(GTK_SWITCH(widget), active);
     return UMI_STATUS_OK;
 }
 
@@ -304,96 +322,100 @@ static UmiStatus automation_perform(
     char *out_message,
     size_t message_capacity)
 {
-    UmiGtk4AutomationDriver *driver = (UmiGtk4AutomationDriver *)context;
-    GtkWidget *widget;
-    UmiStatus status = UMI_STATUS_OK;
-    const char *message = "Action completed.";
-
+    UmiGtk4AutomationDriver *driver = context;
+    UmiUiAutomationStep checked;
+    GtkWidget *widget = NULL;
+    UmiStatus status;
+    const char *message = "Control state observed.";
+    if (out_observation != NULL) memset(out_observation, 0, sizeof(*out_observation));
+    if (out_message != NULL && message_capacity > 0U) out_message[0] = '\0';
     if (driver == NULL || driver->root == NULL || step == NULL ||
-        out_observation == NULL || out_message == NULL || message_capacity == 0U) {
+        out_observation == NULL || out_message == NULL || message_capacity == 0U)
         return UMI_STATUS_INVALID_ARGUMENT;
+    checked = *step;
+    /* Older direct adapter callers did not use a scenario step ID. Keep those
+     * calls valid; stored scenarios still require the caller's real step ID. */
+    if (checked.step_id[0] == '\0')
+        (void)automation_copy_text(checked.step_id, sizeof(checked.step_id), "direct-adapter-call");
+    status = UmiUiAutomationStepValidate(&checked);
+    if (status != UMI_STATUS_OK) {
+        (void)automation_copy_text(out_message, message_capacity, "Invalid automation step.");
+        return status;
     }
-
-    widget = automation_resolve_widget(driver, step->target_id);
-    if (widget == NULL) {
-        (void)automation_copy_text(
-            out_message,
-            message_capacity,
-            "No control has this stable automation ID.");
-        return UMI_STATUS_NOT_FOUND;
+    if (step->operation == UMI_UI_AUTOMATION_WAIT_VISIBLE ||
+        step->operation == UMI_UI_AUTOMATION_WAIT_ENABLED)
+        status = automation_wait(driver, step, &widget);
+    else status = automation_resolve_widget(driver, step->target_id, &widget);
+    if (status != UMI_STATUS_OK) {
+        const char *reason = status == UMI_STATUS_TIMEOUT ? "The control did not reach its required state before the deadline."
+            : status == UMI_STATUS_ALREADY_EXISTS ? "More than one control has this test ID. Use an unambiguous window scope."
+            : status == UMI_STATUS_NOT_FOUND ? "No control has this stable automation ID."
+            : "The control scope could not be inspected completely.";
+        (void)automation_copy_text(out_message, message_capacity, reason);
+        return status;
     }
-
-    /*
-     * Keep the target alive until evidence is captured. A Close or Cancel
-     * action may remove its widget synchronously while gtk_widget_activate is
-     * still returning, but the driver must never inspect released memory.
-     */
-    g_object_ref(widget);
-
-    switch (step->operation) {
+    /* The resolver owns a reference. Signals may remove the widget before
+     * returning, so keep that reference through the post-action observation. */
+    if (step->operation >= UMI_UI_AUTOMATION_FOCUS &&
+        step->operation <= UMI_UI_AUTOMATION_INVOKE_COMMAND &&
+        !gtk_widget_is_sensitive(widget)) {
+        status = UMI_STATUS_UNAVAILABLE;
+        message = "The control or one of its parents is disabled.";
+    } else switch (step->operation) {
         case UMI_UI_AUTOMATION_FOCUS:
-            status = gtk_widget_grab_focus(widget)
-                ? UMI_STATUS_OK
-                : UMI_STATUS_UNAVAILABLE;
-            message = "Control received keyboard focus.";
+            status = gtk_widget_grab_focus(widget) ? UMI_STATUS_OK : UMI_STATUS_UNAVAILABLE;
+            message = "Keyboard focus was requested.";
             break;
         case UMI_UI_AUTOMATION_CLICK:
         case UMI_UI_AUTOMATION_INVOKE_COMMAND:
-            status = gtk_widget_activate(widget)
-                ? UMI_STATUS_OK
-                : UMI_STATUS_UNAVAILABLE;
-            message = "Control was activated through GTK.";
+            status = gtk_widget_activate(widget) ? UMI_STATUS_OK : UMI_STATUS_UNAVAILABLE;
+            message = "GTK activation was requested; check the application outcome in the next step.";
             break;
         case UMI_UI_AUTOMATION_TYPE_TEXT:
-            if (!GTK_IS_EDITABLE(widget)) {
-                status = UMI_STATUS_INVALID_ARGUMENT;
-            } else {
-                gtk_editable_set_text(GTK_EDITABLE(widget), step->value);
-                message = "Text was entered into the editable control.";
-            }
+            if (UmiGtk4RecordingIsPrivate(widget)) status = UMI_STATUS_PERMISSION_DENIED;
+            else if (GTK_IS_TEXT_VIEW(widget)) {
+                if (!gtk_text_view_get_editable(GTK_TEXT_VIEW(widget))) status = UMI_STATUS_PERMISSION_DENIED;
+                else gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)), step->value, -1);
+            } else if (GTK_IS_EDITABLE(widget)) {
+                if (!gtk_editable_get_editable(GTK_EDITABLE(widget))) status = UMI_STATUS_PERMISSION_DENIED;
+                else gtk_editable_set_text(GTK_EDITABLE(widget), step->value);
+            } else status = UMI_STATUS_INVALID_ARGUMENT;
+            message = "Test text was assigned through the widget API; this is not operating-system typing.";
             break;
         case UMI_UI_AUTOMATION_SELECT:
             status = automation_select(widget, step->value);
-            message = "Drop-down selection was changed.";
+            message = "Drop-down selection was requested.";
             break;
         case UMI_UI_AUTOMATION_TOGGLE:
             status = automation_toggle(widget, step->value);
-            message = "Toggle state was changed.";
+            message = "Toggle state was requested.";
             break;
         case UMI_UI_AUTOMATION_OPEN_MENU:
-            if (!GTK_IS_MENU_BUTTON(widget)) {
-                status = UMI_STATUS_INVALID_ARGUMENT;
-            } else {
-                gtk_menu_button_popup(GTK_MENU_BUTTON(widget));
-                message = "Menu was opened.";
-            }
+            if (!GTK_IS_MENU_BUTTON(widget)) status = UMI_STATUS_INVALID_ARGUMENT;
+            else gtk_menu_button_popup(GTK_MENU_BUTTON(widget));
+            message = "Menu popup was requested.";
             break;
         case UMI_UI_AUTOMATION_WAIT_VISIBLE:
         case UMI_UI_AUTOMATION_WAIT_ENABLED:
-            status = automation_wait(widget, step->operation, step->timeout_ms);
-            message = status == UMI_STATUS_OK
-                ? "Expected control state became available."
-                : "Timed out before the expected control state became available.";
+            message = "The control reached the required state.";
             break;
         case UMI_UI_AUTOMATION_ASSERT_TEXT:
-            status = strcmp(automation_widget_text(widget), step->value) == 0
-                ? UMI_STATUS_OK
-                : UMI_STATUS_INVALID_STATE;
-            message = status == UMI_STATUS_OK
-                ? "Displayed text matches the expected value."
-                : "Displayed text does not match the expected value.";
+            status = automation_widget_text(widget, out_observation->text, sizeof(out_observation->text));
             break;
+        case UMI_UI_AUTOMATION_ASSERT_VISIBLE:
+        case UMI_UI_AUTOMATION_ASSERT_ENABLED:
+        case UMI_UI_AUTOMATION_ASSERT_FOCUSED:
+        case UMI_UI_AUTOMATION_ASSERT_SELECTED:
         case UMI_UI_AUTOMATION_CAPTURE_EVIDENCE:
-            message = "Current control state was captured.";
             break;
-        default:
-            status = UMI_STATUS_NOT_IMPLEMENTED;
-            message = "The GTK4 driver does not implement this operation.";
-            break;
+        default: status = UMI_STATUS_NOT_IMPLEMENTED; break;
     }
-
     automation_observe(driver, widget, step->target_id, out_observation);
-    (void)automation_copy_text(out_message, message_capacity, message);
+    if (status == UMI_STATUS_OK) status = UmiUiAutomationObservationCheck(&checked, out_observation);
+    if (status == UMI_STATUS_OK) (void)automation_copy_text(out_message, message_capacity, message);
+    else if (strcmp(message, "The control or one of its parents is disabled.") == 0)
+        (void)automation_copy_text(out_message, message_capacity, message);
+    else (void)snprintf(out_message, message_capacity, "Control operation failed: %s.", umi_status_text(status));
     g_object_unref(widget);
     return status;
 }
