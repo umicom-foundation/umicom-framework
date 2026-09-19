@@ -1,0 +1,51 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: examples/gui_recording/check_session_result.cmake
+# PURPOSE: Verify the exact Notes example result, not any arbitrary nonzero exit.
+# AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+# LICENCE: MIT
+#-----------------------------------------------------------------------------
+cmake_minimum_required(VERSION 3.24)
+if(NOT EXISTS "${PROGRAM}")
+    message(FATAL_ERROR "The Notes session example has not been built.")
+endif()
+if(MODE STREQUAL "pass")
+    set(_argument)
+    set(_exit_expected 0)
+    set(_state_expected completed)
+    set(_attempted 3)
+    set(_failed 0)
+elseif(MODE STREQUAL "fail")
+    set(_argument --fail-save)
+    set(_exit_expected 1)
+    set(_state_expected stopped)
+    set(_attempted 2)
+    set(_failed 1)
+elseif(MODE STREQUAL "cancel")
+    set(_argument --cancel)
+    set(_exit_expected 1)
+    set(_state_expected cancelled)
+    set(_attempted 1)
+    set(_failed 0)
+else()
+    message(FATAL_ERROR "Unknown Notes session mode: ${MODE}")
+endif()
+execute_process(COMMAND "${PROGRAM}" ${_argument} RESULT_VARIABLE _exit
+    OUTPUT_VARIABLE _output ERROR_VARIABLE _error TIMEOUT 10)
+if(NOT "${_exit}" STREQUAL "${_exit_expected}")
+    message(FATAL_ERROR "Expected exit ${_exit_expected}, got ${_exit}.\n${_error}\n${_output}")
+endif()
+string(JSON _state GET "${_output}" state)
+string(JSON _seen GET "${_output}" attempted)
+string(JSON _failures GET "${_output}" failed)
+string(JSON _planned GET "${_output}" planned)
+string(JSON _rows LENGTH "${_output}" steps)
+string(JSON _accepted GET "${_output}" accepted)
+if(NOT _state STREQUAL _state_expected OR NOT _seen EQUAL _attempted OR
+        NOT _failures EQUAL _failed OR NOT _planned EQUAL 3 OR NOT _rows EQUAL 3)
+    message(FATAL_ERROR "Unexpected session contents: ${_output}")
+endif()
+if((MODE STREQUAL "pass" AND NOT _accepted) OR (NOT MODE STREQUAL "pass" AND _accepted))
+    message(FATAL_ERROR "Incorrect acceptance flag: ${_output}")
+endif()
+message(STATUS "Notes ${MODE} result and all planned rows verified.")

@@ -146,6 +146,14 @@ UmiSiteEscape("${_example}" UMICOM_SITE_CONTROL_CHECKS_EXAMPLE)
 configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/GUI_CONTROL_CHECKS.html"
     "${UMICOM_SITE_OUTPUT}/GUI_CONTROL_CHECKS.html" COPYONLY)
 
+# The session walkthrough uses the actual compiled Notes example.
+set(_check_sessions_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/gui_recording/check_sessions.c")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_check_sessions_example}")
+file(READ "${_check_sessions_example}" _example)
+UmiSiteEscape("${_example}" UMICOM_SITE_CHECK_SESSIONS_EXAMPLE)
+configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/GUI_CHECK_SESSIONS.html"
+    "${UMICOM_SITE_OUTPUT}/GUI_CHECK_SESSIONS.html" COPYONLY)
+
 # This is a file inventory, not a second C parser or a runtime module registry.
 file(GLOB_RECURSE _headers CONFIGURE_DEPENDS LIST_DIRECTORIES FALSE
     RELATIVE "${UMICOM_SITE_FRAMEWORK_ROOT}" "${UMICOM_SITE_FRAMEWORK_ROOT}/include/umicom/*.h")

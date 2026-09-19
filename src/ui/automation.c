@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/automation.h"
+#include "umicom/ui/automation_session.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -35,6 +36,18 @@ struct UmiUiAutomationReport {
     size_t total;
     size_t passed;
     size_t failed;
+    char runId[UMI_UI_ID_CAPACITY];
+    char title[UMI_UI_TEXT_CAPACITY];
+    size_t planned;
+    UmiUiAutomationSessionState state;
+    int stepInProgress;
+    int cancellationRequested;
+};
+
+struct UmiUiAutomationSession {
+    UmiUiAutomationDriver driver;
+    UmiUiAutomationReport *report;
+    int continueOnFailure;
 };
 
 /* Check fixed text storage before any string function searches past its end. */
@@ -234,82 +247,205 @@ UmiStatus umi_ui_automation_driver_validate(const UmiUiAutomationDriver *driver)
     return UMI_STATUS_OK;
 }
 
-/* Execute scenario steps in order and retain every attempted result as evidence. */
-UmiStatus umi_ui_automation_run(
-    const UmiUiAutomationDriver *driver,
-    const UmiUiAutomationScenario *scenario,
-    UmiUiAutomationReport **out_report)
+/* Both synchronous runs and paced sessions execute this same checked step. */
+static void PerformStep(const UmiUiAutomationDriver *driver,
+    UmiUiAutomationStepResult *result)
 {
+    result->status = driver->perform(
+        driver->context,
+        &result->step,
+        &result->observation,
+        result->message,
+        sizeof(result->message));
+    /* Validate before repairing report terminators: otherwise a truncated
+     * or malformed adapter response could falsely satisfy an assertion. */
+    if (result->status == UMI_STATUS_OK) {
+        UmiStatus checked = UmiUiAutomationObservationCheck(
+            &result->step, &result->observation);
+        if (checked != UMI_STATUS_OK) {
+            result->status = checked;
+            (void)umi_ui_copy_text(result->message, sizeof(result->message),
+                "The reported control state does not satisfy the assertion.");
+        }
+    }
+    /* A third-party adapter cannot leave report strings unterminated. */
+    result->message[sizeof(result->message) - 1U] = '\0';
+    result->observation.target_id[
+        sizeof(result->observation.target_id) - 1U] = '\0';
+    result->observation.role_name[
+        sizeof(result->observation.role_name) - 1U] = '\0';
+    result->observation.text[
+        sizeof(result->observation.text) - 1U] = '\0';
+}
+
+/* Allocate all rows before the first action. No allocation failure can lose an
+ * already-executed step. Legacy callers alone may create an empty report. */
+static UmiStatus CreateSession(const UmiUiAutomationDriver *driver,
+    const UmiUiAutomationScenario *scenario, const char *runId, int allowEmpty,
+    UmiUiAutomationSession **outSession)
+{
+    UmiUiAutomationSession *session;
     UmiUiAutomationReport *report;
     size_t index;
     UmiStatus status;
-
-    if (out_report == NULL || scenario == NULL) {
-        return UMI_STATUS_INVALID_ARGUMENT;
-    }
-    *out_report = NULL;
-
+    if (outSession == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outSession = NULL;
+    if (scenario == NULL || (!allowEmpty && scenario->step_count == 0U) ||
+        !automation_has_terminator(runId, UMI_UI_ID_CAPACITY) ||
+        !umi_ui_id_is_valid(runId)) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_ui_automation_driver_validate(driver);
     if (status != UMI_STATUS_OK) return status;
+    session = calloc(1U, sizeof(*session));
+    if (session == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    report = calloc(1U, sizeof(*report));
+    if (report == NULL) { free(session); return UMI_STATUS_OUT_OF_MEMORY; }
+    /* Inputs are already validated, so bounded copies cannot truncate here. */
+    (void)umi_ui_copy_text(report->scenario_id, sizeof(report->scenario_id), scenario->scenario_id);
+    (void)umi_ui_copy_text(report->title, sizeof(report->title), scenario->title);
+    (void)umi_ui_copy_text(report->runId, sizeof(report->runId), runId);
+    (void)umi_ui_copy_text(report->driver_id, sizeof(report->driver_id), driver->driver_id);
+    report->planned = scenario->step_count;
+    report->state = report->planned == 0U ? UMI_UI_AUTOMATION_SESSION_COMPLETED
+        : UMI_UI_AUTOMATION_SESSION_READY;
+    for (index = 0U; index < report->planned; ++index)
+        report->results[index].step = scenario->steps[index];
+    session->driver = *driver;
+    session->report = report;
+    session->continueOnFailure = scenario->continue_on_failure;
+    *outSession = session;
+    return UMI_STATUS_OK;
+}
 
-    /* Reports are deliberately heap-owned because their evidence can be large. */
-    report = (UmiUiAutomationReport *)calloc(1U, sizeof(*report));
-    if (report == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+/* A new run captures its plan without invoking any application operation. */
+UmiStatus UmiUiAutomationSessionCreate(const UmiUiAutomationDriver *driver,
+    const UmiUiAutomationScenario *scenario, const char *runId,
+    UmiUiAutomationSession **outSession)
+{
+    return CreateSession(driver, scenario, runId, 0, outSession);
+}
 
-    if (!umi_ui_copy_text(
-            report->scenario_id,
-            sizeof(report->scenario_id),
-            scenario->scenario_id) ||
-        !umi_ui_copy_text(
-            report->driver_id,
-            sizeof(report->driver_id),
-            driver->driver_id)) {
-        free(report);
-        return UMI_STATUS_CAPACITY_EXCEEDED;
+/* Publish one attempted result, then decide whether the next step may run. */
+UmiStatus UmiUiAutomationSessionAdvance(UmiUiAutomationSession *session)
+{
+    UmiUiAutomationReport *report;
+    UmiUiAutomationStepResult *result;
+    if (session == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    report = session->report;
+    if (report->stepInProgress) return UMI_STATUS_BUSY;
+    if (report->state != UMI_UI_AUTOMATION_SESSION_READY &&
+        report->state != UMI_UI_AUTOMATION_SESSION_RUNNING) return UMI_STATUS_INVALID_STATE;
+    report->state = UMI_UI_AUTOMATION_SESSION_RUNNING;
+    report->stepInProgress = 1;
+    result = &report->results[report->total];
+    PerformStep(&session->driver, result);
+    report->stepInProgress = 0;
+    report->total += 1U;
+    if (result->status == UMI_STATUS_OK) report->passed += 1U;
+    else report->failed += 1U;
+    /* Preserve the attempted result even when it requested cancellation. */
+    if (report->cancellationRequested)
+        report->state = UMI_UI_AUTOMATION_SESSION_CANCELLED;
+    else if (result->status != UMI_STATUS_OK && !session->continueOnFailure)
+        report->state = UMI_UI_AUTOMATION_SESSION_STOPPED;
+    else if (report->total == report->planned)
+        report->state = UMI_UI_AUTOMATION_SESSION_COMPLETED;
+    return UMI_STATUS_OK;
+}
+
+/* Keep completed work intact while preventing any further planned action. */
+UmiStatus UmiUiAutomationSessionCancel(UmiUiAutomationSession *session)
+{
+    UmiUiAutomationReport *report;
+    if (session == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    report = session->report;
+    if (report->state == UMI_UI_AUTOMATION_SESSION_READY ||
+        report->state == UMI_UI_AUTOMATION_SESSION_RUNNING) {
+        report->cancellationRequested = 1;
+        if (!report->stepInProgress) report->state = UMI_UI_AUTOMATION_SESSION_CANCELLED;
     }
+    return UMI_STATUS_OK;
+}
 
-    for (index = 0U; index < scenario->step_count; ++index) {
-        UmiUiAutomationStepResult *result = &report->results[report->total];
+/* Refuse teardown during a driver call that still refers to this session. */
+UmiStatus UmiUiAutomationSessionDestroy(UmiUiAutomationSession *session)
+{
+    if (session == NULL) return UMI_STATUS_OK;
+    if (session->report != NULL && session->report->stepInProgress) return UMI_STATUS_BUSY;
+    free(session->report);
+    free(session);
+    return UMI_STATUS_OK;
+}
 
-        result->step = scenario->steps[index];
-        result->status = driver->perform(
-            driver->context,
-            &result->step,
-            &result->observation,
-            result->message,
-            sizeof(result->message));
-        /* Validate before repairing report terminators: otherwise a truncated
-         * or malformed adapter response could falsely satisfy an assertion. */
-        if (result->status == UMI_STATUS_OK) {
-            UmiStatus checked = UmiUiAutomationObservationCheck(
-                &result->step, &result->observation);
-            if (checked != UMI_STATUS_OK) {
-                result->status = checked;
-                (void)umi_ui_copy_text(result->message, sizeof(result->message),
-                    "The reported control state does not satisfy the assertion.");
-            }
-        }
-        /* A third-party adapter cannot leave report strings unterminated. */
-        result->message[sizeof(result->message) - 1U] = '\0';
-        result->observation.target_id[
-            sizeof(result->observation.target_id) - 1U] = '\0';
-        result->observation.role_name[
-            sizeof(result->observation.role_name) - 1U] = '\0';
-        result->observation.text[
-            sizeof(result->observation.text) - 1U] = '\0';
-        report->total += 1U;
+/* Return a borrowed view; the session keeps ownership of report storage. */
+const UmiUiAutomationReport *UmiUiAutomationSessionReport(
+    const UmiUiAutomationSession *session)
+{
+    return session != NULL ? session->report : NULL;
+}
 
-        if (result->status == UMI_STATUS_OK) {
-            report->passed += 1U;
-        } else {
-            report->failed += 1U;
+/* Copy progress without exposing the mutable report or driver interface. */
+UmiStatus UmiUiAutomationReportSnapshot(const UmiUiAutomationReport *report,
+    UmiUiAutomationSessionSnapshot *outSnapshot)
+{
+    if (outSnapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    memset(outSnapshot, 0, sizeof(*outSnapshot));
+    if (report == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    memcpy(outSnapshot->runId, report->runId, sizeof(outSnapshot->runId));
+    memcpy(outSnapshot->scenarioId, report->scenario_id, sizeof(outSnapshot->scenarioId));
+    memcpy(outSnapshot->title, report->title, sizeof(outSnapshot->title));
+    memcpy(outSnapshot->driverId, report->driver_id, sizeof(outSnapshot->driverId));
+    outSnapshot->state = report->state;
+    outSnapshot->planned = report->planned;
+    outSnapshot->attempted = report->total;
+    outSnapshot->passed = report->passed;
+    outSnapshot->failed = report->failed;
+    outSnapshot->notRun = report->planned - report->total;
+    outSnapshot->stepInProgress = report->stepInProgress;
+    outSnapshot->cancellationRequested = report->cancellationRequested;
+    return UMI_STATUS_OK;
+}
 
-            /* Stop only when later steps are likely to depend on this failure. */
-            if (!scenario->continue_on_failure) break;
-        }
+/* Unattempted rows retain only their plan, never an invented observation. */
+UmiStatus UmiUiAutomationReportStep(const UmiUiAutomationReport *report,
+    size_t index, UmiUiAutomationStepState *outState,
+    UmiUiAutomationStepResult *outResult)
+{
+    if (outState != NULL) *outState = UMI_UI_AUTOMATION_STEP_NOT_RUN;
+    if (outResult != NULL) memset(outResult, 0, sizeof(*outResult));
+    if (report == NULL || outState == NULL || outResult == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (index >= report->planned) return UMI_STATUS_NOT_FOUND;
+    if (index < report->total) {
+        *outResult = report->results[index];
+        *outState = outResult->status == UMI_STATUS_OK
+            ? UMI_UI_AUTOMATION_STEP_PASSED : UMI_UI_AUTOMATION_STEP_FAILED;
+    } else {
+        /* A callback may be populating this slot: publish only its plan. */
+        outResult->step = report->results[index].step;
     }
+    return UMI_STATUS_OK;
+}
 
-    *out_report = report;
+/* Execute scenario steps in order and retain every attempted result as evidence.
+ * The old entry point still blocks and permits empty scenarios. It now shares
+ * the exact executor with paced sessions, preserving one assertion policy. */
+UmiStatus umi_ui_automation_run(const UmiUiAutomationDriver *driver,
+    const UmiUiAutomationScenario *scenario, UmiUiAutomationReport **out_report)
+{
+    UmiUiAutomationSession *session = NULL;
+    UmiStatus status;
+    if (out_report == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_report = NULL;
+    if (scenario == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = CreateSession(driver, scenario, scenario->scenario_id, 1, &session);
+    if (status != UMI_STATUS_OK) return status;
+    while (session->report->state == UMI_UI_AUTOMATION_SESSION_READY ||
+           session->report->state == UMI_UI_AUTOMATION_SESSION_RUNNING) {
+        status = UmiUiAutomationSessionAdvance(session);
+        if (status != UMI_STATUS_OK) { (void)UmiUiAutomationSessionDestroy(session); return status; }
+    }
+    *out_report = session->report;
+    session->report = NULL; /* Transfer report ownership to the legacy caller. */
+    (void)UmiUiAutomationSessionDestroy(session);
     return UMI_STATUS_OK;
 }
 
@@ -358,7 +494,9 @@ UmiStatus UmiUiAutomationReportRequireSuccess(
     const UmiUiAutomationReport *report, size_t expectedStepCount)
 {
     if (report == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    if (expectedStepCount == 0U || report->total != expectedStepCount ||
+    if (expectedStepCount == 0U || report->planned != expectedStepCount ||
+        report->state != UMI_UI_AUTOMATION_SESSION_COMPLETED ||
+        report->total != expectedStepCount ||
         report->passed != expectedStepCount || report->failed != 0U)
         return UMI_STATUS_INVALID_STATE;
     return UMI_STATUS_OK;
