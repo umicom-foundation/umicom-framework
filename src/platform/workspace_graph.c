@@ -326,16 +326,20 @@ static UmiStatus discover_visitor(const UmiFileInfo *info, void *user_data)
     char manifest[UMI_PATH_CAPACITY];
     UmiProjectKind kind = UMI_PROJECT_GENERIC;
     char name[UMI_WORKSPACE_NAME_CAPACITY];
+    UmiStatus status;
     /* Apply this branch only when its contract condition is satisfied. */
     if (info->kind != UMI_FILE_KIND_DIRECTORY || info->depth > 0U) {
         return UMI_STATUS_OK;
     }
-    (void)umi_path_join(info->path, "CMakeLists.txt", cmake, sizeof(cmake));
-    (void)umi_path_join(info->path, ".umicom-root", marker, sizeof(marker));
-    (void)umi_path_join(info->path,
-                        "application.umicom.yaml",
-                        manifest,
-                        sizeof(manifest));
+    /* An overlong path is a failed scan, not permission to inspect an
+     * incomplete path and publish an incomplete project list. */
+    status = umi_path_join(info->path, "CMakeLists.txt", cmake, sizeof(cmake));
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_path_join(info->path, ".umicom-root", marker, sizeof(marker));
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_path_join(info->path, "application.umicom.yaml",
+                           manifest, sizeof(manifest));
+    if (status != UMI_STATUS_OK) return status;
     /* Apply this branch only when its contract condition is satisfied. */
     if (umi_fs_is_file(marker) || umi_fs_is_file(manifest)) {
         kind = UMI_PROJECT_UMICOM;
@@ -344,9 +348,10 @@ static UmiStatus discover_visitor(const UmiFileInfo *info, void *user_data)
     } /* Use this fallback path when the earlier condition does not apply. */ else {
         return UMI_STATUS_OK;
     }
-    (void)umi_path_basename(info->path, name, sizeof(name));
+    status = umi_path_basename(info->path, name, sizeof(name));
+    if (status != UMI_STATUS_OK) return status;
     {
-        UmiStatus status = umi_workspace_graph_add_project(context->graph,
+        status = umi_workspace_graph_add_project(context->graph,
                                                             NULL,
                                                             name,
                                                             info->path,
@@ -364,27 +369,61 @@ UmiStatus umi_workspace_graph_discover(UmiWorkspaceGraph *graph)
 {
     UmiDirectoryWalkOptions options;
     DiscoveryContext context;
-    UmiWorkspaceGraphSnapshot snapshot;
+    UmiWorkspaceGraph *candidate = NULL;
+    uint64_t sourceRevision;
     UmiStatus status;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
     if (graph == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    status = umi_workspace_graph_snapshot(graph, &snapshot);
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status != UMI_STATUS_OK || !snapshot.open) {
+    status = umi_workspace_graph_create(&candidate);
+    if (status != UMI_STATUS_OK) return status;
+
+    /* Copy identity, trust and projects under one lock. The private graph has
+     * its own mutex: filesystem traversal must not hold the live graph lock.
+     * Existing project IDs and manually added projects remain authoritative. */
+    (void)umi_mutex_lock(graph->mutex);
+    if (!graph->open) {
+        (void)umi_mutex_unlock(graph->mutex);
+        umi_workspace_graph_destroy(candidate);
         return UMI_STATUS_INVALID_STATE;
     }
+    (void)memcpy(candidate->root, graph->root, sizeof(candidate->root));
+    (void)memcpy(candidate->projects, graph->projects, sizeof(candidate->projects));
+    candidate->project_count = graph->project_count;
+    candidate->next_project_id = graph->next_project_id;
+    candidate->trusted = graph->trusted;
+    candidate->open = graph->open;
+    candidate->revision = graph->revision;
+    sourceRevision = graph->revision;
+    (void)umi_mutex_unlock(graph->mutex);
+
     options = umi_directory_walk_options_default();
     options.recursive = 0;
     options.include_files = 0;
     options.include_directories = 1;
-    context.graph = graph;
-    return umi_directory_walk(snapshot.root,
-                              &options,
-                              discover_visitor,
-                              &context);
+    context.graph = candidate;
+    status = umi_directory_walk(candidate->root, &options,
+                                discover_visitor, &context);
+    if (status == UMI_STATUS_OK) {
+        (void)umi_mutex_lock(graph->mutex);
+        /* Another owner operation may have closed the workspace, changed its
+         * trust, or added/removed a project. Never overwrite that newer state. */
+        if (!graph->open || graph->revision != sourceRevision) {
+            status = UMI_STATUS_INVALID_STATE;
+        } else if (candidate->project_count != graph->project_count) {
+            (void)memcpy(graph->projects, candidate->projects, sizeof(graph->projects));
+            graph->project_count = candidate->project_count;
+            graph->next_project_id = candidate->next_project_id;
+            graph->revision += 1U;
+        }
+        (void)umi_mutex_unlock(graph->mutex);
+    }
+    /* Failed scans release only unpublished rows. They do not consume live
+     * project IDs, remove manual projects or change the visible revision. */
+    umi_workspace_graph_destroy(candidate);
+    return status;
 }
 
 /*

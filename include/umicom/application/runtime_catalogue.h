@@ -187,6 +187,10 @@ UmiStatus umi_application_runtime_catalogue_set_presence(
  * Provide the application runtime catalogue set state operation used by this module and
  * its client applications.
  */
+/** Validate the complete message before changing any state. An oversized
+ * message returns CAPACITY_EXCEEDED and leaves the record, active application
+ * and revisions unchanged. NULL clears the explanation. State changes do not
+ * themselves inspect the operating system. See docs/ACTION_RECOVERY.html. */
 UmiStatus umi_application_runtime_catalogue_set_state(
     UmiApplicationRuntimeCatalogue *catalogue,
     const char *application_id,

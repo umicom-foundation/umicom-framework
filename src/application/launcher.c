@@ -426,7 +426,10 @@ static UmiStatus execute_activate(
     UmiApplicationLauncher *launcher,
     const UmiApplicationLaunchPlan *plan)
 {
-    UmiStatus status = UMI_STATUS_OK;
+    UmiStatus status;
+    /* Without a native activation operation, updating the catalogue would
+     * claim that focus changed even though no platform action occurred. */
+    if (launcher->adapter.activate == NULL) return UMI_STATUS_NOT_IMPLEMENTED;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -450,7 +453,10 @@ static UmiStatus execute_stop(
     UmiApplicationLauncher *launcher,
     const UmiApplicationLaunchPlan *plan)
 {
+    UmiApplicationRuntimeRecord stopping;
+    UmiApplicationRuntimeRecord current;
     UmiStatus status;
+    UmiStatus lookupStatus;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -463,18 +469,44 @@ static UmiStatus execute_stop(
         UMI_APPLICATION_RUNTIME_STOPPING, "");
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    status = umi_application_runtime_catalogue_find(
+        launcher->catalogue, plan->application_id, &stopping);
+    if (status != UMI_STATUS_OK) return status;
     status = launcher->adapter.stop(
         launcher->adapter.adapter_context,
         plan->application_id,
         plan->existing_process_token,
         launcher->graceful_stop_timeout_ms);
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status == UMI_STATUS_OK) {
-        status = umi_application_runtime_catalogue_mark_exit(
-            launcher->catalogue, plan->application_id, 0,
-            "Stopped by Umicom Desk.");
+
+    lookupStatus = umi_application_runtime_catalogue_find(
+        launcher->catalogue, plan->application_id, &current);
+    if (status != UMI_STATUS_OK) {
+        /* Failure does not prove exit. Retain the process token so retry or
+         * reconciliation can address it, and START cannot spawn a duplicate.
+         * A callback may already have reported exit or a newer generation. */
+        if (lookupStatus == UMI_STATUS_OK &&
+            current.revision == stopping.revision &&
+            current.generation == stopping.generation &&
+            current.process_token == stopping.process_token &&
+            current.state == UMI_APPLICATION_RUNTIME_STOPPING) {
+            (void)umi_application_runtime_catalogue_set_state(
+                launcher->catalogue, plan->application_id,
+                UMI_APPLICATION_RUNTIME_ATTENTION,
+                "Stop request failed; process exit is not confirmed. Check status before retrying.");
+        }
+        return status;
     }
-    return status;
+    if (lookupStatus != UMI_STATUS_OK) return lookupStatus;
+    if (current.generation != stopping.generation)
+        return UMI_STATUS_INVALID_STATE;
+    /* Preserve an exit code and explanation already supplied by the owner. */
+    if (!current.running && current.process_token == 0U) return UMI_STATUS_OK;
+    if (current.process_token != stopping.process_token ||
+        current.state != UMI_APPLICATION_RUNTIME_STOPPING)
+        return UMI_STATUS_INVALID_STATE;
+    return umi_application_runtime_catalogue_mark_exit(
+        launcher->catalogue, plan->application_id, 0,
+        "Stopped by Umicom Desk.");
 }
 
 /*
@@ -527,7 +559,11 @@ UmiStatus umi_application_launcher_execute(
         if (status == UMI_STATUS_OK) {
             start_plan.action = UMI_APPLICATION_LAUNCH_START;
             start_plan.existing_process_token = 0U;
-            status = execute_start(launcher, &start_plan);
+            /* Stop callbacks may change availability or replace the process.
+             * Revalidate before starting a second generation. */
+            status = validate_execution_plan(launcher, &start_plan);
+            if (status == UMI_STATUS_OK)
+                status = execute_start(launcher, &start_plan);
         }
         break;
     }

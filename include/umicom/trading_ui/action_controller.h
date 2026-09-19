@@ -27,6 +27,11 @@ extern "C" {
 
 #define UMI_TRADING_UI_CONTROLLER_MESSAGE_CAPACITY 192U
 
+/** Presentation notification after last_status/last_message are updated.
+ * Rejected operations notify too; inspect last_status rather than treating a
+ * callback as order acceptance. revision belongs to the UI, not the trading
+ * ledger. Malformed calls rejected before state access do not notify. Calls
+ * and callbacks use the controller's owning thread. See docs/ACTION_RECOVERY.html. */
 typedef void (*UmiTradingUiChangedHandler)(
     uint64_t revision,
     void *user_data);

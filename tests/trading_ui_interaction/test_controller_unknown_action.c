@@ -29,6 +29,7 @@ void test_controller_unknown_action(void)
            UMI_STATUS_NOT_FOUND);
     snapshot = umi_trading_ui_controller_snapshot(&fixture.controller);
     assert(snapshot.last_status == UMI_STATUS_NOT_FOUND);
-    assert(fixture.changed_count == 0U);
+    /* The rejected command still has an explanation for the interface. */
+    assert(fixture.changed_count == 1U);
     umi_trading_ui_test_fixture_destroy(&fixture);
 }

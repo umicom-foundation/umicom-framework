@@ -28,6 +28,7 @@
 
 typedef struct FakeLaunch {
     uint64_t next_process;
+    size_t activations;
 } FakeLaunch;
 
 /*
@@ -46,6 +47,18 @@ static UmiStatus start_application(
     return UMI_STATUS_OK;
 }
 
+/* Positive activation coverage supplies an actual adapter operation. A NULL
+ * operation is covered separately as NOT_IMPLEMENTED, not an implied success. */
+static UmiStatus ActivateApplication(void *context, const char *applicationId,
+    uint64_t processToken)
+{
+    FakeLaunch *launch = context;
+    if (strcmp(applicationId, "org.umicom.studio") != 0 || processToken != 101U)
+        return UMI_STATUS_INVALID_STATE;
+    launch->activations += 1U;
+    return UMI_STATUS_OK;
+}
+
 /*
  * Start this command or application, report setup failures, and return a process exit code
  * to the operating system.
@@ -60,7 +73,7 @@ int main(void)
     UmiDeskRuntimeSnapshot snapshot;
     UmiApplicationLaunchSelectionCheckpoint checkpoint;
     UmiApplicationLaunchSelectionReport launch_report;
-    FakeLaunch launch = {100U};
+    FakeLaunch launch = {100U, 0U};
 
     config.seed_framework_portfolio = false;
     config.launcher.executable_root = ".";
@@ -69,6 +82,7 @@ int main(void)
     adapter.structure_size = sizeof(adapter);
     adapter.adapter_context = &launch;
     adapter.start = start_application;
+    adapter.activate = ActivateApplication;
 
     REQUIRE(umi_desk_runtime_create(
                 NULL, &config, &adapter, &runtime) == UMI_STATUS_OK);
@@ -130,6 +144,7 @@ int main(void)
     REQUIRE(launch_report.result_count == 2U);
     REQUIRE(launch_report.started_count == 1U);
     REQUIRE(launch_report.activated_count == 1U);
+    REQUIRE(launch.activations == 1U);
 
     REQUIRE(umi_desk_runtime_reconcile_application_exit(
                 runtime, "org.umicom.studio", 0, "") == UMI_STATUS_OK);

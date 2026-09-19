@@ -159,6 +159,12 @@ UmiStatus umi_application_launcher_prepare(
  * Perform application launcher through the module contract so client applications do not
  * duplicate its policy.
  */
+/** A failed stop retains process ownership and requests attention when no
+ * newer lifecycle evidence exists. The original failure is returned; RESTART
+ * does not start a replacement on failure. A missing activation callback
+ * returns NOT_IMPLEMENTED without claiming focus changed. Adapter stop OK
+ * must mean exit was confirmed, not merely that a stop signal was sent.
+ * Use the catalogue from one owning thread. See docs/ACTION_RECOVERY.html. */
 UmiStatus umi_application_launcher_execute(
     UmiApplicationLauncher *launcher,
     const UmiApplicationLaunchPlan *plan);

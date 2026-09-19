@@ -528,6 +528,7 @@ UmiStatus umi_application_runtime_catalogue_set_state(
     UmiApplicationRuntimeRecord *record =
         find_mutable(catalogue, application_id);
     UmiStatus status;
+    char nextMessage[UMI_APPLICATION_RUNTIME_MESSAGE_CAPACITY];
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -544,6 +545,10 @@ UmiStatus umi_application_runtime_catalogue_set_state(
         state != UMI_APPLICATION_RUNTIME_UNAVAILABLE) {
         return UMI_STATUS_INVALID_STATE;
     }
+    /* Prepare the explanation first. A rejected message must not alter the
+     * running/active flags, active application ID or either revision. */
+    status = copy_text(nextMessage, sizeof(nextMessage), message, true);
+    if (status != UMI_STATUS_OK) return status;
     record->state = state;
     record->running = state_is_running(state);
     record->attention = state_is_attention(state);
@@ -557,7 +562,7 @@ UmiStatus umi_application_runtime_catalogue_set_state(
         }
     }
     status = copy_text(record->last_error, sizeof(record->last_error),
-                       message, true);
+                       nextMessage, true);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     record->revision += 1U;

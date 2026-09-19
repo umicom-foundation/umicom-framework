@@ -31,6 +31,8 @@ void test_controller_environment(void)
     assert(umi_trading_workspace_snapshot(fixture.workspace, &snapshot) ==
            UMI_STATUS_OK);
     assert(snapshot.environment == UMI_TRADING_SIMULATION);
-    assert(fixture.changed_count == 0U);
+    /* Denial is visible feedback, not a successful environment change. */
+    assert(fixture.changed_count == 1U);
+    assert(fixture.controller.state.last_status == UMI_STATUS_PERMISSION_DENIED);
     umi_trading_ui_test_fixture_destroy(&fixture);
 }

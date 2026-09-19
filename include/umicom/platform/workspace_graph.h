@@ -114,6 +114,12 @@ UmiStatus umi_workspace_graph_remove_project(UmiWorkspaceGraph *graph,
  * Provide the workspace graph discover operation used by this module and its client
  * applications.
  */
+/** Discover immediate child projects into a private candidate. A successful
+ * scan adds all new projects in one publication; existing/manual projects and
+ * IDs remain. A failed or stale scan adds none. No-change scans retain the
+ * revision. INVALID_STATE means closed or changed during discovery. This call
+ * is synchronous; keep the graph alive until it returns. It does not remove
+ * projects whose folders disappeared. See docs/ACTION_RECOVERY.html. */
 UmiStatus umi_workspace_graph_discover(UmiWorkspaceGraph *graph);
 /**
  * Provide the workspace graph snapshot operation used by this module and its client

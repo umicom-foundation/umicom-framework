@@ -64,17 +64,15 @@ static UmiStatus finish_action(UmiTradingUiController *controller,
     copy_message(controller->state.last_message,
                  sizeof(controller->state.last_message),
                  message != NULL ? message : status_message(status));
+    /* A rejection is visible state too: do not leave the previous green
+     * preview on screen merely because the domain operation was denied.
+     * This is a presentation revision, not evidence of an accepted order.
+     * Publish the status and explanation before invoking the observer. */
+    controller->state.revision += 1U;
+    if ((notify || status != UMI_STATUS_OK) && controller->changed_handler != NULL)
+        controller->changed_handler(controller->state.revision,
+                                    controller->changed_user_data);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status == UMI_STATUS_OK) {
-        controller->state.revision += 1U;
-        /*
-         * Protect caller-owned memory by checking that required state is available before it is
-         * used.
-         */
-        if (notify && controller->changed_handler != NULL)
-            controller->changed_handler(controller->state.revision,
-                                        controller->changed_user_data);
-    }
     return status;
 }
 
@@ -398,13 +396,6 @@ UmiStatus UmiTradingUiControllerPreviewOrderAt(UmiTradingUiController *controlle
     status = finish_action(controller, status, &decision,
         decision.allowed ? "Risk preview passed. Submission will check the current quote again."
                          : decision.reason, 1);
-    /* A rejection is visible state too: do not leave the previous green
-     * preview on screen merely because the domain operation was denied. */
-    if (status != UMI_STATUS_OK) {
-        controller->state.revision += 1U;
-        if (controller->changed_handler != NULL)
-            controller->changed_handler(controller->state.revision, controller->changed_user_data);
-    }
     return status;
 }
 
