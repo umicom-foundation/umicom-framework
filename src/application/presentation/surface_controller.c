@@ -20,6 +20,31 @@
 
 #include "umicom/application/presentation/surface_behavior_catalogue.h"
 
+/* A single failure mapping keeps Bank, TMS and other clients consistent. */
+UmiStatus UmiApplicationPresentationSurfaceFailure(
+    UmiStatus status, const char *reason,
+    UmiApplicationPresentationSurfaceUpdate *out_update)
+{
+    UmiApplicationPresentationSurfaceUpdate candidate = {0};
+    size_t length = 0U;
+    const char *message = reason != NULL ? reason : umi_status_text(status);
+    if (out_update == NULL || status <= UMI_STATUS_OK ||
+        status > UMI_STATUS_BUSY) return UMI_STATUS_INVALID_ARGUMENT;
+    while (length < sizeof(candidate.message) && message[length] != '\0') ++length;
+    if (length == sizeof(candidate.message)) return UMI_STATUS_CAPACITY_EXCEEDED;
+    candidate.state = UMI_APPLICATION_PRESENTATION_STATE_ERROR;
+    if (status == UMI_STATUS_PERMISSION_DENIED)
+        candidate.state = UMI_APPLICATION_PRESENTATION_STATE_PERMISSION_REQUIRED;
+    else if (status == UMI_STATUS_NOT_IMPLEMENTED || status == UMI_STATUS_UNAVAILABLE)
+        candidate.state = UMI_APPLICATION_PRESENTATION_STATE_OFFLINE;
+    else if (status == UMI_STATUS_BUSY || status == UMI_STATUS_CANCELLED ||
+             status == UMI_STATUS_INVALID_STATE)
+        candidate.state = UMI_APPLICATION_PRESENTATION_STATE_WARNING;
+    (void)memcpy(candidate.message, message, length + 1U);
+    *out_update = candidate;
+    return status;
+}
+
 /*
  * Provide the default controller operation used by this module and its client
  * applications.
@@ -40,6 +65,12 @@ static UmiStatus default_controller(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     component_id = placement->panel->component_id;
+    /* A layout definition does not implement a command. Never fabricate success. */
+    if (event == UMI_APPLICATION_PRESENTATION_EVENT_COMMAND) {
+        return UmiApplicationPresentationSurfaceFailure(UMI_STATUS_NOT_IMPLEMENTED,
+            "No command controller is connected to this panel. No request was accepted.",
+            out_update);
+    }
     behavior = umi_application_presentation_surface_behavior_catalogue_find(
         component_id);
     /*

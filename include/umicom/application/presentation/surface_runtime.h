@@ -119,6 +119,29 @@ UmiStatus umi_application_presentation_surface_runtime_refresh(
  */
 UmiStatus umi_application_presentation_surface_runtime_refresh_all(
     UmiApplicationPresentationSurfaceRuntime *runtime);
+/** Read-only dispatch prerequisites, not business permission or completion.
+ * can_dispatch means the started runtime has a controller and its current panel
+ * policy allows a call. That controller must still validate the command, user,
+ * provider and data. reason explains a blocked route without echoing payloads.
+ */
+typedef struct UmiApplicationPresentationCommandAvailability {
+    UmiStatus status;
+    int controller_bound;
+    int can_dispatch;
+    char reason[UMI_APPLICATION_PRESENTATION_MESSAGE_CAPACITY];
+} UmiApplicationPresentationCommandAvailability;
+
+/** Inspect a panel without invoking any controller, host, journal or mutation.
+ * Returns OK for a completed inspection; inspect out_availability->status for
+ * the blocking reason. Invalid arguments/unknown components return an error
+ * and leave the output unchanged. Owner-thread only, like the surface runtime.
+ * See examples/command_feedback/main.c for a complete checked call sequence.
+ */
+UmiStatus UmiApplicationPresentationSurfaceCommandCheck(
+    const UmiApplicationPresentationSurfaceRuntime *runtime,
+    const char *component_id,
+    UmiApplicationPresentationCommandAvailability *out_availability);
+
 /**
  * Provide the application presentation surface runtime command operation used by this
  * module and its client applications.

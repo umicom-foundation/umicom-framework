@@ -280,13 +280,15 @@ UmiStatus umi_application_product_panel_project(
     out_projection->dirty = item->dirty;
     out_projection->has_progress = item->has_progress;
 
-    /* Busy and loading panels reject another action until their controller
-     * returns to a stable state. Guarded financial commands remain enabled;
-     * their controllers stage approval instead of executing immediately. */
-    out_projection->command_enabled =
-        out_projection->command_id[0] != '\0' && item->visible &&
-        item->state != UMI_APPLICATION_PRESENTATION_STATE_BUSY &&
-        item->state != UMI_APPLICATION_PRESENTATION_STATE_LOADING;
+    /* Use the same prerequisite check as dispatch; an enabled control is not
+     * evidence of business approval or of a completed financial operation. */
+    {
+        UmiApplicationPresentationCommandAvailability availability;
+        out_projection->command_enabled = out_projection->command_id[0] != '\0' &&
+            UmiApplicationPresentationSurfaceCommandCheck(runtime,
+                out_projection->component_id, &availability) == UMI_STATUS_OK &&
+            availability.can_dispatch;
+    }
     return UMI_STATUS_OK;
 }
 

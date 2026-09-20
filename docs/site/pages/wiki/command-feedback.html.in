@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Command feedback · Umicom Framework</title><link rel="stylesheet" href="../assets/site.css"><script defer src="../assets/site.js"></script>@UMICOM_SITE_ICONS@</head><body><a class="skip" href="#content">Skip to content</a><header class="top">@UMICOM_SITE_BRAND@<nav aria-label="Main navigation"><a href="index.html">Wiki</a><a href="../source-map.html">Source map</a><a href="../products.html">Applications</a></nav></header><main id="content"><h1>Connecting a command to a useful result</h1>
+<p>You have edited a note and chosen <strong>Save</strong>. What should happen next? The application needs to identify your document, ask the correct service to save it, and show you the result. If the destination is unavailable, your note must remain open and marked as unsaved.</p>
+<p>This guide follows that small journey through Umicom Framework. You will learn how a panel finds its controller, how the controller reports success or failure, and how to test the saved file rather than trusting a responding button. The same separation is useful in an editor, an application launcher, a training bank and a treasury workspace.</p>
+<nav class="toc" aria-label="Contents"><a href="#terms">The parts of an action</a><a href="#route">Check the route</a><a href="#result">Report the result</a><a href="#draft">Protect pending work</a><a href="#example">Build the Notes example</a><a href="#files">Source map</a><a href="#exercise">Practice</a></nav>
+<h2 id="terms">1. The parts of an action</h2>
+<p>A <strong>panel</strong> is an area of an application, such as an editor or account list. A <strong>command</strong> expresses a request, such as <code>notes.save</code>. A <strong>controller</strong> receives that request and delegates the work to the appropriate service. A <strong>presentation update</strong> describes what the interface should show afterwards.</p>
+<p>A layout can describe where a Save button belongs, but it cannot save a file by itself. A controller must be connected. Similarly, a trading screen does not become an order-management service simply because it contains an order button.</p>
+<pre><code>Panel action → command check → controller → owning service
+                                         ↓
+                    visible explanation ← result</code></pre>
+<p>The owning service remains responsible for the actual operation. A document service owns file saving. A payment service owns the payment request. The presentation runtime owns neither your bank balance nor your source text: it carries panel state and routes requests through registered controllers.</p>
+<p>The Master Controller coordinates the application. Its bounded Slave Controllers use the existing Framework services for their own work. The shared presentation code keeps that division visible rather than adding another implementation inside each product.</p>
+<h2 id="route">2. Check whether the panel can dispatch a command</h2>
+<p>Include <code>umicom/application/presentation/presentation.h</code> and link your CMake target to <code>Umicom::application</code>. Before offering an action, use <code>UmiApplicationPresentationSurfaceCommandCheck</code> to inspect the panel:</p>
+<pre><code>UmiApplicationPresentationCommandAvailability availability;
+UmiStatus status = UmiApplicationPresentationSurfaceCommandCheck(
+    runtime, "umicom.development.editor", &amp;availability);
+if (status == UMI_STATUS_OK &amp;&amp; availability.can_dispatch) {
+    /* The route is available. The controller must still validate the request. */
+}</code></pre>
+<p>This inspection does not invoke the controller, change the panel or add a journal entry. It checks whether the runtime is started, the panel is available, the relevant background policy permits a command, and a controller is connected. Busy, loading, hidden and read-only panels are not suitable command targets through this route.</p>
+<div class="table-wrap"><table><tr><th>Value</th><th>Meaning</th></tr><tr><td>The function's returned <code>UmiStatus</code></td><td>Whether the inspection could be performed. An unknown component returns Not Found and leaves the output unchanged.</td></tr><tr><td><code>availability.status</code></td><td>The reason a known panel can or cannot dispatch. A stopped runtime, for example, reports an unavailable route here.</td></tr><tr><td><code>controller_bound</code></td><td>Whether the panel has a registered controller. It does not establish that every command name has an implementation.</td></tr><tr><td><code>can_dispatch</code></td><td>Whether the current presentation conditions permit handing a command to that controller.</td></tr><tr><td><code>reason</code></td><td>A copied explanation that can be displayed beside a disabled action.</td></tr></table></div>
+<p><strong>Being connected is not permission to complete the business operation.</strong> A connected payment controller may still reject an amount, require an approved identity, or find that its provider is offline. Those decisions belong to the existing payment and policy services, not to this preliminary check.</p>
+<p>Use the normal <code>umi_application_presentation_surface_runtime_command</code> function when the user actually chooses an action. It repeats the presentation checks at invocation time. An earlier enabled button is not a permanent authorisation.</p>
+<h2 id="result">3. Keep the explanation and failure code together</h2>
+<p>When a controller cannot complete an operation, return the original reason code and a useful explanation. Do not return OK just to make the interface refresh.</p>
+<pre><code>return UmiApplicationPresentationSurfaceFailure(
+    UMI_STATUS_IO_ERROR,
+    "The Notes destination is unavailable. Keep the draft and try again.",
+    out_update);</code></pre>
+<p><code>UmiApplicationPresentationSurfaceFailure</code> fills a presentation update and returns the supplied failure code. It performs no file access, creates no payment, and opens no approval request. The helper lets several products use the same reporting rules without copying them.</p>
+<div class="table-wrap"><table><tr><th>Result</th><th>Presentation</th><th>Example</th></tr><tr><td>Permission Denied</td><td>Permission required</td><td>The existing policy does not allow this user to perform the request.</td></tr><tr><td>Not Implemented or Unavailable</td><td>Offline</td><td>The necessary service is not connected.</td></tr><tr><td>Busy, Cancelled or Invalid State</td><td>Warning</td><td>The operation cannot proceed in the present state.</td></tr><tr><td>Other recognised failures</td><td>Error</td><td>The destination could not be written.</td></tr></table></div>
+<p>The reason may be <code>NULL</code>, in which case the normal status description is used. A supplied reason must fit the 256-byte message field, including its terminating zero byte: at most 255 bytes of text. Invalid arguments or an overlong reason leave the output unchanged. The limit is measured in bytes, which matters when text contains characters encoded with more than one byte.</p>
+<p>Bank and TMS controllers that do not yet have a connected command service report that directly. They must not say that a payment, trade or approval is staged unless such a record has really been created by its owning service. To make one of those operations available, connect and test that service; changing the message to “success” is not an implementation.</p>
+<h2 id="draft">4. Protect pending work when something goes wrong</h2>
+<p>The <code>dirty</code> flag means that a panel has pending work. It is a small piece of presentation state, not the contents of a document or a durable backup. A rejected command must not clear it.</p>
+<p>On failure, the runtime checks the controller's update before reading its strings. A valid explanation is retained. Malformed output receives a bounded status explanation instead. The runtime preserves the existing dirty flag, publishes the failure state and asks the host to update the visible panel.</p>
+<p>When a command is refused because the panel is already busy or loading, the active progress state remains in place. The refused request is recorded in the surface journal, but it does not erase the operation already in progress. A subsequent user action can inspect that state again.</p>
+<p>A successful update is different. The controller must set <code>dirty</code> correctly after its service finishes. The runtime does not inspect the disk to infer whether a document has really been saved. That is why the example and its test read the file back.</p>
+<h3>Validate updates before changing a session</h3>
+<p><code>UmiApplicationPresentationSurfaceUpdateValidate</code> checks the state enumeration, progress range, Boolean fields and bounded message and badge termination. The session applies an accepted update as one operation. An invalid update changes neither the panel nor its revision.</p>
+<p>A <strong>revision</strong> is a number that increases when this presentation state is updated. It helps a view detect changes. It is not a transaction number, proof of a saved document, or confirmation that a financial operation succeeded.</p>
+<h3>Memory and callback lifetime</h3>
+<p>The runtime and host are owned by the caller. Register a controller before starting the runtime. Its context pointer remains borrowed: keep the context alive until the runtime has stopped and all its callbacks have returned. The example keeps the file, draft and controller context together until shutdown.</p>
+<p>Use these presentation calls on their owning thread. They are synchronous, so a slow controller can delay the caller. Long operations should use the established task and service contracts and publish their final result on the presentation thread. These functions do not create background jobs for you.</p>
+<h2 id="example">5. Build the Notes example</h2>
+<p>The example uses a real temporary file and the existing Studio presentation recipe. Its small controller deliberately refuses the first Save to represent a temporarily unavailable destination. It then permits a retry and reads the saved bytes. It never opens your own notes or connects to a bank or broker.</p>
+<p>The panel, runtime, command checks and result updates are the actual Framework contracts. The small Notes controller is teaching code, separate from Studio's full editor and document coordinator.</p>
+<h3>Windows</h3>
+<p>From a configured Applications checkout, build the example and run it:</p>
+<pre><code>Set-Location "C:\umicom\Umicom-Applications"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+&amp; "C:\msys64\ucrt64\bin\cmake.exe" --build --preset windows-ucrt64-all-debug --target umicom-command-feedback-example --parallel 2
+&amp; ".\build\windows-ucrt64-all-debug\bin\umicom-command-feedback-example.exe"</code></pre>
+<h3>Linux</h3>
+<pre><code>cd "$HOME/umicom/Umicom-Applications"
+cmake --build --preset headless-debug --target umicom-command-feedback-example --parallel 2
+./build/headless-debug/bin/umicom-command-feedback-example</code></pre>
+<p>The output should include an unsaved flag of 1 after the refused Save, followed by the saved Notes text after the retry. A nonzero exit code means that a required check failed. Do not interpret printed progress as proof that the programme completed successfully.</p>
+<h3>The complete source</h3>
+<p>File: <code>framework/examples/command_feedback/main.c</code></p>
+<pre><code>@UMICOM_SITE_COMMAND_FEEDBACK_EXAMPLE@</code></pre>
+<h3>Read the programme in order</h3>
+<p><code>NotesContext</code> holds a borrowed draft, an owned temporary file and the exercise's refusal switch. <code>NotesController</code> handles the explicit <code>notes.save</code> command. Unknown commands fail rather than being accepted silently. The first request returns an I/O error with an explanation. The retry writes and flushes the file before reporting success.</p>
+<p><code>main</code> allocates the bounded runtime and headless host, registers the controller and starts the session. A headless host supplies the same presentation contract without creating a graphical window. This makes the example easy to run from a terminal while keeping its command behaviour reusable by a graphical host.</p>
+<p>The test of the first Save checks both the returned failure and the retained dirty flag. The retry checks the returned success, the cleared dirty flag and the actual file contents. Cleanup stops the runtime before closing the file and freeing its owners. The same ordering matters in a real application where a callback might still need its context.</p>
+<h2 id="files">6. Find the implementation</h2>
+<div class="table-wrap"><table><tr><th>Source location, relative to Framework</th><th>Purpose and example</th></tr>
+<tr><td><code>include/umicom/application/presentation/surface_runtime.h</code></td><td>Runtime and command-check declarations. The Notes programme calls CommandCheck before requesting Save.</td></tr>
+<tr><td><code>src/application/presentation/surface_runtime.c</code></td><td>Routes actions and publishes success or failure. <code>PublishFailure</code> preserves pending state; <code>NotifyAndRecord</code> updates the host and journal. Both are private helpers exercised by the example.</td></tr>
+<tr><td><code>include/umicom/application/presentation/surface_controller.h</code><br><code>src/application/presentation/surface_controller.c</code></td><td>Controller registration, dispatch and shared failure messages. NotesController returns the shared failure helper.</td></tr>
+<tr><td><code>include/umicom/application/presentation/surface_session.h</code><br><code>src/application/presentation/surface_session.c</code></td><td>Stores copied panel updates after validation. The malformed-update tests show refusal without partial changes.</td></tr>
+<tr><td><code>src/application/presentation/product_panel_projection.c</code></td><td>Computes command availability for a product-panel view from the same runtime checks.</td></tr>
+<tr><td><code>adapters/gtk4/application_product_workstation_gtk4.c</code></td><td>Shows unavailable-state explanations and requests a redraw after rejected actions as well as successful actions.</td></tr>
+<tr><td><code>tests/command_feedback/</code></td><td>Checks failure, retry, unavailable controllers and preserved pending state. Its GTK fixture exercises a real shared product window with a controlled controller.</td></tr>
+<tr><td><code>examples/command_feedback/</code></td><td>The complete Notes programme and its CMake target. The source can also be built against an installed Framework SDK.</td></tr></table></div>
+<p>Bank and TMS supply their thin registration at <code>applications/bank/src/application_surface_controllers.c</code> and <code>applications/tms/src/application_surface_controllers.c</code>. Their regression tests call those actual registrations. Shared recipe tests for Studio, Trader and Desk check this runtime contract; each application's real toolbar and service path still needs its own user-journey test.</p>
+<h2 id="exercise">7. Try a controlled failure</h2>
+<p>Change the example's Notes text and run it again. Then change the expected text used in the final comparison without changing the draft. The programme should now return a failure. Restore the expectation afterwards. This demonstrates why a test needs an independent result check.</p>
+<p>Next, temporarily omit the controller registration. Inspect the result of CommandCheck. The route should be unavailable and no Save request should run. Finally, restore the registration and try an unknown command name. A connected controller should explain that it does not handle that request.</p>
+<p>For graphical checks, use a disposable project or training data. Start <strong>Report problem</strong>, record the smallest sequence that demonstrates an issue and inspect the result outside the button itself. A screenshot shows what was visible; a saved-file, model or ledger check establishes what actually changed. Attach the relevant recording and expected result when reporting the defect.</p>
+</main><footer>Umicom Foundation · <a href="../contributing.html">Improve these guides</a></footer></body></html>

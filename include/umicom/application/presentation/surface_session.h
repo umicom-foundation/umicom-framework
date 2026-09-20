@@ -68,6 +68,14 @@ UmiApplicationPresentationSurfaceItem *
 umi_application_presentation_surface_session_at(
     UmiApplicationPresentationSurfaceSession *session,
     size_t index);
+/** Check a complete panel update before any field is copied to live state.
+ * Message and badge must terminate inside their arrays; progress is 0..100;
+ * has_progress and dirty are Boolean. A rejected update changes no live state.
+ * Example: examples/command_feedback/main.c validates and publishes a Notes draft.
+ */
+UmiStatus UmiApplicationPresentationSurfaceUpdateValidate(
+    const UmiApplicationPresentationSurfaceUpdate *update);
+
 /**
  * Perform application presentation surface session through the module contract so client
  * applications do not duplicate its policy.

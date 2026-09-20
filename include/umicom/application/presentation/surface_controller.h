@@ -22,6 +22,16 @@
 extern "C" {
 #endif
 
+/** Prepare a failed operation's presentation without claiming it succeeded.
+ * Returns the supplied non-OK status after filling out_update. reason is optional
+ * and must fit the message array. Invalid input leaves out_update unchanged.
+ * This creates no approval, payment, task or event. The runtime preserves the
+ * existing dirty flag when publishing the failure. See examples/command_feedback.
+ */
+UmiStatus UmiApplicationPresentationSurfaceFailure(
+    UmiStatus status, const char *reason,
+    UmiApplicationPresentationSurfaceUpdate *out_update);
+
 typedef UmiStatus (*UmiApplicationPresentationSurfaceController)(
     void *context,
     const UmiApplicationPresentationPanelPlacement *placement,

@@ -181,6 +181,21 @@ umi_application_presentation_surface_session_at(
         : NULL;
 }
 
+/* Validate the whole value before copying its strings or changing a revision. */
+UmiStatus UmiApplicationPresentationSurfaceUpdateValidate(
+    const UmiApplicationPresentationSurfaceUpdate *update)
+{
+    if (update == NULL || !state_valid(update->state) ||
+        update->progress_percent > 100U ||
+        (update->has_progress != 0 && update->has_progress != 1) ||
+        (update->dirty != 0 && update->dirty != 1) ||
+        memchr(update->message, '\0', sizeof(update->message)) == NULL ||
+        memchr(update->badge, '\0', sizeof(update->badge)) == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    return UMI_STATUS_OK;
+}
+
 /*
  * Perform application presentation surface session through the module contract so client
  * applications do not duplicate its policy.
@@ -195,10 +210,8 @@ UmiStatus umi_application_presentation_surface_session_apply(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (session == NULL || component_id == NULL || update == NULL ||
-        !state_valid(update->state) || update->progress_percent > 100U ||
-        (update->has_progress != 0 && update->has_progress != 1) ||
-        (update->dirty != 0 && update->dirty != 1)) {
+    if (session == NULL || component_id == NULL ||
+        UmiApplicationPresentationSurfaceUpdateValidate(update) != UMI_STATUS_OK) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     item = umi_application_presentation_surface_session_find(

@@ -14,7 +14,7 @@ function(RequireText text needle)
 endfunction()
 if(CASE STREQUAL "pages")
     foreach(_path IN ITEMS index.html getting-started.html products.html downloads.html
-            publishing.html contributing.html source-map.html wiki/index.html wiki/action-recovery.html
+            publishing.html contributing.html source-map.html wiki/index.html wiki/action-recovery.html wiki/command-feedback.html COMMAND_FEEDBACK.html
             GUI_RECORDING.html GUI_CONTROL_CHECKS.html GUI_CHECK_SESSIONS.html wiki/gui-check-sessions.html wiki/gui-control-checks.html wiki/gui-recording.html wiki/reloading-files.html wiki/comparing-saved-files.html wiki/working-copies.html wiki/compiler-diagnostics.html wiki/components.html wiki/project-files.html wiki/file-refresh.html wiki/find-in-files.html
             studio/index.html trader/index.html desktop/index.html bank/index.html
             studio/COMPARING_SAVED_FILES.html studio/EDITING_FILES.html studio/READING_BUILD_ERRORS.html studio/PROJECT_FILES.html studio/FIND_IN_FILES.html build-and-publish.html
@@ -48,7 +48,8 @@ elseif(CASE STREQUAL "examples")
             "gui_recording/main.c|gui-recording.html"
             "gui_recording/control_checks.c|gui-control-checks.html"
             "gui_recording/check_sessions.c|gui-check-sessions.html"
-            "action_recovery/main.c|action-recovery.html")
+            "action_recovery/main.c|action-recovery.html"
+            "command_feedback/main.c|command-feedback.html")
         string(REPLACE "|" ";" _parts "${_pair}")
         list(GET _parts 0 _source)
         list(GET _parts 1 _page)

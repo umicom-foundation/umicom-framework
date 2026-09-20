@@ -102,6 +102,7 @@ static UmiStatus set_boolean_property(
  * namespace which native renderers place behind an explicit disclosure. */
 static UmiStatus create_product_panel_view(
     const UmiApplicationProductPanelProjection *projection,
+    const UmiApplicationPresentationSurfaceRuntime *runtime,
     UmiUiViewModel **out_view)
 {
     UmiUiViewModel *view = NULL;
@@ -191,7 +192,16 @@ static UmiStatus create_product_panel_view(
                        "Run %s through the product controller",
                        projection->command_label);
         action.enabled = projection->command_enabled;
-        status = umi_ui_command_view_set_action(view, 0U, &action);
+        if (!action.enabled) {
+            UmiApplicationPresentationCommandAvailability availability;
+            if (UmiApplicationPresentationSurfaceCommandCheck(runtime,
+                    projection->component_id, &availability) == UMI_STATUS_OK &&
+                !availability.can_dispatch) {
+                (void)snprintf(action.tooltip, sizeof(action.tooltip), "%s", availability.reason);
+                status = set_string_property(view, "Command unavailable", availability.reason);
+            }
+        }
+        if (status == UMI_STATUS_OK) status = umi_ui_command_view_set_action(view, 0U, &action);
     }
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
@@ -244,8 +254,9 @@ static UmiStatus on_product_panel_action(
         panel_data->component_id,
         action_id);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status == UMI_STATUS_OK &&
-        panel_data->workstation->pending_refresh_id == 0U) {
+    /* Failure feedback is a visible change too. Defer rebuilding until this
+     * callback returns, retaining the original status for the action caller. */
+    if (panel_data->workstation->pending_refresh_id == 0U) {
         panel_data->workstation->pending_refresh_id = g_idle_add(
             refresh_from_idle, panel_data->workstation);
     }
@@ -285,7 +296,8 @@ static GtkWidget *create_panel_widget(
     (void)snprintf(panel_data->component_id,
                    sizeof(panel_data->component_id), "%s",
                    projection.component_id);
-    status = create_product_panel_view(&projection, &panel_data->view);
+    status = create_product_panel_view(&projection, &workstation->product.runtime,
+        &panel_data->view);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         product_panel_widget_data_destroy(panel_data);

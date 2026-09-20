@@ -3379,6 +3379,7 @@ if(BUILD_TESTING)
     add_subdirectory(tests/gui_control_checks)
     add_subdirectory(tests/gui_check_runs)
     add_subdirectory(tests/action_recovery)
+    add_subdirectory(tests/command_feedback)
     add_subdirectory(examples/gui_recording)
     umicom_add_framework_test(umicom-ui-appearance-persistence-tests framework.ui.appearance_persistence tests/test_ui_appearance_persistence.c)
     umicom_add_framework_test(umicom-ui-view-presentation-tests framework.ui.view_presentation tests/test_ui_view_presentation.c)
@@ -4910,7 +4911,7 @@ install(DIRECTORY templates/ DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/templat
 install(DIRECTORY docs/guides/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides
     COMPONENT Framework)
-install(FILES docs/WRITING_DOCUMENTATION.md docs/GUI_RECORDING.html docs/GUI_CONTROL_CHECKS.html docs/GUI_CHECK_SESSIONS.html docs/ACTION_RECOVERY.html
+install(FILES docs/WRITING_DOCUMENTATION.md docs/GUI_RECORDING.html docs/GUI_CONTROL_CHECKS.html docs/GUI_CHECK_SESSIONS.html docs/ACTION_RECOVERY.html docs/COMMAND_FEEDBACK.html
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs
     COMPONENT Framework)
 install(DIRECTORY examples/project_files/
@@ -4922,6 +4923,10 @@ install(DIRECTORY examples/build_diagnostics/
 install(DIRECTORY examples/gui_recording/
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/gui_recording"
     COMPONENT Framework)
+install(DIRECTORY examples/command_feedback/
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/command_feedback"
+    COMPONENT Framework
+    FILES_MATCHING PATTERN "*.c" PATTERN "CMakeLists.txt")
 install(DIRECTORY examples/action_recovery/
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/action_recovery"
     COMPONENT Framework
