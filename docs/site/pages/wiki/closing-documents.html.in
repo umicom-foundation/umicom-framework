@@ -1,0 +1,94 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Closing documents · Umicom Framework</title><link rel="stylesheet" href="../assets/site.css"><script defer src="../assets/site.js"></script>@UMICOM_SITE_ICONS@</head><body><header class="top">@UMICOM_SITE_BRAND@<nav><a href="index.html">Wiki</a><a href="../source-map.html">Source map</a></nav></header><main><h1>Closing a document without losing track of your work</h1>
+<p>A source file can have two different versions: the file saved on your computer and the draft open in the editor. Closing a tab is simple when those versions agree. When they differ, the application needs a clear decision about the draft.</p>
+<p>In this lesson, you will edit <code>notes.c</code>, keep a new <code>notes.h</code> draft open, and work through Cancel, Save and Close, and Discard and Close. You will then use the same Framework contracts in a complete C example.</p>
+<nav class="toc"><a href="#choices">The three choices</a><a href="#studio">Try it in Studio</a><a href="#identity">Remember the intended document</a><a href="#contract">Use the C contract</a><a href="#example">Complete example</a><a href="#build">Build and run</a><a href="#source">Source locations</a></nav>
+<h2 id="choices">What each choice does</h2>
+<div class="table-wrap"><table><thead><tr><th>Choice</th><th>Open draft</th><th>Saved file</th></tr></thead><tbody>
+<tr><td>Cancel</td><td>Stays open with its edits.</td><td>The close request changes nothing.</td></tr>
+<tr><td>Save and Close</td><td>Closes after a successful save and the close checks.</td><td>Receives the approved draft. A new document first needs a filename.</td></tr>
+<tr><td>Discard and Close</td><td>Its unsaved text is deliberately discarded.</td><td>The close request does not overwrite or delete the saved file.</td></tr>
+</tbody></table></div>
+<p><strong>Discard is not another kind of Save.</strong> Use it only when you no longer need the open draft. Closing a document also releases that document’s Undo history. Save a separate copy first when both versions are important.</p>
+<p>Cancel is the initially focused and default button in the close question. A document without pending work closes without this question. Pinned tabs keep their existing protection: unpin a tab before using its close button, or use the explicit File → Close action for the selected document.</p>
+<h2 id="studio">Try the workflow in Umicom Studio</h2>
+<h3>1. Prepare two documents</h3>
+<p>Use a disposable Umicom Notes project. Save this function in <code>notes.c</code>:</p>
+<pre><code>int CountSavedNotes(void)
+{
+    return 2;
+}</code></pre>
+<p>Change the return value to <code>3</code> without saving. Open a new source document for <code>notes.h</code> and enter its declaration:</p>
+<pre><code>int CountSavedNotes(void);</code></pre>
+<p>Leave the header untitled for now. The exercise should have one changed named document and one new document that does not yet have a destination.</p>
+<h3>2. Cancel a close request</h3>
+<p>Select <code>notes.c</code> and choose File → Close. Read the document name in the question, then choose Cancel. The source stays open, its return value is still <code>3</code>, and the file on disk should still contain <code>2</code>.</p>
+<h3>3. Save and close the source</h3>
+<p>Choose File → Close again and select Save and Close. Open the saved file again to check its contents. It should contain <code>3</code>. Your header draft should still be open and unsaved.</p>
+<h3>4. Give the header a filename</h3>
+<p>Close the untitled header and choose Save and Close. Select a destination such as the project’s <code>include/notes.h</code>. Review any overwrite question before accepting it. Cancelling the filename chooser cancels this close request and keeps the draft open.</p>
+<p>A rejected path, write failure, read-only document or saved-file conflict must not turn into a discard. Review the displayed error and the open document before trying again. A write that succeeded before a later close or display error is not rolled back.</p>
+<h3>5. Inspect a deliberate discard</h3>
+<p>Reopen <code>notes.c</code>, add a temporary comment, and close it with Discard and Close. Reopen the file once more. The saved return value should still be <code>3</code>, but the unsaved comment should be absent. This checks the file as well as the tab.</p>
+<h2 id="identity">A question must remember the document it describes</h2>
+<p>Imagine that an application asks about <code>notes.c</code>, then another command selects <code>notes.h</code> before the answer is processed. Acting on “the active tab” at that later moment would target the wrong document.</p>
+<p>Framework gives each working copy an identity and captures that identity when the question opens. The plan also records the path, draft and saved-state information. The response goes back to that original document, not whichever tab is active later.</p>
+<p>If the intended draft changes, its path changes through Save As, its saved revision changes, or the document closes and reopens, the old approval is rejected. Cancel the old question and make a fresh decision. Moving the caret, changing a selection or working in another document does not by itself invalidate the captured text.</p>
+<p>These checks run on the document’s owner thread: the same sequence of execution that updates its model. They are not a lock against a separate editor or an external process. Saving still uses the existing file-provider conflict checks.</p>
+<h2 id="contract">Use the public C contract</h2>
+<p>Include <code>umicom/document/close.h</code> and link your application to <code>Umicom::document</code>. A <em>plan</em> is a short-lived record of a question. It owns its captured text, while the document coordinator remains the owner of the open document.</p>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Purpose and use</th></tr></thead><tbody>
+<tr><td><code>UmiDocumentCoordinatorPrepareClose</code></td><td>Capture one document’s state. It does not select a tab, synchronise a draft, save a file or close anything. Keep the returned plan until the answer arrives.</td></tr>
+<tr><td><code>UmiDocumentClosePlanSummary</code></td><td>Copy the name, identity, byte count, pending-work flag, path flag and read-only flag into the caller’s structure. This describes the original question, not a live view.</td></tr>
+<tr><td><code>UmiDocumentCoordinatorCheckClose</code></td><td>Check whether the intended document still matches that question. Use it before a delayed operation; Apply also performs the check.</td></tr>
+<tr><td><code>UmiDocumentCoordinatorApplyClose</code></td><td>Apply an explicit choice. Use <code>NULL</code> as the path for a named file. Supply an approved absolute path when saving an untitled document.</td></tr>
+<tr><td><code>UmiDocumentClosePlanDestroy</code></td><td>Release the captured plan. Destroying an unanswered plan does not close the document.</td></tr>
+<tr><td><code>UmiGtk4AdapterRequestDocumentClose</code></td><td>Present the native workflow through an already bound GTK adapter. Pass a view ID for a particular tab, or <code>NULL</code> for the active source document.</td></tr>
+</tbody></table></div>
+<p>The summary contains <code>document_id</code>, <code>text_bytes</code>, <code>dirty</code>, <code>has_path</code>, <code>read_only</code> and <code>display_name</code>. Counts use UTF-8 bytes, not screen columns. Changing your copy of this summary cannot grant permission to discard another version; the opaque plan retains the original state.</p>
+<h3>Read the return value before proceeding</h3>
+<p><code>UMI_STATUS_OK</code> from Prepare means that a question was captured. It does not mean the file was saved. <code>UMI_STATUS_OK</code> from the GTK request may mean that a form opened. Its later completion callback reports the action’s result.</p>
+<p><code>UMI_STATUS_CANCELLED</code> is the expected response to Cancel. <code>UMI_STATUS_INVALID_STATE</code> can indicate an outdated decision or an attempted clean close of a pending draft. <code>UMI_STATUS_NOT_FOUND</code> means the intended document or view is no longer available. Invalid paths and read-only saves are rejected before a write begins.</p>
+<p>Once a save or close attempt starts, the plan is consumed, even if the operation fails. Destroy it and prepare a new plan before retrying. This avoids treating an old answer as permission for a second operation.</p>
+<h3>Memory and lifetime</h3>
+<p>Prepare allocates the plan and its complete draft copy, bounded by the existing document size limit. The caller must destroy the plan. The plan borrows the coordinator: the coordinator must remain alive while Check or Apply is running. Destroying the plan alone does not dereference the coordinator, so cleanup remains possible after owner teardown.</p>
+<p>A provider must not destroy or mutate the coordinator inside a synchronous save callback. Each file operation is synchronous, so slow storage may delay that operation. The native filename question is asynchronous, but that does not make the write a background operation.</p>
+<h3>Use the existing GTK editing binding</h3>
+<p>An application that has already prepared its Framework GTK adapter connects the document owner once. The following integration fragment uses the same completion path as editing and navigation; it does not create another document model:</p>
+<pre><code>/* adapter and documents were created by the application's composition. */
+UmiStatus status = UmiGtk4AdapterBindDocumentEditing(
+    adapter, documents, OnDocumentOperationCompleted, applicationContext);
+if (status == UMI_STATUS_OK) {
+    status = UmiGtk4AdapterRequestDocumentClose(adapter, NULL);
+}</code></pre>
+<p>The host must remove that binding before destroying the borrowed coordinator or callback context. Framework invalidates a pending close form and any late filename reply during unbinding. Save All or a pending Paste prevents a new close request; the native path checks again before applying an answer.</p>
+<h2 id="example">Complete Notes example</h2>
+<p>This program creates its own temporary Notes file, checks cancellation, saves and closes the intended document, and rejects an old discard after a newer header edit. It reads the saved file independently so a success code alone cannot hide a missing write. It removes only the temporary directory it created.</p>
+<pre><code>@UMICOM_SITE_CLOSE_EXAMPLE@</code></pre><h2 id="build">Build and run the example</h2>
+<p>From a configured Applications checkout, build the real example target. On Windows PowerShell:</p><pre><code>Set-Location "C:\umicom\Umicom-Applications"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+&amp; "C:\msys64\ucrt64\bin\cmake.exe" --build --preset windows-ucrt64-all-debug --target umicom-document-closing-example --parallel 2
+&amp; ".\build\windows-ucrt64-all-debug\bin\umicom-document-closing-example.exe"</code></pre>
+<p>On Linux, from the same project root:</p><pre><code>cmake --build --preset headless-debug --target umicom-document-closing-example --parallel 2
+./build/headless-debug/bin/umicom-document-closing-example</code></pre>
+<p>The expected output is:</p><pre><code>Cancel kept both drafts open and left the saved Notes file unchanged.
+Save and Close wrote notes.c; the untitled header stayed active and unsaved.
+The outdated discard was rejected; the newer header draft remains open.</code></pre>
+<p>The <code>examples/editor_workflow</code> directory also contains a standalone CMake project for an installed Framework SDK. Configure it with <code>-DCMAKE_PREFIX_PATH</code> pointing to that installation and build <code>umicom-notes-close-document</code>.</p>
+<h2 id="source">Find the implementation and tests</h2>
+<div class="table-wrap"><table><thead><tr><th>Location</th><th>What to read there</th></tr></thead><tbody>
+<tr><td><code>include/umicom/document/close.h</code></td><td>The public choices, copied summary, ownership rules and functions.</td></tr>
+<tr><td><code>src/document/coordinator.c</code></td><td>The close plan and comparisons, followed by calls to the established Save As and Close operations.</td></tr>
+<tr><td><code>adapters/gtk4/document_commands_gtk4.c</code></td><td>The native question, filename callback and lifetime checks.</td></tr>
+<tr><td><code>adapters/gtk4/editor_gtk4.c</code></td><td>The tab close button. Managed documents use the coordinator; unbound view-only consumers keep their previous route.</td></tr>
+<tr><td><code>applications/studio/src/gui/workbench/runtime/interaction/documents.inc</code></td><td>Studio’s thin File → Close delegate and the retained migration explanation.</td></tr>
+<tr><td><code>tests/document_closing</code></td><td>Real-file and native-widget scenarios, including rejected requests and retained drafts.</td></tr>
+<tr><td><code>examples/editor_workflow/close_document.c</code></td><td>The complete executable shown above.</td></tr>
+</tbody></table></div>
+<h2>Check the operation, not just the button</h2>
+<p>To test a close, count the open working copies and inspect the saved file. Removing a tab from the screen does not by itself prove that the document owner released it. To test a refusal, verify that the newer draft remains available.</p>
+<p>Use Report problem to record a short interaction and capture a screenshot when it helps. The close question has stable control IDs: <code>document.close.dialog</code>, <code>document.close.cancel</code>, <code>document.close.save</code>, <code>document.close.discard</code> and <code>document.close.message</code>. Keep private source and credentials out of shared recordings.</p>
+<p>Run the <code>framework.document_closing.</code> test group through CTest. The <code>.gtk4.</code> cases exercise real toolkit widgets and their outcomes; they are separate from operating-system mouse and keyboard tests. A run that cannot open a display needs to be repeated in a native graphical environment.</p>
+<h2>Continue the exercise</h2>
+<p>Change the example to save an untitled header to an approved absolute filename before closing it. Then make that destination unavailable. Check that a failed save does not become a discard. Finally, keep two edited documents open and prove that closing one never writes or removes the other.</p>
+<p>This workflow closes one document. Closing a workspace, exiting an application, restoring a session after a crash and closing several documents are separate operations with their own decisions. They must not assume that this one-document decision grants permission to discard every other draft.</p>
+</main></body></html>

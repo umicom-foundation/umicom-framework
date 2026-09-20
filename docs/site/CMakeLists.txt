@@ -204,6 +204,14 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_save_progress
 file(READ "${_save_progress_example}" _example)
 UmiSiteEscape("${_example}" UMICOM_SITE_SAVE_PROGRESS_EXAMPLE)
 
+# Display the compiled close example without maintaining a second code copy.
+set(_close_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/editor_workflow/close_document.c")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_close_example}")
+file(READ "${_close_example}" _example)
+UmiSiteEscape("${_example}" UMICOM_SITE_CLOSE_EXAMPLE)
+configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/CLOSING_DOCUMENTS.html"
+    "${UMICOM_SITE_OUTPUT}/CLOSING_DOCUMENTS.html" COPYONLY)
+
 # This is a file inventory, not a second C parser or a runtime module registry.
 file(GLOB_RECURSE _headers CONFIGURE_DEPENDS LIST_DIRECTORIES FALSE
     RELATIVE "${UMICOM_SITE_FRAMEWORK_ROOT}" "${UMICOM_SITE_FRAMEWORK_ROOT}/include/umicom/*.h")

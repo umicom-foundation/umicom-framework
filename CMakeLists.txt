@@ -3385,6 +3385,7 @@ if(BUILD_TESTING)
     add_subdirectory(tests/command_feedback)
     add_subdirectory(tests/document_editing)
     add_subdirectory(tests/document_saving)
+    add_subdirectory(tests/document_closing)
     add_subdirectory(tests/workflow_tools)
     add_subdirectory(examples/gui_recording)
     umicom_add_framework_test(umicom-ui-appearance-persistence-tests framework.ui.appearance_persistence tests/test_ui_appearance_persistence.c)
@@ -5381,3 +5382,7 @@ install(DIRECTORY examples/workflow_tools/
 install(FILES docs/WORKFLOW_TOOLS.html
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs
     COMPONENT Framework)
+
+# Install the public close-contract lesson beside the other document guides.
+install(FILES docs/CLOSING_DOCUMENTS.html
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs COMPONENT Framework)

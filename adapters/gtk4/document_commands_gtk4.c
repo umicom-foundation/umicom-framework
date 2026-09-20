@@ -10,6 +10,7 @@
 #include "gtk4_internal.h"
 #include "umicom/ui/gtk4/automation.h"
 #include <string.h>
+#include <stdio.h>
 
 /* The request owns its token and edit capture, not the window or coordinator. */
 typedef struct ClipboardRequest {
@@ -73,6 +74,9 @@ static UmiStatus EditFinished(UmiGtk4Adapter *adapter, UmiStatus status)
     return status;
 }
 
+/* The close form shares this existing editing lifetime token. */
+static void ClosePromptClose(GtkWidget *window);
+
 static void EditWindowDestroyed(GtkWidget *window, gpointer data)
 {
     (void)window;
@@ -96,6 +100,10 @@ UmiStatus UmiGtk4AdapterBindDocumentEditing(UmiGtk4Adapter *adapter,
         g_object_set_data(adapter->edit_lifetime, "adapter", NULL);
         g_object_set_data(adapter->edit_lifetime, "location-dialog", NULL);
         if (dialog != NULL) gtk_window_destroy(GTK_WINDOW(dialog));
+        /* Invalidate before cancelling a native chooser: its late reply must
+         * not dereference the coordinator or a replaced Studio context. */
+        GtkWidget *closeDialog = g_object_get_data(adapter->edit_lifetime, "close-dialog");
+        if (closeDialog != NULL) ClosePromptClose(closeDialog);
     }
     UmiGtk4DocumentSaveAllDetach(adapter);
     if (adapter->edit_cancel != NULL) g_cancellable_cancel(adapter->edit_cancel);
@@ -422,4 +430,233 @@ UmiStatus UmiGtk4AdapterCycleDocument(UmiGtk4Adapter *adapter, int direction)
         ? UmiDocumentCoordinatorCycle(adapter->edit_coordinator, direction, NULL)
         : UMI_STATUS_UNAVAILABLE;
     return EditFinished(adapter, status);
+}
+
+
+/* The window owns this question; a pending native filename reply retains the
+ * window. The question owns only its capture and token, never the coordinator. */
+typedef struct ClosePrompt {
+    GObject *lifetime;
+    UmiDocumentClosePlan *plan;
+    GCancellable *cancel;
+    GtkWidget *message;
+    int choosing;
+    int closing;
+} ClosePrompt;
+
+static void ClosePromptFree(gpointer data)
+{
+    ClosePrompt *prompt = data;
+    UmiDocumentClosePlanDestroy(prompt->plan);
+    g_clear_object(&prompt->cancel);
+    g_clear_object(&prompt->lifetime);
+    g_free(prompt);
+}
+
+static UmiGtk4Adapter *ClosePromptOwner(GtkWidget *window, ClosePrompt *prompt)
+{
+    if (prompt == NULL || prompt->closing ||
+        g_object_get_data(prompt->lifetime, "close-dialog") != window) return NULL;
+    UmiGtk4Adapter *adapter = g_object_get_data(prompt->lifetime, "adapter");
+    return adapter != NULL && adapter->edit_coordinator != NULL ? adapter : NULL;
+}
+
+static void ClosePromptClose(GtkWidget *window)
+{
+    /* Cancelling can invoke arbitrary observers. Hold the object until every
+     * field needed here has been used, and clear the lookup before cancellation. */
+    g_object_ref(window);
+    ClosePrompt *prompt = g_object_get_data(G_OBJECT(window), "umicom-close-prompt");
+    if (prompt != NULL) {
+        prompt->closing = 1;
+        if (g_object_get_data(prompt->lifetime, "close-dialog") == window)
+            g_object_set_data(prompt->lifetime, "close-dialog", NULL);
+        g_cancellable_cancel(prompt->cancel);
+    }
+    gtk_window_destroy(GTK_WINDOW(window));
+    g_object_unref(window);
+}
+
+static void ClosePromptFinish(GtkWidget *window, UmiStatus status)
+{
+    ClosePrompt *prompt = g_object_get_data(G_OBJECT(window), "umicom-close-prompt");
+    if (prompt == NULL) return;
+    GObject *lifetime = g_object_ref(prompt->lifetime);
+    ClosePromptClose(window);
+    UmiGtk4Adapter *adapter = g_object_get_data(lifetime, "adapter");
+    if (adapter != NULL) (void)EditFinished(adapter, status);
+    g_object_unref(lifetime);
+}
+
+static gboolean ClosePromptClosing(GtkWindow *window, gpointer data)
+{
+    (void)data;
+    ClosePrompt *prompt = g_object_get_data(G_OBJECT(window), "umicom-close-prompt");
+    if (ClosePromptOwner(GTK_WIDGET(window), prompt) != NULL)
+        ClosePromptFinish(GTK_WIDGET(window), UMI_STATUS_CANCELLED);
+    else ClosePromptClose(GTK_WIDGET(window));
+    return TRUE;
+}
+
+static void ClosePromptDestroyed(GtkWidget *window, gpointer data)
+{
+    (void)data;
+    ClosePrompt *prompt = g_object_get_data(G_OBJECT(window), "umicom-close-prompt");
+    if (prompt != NULL) {
+        prompt->closing = 1;
+        if (g_object_get_data(prompt->lifetime, "close-dialog") == window)
+            g_object_set_data(prompt->lifetime, "close-dialog", NULL);
+        g_cancellable_cancel(prompt->cancel);
+    }
+}
+
+static void ClosePromptCancel(GtkButton *button, gpointer data)
+{
+    GtkWidget *window = data;
+    ClosePrompt *prompt = g_object_get_data(G_OBJECT(window), "umicom-close-prompt");
+    if (gtk_widget_get_root(GTK_WIDGET(button)) != GTK_ROOT(window) ||
+        ClosePromptOwner(window, prompt) == NULL) return;
+    ClosePromptFinish(window, UMI_STATUS_CANCELLED);
+}
+
+/* A chooser response is always finished and freed, even after the binding was
+ * removed. Its saved window reference does not make its document owner live. */
+static void ClosePathChosen(GObject *source, GAsyncResult *result, gpointer data)
+{
+    GtkWidget *window = data;
+    GError *error = NULL;
+    GFile *file = gtk_file_dialog_save_finish(GTK_FILE_DIALOG(source), result, &error);
+    char *path = file != NULL ? g_file_get_path(file) : NULL;
+    ClosePrompt *prompt = g_object_get_data(G_OBJECT(window), "umicom-close-prompt");
+    UmiGtk4Adapter *adapter = ClosePromptOwner(window, prompt);
+    if (adapter != NULL) {
+        prompt->choosing = 0;
+        UmiStatus status;
+        if (g_cancellable_is_cancelled(prompt->cancel)) status = UMI_STATUS_CANCELLED;
+        else if (path == NULL) {
+            int dismissed = error != NULL &&
+                (g_error_matches(error, GTK_DIALOG_ERROR, GTK_DIALOG_ERROR_DISMISSED) ||
+                 g_error_matches(error, GTK_DIALOG_ERROR, GTK_DIALOG_ERROR_CANCELLED) ||
+                 g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED));
+            status = dismissed ? UMI_STATUS_CANCELLED : UMI_STATUS_UNAVAILABLE;
+        } else if (UmiGtk4AdapterDocumentSaveAllBusy(adapter) || adapter->edit_cancel != NULL)
+            status = UMI_STATUS_BUSY;
+        else status = UmiDocumentCoordinatorApplyClose(adapter->edit_coordinator,
+            prompt->plan, UMI_DOCUMENT_CLOSE_SAVE, path);
+        /* A failed write leaves the document available for a fresh question. */
+        ClosePromptFinish(window, status);
+    }
+    g_free(path);
+    g_clear_object(&file);
+    g_clear_error(&error);
+    g_object_unref(window);
+}
+
+static void ClosePromptApply(GtkButton *button, gpointer data)
+{
+    GtkWidget *window = data;
+    ClosePrompt *prompt = g_object_get_data(G_OBJECT(window), "umicom-close-prompt");
+    UmiGtk4Adapter *adapter = ClosePromptOwner(window, prompt);
+    if (adapter == NULL || prompt->choosing ||
+        gtk_widget_get_root(GTK_WIDGET(button)) != GTK_ROOT(window)) return;
+    UmiDocumentCloseDecision decision = (UmiDocumentCloseDecision)GPOINTER_TO_INT(
+        g_object_get_data(G_OBJECT(button), "umicom-close-decision"));
+    UmiDocumentCloseSummary summary;
+    UmiStatus status = UmiDocumentClosePlanSummary(prompt->plan, &summary);
+    if (status == UMI_STATUS_OK) status = UmiDocumentCoordinatorCheckClose(
+        adapter->edit_coordinator, prompt->plan);
+    if (status == UMI_STATUS_OK &&
+        (UmiGtk4AdapterDocumentSaveAllBusy(adapter) || adapter->edit_cancel != NULL))
+        status = UMI_STATUS_BUSY;
+    if (status != UMI_STATUS_OK) { ClosePromptFinish(window, status); return; }
+    if (decision == UMI_DOCUMENT_CLOSE_SAVE && !summary.has_path) {
+        GtkFileDialog *dialog = gtk_file_dialog_new();
+        gtk_file_dialog_set_title(dialog, "Save document before closing");
+        gtk_file_dialog_set_initial_name(dialog, summary.display_name);
+        gtk_file_dialog_set_modal(dialog, TRUE);
+        prompt->choosing = 1;
+        gtk_file_dialog_save(dialog, GTK_WINDOW(window), prompt->cancel,
+            ClosePathChosen, g_object_ref(window));
+        g_object_unref(dialog);
+        return;
+    }
+    status = UmiDocumentCoordinatorApplyClose(adapter->edit_coordinator,
+        prompt->plan, decision, NULL);
+    ClosePromptFinish(window, status);
+}
+
+UmiStatus UmiGtk4AdapterRequestDocumentClose(UmiGtk4Adapter *adapter,
+    const char *viewId)
+{
+    if (adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (adapter->edit_lifetime == NULL || adapter->edit_coordinator == NULL ||
+        adapter->window == NULL || adapter->shell == NULL) return UMI_STATUS_UNAVAILABLE;
+    if (UmiGtk4AdapterDocumentSaveAllBusy(adapter) || adapter->edit_cancel != NULL)
+        return EditFinished(adapter, UMI_STATUS_BUSY);
+    if (g_object_get_data(adapter->edit_lifetime, "close-dialog") != NULL)
+        return EditFinished(adapter, UMI_STATUS_BUSY);
+    UmiDocumentId id = 0U;
+    UmiDocumentClosePlan *plan = NULL;
+    UmiDocumentCloseSummary summary;
+    UmiStatus status = EditFindDocument(adapter, viewId, &id);
+    if (status == UMI_STATUS_OK)
+        status = UmiDocumentCoordinatorPrepareClose(adapter->edit_coordinator, id, &plan);
+    if (status == UMI_STATUS_OK) status = UmiDocumentClosePlanSummary(plan, &summary);
+    if (status != UMI_STATUS_OK) { UmiDocumentClosePlanDestroy(plan); return EditFinished(adapter, status); }
+    if (!summary.dirty) {
+        status = UmiDocumentCoordinatorApplyClose(adapter->edit_coordinator,
+            plan, UMI_DOCUMENT_CLOSE_UNMODIFIED, NULL);
+        UmiDocumentClosePlanDestroy(plan);
+        return EditFinished(adapter, status);
+    }
+    ClosePrompt *prompt = g_try_new0(ClosePrompt, 1);
+    if (prompt == NULL) { UmiDocumentClosePlanDestroy(plan); return EditFinished(adapter, UMI_STATUS_OUT_OF_MEMORY); }
+    prompt->plan = plan;
+    prompt->lifetime = g_object_ref(adapter->edit_lifetime);
+    prompt->cancel = g_cancellable_new();
+    GtkWidget *window = gtk_window_new();
+    g_object_set_data_full(G_OBJECT(window), "umicom-close-prompt", prompt, ClosePromptFree);
+    g_object_set_data(prompt->lifetime, "close-dialog", window);
+    gtk_window_set_title(GTK_WINDOW(window), "Close source document");
+    gtk_window_set_transient_for(GTK_WINDOW(window), adapter->window);
+    gtk_window_set_destroy_with_parent(GTK_WINDOW(window), TRUE);
+    gtk_window_set_modal(GTK_WINDOW(window), TRUE);
+    gtk_window_set_default_size(GTK_WINDOW(window), 520, -1);
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 14);
+    gtk_widget_set_margin_top(box, 18); gtk_widget_set_margin_bottom(box, 18);
+    gtk_widget_set_margin_start(box, 18); gtk_widget_set_margin_end(box, 18);
+    gtk_window_set_child(GTK_WINDOW(window), box);
+    char message[UMI_DOCUMENT_NAME_CAPACITY + 320U];
+    (void)snprintf(message, sizeof(message),
+        "%s has unsaved work.\nSave and Close writes the draft first. Discard and Close removes the open draft without changing the saved file. Cancel keeps it open.",
+        summary.display_name);
+    prompt->message = gtk_label_new(message);
+    gtk_label_set_wrap(GTK_LABEL(prompt->message), TRUE);
+    gtk_label_set_xalign(GTK_LABEL(prompt->message), 0.0F);
+    gtk_box_append(GTK_BOX(box), prompt->message);
+    GtkWidget *buttons = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    GtkWidget *cancel = gtk_button_new_with_label("Cancel");
+    GtkWidget *discard = gtk_button_new_with_label("Discard and Close");
+    GtkWidget *save = gtk_button_new_with_label("Save and Close");
+    gtk_box_append(GTK_BOX(buttons), cancel); gtk_box_append(GTK_BOX(buttons), discard);
+    gtk_box_append(GTK_BOX(buttons), save); gtk_box_append(GTK_BOX(box), buttons);
+    gtk_window_set_default_widget(GTK_WINDOW(window), cancel);
+    gtk_widget_set_sensitive(save, !summary.read_only);
+    if (summary.read_only) gtk_widget_set_tooltip_text(save,
+        "This document is read-only. Cancel to preserve it or explicitly discard its open draft.");
+    g_object_set_data(G_OBJECT(discard), "umicom-close-decision", GINT_TO_POINTER(UMI_DOCUMENT_CLOSE_DISCARD));
+    g_object_set_data(G_OBJECT(save), "umicom-close-decision", GINT_TO_POINTER(UMI_DOCUMENT_CLOSE_SAVE));
+    (void)umi_gtk4_automation_tag_widget(window, "document.close.dialog");
+    (void)umi_gtk4_automation_tag_widget(prompt->message, "document.close.message");
+    (void)umi_gtk4_automation_tag_widget(cancel, "document.close.cancel");
+    (void)umi_gtk4_automation_tag_widget(discard, "document.close.discard");
+    (void)umi_gtk4_automation_tag_widget(save, "document.close.save");
+    g_signal_connect_object(cancel, "clicked", G_CALLBACK(ClosePromptCancel), G_OBJECT(window), 0);
+    g_signal_connect_object(discard, "clicked", G_CALLBACK(ClosePromptApply), G_OBJECT(window), 0);
+    g_signal_connect_object(save, "clicked", G_CALLBACK(ClosePromptApply), G_OBJECT(window), 0);
+    g_signal_connect(window, "close-request", G_CALLBACK(ClosePromptClosing), NULL);
+    g_signal_connect(window, "destroy", G_CALLBACK(ClosePromptDestroyed), NULL);
+    gtk_window_set_focus(GTK_WINDOW(window), cancel);
+    gtk_window_present(GTK_WINDOW(window));
+    return UMI_STATUS_OK;
 }

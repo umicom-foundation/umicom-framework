@@ -9,6 +9,7 @@
 #define UMICOM_UI_GTK4_DOCUMENT_COMMANDS_H
 #include "umicom/ui/gtk4.h"
 #include "umicom/document/edit.h"
+#include "umicom/document/close.h"
 #include "umicom/document/save_session.h"
 #include "umicom/document/navigation.h"
 #ifdef __cplusplus
@@ -91,6 +92,21 @@ int UmiGtk4AdapterDocumentSaveAllBusy(const UmiGtk4Adapter *adapter);
  * deliver the existing editing completion. Does not read the clipboard or save.
  * A pending paste retains its original captured document independently. */
 UmiStatus UmiGtk4AdapterCycleDocument(UmiGtk4Adapter *adapter, int direction);
+/** Request a reviewed close for viewId (NULL selects the active source).
+ * Clean managed documents close through their coordinator. Pending documents
+ * show Save and Close, Discard and Close, and Cancel, with Cancel the default.
+ * Untitled Save requests use the native filename chooser. A stale decision
+ * never discards newer text; a failed Save never becomes a forced close.
+ * One close question is allowed per editing binding. Save All/pending Paste
+ * block a new question; they are rechecked before applying its decision.
+ * Existing tab-pin policy is enforced by the tab caller, not this File action.
+ * Completion uses the editing callback; OK from this request may mean only
+ * that the question opened. Cancel reports CANCELLED. Rebind or destruction
+ * dismisses questions and invalidates late filename replies without calling
+ * the detached host. Use only on the GTK/document owner thread. */
+UmiStatus UmiGtk4AdapterRequestDocumentClose(UmiGtk4Adapter *adapter,
+    const char *viewId);
+
 #ifdef __cplusplus
 }
 #endif

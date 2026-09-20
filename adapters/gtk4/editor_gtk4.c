@@ -676,6 +676,19 @@ static void on_editor_close_clicked(GtkButton *button, gpointer user_data)
         umi_ui_workbench_documents(workbench), binding->view_id, &document);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return;
+    /* Managed source tabs must close their working copy, not only its view.
+     * The old view-only route below remains for adapters without a document
+     * binding. Framework's reviewed close now owns the managed route; Studio
+     * supplies the same completion callback used by its File > Close command. */
+    if (binding->adapter->edit_coordinator != NULL) {
+        if (document.pinned) {
+            gtk_label_set_text(GTK_LABEL(binding->adapter->status_label),
+                "Unpin the editor before closing it");
+            return;
+        }
+        (void)UmiGtk4AdapterRequestDocumentClose(binding->adapter, binding->view_id);
+        return; /* Completion may have rebuilt and destroyed this tab binding. */
+    }
     /* Apply this branch only when its contract condition is satisfied. */
     if (document.dirty) {
         gtk_label_set_text(GTK_LABEL(binding->adapter->status_label),

@@ -99,3 +99,15 @@ if(BUILD_TESTING)
     add_test(NAME notes.document.save_progress COMMAND umicom-notes-save-progress)
 endif()
 install(TARGETS umicom-notes-save-progress RUNTIME DESTINATION bin)
+
+# Build reviewed close against the installed document owner, not copied sources.
+add_executable(umicom-notes-close-document close_document.c)
+target_link_libraries(umicom-notes-close-document PRIVATE Umicom::document)
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(umicom-notes-close-document PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME notes.document.close COMMAND umicom-notes-close-document)
+endif()
+install(TARGETS umicom-notes-close-document RUNTIME DESTINATION bin)

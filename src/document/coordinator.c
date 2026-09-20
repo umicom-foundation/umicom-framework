@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/navigation.h"
 #include "umicom/document/coordinator.h"
+#include "umicom/document/close.h"
 #include "umicom/document/edit.h"
 #include "umicom/document/text_encoding.h"
 
@@ -1997,4 +1998,162 @@ UmiStatus UmiDocumentCoordinatorSyncDocument(UmiDocumentCoordinator *coordinator
     if (coordinator == NULL || documentId == 0U) return UMI_STATUS_INVALID_ARGUMENT;
     size_t index = EditDocumentIndex(coordinator, documentId);
     return index == SIZE_MAX ? UMI_STATUS_NOT_FOUND : sync_index(coordinator, index);
+}
+
+
+/* Reviewed close uses the same working-copy owner as Save, Undo and Reload.
+ * This is a short-lived question, not another document store or Undo history. */
+struct UmiDocumentClosePlan {
+    const UmiDocumentCoordinator *owner;
+    UmiDocumentWorkingCopySnapshot snapshot;
+    UmiDocumentSnapshot stored;
+    UmiUiDocumentTextInfo textInfo;
+    UmiDocumentCloseSummary summary;
+    char *text;
+    size_t length;
+    int consumed;
+};
+
+void UmiDocumentClosePlanDestroy(UmiDocumentClosePlan *plan)
+{
+    if (plan == NULL) return;
+    UmiUiDocumentViewModelFreeText(plan->text);
+    free(plan);
+}
+
+UmiStatus UmiDocumentCoordinatorPrepareClose(UmiDocumentCoordinator *coordinator,
+    UmiDocumentId documentId, UmiDocumentClosePlan **outPlan)
+{
+    if (outPlan != NULL) *outPlan = NULL;
+    if (coordinator == NULL || documentId == 0U || outPlan == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index = EditDocumentIndex(coordinator, documentId);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    UmiDocumentClosePlan *plan = calloc(1U, sizeof(*plan));
+    if (plan == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    plan->owner = coordinator;
+    UmiUiDocumentViewModel *views = umi_ui_workbench_documents(coordinator->workbench);
+    UmiUiDocumentViewSnapshot view;
+    UmiStatus status = snapshot_index(coordinator, index, &plan->snapshot);
+    if (status == UMI_STATUS_OK) status = umi_document_store_snapshot(
+        coordinator->store, documentId, &plan->stored);
+    if (status == UMI_STATUS_OK) status = umi_ui_document_view_model_find(views,
+        plan->snapshot.view_id, &view);
+    if (status == UMI_STATUS_OK) status = UmiUiDocumentViewModelTextInfo(views,
+        plan->snapshot.view_id, &plan->textInfo);
+    if (status == UMI_STATUS_OK) status = UmiUiDocumentViewModelCopyText(views,
+        plan->snapshot.view_id, &plan->text, &plan->length);
+    if (status != UMI_STATUS_OK) { UmiDocumentClosePlanDestroy(plan); return status; }
+    plan->summary.document_id = documentId;
+    plan->summary.text_bytes = plan->length;
+    plan->summary.dirty = plan->snapshot.dirty;
+    plan->summary.has_path = plan->snapshot.has_path;
+    plan->summary.read_only = view.read_only;
+    (void)snprintf(plan->summary.display_name, sizeof(plan->summary.display_name),
+        "%s", plan->snapshot.display_name);
+    *outPlan = plan;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiDocumentClosePlanSummary(const UmiDocumentClosePlan *plan,
+    UmiDocumentCloseSummary *outSummary)
+{
+    if (plan == NULL || outSummary == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (plan->consumed) return UMI_STATUS_INVALID_STATE;
+    *outSummary = plan->summary;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiDocumentCoordinatorCheckClose(UmiDocumentCoordinator *coordinator,
+    const UmiDocumentClosePlan *plan)
+{
+    if (coordinator == NULL || plan == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (plan->owner != coordinator || plan->consumed) return UMI_STATUS_INVALID_STATE;
+    size_t index = EditDocumentIndex(coordinator, plan->snapshot.document_id);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    UmiDocumentWorkingCopySnapshot current;
+    UmiDocumentSnapshot stored;
+    UmiUiDocumentViewSnapshot view;
+    UmiUiDocumentTextInfo info;
+    UmiUiDocumentViewModel *views = umi_ui_workbench_documents(coordinator->workbench);
+    UmiStatus status = snapshot_index(coordinator, index, &current);
+    if (status == UMI_STATUS_OK) status = umi_document_store_snapshot(
+        coordinator->store, plan->snapshot.document_id, &stored);
+    if (status == UMI_STATUS_OK) status = umi_ui_document_view_model_find(views,
+        current.view_id, &view);
+    if (status == UMI_STATUS_OK) status = UmiUiDocumentViewModelTextInfo(views,
+        current.view_id, &info);
+    if (status != UMI_STATUS_OK) return status;
+    if (current.revision != plan->snapshot.revision ||
+        stored.saved_revision != plan->stored.saved_revision ||
+        current.has_path != plan->snapshot.has_path ||
+        strcmp(current.path, plan->snapshot.path) != 0 ||
+        strcmp(current.view_id, plan->snapshot.view_id) != 0 ||
+        current.dirty != plan->summary.dirty ||
+        view.read_only != plan->summary.read_only ||
+        info.text_revision != plan->textInfo.text_revision ||
+        current.text_length != plan->length)
+        return UMI_STATUS_INVALID_STATE;
+    char *text = NULL;
+    size_t length = 0U;
+    status = UmiUiDocumentViewModelCopyText(views, current.view_id, &text, &length);
+    if (status == UMI_STATUS_OK && (length != plan->length ||
+        memcmp(text, plan->text, length) != 0)) status = UMI_STATUS_INVALID_STATE;
+    UmiUiDocumentViewModelFreeText(text);
+    return status;
+}
+
+UmiStatus UmiDocumentCoordinatorApplyClose(UmiDocumentCoordinator *coordinator,
+    UmiDocumentClosePlan *plan, UmiDocumentCloseDecision decision,
+    const char *saveAsPath)
+{
+    if (coordinator == NULL || plan == NULL ||
+        decision < UMI_DOCUMENT_CLOSE_UNMODIFIED || decision > UMI_DOCUMENT_CLOSE_CANCEL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (plan->owner != coordinator || plan->consumed) return UMI_STATUS_INVALID_STATE;
+    if (decision != UMI_DOCUMENT_CLOSE_SAVE && saveAsPath != NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (decision == UMI_DOCUMENT_CLOSE_CANCEL) {
+        plan->consumed = 1;
+        return UMI_STATUS_CANCELLED;
+    }
+    UmiStatus status = UmiDocumentCoordinatorCheckClose(coordinator, plan);
+    if (status != UMI_STATUS_OK) return status;
+    if (decision == UMI_DOCUMENT_CLOSE_UNMODIFIED && plan->summary.dirty)
+        return UMI_STATUS_INVALID_STATE;
+    if (decision == UMI_DOCUMENT_CLOSE_SAVE) {
+        if (plan->summary.read_only) return UMI_STATUS_PERMISSION_DENIED;
+        if (plan->summary.has_path && saveAsPath != NULL) return UMI_STATUS_INVALID_ARGUMENT;
+        if (!plan->summary.has_path) {
+            if (saveAsPath == NULL || saveAsPath[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+            size_t length = 0U;
+            while (length < UMI_PATH_CAPACITY && saveAsPath[length] != '\0') ++length;
+            if (length == UMI_PATH_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
+            if (!umi_path_is_absolute(saveAsPath)) return UMI_STATUS_INVALID_ARGUMENT;
+        }
+    }
+    /* After an attempted side effect, a fresh plan is required even on failure.
+     * A provider error does not permit discarding the draft as a fallback. */
+    plan->consumed = 1;
+    if (decision == UMI_DOCUMENT_CLOSE_SAVE && (plan->summary.dirty || !plan->summary.has_path)) {
+        const char *path = plan->summary.has_path ? plan->snapshot.path : saveAsPath;
+        status = UmiDocumentCoordinatorSaveAs(coordinator, plan->snapshot.document_id, path);
+        if (status != UMI_STATUS_OK) return status;
+        size_t index = EditDocumentIndex(coordinator, plan->snapshot.document_id);
+        if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+        UmiDocumentWorkingCopySnapshot current;
+        status = snapshot_index(coordinator, index, &current);
+        if (status != UMI_STATUS_OK) return status;
+        if (current.dirty) return UMI_STATUS_INVALID_STATE;
+        char *text = NULL;
+        size_t length = 0U;
+        status = UmiUiDocumentViewModelCopyText(
+            umi_ui_workbench_documents(coordinator->workbench), current.view_id, &text, &length);
+        if (status == UMI_STATUS_OK && (length != plan->length ||
+            memcmp(text, plan->text, length) != 0)) status = UMI_STATUS_INVALID_STATE;
+        UmiUiDocumentViewModelFreeText(text);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    return UmiDocumentCoordinatorClose(coordinator, plan->snapshot.document_id,
+        decision == UMI_DOCUMENT_CLOSE_DISCARD);
 }
