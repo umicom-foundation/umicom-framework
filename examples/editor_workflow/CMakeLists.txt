@@ -87,3 +87,15 @@ if(BUILD_TESTING)
     add_test(NAME notes.document.save_all COMMAND umicom-notes-save-all)
 endif()
 install(TARGETS umicom-notes-save-all RUNTIME DESTINATION bin)
+
+# Inspect copied progress through real installed library symbols.
+add_executable(umicom-notes-save-progress save_progress.c)
+target_link_libraries(umicom-notes-save-progress PRIVATE Umicom::document)
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(umicom-notes-save-progress PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME notes.document.save_progress COMMAND umicom-notes-save-progress)
+endif()
+install(TARGETS umicom-notes-save-progress RUNTIME DESTINATION bin)

@@ -79,6 +79,18 @@ UmiStatus UmiDocumentSaveSessionStep(UmiDocumentSaveSession *session);
 UmiStatus UmiDocumentSaveSessionProvidePath(UmiDocumentSaveSession *session,
     const char *path);
 
+/** Validate a copied Save All result without reading files or changing state.
+ * The name must be terminated, the status and phase must be declared values,
+ * and saved + unchanged + remaining must equal total without overflowing.
+ * READY/NEEDS_PATH require remaining work; COMPLETE requires none and OK.
+ * FAILED requires a non-OK result; CANCELLED requires CANCELLED. Terminal
+ * host failures may have zero remaining after successful writes.
+ * Returns OK or INVALID_ARGUMENT. The input is borrowed only during this call
+ * and is never modified or retained. This checks consistency, not authenticity:
+ * it does not prove that a file exists or that the supplied counts are true.
+ * Example: examples/editor_workflow/save_progress.c. */
+UmiStatus UmiDocumentSaveProgressValidate(const UmiDocumentSaveProgress *progress);
+
 /** Write a readable progress message into caller-owned storage. This does not
  * advance, cancel, save or select a document. Counters must partition total as
  * saved + unchanged + remaining; the phase and result must agree. A malformed

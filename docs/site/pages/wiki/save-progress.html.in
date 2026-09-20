@@ -1,0 +1,73 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Save progress and library links · Umicom Framework</title><link rel="stylesheet" href="../assets/site.css"><script defer src="../assets/site.js"></script>@UMICOM_SITE_ICONS@</head><body><header class="top">@UMICOM_SITE_BRAND@<nav aria-label="Main navigation"><a href="index.html">Wiki</a><a href="../source-map.html">Source map</a></nav></header><main id="content"><h1>Understanding Save All progress and library links</h1>
+<p>When you choose <strong>Save All</strong> in Umicom Studio, the document service saves your work and the interface explains what happened. Those are separate responsibilities. The service decides which files were saved; the status area displays a copy of that result.</p>
+<p>This lesson follows a Notes project with three source files. You will read its save progress, check that the numbers agree, and build a small programme that uses the same public functions as Studio. You will also learn why a function can compile successfully at its call site but still be missing when an executable is linked.</p>
+<nav aria-label="Contents"><a href="#counts">Read the counts</a><a href="#functions">Use the functions</a><a href="#example">Run the example</a><a href="#linking">Understand linking</a><a href="#checks">Check the libraries</a><a href="#map">Find the source</a></nav>
+<h2 id="counts">1. Read the save result</h2>
+<p>Imagine that <code>notes.c</code> was saved by the current Save All run. You saved <code>notes.h</code> separately before its turn arrived. The test source still needs saving. There are three documents in the original sequence:</p>
+<div class="table-wrap"><table><tr><th>Field</th><th>Value</th><th>Meaning</th></tr><tr><td><code>total</code></td><td>3</td><td>The number of pending documents captured when this sequence began.</td></tr><tr><td><code>saved</code></td><td>1</td><td>Documents whose save operation succeeded in this sequence.</td></tr><tr><td><code>unchanged</code></td><td>1</td><td>Documents already saved by another action before their turn.</td></tr><tr><td><code>remaining</code></td><td>1</td><td>Documents not successfully processed, including a current failed item.</td></tr></table></div>
+<p>The counts must agree: <code>saved + unchanged + remaining = total</code>. Framework checks the parts without first adding them, because adding extremely large unsigned counts could overflow.</p>
+<p>The phase describes what happens next. <code>READY</code> means another step can run. <code>NEEDS_PATH</code> means an untitled document needs a filename. <code>COMPLETE</code>, <code>FAILED</code> and <code>CANCELLED</code> end the sequence. An empty sequence is complete; it is not waiting to save a nonexistent document.</p>
+<p>Cancellation does not undo an earlier save. A failed interface refresh can also occur after all files were saved. Keep the successful counts in that situation rather than telling the user that their saved work disappeared.</p>
+<h2 id="functions">2. Use the shared functions</h2>
+<h3><code>UmiDocumentSaveProgressValidate()</code></h3>
+<p>Pass a pointer to a copied <code>UmiDocumentSaveProgress</code>. The function checks the declared phase and status, the terminated document name, and the count partition. It returns <code>UMI_STATUS_OK</code> when those fields agree, or <code>UMI_STATUS_INVALID_ARGUMENT</code> otherwise. It neither modifies nor retains the snapshot.</p>
+<p>Validation checks consistency, not authenticity. Someone could construct a consistent set of invented counts. To know what a real save did, obtain the snapshot from its session and independently inspect the files in an acceptance test.</p>
+<h3><code>UmiDocumentSaveProgressFormat()</code></h3>
+<p>Give this function the snapshot, an output character array and that array’s capacity. It validates the snapshot and creates a complete message. A malformed snapshot leaves the output unchanged. A valid message that cannot fit returns <code>UMI_STATUS_CAPACITY_EXCEEDED</code> without publishing half a sentence. The capacity includes the terminating zero byte.</p>
+<p>Ready, filename-request and failure messages include the already-saved count, so the displayed information accounts for the whole original sequence. Names are plain text. A GUI host should not interpret them as markup.</p>
+<h3><code>UmiGtk4AdapterDocumentSaveAllProgress()</code></h3>
+<p>A GTK application calls this accessor on its UI owner thread to copy progress from the currently attached save run. It does not advance the run, open a chooser or write a file. The adapter must remain alive. <code>NOT_FOUND</code> means there is no active run, and <code>INVALID_STATE</code> means its ownership is no longer valid. Output is unchanged on failure.</p>
+<p>The adapter clears a finished run before notifying the host. Copy final progress from the completion callback; do not expect the active-run accessor to retain a history of completed sequences.</p>
+<h2 id="example">3. Run a complete Notes progress example</h2>
+<p>The following programme deliberately uses sample progress. It writes no project files. First it displays a consistent result, then a cancelled result, then verifies that contradictory counts cannot replace an existing message. The separate <code>save_all.c</code> example in the same directory demonstrates real temporary-file saving and read-back checks.</p>
+<pre><code>@UMICOM_SITE_SAVE_PROGRESS_EXAMPLE@</code></pre>
+<h3>Windows: build and run</h3>
+<pre><code>Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+$env:Path = &quot;C:\msys64\ucrt64\bin;$env:Path&quot;
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; --build --preset windows-ucrt64-all-debug --target umicom-document-save-link-check --parallel 2
+&amp; &quot;.\build\windows-ucrt64-all-debug\bin\umicom-document-save-link-check.exe&quot;</code></pre>
+<h3>Linux: build and run</h3>
+<pre><code>cd &quot;$HOME/umicom/Umicom-Applications&quot;
+cmake --build --preset headless-debug --target umicom-document-save-link-check --parallel 2
+./build/headless-debug/bin/umicom-document-save-link-check</code></pre>
+<p>Configure the corresponding preset first. The expected output is:</p>
+<pre><code>Save All: 1 saved, 1 remaining. 1 already saved separately.
+Save All cancelled: 1 saved, 1 already saved, 1 remaining.
+Invalid progress was rejected; the previous status was preserved.</code></pre>
+<p>Try changing <code>remaining</code> in the first snapshot to two. The numbers would then describe four documents rather than three, so validation must reject them. Restore the correct value afterwards.</p>
+<h2 id="linking">4. Understand a missing function at link time</h2>
+<p>A header declares a function’s name, parameters and result. A C implementation supplies its body. The compiler turns that implementation into an object file. A static library groups object files into an archive. The linker connects calls in an executable to the definitions supplied by its libraries.</p>
+<pre><code>save_session.h          Declaration used by a caller
+        ↓
+save_session.c          Function body owned by Framework
+        ↓
+save_session.c.obj      Compiled implementation
+        ↓
+libumicom_document.a    Static archive
+        ↓
+Studio / example       Linked executable</code></pre>
+<p>An <em>undefined reference</em> means a required definition could not be resolved. A successful archive build does not establish that it contains every function declared by a header. An older object file can still be a valid object file while lacking a newer function.</p>
+<p>Likewise, a C <code>_Generic</code> signature check examines a declaration without necessarily emitting a call. A real link check must contain an executable reference to the function. Keep type checks and add linked consumers; neither replaces the other.</p>
+<h2 id="checks">5. Check the actual libraries</h2>
+<p><code>umicom-save-link-readiness</code> builds the core consumer, GTK-library consumer, Save All example and native save tests. Studio’s existing <code>umicom-studio-build-readiness</code> also depends on it. A configuration without GTK support cannot satisfy the full save-link target.</p>
+<p>The core consumer runs the example above. The GTK-library consumer makes real calls to the accessor’s null-argument boundary and the formatter. It does not initialise GTK or open a window. It checks linking and argument handling; use the separate graphical tests to check interaction with a real window.</p>
+<pre><code>&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; --build --preset windows-ucrt64-all-debug --target umicom-save-link-readiness --parallel 2
+&amp; &quot;C:\msys64\ucrt64\bin\ctest.exe&quot; --preset windows-ucrt64-all-debug --no-tests=error --output-on-failure -R &#x27;^framework\.document_saving\.link\.&#x27; </code></pre>
+<p>GNU <code>nm</code> can list definitions in an archive. A capital <code>T</code> identifies a global code symbol; <code>U</code> identifies an unresolved reference. The following commands select definitions only:</p>
+<pre><code>&amp; &quot;C:\msys64\ucrt64\bin\nm.exe&quot; --defined-only --extern-only &quot;.\build\windows-ucrt64-all-debug\lib\libumicom_document.a&quot; | Select-String &#x27;UmiDocumentSaveProgressFormat$&#x27;
+&amp; &quot;C:\msys64\ucrt64\bin\nm.exe&quot; --defined-only --extern-only &quot;.\build\windows-ucrt64-all-debug\lib\libumicom_ui_gtk4.a&quot; | Select-String &#x27;UmiGtk4AdapterDocumentSaveAllProgress$&#x27; </code></pre>
+<p>Each command should show its named definition. This is a useful diagnosis, but a successful real consumer link remains the stronger check because it also resolves that consumer’s dependencies.</p>
+<h2 id="map">6. Find the implementation and tests</h2>
+<div class="table-wrap"><table><tr><th>File</th><th>Purpose and example</th></tr>
+<tr><td><code>include/umicom/document/save_session.h</code></td><td>Declares phases, copied progress and session/report functions. Begin here before reading implementation code.</td></tr>
+<tr><td><code>src/document/save_session.c</code></td><td>Owns save sequencing, snapshot validation and messages. It delegates writes to the existing document coordinator.</td></tr>
+<tr><td><code>adapters/gtk4/document_saving_gtk4.c</code></td><td>Owns GTK scheduling, filename collection and active progress access. It does not create another document store.</td></tr>
+<tr><td><code>examples/editor_workflow/save_progress.c</code></td><td>The complete programme above; compiled as a real library consumer and in the installed-SDK examples.</td></tr>
+<tr><td><code>tests/document_saving/test_save_progress_validation.c</code></td><td>Checks all phases, invalid counts, unknown statuses, boundaries and input/output preservation.</td></tr>
+<tr><td><code>tests/document_saving/test_save_link_gtk4.c</code></td><td>Requires the real GTK accessor and core formatter at link time without opening a display.</td></tr>
+<tr><td><code>tests/document_saving/CMakeLists.txt</code></td><td>Registers the existing and new tests and the shared save-link target.</td></tr>
+<tr><td><code>applications/studio/tests/test_workbench_document_contracts.c</code></td><td>Checks Studio’s declaration boundary and now calls the linked formatter as well.</td></tr>
+<tr><td><code>applications/studio/cmake/StudioBuildReadiness.cmake</code></td><td>Connects the native Studio build to Framework’s save-link checks.</td></tr></table></div>
+<h2>7. Test the user’s outcome</h2><p>Open a disposable Notes project, modify a named source file and an untitled header, then choose Save All. Cancel when asked for the header’s name. Read the named file back: its successful save should remain. The header should remain open with its draft. Start a fresh sequence to save the remaining work.</p>
+<p>Use Report problem to retain a note, the relevant interaction log and an optional screenshot when the result differs from what you expected. Avoid sharing private document contents or credentials. A responding control alone does not establish that the intended file was saved.</p>
+<h2>Further reference</h2><p><a href="https://sourceware.org/binutils/docs/binutils/nm.html">GNU nm: symbol listings</a> · <a href="https://cmake.org/cmake/help/latest/command/add_library.html">CMake: library targets</a> · <a href="https://cmake.org/cmake/help/latest/command/add_dependencies.html">CMake: target dependencies</a></p></main></body></html>

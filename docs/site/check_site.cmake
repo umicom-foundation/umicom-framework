@@ -13,7 +13,7 @@ function(RequireText text needle)
     endif()
 endfunction()
 if(CASE STREQUAL "pages")
-    foreach(_path IN ITEMS WORKFLOW_TOOLS.html wiki/workflow-tools.html studio/WORKFLOW_TOOLS.html trader/WORKFLOW_TOOLS.html desktop/WORKFLOW_TOOLS.html bank/WORKFLOW_TOOLS.html tms/WORKFLOW_TOOLS.html index.html getting-started.html products.html downloads.html
+    foreach(_path IN ITEMS wiki/save-progress.html WORKFLOW_TOOLS.html wiki/workflow-tools.html studio/WORKFLOW_TOOLS.html trader/WORKFLOW_TOOLS.html desktop/WORKFLOW_TOOLS.html bank/WORKFLOW_TOOLS.html tms/WORKFLOW_TOOLS.html index.html getting-started.html products.html downloads.html
             publishing.html contributing.html SAVING_DOCUMENTS.html wiki/saving-documents.html source-map.html wiki/index.html wiki/source-navigation.html wiki/action-recovery.html wiki/command-feedback.html COMMAND_FEEDBACK.html wiki/editing-documents.html EDITING_DOCUMENTS.html studio/EDIT_COMMANDS.html
             GUI_RECORDING.html GUI_CONTROL_CHECKS.html GUI_CHECK_SESSIONS.html wiki/gui-check-sessions.html wiki/gui-control-checks.html wiki/gui-recording.html wiki/reloading-files.html wiki/comparing-saved-files.html wiki/working-copies.html wiki/compiler-diagnostics.html wiki/components.html wiki/project-files.html wiki/file-refresh.html wiki/find-in-files.html
             studio/index.html trader/index.html desktop/index.html bank/index.html
@@ -53,7 +53,8 @@ elseif(CASE STREQUAL "examples")
             "editor_workflow/edit_commands.c|editing-documents.html"
             "editor_workflow/navigation.c|source-navigation.html"
             "editor_workflow/save_all.c|saving-documents.html"
-            "workflow_tools/main.c|workflow-tools.html")
+            "workflow_tools/main.c|workflow-tools.html"
+            "editor_workflow/save_progress.c|save-progress.html")
         string(REPLACE "|" ";" _parts "${_pair}")
         list(GET _parts 0 _source)
         list(GET _parts 1 _page)
@@ -64,6 +65,10 @@ elseif(CASE STREQUAL "examples")
         string(REPLACE "\"" "&quot;" _code "${_code}")
         file(READ "${SITE}/wiki/${_page}" _html)
         RequireText("${_html}" "${_code}")
+        if(_source STREQUAL "editor_workflow/save_progress.c")
+            file(READ "${FRAMEWORK}/docs/guides/save-progress.html" _guide)
+            RequireText("${_guide}" "${_code}")
+        endif()
     endforeach()
 elseif(CASE STREQUAL "products")
     execute_process(COMMAND "${GIT_EXECUTABLE}" config --file "${SUITE}/.gitmodules"

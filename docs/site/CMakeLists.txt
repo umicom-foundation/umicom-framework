@@ -198,6 +198,12 @@ UmiSiteEscape("${_example}" UMICOM_SITE_WORKFLOW_TOOLS_EXAMPLE)
 configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/WORKFLOW_TOOLS.html"
     "${UMICOM_SITE_OUTPUT}/WORKFLOW_TOOLS.html" COPYONLY)
 
+# Compile and publish one canonical progress example; the Wiki includes its source.
+set(_save_progress_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/editor_workflow/save_progress.c")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_save_progress_example}")
+file(READ "${_save_progress_example}" _example)
+UmiSiteEscape("${_example}" UMICOM_SITE_SAVE_PROGRESS_EXAMPLE)
+
 # This is a file inventory, not a second C parser or a runtime module registry.
 file(GLOB_RECURSE _headers CONFIGURE_DEPENDS LIST_DIRECTORIES FALSE
     RELATIVE "${UMICOM_SITE_FRAMEWORK_ROOT}" "${UMICOM_SITE_FRAMEWORK_ROOT}/include/umicom/*.h")

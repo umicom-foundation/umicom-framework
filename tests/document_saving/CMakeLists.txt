@@ -69,3 +69,56 @@ foreach(case invalid name counts phase capacity phases immutable)
     set_tests_properties(framework.document_saving.report.${case} PROPERTIES
         TIMEOUT 30 LABELS "framework;document;saving;regression")
 endforeach()
+
+# Link the real public functions from their owning libraries. Header-only type
+# checks cannot prove that an archive contains a function definition.
+add_executable(umicom-document-save-link-check
+    ../../examples/editor_workflow/save_progress.c)
+target_link_libraries(umicom-document-save-link-check PRIVATE Umicom::document)
+umicom_apply_warnings(umicom-document-save-link-check)
+umicom_apply_sanitizers(umicom-document-save-link-check)
+add_test(NAME framework.document_saving.link.core COMMAND umicom-document-save-link-check)
+set_tests_properties(framework.document_saving.link.core PROPERTIES
+    TIMEOUT 30 LABELS "framework;document;saving;link;example")
+
+add_executable(umicom-save-progress-validation-test test_save_progress_validation.c)
+target_link_libraries(umicom-save-progress-validation-test PRIVATE Umicom::document)
+umicom_apply_warnings(umicom-save-progress-validation-test)
+umicom_apply_sanitizers(umicom-save-progress-validation-test)
+foreach(case null partition overflow ready-empty path-empty unknown-status host-failure
+        counts-visible name immutable all-phases)
+    add_test(NAME framework.document_saving.validation.${case}
+        COMMAND umicom-save-progress-validation-test ${case})
+    set_tests_properties(framework.document_saving.validation.${case} PROPERTIES
+        TIMEOUT 30 LABELS "framework;document;saving;regression")
+endforeach()
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-document-save-link-check)
+    umicom_register_validation_target(umicom-save-progress-validation-test)
+endif()
+
+if(TARGET umicom_ui_gtk4)
+    add_executable(umicom-document-save-native-link-check test_save_link_gtk4.c)
+    target_link_libraries(umicom-document-save-native-link-check PRIVATE
+        Umicom::ui_gtk4 Umicom::document)
+    umicom_apply_warnings(umicom-document-save-native-link-check)
+    umicom_apply_sanitizers(umicom-document-save-native-link-check)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-document-save-native-link-check)
+    endif()
+    # No gtk_init and no display: this is a linkage/argument test, not a click test.
+    add_test(NAME framework.document_saving.link.gtk4
+        COMMAND umicom-document-save-native-link-check)
+    set_tests_properties(framework.document_saving.link.gtk4 PROPERTIES
+        TIMEOUT 30 LABELS "framework;document;saving;link;gtk4-library")
+    add_custom_target(umicom-save-link-readiness)
+    add_dependencies(umicom-save-link-readiness
+        umicom-document-save-link-check umicom-document-save-native-link-check
+        umicom-document-save-all-example umicom-document-saving-gtk4-test)
+else()
+    # Keep the command discoverable, but do not claim the native symbol was linked.
+    add_custom_target(umicom-save-link-readiness
+        COMMAND "${CMAKE_COMMAND}" -E echo
+            "Save link readiness requires the GTK4 adapter and BUILD_TESTING=ON."
+        COMMAND "${CMAKE_COMMAND}" -E false VERBATIM)
+endif()

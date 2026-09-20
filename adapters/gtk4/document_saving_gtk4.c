@@ -165,9 +165,22 @@ UmiStatus UmiGtk4AdapterDocumentSaveAllProgress(const UmiGtk4Adapter *adapter,
     UmiDocumentSaveProgress *outProgress)
 {
     if (adapter == NULL || outProgress == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    const SaveRun *run = adapter->document_save_run;
+    /* This public accessor is implemented in the GTK library, not in Studio.
+     * Former direct-copy statements are retained below. Validate ownership and
+     * the copied snapshot before publishing it into the caller's storage. */
+    // const SaveRun *run = adapter->document_save_run;
+    // if (run == NULL) return UMI_STATUS_NOT_FOUND;
+    // return UmiDocumentSaveSessionProgress(run->session, outProgress);
+    SaveRun *run = adapter->document_save_run;
     if (run == NULL) return UMI_STATUS_NOT_FOUND;
-    return UmiDocumentSaveSessionProgress(run->session, outProgress);
+    if (run->lifetime == NULL || SaveOwner(run) != adapter ||
+        adapter->edit_coordinator == NULL)
+        return UMI_STATUS_INVALID_STATE;
+    UmiDocumentSaveProgress progress;
+    UmiStatus status = UmiDocumentSaveSessionProgress(run->session, &progress);
+    if (status == UMI_STATUS_OK) status = UmiDocumentSaveProgressValidate(&progress);
+    if (status == UMI_STATUS_OK) *outProgress = progress;
+    return status;
 }
 
 int UmiGtk4AdapterDocumentSaveAllBusy(const UmiGtk4Adapter *adapter)
