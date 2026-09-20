@@ -142,6 +142,20 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
     {
         .structure_size = (uint32_t)sizeof(UmiApplicationShellContribution),
         .api_version = UMI_APPLICATION_SHELL_API_VERSION,
+        .contribution_id = "umicom.shell.file-menu.cancel-save-all",
+        .title = "Cancel Save All",
+        .description = "Stop the remaining saves; keep saved files and unsaved drafts.",
+        .command_id = "file.save-all.cancel",
+        .group_id = "file",
+        .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
+        .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
+        .order = 215,
+        .flags = UMI_APPLICATION_SHELL_VISIBLE | UMI_APPLICATION_SHELL_ENABLED,
+        .revision = 1U
+    },
+    {
+        .structure_size = (uint32_t)sizeof(UmiApplicationShellContribution),
+        .api_version = UMI_APPLICATION_SHELL_API_VERSION,
         .contribution_id = "umicom.shell.file-menu.close",
         .title = "Close Editor",
         .description = "Close Editor",

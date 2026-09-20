@@ -12,7 +12,13 @@ umicom_apply_sanitizers(umicom-document-saving-test)
 if(COMMAND umicom_register_validation_target)
     umicom_register_validation_target(umicom-document-saving-test)
 endif()
-foreach(case IN ITEMS invalid-api empty clean named untitled mixed cancel-before
+# Previous registration list retained for reference; every original case
+# remains in the expanded list, with five cancellation/progress cases added.
+# foreach(case IN ITEMS invalid-api empty clean named untitled mixed cancel-before
+#     cancel-after closed renamed already-saved readonly external-conflict
+#     new-document other-tab bad-path other-destination current-draft history-target partial-failure waiting-closed waiting-renamed waiting-other-tab legacy-preflight)
+foreach(case IN ITEMS cancel-waiting-path cancel-retry cancel-complete cancel-failed progress-copy
+    invalid-api empty clean named untitled mixed cancel-before
     cancel-after closed renamed already-saved readonly external-conflict
     new-document other-tab bad-path other-destination current-draft history-target partial-failure waiting-closed waiting-renamed waiting-other-tab legacy-preflight)
     add_test(NAME framework.document_saving.${case} COMMAND umicom-document-saving-test ${case})
@@ -40,9 +46,26 @@ if(TARGET umicom_ui_gtk4)
     if(COMMAND umicom_register_validation_target)
         umicom_register_validation_target(umicom-document-saving-gtk4-test)
     endif()
-    foreach(case empty named cancel unbind complete-unbind)
+    # Previous list retained: the expanded registration keeps all five cases.
+    # foreach(case empty named cancel unbind complete-unbind)
+    foreach(case empty named cancel unbind complete-unbind progress paste-busy repeat-cancel)
         add_test(NAME framework.document_saving.gtk4.${case} COMMAND umicom-document-saving-gtk4-test ${case})
         set_tests_properties(framework.document_saving.gtk4.${case} PROPERTIES TIMEOUT 30
             SKIP_RETURN_CODE 77 RUN_SERIAL TRUE LABELS "framework;document;saving;gtk4;native")
     endforeach()
 endif()
+
+# Progress text is produced by the same library used by Studio's completion.
+add_executable(umicom-document-save-progress-test test_save_progress.c)
+target_link_libraries(umicom-document-save-progress-test PRIVATE Umicom::document)
+umicom_apply_warnings(umicom-document-save-progress-test)
+umicom_apply_sanitizers(umicom-document-save-progress-test)
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-document-save-progress-test)
+endif()
+foreach(case invalid name counts phase capacity phases immutable)
+    add_test(NAME framework.document_saving.report.${case}
+        COMMAND umicom-document-save-progress-test ${case})
+    set_tests_properties(framework.document_saving.report.${case} PROPERTIES
+        TIMEOUT 30 LABELS "framework;document;saving;regression")
+endforeach()

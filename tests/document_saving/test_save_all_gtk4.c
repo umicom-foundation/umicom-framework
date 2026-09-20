@@ -24,6 +24,8 @@ typedef struct Result {
     unsigned count;
     UmiDocumentSaveProgress progress;
     UmiGtk4Adapter *detach;
+    unsigned editCount;
+    UmiStatus editStatus;
 } Result;
 static void Completed(void *context, const UmiDocumentSaveProgress *progress)
 {
@@ -31,6 +33,12 @@ static void Completed(void *context, const UmiDocumentSaveProgress *progress)
     ++result->count; result->progress = *progress;
     if (result->detach != NULL)
         (void)UmiGtk4AdapterBindDocumentEditing(result->detach, NULL, NULL, NULL);
+}
+static void Edited(void *context, UmiStatus status)
+{
+    Result *result = context;
+    ++result->editCount;
+    result->editStatus = status;
 }
 static void Pump(void)
 {
@@ -46,9 +54,15 @@ static int Await(Result *result)
 int main(int argc, char **argv)
 {
     if (argc != 2) return 2;
+    /* Retained original selector: the expanded fixture also accepts progress,
+     * blocked-paste and repeated-cancellation cases without dropping the old ones. */
+    // if (strcmp(argv[1],"empty") != 0 && strcmp(argv[1],"named") != 0 &&
+    // strcmp(argv[1],"cancel") != 0 && strcmp(argv[1],"unbind") != 0 &&
+    // strcmp(argv[1],"complete-unbind") != 0) return 2;
     if (strcmp(argv[1],"empty") != 0 && strcmp(argv[1],"named") != 0 &&
         strcmp(argv[1],"cancel") != 0 && strcmp(argv[1],"unbind") != 0 &&
-        strcmp(argv[1],"complete-unbind") != 0) return 2;
+        strcmp(argv[1],"complete-unbind") != 0 && strcmp(argv[1],"progress") != 0 &&
+        strcmp(argv[1],"paste-busy") != 0 && strcmp(argv[1],"repeat-cancel") != 0) return 2;
     if (!gtk_init_check()) return 77;
     UmiCommandRegistry *commands = NULL;
     UmiUiWorkbench *workbench = NULL;
@@ -86,24 +100,60 @@ int main(int argc, char **argv)
     }
     REQUIRE(umi_gtk4_adapter_create(application, &adapter) == UMI_STATUS_OK);
     REQUIRE(umi_gtk4_adapter_prepare(adapter, shell) == UMI_STATUS_OK);
-    REQUIRE(UmiGtk4AdapterBindDocumentEditing(adapter, documents, NULL, NULL) == UMI_STATUS_OK);
+    /* Former test binding retained for reference:
+     * REQUIRE(UmiGtk4AdapterBindDocumentEditing(adapter, documents, NULL, NULL) == UMI_STATUS_OK);
+     * The replacement observes rejected clipboard commands while preserving
+     * every original save-session and teardown check. */
+    REQUIRE(UmiGtk4AdapterBindDocumentEditing(adapter, documents, Edited, &result) == UMI_STATUS_OK);
+    UmiDocumentSaveProgress observed = {0};
+    observed.total = 456U;
+    REQUIRE(UmiGtk4AdapterDocumentSaveAllProgress(adapter, &observed) == UMI_STATUS_NOT_FOUND);
+    REQUIRE(observed.total == 456U);
+    REQUIRE(UmiGtk4AdapterDocumentSaveAllProgress(NULL, &observed) == UMI_STATUS_INVALID_ARGUMENT);
+    REQUIRE(UmiGtk4AdapterDocumentSaveAllProgress(adapter, NULL) == UMI_STATUS_INVALID_ARGUMENT);
     if (strcmp(argv[1], "complete-unbind") == 0) result.detach = adapter;
     REQUIRE(UmiGtk4AdapterDocumentSaveAll(adapter, Completed, &result) == UMI_STATUS_OK);
     REQUIRE(UmiGtk4AdapterDocumentSaveAllBusy(adapter));
+    REQUIRE(UmiGtk4AdapterDocumentSaveAllProgress(adapter, &observed) == UMI_STATUS_OK);
+    size_t expectedTotal = strcmp(argv[1], "empty") == 0 ? 0U : 1U;
+    REQUIRE(observed.total == expectedTotal && observed.saved == 0U);
+    observed.total = 999U;
+    REQUIRE(UmiGtk4AdapterDocumentSaveAllProgress(adapter, &observed) == UMI_STATUS_OK);
+    REQUIRE(observed.total == expectedTotal);
+    if (strcmp(argv[1], "paste-busy") == 0) {
+        REQUIRE(!UmiGtk4AdapterDocumentCommandEnabled(adapter, "edit.paste"));
+        REQUIRE(UmiGtk4AdapterDocumentCommand(adapter, "edit.paste") == UMI_STATUS_BUSY);
+        REQUIRE(result.editCount == 1U && result.editStatus == UMI_STATUS_BUSY);
+        REQUIRE(UmiGtk4AdapterDocumentSaveAllBusy(adapter));
+    }
     REQUIRE(UmiGtk4AdapterDocumentSaveAll(adapter, Completed, &result) == UMI_STATUS_BUSY);
     if (strcmp(argv[1], "unbind") == 0) {
         REQUIRE(UmiGtk4AdapterBindDocumentEditing(adapter, NULL, NULL, NULL) == UMI_STATUS_OK);
         for (unsigned i=0U; i<50U; ++i) { Pump(); g_usleep(1000); }
         REQUIRE(result.count == 0U);
     } else {
-        if (strcmp(argv[1], "cancel") == 0)
+        /* Previously only the cancel case requested cancellation. The new
+         * paste-busy and repeat-cancel cases follow the same unchanged operation. */
+        // if (strcmp(argv[1], "cancel") == 0)
+        int cancelCase = strcmp(argv[1], "cancel") == 0 || strcmp(argv[1], "paste-busy") == 0 ||
+            strcmp(argv[1], "repeat-cancel") == 0;
+        if (strcmp(argv[1], "repeat-cancel") == 0)
+            REQUIRE(UmiGtk4AdapterCancelDocumentSaveAll(adapter) == UMI_STATUS_OK);
+        if (cancelCase)
             REQUIRE(UmiGtk4AdapterCancelDocumentSaveAll(adapter) == UMI_STATUS_OK);
         REQUIRE(Await(&result));
-        REQUIRE(result.progress.phase == (strcmp(argv[1],"cancel")==0 ? UMI_DOCUMENT_SAVE_CANCELLED : UMI_DOCUMENT_SAVE_COMPLETE));
+        // REQUIRE(result.progress.phase == (strcmp(argv[1],"cancel")==0 ? UMI_DOCUMENT_SAVE_CANCELLED : UMI_DOCUMENT_SAVE_COMPLETE));
+        REQUIRE(result.progress.phase == (cancelCase ? UMI_DOCUMENT_SAVE_CANCELLED : UMI_DOCUMENT_SAVE_COMPLETE));
     }
     REQUIRE(!UmiGtk4AdapterDocumentSaveAllBusy(adapter));
+    observed.total = 456U;
+    REQUIRE(UmiGtk4AdapterDocumentSaveAllProgress(adapter, &observed) == UMI_STATUS_NOT_FOUND);
+    REQUIRE(observed.total == 456U);
     REQUIRE(umi_fs_read_text(path, &disk, &diskBytes) == UMI_STATUS_OK);
-    const char *expected = (strcmp(argv[1],"named")==0 || strcmp(argv[1],"complete-unbind")==0) ? "saved Notes\n" : "original\n";
+    /* The progress-observation scenario also lets the original save complete.
+     * Other original scenarios keep their prior saved-content expectations. */
+    // const char *expected = (strcmp(argv[1],"named")==0 || strcmp(argv[1],"complete-unbind")==0) ? "saved Notes\n" : "original\n";
+    const char *expected = (strcmp(argv[1],"named")==0 || strcmp(argv[1],"complete-unbind")==0 || strcmp(argv[1],"progress")==0) ? "saved Notes\n" : "original\n";
     REQUIRE(diskBytes == strlen(expected) && memcmp(disk, expected, diskBytes) == 0);
 cleanup:
     free(disk);

@@ -105,6 +105,40 @@ int main(void)
     REQUIRE(umi_document_coordinator_active_snapshot(documents, &active) == UMI_STATUS_OK);
     REQUIRE(strcmp(active.view_id, headerView) == 0);
     printf("Verified %zu saved Notes source files. The active document did not change.\n", progress.saved);
+    /* A second run demonstrates cancellation after one successful save. */
+    UmiDocumentSaveSessionDestroy(session); session = NULL;
+    const char *changedSource = "int CountNotes(void) { return 3; }\n";
+    const char *changedHeader = "/* Header edit waiting to be saved. */\nint CountNotes(void);\n";
+    REQUIRE(SetDraft(workbench, sourceView, changedSource) == UMI_STATUS_OK);
+    REQUIRE(SetDraft(workbench, headerView, changedHeader) == UMI_STATUS_OK);
+    REQUIRE(UmiDocumentSaveSessionCreate(documents, &session) == UMI_STATUS_OK);
+    REQUIRE(UmiDocumentSaveSessionStep(session) == UMI_STATUS_OK);
+    REQUIRE(UmiDocumentSaveSessionCancel(session) == UMI_STATUS_OK);
+    REQUIRE(UmiDocumentSaveSessionStep(session) == UMI_STATUS_CANCELLED);
+    REQUIRE(UmiDocumentSaveSessionProgress(session, &progress) == UMI_STATUS_OK);
+    REQUIRE(progress.saved == 1U && progress.remaining == 1U);
+    char summary[768];
+    REQUIRE(UmiDocumentSaveProgressFormat(&progress, summary, sizeof(summary)) == UMI_STATUS_OK);
+    puts(summary);
+    REQUIRE(FileEquals(sourcePath, changedSource));
+    REQUIRE(FileEquals(headerPath, headerText));
+    char *draft = NULL; size_t draftBytes = 0U;
+    REQUIRE(UmiUiDocumentViewModelCopyText(umi_ui_workbench_documents(workbench),
+        headerView, &draft, &draftBytes) == UMI_STATUS_OK);
+    int draftKept = draftBytes == strlen(changedHeader) && memcmp(draft, changedHeader, draftBytes) == 0;
+    UmiUiDocumentViewModelFreeText(draft);
+    REQUIRE(draftKept);
+
+    /* A fresh run captures only what still needs saving; it does not repeat the
+     * already successful source write. No reset or forced overwrite is needed. */
+    UmiDocumentSaveSessionDestroy(session); session = NULL;
+    REQUIRE(UmiDocumentSaveSessionCreate(documents, &session) == UMI_STATUS_OK);
+    REQUIRE(UmiDocumentSaveSessionStep(session) == UMI_STATUS_OK);
+    REQUIRE(UmiDocumentSaveSessionProgress(session, &progress) == UMI_STATUS_OK);
+    REQUIRE(progress.total == 1U && progress.saved == 1U && progress.remaining == 0U);
+    REQUIRE(FileEquals(headerPath, changedHeader));
+    REQUIRE(UmiDocumentSaveProgressFormat(&progress, summary, sizeof(summary)) == UMI_STATUS_OK);
+    puts(summary);
     result = 0;
 cleanup:
     /* Cancel before release. Earlier completed saves are not rolled back. The

@@ -153,7 +153,12 @@ int UmiGtk4AdapterDocumentCommandEnabled(UmiGtk4Adapter *adapter, const char *co
     case UMI_DOCUMENT_EDIT_SELECT_ALL: return state.text_bytes != 0U;
     case UMI_DOCUMENT_EDIT_UNDO: return state.can_undo;
     case UMI_DOCUMENT_EDIT_REDO: return state.can_redo;
-    case UMI_DOCUMENT_EDIT_PASTE: return !state.read_only && adapter->edit_cancel == NULL;
+    /* Previous availability considered only another clipboard read:
+     * case UMI_DOCUMENT_EDIT_PASTE: return !state.read_only && adapter->edit_cancel == NULL;
+     * Save All and delayed Paste now exclude one another in this Framework
+     * adapter. Ordinary typing and immediate Copy/Undo remain available. */
+    case UMI_DOCUMENT_EDIT_PASTE: return !state.read_only && adapter->edit_cancel == NULL &&
+        !UmiGtk4AdapterDocumentSaveAllBusy(adapter);
     case UMI_DOCUMENT_EDIT_CUT:
     case UMI_DOCUMENT_EDIT_DELETE: return !state.read_only && state.selection_bytes != 0U;
     }
@@ -204,7 +209,12 @@ UmiStatus UmiGtk4EditorCommandForView(UmiGtk4Adapter *adapter,
         return EditFinished(adapter, UmiDocumentCoordinatorSelectAll(adapter->edit_coordinator, id));
     if (command != UMI_DOCUMENT_EDIT_COPY && state.read_only)
         return EditFinished(adapter, UMI_STATUS_PERMISSION_DENIED);
-    if (command == UMI_DOCUMENT_EDIT_PASTE && adapter->edit_cancel != NULL)
+    /* Preserve the previous rule, extended here to the shared save owner:
+     * if (command == UMI_DOCUMENT_EDIT_PASTE && adapter->edit_cancel != NULL)
+     *     return EditFinished(adapter, UMI_STATUS_BUSY);
+     * Recheck at invocation, not only when the menu was last painted. */
+    if (command == UMI_DOCUMENT_EDIT_PASTE && (adapter->edit_cancel != NULL ||
+        UmiGtk4AdapterDocumentSaveAllBusy(adapter)))
         return EditFinished(adapter, UMI_STATUS_BUSY);
     if (command != UMI_DOCUMENT_EDIT_PASTE && state.selection_bytes == 0U)
         return EditFinished(adapter, UMI_STATUS_NOT_FOUND);

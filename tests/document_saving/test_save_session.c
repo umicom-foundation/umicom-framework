@@ -100,6 +100,59 @@ static int Progress(Fixture *f, UmiDocumentSavePhase phase, size_t saved, size_t
 }
 static int Run(Fixture *f, const char *name)
 {
+    if (strcmp(name, "cancel-waiting-path") == 0 || strcmp(name, "cancel-retry") == 0) {
+        CHECK(Add(f, 0U, 1) == 0); CHECK(Edit(f, 0U, "saved first\n") == 0);
+        CHECK(Add(f, 1U, 0) == 0); CHECK(Edit(f, 1U, "header draft\n") == 0);
+        CHECK(Add(f, 2U, 1) == 0); CHECK(Edit(f, 2U, "last draft\n") == 0);
+        CHECK(Begin(f) == 0);
+        CHECK(UmiDocumentSaveSessionStep(f->session) == UMI_STATUS_OK);
+        CHECK(UmiDocumentSaveSessionStep(f->session) == UMI_STATUS_OK);
+        CHECK(Progress(f, UMI_DOCUMENT_SAVE_NEEDS_PATH, 1U, 2U) == 0);
+        CHECK(UmiDocumentSaveSessionCancel(f->session) == UMI_STATUS_OK);
+        CHECK(UmiDocumentSaveSessionCancel(f->session) == UMI_STATUS_OK);
+        CHECK(UmiDocumentSaveSessionProvidePath(f->session, f->path[1]) == UMI_STATUS_INVALID_STATE);
+        CHECK(UmiDocumentSaveSessionStep(f->session) == UMI_STATUS_CANCELLED);
+        CHECK(Progress(f, UMI_DOCUMENT_SAVE_CANCELLED, 1U, 2U) == 0);
+        CHECK(Text(f, 0U, "saved first\n", 1) == 0);
+        CHECK(Text(f, 1U, "header draft\n", 0) == 0);
+        CHECK(!umi_fs_exists(f->path[1]));
+        CHECK(Text(f, 2U, "original\n", 1) == 0);
+        if (strcmp(name, "cancel-retry") == 0) {
+            UmiDocumentSaveSessionDestroy(f->session); f->session = NULL;
+            CHECK(Begin(f) == 0);
+            CHECK(Progress(f, UMI_DOCUMENT_SAVE_READY, 0U, 2U) == 0);
+            CHECK(UmiDocumentSaveSessionStep(f->session) == UMI_STATUS_OK);
+            CHECK(UmiDocumentSaveSessionProvidePath(f->session, f->path[1]) == UMI_STATUS_OK);
+            CHECK(UmiDocumentSaveSessionStep(f->session) == UMI_STATUS_OK);
+            CHECK(Progress(f, UMI_DOCUMENT_SAVE_COMPLETE, 2U, 0U) == 0);
+            CHECK(Text(f, 1U, "header draft\n", 1) == 0);
+            CHECK(Text(f, 2U, "last draft\n", 1) == 0);
+        }
+        UmiDocumentWorkingCopySnapshot active;
+        CHECK(umi_document_coordinator_active_snapshot(f->documents, &active) == UMI_STATUS_OK);
+        CHECK(active.document_id == f->id[2]);
+        return 0;
+    }
+    if (strcmp(name, "cancel-complete") == 0 || strcmp(name, "cancel-failed") == 0 ||
+        strcmp(name, "progress-copy") == 0) {
+        CHECK(Add(f, 0U, 1) == 0); CHECK(Edit(f, 0U, "new Notes text\n") == 0);
+        CHECK(Begin(f) == 0);
+        UmiDocumentSaveProgress copy;
+        CHECK(UmiDocumentSaveSessionProgress(f->session, &copy) == UMI_STATUS_OK);
+        copy.total = 999U; copy.remaining = 999U; copy.phase = UMI_DOCUMENT_SAVE_COMPLETE;
+        CHECK(Progress(f, UMI_DOCUMENT_SAVE_READY, 0U, 1U) == 0);
+        int failed = strcmp(name, "cancel-failed") == 0;
+        if (failed) CHECK(umi_fs_write_text(f->path[0], "external writer\n") == UMI_STATUS_OK);
+        UmiStatus expected = failed ? UMI_STATUS_INVALID_STATE : UMI_STATUS_OK;
+        CHECK(UmiDocumentSaveSessionStep(f->session) == expected);
+        CHECK(UmiDocumentSaveSessionCancel(f->session) == UMI_STATUS_OK);
+        CHECK(UmiDocumentSaveSessionCancel(f->session) == UMI_STATUS_OK);
+        CHECK(UmiDocumentSaveSessionStep(f->session) == expected);
+        CHECK(Progress(f, failed ? UMI_DOCUMENT_SAVE_FAILED : UMI_DOCUMENT_SAVE_COMPLETE,
+            failed ? 0U : 1U, failed ? 1U : 0U) == 0);
+        CHECK(Text(f, 0U, failed ? "external writer\n" : "new Notes text\n", 1) == 0);
+        return 0;
+    }
     if (strcmp(name, "invalid-api") == 0) {
         CHECK(UmiDocumentSaveSessionCreate(NULL, &f->session) == UMI_STATUS_INVALID_ARGUMENT);
         CHECK(f->session == NULL);
@@ -265,7 +318,10 @@ static int Run(Fixture *f, const char *name)
 int main(int argc, char **argv)
 {
     if (argc != 2) return 2;
-    const char *cases[] = {"invalid-api","empty","clean","named","untitled","mixed", "cancel-before", "cancel-after", "closed", "renamed", "already-saved", "readonly", "external-conflict", "new-document", "other-tab", "bad-path", "other-destination", "current-draft", "history-target", "partial-failure", "waiting-closed", "waiting-renamed", "waiting-other-tab", "legacy-preflight"};
+    /* The five additional scenarios extend the existing fixture; the previous
+     * case list is preserved below and every original name remains active. */
+    // const char *cases[] = {"invalid-api","empty","clean","named","untitled","mixed", "cancel-before", "cancel-after", "closed", "renamed", "already-saved", "readonly", "external-conflict", "new-document", "other-tab", "bad-path", "other-destination", "current-draft", "history-target", "partial-failure", "waiting-closed", "waiting-renamed", "waiting-other-tab", "legacy-preflight"};
+    const char *cases[] = {"cancel-waiting-path", "cancel-retry", "cancel-complete", "cancel-failed", "progress-copy", "invalid-api","empty","clean","named","untitled","mixed", "cancel-before", "cancel-after", "closed", "renamed", "already-saved", "readonly", "external-conflict", "new-document", "other-tab", "bad-path", "other-destination", "current-draft", "history-target", "partial-failure", "waiting-closed", "waiting-renamed", "waiting-other-tab", "legacy-preflight"};
     int known = 0; for (size_t i=0U; i<sizeof(cases)/sizeof(cases[0]); ++i) if (strcmp(argv[1],cases[i])==0) known=1;
     if (!known) return 2;
     Fixture fixture = {0};

@@ -74,6 +74,15 @@ UmiStatus UmiGtk4AdapterDocumentSaveAll(UmiGtk4Adapter *adapter,
 /** Request cancellation without discarding unsaved documents. A synchronous
  * write already in progress cannot be interrupted. Safe when no run exists. */
 UmiStatus UmiGtk4AdapterCancelDocumentSaveAll(UmiGtk4Adapter *adapter);
+/** Copy the current Save All counters on the GTK owner thread without advancing
+ * the run, reading a clipboard or writing a file. The output owns its copied
+ * values. NOT_FOUND means there is no active run; output is then unchanged.
+ * A completed run is removed before its completion callback: retain that
+ * callback's final snapshot for a permanent summary. Example: the native
+ * document-saving tests query progress before their first event-loop step. */
+UmiStatus UmiGtk4AdapterDocumentSaveAllProgress(const UmiGtk4Adapter *adapter,
+    UmiDocumentSaveProgress *outProgress);
+
 /** Query whether this binding has a queued save, active write or filename prompt. */
 int UmiGtk4AdapterDocumentSaveAllBusy(const UmiGtk4Adapter *adapter);
 

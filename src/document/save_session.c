@@ -194,3 +194,59 @@ UmiStatus UmiDocumentSaveSessionCancel(UmiDocumentSaveSession *session)
     }
     return UMI_STATUS_OK;
 }
+
+
+/* The copied progress is a public boundary. Validate it before formatting;
+ * subtracting each component avoids overflowing saved + unchanged + remaining. */
+UmiStatus UmiDocumentSaveProgressFormat(const UmiDocumentSaveProgress *progress,
+    char *text, size_t capacity)
+{
+    if (progress == NULL || text == NULL || capacity == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(progress->display_name, '\0', sizeof(progress->display_name)) == NULL ||
+        progress->phase < UMI_DOCUMENT_SAVE_READY || progress->phase > UMI_DOCUMENT_SAVE_CANCELLED ||
+        progress->saved > progress->total ||
+        progress->unchanged > progress->total - progress->saved ||
+        progress->remaining != progress->total - progress->saved - progress->unchanged)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if ((progress->phase == UMI_DOCUMENT_SAVE_CANCELLED && progress->last_status != UMI_STATUS_CANCELLED) ||
+        (progress->phase == UMI_DOCUMENT_SAVE_FAILED && progress->last_status == UMI_STATUS_OK) ||
+        ((progress->phase == UMI_DOCUMENT_SAVE_READY || progress->phase == UMI_DOCUMENT_SAVE_NEEDS_PATH ||
+          progress->phase == UMI_DOCUMENT_SAVE_COMPLETE) && progress->last_status != UMI_STATUS_OK) ||
+        (progress->phase == UMI_DOCUMENT_SAVE_COMPLETE && progress->remaining != 0U))
+        return UMI_STATUS_INVALID_ARGUMENT;
+
+    char message[UMI_DOCUMENT_NAME_CAPACITY + 384U];
+    int length;
+    switch (progress->phase) {
+    case UMI_DOCUMENT_SAVE_COMPLETE:
+        length = snprintf(message, sizeof(message), "Save All complete: %zu saved, %zu already saved.",
+            progress->saved, progress->unchanged);
+        break;
+    case UMI_DOCUMENT_SAVE_CANCELLED:
+        length = snprintf(message, sizeof(message), "Save All cancelled: %zu saved, %zu already saved, %zu remaining.",
+            progress->saved, progress->unchanged, progress->remaining);
+        break;
+    case UMI_DOCUMENT_SAVE_NEEDS_PATH:
+        length = snprintf(message, sizeof(message), "Choose a filename for %s. %zu saved, %zu remaining.",
+            progress->display_name, progress->saved, progress->remaining);
+        break;
+    case UMI_DOCUMENT_SAVE_FAILED:
+        length = snprintf(message, sizeof(message), "Save All stopped: %zu saved, %zu remaining. %s%s%s",
+            progress->saved, progress->remaining, progress->display_name,
+            progress->display_name[0] != '\0' ? ": " : "", umi_status_text(progress->last_status));
+        break;
+    case UMI_DOCUMENT_SAVE_READY:
+        length = snprintf(message, sizeof(message), "Save All: %zu saved, %zu remaining.",
+            progress->saved, progress->remaining);
+        break;
+    default:
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (length < 0) return UMI_STATUS_IO_ERROR;
+    if ((size_t)length >= sizeof(message) || (size_t)length >= capacity)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Assemble privately, then publish a complete message including its zero. */
+    memcpy(text, message, (size_t)length + 1U);
+    return UMI_STATUS_OK;
+}

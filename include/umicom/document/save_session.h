@@ -79,6 +79,17 @@ UmiStatus UmiDocumentSaveSessionStep(UmiDocumentSaveSession *session);
 UmiStatus UmiDocumentSaveSessionProvidePath(UmiDocumentSaveSession *session,
     const char *path);
 
+/** Write a readable progress message into caller-owned storage. This does not
+ * advance, cancel, save or select a document. Counters must partition total as
+ * saved + unchanged + remaining; the phase and result must agree. A malformed
+ * snapshot or unterminated name returns INVALID_ARGUMENT; insufficient output
+ * space returns CAPACITY_EXCEEDED. The output is unchanged on either failure.
+ * No document contents or paths are read. Use the message for a status area or
+ * an explicitly requested problem report. See examples/editor_workflow/save_all.c
+ * and tests/document_saving/test_save_progress.c for all phases and failures. */
+UmiStatus UmiDocumentSaveProgressFormat(const UmiDocumentSaveProgress *progress,
+    char *text, size_t capacity);
+
 /** Cancel remaining work. Does not discard documents or undo earlier saves.
  * Repeated cancellation is harmless. If called from a provider callback during
  * a step, cancellation takes effect after the current synchronous call returns. */

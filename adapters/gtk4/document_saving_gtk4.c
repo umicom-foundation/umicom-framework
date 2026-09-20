@@ -160,6 +160,16 @@ UmiStatus UmiGtk4AdapterDocumentSaveAll(UmiGtk4Adapter *adapter,
     return UMI_STATUS_OK;
 }
 
+/* Observing a save must not schedule another step or retain a borrowed result. */
+UmiStatus UmiGtk4AdapterDocumentSaveAllProgress(const UmiGtk4Adapter *adapter,
+    UmiDocumentSaveProgress *outProgress)
+{
+    if (adapter == NULL || outProgress == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    const SaveRun *run = adapter->document_save_run;
+    if (run == NULL) return UMI_STATUS_NOT_FOUND;
+    return UmiDocumentSaveSessionProgress(run->session, outProgress);
+}
+
 int UmiGtk4AdapterDocumentSaveAllBusy(const UmiGtk4Adapter *adapter)
 { return adapter != NULL && adapter->document_save_run != NULL; }
 
