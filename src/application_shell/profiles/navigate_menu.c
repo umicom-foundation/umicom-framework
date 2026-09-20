@@ -178,6 +178,19 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .flags = UMI_APPLICATION_SHELL_VISIBLE | UMI_APPLICATION_SHELL_ENABLED,
         .badge_count = 0U,
         .revision = 1U
+    },
+    {
+        .structure_size = (uint32_t)sizeof(UmiApplicationShellContribution),
+        .api_version = UMI_APPLICATION_SHELL_API_VERSION,
+        .contribution_id = "umicom.shell.navigate-menu.line",
+        .title = "Go to Line...",
+        .description = "Move to a source line or line:column without editing the document.",
+        .command_id = "umicom.document.go-to-line",
+        .component_id = "", .group_id = "go", .icon_id = "go-jump-symbolic",
+        .context_key = "", .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
+        .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR, .order = 220,
+        .flags = UMI_APPLICATION_SHELL_VISIBLE | UMI_APPLICATION_SHELL_ENABLED,
+        .badge_count = 0U, .revision = 1U
     }
 };
 

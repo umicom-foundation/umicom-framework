@@ -13,11 +13,67 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/document/commands.h"
+#include "umicom/document/navigation.h"
 
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+/* Both native forms and registered commands use this parser. An explicit
+ * byte count avoids searching beyond a caller's input and makes rejection
+ * atomic: the output location is assigned only after all checks succeed. */
+UmiStatus UmiDocumentLocationParse(const char *text, size_t byteCount,
+    UmiDocumentLocation *outLocation)
+{
+    if (text == NULL || outLocation == NULL || byteCount == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (byteCount > UMI_DOCUMENT_LOCATION_TEXT_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    size_t start = 0U, end = byteCount;
+    while (start < end && (text[start] == ' ' || text[start] == '\t')) ++start;
+    while (end > start && (text[end - 1U] == ' ' || text[end - 1U] == '\t')) --end;
+    if (start == end) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiDocumentLocation location = {0U, 1U};
+    size_t number = 0U;
+    int column = 0, digits = 0;
+    for (size_t index = start; index < end; ++index) {
+        unsigned char value = (unsigned char)text[index];
+        if (value == ':' && !column && digits && number != 0U) {
+            location.line = number;
+            number = 0U; digits = 0; column = 1;
+        } else if (value >= '0' && value <= '9') {
+            size_t digit = (size_t)(value - '0');
+            if (number > (SIZE_MAX - digit) / 10U)
+                return UMI_STATUS_INVALID_ARGUMENT;
+            number = number * 10U + digit; digits = 1;
+        } else return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (!digits || number == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    if (column) location.column = number;
+    else location.line = number;
+    *outLocation = location;
+    return UMI_STATUS_OK;
+}
+
+/* There is no second navigation engine here. The established coordinator
+ * selects a byte position in the complete draft after the target guard. */
+UmiStatus UmiDocumentCoordinatorNavigate(UmiDocumentCoordinator *coordinator,
+    UmiDocumentId expectedDocument, const char *text, size_t byteCount,
+    size_t *outOffset)
+{
+    UmiDocumentLocation location;
+    UmiDocumentWorkingCopySnapshot active;
+    if (coordinator == NULL || expectedDocument == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = UmiDocumentLocationParse(text, byteCount, &location);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_document_coordinator_active_snapshot(coordinator, &active);
+    if (status != UMI_STATUS_OK) return status;
+    if (active.document_id != expectedDocument) return UMI_STATUS_INVALID_STATE;
+    return UmiDocumentCoordinatorGoToPosition(coordinator, location.line,
+        location.column, outOffset);
+}
 
 /* Provide the command message operation used by this module and its client applications. */
 static void command_message(char *out_message,
@@ -214,35 +270,69 @@ static UmiStatus replace_command(void *user_data,
  * Provide the go to line command operation used by this module and its client
  * applications.
  */
+/* REFACTOR NOTE: Numeric parsing stays in Framework and is consolidated in
+ * UmiDocumentLocationParse in this file. Native Studio forms call the same
+ * contract; signed and overflowing input can no longer be accepted by strtoull.
+ * The former code is retained below for reference; do not enable both paths.
+ */
+// static UmiStatus go_to_line_command(void *user_data,
+//                                     const char *argument,
+//                                     char *out_message,
+//                                     size_t capacity)
+// {
+//     unsigned long long line;
+//     char *end = NULL;
+//     size_t offset = 0U;
+//     UmiStatus status;
+//     /*
+//      * Protect caller-owned memory by checking that required state is available before it is
+//      * used.
+//      */
+//     if (argument == NULL || argument[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+//     errno = 0;
+//     line = strtoull(argument, &end, 10);
+//     /* Apply this branch only when its contract condition is satisfied. */
+//     if (errno != 0 || end == argument || *end != '\0' || line == 0ULL ||
+//         line > (unsigned long long)SIZE_MAX) return UMI_STATUS_INVALID_ARGUMENT;
+//     status = umi_document_coordinator_go_to_line(
+//         (UmiDocumentCoordinator *)user_data, (size_t)line, &offset);
+//     /*
+//      * Protect caller-owned memory by checking that required state is available before it is
+//      * used.
+//      */
+//     if (status == UMI_STATUS_OK && out_message != NULL && capacity > 0U) {
+//         (void)snprintf(out_message, capacity, "Line %llu at byte %zu", line, offset);
+//     } /* Use this fallback path when the earlier condition does not apply. */ else {
+//         command_message(out_message, capacity, "Line selected", status);
+//     }
+//     return status;
+// }
+
 static UmiStatus go_to_line_command(void *user_data,
                                     const char *argument,
                                     char *out_message,
                                     size_t capacity)
 {
-    unsigned long long line;
-    char *end = NULL;
-    size_t offset = 0U;
-    UmiStatus status;
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (argument == NULL || argument[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
-    errno = 0;
-    line = strtoull(argument, &end, 10);
-    /* Apply this branch only when its contract condition is satisfied. */
-    if (errno != 0 || end == argument || *end != '\0' || line == 0ULL ||
-        line > (unsigned long long)SIZE_MAX) return UMI_STATUS_INVALID_ARGUMENT;
-    status = umi_document_coordinator_go_to_line(
-        (UmiDocumentCoordinator *)user_data, (size_t)line, &offset);
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (status == UMI_STATUS_OK && out_message != NULL && capacity > 0U) {
-        (void)snprintf(out_message, capacity, "Line %llu at byte %zu", line, offset);
-    } /* Use this fallback path when the earlier condition does not apply. */ else {
-        command_message(out_message, capacity, "Line selected", status);
+    UmiDocumentCoordinator *coordinator = user_data;
+    UmiDocumentWorkingCopySnapshot active;
+    size_t offset = 0U, length = 0U;
+    if (argument != NULL) {
+        while (length <= UMI_DOCUMENT_LOCATION_TEXT_MAX && argument[length] != '\0') ++length;
+    }
+    UmiDocumentLocation location;
+    UmiStatus status = UmiDocumentLocationParse(argument, length, &location);
+    if (status == UMI_STATUS_OK)
+        status = umi_document_coordinator_active_snapshot(coordinator, &active);
+    if (status == UMI_STATUS_OK)
+        status = UmiDocumentCoordinatorNavigate(coordinator, active.document_id,
+            argument, length, &offset);
+    if (out_message != NULL && capacity != 0U) {
+        if (status == UMI_STATUS_OK)
+            (void)snprintf(out_message, capacity, "Line %zu, byte column %zu at byte %zu",
+                location.line, location.column, offset);
+        else if (status == UMI_STATUS_INVALID_ARGUMENT || status == UMI_STATUS_CAPACITY_EXCEEDED)
+            (void)snprintf(out_message, capacity, "Enter a positive line or line:column, for example 12:5.");
+        else command_message(out_message, capacity, "Source location selected", status);
     }
     return status;
 }

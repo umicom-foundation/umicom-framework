@@ -176,6 +176,12 @@ UmiSiteEscape("${_example}" UMICOM_SITE_EDIT_COMMANDS_EXAMPLE)
 configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/EDITING_DOCUMENTS.html"
     "${UMICOM_SITE_OUTPUT}/EDITING_DOCUMENTS.html" COPYONLY)
 
+# Read the executable navigation example directly into its Wiki lesson.
+set(_navigation_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/editor_workflow/navigation.c")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_navigation_example}")
+file(READ "${_navigation_example}" _example)
+UmiSiteEscape("${_example}" UMICOM_SITE_NAVIGATION_EXAMPLE)
+
 # This is a file inventory, not a second C parser or a runtime module registry.
 file(GLOB_RECURSE _headers CONFIGURE_DEPENDS LIST_DIRECTORIES FALSE
     RELATIVE "${UMICOM_SITE_FRAMEWORK_ROOT}" "${UMICOM_SITE_FRAMEWORK_ROOT}/include/umicom/*.h")
