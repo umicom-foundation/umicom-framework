@@ -1950,3 +1950,18 @@ const char *umi_trading_workspace_order_filter_text(
         default: return "all";
     }
 }
+
+/* An explicit reset affects the private ticket, never an order in the OMS. */
+UmiStatus UmiTradingWorkspaceResetDraft(UmiTradingWorkspace *workspace)
+{
+    if (workspace == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t selected = market_index(workspace, workspace->selected_instrument_id);
+    initialise_draft(workspace);
+    if (selected != SIZE_MAX) choose_instrument(workspace, &workspace->markets[selected]);
+    memset(&workspace->riskEvidence, 0, sizeof workspace->riskEvidence);
+    umi_risk_decision_deny(&workspace->draft_risk,
+        "Ticket reset. Preview risk before submitting.");
+    workspace->has_draft_risk = 0;
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}

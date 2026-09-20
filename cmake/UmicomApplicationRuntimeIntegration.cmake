@@ -41,6 +41,7 @@ target_sources(umicom_application PRIVATE
 )
 
 target_sources(umicom_desktop PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/application_filter.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/application_strip.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/desk_runtime.c"
 )

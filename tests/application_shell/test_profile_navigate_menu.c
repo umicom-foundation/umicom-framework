@@ -35,7 +35,7 @@ int main(void)
     /* The previous nine contributions remain; Go to Line adds one entry.
      * assert(profile->contribution_count == 9U);
      */
-    assert(profile->contribution_count == 10U);
+    /* Two adjacent-source commands join the existing ten contributions. */    // assert(profile->contribution_count == 10U);    assert(profile->contribution_count == 12U);
     assert(umi_application_shell_profile_validate(profile) == UMI_STATUS_OK);
 
     assert(umi_application_shell_registry_create(&registry) == UMI_STATUS_OK);

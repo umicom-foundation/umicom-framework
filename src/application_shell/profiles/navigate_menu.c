@@ -191,6 +191,30 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR, .order = 220,
         .flags = UMI_APPLICATION_SHELL_VISIBLE | UMI_APPLICATION_SHELL_ENABLED,
         .badge_count = 0U, .revision = 1U
+    },
+    {
+        .structure_size = (uint32_t)sizeof(UmiApplicationShellContribution),
+        .api_version = UMI_APPLICATION_SHELL_API_VERSION,
+        .contribution_id = "umicom.shell.navigate-menu.document-next",
+        .title = "Next Source Document", .description = "Select a source document without saving or closing it.",
+        .command_id = "navigate.document.next", .component_id = "",
+        .group_id = "go", .icon_id = "", .context_key = "",
+        .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
+        .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR, .order = 230,
+        .flags = UMI_APPLICATION_SHELL_VISIBLE | UMI_APPLICATION_SHELL_ENABLED,
+        .badge_count = 0U, .revision = 1U
+    },
+    {
+        .structure_size = (uint32_t)sizeof(UmiApplicationShellContribution),
+        .api_version = UMI_APPLICATION_SHELL_API_VERSION,
+        .contribution_id = "umicom.shell.navigate-menu.document-previous",
+        .title = "Previous Source Document", .description = "Select a source document without saving or closing it.",
+        .command_id = "navigate.document.previous", .component_id = "",
+        .group_id = "go", .icon_id = "", .context_key = "",
+        .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
+        .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR, .order = 240,
+        .flags = UMI_APPLICATION_SHELL_VISIBLE | UMI_APPLICATION_SHELL_ENABLED,
+        .badge_count = 0U, .revision = 1U
     }
 };
 

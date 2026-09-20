@@ -3385,6 +3385,7 @@ if(BUILD_TESTING)
     add_subdirectory(tests/command_feedback)
     add_subdirectory(tests/document_editing)
     add_subdirectory(tests/document_saving)
+    add_subdirectory(tests/workflow_tools)
     add_subdirectory(examples/gui_recording)
     umicom_add_framework_test(umicom-ui-appearance-persistence-tests framework.ui.appearance_persistence tests/test_ui_appearance_persistence.c)
     umicom_add_framework_test(umicom-ui-view-presentation-tests framework.ui.view_presentation tests/test_ui_view_presentation.c)
@@ -4998,6 +4999,8 @@ install(TARGETS
     umicom_distribution
     umicom_distribution_ui
     umicom_finance
+    # Export the same finance views/reviews consumed by Bank and TMS.
+    umicom_finance_ui
     umicom_trading
     umicom_trading_ui
     umicom_engine
@@ -5368,5 +5371,13 @@ endif()
 
 # The Save All lesson is part of the public SDK reference.
 install(FILES docs/SAVING_DOCUMENTS.html
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs
+    COMPONENT Framework)
+
+# The worked lesson remains available to consumers of the installed SDK.
+install(DIRECTORY examples/workflow_tools/
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/workflow_tools
+    COMPONENT Framework)
+install(FILES docs/WORKFLOW_TOOLS.html
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs
     COMPONENT Framework)

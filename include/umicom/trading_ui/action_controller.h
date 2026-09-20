@@ -263,6 +263,11 @@ UmiTradingUiControllerSnapshot umi_trading_ui_controller_snapshot(
 UmiStatus UmiTradingUiControllerPreviewOrderAt(UmiTradingUiController *controller,
     int64_t nowMs, UmiRiskDecision *outDecision);
 
+
+/** Reset the ticket through UmiTradingWorkspaceResetDraft, discard the old
+ * preview result and send exactly one existing change notification.
+ * No payload, broker call or order submission is made. */
+UmiStatus UmiTradingUiControllerResetDraft(UmiTradingUiController *controller);
 #ifdef __cplusplus
 }
 #endif

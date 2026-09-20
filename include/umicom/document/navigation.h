@@ -49,6 +49,16 @@ UmiStatus UmiDocumentLocationParse(const char *text, size_t byteCount,
 UmiStatus UmiDocumentCoordinatorNavigate(UmiDocumentCoordinator *coordinator,
     UmiDocumentId expectedDocument, const char *text, size_t byteCount,
     size_t *outOffset);
+
+/** Select the next (+1) or previous (-1) managed source document in opening
+ * order, wrapping at the ends. Not a most-recently-used or visual-tab-order list.
+ * Dirty/read-only/pinned documents remain open; text, selection, history and
+ * saved files are unchanged. A single source is a successful no-op.
+ * No active managed source or an empty set returns NOT_FOUND. Invalid direction
+ * returns INVALID_ARGUMENT. outDocument is optional, unchanged on failure.
+ * Owner-thread only. Example: Cycle(coordinator, +1, NULL) switches Notes tabs. */
+UmiStatus UmiDocumentCoordinatorCycle(UmiDocumentCoordinator *coordinator,
+    int direction, UmiDocumentId *outDocument);
 #ifdef __cplusplus
 }
 #endif

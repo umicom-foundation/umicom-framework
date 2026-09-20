@@ -23,6 +23,7 @@
 #include "umicom/chart/indicator.h"
 #include "umicom/chart/plot.h"
 #include "umicom/trading_ui/trading_ui.h"
+#include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/drop_down.h"
 #include "umicom/ui/gtk4/workstation/chart_surface.h"
 #include "umicom/ui/gtk4/workstation/view_model_panel.h"
@@ -1195,6 +1196,16 @@ static size_t tif_index(UmiTimeInForce tif)
  * Provide the create order entry panel operation used by this module and its client
  * applications.
  */
+/* The controller owns resetting and notification. Do not use state after
+ * dispatch: the host may schedule replacement of this panel. */
+static void OnResetTicket(GtkButton *button, gpointer data)
+{
+    (void)button;
+    UmiGtk4TradingPanelState *state = data;
+    if (state != NULL && state->context != NULL)
+        (void)UmiTradingUiControllerResetDraft(state->context->controller);
+}
+
 static GtkWidget *create_order_entry_panel(UmiGtk4TradingPanelContext *context)
 {
     static const char *const side_labels[] = {"Buy", "Sell"};
@@ -1285,6 +1296,12 @@ static GtkWidget *create_order_entry_panel(UmiGtk4TradingPanelContext *context)
     g_signal_connect(submit, "clicked", G_CALLBACK(on_submit_clicked), state);
     gtk_box_append(GTK_BOX(buttons), preview);
     gtk_box_append(GTK_BOX(buttons), submit);
+    GtkWidget *reset = gtk_button_new_with_label("Reset ticket");
+    gtk_widget_set_tooltip_text(reset,
+        "Restore ticket defaults. Existing orders, positions and trading safeguards are unchanged.");
+    (void)umi_gtk4_automation_tag_widget(reset, "trading.ticket.reset");
+    g_signal_connect(reset, "clicked", G_CALLBACK(OnResetTicket), state);
+    gtk_box_append(GTK_BOX(buttons), reset);
     gtk_box_append(GTK_BOX(root), buttons);
     return root;
 }

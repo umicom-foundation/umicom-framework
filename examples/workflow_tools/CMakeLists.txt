@@ -1,0 +1,26 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework: build the workflow-tools lesson against source or installed SDK.
+# Author: Sammy Hegab, Umicom Foundation. Licence: MIT.
+#-----------------------------------------------------------------------------
+cmake_minimum_required(VERSION 3.24)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    project(UmicomWorkflowToolsExample LANGUAGES C)
+    include(CTest)
+endif()
+if(NOT TARGET Umicom::finance_ui)
+    find_package(UmicomFramework CONFIG REQUIRED)
+endif()
+if(NOT TARGET umicom-workflow-tools-example)
+    add_executable(umicom-workflow-tools-example main.c)
+    set_target_properties(umicom-workflow-tools-example PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES)
+    target_link_libraries(umicom-workflow-tools-example PRIVATE Umicom::finance_ui Umicom::desktop)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-workflow-tools-example)
+        umicom_apply_sanitizers(umicom-workflow-tools-example)
+    endif()
+    if(BUILD_TESTING)
+        add_test(NAME framework.workflow_tools.example COMMAND umicom-workflow-tools-example)
+        set_tests_properties(framework.workflow_tools.example PROPERTIES TIMEOUT 30 LABELS "framework;workflow;example")
+    endif()
+    install(TARGETS umicom-workflow-tools-example RUNTIME DESTINATION bin)
+endif()

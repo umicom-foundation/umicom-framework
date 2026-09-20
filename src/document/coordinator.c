@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "umicom/document/navigation.h"
 #include "umicom/document/coordinator.h"
 #include "umicom/document/edit.h"
 #include "umicom/document/text_encoding.h"
@@ -933,6 +934,27 @@ UmiStatus umi_document_coordinator_close_active(UmiDocumentCoordinator *coordina
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     return UmiDocumentCoordinatorClose(coordinator,
         coordinator->entries[index].document_id, force);
+}
+
+/* Document switching uses the same view IDs and activation operation as Open.
+ * Do not synchronise a draft into the store just to select another tab. */
+UmiStatus UmiDocumentCoordinatorCycle(UmiDocumentCoordinator *coordinator,
+    int direction, UmiDocumentId *outDocument)
+{
+    if (coordinator == NULL || (direction != -1 && direction != 1))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index = active_index(coordinator);
+    if (index == SIZE_MAX || coordinator->count == 0U) return UMI_STATUS_NOT_FOUND;
+    size_t next = direction > 0
+        ? (index + 1U == coordinator->count ? 0U : index + 1U)
+        : (index == 0U ? coordinator->count - 1U : index - 1U);
+    UmiStatus status = UMI_STATUS_OK;
+    if (next != index)
+        status = umi_ui_workbench_activate_document(coordinator->workbench,
+            coordinator->entries[next].view_id);
+    if (status == UMI_STATUS_OK && outDocument != NULL)
+        *outDocument = coordinator->entries[next].document_id;
+    return status;
 }
 
 /* Provide the apply history operation used by this module and its client applications. */

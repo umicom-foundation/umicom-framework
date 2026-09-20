@@ -59,6 +59,8 @@ extern "C" {
 #define UMI_TRADING_UI_ACTION_RESUME_TRADE_TAPE \
     "studio.action.trading.resume-trade-tape"
 
+#define UMI_TRADING_UI_ACTION_RESET_DRAFT "umicom.trading.reset-draft"
+
 /**
  * List the named trading ui action kind values accepted by this public contract.
  */
@@ -81,7 +83,8 @@ typedef enum UmiTradingUiActionKind {
     UMI_TRADING_UI_ACTION_KIND_RESET_KILL_SWITCH = 15,
     UMI_TRADING_UI_ACTION_KIND_FILTER_TRADE_TAPE = 16,
     UMI_TRADING_UI_ACTION_KIND_PAUSE_TRADE_TAPE = 17,
-    UMI_TRADING_UI_ACTION_KIND_RESUME_TRADE_TAPE = 18
+    UMI_TRADING_UI_ACTION_KIND_RESUME_TRADE_TAPE = 18,
+    UMI_TRADING_UI_ACTION_KIND_RESET_DRAFT = 19
 } UmiTradingUiActionKind;
 
 /**

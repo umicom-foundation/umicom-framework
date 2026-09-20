@@ -18,6 +18,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "umicom/desktop/application_filter.h"
 #include "umicom/ui/gtk4/desk.h"
 #include "umicom/ui/gtk4/workstation/shell_header.h"
 #include "umicom/ui/gtk4/workstation/window_fit.h"
@@ -43,6 +44,7 @@ typedef struct DeskHomeTile {
     GtkWidget *select;
     char *search_text;
     bool seen;
+    UmiApplicationLaunchChoice choice;
 } DeskHomeTile;
 
 /* Copy delayed launch identity so refresh cannot invalidate an emitting row. */
@@ -80,6 +82,7 @@ struct UmiGtk4Desk {
     GPtrArray *home_entries;
     GPtrArray *header_bindings;
     char *home_query;
+    UmiDeskApplicationFilter home_filter;
     GArray *choice_cache;
     GArray *strip_cache;
     GArray *layout_cache;
@@ -864,6 +867,10 @@ static void filter_home(UmiGtk4Desk *desk)
         DeskHomeTile *tile = g_ptr_array_index(desk->home_entries, index);
         bool shown = desk->home_query == NULL || desk->home_query[0] == '\0' ||
             (tile->search_text != NULL && strstr(tile->search_text, desk->home_query) != NULL);
+        bool categoryMatches = false;
+        if (UmiDeskApplicationFilterMatches(&tile->choice, desk->home_filter,
+                &categoryMatches) != UMI_STATUS_OK) categoryMatches = false;
+        shown = shown && categoryMatches;
         gtk_widget_set_visible(tile->row, shown);
         if (shown) ++matches;
     }
@@ -874,11 +881,27 @@ static void filter_home(UmiGtk4Desk *desk)
         set_label_if_changed(desk->home_summary, message);
     }
     if (desk->home_empty != NULL) {
+        /* The earlier text only described search. The shared filter in
+         * src/desktop/application_filter.c now adds a category condition.
+         * Keep the former call here as a migration reference. */
+        // set_label_if_changed(desk->home_empty, desk->home_entries->len == 0U
+        // ? "No applications are registered with this desktop."
+        // : "No applications match this search. Clear the search to see all applications.");
         set_label_if_changed(desk->home_empty, desk->home_entries->len == 0U
             ? "No applications are registered with this desktop."
-            : "No applications match this search. Clear the search to see all applications.");
+            : "No applications match. Choose All applications and clear the search to see the complete list.");
         gtk_widget_set_visible(desk->home_empty, matches == 0U);
     }
+}
+
+static void OnHomeFilterChanged(GObject *object, GParamSpec *property, gpointer data)
+{
+    (void)property;
+    UmiGtk4Desk *desk = data;
+    guint selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(object));
+    if (desk == NULL || selected > (guint)UMI_DESK_APPLICATION_FILTER_ATTENTION) return;
+    desk->home_filter = (UmiDeskApplicationFilter)selected;
+    filter_home(desk);
 }
 
 /* Search edits alter only tile visibility, never launch or selection state. */
@@ -1040,6 +1063,7 @@ static void update_home_tile(UmiGtk4Desk *desk, DeskHomeTile *tile,
     desk->updating_home = true;
     gtk_check_button_set_active(GTK_CHECK_BUTTON(tile->select), choice->selected);
     desk->updating_home = false;
+    tile->choice = *choice; /* Copy presentation evidence; the runtime still owns selection. */
     search_source = g_strconcat(choice->display_name, " ", choice->application_id, NULL);
     g_free(tile->search_text);
     tile->search_text = g_utf8_casefold(search_source, -1);
@@ -1126,6 +1150,15 @@ static GtkWidget *build_home(UmiGtk4Desk *desk)
     gtk_widget_set_hexpand(desk->home_summary, TRUE);
     gtk_label_set_xalign(GTK_LABEL(desk->home_summary), 0.0F);
     gtk_box_append(GTK_BOX(actions), desk->home_summary);
+    static const char *filterNames[] = {
+        "All applications", "Available", "Running", "Selected", "Needs attention", NULL
+    };
+    GtkWidget *filter = gtk_drop_down_new_from_strings(filterNames);
+    gtk_widget_set_tooltip_text(filter,
+        "Filter the application list. Hidden applications keep their selection and running state.");
+    (void)umi_gtk4_automation_tag_widget(filter, "desk.home.filter");
+    g_signal_connect(filter, "notify::selected", G_CALLBACK(OnHomeFilterChanged), desk);
+    gtk_box_append(GTK_BOX(actions), filter);
     gtk_box_append(GTK_BOX(actions), chooser);
     gtk_box_append(GTK_BOX(page), heading);
     gtk_box_append(GTK_BOX(page), description);

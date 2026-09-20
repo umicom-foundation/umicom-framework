@@ -190,6 +190,14 @@ UmiSiteEscape("${_example}" UMICOM_SITE_SAVE_ALL_EXAMPLE)
 configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/SAVING_DOCUMENTS.html"
     "${UMICOM_SITE_OUTPUT}/SAVING_DOCUMENTS.html" COPYONLY)
 
+# Keep workflow teaching tied to the actual executable source.
+set(_workflow_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/workflow_tools/main.c")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_workflow_example}")
+file(READ "${_workflow_example}" _example)
+UmiSiteEscape("${_example}" UMICOM_SITE_WORKFLOW_TOOLS_EXAMPLE)
+configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/WORKFLOW_TOOLS.html"
+    "${UMICOM_SITE_OUTPUT}/WORKFLOW_TOOLS.html" COPYONLY)
+
 # This is a file inventory, not a second C parser or a runtime module registry.
 file(GLOB_RECURSE _headers CONFIGURE_DEPENDS LIST_DIRECTORIES FALSE
     RELATIVE "${UMICOM_SITE_FRAMEWORK_ROOT}" "${UMICOM_SITE_FRAMEWORK_ROOT}/include/umicom/*.h")
@@ -265,6 +273,10 @@ configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/docs/getting-started/BUILDING_S
     "${UMICOM_SITE_OUTPUT}/build-and-publish.html" COPYONLY)
 configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/EDIT_COMMANDS.html"
     "${UMICOM_SITE_OUTPUT}/studio/EDIT_COMMANDS.html" COPYONLY)
+foreach(_workflow_product IN ITEMS studio trader desktop bank tms)
+    configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/${_workflow_product}/docs/WORKFLOW_TOOLS.html"
+        "${UMICOM_SITE_OUTPUT}/${_workflow_product}/WORKFLOW_TOOLS.html" COPYONLY)
+endforeach()
 file(WRITE "${UMICOM_SITE_OUTPUT}/.nojekyll" "")
 add_custom_target(umicom-website
     COMMAND "${CMAKE_COMMAND}" -E echo "Public site: ${UMICOM_SITE_OUTPUT}/index.html"

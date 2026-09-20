@@ -86,6 +86,11 @@ UmiStatus UmiGtk4AdapterDocumentSaveAllProgress(const UmiGtk4Adapter *adapter,
 /** Query whether this binding has a queued save, active write or filename prompt. */
 int UmiGtk4AdapterDocumentSaveAllBusy(const UmiGtk4Adapter *adapter);
 
+
+/** Select the adjacent managed source (+1 next, -1 previous), then refresh and
+ * deliver the existing editing completion. Does not read the clipboard or save.
+ * A pending paste retains its original captured document independently. */
+UmiStatus UmiGtk4AdapterCycleDocument(UmiGtk4Adapter *adapter, int direction);
 #ifdef __cplusplus
 }
 #endif

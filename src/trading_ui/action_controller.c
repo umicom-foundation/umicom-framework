@@ -692,6 +692,8 @@ UmiStatus umi_trading_ui_controller_dispatch(
         return UMI_STATUS_INVALID_ARGUMENT;
     /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
+    case UMI_TRADING_UI_ACTION_KIND_RESET_DRAFT:
+        return UmiTradingUiControllerResetDraft(controller);
     case UMI_TRADING_UI_ACTION_KIND_REFRESH:
         return umi_trading_ui_controller_refresh(controller);
     case UMI_TRADING_UI_ACTION_KIND_SET_ENVIRONMENT:
@@ -759,4 +761,21 @@ UmiTradingUiControllerSnapshot umi_trading_ui_controller_snapshot(
 {
     return controller != NULL
         ? controller->state : (UmiTradingUiControllerSnapshot){0};
+}
+
+/* Notify after all ticket and presentation state has been updated. */
+UmiStatus UmiTradingUiControllerResetDraft(UmiTradingUiController *controller)
+{
+    if (controller == NULL || controller->workspace == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = UmiTradingWorkspaceResetDraft(controller->workspace);
+    if (status == UMI_STATUS_OK) {
+        memset(&controller->state.last_risk, 0, sizeof controller->state.last_risk);
+        (void)snprintf(controller->state.last_risk.reason,
+            sizeof controller->state.last_risk.reason, "%s", "Preview risk for the reset ticket.");
+    }
+    return finish_action(controller, status, NULL,
+        status == UMI_STATUS_OK
+            ? "Ticket reset. No order was submitted or cancelled; preview risk again."
+            : NULL, 1);
 }

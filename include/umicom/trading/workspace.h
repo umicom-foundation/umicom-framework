@@ -542,6 +542,16 @@ UmiStatus UmiTradingWorkspaceSetRiskPricePolicy(UmiTradingWorkspace *workspace,
 UmiStatus UmiTradingWorkspaceRiskEvidence(const UmiTradingWorkspace *workspace,
     UmiPretradeRiskEvidence *outEvidence);
 
+
+/** Reset only the editable order ticket to the workspace's existing defaults:
+ * Buy, Limit, DAY, quantity 1, no stop. Retain account/environment and selected
+ * instrument; select its latest quote midpoint or last bar as the reference
+ * limit when available. This reference is not a fresh quote guarantee.
+ * Clears previous risk evidence. Does not submit/cancel orders, reset the kill
+ * switch, arm live trading or alter fills, cash, positions or selection.
+ * Owner-thread only. A NULL workspace is INVALID_ARGUMENT.
+ * See examples/workflow_tools/main.c and tests/workflow_tools/test_trading.c. */
+UmiStatus UmiTradingWorkspaceResetDraft(UmiTradingWorkspace *workspace);
 #ifdef __cplusplus
 }
 #endif

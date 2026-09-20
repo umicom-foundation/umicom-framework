@@ -24,6 +24,7 @@ typedef struct UmiTradingUiActionEntry {
 } UmiTradingUiActionEntry;
 
 static const UmiTradingUiActionEntry action_entries[] = {
+    {UMI_TRADING_UI_ACTION_KIND_RESET_DRAFT, UMI_TRADING_UI_ACTION_RESET_DRAFT, 0},
     {UMI_TRADING_UI_ACTION_KIND_REFRESH,
      UMI_TRADING_UI_ACTION_REFRESH, 0},
     {UMI_TRADING_UI_ACTION_KIND_SET_ENVIRONMENT,

@@ -413,3 +413,13 @@ UmiStatus UmiGtk4AdapterPromptDocumentLocation(UmiGtk4Adapter *adapter)
     (void)gtk_widget_grab_focus(prompt->entry);
     return UMI_STATUS_OK;
 }
+
+/* Keep menu and keyboard switching on the same public document contract. */
+UmiStatus UmiGtk4AdapterCycleDocument(UmiGtk4Adapter *adapter, int direction)
+{
+    if (adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = adapter->edit_coordinator != NULL
+        ? UmiDocumentCoordinatorCycle(adapter->edit_coordinator, direction, NULL)
+        : UMI_STATUS_UNAVAILABLE;
+    return EditFinished(adapter, status);
+}
