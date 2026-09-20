@@ -9,6 +9,7 @@
 #define UMICOM_UI_GTK4_DOCUMENT_COMMANDS_H
 #include "umicom/ui/gtk4.h"
 #include "umicom/document/edit.h"
+#include "umicom/document/save_session.h"
 #include "umicom/document/navigation.h"
 #ifdef __cplusplus
 extern "C" {
@@ -56,6 +57,26 @@ UmiStatus UmiGtk4AdapterPromptDocumentLocation(UmiGtk4Adapter *adapter);
  * have no callback; callers must inspect the return status in that case.
  * Plain UTF-8 text only: no rich text, files or automatic clipboard logging. */
 UmiStatus UmiGtk4AdapterDocumentCommand(UmiGtk4Adapter *adapter, const char *commandId);
+/** Receives a borrowed progress snapshot for this callback only. Copy it to
+ * retain it. Completion runs on the GTK/document owner thread, after the run
+ * stops; saved files are not rolled back on failure or cancellation. */
+typedef void (*UmiGtk4DocumentSaveResultFn)(void *context,
+    const UmiDocumentSaveProgress *progress);
+
+/** Begin Save All over the currently bound coordinator. At most one save run
+ * and no outstanding clipboard read may exist at start. Returns OK when
+ * scheduling succeeds, not when all files are saved. Each named save runs in
+ * a separate idle dispatch; untitled documents use GTK's save-file dialog.
+ * The callback/context must live until completion or binding teardown.
+ * Teardown cancels work and suppresses callbacks to the detached context. */
+UmiStatus UmiGtk4AdapterDocumentSaveAll(UmiGtk4Adapter *adapter,
+    UmiGtk4DocumentSaveResultFn completed, void *context);
+/** Request cancellation without discarding unsaved documents. A synchronous
+ * write already in progress cannot be interrupted. Safe when no run exists. */
+UmiStatus UmiGtk4AdapterCancelDocumentSaveAll(UmiGtk4Adapter *adapter);
+/** Query whether this binding has a queued save, active write or filename prompt. */
+int UmiGtk4AdapterDocumentSaveAllBusy(const UmiGtk4Adapter *adapter);
+
 #ifdef __cplusplus
 }
 #endif

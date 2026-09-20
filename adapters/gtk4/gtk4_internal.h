@@ -32,6 +32,7 @@ struct UmiGtk4Adapter {
     /* Borrowed document owner; the token invalidates outstanding clipboard
      * completions before native or application services are destroyed. */
     UmiDocumentCoordinator *edit_coordinator;
+    void *document_save_run; /* Private, reference-counted Save All request. */
     GObject *edit_lifetime;
     GCancellable *edit_cancel;
     gulong edit_window_destroy_handler;
@@ -349,5 +350,9 @@ void umi_gtk4_context_interaction_tag_source_control_row(
     GtkWidget *widget,
     const char *view_kind,
     const char *row_text);
+
+/* Called after editing-token invalidation, before the coordinator is released.
+ * Defined in document_saving_gtk4.c; this is not an application service. */
+void UmiGtk4DocumentSaveAllDetach(UmiGtk4Adapter *adapter);
 
 #endif

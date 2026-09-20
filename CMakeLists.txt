@@ -799,6 +799,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
         adapters/gtk4/dialog_gtk4.c
         adapters/gtk4/clipboard_gtk4.c
         adapters/gtk4/document_commands_gtk4.c
+        adapters/gtk4/document_saving_gtk4.c
         adapters/gtk4/declarative_renderer_gtk4.c
         adapters/gtk4/components/component_factory_gtk4.c
         adapters/gtk4/components/controls_gtk4.c
@@ -1494,6 +1495,7 @@ add_library(umicom_document STATIC
     src/document/file_filter.c
     src/document/coordinator.c
     src/document/commands.c
+    src/document/save_session.c
     ${UMICOM_DOCUMENT_CAPABILITY_SOURCES}
     ${UMICOM_DOCUMENT_ASSEMBLY_SOURCE}
 )
@@ -3382,6 +3384,7 @@ if(BUILD_TESTING)
     add_subdirectory(tests/action_recovery)
     add_subdirectory(tests/command_feedback)
     add_subdirectory(tests/document_editing)
+    add_subdirectory(tests/document_saving)
     add_subdirectory(examples/gui_recording)
     umicom_add_framework_test(umicom-ui-appearance-persistence-tests framework.ui.appearance_persistence tests/test_ui_appearance_persistence.c)
     umicom_add_framework_test(umicom-ui-view-presentation-tests framework.ui.view_presentation tests/test_ui_view_presentation.c)
@@ -5362,3 +5365,8 @@ if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
     add_test(NAME framework.text_comparison.gtk4 COMMAND umicom-text-comparison-gtk4-test)
     set_tests_properties(framework.text_comparison.gtk4 PROPERTIES TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;comparison;gtk4;native")
 endif()
+
+# The Save All lesson is part of the public SDK reference.
+install(FILES docs/SAVING_DOCUMENTS.html
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs
+    COMPONENT Framework)

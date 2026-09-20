@@ -939,7 +939,13 @@ UmiStatus umi_document_coordinator_close_active(UmiDocumentCoordinator *coordina
 static UmiStatus apply_history(UmiDocumentCoordinator *coordinator,
                                int redo_direction, size_t index)
 {
-    size_t index = active_index(coordinator);
+    /* Targeted history now receives its document entry from the caller.
+     * The old active-tab lookup below is retained for migration reference.
+     * Reintroducing it both redeclares the parameter and loses the document
+     * chosen by UmiDocumentCoordinatorUndo / UmiDocumentCoordinatorRedo.
+     * Active-document wrappers still call active_index before this helper.
+     */
+    // size_t index = active_index(coordinator);
     UmiDocumentCoordinatorEntry *entry;
     UmiUiDocumentViewSnapshot view;
     char *current = NULL;

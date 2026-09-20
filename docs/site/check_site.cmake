@@ -14,7 +14,7 @@ function(RequireText text needle)
 endfunction()
 if(CASE STREQUAL "pages")
     foreach(_path IN ITEMS index.html getting-started.html products.html downloads.html
-            publishing.html contributing.html source-map.html wiki/index.html wiki/source-navigation.html wiki/action-recovery.html wiki/command-feedback.html COMMAND_FEEDBACK.html wiki/editing-documents.html EDITING_DOCUMENTS.html studio/EDIT_COMMANDS.html
+            publishing.html contributing.html SAVING_DOCUMENTS.html wiki/saving-documents.html source-map.html wiki/index.html wiki/source-navigation.html wiki/action-recovery.html wiki/command-feedback.html COMMAND_FEEDBACK.html wiki/editing-documents.html EDITING_DOCUMENTS.html studio/EDIT_COMMANDS.html
             GUI_RECORDING.html GUI_CONTROL_CHECKS.html GUI_CHECK_SESSIONS.html wiki/gui-check-sessions.html wiki/gui-control-checks.html wiki/gui-recording.html wiki/reloading-files.html wiki/comparing-saved-files.html wiki/working-copies.html wiki/compiler-diagnostics.html wiki/components.html wiki/project-files.html wiki/file-refresh.html wiki/find-in-files.html
             studio/index.html trader/index.html desktop/index.html bank/index.html
             studio/COMPARING_SAVED_FILES.html studio/EDITING_FILES.html studio/READING_BUILD_ERRORS.html studio/PROJECT_FILES.html studio/FIND_IN_FILES.html build-and-publish.html
@@ -51,7 +51,8 @@ elseif(CASE STREQUAL "examples")
             "action_recovery/main.c|action-recovery.html"
             "command_feedback/main.c|command-feedback.html"
             "editor_workflow/edit_commands.c|editing-documents.html"
-            "editor_workflow/navigation.c|source-navigation.html")
+            "editor_workflow/navigation.c|source-navigation.html"
+            "editor_workflow/save_all.c|saving-documents.html")
         string(REPLACE "|" ";" _parts "${_pair}")
         list(GET _parts 0 _source)
         list(GET _parts 1 _page)

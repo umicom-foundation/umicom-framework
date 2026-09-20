@@ -182,6 +182,14 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_navigation_ex
 file(READ "${_navigation_example}" _example)
 UmiSiteEscape("${_example}" UMICOM_SITE_NAVIGATION_EXAMPLE)
 
+# Render the actual Save All example, keeping public teaching and C source together.
+set(_saving_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/editor_workflow/save_all.c")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_saving_example}")
+file(READ "${_saving_example}" _example)
+UmiSiteEscape("${_example}" UMICOM_SITE_SAVE_ALL_EXAMPLE)
+configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/SAVING_DOCUMENTS.html"
+    "${UMICOM_SITE_OUTPUT}/SAVING_DOCUMENTS.html" COPYONLY)
+
 # This is a file inventory, not a second C parser or a runtime module registry.
 file(GLOB_RECURSE _headers CONFIGURE_DEPENDS LIST_DIRECTORIES FALSE
     RELATIVE "${UMICOM_SITE_FRAMEWORK_ROOT}" "${UMICOM_SITE_FRAMEWORK_ROOT}/include/umicom/*.h")

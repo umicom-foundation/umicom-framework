@@ -97,6 +97,7 @@ UmiStatus UmiGtk4AdapterBindDocumentEditing(UmiGtk4Adapter *adapter,
         g_object_set_data(adapter->edit_lifetime, "location-dialog", NULL);
         if (dialog != NULL) gtk_window_destroy(GTK_WINDOW(dialog));
     }
+    UmiGtk4DocumentSaveAllDetach(adapter);
     if (adapter->edit_cancel != NULL) g_cancellable_cancel(adapter->edit_cancel);
     g_clear_object(&adapter->edit_cancel);
     g_clear_object(&adapter->edit_lifetime);

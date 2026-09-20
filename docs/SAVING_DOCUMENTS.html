@@ -1,0 +1,176 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Saving several documents in Umicom Studio · Umicom</title><style>*{box-sizing:border-box}body{margin:0;color:#203046;background:#f4f6f9;font:17px/1.65 system-ui,Segoe UI,sans-serif}header{background:#142235;color:white;padding:22px max(5vw,20px)}header img{width:190px;max-width:70vw;height:auto}main{max-width:1080px;margin:auto;padding:30px 24px 70px}h1{font-size:clamp(30px,5vw,46px);line-height:1.18}h2{margin-top:2em;line-height:1.3}h3{margin-top:1.6em}a{color:#155fa3}nav a{display:inline-block;margin:3px 15px 3px 0}pre{background:#101d2e;color:#edf4fc;padding:20px;border-radius:10px;overflow:auto;font:14px/1.6 Consolas,monospace}code{font-family:Consolas,monospace;overflow-wrap:anywhere}pre code{overflow-wrap:normal;white-space:pre}table{border-collapse:collapse;width:100%;background:white}th,td{border:1px solid #cfdae6;padding:12px;text-align:left;vertical-align:top}.table-wrap{overflow:auto}.note{background:#e7f1fb;border-left:4px solid #3378af;padding:14px 18px}details{background:white;margin:12px 0;padding:14px;border:1px solid #d3dee8;border-radius:8px}summary{cursor:pointer;font-weight:650}footer{max-width:1080px;margin:auto;padding:25px;color:#65758a}@media(max-width:600px){body{font-size:16px}main{padding:20px 16px}th,td{padding:8px}}@media print{body{background:white}header{background:#142235!important}pre{white-space:pre-wrap}details{break-inside:avoid}h2{break-after:avoid}}</style></head><body><header><img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4NCjwhLS0NCiAgVW1pY29tIEZyYW1ld29yaw0KICBGaWxlOiByZXNvdXJjZXMvYnJhbmQvdW1pY29tLWxvZ28tb24tZGFyay5zdmcNCg0KICBQVVJQT1NFOg0KICBTdG9yZSBzY2FsYWJsZSB1bWljb20gbG9nbyBvbiBkYXJrIGFydHdvcmsgd2l0aCBhY2Nlc3NpYmxlIG1ldGFkYXRhIGZvcg0KICBldmVyeSBzdXBwb3J0ZWQgZnJvbnRlbmQuDQoNCiAgQVVUSE9SIEFORCBPUkdBTklTQVRJT046DQogIFNhbW15IEhlZ2FiDQogIFVtaWNvbSBGb3VuZGF0aW9uDQoNCiAgTElDRU5DRToNCiAgTUlUDQotLT4NCg0KPCEtLQ0KICBUaGlzIHRyYW5zcGFyZW50IHdvcmRtYXJrIGtlZXBzIHRoZSBVbWljb20gbmFtZSByZWFkYWJsZSBvbiBkYXJrIHN1cmZhY2VzLg0KICBBcHBsaWNhdGlvbnMgc2VsZWN0IHRoaXMgdmFyaWFudCB0aHJvdWdoIHRoZSBGcmFtZXdvcmsgcmVzb3VyY2UgY2F0YWxvZ3VlLg0KLS0+DQo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyINCiAgICAgdmlld0JveD0iMCAwIDEwNjAgMjU2Ig0KICAgICByb2xlPSJpbWciDQogICAgIGFyaWEtbGFiZWxsZWRieT0idW1pY29tLWRhcmstbG9nby10aXRsZSB1bWljb20tZGFyay1sb2dvLWRlc2NyaXB0aW9uIj4NCiAgPHRpdGxlIGlkPSJ1bWljb20tZGFyay1sb2dvLXRpdGxlIj5VbWljb208L3RpdGxlPg0KICA8ZGVzYyBpZD0idW1pY29tLWRhcmstbG9nby1kZXNjcmlwdGlvbiI+VGhlIFVtaWNvbSBjb2RlIG1hcmsgYW5kIGxpZ2h0IHdvcmRtYXJrLjwvZGVzYz4NCiAgPCEtLSBUaGUgZGFyayB3b3JkbWFyayByZXVzZXMgdGhlIHN1cHBsaWVkIGNhbm9uaWNhbCBzeW1ib2wgcmF0aGVyIHRoYW4gYQ0KICAgICAgIHNlcGFyYXRlbHkgZHJhd24gYXBwcm94aW1hdGlvbiB0aGF0IGNvdWxkIGRyaWZ0IGZyb20gdGhlIGJyYW5kLiAtLT4NCiAgPGltYWdlIGhyZWY9InVtaWNvbS1pY29uLW9uLWRhcmsuc3ZnIg0KICAgICAgICAgeD0iMTAiIHk9IjEwIiB3aWR0aD0iMjM2IiBoZWlnaHQ9IjIzNiINCiAgICAgICAgIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiLz4NCiAgPCEtLSBUaGUgcGFsZSB3b3JkbWFyayBwcm92aWRlcyBjbGVhciBjb250cmFzdCB3aXRob3V0IGEgYmFja2dyb3VuZCB0aWxlLiAtLT4NCiAgPHRleHQgeD0iMjgyIiB5PSIxODQiDQogICAgICAgIGZpbGw9IiNGNEY3RkIiDQogICAgICAgIGZvbnQtZmFtaWx5PSJTZWdvZSBVSSBWYXJpYWJsZSBEaXNwbGF5LCBTZWdvZSBVSSwgSW50ZXIsIHNhbnMtc2VyaWYiDQogICAgICAgIGZvbnQtc2l6ZT0iMTY2Ig0KICAgICAgICBmb250LXdlaWdodD0iNjUwIg0KICAgICAgICBsZXR0ZXItc3BhY2luZz0iMSI+dW1pY29tPC90ZXh0Pg0KPC9zdmc+DQo=" alt="Umicom"></header><main><h1>Saving several documents in Umicom Studio</h1><p>A project often has several open source files. You might change a function in <code>notes.c</code> and write its declaration in a new <code>notes.h</code> tab. <strong>Save All</strong> lets you save both without moving between the tabs yourself.</p>
+<p>A <strong>draft</strong> is the text currently open in the editor. A <strong>saved file</strong> is the copy stored at a particular path. A draft can exist before it has a filename. Save All therefore needs to know both which document you mean and where it should be written.</p>
+<nav aria-label="Contents"><a href="#practice">Practise in Studio</a><a href="#cancel">Cancellation and failures</a><a href="#contracts">Use the Framework contracts</a><a href="#example">Complete C example</a><a href="#files">Source locations</a><a href="#checks">Check your application</a></nav>
+<h2 id="practice">1. Save a Notes source file and a new header</h2>
+<p>Open a practice Umicom Notes project. Use a folder that contains no important work. Open a named source file and make a small change, such as changing the number returned by a note-count function. Keep the modified file open.</p>
+<p>Choose <strong>File → New</strong> to create another draft. Enter the declaration <code>int CountNotes(void);</code>. This second draft has text but no destination yet.</p>
+<p>Choose <strong>File → Save All</strong>. Named documents use their existing paths. When the sequence reaches the new header, a filename chooser identifies that document. Choose a suitable local destination, such as <code>include/notes.h</code> in an existing <code>include</code> directory, and accept it. Review any replacement question carefully when selecting an existing file.</p>
+<p>Studio reports the number of completed saves. Open the files through the file manager or another reader and check their contents. Saving a header does not automatically add it to a build target, and saving source does not compile it. Build and Test remain separate commands.</p>
+<h2 id="cancel">2. Understand cancellation and partial saves</h2>
+<p>Save All processes one document at a time. If it saves <code>notes.c</code> and you then cancel the filename chooser for <code>notes.h</code>, the first file stays saved. The header stays open and unsaved. The remaining documents are not processed by that run.</p>
+<p>This is why a report may say <strong>one saved, two remaining</strong>. It is not an all-or-nothing transaction. After correcting a problem, start a fresh Save All run; documents that are already clean do not need another write.</p>
+<div class="table-wrap"><table><tr><th>Situation</th><th>What to expect</th></tr><tr><td>You select a different tab while input is being collected.</td><td>The original document identity remains the target. The new active tab is not substituted.</td></tr><tr><td>The intended document is closed or given another path.</td><td>The old request stops instead of writing to a different document or destination.</td></tr><tr><td>The same intended draft is edited before its turn.</td><td>Its latest text is saved when its own step runs. The session captures document identities, not frozen text.</td></tr><tr><td>A new document is opened after Save All starts.</td><td>That new document belongs to the next run. Completion describes the original captured list.</td></tr><tr><td>A saved file changed outside Studio.</td><td>The existing conflict-aware saver checks it. Resolve the difference rather than forcing an overwrite.</td></tr><tr><td>A document is read-only or its destination cannot be written.</td><td>The run stops with an explanation. The open draft is retained. A provider failure can leave the destination uncertain; inspect that file before retrying.</td></tr><tr><td>Another Save All or clipboard read is already pending.</td><td>A new Save All request reports Busy instead of queuing a second competing sequence.</td></tr></table></div>
+<p>The interface returns to its event loop between documents. Each file write itself is synchronous: slow storage can still delay that step. Cancel cannot interrupt or reverse a write already executing. Closing or rebinding the editing host cancels later work and prevents callbacks from reaching its old application context.</p>
+<h2 id="contracts">3. Reuse Save All in another application</h2>
+<p>The <strong>document coordinator</strong> already owns document identity, drafts, history and saving. A <strong>save session</strong> only records a list of pending document identities and its progress. It does not create another document store, write files directly or select tabs to find its destination.</p>
+<div class="table-wrap"><table><tr><th>Contract</th><th>Purpose</th><th>Use in the example</th></tr><tr><td><code>UmiDocumentSaveSessionCreate</code></td><td>Capture currently pending document identities and paths without writing. The caller owns the returned session; the coordinator is borrowed.</td><td>Create the session after both Notes drafts are ready.</td></tr><tr><td><code>UmiDocumentSaveSessionProgress</code></td><td>Copy the phase, saved/remaining counts and current document description.</td><td>Inspect the phase before taking the next step.</td></tr><tr><td><code>UmiDocumentSaveSessionStep</code></td><td>Process at most one document or pause for a filename. An OK result alone is not whole-run completion.</td><td>Save the named source, then reach NEEDS_PATH for the header.</td></tr><tr><td><code>UmiDocumentSaveSessionProvidePath</code></td><td>Supply an explicitly chosen absolute filename for the waiting untitled document. Existing Save As checks and overwrite semantics apply.</td><td>Supply a new header path inside the exercise directory.</td></tr><tr><td><code>UmiDocumentSaveSessionCancel</code></td><td>Prevent remaining steps without discarding drafts or rolling back files already saved.</td><td>Use during cleanup or when a user cancels a chooser.</td></tr><tr><td><code>UmiDocumentSaveSessionDestroy</code></td><td>Release the session and its copied metadata; do not destroy its borrowed coordinator.</td><td>Release before destroying the document services.</td></tr></table></div>
+<h3>Read the phase before continuing</h3>
+<div class="table-wrap"><table><tr><th>Phase</th><th>Next action</th></tr><tr><td>READY</td><td>Call Step once, then inspect progress again.</td></tr><tr><td>NEEDS_PATH</td><td>Ask the user for a destination, or cancel. Do not repeatedly call Step while waiting.</td></tr><tr><td>COMPLETE</td><td>Report the successful saves. The same session cannot acquire documents opened later.</td></tr><tr><td>FAILED</td><td>Keep the original status and current filename visible. Retain drafts and start a fresh run after resolving the cause.</td></tr><tr><td>CANCELLED</td><td>Stop requesting filenames and saves. Earlier completed saves remain valid.</td></tr></table></div>
+<p>Run these functions on the document owner’s thread. Keep the coordinator alive for the session lifetime, and never destroy either object from a provider callback while a call is executing. A session is not a lock against another process editing the filesystem.</p>
+<h3>Connect a GTK host</h3>
+<p>The existing editing binding supplies the coordinator. The GTK adapter adds filename collection and scheduling; an application supplies a completion callback for its own status area.</p>
+<pre><code>/* The adapter and documents already belong to the application. */
+UmiStatus status = UmiGtk4AdapterBindDocumentEditing(
+    adapter, documents, OnEditCompleted, applicationContext);
+if (status == UMI_STATUS_OK &amp;&amp; !UmiGtk4AdapterDocumentSaveAllBusy(adapter)) {
+    status = UmiGtk4AdapterDocumentSaveAll(
+        adapter, OnSaveAllCompleted, applicationContext);
+}
+/* An explicit Cancel command may call this between owner-thread steps. */
+(void)UmiGtk4AdapterCancelDocumentSaveAll(adapter);
+/* Before releasing documents or applicationContext: */
+(void)UmiGtk4AdapterBindDocumentEditing(adapter, NULL, NULL, NULL);</code></pre>
+<p>This fragment shows where an existing host connects the service. The runnable example below does not open a GTK window; it demonstrates the same document-saving sequence with its own temporary filenames. The native test fixture supplies complete adapter setup, scheduling and teardown.</p>
+<h2 id="example">4. Run the complete C example</h2>
+<p>The programme creates two temporary Notes source documents, saves them through a single session and reads both files back to verify the result. It also checks that the active document has not changed. The temporary folder is removed at the end; your existing projects are not used.</p>
+<pre><code>/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/editor_workflow/save_all.c
+ *
+ * PURPOSE:
+ *   Save the two source documents of an Umicom Notes exercise using the real
+ *   Framework coordinator. A header starts untitled; the caller supplies its
+ *   filename at the same boundary used by the graphical Save All workflow.
+ *
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+#include &quot;umicom/document/save_session.h&quot;
+#include &quot;umicom/document/local_provider.h&quot;
+#include &quot;umicom/platform/filesystem.h&quot;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#ifdef _WIN32
+#include &lt;process.h&gt;
+#define PROCESS_ID _getpid
+#else
+#include &lt;unistd.h&gt;
+#define PROCESS_ID getpid
+#endif
+#define REQUIRE(x) do { if (!(x)) { fprintf(stderr, &quot;Line %d: %s\n&quot;, __LINE__, #x); goto cleanup; } } while (0)
+
+/* The view contains the editor draft. Updating it is deliberately separate
+ * from saving: a successful edit must not imply that a file was written. */
+static UmiStatus SetDraft(UmiUiWorkbench *workbench, const char *viewId, const char *text)
+{
+    UmiUiDocumentViewSnapshot view;
+    UmiUiDocumentViewModel *views = umi_ui_workbench_documents(workbench);
+    UmiStatus status = umi_ui_document_view_model_find(views, viewId, &amp;view);
+    if (status != UMI_STATUS_OK) return status;
+    view.dirty = 1;
+    return UmiUiDocumentViewModelUpsertText(views, &amp;view, text, strlen(text));
+}
+
+/* Read back independently. A Save request is not proof that the desired bytes
+ * reached this file; the comparison below checks the observable result. */
+static int FileEquals(const char *path, const char *expected)
+{
+    char *text = NULL; size_t length = 0U;
+    UmiStatus status = umi_fs_read_text(path, &amp;text, &amp;length);
+    int same = status == UMI_STATUS_OK &amp;&amp; length == strlen(expected) &amp;&amp;
+        memcmp(text, expected, length) == 0;
+    free(text);
+    return same;
+}
+
+int main(void)
+{
+    UmiCommandRegistry *commands = NULL;
+    UmiUiWorkbench *workbench = NULL;
+    UmiDocumentStore *store = NULL;
+    UmiDocumentCoordinator *documents = NULL;
+    UmiDocumentSaveSession *session = NULL;
+    char temp[UMI_PATH_CAPACITY], root[UMI_PATH_CAPACITY], leaf[96];
+    char sourcePath[UMI_PATH_CAPACITY], headerPath[UMI_PATH_CAPACITY];
+    char sourceView[UMI_UI_ID_CAPACITY], headerView[UMI_UI_ID_CAPACITY];
+    const char *sourceText = &quot;/* Umicom Notes: count the stored notes. */\nint CountNotes(void) { return 2; }\n&quot;;
+    const char *headerText = &quot;/* Umicom Notes public declaration. */\nint CountNotes(void);\n&quot;;
+    int created = 0, result = 1;
+
+    /* Use an isolated practice directory. Never overwrite a real project. */
+    REQUIRE(umi_fs_temp_directory(temp, sizeof(temp)) == UMI_STATUS_OK);
+    REQUIRE(snprintf(leaf, sizeof(leaf), &quot;umicom-notes-save-all-%ld&quot;, (long)PROCESS_ID()) &gt; 0);
+    REQUIRE(umi_fs_join(root, sizeof(root), temp, leaf) == UMI_STATUS_OK);
+    REQUIRE(!umi_fs_exists(root));
+    REQUIRE(umi_fs_make_directories(root) == UMI_STATUS_OK); created = 1;
+    REQUIRE(umi_fs_join(sourcePath, sizeof(sourcePath), root, &quot;notes.c&quot;) == UMI_STATUS_OK);
+    REQUIRE(umi_fs_join(headerPath, sizeof(headerPath), root, &quot;notes.h&quot;) == UMI_STATUS_OK);
+    REQUIRE(umi_fs_write_text(sourcePath, &quot;int CountNotes(void) { return 1; }\n&quot;) == UMI_STATUS_OK);
+
+    REQUIRE(umi_command_registry_create(&amp;commands) == UMI_STATUS_OK);
+    REQUIRE(umi_ui_workbench_create(&quot;umicom.notes.save-all&quot;, commands, &amp;workbench) == UMI_STATUS_OK);
+    REQUIRE(umi_document_store_create(&amp;store) == UMI_STATUS_OK);
+    UmiDocumentProvider provider = umi_document_local_provider();
+    REQUIRE(umi_document_coordinator_create(store, workbench, &amp;provider, &amp;documents) == UMI_STATUS_OK);
+    REQUIRE(umi_document_coordinator_open(documents, sourcePath, sourceView, sizeof(sourceView)) == UMI_STATUS_OK);
+    REQUIRE(SetDraft(workbench, sourceView, sourceText) == UMI_STATUS_OK);
+    REQUIRE(umi_document_coordinator_new(documents, &quot;notes.h&quot;, headerView, sizeof(headerView)) == UMI_STATUS_OK);
+    REQUIRE(SetDraft(workbench, headerView, headerText) == UMI_STATUS_OK);
+
+    REQUIRE(UmiDocumentSaveSessionCreate(documents, &amp;session) == UMI_STATUS_OK);
+    UmiDocumentSaveProgress progress;
+    for (;;) {
+        REQUIRE(UmiDocumentSaveSessionProgress(session, &amp;progress) == UMI_STATUS_OK);
+        if (progress.phase == UMI_DOCUMENT_SAVE_COMPLETE) break;
+        if (progress.phase == UMI_DOCUMENT_SAVE_NEEDS_PATH) {
+            /* A GUI shows a filename chooser here. This exercise deliberately
+             * supplies its own new temporary header destination, not user data. */
+            printf(&quot;Choose a filename for %s\n&quot;, progress.display_name);
+            REQUIRE(UmiDocumentSaveSessionProvidePath(session, headerPath) == UMI_STATUS_OK);
+        } else {
+            REQUIRE(progress.phase == UMI_DOCUMENT_SAVE_READY);
+            REQUIRE(UmiDocumentSaveSessionStep(session) == UMI_STATUS_OK);
+        }
+    }
+    REQUIRE(progress.saved == 2U &amp;&amp; progress.remaining == 0U);
+    REQUIRE(FileEquals(sourcePath, sourceText));
+    REQUIRE(FileEquals(headerPath, headerText));
+    UmiDocumentWorkingCopySnapshot active;
+    REQUIRE(umi_document_coordinator_active_snapshot(documents, &amp;active) == UMI_STATUS_OK);
+    REQUIRE(strcmp(active.view_id, headerView) == 0);
+    printf(&quot;Verified %zu saved Notes source files. The active document did not change.\n&quot;, progress.saved);
+    result = 0;
+cleanup:
+    /* Cancel before release. Earlier completed saves are not rolled back. The
+     * exercise removes only the temporary directory that it created above. */
+    if (session != NULL) (void)UmiDocumentSaveSessionCancel(session);
+    UmiDocumentSaveSessionDestroy(session);
+    umi_document_coordinator_destroy(documents);
+    umi_document_store_destroy(store);
+    umi_ui_workbench_destroy(workbench);
+    umi_command_registry_destroy(commands);
+    if (created) (void)umi_fs_remove_tree(root);
+    return result;
+}
+</code></pre>
+<h3>Follow the main steps</h3>
+<p><code>SetDraft</code> changes only the editor text. <code>UmiDocumentSaveSessionCreate</code> remembers the two pending document identities. The loop then checks the current phase: READY advances one file; NEEDS_PATH supplies the header’s new destination; COMPLETE ends the sequence. A failed call goes to cleanup instead of reporting success.</p>
+<p><code>FileEquals</code> performs a separate read. This matters because a request that returns without an obvious error is not sufficient proof that the expected bytes reached the correct file. The cleanup order releases the session before the coordinator and other borrowed services.</p>
+<h3>Build from an Applications checkout</h3>
+<pre><code># Windows PowerShell, after configuring the normal development preset:
+Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; --build --preset windows-ucrt64-all-debug --target umicom-document-save-all-example --parallel 2
+&amp; &quot;.\build\windows-ucrt64-all-debug\bin\umicom-document-save-all-example.exe&quot;
+
+# Linux, after configuring the headless-debug preset:
+cmake --build build/headless-debug --target umicom-document-save-all-example --parallel 2
+./build/headless-debug/bin/umicom-document-save-all-example</code></pre>
+<p>The expected final line reports two verified source files and an unchanged active document. The example uses the real local provider and document coordinator, not a simulated Save callback.</p>
+<h2 id="files">5. Find the implementation</h2>
+<div class="table-wrap"><table><tr><th>Location</th><th>Responsibility</th></tr><tr><td><code>framework/include/umicom/document/save_session.h</code></td><td>Public phases, progress fields, ownership and session functions used by the example.</td></tr><tr><td><code>framework/src/document/save_session.c</code></td><td>Captures identities, processes steps, requests filenames and retains cancellation/failure counts. Its private CurrentTarget helper is exercised by closed, renamed and other-tab tests.</td></tr><tr><td><code>framework/src/document/coordinator.c</code></td><td>The existing conflict-aware saver and document history owner. Undo/Redo use the entry supplied by their caller; the obsolete active-tab redeclaration is retained as a comment.</td></tr><tr><td><code>framework/include/umicom/ui/gtk4/document_commands.h</code></td><td>Public native binding, Save All scheduling, cancellation and completion contracts.</td></tr><tr><td><code>framework/adapters/gtk4/document_saving_gtk4.c</code></td><td>GTK idle steps and asynchronous filename choices. Reference-counted requests and the existing editing token protect callback lifetime.</td></tr><tr><td><code>framework/adapters/gtk4/gtk4_internal.h</code> and <code>document_commands_gtk4.c</code></td><td>Private run ownership and cancellation during editing-binding teardown. Applications do not access this private state.</td></tr><tr><td><code>applications/studio/src/gui/workbench/runtime/interaction/documents.inc</code></td><td>Thin request and presentation callbacks. Shared saving remains in Framework.</td></tr><tr><td><code>applications/studio/src/gui/workbench/runtime/interaction/command_router.inc</code> and <code>runtime_helpers.inc</code></td><td>Route Save All and inspect whether the shared operation is busy. The previous named-only route remains commented beside the replacement.</td></tr><tr><td><code>runtime_types.inc</code>, <code>runtime_attach.inc</code> and <code>runtime_framework.inc</code> in the same Studio directory</td><td>Include the contracts, bind the existing coordinator and remove the binding before releasing Studio’s callback context.</td></tr><tr><td><code>framework/tests/document_saving/</code></td><td>Real-file tests for naming, cancellation, conflicts, history targeting and native scheduling.</td></tr><tr><td><code>framework/examples/editor_workflow/save_all.c</code></td><td>The complete example printed above. The website reads this source when building the lesson.</td></tr></table></div>
+<h2 id="checks">6. Check the whole operation</h2>
+<p>Repeat the two-document exercise in Studio. Record which tab was active, which files were modified and the filenames you selected. Verify the saved contents, not just the notification. Then repeat with cancellation, a read-only draft and a file that another editor changed.</p>
+<p>Use <strong>Report problem</strong> to collect the shortest useful interaction sequence and a note of the expected and actual results. Review any screenshot before sharing it; source code and paths may contain private information.</p>
+<p>For Undo/Redo, keep two documents with different edits open. Apply targeted Undo to the first while the second is active. Only the first history should change. This catches an incorrect implementation that substitutes the active tab for the document chosen by the caller.</p>
+</main><footer>Umicom Foundation</footer></body></html>
