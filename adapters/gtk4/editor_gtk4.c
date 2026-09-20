@@ -367,6 +367,13 @@ static void on_editor_end_user_action(GtkTextBuffer *buffer, gpointer user_data)
     UmiUiDocumentViewSnapshot current;
     UmiUiWorkbench *workbench;
     if (action == NULL) return;
+    if (!action->rejected && binding != NULL && binding->adapter != NULL &&
+        UmiGtk4EditorHasDocument(binding->adapter, binding->view_id) && !binding->adapter->applying_document_state) {
+        UmiStatus syncStatus = UmiGtk4EditorSynchronise(binding->adapter, binding->view_id);
+        if (syncStatus != UMI_STATUS_OK && binding->adapter->status_label != NULL)
+            gtk_label_set_text(GTK_LABEL(binding->adapter->status_label),
+                "The draft is open, but its history group could not be recorded.");
+    }
     if (!action->rejected || binding == NULL || binding->adapter == NULL ||
         binding->adapter->shell == NULL || action->text == NULL) {
         editor_action_free(action);
@@ -503,6 +510,60 @@ static void on_editor_buffer_changed(GtkTextBuffer *text_buffer,
     gtk_label_set_text(GTK_LABEL(binding->adapter->status_label),
                        "Modified — use File / Save to persist the document");
     g_free(text);
+}
+
+/* Source-editor shortcuts and clipboard actions share the same coordinator
+ * as Edit menu commands. Other text fields keep GTK's normal editing. */
+static int EditorHasCommandOwner(UmiGtk4EditorBinding *binding)
+{
+    return binding != NULL && binding->adapter != NULL &&
+        UmiGtk4EditorHasDocument(binding->adapter, binding->view_id) &&
+        !binding->adapter->applying_document_state;
+}
+
+static void EditorClipboardAction(GtkTextView *view, gpointer data, const char *signal, const char *command)
+{
+    UmiGtk4EditorBinding *binding = data;
+    if (!EditorHasCommandOwner(binding)) return;
+    g_signal_stop_emission_by_name(view, signal);
+    (void)UmiGtk4EditorCommandForView(binding->adapter, command, binding->view_id);
+}
+static void EditorCopy(GtkTextView *view, gpointer data)
+{ EditorClipboardAction(view, data, "copy-clipboard", "edit.copy"); }
+static void EditorCut(GtkTextView *view, gpointer data)
+{ EditorClipboardAction(view, data, "cut-clipboard", "edit.cut"); }
+static void EditorPaste(GtkTextView *view, gpointer data)
+{ EditorClipboardAction(view, data, "paste-clipboard", "edit.paste"); }
+static void EditorUndo(GtkTextBuffer *buffer, gpointer data)
+{
+    UmiGtk4EditorBinding *binding = data;
+    if (!EditorHasCommandOwner(binding)) return;
+    g_signal_stop_emission_by_name(buffer, "undo");
+    (void)UmiGtk4EditorCommandForView(binding->adapter, "edit.undo", binding->view_id);
+}
+static void EditorRedo(GtkTextBuffer *buffer, gpointer data)
+{
+    UmiGtk4EditorBinding *binding = data;
+    if (!EditorHasCommandOwner(binding)) return;
+    g_signal_stop_emission_by_name(buffer, "redo");
+    (void)UmiGtk4EditorCommandForView(binding->adapter, "edit.redo", binding->view_id);
+}
+static gboolean EditorHistoryKey(GtkEventControllerKey *controller, guint keyval,
+    guint keycode, GdkModifierType state, gpointer data)
+{
+    UmiGtk4EditorBinding *binding = data;
+    (void)controller; (void)keycode;
+    if (!EditorHasCommandOwner(binding)) return FALSE;
+    GdkModifierType modifiers = state & (GDK_CONTROL_MASK | GDK_SHIFT_MASK | GDK_ALT_MASK | GDK_SUPER_MASK);
+    const char *command = NULL;
+    guint key = gdk_keyval_to_lower(keyval);
+    if (modifiers == GDK_CONTROL_MASK && key == GDK_KEY_z) command = "edit.undo";
+    if ((modifiers == GDK_CONTROL_MASK && key == GDK_KEY_y) ||
+        (modifiers == (GDK_CONTROL_MASK | GDK_SHIFT_MASK) && key == GDK_KEY_z)) command = "edit.redo";
+    if (modifiers == GDK_CONTROL_MASK && key == GDK_KEY_a) command = "edit.select-all";
+    if (command == NULL) return FALSE;
+    (void)UmiGtk4EditorCommandForView(binding->adapter, command, binding->view_id);
+    return TRUE;
 }
 
 /*
@@ -1026,6 +1087,21 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
                 editor_binding_new(adapter, document.view_id), editor_binding_free, 0);
             g_signal_connect_data(text_buffer, "end-user-action", G_CALLBACK(on_editor_end_user_action),
                 editor_binding_new(adapter, document.view_id), editor_binding_free, 0);
+            g_signal_connect_data(view, "copy-clipboard", G_CALLBACK(EditorCopy),
+                editor_binding_new(adapter, document.view_id), editor_binding_free, 0);
+            g_signal_connect_data(view, "cut-clipboard", G_CALLBACK(EditorCut),
+                editor_binding_new(adapter, document.view_id), editor_binding_free, 0);
+            g_signal_connect_data(view, "paste-clipboard", G_CALLBACK(EditorPaste),
+                editor_binding_new(adapter, document.view_id), editor_binding_free, 0);
+            g_signal_connect_data(text_buffer, "undo", G_CALLBACK(EditorUndo),
+                editor_binding_new(adapter, document.view_id), editor_binding_free, 0);
+            g_signal_connect_data(text_buffer, "redo", G_CALLBACK(EditorRedo),
+                editor_binding_new(adapter, document.view_id), editor_binding_free, 0);
+            GtkEventController *historyKeys = gtk_event_controller_key_new();
+            gtk_event_controller_set_propagation_phase(historyKeys, GTK_PHASE_CAPTURE);
+            g_signal_connect_data(historyKeys, "key-pressed", G_CALLBACK(EditorHistoryKey),
+                editor_binding_new(adapter, document.view_id), editor_binding_free, 0);
+            gtk_widget_add_controller(view, historyKeys);
             }
             if (new_page) {
                 page_index = gtk_notebook_append_page(GTK_NOTEBOOK(notebook), scroll, tab_box);

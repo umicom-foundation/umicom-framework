@@ -111,6 +111,7 @@ void umi_gtk4_adapter_destroy(UmiGtk4Adapter *adapter)
      * tree. Existing signal closures can therefore never call product
      * composition while window teardown is in progress.
      */
+    (void)UmiGtk4AdapterBindDocumentEditing(adapter, NULL, NULL, NULL);
     umi_gtk4_context_interaction_unbind(adapter);
     /* Retained text buffers and retired tab controls must not borrow this
      * adapter after its owning application has been destroyed. */

@@ -168,6 +168,14 @@ UmiSiteEscape("${_example}" UMICOM_SITE_COMMAND_FEEDBACK_EXAMPLE)
 configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/COMMAND_FEEDBACK.html"
     "${UMICOM_SITE_OUTPUT}/COMMAND_FEEDBACK.html" COPYONLY)
 
+# Keep the editing walkthrough tied to the actual compiled example.
+set(_editing_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/editor_workflow/edit_commands.c")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_editing_example}")
+file(READ "${_editing_example}" _example)
+UmiSiteEscape("${_example}" UMICOM_SITE_EDIT_COMMANDS_EXAMPLE)
+configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/EDITING_DOCUMENTS.html"
+    "${UMICOM_SITE_OUTPUT}/EDITING_DOCUMENTS.html" COPYONLY)
+
 # This is a file inventory, not a second C parser or a runtime module registry.
 file(GLOB_RECURSE _headers CONFIGURE_DEPENDS LIST_DIRECTORIES FALSE
     RELATIVE "${UMICOM_SITE_FRAMEWORK_ROOT}" "${UMICOM_SITE_FRAMEWORK_ROOT}/include/umicom/*.h")
@@ -241,6 +249,8 @@ configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/READIN
     "${UMICOM_SITE_OUTPUT}/studio/READING_BUILD_ERRORS.html" COPYONLY)
 configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/docs/getting-started/BUILDING_STUDIO.html"
     "${UMICOM_SITE_OUTPUT}/build-and-publish.html" COPYONLY)
+configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/EDIT_COMMANDS.html"
+    "${UMICOM_SITE_OUTPUT}/studio/EDIT_COMMANDS.html" COPYONLY)
 file(WRITE "${UMICOM_SITE_OUTPUT}/.nojekyll" "")
 add_custom_target(umicom-website
     COMMAND "${CMAKE_COMMAND}" -E echo "Public site: ${UMICOM_SITE_OUTPUT}/index.html"

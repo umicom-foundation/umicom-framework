@@ -14,6 +14,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/document/coordinator.h"
+#include "umicom/document/edit.h"
+#include "umicom/document/text_encoding.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,6 +43,12 @@ typedef struct UmiDocumentCoordinatorEntry {
     char *redo[UMI_DOCUMENT_COORDINATOR_HISTORY_CAPACITY];
     size_t redo_count;
     int pristine_virtual;
+    /* Cache only the comparison needed by menu availability. Selection/focus
+     * refreshes must not repeatedly copy an eight-megabyte document. */
+    uint64_t edit_text_revision;
+    uint64_t edit_store_revision;
+    int edit_pending;
+    int edit_cache_valid;
 } UmiDocumentCoordinatorEntry;
 
 struct UmiDocumentCoordinator {
@@ -929,7 +937,7 @@ UmiStatus umi_document_coordinator_close_active(UmiDocumentCoordinator *coordina
 
 /* Provide the apply history operation used by this module and its client applications. */
 static UmiStatus apply_history(UmiDocumentCoordinator *coordinator,
-                               int redo_direction)
+                               int redo_direction, size_t index)
 {
     size_t index = active_index(coordinator);
     UmiDocumentCoordinatorEntry *entry;
@@ -969,6 +977,16 @@ static UmiStatus apply_history(UmiDocumentCoordinator *coordinator,
         if (view.cursor_offset > targetLength) view.cursor_offset = targetLength;
         if (view.selection_length > targetLength - view.cursor_offset)
             view.selection_length = targetLength - view.cursor_offset;
+        /* A byte position from the newer text may land inside an older UTF-8
+         * character. Keep the restored selection on complete characters. */
+        size_t selectionEnd = view.cursor_offset + view.selection_length;
+        while (view.cursor_offset > 0U && view.cursor_offset < targetLength &&
+            ((unsigned char)target[view.cursor_offset] & 0xc0U) == 0x80U)
+            --view.cursor_offset;
+        while (selectionEnd > view.cursor_offset && selectionEnd < targetLength &&
+            ((unsigned char)target[selectionEnd] & 0xc0U) == 0x80U)
+            --selectionEnd;
+        view.selection_length = selectionEnd - view.cursor_offset;
         status = UmiUiDocumentViewModelUpsertText(umi_ui_workbench_documents(coordinator->workbench),
             &view, target, targetLength);
         free(target);
@@ -983,7 +1001,7 @@ static UmiStatus apply_history(UmiDocumentCoordinator *coordinator,
  */
 UmiStatus umi_document_coordinator_undo(UmiDocumentCoordinator *coordinator)
 {
-    return coordinator != NULL ? apply_history(coordinator, 0)
+    return coordinator != NULL ? apply_history(coordinator, 0, active_index(coordinator))
                                : UMI_STATUS_INVALID_ARGUMENT;
 }
 
@@ -993,7 +1011,7 @@ UmiStatus umi_document_coordinator_undo(UmiDocumentCoordinator *coordinator)
  */
 UmiStatus umi_document_coordinator_redo(UmiDocumentCoordinator *coordinator)
 {
-    return coordinator != NULL ? apply_history(coordinator, 1)
+    return coordinator != NULL ? apply_history(coordinator, 1, active_index(coordinator))
                                : UMI_STATUS_INVALID_ARGUMENT;
 }
 
@@ -1721,4 +1739,234 @@ UmiStatus UmiDocumentCoordinatorApplyReload(UmiDocumentCoordinator *coordinator,
     status = UmiUiDocumentViewModelUpsertText(views, &view, plan->incoming.text, length);
     plan->consumed = 1;
     return status;
+}
+
+
+/* Document editing shares CommitViewText and the original history stacks.
+ * A plan is an immutable capture, not another document model. */
+struct UmiDocumentEditPlan {
+    const UmiDocumentCoordinator *owner;
+    UmiDocumentSnapshot stored;
+    UmiUiDocumentTextInfo textInfo;
+    UmiUiDocumentViewSnapshot view;
+    char *text;
+    size_t length;
+    int consumed;
+};
+
+static size_t EditDocumentIndex(const UmiDocumentCoordinator *coordinator,
+    UmiDocumentId documentId)
+{
+    for (size_t index = 0U; index < coordinator->count; ++index)
+        if (coordinator->entries[index].document_id == documentId) return index;
+    return SIZE_MAX;
+}
+
+UmiStatus UmiDocumentEditCommandFromId(const char *commandId,
+    UmiDocumentEditCommand *outCommand)
+{
+    static const char *const names[] = {"edit.undo", "edit.redo", "edit.cut",
+        "edit.copy", "edit.paste", "edit.select-all", "edit.delete"};
+    if (commandId == NULL || outCommand == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t index = 0U; index < sizeof names / sizeof names[0]; ++index) {
+        if (strcmp(commandId, names[index]) == 0) {
+            *outCommand = (UmiDocumentEditCommand)(index + 1U);
+            return UMI_STATUS_OK;
+        }
+    }
+    return UMI_STATUS_NOT_FOUND;
+}
+
+void UmiDocumentEditPlanDestroy(UmiDocumentEditPlan *plan)
+{
+    if (plan == NULL) return;
+    UmiUiDocumentViewModelFreeText(plan->text);
+    free(plan);
+}
+
+/* Selection offsets are byte positions. Neither endpoint may split a UTF-8
+ * character. A view with invalid metadata must fail before memcpy or editing. */
+static int EditSelectionValid(const UmiUiDocumentViewSnapshot *view,
+    const char *text, size_t length)
+{
+    if (view->cursor_offset > length ||
+        view->selection_length > length - view->cursor_offset) return 0;
+    size_t end = view->cursor_offset + view->selection_length;
+    return (view->cursor_offset == length ||
+            ((unsigned char)text[view->cursor_offset] & 0xc0U) != 0x80U) &&
+        (end == length || ((unsigned char)text[end] & 0xc0U) != 0x80U);
+}
+
+UmiStatus UmiDocumentCoordinatorPrepareEdit(UmiDocumentCoordinator *coordinator,
+    UmiDocumentId documentId, UmiDocumentEditPlan **outPlan)
+{
+    if (outPlan != NULL) *outPlan = NULL;
+    if (coordinator == NULL || documentId == 0U || outPlan == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index = EditDocumentIndex(coordinator, documentId);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    UmiDocumentEditPlan *plan = calloc(1U, sizeof *plan);
+    if (plan == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    plan->owner = coordinator;
+    UmiUiDocumentViewModel *views = umi_ui_workbench_documents(coordinator->workbench);
+    UmiStatus status = umi_document_store_snapshot(coordinator->store, documentId, &plan->stored);
+    if (status == UMI_STATUS_OK) status = umi_ui_document_view_model_find(views,
+        coordinator->entries[index].view_id, &plan->view);
+    if (status == UMI_STATUS_OK) status = UmiUiDocumentViewModelTextInfo(views,
+        plan->view.view_id, &plan->textInfo);
+    if (status == UMI_STATUS_OK) status = UmiUiDocumentViewModelCopyText(views,
+        plan->view.view_id, &plan->text, &plan->length);
+    if (status == UMI_STATUS_OK && !EditSelectionValid(&plan->view, plan->text, plan->length))
+        status = UMI_STATUS_INVALID_STATE;
+    if (status != UMI_STATUS_OK) { UmiDocumentEditPlanDestroy(plan); return status; }
+    *outPlan = plan;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiDocumentEditPlanSelection(const UmiDocumentEditPlan *plan,
+    const char **outText, size_t *outBytes)
+{
+    if (outText != NULL) *outText = NULL;
+    if (outBytes != NULL) *outBytes = 0U;
+    if (plan == NULL || outText == NULL || outBytes == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (plan->consumed) return UMI_STATUS_INVALID_STATE;
+    *outText = plan->text + plan->view.cursor_offset;
+    *outBytes = plan->view.selection_length;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiDocumentCoordinatorGetEditState(UmiDocumentCoordinator *coordinator,
+    UmiDocumentId documentId, UmiDocumentEditState *outState)
+{
+    if (coordinator == NULL || documentId == 0U || outState == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index = EditDocumentIndex(coordinator, documentId);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    UmiDocumentCoordinatorEntry *entry = &coordinator->entries[index];
+    UmiUiDocumentViewModel *views = umi_ui_workbench_documents(coordinator->workbench);
+    UmiUiDocumentViewSnapshot view;
+    UmiUiDocumentTextInfo info;
+    UmiDocumentSnapshot storedInfo;
+    UmiStatus status = umi_ui_document_view_model_find(views, entry->view_id, &view);
+    if (status == UMI_STATUS_OK) status = UmiUiDocumentViewModelTextInfo(views, entry->view_id, &info);
+    if (status == UMI_STATUS_OK) status = umi_document_store_snapshot(coordinator->store, documentId, &storedInfo);
+    if (status != UMI_STATUS_OK) return status;
+    if (view.cursor_offset > info.byte_count || view.selection_length > info.byte_count - view.cursor_offset)
+        return UMI_STATUS_INVALID_STATE;
+    if (!entry->edit_cache_valid || entry->edit_text_revision != info.text_revision ||
+        entry->edit_store_revision != storedInfo.revision) {
+        char *stored = NULL, *draft = NULL;
+        size_t storedLength = 0U, draftLength = 0U;
+        status = copy_store_text(coordinator, index, &stored, &storedLength);
+        if (status == UMI_STATUS_OK) status = UmiUiDocumentViewModelCopyText(views, entry->view_id, &draft, &draftLength);
+        if (status == UMI_STATUS_OK) {
+            entry->edit_pending = storedLength != draftLength || memcmp(stored, draft, storedLength) != 0;
+            entry->edit_text_revision = info.text_revision;
+            entry->edit_store_revision = storedInfo.revision;
+            entry->edit_cache_valid = 1;
+        }
+        umi_document_store_free_text(stored);
+        UmiUiDocumentViewModelFreeText(draft);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    UmiDocumentEditState state = {0};
+    state.document_id = documentId;
+    state.text_bytes = info.byte_count;
+    state.selection_offset = view.cursor_offset;
+    state.selection_bytes = view.selection_length;
+    state.read_only = view.read_only;
+    state.can_undo = !state.read_only && (entry->edit_pending || entry->undo_count != 0U);
+    state.can_redo = !state.read_only && !entry->edit_pending && entry->redo_count != 0U;
+    *outState = state;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiDocumentCoordinatorUndo(UmiDocumentCoordinator *coordinator, UmiDocumentId documentId)
+{
+    if (coordinator == NULL || documentId == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    return apply_history(coordinator, 0, EditDocumentIndex(coordinator, documentId));
+}
+
+UmiStatus UmiDocumentCoordinatorRedo(UmiDocumentCoordinator *coordinator, UmiDocumentId documentId)
+{
+    if (coordinator == NULL || documentId == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    return apply_history(coordinator, 1, EditDocumentIndex(coordinator, documentId));
+}
+
+UmiStatus UmiDocumentCoordinatorSelectAll(UmiDocumentCoordinator *coordinator, UmiDocumentId documentId)
+{
+    if (coordinator == NULL || documentId == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index = EditDocumentIndex(coordinator, documentId);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    UmiUiDocumentViewModel *views = umi_ui_workbench_documents(coordinator->workbench);
+    UmiUiDocumentViewSnapshot view;
+    UmiUiDocumentTextInfo text;
+    UmiStatus status = umi_ui_document_view_model_find(views, coordinator->entries[index].view_id, &view);
+    if (status == UMI_STATUS_OK) status = UmiUiDocumentViewModelTextInfo(views, view.view_id, &text);
+    if (status == UMI_STATUS_OK) {
+        view.cursor_offset = 0U;
+        view.selection_length = text.byte_count;
+        status = umi_ui_document_view_model_upsert(views, &view);
+    }
+    return status;
+}
+
+UmiStatus UmiDocumentCoordinatorApplyEdit(UmiDocumentCoordinator *coordinator,
+    UmiDocumentEditPlan *plan, const char *replacement, size_t bytes)
+{
+    if (coordinator == NULL || plan == NULL || replacement == NULL || plan->owner != coordinator)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (plan->consumed) return UMI_STATUS_INVALID_STATE;
+    if (bytes > UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (memchr(replacement, '\0', bytes) != NULL ||
+        !umi_document_utf8_validate((const unsigned char *)replacement, bytes, NULL))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index = EditDocumentIndex(coordinator, plan->stored.document_id);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    UmiUiDocumentViewModel *views = umi_ui_workbench_documents(coordinator->workbench);
+    UmiUiDocumentViewSnapshot current;
+    UmiUiDocumentTextInfo textInfo;
+    UmiDocumentSnapshot stored;
+    UmiStatus status = umi_document_store_snapshot(coordinator->store, plan->stored.document_id, &stored);
+    if (status == UMI_STATUS_OK) status = umi_ui_document_view_model_find(views,
+        coordinator->entries[index].view_id, &current);
+    if (status == UMI_STATUS_OK) status = UmiUiDocumentViewModelTextInfo(views, current.view_id, &textInfo);
+    if (status != UMI_STATUS_OK) return status;
+    if (current.read_only) return UMI_STATUS_PERMISSION_DENIED;
+    if (stored.revision != plan->stored.revision || stored.saved_revision != plan->stored.saved_revision ||
+        stored.has_path != plan->stored.has_path || strcmp(stored.path, plan->stored.path) != 0 ||
+        textInfo.text_revision != plan->textInfo.text_revision ||
+        strcmp(current.view_id, plan->view.view_id) != 0 ||
+        strcmp(current.document_id, plan->view.document_id) != 0 ||
+        strcmp(current.uri, plan->view.uri) != 0 ||
+        current.cursor_offset != plan->view.cursor_offset ||
+        current.selection_length != plan->view.selection_length)
+        return UMI_STATUS_INVALID_STATE;
+    size_t remaining = plan->length - plan->view.selection_length;
+    if (bytes > UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES - remaining) return UMI_STATUS_CAPACITY_EXCEEDED;
+    size_t newLength = remaining + bytes;
+    char *newText = malloc(newLength + 1U);
+    if (newText == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    size_t offset = plan->view.cursor_offset;
+    memcpy(newText, plan->text, offset);
+    memcpy(newText + offset, replacement, bytes);
+    size_t tail = offset + plan->view.selection_length;
+    memcpy(newText + offset + bytes, plan->text + tail, plan->length - tail);
+    newText[newLength] = '\0';
+    UmiUiDocumentViewSnapshot after = current;
+    after.cursor_offset = offset + bytes;
+    after.selection_length = 0U;
+    after.preview = 0;
+    status = CommitViewText(coordinator, index, &current, &after,
+        plan->text, plan->length, newText, newLength);
+    free(newText);
+    if (status == UMI_STATUS_OK) plan->consumed = 1;
+    return status;
+}
+
+UmiStatus UmiDocumentCoordinatorSyncDocument(UmiDocumentCoordinator *coordinator, UmiDocumentId documentId)
+{
+    if (coordinator == NULL || documentId == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index = EditDocumentIndex(coordinator, documentId);
+    return index == SIZE_MAX ? UMI_STATUS_NOT_FOUND : sync_index(coordinator, index);
 }

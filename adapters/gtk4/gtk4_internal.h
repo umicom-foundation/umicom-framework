@@ -26,8 +26,17 @@
 
 #include "umicom/ui/gtk4.h"
 #include "umicom/ui/view_presentation.h"
+#include "umicom/ui/gtk4/document_commands.h"
 
 struct UmiGtk4Adapter {
+    /* Borrowed document owner; the token invalidates outstanding clipboard
+     * completions before native or application services are destroyed. */
+    UmiDocumentCoordinator *edit_coordinator;
+    GObject *edit_lifetime;
+    GCancellable *edit_cancel;
+    gulong edit_window_destroy_handler;
+    UmiGtk4DocumentEditResultFn edit_completed;
+    void *edit_context;
     GtkApplication *application;
     GtkWindow *window;
     GtkWidget *root_box;
@@ -117,6 +126,11 @@ struct UmiGtk4Adapter {
  * Provide the gtk4 clear box operation used by this module and its client applications.
  */
 void umi_gtk4_clear_box(GtkWidget *box);
+/* Native editor callbacks use their own stable view, not the currently active tab. */
+UmiStatus UmiGtk4EditorCommandForView(UmiGtk4Adapter *adapter,
+    const char *commandId, const char *viewId);
+int UmiGtk4EditorHasDocument(UmiGtk4Adapter *adapter, const char *viewId);
+UmiStatus UmiGtk4EditorSynchronise(UmiGtk4Adapter *adapter, const char *viewId);
 /**
  * Provide the gtk4 build shell operation used by this module and its client applications.
  */

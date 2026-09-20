@@ -12,7 +12,11 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#ifdef NDEBUG
+#undef NDEBUG /* Keep acceptance assertions active in Release builds too. */
+#endif
 #include <assert.h>
+#include <string.h>
 
 #include "umicom/application_shell/profiles/edit_menu.h"
 
@@ -28,7 +32,7 @@ int main(void)
     UmiApplicationShellContribution contribution;
 
     assert(profile != NULL);
-    assert(profile->contribution_count == 9U);
+    assert(profile->contribution_count == 11U);
     assert(umi_application_shell_profile_validate(profile) == UMI_STATUS_OK);
 
     assert(umi_application_shell_registry_create(&registry) == UMI_STATUS_OK);
@@ -40,6 +44,18 @@ int main(void)
         registry,
         "umicom.shell.edit-menu.root",
         &contribution) == UMI_STATUS_OK);
+
+    /* Adding selection commands must retain every existing editing/search route. */
+    static const char *required[] = {
+        "edit.undo", "edit.redo", "edit.cut", "edit.copy", "edit.paste",
+        "edit.select-all", "edit.delete", "search.find", "search.replace", "search.workspace"
+    };
+    for (size_t index = 0U; index < sizeof(required) / sizeof(required[0]); ++index) {
+        size_t matches = 0U;
+        for (size_t item = 0U; item < profile->contribution_count; ++item)
+            if (strcmp(profile->contributions[item].command_id, required[index]) == 0) ++matches;
+        assert(matches == 1U);
+    }
 
     umi_application_shell_registry_destroy(registry);
     return 0;
