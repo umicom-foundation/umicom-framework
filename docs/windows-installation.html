@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Installing and opening Umicom applications on Windows</title>
+<style>
+:root{color-scheme:light;--ink:#17283a;--muted:#536477;--line:#d7e1eb;--accent:#165f83;--paper:#fff;--wash:#f1f5f9}
+*{box-sizing:border-box}body{margin:0;background:var(--wash);color:var(--ink);font:17px/1.65 system-ui,"Segoe UI",sans-serif}
+header{background:#152b40;color:white;padding:3rem max(1.5rem,calc((100vw - 1000px)/2)) 2.6rem}header p{max-width:780px;color:#dce8f1}header .eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:.8rem}
+h1{font-size:clamp(2rem,4vw,3rem);line-height:1.15;margin:.6rem 0 1rem}h2{font-size:1.6rem;margin-top:2.6rem;line-height:1.3}h3{margin-top:1.5rem;font-size:1.15rem}
+main{max-width:1064px;margin:0 auto;padding:1.3rem 2rem 4rem;background:var(--paper)}nav{padding:1.2rem;border-bottom:1px solid var(--line)}nav a{display:inline-block;margin:.2rem 1rem .2rem 0;color:var(--accent)}a{color:var(--accent)}
+.callout{padding:1rem 1.3rem;border-left:4px solid var(--accent);background:var(--wash);margin:1.4rem 0}.note{border-left-color:#916721;background:#fcf7e9}code{font-family:Consolas,monospace;font-size:.92em;overflow-wrap:anywhere}pre{padding:1rem;background:#eef3f8;overflow:auto;line-height:1.5}pre code{overflow-wrap:normal}table{width:100%;border-collapse:collapse;margin:1.3rem 0}th,td{text-align:left;padding:.8rem;border-bottom:1px solid var(--line);vertical-align:top}th{background:var(--wash)}.step{font-size:.83rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)}footer{border-top:1px solid var(--line);margin-top:3rem;padding-top:1rem;font-size:.87rem;color:var(--muted)}@media(max-width:650px){main{padding:1rem 1.2rem 3rem}th,td{padding:.6rem;font-size:.9rem}}@media print{body,main{background:white}header{background:white;color:var(--ink);padding:0}header p{color:var(--ink)}main{padding:0}nav{display:none}h2,h3{break-after:avoid}pre,.callout,tr{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header><div class="eyebrow">Umicom Foundation · Windows guide</div><h1>Installing and opening<br>Umicom applications</h1><p>Choose the applications you need, choose their destination, and open them from Windows. This guide explains both the setup application and the portable package.</p></header>
+<main>
+<nav aria-label="On this page"><a href="#before">Before you start</a><a href="#setup">Using setup</a><a href="#open">Opening applications</a><a href="#portable">Portable package</a><a href="#remove">Uninstalling</a><a href="#help">Troubleshooting</a><a href="#developers">For developers</a></nav>
+<section id="before"><h2>Before you start</h2>
+<p>The Windows distribution contains <code>Umicom-Setup.exe</code>. This is the installer: it copies the selected applications and their shared runtime into the destination you choose. The runtime includes the supporting libraries and resource files that the applications need when they start.</p>
+<p>You do not install GTK, GLib, MSYS2 or a compiler just to open a correctly prepared Umicom package. Building software inside Umicom Studio IDE is a different task: a development project may need its own compiler, debugger or SDK.</p>
+<div class="callout"><strong>Current installation scope.</strong> This setup installs 64-bit Windows applications for your current Windows user account. It accepts a new or empty folder on a local drive that you can write to. It does not request administrator privileges or change your system PATH.</div>
+<p>Obtain the package from a trusted distributor. Check its publisher and any supplied checksum before opening it. Public releases should be signed by their distributor. An unsigned development build may produce a Windows security warning; do not disable Windows security protections to install an unknown package.</p>
+<p>Keep your projects, financial records and other personal documents outside the application installation folder. For example, application software could live in <code>D:\Umicom</code>, while project files live in <code>Documents\Umicom Projects</code>.</p>
+</section>
+<section id="setup"><h2>Using the setup application</h2>
+<h3><span class="step">Step 1</span><br>Open the installer</h3>
+<p>Double-click <code>Umicom-Setup.exe</code> in File Explorer. Read the welcome page and continue to the licence page. The installer itself uses native Windows controls and does not need the GTK runtime that it is about to install.</p>
+<h3><span class="step">Step 2</span><br>Choose the applications</h3>
+<p>The components page lists the graphical applications included in this particular package. Tick the applications you need. For example, a package may include Umicom Studio IDE, Umicom Trader, Umicom Bank and Umicom Desk.</p>
+<p>Select <strong>Install all applications</strong> in the installation-type list to select every application included in that package. Change individual checkboxes to make a custom selection. At least one application must remain selected.</p>
+<p>“All” means all applications included in the package, not every product ever proposed for Umicom. A product that was not enabled and built when the package was prepared is not offered as an installable application. This prevents a checkbox from promising software that the package does not contain.</p>
+<p>The shared runtime is required and is selected automatically. You do not need to identify or select individual DLL files. Required command-line helper programs, when included by the distributor, are installed with the runtime rather than appearing as separate desktop applications.</p>
+<h3><span class="step">Step 3</span><br>Choose the destination</h3>
+<p>Use the destination page to type a folder path or choose one with the browse control. The default is the <code>Programs\Umicom</code> directory inside your Windows account’s local application-data folder. A writable local path such as <code>D:\Umicom</code> is another example.</p>
+<p>Choose a new or empty directory. Setup refuses to overwrite a directory containing existing files. It also rejects drive roots, network locations, a destination that is a file, and a destination that is itself a junction or symbolic link. An unusually long destination can be rejected so that the complete installed paths remain within the installer’s supported path limit.</p>
+<p>A location such as <code>C:\Program Files</code> normally needs permissions beyond an ordinary user installation. Choose a location your current account can write to instead. This installer does not automatically elevate itself.</p>
+<h3><span class="step">Step 4</span><br>Choose the shortcuts</h3>
+<p>The <strong>Application shortcuts</strong> page has two independent options:</p>
+<table><thead><tr><th>Option</th><th>What it does</th><th>Default</th></tr></thead><tbody><tr><td>Create desktop shortcuts</td><td>Adds a desktop shortcut for each selected application.</td><td>Off</td></tr><tr><td>Add applications to the Windows Start menu</td><td>Adds the selected applications under <strong>Umicom Applications</strong> in your Start menu.</td><td>On</td></tr></tbody></table>
+<p>Neither option changes your PATH. Existing shortcuts with the same names are not silently replaced. Setup reports a warning when a requested shortcut could not be created or already existed; the installed executable can still be opened from the installation folder.</p>
+<h3><span class="step">Step 5</span><br>Install and finish</h3>
+<p>Start installation and allow the progress page to finish. Setup copies the shared runtime and the selected applications, records the files it owns, creates the requested shortcuts, and registers an uninstaller with Windows.</p>
+<p>Read any error shown on the progress page. Do not treat a failed or cancelled installation as complete. Setup attempts to remove files written by an interrupted installation. If a file cannot be removed, it retains the installation receipt and provides instructions for completing cleanup.</p>
+</section>
+<section id="open"><h2>Opening an installed application</h2>
+<p>Open the Start menu, find <strong>Umicom Applications</strong>, and select the application. A desktop shortcut works in the same way. No terminal command is needed.</p>
+<p>When shortcuts were not selected, open the installation’s <code>bin</code> folder in File Explorer and double-click the executable. For Studio, the executable is <code>umicom-studio-ide.exe</code>.</p>
+<pre><code>D:\Umicom\
+  bin\
+    umicom-studio-ide.exe
+    ...other selected executables and runtime DLLs...
+  lib\
+    ...runtime modules...
+  share\
+    ...icons, schemas, licences and Framework resources...
+  installation.ini
+  Uninstall-Umicom.exe</code></pre>
+<p>This is one application installation, even though it contains multiple files. Do not move just the executable to your desktop. A shortcut points to the executable without separating it from its runtime. Do not edit <code>installation.ini</code>; it is the ownership receipt used by setup and the uninstaller.</p>
+</section>
+<section id="portable"><h2>Using the portable package</h2>
+<p>A distributor may also provide <code>Umicom-Portable.zip</code>. Extract the <em>entire</em> archive into a new folder, open its <code>bin</code> directory, and double-click an application.</p>
+<p>The portable package contains every application chosen by the distributor at build time. It does not show the installer’s component-selection pages, create shortcuts, or register an uninstaller. To relocate it, close the applications and move the entire extracted folder, including <code>bin</code>, <code>lib</code> and <code>share</code>.</p>
+<p>Do not run an executable from inside an archive preview. Windows may extract only that executable, leaving its supporting DLLs and resources behind.</p>
+</section>
+<section id="remove"><h2>Uninstalling or replacing an installation</h2>
+<p>Close all running Umicom applications. In Windows Settings, open <strong>Apps → Installed apps</strong>, find <strong>Umicom Applications</strong>, and choose <strong>Uninstall</strong>. The exact Settings labels can differ between Windows releases. You can also open <code>Uninstall-Umicom.exe</code> in the installation folder.</p>
+<p>The uninstaller uses the receipt to remove the application files and shortcuts it owns. It does not recursively erase an arbitrary destination folder. Unrecognised extra files can cause the folder to remain after uninstalling. Keep your own documents elsewhere nevertheless: an installed application file that you manually replace is still part of the package’s ownership list.</p>
+<p>If Windows reports files still in use, close the applications and run the uninstaller again. The receipt is retained when removal cannot be completed.</p>
+<div class="callout note"><strong>Replacing a release or changing the installed selection.</strong> This implementation supports a fresh installation, not in-place upgrades, repair, or “add/remove components” maintenance. Uninstall the existing registered installation first, then run the new package and choose the applications again. Back up any personal files before changing an installation.</div>
+</section>
+<section id="help"><h2>Understanding common problems</h2>
+<h3>A DLL is missing</h3><p>An error naming a file such as <code>libglib-2.0-0.dll</code> means Windows could not load a required runtime library. Confirm that you extracted or installed the complete package and did not copy only the executable. Reinstall a complete package from its trusted distributor. Do not download individual DLLs from unrelated DLL-download sites.</p>
+<h3>The private runtime could not be prepared</h3><p>This message comes from Umicom’s resource bootstrap rather than the Windows DLL loader. Check that the installation still contains its <code>share</code> and <code>lib</code> directories and that your Windows temporary folder is writable. The bootstrap uses a temporary, process-specific image-loader cache; it does not need to write into the installed application directory.</p>
+<h3>The folder is not empty</h3><p>Choose a different new folder. Do not remove unfamiliar files simply to make an installation proceed. An existing registered Umicom installation should be removed through its uninstaller before installing another release.</p>
+<h3>An application is absent from the list</h3><p>It was not included as an enabled graphical application in that package. Ask the distributor for a package containing that application. Selecting “Install all applications” does not download additional products.</p>
+<h3>A development build works only from a terminal</h3><p>This is a packaging problem for the developer to correct. A release should not depend on the developer’s MSYS2 PATH. The shared deployment build target described below prepares the runtime before the application is distributed.</p>
+</section>
+<section id="developers"><h2>For application developers</h2>
+<p>Framework’s <code>umicom_apply_application_branding</code> integration registers locally built Windows executable targets with the shared deployment module. The module prepares private DLLs and resources, creates an application catalogue, and supplies the <code>umicom-windows-runtime</code> and <code>umicom-windows-installer</code> build targets.</p>
+<p>The installer is generated with NSIS on the build machine. NSIS is not an end-user prerequisite. Application modules supply their identity and existing executable target; they do not maintain separate runtime-copying scripts or installer implementations.</p>
+<p>See <code>docs/windows-deployment-development.md</code> in the Framework source for configuration commands, extension points, focused tests and the clean-Windows release checklist. A successful portable contract test is not a substitute for running the actual installer and applications on Windows without a development environment.</p>
+</section>
+<footer><p>Umicom Foundation · Educational installation guide. Umicom source is distributed under its stated licence. GTK, GLib, NSIS and other third-party components retain their respective licences.</p><p>Technical references: <a href="https://www.gtk.org/docs/installations/windows/">GTK on Windows</a> · <a href="https://docs.gtk.org/gtk4/running.html">GTK runtime configuration</a> · <a href="https://nsis.sourceforge.io/Docs/">NSIS documentation</a> · <a href="https://cmake.org/cmake/help/latest/command/file.html#get-runtime-dependencies">CMake runtime dependency inspection</a>.</p></footer>
+</main>
+</body>
+</html>

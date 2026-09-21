@@ -1,0 +1,414 @@
+;-----------------------------------------------------------------------------
+; -*- coding: utf-8 -*-
+; Umicom Framework
+; File: cmake/windows/UmicomSetup.nsi.in
+;
+; PURPOSE:
+;   Native, GTK-independent Windows setup. The generator supplies application
+;   sections and exact-file ownership actions from the validated payload.
+;
+; AUTHOR AND ORGANISATION:
+;   Sammy Hegab
+;   Umicom Foundation
+;
+; LICENCE:
+;   MIT (this template). The NSIS engine retains its own licences.
+;-----------------------------------------------------------------------------
+Unicode true
+RequestExecutionLevel user
+ManifestDPIAware true
+CRCCheck force
+SetCompressor /SOLID lzma
+SetDatablockOptimize on
+AllowSkipFiles off
+Name "Umicom Applications"
+OutFile "@UMI_SETUP_OUTPUT_ESCAPED@"
+InstallDir "$LOCALAPPDATA\Programs\Umicom"
+BrandingText "Umicom Foundation"
+VIProductVersion "@UMI_SETUP_VERSION@.0"
+VIAddVersionKey "ProductName" "Umicom Applications Setup"
+VIAddVersionKey "CompanyName" "Umicom Foundation"
+VIAddVersionKey "FileDescription" "Umicom application selection installer"
+VIAddVersionKey "FileVersion" "@UMI_SETUP_VERSION@"
+VIAddVersionKey "LegalCopyright" "Umicom Foundation"
+
+!include "MUI2.nsh"
+!include "LogicLib.nsh"
+!include "Sections.nsh"
+!include "nsDialogs.nsh"
+!include "FileFunc.nsh"
+!include "x64.nsh"
+@UMI_SETUP_ICON_CODE@
+!define UMI_UNINSTALL_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\UmicomApplications"
+!define MUI_ABORTWARNING
+!define MUI_CUSTOMFUNCTION_ABORT UmiUserAbort
+!define MUI_COMPONENTSPAGE_NODESC
+!define MUI_WELCOMEPAGE_TITLE "Install Umicom Applications"
+!define MUI_WELCOMEPAGE_TEXT "Choose the applications to install, their destination, and the shortcuts to create.$\r$\n$\r$\nThe required application runtime is included. GTK, MSYS2 and developer tools are not required on this computer.$\r$\n$\r$\nThis setup installs for your Windows user account into a new or empty folder. Close running Umicom applications before uninstalling an older installation."
+!define MUI_FINISHPAGE_TEXT "The selected Umicom applications have been installed.$\r$\n$\r$\nOpen them from the shortcuts you selected, or open the bin folder inside your installation directory."
+
+Var DesktopOption
+Var StartMenuOption
+Var DesktopCheck
+Var StartMenuCheck
+Var ShortcutsDialog
+Var InstallStarted
+Var InstallComplete
+Var DeletionFailures
+Var ShortcutWarnings
+Var SetupMutex
+
+InstType "Install all applications"
+InstType /CUSTOMSTRING="Choose applications"
+!insertmacro MUI_PAGE_WELCOME
+!insertmacro MUI_PAGE_LICENSE "@UMI_SETUP_LICENCE_ESCAPED@"
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE UmiCheckSelection
+!insertmacro MUI_PAGE_COMPONENTS
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE UmiValidateDirectory
+!insertmacro MUI_PAGE_DIRECTORY
+Page custom UmiShowShortcutOptions UmiReadShortcutOptions
+!insertmacro MUI_PAGE_INSTFILES
+!insertmacro MUI_PAGE_FINISH
+!insertmacro MUI_UNPAGE_CONFIRM
+!insertmacro MUI_UNPAGE_INSTFILES
+!insertmacro MUI_UNPAGE_FINISH
+!insertmacro MUI_LANGUAGE "English"
+
+Section "-Shared Umicom runtime" UMI_RUNTIME
+  SectionIn 1 RO
+  ; Repeat validation at the moment installation begins, not just on page exit.
+  Call UmiCheckSelection
+  Call UmiValidateDirectory
+  ClearErrors
+  CreateDirectory "$INSTDIR"
+  IfErrors 0 +2
+    Abort "The installation folder cannot be created. Choose a folder you can write to."
+  StrCpy $InstallStarted 1
+  ClearErrors
+  WriteINIStr "$INSTDIR\installation.ini" "Identity" "Owner" "Umicom Applications"
+  WriteINIStr "$INSTDIR\installation.ini" "Identity" "Bundle" "@UMI_SETUP_BUNDLE_ID@"
+  WriteINIStr "$INSTDIR\installation.ini" "Applications" "runtime" "1"
+  WriteUninstaller "$INSTDIR\Uninstall-Umicom.exe"
+  IfErrors 0 +2
+    Abort "The installation receipt or uninstaller could not be written."
+  SetOutPath "$INSTDIR"
+  File /r "@UMI_SETUP_RUNTIME_ESCAPED@/*"
+  IfErrors 0 +2
+    Abort "The shared runtime could not be installed."
+SectionEnd
+
+@UMI_SETUP_SECTIONS@
+
+Section "-Finish installation"
+@UMI_SETUP_SHORTCUT_CALLS@
+  ClearErrors
+  WriteRegStr HKCU "${UMI_UNINSTALL_KEY}" "DisplayName" "Umicom Applications"
+  WriteRegStr HKCU "${UMI_UNINSTALL_KEY}" "DisplayVersion" "@UMI_SETUP_VERSION@"
+  WriteRegStr HKCU "${UMI_UNINSTALL_KEY}" "Publisher" "Umicom Foundation"
+  WriteRegStr HKCU "${UMI_UNINSTALL_KEY}" "Bundle" "@UMI_SETUP_BUNDLE_ID@"
+  WriteRegStr HKCU "${UMI_UNINSTALL_KEY}" "InstallLocation" "$INSTDIR"
+  WriteRegStr HKCU "${UMI_UNINSTALL_KEY}" "UninstallString" '"$INSTDIR\Uninstall-Umicom.exe"'
+  WriteRegDWORD HKCU "${UMI_UNINSTALL_KEY}" "NoModify" 1
+  WriteRegDWORD HKCU "${UMI_UNINSTALL_KEY}" "NoRepair" 1
+  IfErrors 0 +2
+    Abort "Windows could not register the installed applications."
+  StrCpy $InstallComplete 1
+  ${If} $ShortcutWarnings > 0
+    MessageBox MB_OK|MB_ICONINFORMATION "Installation finished, but one or more requested shortcuts could not be created, or already existed. Existing shortcuts were not overwritten. Open the applications from $INSTDIR\bin."
+  ${EndIf}
+SectionEnd
+
+Function .onInit
+  SetShellVarContext current
+  SetRegView 64
+  StrCpy $DesktopOption 0
+  StrCpy $StartMenuOption 1
+  StrCpy $InstallStarted 0
+  StrCpy $InstallComplete 0
+  StrCpy $ShortcutWarnings 0
+  ; Silent setup requires a separate, explicit application-selection contract.
+  IfSilent unsupported_silent interactive_start
+unsupported_silent:
+  SetErrorLevel 2
+  Quit
+interactive_start:
+  ${IfNot} ${RunningX64}
+    MessageBox MB_OK|MB_ICONSTOP "This package contains 64-bit Windows applications."
+    Quit
+  ${EndIf}
+  System::Call 'kernel32::CreateMutexW(p 0, i 0, w "Local\UmicomApplicationsSetup") p .r0 ?e'
+  Pop $1
+  StrCpy $SetupMutex $0
+  ${If} $0 == 0
+  ${OrIf} $1 == 183
+    MessageBox MB_OK|MB_ICONSTOP "Another Umicom setup is already running, or setup could not acquire its installation lock."
+    Quit
+  ${EndIf}
+  ClearErrors
+  ReadRegStr $0 HKCU "${UMI_UNINSTALL_KEY}" "InstallLocation"
+  ${IfNot} ${Errors}
+  ${AndIf} $0 != ""
+    MessageBox MB_OK|MB_ICONINFORMATION "Umicom Applications is already registered at:$\r$\n$0$\r$\n$\r$\nUse Windows Installed Apps to uninstall that installation before running this setup. Your project folders should be kept outside the application installation directory."
+    Quit
+  ${EndIf}
+FunctionEnd
+
+Function .onGUIEnd
+  ${If} $SetupMutex != 0
+    System::Call 'kernel32::CloseHandle(p $SetupMutex)'
+  ${EndIf}
+FunctionEnd
+
+Function UmiCheckSelection
+  StrCpy $2 0
+@UMI_SETUP_SELECTION_CHECK@
+  ${If} $2 == 0
+    MessageBox MB_OK|MB_ICONINFORMATION "Select at least one application, or choose Install all applications."
+    Abort
+  ${EndIf}
+FunctionEnd
+
+Function UmiValidateDirectory
+  GetFullPathName $INSTDIR "$INSTDIR"
+  StrCpy $0 "$INSTDIR" 1 1
+  ${If} $0 != ":"
+    MessageBox MB_OK|MB_ICONSTOP "Choose an absolute folder on a local drive, for example D:\Umicom."
+    Abort
+  ${EndIf}
+  ${GetRoot} "$INSTDIR" $0
+  System::Call 'kernel32::GetDriveTypeW(w "$0\") i .r1'
+  ${If} $1 != 3
+  ${AndIf} $1 != 2
+    MessageBox MB_OK|MB_ICONSTOP "Choose a writable local fixed or removable drive, not a network location."
+    Abort
+  ${EndIf}
+  ${If} $INSTDIR == "$0"
+  ${OrIf} $INSTDIR == "$0\"
+    MessageBox MB_OK|MB_ICONSTOP "Choose an application folder, not the root of a drive."
+    Abort
+  ${EndIf}
+  StrLen $0 "$INSTDIR"
+  IntOp $0 $0 + @UMI_SETUP_MAX_RELATIVE@
+  ${If} $0 > 240
+    MessageBox MB_OK|MB_ICONSTOP "Choose a shorter installation path. The destination and packaged filenames must fit within this installer's Windows path limit."
+    Abort
+  ${EndIf}
+  System::Call 'kernel32::GetFileAttributesW(w "$INSTDIR") i .r0 ?e'
+  Pop $2
+  ${If} $0 == -1
+    ${If} $2 == 2
+    ${OrIf} $2 == 3
+      Return
+    ${EndIf}
+    MessageBox MB_OK|MB_ICONSTOP "Setup cannot inspect this destination. Choose a folder you can access."
+    Abort
+  ${Else}
+    IntOp $1 $0 & 0x10
+    ${If} $1 == 0
+      MessageBox MB_OK|MB_ICONSTOP "The selected destination is a file, not a directory."
+      Abort
+    ${EndIf}
+    IntOp $1 $0 & 0x400
+    ${If} $1 != 0
+      MessageBox MB_OK|MB_ICONSTOP "Choose a regular directory, not a junction or symbolic link."
+      Abort
+    ${EndIf}
+  ${EndIf}
+  ; Capture each Win32 error in the same System call that produced it. Reading
+  ; GetLastError after an unrelated plugin/instruction is not reliable.
+  ; cFileName begins after 44 bytes in WIN32_FIND_DATAW. 608 bytes also covers
+  ; the legacy trailing members shown in the documented wide structure.
+  System::Alloc 608
+  Pop $3
+  ${If} $3 == 0
+    MessageBox MB_OK|MB_ICONSTOP "Not enough memory to inspect the installation folder."
+    Abort
+  ${EndIf}
+  System::Call 'kernel32::FindFirstFileW(w "$INSTDIR\*", p r3) p .r0 ?e'
+  Pop $2
+  ${If} $0 == -1
+    System::Free $3
+    ${If} $2 == 2
+      Return
+    ${EndIf}
+    MessageBox MB_OK|MB_ICONSTOP "Setup could not enumerate this folder. No existing files will be overwritten."
+    Abort
+  ${EndIf}
+check_directory_entry:
+  System::Call '*$3(&v44, &w260 .r1)'
+  ${If} $1 != "."
+  ${AndIf} $1 != ".."
+  ${AndIf} $1 != ""
+    System::Call 'kernel32::FindClose(p r0)'
+    System::Free $3
+    MessageBox MB_OK|MB_ICONSTOP "The selected folder is not empty. Choose a new or empty Umicom application folder. Setup will not overwrite existing files."
+    Abort
+  ${EndIf}
+  System::Call 'kernel32::FindNextFileW(p r0, p r3) i .r1 ?e'
+  Pop $2
+  ${If} $1 != 0
+    Goto check_directory_entry
+  ${EndIf}
+  System::Call 'kernel32::FindClose(p r0)'
+  System::Free $3
+  ${If} $2 != 18
+    MessageBox MB_OK|MB_ICONSTOP "Setup could not finish inspecting the destination folder."
+    Abort
+  ${EndIf}
+FunctionEnd
+
+Function UmiShowShortcutOptions
+  !insertmacro MUI_HEADER_TEXT "Application shortcuts" "Choose how to open your installed Umicom applications."
+  nsDialogs::Create 1018
+  Pop $ShortcutsDialog
+  ${If} $ShortcutsDialog == error
+    Abort
+  ${EndIf}
+  ${NSD_CreateLabel} 0 0 100% 30u "Shortcuts are created only for the applications selected in this installer. Your system PATH will not be changed."
+  Pop $0
+  ${NSD_CreateCheckbox} 0 40u 100% 14u "Create desktop shortcuts"
+  Pop $DesktopCheck
+  ${NSD_SetState} $DesktopCheck $DesktopOption
+  ${NSD_CreateCheckbox} 0 62u 100% 14u "Add applications to the Windows Start menu"
+  Pop $StartMenuCheck
+  ${NSD_SetState} $StartMenuCheck $StartMenuOption
+  nsDialogs::Show
+FunctionEnd
+
+Function UmiReadShortcutOptions
+  ${NSD_GetState} $DesktopCheck $DesktopOption
+  ${NSD_GetState} $StartMenuCheck $StartMenuOption
+FunctionEnd
+
+; The generator passes identity, title and executable, in that order.
+Function UmiCreateApplicationShortcuts
+  Pop $0
+  Pop $1
+  Pop $2
+  ReadINIStr $3 "$INSTDIR\installation.ini" "Applications" "$2"
+  ${If} $3 != "1"
+    Return
+  ${EndIf}
+  SetOutPath "$INSTDIR\bin"
+  ${If} $DesktopOption == ${BST_CHECKED}
+    ${If} ${FileExists} "$DESKTOP\$1.lnk"
+      IntOp $ShortcutWarnings $ShortcutWarnings + 1
+    ${Else}
+      ClearErrors
+      CreateShortcut "$DESKTOP\$1.lnk" "$INSTDIR\bin\$0" "" "$INSTDIR\bin\$0" 0
+      ${If} ${Errors}
+        IntOp $ShortcutWarnings $ShortcutWarnings + 1
+      ${Else}
+        WriteINIStr "$INSTDIR\installation.ini" "Shortcuts" "desktop-$2" "1"
+        ${If} ${Errors}
+          Delete "$DESKTOP\$1.lnk"
+          IntOp $ShortcutWarnings $ShortcutWarnings + 1
+        ${EndIf}
+      ${EndIf}
+    ${EndIf}
+  ${EndIf}
+  ${If} $StartMenuOption == ${BST_CHECKED}
+    ${If} ${FileExists} "$SMPROGRAMS\Umicom Applications\$1.lnk"
+      IntOp $ShortcutWarnings $ShortcutWarnings + 1
+    ${Else}
+      ClearErrors
+      CreateDirectory "$SMPROGRAMS\Umicom Applications"
+      CreateShortcut "$SMPROGRAMS\Umicom Applications\$1.lnk" "$INSTDIR\bin\$0" "" "$INSTDIR\bin\$0" 0
+      ${If} ${Errors}
+        IntOp $ShortcutWarnings $ShortcutWarnings + 1
+      ${Else}
+        WriteINIStr "$INSTDIR\installation.ini" "Shortcuts" "menu-$2" "1"
+        ${If} ${Errors}
+          Delete "$SMPROGRAMS\Umicom Applications\$1.lnk"
+          IntOp $ShortcutWarnings $ShortcutWarnings + 1
+        ${EndIf}
+      ${EndIf}
+    ${EndIf}
+  ${EndIf}
+FunctionEnd
+
+; The same ownership list drives failure cleanup and normal uninstallation.
+!macro UmiDefineRemoval prefix
+Function ${prefix}UmiRemoveOwnedPayload
+  StrCpy $DeletionFailures 0
+@UMI_SETUP_SHORTCUT_REMOVAL@
+@UMI_SETUP_PAYLOAD_REMOVAL@
+  RMDir "$SMPROGRAMS\Umicom Applications"
+FunctionEnd
+!macroend
+!insertmacro UmiDefineRemoval ""
+!insertmacro UmiDefineRemoval "un."
+
+Function UmiRollback
+  ${If} $InstallStarted == 1
+  ${AndIf} $InstallComplete != 1
+    SetOutPath "$TEMP"
+    Call UmiRemoveOwnedPayload
+    ${If} $DeletionFailures == 0
+      Delete "$INSTDIR\installation.ini"
+      Delete "$INSTDIR\Uninstall-Umicom.exe"
+      RMDir "$INSTDIR"
+      DeleteRegKey HKCU "${UMI_UNINSTALL_KEY}"
+    ${Else}
+      MessageBox MB_OK|MB_ICONEXCLAMATION "Setup could not finish and some files could not be removed. Close applications using this folder, then run Uninstall-Umicom.exe inside the installation folder to finish cleanup."
+    ${EndIf}
+    StrCpy $InstallStarted 0
+  ${EndIf}
+FunctionEnd
+
+Function .onInstFailed
+  Call UmiRollback
+FunctionEnd
+
+Function UmiUserAbort
+  Call UmiRollback
+FunctionEnd
+
+Function un.onInit
+  SetShellVarContext current
+  SetRegView 64
+  System::Call 'kernel32::CreateMutexW(p 0, i 0, w "Local\UmicomApplicationsSetup") p .r0 ?e'
+  Pop $1
+  StrCpy $SetupMutex $0
+  ${If} $0 == 0
+  ${OrIf} $1 == 183
+    MessageBox MB_OK|MB_ICONSTOP "Another Umicom installer or uninstaller is already running."
+    Abort
+  ${EndIf}
+  ReadINIStr $0 "$INSTDIR\installation.ini" "Identity" "Owner"
+  ReadINIStr $1 "$INSTDIR\installation.ini" "Identity" "Bundle"
+  ${If} $0 != "Umicom Applications"
+  ${OrIf} $1 != "@UMI_SETUP_BUNDLE_ID@"
+    MessageBox MB_OK|MB_ICONSTOP "The installation ownership receipt is missing or does not match this uninstaller. No files have been removed."
+    Abort
+  ${EndIf}
+  ; A leftover/copy must not remove another registered installation's links.
+  ReadRegStr $0 HKCU "${UMI_UNINSTALL_KEY}" "InstallLocation"
+  ${If} $0 != ""
+    ReadRegStr $1 HKCU "${UMI_UNINSTALL_KEY}" "Bundle"
+    ${If} $0 != "$INSTDIR"
+    ${OrIf} $1 != "@UMI_SETUP_BUNDLE_ID@"
+      MessageBox MB_OK|MB_ICONSTOP "Windows has registered another Umicom installation. This uninstaller will not remove its registration or shortcuts."
+      Abort
+    ${EndIf}
+  ${EndIf}
+FunctionEnd
+
+Function un.onGUIEnd
+  ${If} $SetupMutex != 0
+    System::Call 'kernel32::CloseHandle(p $SetupMutex)'
+  ${EndIf}
+FunctionEnd
+
+Section "Uninstall"
+  SetOutPath "$TEMP"
+  Call un.UmiRemoveOwnedPayload
+  ${If} $DeletionFailures != 0
+    MessageBox MB_OK|MB_ICONEXCLAMATION "Some application files or shortcuts are still in use or cannot be removed. Close the Umicom applications and run this uninstaller again. The installation receipt has been retained."
+    Abort
+  ${EndIf}
+  Delete "$INSTDIR\installation.ini"
+  Delete "$INSTDIR\Uninstall-Umicom.exe"
+  RMDir "$INSTDIR"
+  DeleteRegKey HKCU "${UMI_UNINSTALL_KEY}"
+SectionEnd

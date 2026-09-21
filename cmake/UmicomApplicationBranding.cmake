@@ -258,4 +258,19 @@ function(umicom_apply_application_branding)
         install(FILES "${_umicom_desktop_file}"
             DESTINATION "${CMAKE_INSTALL_DATADIR}/applications")
     endif()
+
+    # Framework owns deployment as well as branding. This is deliberately
+    # additive: existing icons, install rules and product behaviour stay intact.
+    if(WIN32)
+        include("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/UmicomWindowsDeployment.cmake")
+        set(_umicom_deployment_gui_option "")
+        if(UMICOM_BRAND_WINDOWS_GUI)
+            set(_umicom_deployment_gui_option GUI)
+        endif()
+        umicom_prepare_windows_application(
+            TARGET "${UMICOM_BRAND_TARGET}"
+            PRODUCT_NAME "${UMICOM_BRAND_PRODUCT_NAME}"
+            RESOURCE_ROOT "${_umicom_brand_root}"
+            ${_umicom_deployment_gui_option})
+    endif()
 endfunction()
