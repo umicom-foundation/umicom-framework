@@ -88,6 +88,13 @@ UmiStatus umi_test_platform_discovery_registry_upsert(UmiTestPlatformDiscoveryRe
      * used.
      */
     if (registry == NULL || item == NULL || item->id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    /* Validate bounded strings before identity lookup, not after copying. */
+    if (memchr(item->id, '\0', sizeof(item->id)) == NULL) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (memchr(item->project_id, '\0', sizeof(item->project_id)) == NULL) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (memchr(item->provider, '\0', sizeof(item->provider)) == NULL) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (memchr(item->root_uri, '\0', sizeof(item->root_uri)) == NULL) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (memchr(item->configuration, '\0', sizeof(item->configuration)) == NULL) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (registry->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     index = find_index(registry, item->id);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
@@ -188,4 +195,37 @@ void umi_test_platform_discovery_registry_clear(UmiTestPlatformDiscoveryRegistry
      */
     if (registry == NULL) return;
     memset(registry->items,0,sizeof(registry->items)); registry->count=0U; registry->revision += 1U;
+}
+
+/* Staging keeps publication out of the individual upsert failure paths. */
+UmiStatus UmiTestPlatformDiscoveryRegistryClone(const UmiTestPlatformDiscoveryRegistry *source,
+    UmiTestPlatformDiscoveryRegistry **outRegistry)
+{
+    UmiTestPlatformDiscoveryRegistry *copy;
+    if (outRegistry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outRegistry = NULL;
+    if (source == NULL || source->count > UMI_TEST_PLATFORM_DISCOVERY_CAPACITY)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    copy = (UmiTestPlatformDiscoveryRegistry *)malloc(sizeof(*copy));
+    if (copy == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    (void)memcpy(copy, source, sizeof(*copy));
+    *outRegistry = copy;
+    return UMI_STATUS_OK;
+}
+
+void UmiTestPlatformDiscoveryRegistrySwap(UmiTestPlatformDiscoveryRegistry *left,
+    UmiTestPlatformDiscoveryRegistry *right)
+{
+    size_t index, count;
+    uint64_t revision;
+    UmiTestPlatformDiscoverySnapshot item;
+    if (left == NULL || right == NULL || left == right) return;
+    /* One snapshot on the stack, not two multi-megabyte registry objects. */
+    for (index = 0U; index < UMI_TEST_PLATFORM_DISCOVERY_CAPACITY; ++index) {
+        item = left->items[index];
+        left->items[index] = right->items[index];
+        right->items[index] = item;
+    }
+    count = left->count; left->count = right->count; right->count = count;
+    revision = left->revision; left->revision = right->revision; right->revision = revision;
 }

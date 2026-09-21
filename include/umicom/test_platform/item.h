@@ -28,7 +28,10 @@
 extern "C" {
 #endif
 
+/* Retained compatibility window for existing history consumers. Registry
+ * storage is now dynamically allocated, with a separate explicit hard limit. */
 #define UMI_TEST_PLATFORM_ITEM_CAPACITY 4096U
+#define UMI_TEST_PLATFORM_ITEM_MAX_CAPACITY 65536U
 #define UMI_TEST_PLATFORM_ITEM_API_VERSION 2U
 
 /**
@@ -107,6 +110,26 @@ uint64_t umi_test_platform_item_registry_revision(const UmiTestPlatformItemRegis
  * reused safely.
  */
 void umi_test_platform_item_registry_clear(UmiTestPlatformItemRegistry *registry);
+
+/** Create an independent, exact copy for a staged catalogue transaction.
+ * Existing records and revisions are preserved. The caller owns the clone.
+ * These registries are single-owner objects: synchronise all access externally.
+ */
+UmiStatus UmiTestPlatformItemRegistryClone(const UmiTestPlatformItemRegistry *source,
+    UmiTestPlatformItemRegistry **outRegistry);
+/** Exchange complete valid registry states without allocation or callbacks.
+ * Use only on the owning thread, after every staged operation has succeeded.
+ * Existing registry object addresses remain valid; borrowed private storage does
+ * not escape through this API. A NULL argument or the same object is a no-op.
+ */
+void UmiTestPlatformItemRegistrySwap(UmiTestPlatformItemRegistry *left,
+    UmiTestPlatformItemRegistry *right);
+
+/** Remove a suite's item records in one stable compaction. Other suites keep
+ * their order and records. Intended for an unpublished clone during refresh.
+ */
+UmiStatus UmiTestPlatformItemRegistryRemoveSuite(UmiTestPlatformItemRegistry *registry,
+    const char *suiteId);
 
 #ifdef __cplusplus
 }

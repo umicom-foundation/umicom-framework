@@ -24,27 +24,16 @@
 #include <string.h>
 
 struct UmiTestPlatformItemRegistry {
-    UmiTestPlatformItemSnapshot items[UMI_TEST_PLATFORM_ITEM_CAPACITY];
+    UmiTestPlatformItemSnapshot *items;
+    size_t capacity;
+    size_t *index;
+    size_t index_capacity;
     size_t count;
     uint64_t revision;
 };
 
-/* Provide the find index operation used by this module and its client applications. */
-static size_t find_index(const UmiTestPlatformItemRegistry *registry, const char *id)
-{
-    size_t i;
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (registry == NULL || id == NULL) return SIZE_MAX;
-    /* Visit each bounded item once so every record receives the same rule. */
-    for (i = 0U; i < registry->count; ++i) {
-        /* Use the stable identifier comparison to choose the matching record or policy. */
-        if (strcmp(registry->items[i].id, id) == 0) return i;
-    }
-    return SIZE_MAX;
-}
+/* Dynamic storage and the identifier index stay private to this registry. */
+#include "item_storage.inc"
 
 /*
  * Initialise test platform item registry from caller-provided values so later operations
@@ -74,7 +63,14 @@ UmiStatus umi_test_platform_item_registry_create(UmiTestPlatformItemRegistry **o
  * Release or reset state held by test platform item registry so the same storage can be
  * reused safely.
  */
-void umi_test_platform_item_registry_destroy(UmiTestPlatformItemRegistry *registry) { free(registry); }
+void umi_test_platform_item_registry_destroy(UmiTestPlatformItemRegistry *registry)
+{
+    if (registry != NULL) {
+        free(registry->items);
+        free(registry->index);
+        free(registry);
+    }
+}
 
 /*
  * Provide the test platform item registry upsert operation used by this module and its
@@ -88,11 +84,16 @@ UmiStatus umi_test_platform_item_registry_upsert(UmiTestPlatformItemRegistry *re
      * used.
      */
     if (registry == NULL || item == NULL || item->id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus validation = UmiItemValidate(item);
+    if (validation != UMI_STATUS_OK) return validation;
+    if (registry->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     index = find_index(registry, item->id);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (registry->count >= UMI_TEST_PLATFORM_ITEM_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
+        if (registry->count >= UMI_TEST_PLATFORM_ITEM_MAX_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
+        validation = UmiItemReserve(registry, registry->count + 1U);
+        if (validation != UMI_STATUS_OK) return validation;
         index = registry->count++;
     }
     registry->items[index] = *item;
@@ -111,6 +112,7 @@ UmiStatus umi_test_platform_item_registry_upsert(UmiTestPlatformItemRegistry *re
     registry->items[index].working_directory[1023U] = '\0';
     registry->revision += 1U;
     registry->items[index].revision = registry->revision;
+    UmiItemIndexInsert(registry, index);
     return UMI_STATUS_OK;
 }
 
@@ -135,6 +137,7 @@ UmiStatus umi_test_platform_item_registry_remove(UmiTestPlatformItemRegistry *re
                 (registry->count-index-1U)*sizeof(registry->items[0]));
     }
     registry->count -= 1U; registry->revision += 1U;
+    UmiItemReindex(registry);
     return UMI_STATUS_OK;
 }
 
@@ -193,5 +196,62 @@ void umi_test_platform_item_registry_clear(UmiTestPlatformItemRegistry *registry
      * used.
      */
     if (registry == NULL) return;
-    memset(registry->items,0,sizeof(registry->items)); registry->count=0U; registry->revision += 1U;
+    if (registry->items != NULL) memset(registry->items, 0, registry->count * sizeof(*registry->items));
+    registry->count=0U; registry->revision += 1U;
+    UmiItemReindex(registry);
+}
+
+/* Clone owns its arrays, so aborting a refresh cannot modify a live record. */
+UmiStatus UmiTestPlatformItemRegistryClone(const UmiTestPlatformItemRegistry *source,
+    UmiTestPlatformItemRegistry **outRegistry)
+{
+    UmiTestPlatformItemRegistry *copy = NULL;
+    UmiStatus status;
+    if (outRegistry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outRegistry = NULL;
+    if (source == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_test_platform_item_registry_create(&copy);
+    if (status == UMI_STATUS_OK) status = UmiItemReserve(copy, source->count);
+    if (status != UMI_STATUS_OK) {
+        umi_test_platform_item_registry_destroy(copy);
+        return status;
+    }
+    if (source->count != 0U)
+        (void)memcpy(copy->items, source->items, source->count * sizeof(*copy->items));
+    copy->count = source->count;
+    copy->revision = source->revision;
+    UmiItemReindex(copy);
+    *outRegistry = copy;
+    return UMI_STATUS_OK;
+}
+
+void UmiTestPlatformItemRegistrySwap(UmiTestPlatformItemRegistry *left,
+    UmiTestPlatformItemRegistry *right)
+{
+    UmiTestPlatformItemRegistry temporary;
+    if (left == NULL || right == NULL || left == right) return;
+    temporary = *left; *left = *right; *right = temporary;
+}
+
+UmiStatus UmiTestPlatformItemRegistryRemoveSuite(UmiTestPlatformItemRegistry *registry,
+    const char *suiteId)
+{
+    size_t readIndex, writeIndex = 0U;
+    if (registry == NULL || suiteId == NULL || suiteId[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (registry->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    for (readIndex = 0U; readIndex < registry->count; ++readIndex) {
+        if (strcmp(registry->items[readIndex].suite_id, suiteId) != 0) {
+            if (writeIndex != readIndex) registry->items[writeIndex] = registry->items[readIndex];
+            ++writeIndex;
+        }
+    }
+    if (writeIndex != registry->count) {
+        (void)memset(registry->items + writeIndex, 0,
+            (registry->count - writeIndex) * sizeof(*registry->items));
+        registry->count = writeIndex;
+        ++registry->revision;
+        UmiItemReindex(registry);
+    }
+    return UMI_STATUS_OK;
 }

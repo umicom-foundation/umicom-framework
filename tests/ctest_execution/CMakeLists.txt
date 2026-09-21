@@ -147,3 +147,6 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_BINARY_DIR}/unconfigured build" unconfigured)
     set_tests_properties(framework.ctest.discovery_native.unconfigured PROPERTIES TIMEOUT 30)
 endif()
+
+# Scalable metadata uses the same test project and native process implementation.
+include("${CMAKE_CURRENT_LIST_DIR}/json_checks.cmake")

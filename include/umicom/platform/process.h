@@ -106,6 +106,28 @@ typedef void (*UmiProcessResultObserver)(const UmiProcessResult *result,
 UmiStatus UmiProcessExecuteObserved(const UmiProcessRequest *request,
     UmiProcessResultObserver observer, void *context, UmiProcessResult *outResult);
 
+/** Observe each raw captured chunk before the fixed diagnostic tail is updated.
+ * Bytes are borrowed for the callback only and are NOT NUL-terminated. The
+ * callback runs synchronously on the executing thread, never on a GUI thread
+ * supplied by the runner. A caller must impose its own memory limit, record
+ * allocation/write failures, and discard later bytes after such a failure.
+ *
+ * When both streams are captured the native runner merges them, exactly as it
+ * does for umi_process_execute. No stdout/stderr identity is implied. A parser
+ * must reject a contaminated protocol stream rather than ignore diagnostic text.
+ * This observer does not cancel the child. Use the request's cancellation token
+ * and timeout; keep the callback bounded and do not re-enter the same request.
+ */
+typedef void (*UmiProcessOutputObserver)(const char *bytes, size_t length,
+    void *context);
+/** Stream every captured byte through the existing native runner. The request
+ * and result layouts, argument handling and diagnostic-tail policy are unchanged.
+ * outResult->output_truncated refers ONLY to that fixed tail, not to the raw
+ * callback stream. The caller is responsible for reporting its sink's failure.
+ */
+UmiStatus UmiProcessExecuteStreamed(const UmiProcessRequest *request,
+    UmiProcessOutputObserver observer, void *context, UmiProcessResult *outResult);
+
 /**
  * Provide the process capture operation used by this module and its client applications.
  */

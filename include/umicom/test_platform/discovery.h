@@ -102,6 +102,20 @@ uint64_t umi_test_platform_discovery_registry_revision(const UmiTestPlatformDisc
  */
 void umi_test_platform_discovery_registry_clear(UmiTestPlatformDiscoveryRegistry *registry);
 
+/** Create an independent, exact copy for a staged catalogue transaction.
+ * Existing records and revisions are preserved. The caller owns the clone.
+ * These registries are single-owner objects: synchronise all access externally.
+ */
+UmiStatus UmiTestPlatformDiscoveryRegistryClone(const UmiTestPlatformDiscoveryRegistry *source,
+    UmiTestPlatformDiscoveryRegistry **outRegistry);
+/** Exchange complete valid registry states without allocation or callbacks.
+ * Use only on the owning thread, after every staged operation has succeeded.
+ * Existing registry object addresses remain valid; borrowed private storage does
+ * not escape through this API. A NULL argument or the same object is a no-op.
+ */
+void UmiTestPlatformDiscoveryRegistrySwap(UmiTestPlatformDiscoveryRegistry *left,
+    UmiTestPlatformDiscoveryRegistry *right);
+
 #ifdef __cplusplus
 }
 #endif

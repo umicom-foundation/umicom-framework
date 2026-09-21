@@ -402,7 +402,7 @@ static char *umi_windows_environment_block(const UmiProcessRequest *request)
  * applications.
  */
 static void drain_windows_pipe(HANDLE read_pipe, UmiProcessResult *result,
-    UmiProcessResultObserver observer, void *context)
+    UmiProcessResultObserver observer, UmiProcessOutputObserver rawObserver, void *context)
 {
     DWORD available = 0U;
     char chunk[4096];
@@ -429,6 +429,7 @@ static void drain_windows_pipe(HANDLE read_pipe, UmiProcessResult *result,
                       NULL) || read_count == 0U) {
             break;
         }
+        if (rawObserver != NULL) rawObserver(chunk, (size_t)read_count, context);
         append_output(result, chunk, (size_t)read_count);
         /* Publish only between appends, while this thread owns the result. */
         if (observer != NULL) observer(result, context);
@@ -455,7 +456,7 @@ static int umi_windows_process_is_hidden(const UmiProcessRequest *request)
  */
 static UmiStatus umi_process_execute_windows(const UmiProcessRequest *request,
                                               UmiProcessResult *result,
-                                              UmiProcessResultObserver observer,
+                                              UmiProcessResultObserver observer, UmiProcessOutputObserver rawObserver,
                                               void *context)
 {
     char command_line[32768];
@@ -552,7 +553,7 @@ static UmiStatus umi_process_execute_windows(const UmiProcessRequest *request,
     /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
         DWORD wait_result;
-        drain_windows_pipe(read_pipe, result, observer, context);
+        drain_windows_pipe(read_pipe, result, observer, rawObserver, context);
         wait_result = WaitForSingleObject(process.hProcess, (DWORD)poll_interval);
         /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (wait_result == WAIT_OBJECT_0) break;
@@ -585,7 +586,7 @@ static UmiStatus umi_process_execute_windows(const UmiProcessRequest *request,
         status = UMI_STATUS_OK;
     }
     (void)WaitForSingleObject(process.hProcess, INFINITE);
-    drain_windows_pipe(read_pipe, result, observer, context);
+    drain_windows_pipe(read_pipe, result, observer, rawObserver, context);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -622,7 +623,7 @@ static uint64_t monotonic_milliseconds(void)
 
 /* Provide the drain posix pipe operation used by this module and its client applications. */
 static void drain_posix_pipe(int descriptor, UmiProcessResult *result,
-    UmiProcessResultObserver observer, void *context)
+    UmiProcessResultObserver observer, UmiProcessOutputObserver rawObserver, void *context)
 {
     char chunk[4096];
     ssize_t count;
@@ -636,6 +637,7 @@ static void drain_posix_pipe(int descriptor, UmiProcessResult *result,
             /* Keep the OS byte count within the buffer passed to read().
              * This also makes the capture bound explicit to optimising compilers. */
             if ((size_t)count > sizeof(chunk)) return;
+            if (rawObserver != NULL) rawObserver(chunk, (size_t)count, context);
             append_output(result, chunk, (size_t)count);
             /* Copying observers see a complete string, never an active append. */
             if (observer != NULL) observer(result, context);
@@ -653,7 +655,7 @@ static void drain_posix_pipe(int descriptor, UmiProcessResult *result,
  */
 static UmiStatus umi_process_execute_posix(const UmiProcessRequest *request,
                                             UmiProcessResult *result,
-                                            UmiProcessResultObserver observer,
+                                            UmiProcessResultObserver observer, UmiProcessOutputObserver rawObserver,
                                             void *context)
 {
     int pipe_descriptors[2] = {-1, -1};
@@ -742,7 +744,7 @@ static UmiStatus umi_process_execute_posix(const UmiProcessRequest *request,
     /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
         pid_t wait_result;
-        drain_posix_pipe(pipe_descriptors[0], result, observer, context);
+        drain_posix_pipe(pipe_descriptors[0], result, observer, rawObserver, context);
         wait_result = waitpid(child, &status_code, WNOHANG);
         /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (wait_result == child) break;
@@ -781,7 +783,7 @@ static UmiStatus umi_process_execute_posix(const UmiProcessRequest *request,
             (void)nanosleep(&duration, NULL);
         }
     }
-    drain_posix_pipe(pipe_descriptors[0], result, observer, context);
+    drain_posix_pipe(pipe_descriptors[0], result, observer, rawObserver, context);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (pipe_descriptors[0] >= 0) (void)close(pipe_descriptors[0]);
 
@@ -818,8 +820,9 @@ UmiStatus umi_process_execute(const UmiProcessRequest *request,
 
 /* Keep validation and platform execution in one path. An observer adds a safe
  * publication boundary; it does not create another child-process runner. */
-UmiStatus UmiProcessExecuteObserved(const UmiProcessRequest *request,
-    UmiProcessResultObserver observer, void *context, UmiProcessResult *out_result)
+static UmiStatus UmiProcessExecuteInternal(const UmiProcessRequest *request,
+    UmiProcessResultObserver observer, UmiProcessOutputObserver rawObserver,
+    void *context, UmiProcessResult *out_result)
 {
     UmiProcessResult local_result;
     UmiProcessResult *result = out_result != NULL ? out_result : &local_result;
@@ -857,10 +860,24 @@ UmiStatus UmiProcessExecuteObserved(const UmiProcessRequest *request,
         }
     }
 #ifdef _WIN32
-    return umi_process_execute_windows(request, result, observer, context);
+    return umi_process_execute_windows(request, result, observer, rawObserver, context);
 #else
-    return umi_process_execute_posix(request, result, observer, context);
+    return umi_process_execute_posix(request, result, observer, rawObserver, context);
 #endif
+}
+
+/* Compatibility wrapper: retained output snapshots remain unchanged. */
+UmiStatus UmiProcessExecuteObserved(const UmiProcessRequest *request,
+    UmiProcessResultObserver observer, void *context, UmiProcessResult *outResult)
+{
+    return UmiProcessExecuteInternal(request, observer, NULL, context, outResult);
+}
+
+/* Raw observers receive bytes before the 64 KiB diagnostic tail can rotate. */
+UmiStatus UmiProcessExecuteStreamed(const UmiProcessRequest *request,
+    UmiProcessOutputObserver observer, void *context, UmiProcessResult *outResult)
+{
+    return UmiProcessExecuteInternal(request, NULL, observer, context, outResult);
 }
 
 /* Provide the process capture operation used by this module and its client applications. */
