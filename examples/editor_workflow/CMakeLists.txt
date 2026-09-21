@@ -111,3 +111,15 @@ if(BUILD_TESTING)
     add_test(NAME notes.document.close COMMAND umicom-notes-close-document)
 endif()
 install(TARGETS umicom-notes-close-document RUNTIME DESTINATION bin)
+
+# Close All/Close Others through the same installed document service.
+add_executable(umicom-notes-close-documents close_documents.c)
+target_link_libraries(umicom-notes-close-documents PRIVATE Umicom::document)
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(umicom-notes-close-documents PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME notes.document.close_sequence COMMAND umicom-notes-close-documents)
+endif()
+install(TARGETS umicom-notes-close-documents RUNTIME DESTINATION bin)

@@ -298,6 +298,38 @@ UmiStatus umi_ui_workbench_activate_document(UmiUiWorkbench *workbench,
     return UMI_STATUS_OK;
 }
 
+/* A closed source must not remain the active ID in a saved workbench state.
+ * Compare before clearing so closing a background tab preserves the foreground. */
+UmiStatus UmiUiWorkbenchClearClosedDocument(UmiUiWorkbench *workbench,
+    const char *closedViewId)
+{
+    if (workbench == NULL || closedViewId == NULL || closedViewId[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    size_t length = 0U;
+    while (length < UMI_UI_ID_CAPACITY && closedViewId[length] != '\0') ++length;
+    if (length == UMI_UI_ID_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiUiDocumentViewSnapshot view;
+    UmiStatus status = umi_ui_document_view_model_find(workbench->documents, closedViewId, &view);
+    if (status == UMI_STATUS_OK) return UMI_STATUS_INVALID_STATE;
+    if (status != UMI_STATUS_NOT_FOUND) return status;
+    (void)umi_mutex_lock(workbench->mutex);
+    int changed = 0;
+    if (strcmp(workbench->active_document, closedViewId) == 0) {
+        workbench->active_document[0] = '\0';
+        changed = 1;
+    }
+    if (strcmp(workbench->state.active_document, closedViewId) == 0) {
+        workbench->state.active_document[0] = '\0';
+        changed = 1;
+    }
+    if (changed) {
+        workbench->state.revision = umi_ui_next_revision(workbench->state.revision);
+        workbench->revision = umi_ui_next_revision(workbench->revision);
+    }
+    (void)umi_mutex_unlock(workbench->mutex);
+    return UMI_STATUS_OK;
+}
+
 /*
  * Provide the ui workbench activate activity operation used by this module and its client
  * applications.

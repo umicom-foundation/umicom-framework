@@ -10,6 +10,7 @@
 #include "umicom/ui/gtk4.h"
 #include "umicom/document/edit.h"
 #include "umicom/document/close.h"
+#include "umicom/document/close_session.h"
 #include "umicom/document/save_session.h"
 #include "umicom/document/navigation.h"
 #ifdef __cplusplus
@@ -106,6 +107,41 @@ UmiStatus UmiGtk4AdapterCycleDocument(UmiGtk4Adapter *adapter, int direction);
  * the detached host. Use only on the GTK/document owner thread. */
 UmiStatus UmiGtk4AdapterRequestDocumentClose(UmiGtk4Adapter *adapter,
     const char *viewId);
+
+/** Result of one Close All/Close Others run. Snapshot is borrowed for the
+ * callback only; copy it for a report. Called after detaching the finished run;
+ * the callback may unbind or destroy the host. Teardown suppresses callbacks. */
+typedef void (*UmiGtk4DocumentCloseResultFn)(void *context,
+    const UmiDocumentCloseProgress *progress);
+
+/** Capture the bound sources and schedule one operation per GTK idle dispatch.
+ * OTHERS keeps the originally active source, even if tabs change afterwards.
+ * Each pending draft uses the same Save/Discard/Cancel form as File Close.
+ * Cancellation/failure stops later work, without reopening already closed
+ * sources. New sources opened during the run are not captured. Explicit File
+ * closing includes pinned sources. The callback context and coordinator must
+ * outlive the binding. All calls require the GTK owner thread/main context. */
+UmiStatus UmiGtk4AdapterCloseDocuments(UmiGtk4Adapter *adapter,
+    UmiDocumentCloseScope scope, UmiGtk4DocumentCloseResultFn completed,
+    void *context);
+
+/** Stop a group close, dismiss its question and cancel a pending filename
+ * chooser. Already completed saves/closes are not rolled back. No-op when no
+ * group run is active. A synchronous write cannot be interrupted. */
+UmiStatus UmiGtk4AdapterCancelCloseDocuments(UmiGtk4Adapter *adapter);
+
+/** Group-close query only; single-document questions are not group runs. */
+int UmiGtk4AdapterCloseDocumentsBusy(const UmiGtk4Adapter *adapter);
+
+/** True for a single close question or a queued/active group close. Save All
+ * and asynchronous Paste use this boundary to avoid overlapping decisions. */
+int UmiGtk4AdapterDocumentCloseBusy(const UmiGtk4Adapter *adapter);
+
+/** Copy current group progress without advancing work. NOT_FOUND after the run
+ * detaches; retain the final callback copy instead. Output is unchanged on
+ * error. No source text, screenshots or automatic uploads are involved. */
+UmiStatus UmiGtk4AdapterCloseDocumentsProgress(const UmiGtk4Adapter *adapter,
+    UmiDocumentCloseProgress *outProgress);
 
 #ifdef __cplusplus
 }

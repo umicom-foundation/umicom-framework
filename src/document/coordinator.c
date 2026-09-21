@@ -906,6 +906,10 @@ UmiStatus UmiDocumentCoordinatorClose(UmiDocumentCoordinator *coordinator,
     (void)umi_ui_document_view_model_remove(
         umi_ui_workbench_documents(coordinator->workbench),
         coordinator->entries[index].view_id);
+    /* The view was removed above; clear only its stale active ID. The existing
+     * next-document selection below still decides which managed view to show. */
+    (void)UmiUiWorkbenchClearClosedDocument(coordinator->workbench,
+        coordinator->entries[index].view_id);
     entry_dispose(&coordinator->entries[index]);
     move_count = coordinator->count - index - 1U;
     /* Apply this branch only when its contract condition is satisfied. */

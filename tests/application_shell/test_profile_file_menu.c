@@ -35,7 +35,9 @@ int main(void)
     assert(profile != NULL);
     /* Previous profile: assert(profile->contribution_count == 11U);
      * Retain its eleven entries and add the shared Cancel Save All action. */
-    assert(profile->contribution_count == 12U);
+    /* Earlier count: assert(profile->contribution_count == 12U);
+     * Every former action remains, with three group-close commands added. */
+    assert(profile->contribution_count == 15U);
     assert(umi_application_shell_profile_validate(profile) == UMI_STATUS_OK);
 
     assert(umi_application_shell_registry_create(&registry) == UMI_STATUS_OK);
@@ -54,6 +56,15 @@ int main(void)
     assert(umi_application_shell_registry_find(registry,
         "umicom.shell.file-menu.save-all", &contribution) == UMI_STATUS_OK);
     assert(strcmp(contribution.command_id, "file.save-all") == 0);
+    assert(umi_application_shell_registry_find(registry,
+        "umicom.shell.file-menu.close-all", &contribution) == UMI_STATUS_OK);
+    assert(strcmp(contribution.command_id, "file.close-all") == 0);
+    assert(umi_application_shell_registry_find(registry,
+        "umicom.shell.file-menu.close-others", &contribution) == UMI_STATUS_OK);
+    assert(strcmp(contribution.command_id, "file.close-others") == 0);
+    assert(umi_application_shell_registry_find(registry,
+        "umicom.shell.file-menu.cancel-close-all", &contribution) == UMI_STATUS_OK);
+    assert(strcmp(contribution.command_id, "file.close-all.cancel") == 0);
     umi_application_shell_registry_destroy(registry);
     return 0;
 }

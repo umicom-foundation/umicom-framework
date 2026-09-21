@@ -145,7 +145,11 @@ UmiStatus UmiGtk4AdapterDocumentSaveAll(UmiGtk4Adapter *adapter,
     if (adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     if (adapter->edit_coordinator == NULL || adapter->edit_lifetime == NULL ||
         adapter->window == NULL || adapter->shell == NULL) return UMI_STATUS_UNAVAILABLE;
-    if (adapter->document_save_run != NULL || adapter->edit_cancel != NULL) return UMI_STATUS_BUSY;
+    /* Former guard retained below. An unanswered close also owns a document
+     * decision, so reject Save All until that question/sequence has ended. */
+    // if (adapter->document_save_run != NULL || adapter->edit_cancel != NULL) return UMI_STATUS_BUSY;
+    if (adapter->document_save_run != NULL || adapter->edit_cancel != NULL ||
+        UmiGtk4AdapterDocumentCloseBusy(adapter)) return UMI_STATUS_BUSY;
     SaveRun *run = g_try_new0(SaveRun, 1);
     if (run == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     run->references = 1U;

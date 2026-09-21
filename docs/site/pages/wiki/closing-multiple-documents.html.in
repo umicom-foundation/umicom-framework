@@ -1,0 +1,101 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Closing several documents · Umicom Framework</title><link rel="stylesheet" href="../assets/site.css"><script defer src="../assets/site.js"></script>@UMICOM_SITE_ICONS@</head><body><header class="top">@UMICOM_SITE_BRAND@<nav aria-label="Main navigation"><a href="index.html">Wiki</a><a href="../source-map.html">Source map</a></nav></header><main id="content"><h1>Closing several source documents</h1>
+<p>A project often leaves several source files open. In Umicom Notes, you might have <code>notes.c</code>, <code>notes.h</code> and a test file on separate tabs. When you finish a task, you can close those documents together without losing the chance to review each unsaved draft.</p>
+<nav aria-label="On this page"><a href="#studio">Use the commands</a><a href="#exercise">Try Notes</a><a href="#decisions">Understand the decisions</a><a href="#contract">Use the C contract</a><a href="#example">Complete example</a><a href="#build">Build it</a><a href="#source">Source map</a></nav>
+<h2 id="studio">Choose which documents to close</h2>
+<div class="table-wrap"><table><thead><tr><th>File-menu command</th><th>Purpose</th></tr></thead><tbody>
+<tr><td>Close All Source Documents</td><td>Visit every source document that was open when you chose the command.</td></tr>
+<tr><td>Close Other Source Documents</td><td>Keep the selected source document and visit the other open sources. The retained document is remembered by its identity, even if selection later changes.</td></tr>
+<tr><td>Cancel Closing Documents</td><td>Stop a running sequence before it processes more documents.</td></tr></tbody></table></div>
+<p>Documents are visited in the order they were opened, not in most-recently-used order. A source opened after the sequence starts is not added to that sequence. Other tools and panels, such as Output or Problems, are not source documents and are not closed by these commands.</p>
+<p>A clean document closes without a question. For each unsaved draft, choose <strong>Save and Close</strong>, <strong>Discard and Close</strong> or <strong>Cancel</strong>. Cancel has the initial focus and is the default choice. The question shows how many documents have already closed and how many remain.</p>
+<div class="note"><strong>Pinned documents:</strong> these explicit File-menu group commands include pinned source documents. Pinning still protects the individual tab-close button. Keep the selected source with Close Other Source Documents when it should remain open.</div>
+<h2 id="exercise">Try the workflow with Umicom Notes</h2>
+<p>Use a practice project. Save a <code>notes.c</code> file containing a small function, then edit its return value without saving. Create a second, untitled header draft containing its declaration.</p>
+<pre><code>/* notes.c: save this version, then change 2 to 3 in the editor. */
+int CountSavedNotes(void)
+{
+    return 2;
+}
+
+/* Untitled header draft */
+int CountSavedNotes(void);</code></pre>
+<p>Choose <strong>File → Close All Source Documents</strong>. At the question for <code>notes.c</code>, choose Save and Close. At the question for the header, choose Cancel. The source has been saved and closed; the header remains open and unsaved.</p>
+<p>Open the saved source independently and check that it now returns <code>3</code>. The header must still contain your declaration. Open the source again, select the header and choose <strong>Close Other Source Documents</strong>. The source closes, while the header stays open. This is useful when you want to keep one file in view and clear the surrounding tabs.</p>
+<p>Repeat with Discard and Close on a practice draft. Check that the saved file keeps its previous contents. Repeat with an untitled Save and cancel the filename chooser: its draft and the later documents must remain open.</p>
+<h2 id="decisions">What cancellation and failure mean</h2>
+<p>Closing several files is a sequence of separate operations. Cancel stops the remaining work. It does not reopen files that already closed, and it does not reverse a successful save. There is no automatic “undo everything” operation across the whole sequence.</p>
+<p>When a filename chooser is open, use its Cancel button. When a close question is open, use Cancel in that question. Between questions, the File-menu cancellation command stops later work. A single file write is synchronous: the interface returns to its event loop between documents, but a slow write can still delay the current operation.</p>
+<p>A failed save never becomes permission to discard. A read-only draft, an external-file conflict or an unavailable destination stops the sequence and leaves the unsuccessful document available for review. A successful write followed by a later close or display failure can leave a saved document open. Read the result before retrying.</p>
+<p>Closing releases that document’s Undo history. Save another copy before closing when you need to keep both versions. This workflow does not provide crash recovery, an application-exit wizard or automatic workspace shutdown.</p>
+<h3>A question must describe the current draft</h3>
+<p>The Framework prepares a close plan when a pending document reaches its turn. A plan is a record of the document and draft the user is being asked to review. If that draft changes after the question opens, the old answer is rejected. Saving or renaming the target separately also invalidates the question.</p>
+<p>An edit made before the document reaches its turn is included in the new question. Moving the caret or changing an unrelated tab does not approve or discard anything. A document closed separately before its turn is counted as already closed. A newly opened replacement with a different identity is not silently substituted.</p>
+<h3>Avoid competing operations</h3>
+<p>The shared editing binding permits one group-close sequence at a time. Finish or cancel Save All and allow a pending clipboard Paste to complete before starting it. An outstanding close question also prevents those operations from starting through that binding.</p>
+<p>Studio checks its build-service state before beginning the group close. Its command routes reject a new build or workspace change while the group is active. These checks coordinate the application’s own actions; they are not filesystem locks against another editor or an external process.</p>
+<h2 id="contract">Use the public C contract</h2>
+<p>A <em>session</em> remembers which documents belong to the operation and how far it has progressed. It does not own their text or write files itself. The existing document coordinator remains responsible for saving and closing.</p>
+<pre><code>#include "umicom/document/close_session.h"
+
+UmiDocumentCloseSession *session = NULL;
+UmiStatus status = UmiDocumentCloseSessionCreate(
+    documents, UMI_DOCUMENT_CLOSE_ALL, 0U, &amp;session);</code></pre>
+<p>Here, <code>documents</code> is the application’s existing coordinator. For Close Others, pass <code>UMI_DOCUMENT_CLOSE_OTHERS</code> and the identity of the document to keep. Do not create a second coordinator just to run this operation.</p>
+<div class="table-wrap"><table><thead><tr><th>Operation</th><th>What it does</th><th>Example call</th></tr></thead><tbody>
+<tr><td><code>UmiDocumentCloseSessionCreate</code></td><td>Capture the original IDs, paths and order. It changes no files or selection.</td><td><code>UmiDocumentCloseSessionCreate(documents, UMI_DOCUMENT_CLOSE_ALL, 0U, &amp;session)</code></td></tr>
+<tr><td><code>UmiDocumentCloseSessionStep</code></td><td>Process at most one captured document. A pending draft produces a question rather than an automatic discard.</td><td><code>UmiDocumentCloseSessionStep(session)</code></td></tr>
+<tr><td><code>UmiDocumentCloseSessionProgress</code></td><td>Copy progress without advancing the operation.</td><td><code>UmiDocumentCloseSessionProgress(session, &amp;progress)</code></td></tr>
+<tr><td><code>UmiDocumentCloseSessionCheck</code></td><td>Check whether the outstanding question still matches its target.</td><td><code>UmiDocumentCloseSessionCheck(session)</code></td></tr>
+<tr><td><code>UmiDocumentCloseSessionRespond</code></td><td>Apply the selected decision through the existing reviewed-close contract.</td><td><code>UmiDocumentCloseSessionRespond(session, UMI_DOCUMENT_CLOSE_SAVE, NULL)</code></td></tr>
+<tr><td><code>UmiDocumentCloseSessionCancel</code></td><td>Stop unanswered work without discarding it. Repeating cancellation on a terminal session is harmless.</td><td><code>UmiDocumentCloseSessionCancel(session)</code></td></tr>
+<tr><td><code>UmiDocumentCloseProgressFormat</code></td><td>Validate a copied result and write a complete plain-text message.</td><td><code>UmiDocumentCloseProgressFormat(&amp;progress, text, sizeof(text))</code></td></tr>
+<tr><td><code>UmiDocumentCloseSessionDestroy</code></td><td>Release the session and its current capture. It does not save or close documents.</td><td><code>UmiDocumentCloseSessionDestroy(session)</code></td></tr></tbody></table></div>
+<p>The complete programme below demonstrates these calls and their error checks together.</p>
+<h3>Read the phase, not only the return code</h3>
+<p>An <code>OK</code> result from Step means that the requested step completed. It does not mean every document closed. Read the copied phase:</p>
+<div class="table-wrap"><table><thead><tr><th>Phase</th><th>Host action</th></tr></thead><tbody>
+<tr><td><code>READY</code></td><td>Schedule one more Step. A graphical host should return to its event loop between steps.</td></tr>
+<tr><td><code>DECISION</code></td><td>Ask the user to save, discard or cancel the current draft.</td></tr>
+<tr><td><code>PATH</code></td><td>An untitled Save needs an approved absolute filename. Respond again with Save and that filename.</td></tr>
+<tr><td><code>COMPLETE</code></td><td>Show the result and release the session.</td></tr>
+<tr><td><code>FAILED</code> or <code>CANCELLED</code></td><td>Show the reason and remaining count. Release the session; use a fresh one for a later retry.</td></tr></tbody></table></div>
+<p>For an untitled draft, responding with Save and a null path requests a filename without writing. Empty, relative or overlong paths are rejected. A supplied replacement filename is not accepted for an already named document: use the separate Save As workflow instead.</p>
+<p>The counters always divide the original total into <code>closed</code>, <code>already_closed</code> and <code>remaining</code>. They describe document closure, not a count of files written. A failure or unanswered question remains in the remaining count.</p>
+<h3>Ownership and callbacks</h3>
+<p>The caller owns the session and must destroy it. The coordinator is borrowed and must remain alive during operations. Use these functions on its owner thread. Do not destroy or reentrantly change the coordinator from a provider callback. The session holds at most one full reviewed draft at a time, within the existing document-size limit.</p>
+<p>For GTK applications, use <code>UmiGtk4AdapterCloseDocuments()</code> on the existing bound adapter. It schedules the sequence and reuses the same Save/Discard/Cancel form as single-document Close. Its completion callback receives a borrowed progress pointer for that call; copy the structure when it must be kept. <code>UmiGtk4AdapterCloseDocumentsProgress()</code> copies current progress, and <code>UmiGtk4AdapterCancelCloseDocuments()</code> stops remaining work. The busy queries distinguish a group sequence from any close question.</p>
+<p>Remove the editing binding before releasing the application callback context. Queued work and late filename replies must not access a detached host. These rules allow future Umicom applications to use the same component without duplicating its document or lifetime logic.</p>
+<h2 id="example">Complete Notes example</h2>
+<p>This programme uses the actual local provider, document store, workbench and coordinator. It creates only its own temporary practice files. First it saves and closes the source, cancels at the header, and reads the saved source back. It then keeps the header and closes the reopened source through Close Others.</p>
+<pre><code>@UMICOM_SITE_CLOSE_SEQUENCE_EXAMPLE@</code></pre>
+<h2 id="build">Build and run it</h2>
+<p>From the Applications repository in Windows PowerShell, after configuration:</p>
+<pre><code>Set-Location "C:\umicom\Umicom-Applications"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+&amp; "C:\msys64\ucrt64\bin\cmake.exe" --build --preset windows-ucrt64-all-debug --target umicom-document-close-session-example --parallel 2
+&amp; ".\build\windows-ucrt64-all-debug\bin\umicom-document-close-session-example.exe"</code></pre>
+<p>On Linux, the same example can run without a graphical desktop:</p>
+<pre><code>cmake --preset headless-debug -DCMAKE_C_COMPILER=gcc
+cmake --build --preset headless-debug --target umicom-document-close-session-example --parallel 2
+./build/headless-debug/bin/umicom-document-close-session-example</code></pre>
+<p>When using an installed SDK, configure <code>examples/editor_workflow</code> with <code>CMAKE_PREFIX_PATH</code> pointing to that SDK. Its <code>umicom-notes-close-documents</code> target compiles the same programme against the installed <code>Umicom::document</code> library.</p>
+<h2 id="source">Find the implementation and its tests</h2>
+<div class="table-wrap"><table><thead><tr><th>Location</th><th>Purpose and example</th></tr></thead><tbody>
+<tr><td><code>include/umicom/document/close_session.h</code></td><td>Public session contract, counters and ownership rules. Include it as the example does.</td></tr>
+<tr><td><code>src/document/close_session.c</code></td><td>Captured target sequence and decision handling. Step and Respond delegate to the existing close plan.</td></tr>
+<tr><td><code>src/document/coordinator.c</code> and <code>include/umicom/document/close.h</code></td><td>Authoritative single-document state checks, save and close. Used by each session target.</td></tr>
+<tr><td><code>src/ui/workbench.c</code> and <code>include/umicom/ui/workbench.h</code></td><td><code>UmiUiWorkbenchClearClosedDocument()</code> clears an absent active ID without disturbing another active document. The coordinator calls it after removing a view.</td></tr>
+<tr><td><code>adapters/gtk4/document_commands_gtk4.c</code></td><td>Existing editing binding, reusable close question, filename response and group idle runner.</td></tr>
+<tr><td><code>adapters/gtk4/document_saving_gtk4.c</code></td><td>Existing Save All host rejects overlap with an outstanding close decision.</td></tr>
+<tr><td><code>include/umicom/ui/gtk4/document_commands.h</code></td><td>GTK-facing group functions and callback. Consumed by Studio and the native fixture.</td></tr>
+<tr><td><code>src/application_shell/profiles/file_menu.c</code></td><td>The three group-close command contributions. Applications connect these through their normal routing.</td></tr>
+<tr><td><code>tests/document_closing/test_close_session.c</code></td><td>Real document/file cases, stale questions, cancellation, counts and active-ID cleanup.</td></tr>
+<tr><td><code>tests/document_closing/test_close_session_gtk4.c</code></td><td>Native controls, completion, binding removal, retained callbacks and a no-display library-link case.</td></tr>
+<tr><td><code>examples/editor_workflow/close_documents.c</code></td><td>The complete programme above. The Wiki embeds this file during site generation.</td></tr>
+<tr><td><code>applications/studio/src/gui/workbench/runtime/interaction/documents.inc</code></td><td>Thin Studio request and completion handlers. Command routing, availability and project guards sit beside it in the runtime directory.</td></tr></tbody></table></div>
+<h2>Test the outcome</h2>
+<p>A close button responding is not enough. Check which document disappeared, which drafts remain, what the saved file contains and what the progress report says. After the last source closes, the workbench must not continue naming its absent view as active.</p>
+<p>For an automated regression, first make the outcome deliberately wrong in an isolated fixture and confirm that the assertion detects it. Keep native input checks separate from core service tests: a successful core test does not operate a GTK window.</p>
+<h2>Continue the exercise</h2>
+<p>Add a third practice source and close it separately before its turn. Check that the report counts it as already closed. Then open a new source after creating a session and confirm that it remains open. Finally, change the current draft after its question is prepared and verify that the old discard is rejected.</p>
+</main></body></html>

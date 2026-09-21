@@ -111,6 +111,17 @@ UmiStatus umi_ui_workbench_activate_perspective(UmiUiWorkbench *workbench,
  */
 UmiStatus umi_ui_workbench_activate_document(UmiUiWorkbench *workbench,
                                              const char *view_id);
+
+/** Clear an active-document reference only after that exact view is absent.
+ * A live view returns INVALID_STATE and remains active. A different active
+ * document is preserved. This does not remove views, alter text or reset editor
+ * groups; it only prevents a closed ID surviving in snapshots/session state.
+ * Use on the workbench owner thread after removing a view. NULL/empty/overlong
+ * identifiers are rejected. Repeating a completed cleanup is harmless.
+ * Example: DocumentCoordinator calls this after its owned view is removed. */
+UmiStatus UmiUiWorkbenchClearClosedDocument(UmiUiWorkbench *workbench,
+    const char *closedViewId);
+
 /**
  * Provide the ui workbench activate activity operation used by this module and its client
  * applications.

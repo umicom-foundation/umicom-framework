@@ -1496,6 +1496,7 @@ add_library(umicom_document STATIC
     src/document/coordinator.c
     src/document/commands.c
     src/document/save_session.c
+    src/document/close_session.c
     ${UMICOM_DOCUMENT_CAPABILITY_SOURCES}
     ${UMICOM_DOCUMENT_ASSEMBLY_SOURCE}
 )
@@ -5385,4 +5386,8 @@ install(FILES docs/WORKFLOW_TOOLS.html
 
 # Install the public close-contract lesson beside the other document guides.
 install(FILES docs/CLOSING_DOCUMENTS.html
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs COMPONENT Framework)
+
+# Install the public multi-document close guide beside the earlier single-close lesson.
+install(FILES docs/CLOSING_MULTIPLE_DOCUMENTS.html
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs COMPONENT Framework)
