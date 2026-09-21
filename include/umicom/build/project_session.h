@@ -23,7 +23,8 @@
 extern "C" {
 #endif
 
-#define UMI_BUILD_PROJECT_SESSION_MAX_PHASES 3U
+/* Previously 3U; packaging and deployment also require the Test phase. */
+#define UMI_BUILD_PROJECT_SESSION_MAX_PHASES 4U
 
 typedef struct UmiBuildProjectSession UmiBuildProjectSession;
 
@@ -61,7 +62,12 @@ void umi_build_project_session_destroy(UmiBuildProjectSession *session);
  * workspace trust decision. Build runs Configure then Build; Run runs Configure,
  * Build then the configured program. Test/Install run Configure, Build-all, then
  * Test/Install. Configure and Clean run once. No shell is used.
- * A nonempty Run program is required; no default executable is guessed. */
+ * A nonempty Run program is required; no default executable is guessed.
+ * Rebuild is Configure/Clean/Build. Package is Configure/Build-all/Test/CPack
+ * and creates a ZIP and SHA-256 sidecar below build_directory/packages.
+ * Deploy is Configure/Build-all/Test/Install to the reviewed install_directory.
+ * It is local installation, not remote transfer, activation or rollback.
+ * Test failure or an empty test suite blocks Package and Deploy. */
 UmiStatus umi_build_project_session_submit(UmiBuildProjectSession *session,
     const UmiBuildProfile *profile, UmiBuildPhase phase, bool trusted);
 /** Poll copied state/results; calls do not invoke owner callbacks or wait for
@@ -77,3 +83,9 @@ void umi_build_project_session_cancel(UmiBuildProjectSession *session);
 }
 #endif
 #endif
+
+// MIGRATION REFERENCE — previous implementation excerpts
+// The shared build session now distinguishes Package, Rebuild and local Deploy. Command execution stays in src/build/runner.c and its existing providers; CPack uses src/build/cpack_provider.c.
+// These comments explain superseded statements; do not enable both execution paths.
+// Previous source near line 26:
+// #define UMI_BUILD_PROJECT_SESSION_MAX_PHASES 3U

@@ -13,6 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/request_support.h"
+#include <string.h>
+/* Required DAP frameId may be zero; thread/reference zero remains invalid. */
 
 /*
  * Provide the debug runtime request no arguments operation used by this module and its
@@ -51,7 +53,7 @@ static UmiStatus request_numeric(
      * used.
      */
     if (adapter == NULL || command == NULL ||
-        key == NULL || value == 0U) {
+        key == NULL || (value == 0U && strcmp(key, "frameId") != 0)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
@@ -139,3 +141,9 @@ UmiStatus umi_debug_runtime_request_raw(
         context != NULL ? context : "",
         out_sequence);
 }
+
+// MIGRATION REFERENCE — previous implementation excerpts
+// Protocol sequencing, bounded request waiting and inspection now use the helpers in this file and src/debug_runtime/deadline.h. They remain Framework-owned.
+// These comments explain superseded statements; do not enable both execution paths.
+// Previous source near line 54:
+//         key == NULL || value == 0U) {

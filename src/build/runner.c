@@ -21,6 +21,7 @@
 
 #include "umicom/build/cmake_provider.h"
 #include "umicom/build/ctest_provider.h"
+#include "umicom/build/cpack_provider.h"
 #include "umicom/build/parser.h"
 #include "umicom/platform/process.h"
 #include "umicom/platform/filesystem.h"
@@ -38,6 +39,7 @@ struct UmiBuildRunner {
 
 static UmiBuildProvider provider_for_phase(UmiBuildPhase phase)
 {
+    if (phase == UMI_BUILD_PHASE_PACKAGE) return UmiBuildCPackProvider();
     if (phase == UMI_BUILD_PHASE_TEST) {
         return umi_build_ctest_provider();
     }

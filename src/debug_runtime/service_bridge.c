@@ -372,7 +372,8 @@ UmiStatus umi_debug_runtime_publish_scopes(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (bridge == NULL || result == NULL || frame_id == 0U) {
+    /* A required DAP frame ID is nonnegative; zero is a real frame. */
+    if (bridge == NULL || result == NULL || frame_id > INT32_MAX) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
@@ -875,3 +876,9 @@ UmiStatus umi_debug_runtime_publish_event(
 
     return UMI_STATUS_OK;
 }
+
+// MIGRATION REFERENCE — previous implementation excerpts
+// Protocol sequencing, bounded request waiting and inspection now use the helpers in this file and src/debug_runtime/deadline.h. They remain Framework-owned.
+// These comments explain superseded statements; do not enable both execution paths.
+// Previous source near line 375:
+//     if (bridge == NULL || result == NULL || frame_id == 0U) {

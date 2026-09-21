@@ -13,6 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/build/task.h"
+/* The former upper bound was UMI_BUILD_PHASE_INSTALL. Package, Rebuild
+ * and local Deploy are now declared by include/umicom/build/types.h. */
 
 #include <stdlib.h>
 #include <string.h>
@@ -110,10 +112,25 @@ void umi_build_task_init(UmiBuildTaskSnapshot *task,
         task->build_phase = UMI_BUILD_PHASE_CLEAN;
         task->has_build_phase = 1;
         break;
+    /* Previously Install, Package and Deploy all mapped to INSTALL.
+     * The original mapping is retained below; the existing task types now
+     * select their actual Framework phases, not a silent substitute. */
+    // case UMI_BUILD_TASK_INSTALL:
+    // case UMI_BUILD_TASK_PACKAGE:
+    // case UMI_BUILD_TASK_DEPLOY:
+    //     task->build_phase = UMI_BUILD_PHASE_INSTALL;
+    //     task->has_build_phase = 1;
+    //     break;
     case UMI_BUILD_TASK_INSTALL:
-    case UMI_BUILD_TASK_PACKAGE:
-    case UMI_BUILD_TASK_DEPLOY:
         task->build_phase = UMI_BUILD_PHASE_INSTALL;
+        task->has_build_phase = 1;
+        break;
+    case UMI_BUILD_TASK_PACKAGE:
+        task->build_phase = UMI_BUILD_PHASE_PACKAGE;
+        task->has_build_phase = 1;
+        break;
+    case UMI_BUILD_TASK_DEPLOY:
+        task->build_phase = UMI_BUILD_PHASE_DEPLOY;
         task->has_build_phase = 1;
         break;
     case UMI_BUILD_TASK_COMMAND:
@@ -265,7 +282,7 @@ UmiStatus umi_build_task_validate(const UmiBuildTaskSnapshot *task,
     }
     if (task->has_build_phase &&
         (task->build_phase < UMI_BUILD_PHASE_CONFIGURE ||
-         task->build_phase > UMI_BUILD_PHASE_INSTALL)) {
+         task->build_phase > UMI_BUILD_PHASE_DEPLOY)) {
         write_message(out_message, message_capacity,
                       "Build phase is invalid.");
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -447,3 +464,9 @@ const char *umi_build_task_run_on_text(UmiBuildTaskRunOn run_on)
     default: return "Unknown";
     }
 }
+
+// MIGRATION REFERENCE — previous implementation excerpts
+// The shared build session now distinguishes Package, Rebuild and local Deploy. Command execution stays in src/build/runner.c and its existing providers; CPack uses src/build/cpack_provider.c.
+// These comments explain superseded statements; do not enable both execution paths.
+// Previous source near line 268:
+//          task->build_phase > UMI_BUILD_PHASE_INSTALL)) {

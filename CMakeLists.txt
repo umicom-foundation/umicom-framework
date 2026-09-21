@@ -1048,6 +1048,7 @@ add_library(umicom_build STATIC
     src/build/cmake_provider.c
     src/build/ninja_provider.c
     src/build/ctest_provider.c
+    src/build/cpack_provider.c
     src/build/runner.c
     src/build/project_session.c
     src/build/graph.c
@@ -5391,3 +5392,12 @@ install(FILES docs/CLOSING_DOCUMENTS.html
 # Install the public multi-document close guide beside the earlier single-close lesson.
 install(FILES docs/CLOSING_MULTIPLE_DOCUMENTS.html
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs COMPONENT Framework)
+
+# Real development workflow consumers share the existing Framework targets.
+if(BUILD_TESTING)
+    add_subdirectory(tests/development_workflow)
+endif()
+
+# Install the public project-development lesson beside the existing guides.
+install(FILES docs/DEVELOPMENT_WORKFLOW.html
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/docs)

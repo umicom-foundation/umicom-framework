@@ -67,9 +67,16 @@ UmiStatus umi_debug_runtime_decode_stack_trace(
 
         /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (token < 0) continue;
-        id = umi_debug_runtime_decoder_optional_int(&document, token, "id", 0);
+        /* DAP frame identifiers may be zero. A missing/negative identifier is
+         * different from the valid top frame 0. The previous test below lost
+         * that frame before the shared platform could request its scopes.
+         * Replacement: this decoder keeps the complete non-negative DAP range.
+         */
+        // id = umi_debug_runtime_decoder_optional_int(&document, token, "id", 0);
+        // if (id <= 0) continue;
+        id = umi_debug_runtime_decoder_optional_int(&document, token, "id", -1);
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (id <= 0) continue;
+        if (id < 0 || id > INT32_MAX) continue;
 
         item->id = (uint64_t)id;
         (void)umi_debug_runtime_decoder_optional_string(

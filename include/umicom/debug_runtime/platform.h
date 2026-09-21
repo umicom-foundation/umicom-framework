@@ -63,6 +63,30 @@ typedef struct UmiDebugRuntimePlatformSnapshot {
 UmiStatus umi_debug_runtime_platform_create(
     UmiDebugRuntimePlatform **out_platform);
 
+/** Launch an installed native adapter through the existing DAP runtime.
+ * kind is "lldb" or "gdb". A NULL/empty executable uses the builtin profile;
+ * an explicit executable is a filesystem path, never a shell command.
+ * program and working_directory must be absolute existing file/directory paths.
+ * arguments uses the existing Framework argument parser (not shell expansion).
+ * The adapter stops at entry/main; ASLR remains enabled. Breakpoints already in
+ * service() are configured before configurationDone. The caller must authorise
+ * executing this project and selected adapter before calling. All operations
+ * are synchronous and owner-thread confined with bounded request waits.
+ * See examples/development_workflow/README.html and tests/development_workflow.
+ */
+UmiStatus UmiDebugRuntimePlatformLaunchNative(UmiDebugRuntimePlatform *platform,
+    const char *kind, const char *executable, const char *program,
+    const char *working_directory, const char *arguments, uint32_t timeout_ms);
+
+/** Populate Threads, Stack, Scopes and non-expensive Variables after a stop.
+ * Uses one shared timeout budget and the existing Debug Service registries.
+ * Does not evaluate watches automatically: evaluating an expression can execute
+ * target code, so the application requests it explicitly through evaluate_watch.
+ * Frame zero is a valid DAP frame. Returns INVALID_STATE unless paused. */
+UmiStatus UmiDebugRuntimePlatformInspectStopped(UmiDebugRuntimePlatform *platform,
+    uint32_t timeout_ms);
+
+
 /**
  * Release or reset state held by debug runtime platform so the same storage can be reused
  * safely.

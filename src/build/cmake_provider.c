@@ -116,7 +116,9 @@ static UmiStatus cmake_command(const UmiBuildProfile *profile,
         }
         return UMI_STATUS_OK;
     }
-    if (phase == UMI_BUILD_PHASE_INSTALL) {
+    /* Former predicate: phase == UMI_BUILD_PHASE_INSTALL. Local Deploy uses
+     * the same install command after the session has completed its tests. */
+    if (phase == UMI_BUILD_PHASE_INSTALL || phase == UMI_BUILD_PHASE_DEPLOY) {
         if (!umi_build_command_add_argument(out_command, "--install") ||
             !umi_build_command_add_argument(out_command,
                                             profile->build_directory) ||
@@ -152,7 +154,16 @@ UmiBuildProvider umi_build_cmake_provider(void)
         UMI_BUILD_PHASE_MASK(UMI_BUILD_PHASE_BUILD) |
         UMI_BUILD_PHASE_MASK(UMI_BUILD_PHASE_CLEAN) |
         UMI_BUILD_PHASE_MASK(UMI_BUILD_PHASE_RUN) |
-        UMI_BUILD_PHASE_MASK(UMI_BUILD_PHASE_INSTALL);
+        UMI_BUILD_PHASE_MASK(UMI_BUILD_PHASE_INSTALL) |
+        UMI_BUILD_PHASE_MASK(UMI_BUILD_PHASE_DEPLOY);
     provider.create_command = cmake_command;
     return provider;
 }
+
+// MIGRATION REFERENCE — previous implementation excerpts
+// The shared build session now distinguishes Package, Rebuild and local Deploy. Command execution stays in src/build/runner.c and its existing providers; CPack uses src/build/cpack_provider.c.
+// These comments explain superseded statements; do not enable both execution paths.
+// Previous source near line 119:
+//     if (phase == UMI_BUILD_PHASE_INSTALL) {
+// Previous source near line 155:
+//         UMI_BUILD_PHASE_MASK(UMI_BUILD_PHASE_INSTALL);

@@ -14,6 +14,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/build/incremental.h"
+/* The former upper bound was UMI_BUILD_PHASE_INSTALL. Package, Rebuild
+ * and local Deploy are now declared by include/umicom/build/types.h. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -157,7 +159,7 @@ static UmiStatus validate_evidence(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     if (evidence->phase < UMI_BUILD_PHASE_CONFIGURE ||
-        evidence->phase > UMI_BUILD_PHASE_INSTALL) {
+        evidence->phase > UMI_BUILD_PHASE_DEPLOY) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     if ((evidence->reason_flags &
@@ -508,3 +510,9 @@ const char *umi_build_incremental_reason_text(
         append_reason(out_text, capacity, "forced");
     return out_text;
 }
+
+// MIGRATION REFERENCE — previous implementation excerpts
+// The shared build session now distinguishes Package, Rebuild and local Deploy. Command execution stays in src/build/runner.c and its existing providers; CPack uses src/build/cpack_provider.c.
+// These comments explain superseded statements; do not enable both execution paths.
+// Previous source near line 160:
+//         evidence->phase > UMI_BUILD_PHASE_INSTALL) {

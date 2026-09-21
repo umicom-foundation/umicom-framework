@@ -220,6 +220,14 @@ UmiSiteEscape("${_example}" UMICOM_SITE_CLOSE_SEQUENCE_EXAMPLE)
 configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/CLOSING_MULTIPLE_DOCUMENTS.html"
     "${UMICOM_SITE_OUTPUT}/CLOSING_MULTIPLE_DOCUMENTS.html" COPYONLY)
 
+# Keep the development lesson's example compiled and displayed from one source.
+set(_development_workflow_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/development_workflow/main.c")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_development_workflow_example}")
+file(READ "${_development_workflow_example}" _example)
+UmiSiteEscape("${_example}" UMICOM_SITE_DEVELOPMENT_WORKFLOW_EXAMPLE)
+configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/DEVELOPMENT_WORKFLOW.html"
+    "${UMICOM_SITE_OUTPUT}/DEVELOPMENT_WORKFLOW.html" COPYONLY)
+
 # This is a file inventory, not a second C parser or a runtime module registry.
 file(GLOB_RECURSE _headers CONFIGURE_DEPENDS LIST_DIRECTORIES FALSE
     RELATIVE "${UMICOM_SITE_FRAMEWORK_ROOT}" "${UMICOM_SITE_FRAMEWORK_ROOT}/include/umicom/*.h")

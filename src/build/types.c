@@ -60,6 +60,9 @@ const char *umi_build_phase_text(UmiBuildPhase phase)
         case UMI_BUILD_PHASE_CLEAN: return "clean";
         case UMI_BUILD_PHASE_RUN: return "run";
         case UMI_BUILD_PHASE_INSTALL: return "install";
+        case UMI_BUILD_PHASE_PACKAGE: return "package";
+        case UMI_BUILD_PHASE_REBUILD: return "rebuild";
+        case UMI_BUILD_PHASE_DEPLOY: return "deploy";
         default: return "unknown";
     }
 }

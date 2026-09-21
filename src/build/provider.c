@@ -14,12 +14,14 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/build/provider.h"
+/* The former upper bound was UMI_BUILD_PHASE_INSTALL. Package, Rebuild
+ * and local Deploy are now declared by include/umicom/build/types.h. */
 
 int umi_build_provider_supports(const UmiBuildProvider *provider,
                                 UmiBuildPhase phase)
 {
     if (provider == NULL || phase < UMI_BUILD_PHASE_CONFIGURE ||
-        phase > UMI_BUILD_PHASE_INSTALL) {
+        phase > UMI_BUILD_PHASE_DEPLOY) {
         return 0;
     }
     return (provider->supported_phases &
@@ -41,3 +43,9 @@ UmiStatus umi_build_provider_create_command(
     }
     return provider->create_command(profile, phase, out_command);
 }
+
+// MIGRATION REFERENCE — previous implementation excerpts
+// The shared build session now distinguishes Package, Rebuild and local Deploy. Command execution stays in src/build/runner.c and its existing providers; CPack uses src/build/cpack_provider.c.
+// These comments explain superseded statements; do not enable both execution paths.
+// Previous source near line 22:
+//         phase > UMI_BUILD_PHASE_INSTALL) {

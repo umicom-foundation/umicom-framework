@@ -15,6 +15,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/adapter.h"
+#include "deadline.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -394,6 +395,7 @@ UmiStatus umi_debug_runtime_adapter_wait_response(
     UmiDebugRuntimeEnvelope *out_response)
 {
     uint32_t attempts = 0U;
+    DebugDeadline deadline = DebugDeadlineStart(timeout_ms);
     UmiStatus status;
 
     /*
@@ -420,15 +422,19 @@ UmiStatus umi_debug_runtime_adapter_wait_response(
      * pass.
      */
     while (attempts < 256U) {
+        if (attempts != 0U && timeout_ms != 0U && DebugDeadlineRemaining(&deadline) == 0U)
+            return UMI_STATUS_TIMEOUT;
         UmiDebugRuntimeEnvelope envelope;
 
+        /* Former per-frame timeout_ms is now the remaining operation budget. */
         status = umi_debug_runtime_adapter_receive(
             adapter,
-            timeout_ms,
+            DebugDeadlineRemaining(&deadline),
             &envelope);
 
         /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_NOT_FOUND) {
+            if (DebugDeadlineRemaining(&deadline) == 0U) return UMI_STATUS_TIMEOUT;
             attempts += 1U;
             continue;
         }

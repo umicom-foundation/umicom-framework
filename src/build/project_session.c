@@ -131,8 +131,10 @@ UmiStatus umi_build_project_session_submit(UmiBuildProjectSession *session,
     UmiTaskConfig task_config = {0};
     UmiStatus status;
     if (session == NULL || profile == NULL || phase < UMI_BUILD_PHASE_CONFIGURE ||
-        phase > UMI_BUILD_PHASE_INSTALL) return UMI_STATUS_INVALID_ARGUMENT;
+        phase > UMI_BUILD_PHASE_DEPLOY) return UMI_STATUS_INVALID_ARGUMENT;
     if (!trusted) return UMI_STATUS_PERMISSION_DENIED;
+    if ((phase == UMI_BUILD_PHASE_PACKAGE || phase == UMI_BUILD_PHASE_DEPLOY) &&
+        !profile->build_testing) return UMI_STATUS_INVALID_STATE;
     status = umi_build_profile_validate(profile, NULL, 0U);
     if (status != UMI_STATUS_OK) return status;
     if (phase == UMI_BUILD_PHASE_RUN && profile->run_program[0] == '\0') return UMI_STATUS_INVALID_STATE;
@@ -146,16 +148,38 @@ UmiStatus umi_build_project_session_submit(UmiBuildProjectSession *session,
     status = umi_task_create(&task_config, &session->task);
     if (status != UMI_STATUS_OK) return status;
     session->profile = *profile;
-    if (phase == UMI_BUILD_PHASE_TEST || phase == UMI_BUILD_PHASE_INSTALL)
+/* Previous three-stage plan retained. The same worker now gates delivery on tests. */
+//     if (phase == UMI_BUILD_PHASE_TEST || phase == UMI_BUILD_PHASE_INSTALL)
+//         session->profile.build_target[0] = '\0';
+//     session->phase_count = 0U;
+//     if (phase == UMI_BUILD_PHASE_BUILD || phase == UMI_BUILD_PHASE_RUN ||
+//         phase == UMI_BUILD_PHASE_TEST || phase == UMI_BUILD_PHASE_INSTALL)
+//         session->phases[session->phase_count++] = UMI_BUILD_PHASE_CONFIGURE;
+//     if (phase == UMI_BUILD_PHASE_RUN || phase == UMI_BUILD_PHASE_TEST ||
+//         phase == UMI_BUILD_PHASE_INSTALL)
+//         session->phases[session->phase_count++] = UMI_BUILD_PHASE_BUILD;
+//     session->phases[session->phase_count++] = phase;
+    if (phase == UMI_BUILD_PHASE_TEST || phase == UMI_BUILD_PHASE_INSTALL ||
+        phase == UMI_BUILD_PHASE_PACKAGE || phase == UMI_BUILD_PHASE_DEPLOY)
         session->profile.build_target[0] = '\0';
     session->phase_count = 0U;
-    if (phase == UMI_BUILD_PHASE_BUILD || phase == UMI_BUILD_PHASE_RUN ||
-        phase == UMI_BUILD_PHASE_TEST || phase == UMI_BUILD_PHASE_INSTALL)
+    if (phase == UMI_BUILD_PHASE_REBUILD) {
         session->phases[session->phase_count++] = UMI_BUILD_PHASE_CONFIGURE;
-    if (phase == UMI_BUILD_PHASE_RUN || phase == UMI_BUILD_PHASE_TEST ||
-        phase == UMI_BUILD_PHASE_INSTALL)
+        session->phases[session->phase_count++] = UMI_BUILD_PHASE_CLEAN;
         session->phases[session->phase_count++] = UMI_BUILD_PHASE_BUILD;
-    session->phases[session->phase_count++] = phase;
+    } else {
+        if (phase == UMI_BUILD_PHASE_BUILD || phase == UMI_BUILD_PHASE_RUN ||
+            phase == UMI_BUILD_PHASE_TEST || phase == UMI_BUILD_PHASE_INSTALL ||
+            phase == UMI_BUILD_PHASE_PACKAGE || phase == UMI_BUILD_PHASE_DEPLOY)
+            session->phases[session->phase_count++] = UMI_BUILD_PHASE_CONFIGURE;
+        if (phase == UMI_BUILD_PHASE_RUN || phase == UMI_BUILD_PHASE_TEST ||
+            phase == UMI_BUILD_PHASE_INSTALL || phase == UMI_BUILD_PHASE_PACKAGE ||
+            phase == UMI_BUILD_PHASE_DEPLOY)
+            session->phases[session->phase_count++] = UMI_BUILD_PHASE_BUILD;
+        if (phase == UMI_BUILD_PHASE_PACKAGE || phase == UMI_BUILD_PHASE_DEPLOY)
+            session->phases[session->phase_count++] = UMI_BUILD_PHASE_TEST;
+        session->phases[session->phase_count++] = phase;
+    }
     umi_cancellation_token_reset(session->cancellation);
     (void)umi_mutex_lock(session->mutex);
     ++session->snapshot.operation_id;
@@ -210,3 +234,9 @@ void umi_build_project_session_cancel(UmiBuildProjectSession *session)
     if (session != NULL && session->cancellation != NULL)
         umi_cancellation_token_request(session->cancellation);
 }
+
+// MIGRATION REFERENCE — previous implementation excerpts
+// The shared build session now distinguishes Package, Rebuild and local Deploy. Command execution stays in src/build/runner.c and its existing providers; CPack uses src/build/cpack_provider.c.
+// These comments explain superseded statements; do not enable both execution paths.
+// Previous source near line 134:
+//         phase > UMI_BUILD_PHASE_INSTALL) return UMI_STATUS_INVALID_ARGUMENT;
