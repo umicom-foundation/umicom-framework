@@ -157,3 +157,42 @@ const char *umi_test_suite_name(const UmiTestSuite *suite)
 {
     return suite != NULL ? suite->name : NULL;
 }
+
+/* Validate every bounded identity before strcmp, and every addition before
+ * publication. Copying the whole batch is the sole commit point; a failed
+ * discovery cannot leave the first few incoming records in the live suite. */
+UmiStatus UmiTestSuiteAppendCases(UmiTestSuite *suite,
+    const UmiTestCase *cases, size_t count)
+{
+    if (suite == NULL || (cases == NULL && count != 0U))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (suite->count > UMI_TEST_SUITE_MAX_CASES ||
+        count > UMI_TEST_SUITE_MAX_CASES - suite->count)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* The legacy single-record API also serves invalid-record tests. Do not
+     * assume it validated identities; inspect existing records before lookup. */
+    for (size_t index = 0U; count != 0U && index < suite->count; ++index) {
+        if (memchr(suite->cases[index].test_id, '\0',
+                sizeof suite->cases[index].test_id) == NULL)
+            return UMI_STATUS_INVALID_STATE;
+    }
+    for (size_t index = 0U; index < count; ++index) {
+        const UmiTestCase *item = &cases[index];
+        if (memchr(item->test_id, '\0', sizeof item->test_id) == NULL ||
+            memchr(item->name, '\0', sizeof item->name) == NULL ||
+            item->test_id[0] == '\0' || item->name[0] == '\0')
+            return UMI_STATUS_INVALID_ARGUMENT;
+        if (umi_test_suite_find(suite, item->test_id) != NULL)
+            return UMI_STATUS_ALREADY_EXISTS;
+        for (size_t previous = 0U; previous < index; ++previous) {
+            if (strcmp(cases[previous].test_id, item->test_id) == 0)
+                return UMI_STATUS_ALREADY_EXISTS;
+        }
+    }
+    if (count != 0U) {
+        memmove(suite->cases + suite->count, cases,
+            count * sizeof *cases);
+        suite->count += count;
+    }
+    return UMI_STATUS_OK;
+}

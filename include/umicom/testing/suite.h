@@ -69,6 +69,17 @@ const char *umi_test_suite_id(const UmiTestSuite *suite);
  */
 const char *umi_test_suite_name(const UmiTestSuite *suite);
 
+/** Append a complete batch without publishing a partial catalogue.
+ * All incoming identities and duplicates are checked before any write. On
+ * failure, the suite, existing records and borrowed record pointers are
+ * unchanged. No allocation occurs. Empty input is a successful no-op.
+ * The caller must serialise mutations; this is not a thread-safety primitive.
+ * Case storage is borrowed only for this call. The existing 1,024-case limit
+ * remains in force; capacity exhaustion is an error, never a partial success.
+ */
+UmiStatus UmiTestSuiteAppendCases(UmiTestSuite *suite,
+    const UmiTestCase *cases, size_t count);
+
 #ifdef __cplusplus
 }
 #endif

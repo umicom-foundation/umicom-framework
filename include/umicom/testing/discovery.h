@@ -32,6 +32,19 @@ UmiStatus umi_test_discovery_parse_ctest(const char *output,
                                          UmiTestSuite *suite,
                                          size_t *out_discovered);
 
+/** Parse one complete captured CTest human listing and append atomically.
+ * length excludes the trailing NUL. Embedded NULs, malformed test rows,
+ * duplicate identifiers, oversized identities, a missing/repeated summary,
+ * and a Total Tests count that differs from the listing are errors. Failure
+ * leaves the suite unchanged and writes zero to outDiscovered when supplied.
+ * Names ending in the ambiguous human-output " (Disabled)" suffix are rejected
+ * with UNAVAILABLE; use the JSON metadata provider for disabled catalogues.
+ * No process or file is accessed. The caller supplies immutable text for the
+ * call and serialises suite access. At most 8 MiB of text is accepted.
+ */
+UmiStatus UmiTestDiscoveryParseCtestComplete(const char *output, size_t length,
+    const char *buildDirectory, UmiTestSuite *suite, size_t *outDiscovered);
+
 #ifdef __cplusplus
 }
 #endif
