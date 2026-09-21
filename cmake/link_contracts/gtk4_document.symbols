@@ -1,0 +1,11 @@
+# Umicom Framework: native document operations used by Studio.
+UmiGtk4AdapterCloseDocumentsBusy
+UmiGtk4AdapterDocumentCloseBusy
+UmiGtk4AdapterCloseDocuments
+UmiGtk4AdapterCancelCloseDocuments
+UmiGtk4AdapterCloseDocumentsProgress
+UmiGtk4AdapterRequestDocumentClose
+UmiGtk4AdapterDocumentSaveAll
+UmiGtk4AdapterDocumentSaveAllBusy
+UmiGtk4AdapterCancelDocumentSaveAll
+UmiGtk4AdapterDocumentSaveAllProgress

@@ -1003,5 +1003,13 @@ UmiStatus UmiGtk4AdapterCloseDocumentsProgress(const UmiGtk4Adapter *adapter,
     if (!UmiGtk4AdapterCloseDocumentsBusy(adapter)) return UMI_STATUS_NOT_FOUND;
     CloseRun *run = g_object_get_data(adapter->edit_lifetime, "close-run");
     if (CloseRunOwner(run) != adapter) return UMI_STATUS_INVALID_STATE;
-    return UmiDocumentCloseSessionProgress(run->session, outProgress);
+    /* Former direct publication retained for reference:
+     * return UmiDocumentCloseSessionProgress(run->session, outProgress);
+     * The shared validator in src/document/close_session.c now checks a private
+     * snapshot first. Failed observations leave caller-owned storage intact. */
+    UmiDocumentCloseProgress progress;
+    UmiStatus status = UmiDocumentCloseSessionProgress(run->session, &progress);
+    if (status == UMI_STATUS_OK) status = UmiDocumentCloseProgressValidate(&progress);
+    if (status == UMI_STATUS_OK) *outProgress = progress;
+    return status;
 }

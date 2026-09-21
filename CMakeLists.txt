@@ -3263,6 +3263,10 @@ include(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomApplicationRuntimeIntegration.cmake"
 )
 # Register verification targets only when the developer has enabled testing.
+# Verify the exact editor archives used by downstream applications. The checks
+# are build targets, not a new runtime service or duplicate document library.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomLibraryLinkChecks.cmake")
+
 if(BUILD_TESTING)
     # Define the add framework test build helper so parent and application projects apply one
     # consistent rule.
@@ -3388,6 +3392,7 @@ if(BUILD_TESTING)
     add_subdirectory(tests/document_editing)
     add_subdirectory(tests/document_saving)
     add_subdirectory(tests/document_closing)
+    add_subdirectory(tests/library_link)
     add_subdirectory(tests/workflow_tools)
     add_subdirectory(examples/gui_recording)
     umicom_add_framework_test(umicom-ui-appearance-persistence-tests framework.ui.appearance_persistence tests/test_ui_appearance_persistence.c)

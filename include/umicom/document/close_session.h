@@ -100,6 +100,21 @@ UmiStatus UmiDocumentCloseSessionRespond(UmiDocumentCloseSession *session,
  * closed documents, roll back saved files or discard unanswered drafts. */
 UmiStatus UmiDocumentCloseSessionCancel(UmiDocumentCloseSession *session);
 
+/** Validate a copied summary without accessing its coordinator. Counts must
+ * partition total without overflow; phase/status, terminated name and Boolean
+ * fields must agree. This checks consistency, not the truth of an external
+ * caller's claims. INVALID_ARGUMENT leaves the input untouched. READY,
+ * DECISION and PATH are valid progress states, but not completed operations.
+ * Example: examples/editor_workflow/link_components.c. */
+UmiStatus UmiDocumentCloseProgressValidate(const UmiDocumentCloseProgress *progress);
+
+/** Establish completion of every captured target. Return OK only for valid
+ * COMPLETE progress; propagate FAILED/CANCELLED status and return INVALID_STATE
+ * while work or a user decision remains. New documents opened after capture
+ * are outside that sequence. This does not save, close or roll back anything.
+ * Use after observing progress, not as a substitute for the reviewed decision. */
+UmiStatus UmiDocumentCloseProgressRequireComplete(const UmiDocumentCloseProgress *progress);
+
 /** Produce a complete plain-text status message into caller-owned storage.
  * Reject malformed phase/count/name data; leave output unchanged on invalid
  * input or insufficient capacity. Does not access documents or a filesystem. */

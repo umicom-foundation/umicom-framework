@@ -1,0 +1,14 @@
+# Umicom Framework: public document functions required by Studio editing.
+# One external code definition per function; never satisfy these with stubs.
+UmiDocumentCloseSessionCreate
+UmiDocumentCloseSessionDestroy
+UmiDocumentCloseSessionProgress
+UmiDocumentCloseSessionStep
+UmiDocumentCloseSessionCheck
+UmiDocumentCloseSessionRespond
+UmiDocumentCloseSessionCancel
+UmiDocumentCloseProgressFormat
+UmiDocumentCloseProgressValidate
+UmiDocumentCloseProgressRequireComplete
+UmiDocumentSaveProgressFormat
+UmiDocumentSaveProgressValidate

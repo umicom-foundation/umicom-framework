@@ -57,7 +57,8 @@ elseif(CASE STREQUAL "examples")
             "editor_workflow/save_progress.c|save-progress.html"
             "editor_workflow/close_document.c|closing-documents.html"
             "editor_workflow/close_documents.c|closing-multiple-documents.html"
-        "development_workflow/main.c|development-workflow.html")
+        "development_workflow/main.c|development-workflow.html"
+            "editor_workflow/link_components.c|editor-library-links.html")
         string(REPLACE "|" ";" _parts "${_pair}")
         list(GET _parts 0 _source)
         list(GET _parts 1 _page)

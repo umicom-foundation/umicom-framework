@@ -123,3 +123,15 @@ if(BUILD_TESTING)
     add_test(NAME notes.document.close_sequence COMMAND umicom-notes-close-documents)
 endif()
 install(TARGETS umicom-notes-close-documents RUNTIME DESTINATION bin)
+
+# Link the same caller against the installed SDK; no copied implementation.
+add_executable(umicom-notes-link-components link_components.c)
+target_link_libraries(umicom-notes-link-components PRIVATE Umicom::document)
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(umicom-notes-link-components PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME notes.document.link_components COMMAND umicom-notes-link-components)
+endif()
+install(TARGETS umicom-notes-link-components RUNTIME DESTINATION bin)

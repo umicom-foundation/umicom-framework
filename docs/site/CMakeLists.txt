@@ -257,6 +257,14 @@ endif()
 UmiSiteConfigurePage("${CMAKE_CURRENT_SOURCE_DIR}/templates/source-map.html.in"
     "${UMICOM_SITE_OUTPUT}/source-map.html")
 
+# The link lesson includes exactly the compiled caller.
+set(_editor_link_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/editor_workflow/link_components.c")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_editor_link_example}")
+file(READ "${_editor_link_example}" _example)
+UmiSiteEscape("${_example}" UMICOM_SITE_EDITOR_LINK_EXAMPLE)
+configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/LIBRARY_LINK_CHECKS.html"
+    "${UMICOM_SITE_OUTPUT}/LIBRARY_LINK_CHECKS.html" COPYONLY)
+
 file(GLOB_RECURSE _pages CONFIGURE_DEPENDS LIST_DIRECTORIES FALSE
     RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/pages" "${CMAKE_CURRENT_SOURCE_DIR}/pages/*")
 foreach(_page IN LISTS _pages)
