@@ -98,3 +98,16 @@ if(WIN32)
     set_tests_properties(windows_deployment.native.startup-environment PROPERTIES
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 endif()
+
+# Exercise the real staging script in a child cmake -P process. The probe stops
+# before PE scanning or deployment, so it is safe on Windows and non-Windows
+# hosts. On CMake 4.3+ it checks NEW policy selection; older hosts check that the
+# unknown-policy guard remains compatible with the supported minimum version.
+foreach(_mode IN ITEMS default inherited-old)
+    add_test(NAME windows_deployment.cmake.runtime-policy-${_mode}
+        COMMAND "${CMAKE_COMMAND}"
+            "-DFRAMEWORK=${UMI_FRAMEWORK}"
+            "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/runtime-policy/${_mode}"
+            "-DMODE=${_mode}"
+            -P "${CMAKE_CURRENT_LIST_DIR}/test_runtime_policy.cmake")
+endforeach()

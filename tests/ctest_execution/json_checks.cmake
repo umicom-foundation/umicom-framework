@@ -148,3 +148,17 @@ if(BUILD_TESTING)
     add_test(NAME framework.ctest.json.registry COMMAND umicom-ctest-json_registry-checks)
     set_tests_properties(framework.ctest.json.registry PROPERTIES TIMEOUT 120)
 endif()
+
+# Background discovery uses the established Framework task queue. This helper
+# library is test-only; production umicom_test_platform already links platform.
+find_package(Threads REQUIRED)
+add_library(umicom-ctest-task-support STATIC
+    "${framework_root}/src/platform/task.c"
+    "${framework_root}/src/platform/task_queue.c"
+    "${framework_root}/src/platform/threading.c"
+    "${framework_root}/src/platform/clock.c"
+    "${framework_root}/src/platform/cancellation.c")
+target_include_directories(umicom-ctest-task-support PUBLIC "${framework_root}/include")
+target_link_libraries(umicom-ctest-task-support PUBLIC Threads::Threads)
+target_link_libraries(umicom-ctest-json-core PUBLIC umicom-ctest-task-support)
+target_link_libraries(umicom-ctest-json-fault-core PUBLIC umicom-ctest-task-support)

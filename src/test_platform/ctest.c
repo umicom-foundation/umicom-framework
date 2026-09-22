@@ -170,3 +170,6 @@ UmiStatus UmiTestPlatformCtestParseJsonSized(const char *json, size_t length,
 }
 
 #include "ctest_json_capture.inc"
+
+/* The background path composes the same parser/capture implementation. */
+#include "ctest_background.inc"

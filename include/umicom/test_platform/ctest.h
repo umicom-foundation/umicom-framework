@@ -20,6 +20,7 @@
 
 #include "umicom/base/status.h"
 #include "umicom/platform/cancellation.h"
+#include "umicom/platform/task_queue.h"
 #include "umicom/test_platform/discovery.h"
 #include "umicom/test_platform/item.h"
 #include "umicom/test_platform/suite.h"
@@ -118,6 +119,52 @@ UmiStatus UmiTestPlatformCtestDiscoverConfigured(
     UmiTestPlatformDiscoveryRegistry *discoveries,
     UmiTestPlatformCtestImportSummary *outSummary,
     char *outDiagnostics, size_t diagnosticsCapacity);
+
+/** One supervised discovery transaction. Start clones the current registries
+ * on the calling/owning thread, then queues the existing JSON provider against
+ * those private clones. Workers never mutate the live registries or widgets.
+ * Start still incurs bounded validation/allocation/copy costs; it is not a
+ * hard-real-time operation. Existing synchronous entry points remain available.
+ *
+ * All job APIs except its worker run on the thread that called Start. Queue
+ * access remains thread-safe. Live registries must be serialised by their owner
+ * and remain valid until the job is destroyed or no further Poll will occur.
+ * Generation is a caller-owned workspace/session epoch, not a queue sequence.
+ */
+typedef struct UmiCtestDiscoveryJob UmiCtestDiscoveryJob;
+
+/** Queue discovery. execution may be NULL. Its cancellation field must be NULL:
+ * the job uses its task-owned token instead of retaining a borrowed token.
+ * Cancel through UmiCtestDiscoveryJobCancel. Inputs are copied before return.
+ * On any submission failure outJob is NULL and live registries are unchanged.
+ */
+UmiStatus UmiCtestDiscoveryJobStart(UmiTaskQueue *queue,
+    const UmiTestPlatformCtestImportOptions *options,
+    const UmiTestPlatformCtestDiscoveryOptions *execution,
+    UmiTestPlatformItemRegistry *items, UmiTestPlatformSuiteRegistry *suites,
+    UmiTestPlatformDiscoveryRegistry *discoveries, uint64_t generation,
+    UmiCtestDiscoveryJob **outJob);
+
+/** Return BUSY while the worker is pending/running; never wait for it.
+ * A completed job publishes only if generation and all three saved registry
+ * revisions still match. Otherwise INVALID_STATE preserves the newer state.
+ * Publication uses the existing no-allocation swaps on the owner thread.
+ * outPublished is true once only. Repeated polls return the final status/summary
+ * without publishing again. Failed/cancelled jobs return a zero summary.
+ */
+UmiStatus UmiCtestDiscoveryJobPoll(UmiCtestDiscoveryJob *job,
+    uint64_t currentGeneration, UmiTestPlatformCtestImportSummary *outSummary,
+    int *outPublished, char *outDiagnostics, size_t diagnosticsCapacity);
+
+/** Cooperative Stop also suppresses a completed-but-not-published result.
+ * After publication/consumption there is nothing to cancel: INVALID_STATE.
+ */
+UmiStatus UmiCtestDiscoveryJobCancel(UmiCtestDiscoveryJob *job);
+/** Release a finished/cancelled job. BUSY leaves a running job and its pointer
+ * valid: cancel and poll again before retrying. Never blocks or frees a worker's
+ * payload early. A queued task already marked CANCELLED is safe to release.
+ */
+UmiStatus UmiCtestDiscoveryJobDestroy(UmiCtestDiscoveryJob *job);
 
 #ifdef __cplusplus
 }

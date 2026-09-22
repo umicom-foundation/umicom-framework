@@ -14,6 +14,14 @@
 #   MIT
 #-----------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.24)
+
+# Runtime staging runs in its own cmake -P process, so policies selected by the
+# application configure step do not carry into this script. CMake 4.3 added
+# normalised dependency paths; opt in here rather than hiding policy warnings.
+# The guard preserves the supported CMake 3.24 baseline and older build hosts.
+if(POLICY CMP0207)
+    cmake_policy(SET CMP0207 NEW)
+endif()
 include("${CMAKE_CURRENT_LIST_DIR}/DeploymentCommon.cmake")
 if(NOT UMI_DEPLOY_CONFIG OR NOT EXISTS "${UMI_DEPLOY_CONFIG}")
     message(FATAL_ERROR "A generated UMI_DEPLOY_CONFIG is required")

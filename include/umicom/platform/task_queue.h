@@ -71,6 +71,10 @@ void umi_task_queue_destroy(UmiTaskQueue *queue);
 /**
  * Provide the task queue submit operation used by this module and its client applications.
  */
+/* On success the queue retains the task until removal/completion; the caller
+ * keeps its own reference. Queue-full/stopping rejection leaves a CREATED task
+ * reusable instead of cancelling work the queue never accepted. The task must
+ * not be run manually after submission. Callback payloads remain caller-owned. */
 UmiStatus umi_task_queue_submit(UmiTaskQueue *queue, UmiTask *task);
 /**
  * Provide the task queue wait idle operation used by this module and its client
@@ -86,6 +90,19 @@ UmiStatus umi_task_queue_shutdown(UmiTaskQueue *queue, int cancel_pending);
  * Provide the task queue stats operation used by this module and its client applications.
  */
 UmiTaskQueueStats umi_task_queue_stats(const UmiTaskQueue *queue);
+
+/** Request cancellation of currently queued and running tasks without joining
+ * worker threads. The queue remains usable for subsequent submissions. This
+ * affects the whole queue: use umi_task_cancel for one selected task, not this
+ * function on a shared application queue. Running callbacks must cooperate. */
+UmiStatus UmiTaskQueueCancelAll(UmiTaskQueue *queue);
+/** Close admission and optionally cancel queued/running work; return without
+ * waiting for worker callbacks. Repeated requests can escalate cancellation.
+ * After idleness, the lifecycle owner calls shutdown to join, then destroy.
+ * Queue destruction must not race any queue call or run on a queue worker.
+ * Existing shutdown retains its blocking drain/cancel-pending behaviour. */
+UmiStatus UmiTaskQueueRequestShutdown(UmiTaskQueue *queue,
+    int cancelPending, int cancelRunning);
 
 #ifdef __cplusplus
 }

@@ -20,6 +20,7 @@
 #include <stdint.h>
 
 #include "umicom/base/status.h"
+#include "umicom/platform/cancellation.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -71,7 +72,16 @@ UmiStatus umi_task_create(const UmiTaskConfig *config,
 /**
  * Release or reset state held by task so the same storage can be reused safely.
  */
+/* Release one owned reference, not an unconditional free. A successfully
+ * submitted queue retains its own reference until it no longer holds the task.
+ * The caller still owns exactly one reference returned by create. Retaining a
+ * task does not retain user_data or progress_user_data: their owner must keep
+ * them alive through callback completion. Never use a pointer after releasing
+ * its reference, and never race the last release with an unowned retain. */
 void umi_task_destroy(UmiTask *task);
+/** Acquire one additional reference while already owning a live reference.
+ * A successful retain must be matched by one umi_task_destroy call. */
+UmiStatus UmiTaskRetain(UmiTask *task);
 /**
  * Perform task through the module contract so client applications do not duplicate its
  * policy.
@@ -88,6 +98,9 @@ UmiStatus umi_task_cancel(UmiTask *task);
 /**
  * Provide the task wait operation used by this module and its client applications.
  */
+/* Zero waits indefinitely; a positive timeout is one total wait budget, not
+ * a new budget on every condition wake. Do not wait on this task from its own
+ * callback. Completion does not imply that queue statistics have caught up. */
 UmiStatus umi_task_wait(UmiTask *task, uint32_t timeout_ms);
 /**
  * Provide the task state operation used by this module and its client applications.
@@ -126,6 +139,14 @@ UmiStatus umi_task_context_report(UmiTaskContext *context,
  * Provide the task context id operation used by this module and its client applications.
  */
 uint64_t umi_task_context_id(const UmiTaskContext *context);
+
+/** Borrow the task's canonical cancellation token for a synchronous process
+ * request or another cancellable Framework operation inside this callback.
+ * The pointer is valid only for the callback lifetime. Do not destroy/reset it
+ * or retain it in a child operation that outlives the callback. NULL context
+ * returns NULL. Cancellation is cooperative, not thread termination. */
+const UmiCancellationToken *UmiTaskContextCancellation(
+    const UmiTaskContext *context);
 
 #ifdef __cplusplus
 }

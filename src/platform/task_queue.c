@@ -19,13 +19,26 @@
 #include <string.h>
 
 #include "umicom/platform/threading.h"
+#include "task_wait.inc"
 
 #define UMI_TASK_QUEUE_MAX_WORKERS 64U
 #define UMI_TASK_QUEUE_MAX_CAPACITY 65536U
 
+typedef struct UmiTaskQueueWorkerSlot {
+    struct UmiTaskQueue *queue;
+    size_t index;
+} UmiTaskQueueWorkerSlot;
+
+/* Prevent a worker from joining its own queue or waiting for its own idleness. */
+static _Thread_local struct UmiTaskQueue *umiExecutingQueue;
+
 struct UmiTaskQueue {
     UmiTask **items;
     UmiThread **workers;
+    UmiTask *activeTasks[UMI_TASK_QUEUE_MAX_WORKERS];
+    UmiTaskQueueWorkerSlot workerSlots[UMI_TASK_QUEUE_MAX_WORKERS];
+    int workerJoined[UMI_TASK_QUEUE_MAX_WORKERS];
+    int joining;
     size_t worker_count;
     size_t capacity;
     size_t head;
@@ -47,7 +60,9 @@ struct UmiTaskQueue {
 /* Provide the task queue worker operation used by this module and its client applications. */
 static int umi_task_queue_worker(void *user_data)
 {
-    UmiTaskQueue *queue = (UmiTaskQueue *)user_data;
+    UmiTaskQueueWorkerSlot *slot = (UmiTaskQueueWorkerSlot *)user_data;
+    UmiTaskQueue *queue = slot->queue;
+    umiExecutingQueue = queue;
     /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
         UmiTask *task;
@@ -70,12 +85,17 @@ static int umi_task_queue_worker(void *user_data)
         queue->head = (queue->head + 1U) % queue->capacity;
         queue->queued -= 1U;
         queue->running += 1U;
+        queue->activeTasks[slot->index] = task;
         (void)umi_condition_signal(queue->not_full);
         (void)umi_mutex_unlock(queue->mutex);
 
         result = umi_task_run(task);
 
         (void)umi_mutex_lock(queue->mutex);
+        queue->activeTasks[slot->index] = NULL;
+        /* A cancelled queued task may already have lost its caller reference.
+         * Release the queue reference only after its final pointer use. */
+        umi_task_destroy(task);
         queue->running -= 1U;
         queue->completed += 1U;
         /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -87,6 +107,7 @@ static int umi_task_queue_worker(void *user_data)
         }
         (void)umi_mutex_unlock(queue->mutex);
     }
+    umiExecutingQueue = NULL;
     return 0;
 }
 
@@ -152,8 +173,10 @@ UmiStatus umi_task_queue_create(const UmiTaskQueueConfig *config,
     queue->capacity = effective.capacity;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < queue->worker_count; ++index) {
+        queue->workerSlots[index].queue = queue;
+        queue->workerSlots[index].index = index;
         UmiStatus status = umi_thread_start(umi_task_queue_worker,
-                                            queue,
+                                            &queue->workerSlots[index],
                                             &queue->workers[index]);
         /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
@@ -176,12 +199,15 @@ void umi_task_queue_destroy(UmiTaskQueue *queue)
      * used.
      */
     if (queue == NULL) return;
+    /* Destruction from a worker cannot join itself. Keep storage alive rather
+     * than freeing a queue still in use; only its external owner may destroy. */
+    if (umiExecutingQueue == queue) return;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
     if (!queue->stopped && queue->worker_count > 0U && queue->mutex != NULL) {
-        (void)umi_task_queue_shutdown(queue, 1);
+        if (umi_task_queue_shutdown(queue, 1) != UMI_STATUS_OK) return;
     }
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < queue->worker_count; ++index) {
@@ -205,21 +231,26 @@ UmiStatus umi_task_queue_submit(UmiTaskQueue *queue, UmiTask *task)
      * used.
      */
     if (queue == NULL || task == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    status = umi_task_mark_queued(task);
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status != UMI_STATUS_OK) return status;
     (void)umi_mutex_lock(queue->mutex);
     /* Apply this branch only when its contract condition is satisfied. */
     if (queue->stopping) {
         (void)umi_mutex_unlock(queue->mutex);
-        (void)umi_task_cancel(task);
         return UMI_STATUS_INVALID_STATE;
     }
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (queue->queued >= queue->capacity) {
         (void)umi_mutex_unlock(queue->mutex);
-        (void)umi_task_cancel(task);
         return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    status = UmiTaskRetain(task);
+    if (status == UMI_STATUS_OK) {
+        status = umi_task_mark_queued(task);
+        if (status != UMI_STATUS_OK) umi_task_destroy(task);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) {
+        (void)umi_mutex_unlock(queue->mutex);
+        return status;
     }
     queue->items[queue->tail] = task;
     queue->tail = (queue->tail + 1U) % queue->capacity;
@@ -237,20 +268,28 @@ UmiStatus umi_task_queue_submit(UmiTaskQueue *queue, UmiTask *task)
 UmiStatus umi_task_queue_wait_idle(UmiTaskQueue *queue, uint32_t timeout_ms)
 {
     UmiStatus status = UMI_STATUS_OK;
+    UmiClock clock = umi_clock_system();
+    uint64_t startTime = clock.monotonic_nanoseconds(&clock);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
     if (queue == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (umiExecutingQueue == queue) return UMI_STATUS_INVALID_STATE;
     (void)umi_mutex_lock(queue->mutex);
     /*
      * Continue only while work remains available; the loop body advances the state on each
      * pass.
      */
     while (queue->queued > 0U || queue->running > 0U) {
+        uint32_t remaining = UmiTaskWaitRemaining(&clock, startTime, timeout_ms);
+        if (timeout_ms != 0U && remaining == 0U) {
+            status = UMI_STATUS_TIMEOUT;
+            break;
+        }
         status = timeout_ms == 0U
             ? umi_condition_wait(queue->idle, queue->mutex)
-            : umi_condition_wait_for(queue->idle, queue->mutex, timeout_ms);
+            : umi_condition_wait_for(queue->idle, queue->mutex, remaining);
         /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
     }
@@ -258,27 +297,13 @@ UmiStatus umi_task_queue_wait_idle(UmiTaskQueue *queue, uint32_t timeout_ms)
     return status;
 }
 
-/*
- * Provide the task queue shutdown operation used by this module and its client
- * applications.
- */
-UmiStatus umi_task_queue_shutdown(UmiTaskQueue *queue, int cancel_pending)
+/* queue->mutex serialises the transition with worker dequeue/completion.
+ * No user callback runs here. Active pointers retain a queue-owned reference. */
+static void UmiTaskQueueCancelLocked(UmiTaskQueue *queue,
+    int cancelPending, int cancelRunning)
 {
-    size_t index;
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (queue == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    (void)umi_mutex_lock(queue->mutex);
     /* Apply this branch only when its contract condition is satisfied. */
-    if (queue->stopped) {
-        (void)umi_mutex_unlock(queue->mutex);
-        return UMI_STATUS_OK;
-    }
-    queue->stopping = 1;
-    /* Apply this branch only when its contract condition is satisfied. */
-    if (cancel_pending) {
+    if (cancelPending) {
         /*
          * Continue only while work remains available; the loop body advances the state on each
          * pass.
@@ -292,13 +317,73 @@ UmiStatus umi_task_queue_shutdown(UmiTaskQueue *queue, int cancel_pending)
              * Protect caller-owned memory by checking that required state is available before it is
              * used.
              */
-            if (task != NULL) (void)umi_task_cancel(task);
+            if (task != NULL) {
+                (void)umi_task_cancel(task);
+                umi_task_destroy(task);
+            }
             queue->cancelled += 1U;
             queue->completed += 1U;
         }
     }
-    (void)umi_condition_broadcast(queue->not_empty);
+    if (cancelRunning) {
+        for (size_t index = 0U; index < queue->worker_count; ++index) {
+            if (queue->activeTasks[index] != NULL)
+                (void)umi_task_cancel(queue->activeTasks[index]);
+        }
+    }
+    if (queue->queued == 0U && queue->running == 0U)
+        (void)umi_condition_broadcast(queue->idle);
     (void)umi_condition_broadcast(queue->not_full);
+}
+
+UmiStatus UmiTaskQueueCancelAll(UmiTaskQueue *queue)
+{
+    if (queue == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)umi_mutex_lock(queue->mutex);
+    UmiTaskQueueCancelLocked(queue, 1, 1);
+    (void)umi_mutex_unlock(queue->mutex);
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiTaskQueueRequestShutdown(UmiTaskQueue *queue,
+    int cancelPending, int cancelRunning)
+{
+    if (queue == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)umi_mutex_lock(queue->mutex);
+    queue->stopping = 1;
+    UmiTaskQueueCancelLocked(queue, cancelPending, cancelRunning);
+    (void)umi_condition_broadcast(queue->not_empty);
+    (void)umi_mutex_unlock(queue->mutex);
+    return UMI_STATUS_OK;
+}
+
+/*
+ * Provide the task queue shutdown operation used by this module and its client
+ * applications.
+ */
+UmiStatus umi_task_queue_shutdown(UmiTaskQueue *queue, int cancel_pending)
+{
+    size_t index;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (queue == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (umiExecutingQueue == queue) return UMI_STATUS_INVALID_STATE;
+    status = UmiTaskQueueRequestShutdown(queue, cancel_pending, 0);
+    if (status != UMI_STATUS_OK) return status;
+    (void)umi_mutex_lock(queue->mutex);
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (queue->stopped) {
+        (void)umi_mutex_unlock(queue->mutex);
+        return UMI_STATUS_OK;
+    }
+    if (queue->joining) {
+        (void)umi_mutex_unlock(queue->mutex);
+        return UMI_STATUS_BUSY;
+    }
+    queue->joining = 1;
     (void)umi_mutex_unlock(queue->mutex);
 
     /* Visit each bounded item once so every record receives the same rule. */
@@ -307,12 +392,17 @@ UmiStatus umi_task_queue_shutdown(UmiTaskQueue *queue, int cancel_pending)
          * Protect caller-owned memory by checking that required state is available before it is
          * used.
          */
-        if (queue->workers[index] != NULL) {
-            (void)umi_thread_join(queue->workers[index], NULL);
+        if (queue->workers[index] != NULL && !queue->workerJoined[index]) {
+            status = umi_thread_join(queue->workers[index], NULL);
+            if (status != UMI_STATUS_OK) break;
+            queue->workerJoined[index] = 1;
         }
     }
-    queue->stopped = 1;
-    return UMI_STATUS_OK;
+    (void)umi_mutex_lock(queue->mutex);
+    if (status == UMI_STATUS_OK) queue->stopped = 1;
+    queue->joining = 0;
+    (void)umi_mutex_unlock(queue->mutex);
+    return status;
 }
 
 /* Provide the task queue stats operation used by this module and its client applications. */

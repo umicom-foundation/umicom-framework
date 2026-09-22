@@ -16,10 +16,12 @@
 #include "umicom/platform/task.h"
 
 #include <stdatomic.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "umicom/platform/threading.h"
+#include "task_wait.inc"
 
 #define UMI_TASK_LABEL_CAPACITY 160U
 
@@ -36,7 +38,8 @@ struct UmiTask {
     void *progress_user_data;
     UmiMutex *mutex;
     UmiCondition *condition;
-    atomic_int cancel_requested;
+    atomic_uint referenceCount;
+    UmiCancellationToken *cancellation;
     UmiTaskState state;
     UmiStatus result;
     unsigned progress;
@@ -49,6 +52,7 @@ UmiStatus umi_task_create(const UmiTaskConfig *config,
                           UmiTask **out_task)
 {
     UmiTask *task;
+    UmiStatus status;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -63,6 +67,7 @@ UmiStatus umi_task_create(const UmiTaskConfig *config,
      * used.
      */
     if (task == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    atomic_init(&task->referenceCount, 1U);
     task->id = atomic_fetch_add(&g_next_task_id, 1U);
     (void)snprintf(task->label,
                    sizeof(task->label),
@@ -74,12 +79,14 @@ UmiStatus umi_task_create(const UmiTaskConfig *config,
     task->progress_user_data = config->progress_user_data;
     task->state = UMI_TASK_CREATED;
     task->result = UMI_STATUS_INVALID_STATE;
-    atomic_init(&task->cancel_requested, 0);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (umi_mutex_create(&task->mutex) != UMI_STATUS_OK ||
-        umi_condition_create(&task->condition) != UMI_STATUS_OK) {
+    status = umi_mutex_create(&task->mutex);
+    if (status == UMI_STATUS_OK) status = umi_condition_create(&task->condition);
+    if (status == UMI_STATUS_OK)
+        status = umi_cancellation_token_create(&task->cancellation);
+    if (status != UMI_STATUS_OK) {
         umi_task_destroy(task);
-        return UMI_STATUS_OUT_OF_MEMORY;
+        return status;
     }
     *out_task = task;
     return UMI_STATUS_OK;
@@ -93,9 +100,28 @@ void umi_task_destroy(UmiTask *task)
      * used.
      */
     if (task == NULL) return;
+    /* One acquire-release operation makes the final owner's hand-off explicit
+     * before destroying locks, cancellation state or storage. */
+    if (atomic_fetch_sub_explicit(&task->referenceCount, 1U,
+                                  memory_order_acq_rel) != 1U) return;
+    umi_cancellation_token_destroy(task->cancellation);
     umi_condition_destroy(task->condition);
     umi_mutex_destroy(task->mutex);
     free(task);
+}
+
+/* References protect task storage, not caller-owned callback payloads. */
+UmiStatus UmiTaskRetain(UmiTask *task)
+{
+    unsigned references;
+    if (task == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    references = atomic_load_explicit(&task->referenceCount, memory_order_relaxed);
+    do {
+        if (references == 0U) return UMI_STATUS_INVALID_STATE;
+        if (references == UINT_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    } while (!atomic_compare_exchange_weak_explicit(&task->referenceCount,
+        &references, references + 1U, memory_order_relaxed, memory_order_relaxed));
+    return UMI_STATUS_OK;
 }
 
 /* Provide the task mark queued operation used by this module and its client applications. */
@@ -130,24 +156,29 @@ UmiStatus umi_task_run(UmiTask *task)
      * used.
      */
     if (task == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    result = UmiTaskRetain(task);
+    if (result != UMI_STATUS_OK) return result;
 
     (void)umi_mutex_lock(task->mutex);
     /* Apply this branch only when its contract condition is satisfied. */
     if (task->state == UMI_TASK_CANCELLED) {
         (void)umi_mutex_unlock(task->mutex);
+        umi_task_destroy(task); /* release only the runner's reference */
         return UMI_STATUS_CANCELLED;
     }
     /* Apply this branch only when its contract condition is satisfied. */
     if (task->state != UMI_TASK_CREATED && task->state != UMI_TASK_QUEUED) {
         (void)umi_mutex_unlock(task->mutex);
+        umi_task_destroy(task);
         return UMI_STATUS_INVALID_STATE;
     }
     /* Apply this branch only when its contract condition is satisfied. */
-    if (atomic_load(&task->cancel_requested) != 0) {
+    if (umi_cancellation_token_is_requested(task->cancellation)) {
         task->state = UMI_TASK_CANCELLED;
         task->result = UMI_STATUS_CANCELLED;
         (void)umi_condition_broadcast(task->condition);
         (void)umi_mutex_unlock(task->mutex);
+        umi_task_destroy(task); /* release only the runner's reference */
         return UMI_STATUS_CANCELLED;
     }
     task->state = UMI_TASK_RUNNING;
@@ -158,7 +189,7 @@ UmiStatus umi_task_run(UmiTask *task)
 
     (void)umi_mutex_lock(task->mutex);
     /* Apply this branch only when its contract condition is satisfied. */
-    if (atomic_load(&task->cancel_requested) != 0 ||
+    if (umi_cancellation_token_is_requested(task->cancellation) ||
         result == UMI_STATUS_CANCELLED) {
         task->state = UMI_TASK_CANCELLED;
         task->result = UMI_STATUS_CANCELLED;
@@ -171,10 +202,12 @@ UmiStatus umi_task_run(UmiTask *task)
         task->result = result;
     }
     /* A waiter can release a completed task as soon as this mutex is unlocked.
-     * Copy the final result before waking it; do not access task afterwards. */
+     * Copy the final result before waking it; do not read task fields afterwards.
+     * The runner now owns a reference, which it releases after unlocking. */
     result = task->result;
     (void)umi_condition_broadcast(task->condition);
     (void)umi_mutex_unlock(task->mutex);
+    umi_task_destroy(task);
     return result;
 }
 
@@ -186,8 +219,13 @@ UmiStatus umi_task_cancel(UmiTask *task)
      * used.
      */
     if (task == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    atomic_store(&task->cancel_requested, 1);
     (void)umi_mutex_lock(task->mutex);
+    /* Linearise cancellation with completion. A late Stop never changes a
+     * completed result or marks its token as cancelled afterwards. */
+    if (task->state == UMI_TASK_CREATED || task->state == UMI_TASK_QUEUED ||
+        task->state == UMI_TASK_RUNNING) {
+        umi_cancellation_token_request(task->cancellation);
+    }
     /* Apply this branch only when its contract condition is satisfied. */
     if (task->state == UMI_TASK_CREATED || task->state == UMI_TASK_QUEUED) {
         task->state = UMI_TASK_CANCELLED;
@@ -202,6 +240,8 @@ UmiStatus umi_task_cancel(UmiTask *task)
 UmiStatus umi_task_wait(UmiTask *task, uint32_t timeout_ms)
 {
     UmiStatus wait_status = UMI_STATUS_OK;
+    UmiClock clock = umi_clock_system();
+    uint64_t startTime = clock.monotonic_nanoseconds(&clock);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -215,11 +255,16 @@ UmiStatus umi_task_wait(UmiTask *task, uint32_t timeout_ms)
     while (task->state == UMI_TASK_CREATED ||
            task->state == UMI_TASK_QUEUED ||
            task->state == UMI_TASK_RUNNING) {
+        uint32_t remaining = UmiTaskWaitRemaining(&clock, startTime, timeout_ms);
+        if (timeout_ms != 0U && remaining == 0U) {
+            wait_status = UMI_STATUS_TIMEOUT;
+            break;
+        }
         wait_status = timeout_ms == 0U
             ? umi_condition_wait(task->condition, task->mutex)
             : umi_condition_wait_for(task->condition,
                                      task->mutex,
-                                     timeout_ms);
+                                     remaining);
         /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (wait_status != UMI_STATUS_OK) break;
     }
@@ -297,7 +342,7 @@ unsigned umi_task_progress(const UmiTask *task)
 int umi_task_context_is_cancelled(const UmiTaskContext *context)
 {
     return context != NULL && context->task != NULL &&
-        atomic_load(&context->task->cancel_requested) != 0;
+        umi_cancellation_token_is_requested(context->task->cancellation);
 }
 
 /*
@@ -341,4 +386,11 @@ uint64_t umi_task_context_id(const UmiTaskContext *context)
     return context != NULL && context->task != NULL
         ? context->task->id
         : 0U;
+}
+
+const UmiCancellationToken *UmiTaskContextCancellation(
+    const UmiTaskContext *context)
+{
+    return context != NULL && context->task != NULL
+        ? context->task->cancellation : NULL;
 }
