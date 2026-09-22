@@ -26,6 +26,7 @@ typedef struct ProductApplicationState {
     UmiApplicationProductGtk4Workstation *workstation;
     UmiGtk4WorkstationStartupSplash *splash;
     guint startup_source;
+    gulong windowsChangedSignal;
     int startup_failed;
 } ProductApplicationState;
 
@@ -66,6 +67,59 @@ static UmiStatus register_preview_controllers(
         runtime, preview_controller, context);
 }
 
+/* GtkWindow destruction removes a toplevel before the last external reference
+ * is released. Observe membership, not only Widget::destroy or finalization:
+ * an unpresented window need not emit unrealize at all. GTK owning thread only. */
+static void product_window_destroyed(GtkWidget *widget, gpointer data);
+
+static void ProductStopWindowObservation(ProductApplicationState *state)
+{
+    if (state->windowsChangedSignal != 0U) {
+        const gulong signalId = state->windowsChangedSignal;
+        state->windowsChangedSignal = 0U;
+        g_signal_handler_disconnect(gtk_window_get_toplevels(), signalId);
+    }
+}
+
+static int ProductWindowIsRegistered(GListModel *windows, GtkWindow *window)
+{
+    const guint count = g_list_model_get_n_items(windows);
+    for (guint index = 0U; index < count; ++index) {
+        GObject *candidate = g_list_model_get_item(windows, index);
+        const int matches = candidate == G_OBJECT(window);
+        g_clear_object(&candidate);
+        if (matches) return 1;
+    }
+    return 0;
+}
+
+static void ProductNativeWindowsChanged(GListModel *windows, guint position,
+    guint removed, guint added, gpointer data)
+{
+    ProductApplicationState *state = data;
+    GtkWindow *closed = NULL;
+    (void)position;
+    (void)added;
+    if (removed == 0U) return;
+    if (state->startup_window != NULL &&
+        !ProductWindowIsRegistered(windows, state->startup_window))
+        closed = state->startup_window;
+    else if (state->window != NULL &&
+        !ProductWindowIsRegistered(windows, state->window))
+        closed = state->window;
+    if (closed != NULL) product_window_destroyed(GTK_WIDGET(closed), state);
+}
+
+/* A single observer covers this product's two windows. Unrelated application
+ * windows cannot cancel startup. Explicit release clears the slot first, so
+ * the normal splash-to-workstation handover does not look like an external close. */
+static void ProductObserveNativeWindows(ProductApplicationState *state)
+{
+    if (state->windowsChangedSignal == 0U)
+        state->windowsChangedSignal = g_signal_connect(gtk_window_get_toplevels(),
+            "items-changed", G_CALLBACK(ProductNativeWindowsChanged), state);
+}
+
 /* Forget a finalized window before any pending startup callback can use it. */
 static void product_window_finalized(gpointer data, GObject *object)
 {
@@ -94,7 +148,12 @@ static void product_release_window(ProductApplicationState *state, GtkWindow **s
     *slot = NULL;
     g_signal_handlers_disconnect_by_data(window, state);
     g_object_weak_unref(G_OBJECT(window), product_window_finalized, state);
+    /* Destroy does not necessarily dispose a retained GtkWindow. Detach our
+     * content synchronously before releasing its controllers below. */
+    gtk_window_set_child(window, NULL);
     gtk_window_destroy(window);
+    if (state->window == NULL && state->startup_window == NULL)
+        ProductStopWindowObservation(state);
 }
 
 /* A retained GtkWindow can be destroyed without finalizing. Invalidate its
@@ -102,8 +161,14 @@ static void product_release_window(ProductApplicationState *state, GtkWindow **s
 static void product_window_destroyed(GtkWidget *widget, gpointer data)
 {
     ProductApplicationState *state = data;
+    if ((GtkWidget *)state->startup_window != widget &&
+        (GtkWidget *)state->window != widget) return;
+    /* Release can itself change the toplevel model; remove this observer
+     * before touching either window so nested notifications are harmless. */
+    ProductStopWindowObservation(state);
     g_signal_handlers_disconnect_by_data(widget, state);
     g_object_weak_unref(G_OBJECT(widget), product_window_finalized, state);
+    gtk_window_set_child(GTK_WINDOW(widget), NULL);
     if (state->startup_source != 0U) {
         g_source_remove(state->startup_source);
         state->startup_source = 0U;
@@ -216,6 +281,7 @@ static void product_activate(GtkApplication *application, gpointer data)
     (void)umi_gtk4_ws_window_fit(state->window, 1180, 760, 720, 480);
     g_object_weak_ref(G_OBJECT(state->window), product_window_finalized, state);
     g_signal_connect(state->window, "destroy", G_CALLBACK(product_window_destroyed), state);
+    ProductObserveNativeWindows(state);
     splash_config = umi_gtk4_ws_startup_splash_config_default(
         state->config.application_id, state->config.title);
     splash_config.subtitle = "Customisable application workspace";
@@ -288,6 +354,7 @@ int umi_application_product_gtk4_run(
     }
     product_release_window(&state, &state.startup_window);
     product_release_window(&state, &state.window);
+    ProductStopWindowObservation(&state);
     product_content_dispose(&state);
     g_object_unref(application);
     return result != 0 ? result : state.startup_failed;

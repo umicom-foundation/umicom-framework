@@ -19,6 +19,7 @@
 #include <string.h>
 
 #include "umicom/editor/presentation.h"
+#include "editor_buffer_replace_gtk4.inc"
 
 #if defined(UMICOM_GTK4_HAS_SOURCEVIEW5)
 #include <gtksourceview/gtksource.h>
@@ -388,7 +389,7 @@ static void on_editor_end_user_action(GtkTextBuffer *buffer, gpointer user_data)
         UmiUiDocumentViewSnapshot *cached;
         const int was_applying = binding->adapter->applying_document_state;
         binding->adapter->applying_document_state = 1;
-        gtk_text_buffer_set_text(buffer, action->text, -1);
+        EditorReplaceTextReversibly(buffer, action->text, -1);
         gtk_text_buffer_get_iter_at_offset(buffer, &insert, action->insert_offset);
         gtk_text_buffer_get_iter_at_offset(buffer, &bound, action->bound_offset);
         gtk_text_buffer_select_range(buffer, &insert, &bound);
@@ -492,7 +493,7 @@ static void on_editor_buffer_changed(GtkTextBuffer *text_buffer,
         if (UmiUiDocumentViewModelCopyText(documents, document.view_id,
                 &accepted, &acceptedLength) == UMI_STATUS_OK) {
             binding->adapter->applying_document_state = 1;
-            gtk_text_buffer_set_text(text_buffer, accepted, (int)acceptedLength);
+            EditorReplaceTextReversibly(text_buffer, accepted, (int)acceptedLength);
             binding->adapter->applying_document_state = 0;
             UmiUiDocumentViewModelFreeText(accepted);
         }

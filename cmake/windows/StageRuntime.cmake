@@ -172,6 +172,15 @@ foreach(_dependency IN LISTS _dependencies)
     umicom_stage_owned_file("${_dependency}" "${_binary_dir}/${_name}" "bin/${_name}")
 endforeach()
 
+# GtkSourceView embeds many language files but loads their RelaxNG schema
+# from disk. A DLL-complete Studio package is not therefore data-complete.
+include("${CMAKE_CURRENT_LIST_DIR}/SourceViewResources.cmake")
+umicom_windows_sourceview_resources("${UMI_DEPLOY_PREFIX}" "${_dependencies}"
+    _sourceview_resources)
+foreach(_resource IN LISTS _sourceview_resources)
+    umicom_stage_owned_tree("${UMI_DEPLOY_PREFIX}/${_resource}" "${_resource}")
+endforeach()
+
 # GTK has runtime data and dynamically loaded modules in addition to PE import
 # dependencies. Keep optional resource directories when the prefix supplies
 # them, and compile schema caches from the copied XML on the build machine.

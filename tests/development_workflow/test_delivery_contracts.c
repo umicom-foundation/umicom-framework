@@ -34,8 +34,20 @@ int main(int argc,char **argv)
     if(strcmp(mode,"provider-argv")==0){
         CHECK(umi_build_provider_create_command(&provider,&profile,UMI_BUILD_PHASE_PACKAGE,&command)==UMI_STATUS_OK);
         CHECK(strcmp(command.program,"cpack")==0 && command.argument_count==10U);
+        /* Filesystem joins use the native separator. Keep exact independent
+         * expectations on both hosts; a Windows path is not a malformed argv. */
+#ifdef _WIN32
+        CHECK(strcmp(command.arguments[1],"build dir\\CPackConfig.cmake")==0);
+        CHECK(strcmp(command.arguments[7],"build dir\\packages")==0);
+#else
         CHECK(strcmp(command.arguments[1],"build dir/CPackConfig.cmake")==0);
         CHECK(strcmp(command.arguments[7],"build dir/packages")==0);
+#endif
+        CHECK(strcmp(command.arguments[0],"--config")==0);
+        CHECK(strcmp(command.arguments[2],"-G")==0 && strcmp(command.arguments[3],"ZIP")==0);
+        CHECK(strcmp(command.arguments[4],"-C")==0);
+        CHECK(strcmp(command.arguments[5],profile.configuration)==0);
+        CHECK(strcmp(command.arguments[6],"-B")==0 && strcmp(command.arguments[8],"-D")==0);
         CHECK(strcmp(command.arguments[9],"CPACK_PACKAGE_CHECKSUM=SHA256")==0);
         CHECK(strcmp(command.working_directory,profile.source_directory)==0);return 0;
     }

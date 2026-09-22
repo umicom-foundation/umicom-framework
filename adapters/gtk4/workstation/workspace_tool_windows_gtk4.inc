@@ -207,7 +207,11 @@ UmiStatus umi_gtk4_workspace_layout_host_reveal_tool_window(
     host->updating_tool_tabs = 1;
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tab->button), TRUE);
     host->updating_tool_tabs = 0;
-    (void)gtk_widget_child_focus(tab->page, GTK_DIR_TAB_FORWARD);
+    /* A preview can build this entire host before attaching a GtkWindow.
+     * GtkEntry focus traversal requires a native window; revealing its content
+     * must still succeed without performing invalid unrooted focus traversal. */
+    if (GTK_IS_WINDOW(gtk_widget_get_root(tab->page)))
+        (void)gtk_widget_child_focus(tab->page, GTK_DIR_TAB_FORWARD);
     return UMI_STATUS_OK;
 }
 

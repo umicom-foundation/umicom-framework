@@ -1,0 +1,83 @@
+{
+  "purpose": "Native rerun of the six failures visible in the supplied 22 September log. A skipped case is not accepted.",
+  "tests": [
+    {
+      "name": "framework.ui_workstation.product.startup.lifetime.gtk4",
+      "reject_output": [
+        "SKIP:",
+        "smoke test skipped",
+        "RelaxNG schema missing",
+        "instance is NULL",
+        "Cannot begin irreversible action",
+        "Cannot end irreversible action",
+        "Gtk-CRITICAL",
+        "GLib-GObject-CRITICAL"
+      ]
+    },
+    {
+      "name": "framework.ui_workstation.workspace.tool.windows.gtk4",
+      "reject_output": [
+        "SKIP:",
+        "smoke test skipped",
+        "RelaxNG schema missing",
+        "instance is NULL",
+        "Cannot begin irreversible action",
+        "Cannot end irreversible action",
+        "Gtk-CRITICAL",
+        "GLib-GObject-CRITICAL"
+      ]
+    },
+    {
+      "name": "framework.development_workflow.contract.provider-argv",
+      "reject_output": [
+        "SKIP:",
+        "smoke test skipped",
+        "RelaxNG schema missing",
+        "instance is NULL",
+        "Cannot begin irreversible action",
+        "Cannot end irreversible action",
+        "Gtk-CRITICAL",
+        "GLib-GObject-CRITICAL"
+      ]
+    },
+    {
+      "name": "desktop.window.titlebar.gtk4",
+      "reject_output": [
+        "SKIP:",
+        "smoke test skipped",
+        "RelaxNG schema missing",
+        "instance is NULL",
+        "Cannot begin irreversible action",
+        "Cannot end irreversible action",
+        "Gtk-CRITICAL",
+        "GLib-GObject-CRITICAL"
+      ]
+    },
+    {
+      "name": "studio.workspace.canvas.gtk4",
+      "reject_output": [
+        "SKIP:",
+        "smoke test skipped",
+        "RelaxNG schema missing",
+        "instance is NULL",
+        "Cannot begin irreversible action",
+        "Cannot end irreversible action",
+        "Gtk-CRITICAL",
+        "GLib-GObject-CRITICAL"
+      ]
+    },
+    {
+      "name": "trader.module.gtk_workstation",
+      "reject_output": [
+        "SKIP:",
+        "smoke test skipped",
+        "RelaxNG schema missing",
+        "instance is NULL",
+        "Cannot begin irreversible action",
+        "Cannot end irreversible action",
+        "Gtk-CRITICAL",
+        "GLib-GObject-CRITICAL"
+      ]
+    }
+  ]
+}

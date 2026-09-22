@@ -284,12 +284,16 @@ int main(void)
     (void)g_strlcpy(layout->windows[1].placement_id, "auto-hide:centre",
         sizeof(layout->windows[1].placement_id));
     REQUIRE(umi_gtk4_workspace_layout_host_rebuild(host, layout) == UMI_STATUS_INVALID_ARGUMENT);
-    (void)g_strlcpy(layout->windows[1].placement_id, "auto-hide:left",
+    /* Restore the complete fixture field. Copying a shorter string over
+     * auto-hide:centre leaves changed bytes after NUL and falsely attributes
+     * that test-owned mutation to the renderer in the byte-preservation check. */
+    memcpy(layout->windows[1].placement_id, original->windows[1].placement_id,
         sizeof(layout->windows[1].placement_id));
     layout->windows[1].title[0] = (char)0xff;
     REQUIRE(umi_gtk4_workspace_layout_host_rebuild(host, layout) == UMI_STATUS_INVALID_ARGUMENT);
     memcpy(layout->windows[1].title, original->windows[1].title,
         sizeof(layout->windows[1].title));
+    REQUIRE(memcmp(layout, original, sizeof(*layout)) == 0);
     snapshot = umi_gtk4_workspace_layout_host_snapshot(host);
     REQUIRE(snapshot.source_layout_revision == original->revision);
     REQUIRE(snapshot.tool_rail_count == 2U && snapshot.revealed_tool_count == 0U);
