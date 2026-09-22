@@ -45,6 +45,7 @@ typedef struct UmiProcessJob {
     char label[UMI_PROCESS_JOB_LABEL_CAPACITY];
     UmiProcessJobState state;
     UmiOwnedProcessRequest owned;
+    UmiProcessLifetime lifetime;
     UmiCancellationToken *cancellation;
     UmiThread *thread;
     UmiProcessResult result;
@@ -212,8 +213,8 @@ static int process_job_thread(void *user_data)
     /* The executor writes a worker-owned result and publishes coherent live
      * copies through its observer. Publish completion and terminal state under
      * the same mutex, retaining both live output and the final result. */
-    status = UmiProcessExecuteObserved(&job->owned.request,
-        PublishProcessOutput, job, &result);
+    status = UmiProcessExecuteWithLifetime(&job->owned.request,
+        job->lifetime, PublishProcessOutput, NULL, job, &result);
 
     (void)umi_mutex_lock(job->owner->mutex);
     job->result = result;
@@ -330,6 +331,16 @@ UmiStatus umi_process_supervisor_submit(UmiProcessSupervisor *supervisor,
                                         const UmiProcessRequest *request,
                                         UmiProcessJobId *out_job_id)
 {
+    return UmiProcessSupervisorSubmitWithLifetime(supervisor, label, request,
+        UMI_PROCESS_LIFETIME_CHILD, out_job_id);
+}
+
+/* Copy the lifetime with the owned request; later callers cannot change which
+ * processes this job is responsible for terminating. */
+UmiStatus UmiProcessSupervisorSubmitWithLifetime(UmiProcessSupervisor *supervisor,
+    const char *label, const UmiProcessRequest *request,
+    UmiProcessLifetime lifetime, UmiProcessJobId *out_job_id)
+{
     UmiProcessJob *job = NULL;
     size_t index;
     UmiProcessJobId assignedId;
@@ -339,7 +350,8 @@ UmiStatus umi_process_supervisor_submit(UmiProcessSupervisor *supervisor,
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (supervisor == NULL || request == NULL || out_job_id == NULL) {
+    if (supervisor == NULL || request == NULL || out_job_id == NULL ||
+        (lifetime != UMI_PROCESS_LIFETIME_CHILD && lifetime != UMI_PROCESS_LIFETIME_TREE)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
@@ -381,6 +393,7 @@ UmiStatus umi_process_supervisor_submit(UmiProcessSupervisor *supervisor,
     }
     (void)memset(job, 0, sizeof(*job));
     job->owner = supervisor;
+    job->lifetime = lifetime;
     assignedId = supervisor->next_job_id++;
     job->job_id = assignedId;
     job->state = UMI_PROCESS_JOB_CREATED;
@@ -532,12 +545,16 @@ static void copy_snapshot(const UmiProcessJob *job,
     snapshot->output_truncated = job->result.output_truncated;
     (void)snprintf(snapshot->label, sizeof(snapshot->label), "%s", job->label);
     length = strlen(job->result.output);
+    const char *output = job->result.output;
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= sizeof(snapshot->output)) {
+        /* The compact view must keep the final compiler/test diagnostic,
+         * just as the larger process result keeps its newest output. */
+        output += length - (sizeof(snapshot->output) - 1U);
         length = sizeof(snapshot->output) - 1U;
         snapshot->output_truncated = 1;
     }
-    (void)memcpy(snapshot->output, job->result.output, length);
+    (void)memcpy(snapshot->output, output, length);
     snapshot->output[length] = '\0';
 }
 

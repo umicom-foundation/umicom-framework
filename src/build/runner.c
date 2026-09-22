@@ -210,7 +210,8 @@ UmiStatus umi_build_runner_run(UmiBuildRunner *runner,
     if (runner->clock != NULL && runner->clock->monotonic_nanoseconds != NULL) {
         start_ns = runner->clock->monotonic_nanoseconds(runner->clock);
     }
-    status = umi_process_execute(&request, &process_result);
+    status = UmiProcessExecuteWithLifetime(&request, UMI_PROCESS_LIFETIME_TREE,
+        NULL, NULL, NULL, &process_result);
     (void)snprintf(out_result->output,
                    sizeof(out_result->output),
                    "%s",

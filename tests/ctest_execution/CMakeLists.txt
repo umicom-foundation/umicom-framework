@@ -86,11 +86,8 @@ if(BUILD_TESTING)
     add_test(NAME framework.ctest.suite COMMAND umicom-ctest-suite-checks "${fixture_build}")
     set_tests_properties(framework.ctest.suite PROPERTIES
         FIXTURES_REQUIRED umicom_ctest_fixture RESOURCE_LOCK umicom_ctest_fixture TIMEOUT 60)
-    # The existing Framework Windows process implementation uses CreateProcessA.
-    # Do not advertise native Unicode argv coverage before its separate migration.
-    if(WIN32)
-        set_tests_properties(framework.ctest.execute.unicode-name PROPERTIES DISABLED TRUE)
-    endif()
+    # UTF-8 argv now goes through CreateProcessW. Require this regression on
+    # Windows too; a missing dependency is not a passing Unicode test.
 endif()
 
 # Checked discovery is a separate test family, so it can be required before the

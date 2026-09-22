@@ -246,7 +246,8 @@ static UmiStatus CtestRunConfigured(const char *buildDirectory,
     }
     /* No shell parser, command-string interpolation or global chdir is used.
      * CTest itself owns test properties, fixtures and WORKING_DIRECTORY. */
-    UmiStatus processStatus = umi_process_execute(&request, &process);
+    UmiStatus processStatus = UmiProcessExecuteWithLifetime(&request,
+        UMI_PROCESS_LIFETIME_TREE, NULL, NULL, NULL, &process);
     CtestCopyOutput(outResult, &process);
     outResult->exit_code = process.exit_code;
     outResult->duration_ms = process.duration_ms;

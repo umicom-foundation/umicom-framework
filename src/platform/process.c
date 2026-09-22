@@ -16,6 +16,9 @@
  *---------------------------------------------------------------------------*/
 #ifndef _WIN32
 #define _POSIX_C_SOURCE 200809L
+#if defined(__linux__)
+#define _GNU_SOURCE
+#endif
 #endif
 
 #include "umicom/platform/process.h"
@@ -27,7 +30,12 @@
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0602
+#endif
 #include <windows.h>
+#include <wchar.h>
+#include <limits.h>
 #else
 #include <errno.h>
 #include <fcntl.h>
@@ -119,283 +127,10 @@ static uint64_t monotonic_milliseconds(void)
     return (uint64_t)GetTickCount64();
 }
 
-/*
- * Provide the windows needs quotes operation used by this module and its client
- * applications.
- */
-static int umi_windows_needs_quotes(const char *text)
-{
-    const char *cursor = text;
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (text == NULL || text[0] == '\0') return 1;
-    /*
-     * Continue only while work remains available; the loop body advances the state on each
-     * pass.
-     */
-    while (*cursor != '\0') {
-        /* Apply this branch only when its contract condition is satisfied. */
-        if (*cursor == ' ' || *cursor == '\t' || *cursor == '"') return 1;
-        ++cursor;
-    }
-    return 0;
-}
+#include "process_windows_arguments.inc"
 
-/*
- * Provide the windows append quoted operation used by this module and its client
- * applications.
- */
-static UmiStatus umi_windows_append_quoted(char *buffer,
-                                           size_t capacity,
-                                           size_t *used,
-                                           const char *text)
-{
-    size_t backslashes = 0U;
-    const char *cursor;
-    int quoted;
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (buffer == NULL || used == NULL || text == NULL) {
-        return UMI_STATUS_INVALID_ARGUMENT;
-    }
-    quoted = umi_windows_needs_quotes(text);
-    /* Apply this branch only when its contract condition is satisfied. */
-    if (quoted) {
-        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (*used + 1U >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
-        buffer[(*used)++] = '"';
-    }
-    /* Visit each bounded item once so every record receives the same rule. */
-    for (cursor = text; ; ++cursor) {
-        char value = *cursor;
-        /* Apply this branch only when its contract condition is satisfied. */
-        if (value == '\\') {
-            ++backslashes;
-            continue;
-        }
-        /* Apply this branch only when its contract condition is satisfied. */
-        if (value == '"') {
-            size_t index;
-            /* Visit each bounded item once so every record receives the same rule. */
-            for (index = 0U; index < backslashes * 2U + 1U; ++index) {
-                /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-                if (*used + 1U >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
-                buffer[(*used)++] = '\\';
-            }
-            backslashes = 0U;
-            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-            if (*used + 1U >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
-            buffer[(*used)++] = '"';
-            continue;
-        }
-        /* Apply this branch only when its contract condition is satisfied. */
-        if (value == '\0') {
-            size_t index;
-            size_t count = quoted ? backslashes * 2U : backslashes;
-            /* Visit each bounded item once so every record receives the same rule. */
-            for (index = 0U; index < count; ++index) {
-                /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-                if (*used + 1U >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
-                buffer[(*used)++] = '\\';
-            }
-            break;
-        }
-        /*
-         * Continue only while work remains available; the loop body advances the state on each
-         * pass.
-         */
-        while (backslashes > 0U) {
-            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-            if (*used + 1U >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
-            buffer[(*used)++] = '\\';
-            --backslashes;
-        }
-        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (*used + 1U >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
-        buffer[(*used)++] = value;
-    }
-    /* Apply this branch only when its contract condition is satisfied. */
-    if (quoted) {
-        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (*used + 1U >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
-        buffer[(*used)++] = '"';
-    }
-    buffer[*used] = '\0';
-    return UMI_STATUS_OK;
-}
-
-/*
- * Provide the windows command line operation used by this module and its client
- * applications.
- */
-static UmiStatus umi_windows_command_line(const UmiProcessRequest *request,
-                                          char *buffer,
-                                          size_t capacity)
-{
-    size_t used = 0U;
-    size_t index;
-    UmiStatus status;
-    status = umi_windows_append_quoted(buffer, capacity, &used, request->program);
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status != UMI_STATUS_OK) return status;
-    /* Visit each bounded item once so every record receives the same rule. */
-    for (index = 0U; index < request->argument_count; ++index) {
-        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (used + 2U >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
-        buffer[used++] = ' ';
-        buffer[used] = '\0';
-        status = umi_windows_append_quoted(buffer,
-                                           capacity,
-                                           &used,
-                                           request->arguments[index]);
-        /* Preserve the original failure result so the caller can respond to the correct cause. */
-        if (status != UMI_STATUS_OK) return status;
-    }
-    return UMI_STATUS_OK;
-}
-
-/*
- * Provide the windows env name matches operation used by this module and its client
- * applications.
- */
-static int umi_windows_env_name_matches(const char *entry, const char *name)
-{
-    size_t entry_length;
-    size_t name_length;
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (entry == NULL || name == NULL) return 0;
-    entry_length = strlen(entry);
-    name_length = strlen(name);
-    /* A matching environment record must contain the complete name and the
-     * separator.  Check the entry length before indexing at name_length so a
-     * shorter record can never cause a read beyond its terminator. */
-    if (name_length == SIZE_MAX || entry_length < name_length + 1U) {
-        return 0;
-    }
-    return _strnicmp(entry, name, name_length) == 0 &&
-           entry[name_length] == '=';
-}
-
-/*
- * Provide the windows environment block operation used by this module and its client
- * applications.
- */
-static char *umi_windows_environment_block(const UmiProcessRequest *request)
-{
-    LPCH current;
-    LPCH cursor;
-    size_t total = 1U;
-    size_t override_index;
-    char *block;
-    size_t used = 0U;
-    /* Apply this branch only when its contract condition is satisfied. */
-    if (request->environment_count == 0U) return NULL;
-    current = GetEnvironmentStringsA();
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (current == NULL) return NULL;
-    /* Visit each bounded item once so every record receives the same rule. */
-    for (cursor = current; *cursor != '\0'; cursor += strlen(cursor) + 1U) {
-        int replaced = 0;
-        /* Visit each bounded item once so every record receives the same rule. */
-        for (override_index = 0U;
-             override_index < request->environment_count;
-             ++override_index) {
-            /* Use the stable identifier comparison to choose the matching record or policy. */
-            if (umi_windows_env_name_matches(
-                    cursor,
-                    request->environment[override_index].name)) {
-                replaced = 1;
-                break;
-            }
-        }
-        /* Apply this branch only when its contract condition is satisfied. */
-        if (!replaced) {
-            size_t length = strlen(cursor);
-            if (!umi_process_size_add(total, length, &total) ||
-                !umi_process_size_add(total, 1U, &total)) {
-                FreeEnvironmentStringsA(current);
-                return NULL;
-            }
-        }
-    }
-    /* Visit each bounded item once so every record receives the same rule. */
-    for (override_index = 0U;
-         override_index < request->environment_count;
-         ++override_index) {
-        size_t name_length = strlen(
-            request->environment[override_index].name);
-        size_t value_length = strlen(
-            request->environment[override_index].value);
-        if (!umi_process_size_add(total, name_length, &total) ||
-            !umi_process_size_add(total, value_length, &total) ||
-            !umi_process_size_add(total, 2U, &total)) {
-            FreeEnvironmentStringsA(current);
-            return NULL;
-        }
-    }
-    block = (char *)calloc(total, 1U);
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (block == NULL) {
-        FreeEnvironmentStringsA(current);
-        return NULL;
-    }
-    /* Visit each bounded item once so every record receives the same rule. */
-    for (cursor = current; *cursor != '\0'; cursor += strlen(cursor) + 1U) {
-        int replaced = 0;
-        size_t length;
-        /* Visit each bounded item once so every record receives the same rule. */
-        for (override_index = 0U;
-             override_index < request->environment_count;
-             ++override_index) {
-            /* Use the stable identifier comparison to choose the matching record or policy. */
-            if (umi_windows_env_name_matches(
-                    cursor,
-                    request->environment[override_index].name)) {
-                replaced = 1;
-                break;
-            }
-        }
-        /* Apply this branch only when its contract condition is satisfied. */
-        if (!replaced) {
-            length = strlen(cursor) + 1U;
-            (void)memcpy(block + used, cursor, length);
-            used += length;
-        }
-    }
-    /* Visit each bounded item once so every record receives the same rule. */
-    for (override_index = 0U;
-         override_index < request->environment_count;
-         ++override_index) {
-        int written = snprintf(block + used,
-                               total - used,
-                               "%s=%s",
-                               request->environment[override_index].name,
-                               request->environment[override_index].value);
-        /* Apply this branch only when its contract condition is satisfied. */
-        if (written < 0 || (size_t)written + 1U > total - used) {
-            free(block);
-            FreeEnvironmentStringsA(current);
-            return NULL;
-        }
-        used += (size_t)written + 1U;
-    }
-    block[used] = '\0';
-    FreeEnvironmentStringsA(current);
-    return block;
-}
+/* Unicode resource ownership is private to this Windows adapter. */
+#include "process_windows_utf8.inc"
 
 /*
  * Provide the drain windows pipe operation used by this module and its client
@@ -412,7 +147,7 @@ static void drain_windows_pipe(HANDLE read_pipe, UmiProcessResult *result,
      */
     if (read_pipe == NULL) return;
     /* Visit each bounded item once so every record receives the same rule. */
-    for (;;) {
+    for (size_t chunks = 0U; chunks < 64U; ++chunks) {
         DWORD read_count = 0U;
         /* Apply this branch only when its contract condition is satisfied. */
         if (!PeekNamedPipe(read_pipe, NULL, 0U, NULL, &available, NULL) ||
@@ -457,153 +192,153 @@ static int umi_windows_process_is_hidden(const UmiProcessRequest *request)
 static UmiStatus umi_process_execute_windows(const UmiProcessRequest *request,
                                               UmiProcessResult *result,
                                               UmiProcessResultObserver observer, UmiProcessOutputObserver rawObserver,
-                                              void *context)
+                                              void *context, UmiProcessLifetime lifetime)
 {
-    char command_line[32768];
-    STARTUPINFOA startup;
+    const size_t utf8Capacity = 4U * 32767U + 1U;
+    char *command_line = malloc(utf8Capacity);
+    wchar_t *wideCommand = NULL, *wideDirectory = NULL, *wideProgram = NULL;
+    wchar_t *environment_block = NULL;
+    STARTUPINFOEXW startup;
     PROCESS_INFORMATION process;
     SECURITY_ATTRIBUTES security;
-    HANDLE read_pipe = NULL;
-    HANDLE write_pipe = NULL;
-    char *environment_block;
-    BOOL created;
-    DWORD creation_flags = 0U;
+    HANDLE read_pipe = NULL, write_pipe = NULL, job = NULL;
+    HANDLE inherited[3] = {NULL, NULL, NULL};
+    HANDLE standardCopies[3] = {NULL, NULL, NULL};
+    size_t inheritedCount = 0U;
+    int attributesInitialised = 0;
+    int created = 0;
+    DWORD creation_flags = CREATE_UNICODE_ENVIRONMENT;
     DWORD exit_code = 1U;
-    uint64_t started;
-    uint32_t poll_interval;
-    UmiStatus status;
-
-    status = umi_windows_command_line(request,
-                                      command_line,
-                                      sizeof(command_line));
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status != UMI_STATUS_OK) return status;
-    (void)memset(&startup, 0, sizeof(startup));
-    (void)memset(&process, 0, sizeof(process));
-    startup.cb = sizeof(startup);
-
-    /* Apply this branch only when its contract condition is satisfied. */
+    const uint64_t started = monotonic_milliseconds();
+    uint32_t poll_interval = request->poll_interval_ms > 0U ? request->poll_interval_ms : 10U;
+    UmiStatus status = UMI_STATUS_OK;
+    memset(&startup, 0, sizeof(startup));
+    memset(&process, 0, sizeof(process));
+    memset(&security, 0, sizeof(security));
+    startup.StartupInfo.cb = sizeof(STARTUPINFOW);
+    security.nLength = sizeof(security);
+    security.bInheritHandle = TRUE;
+    if (command_line == NULL) { status = UMI_STATUS_OUT_OF_MEMORY; goto cleanup; }
+    status = umi_windows_command_line(request, command_line, utf8Capacity);
+    if (status == UMI_STATUS_OK) status = UmiWindowsUtf16(command_line, &wideCommand);
+    if (status == UMI_STATUS_OK) status = UmiWindowsUtf16(request->working_directory, &wideDirectory);
+    if (status == UMI_STATUS_OK) status = umi_windows_environment_block(request, &environment_block);
+    if (status == UMI_STATUS_OK) status = UmiWindowsProgram(request, &wideProgram);
+    if (status != UMI_STATUS_OK) goto cleanup;
     if (umi_windows_process_is_hidden(request)) {
-        startup.dwFlags |= STARTF_USESHOWWINDOW;
-        startup.wShowWindow = (WORD)SW_HIDE;
+        startup.StartupInfo.dwFlags |= STARTF_USESHOWWINDOW;
+        startup.StartupInfo.wShowWindow = (WORD)SW_HIDE;
         creation_flags |= CREATE_NO_WINDOW;
     }
-
-    /* Apply this branch only when its contract condition is satisfied. */
     if (request->capture_stdout || request->capture_stderr) {
-        (void)memset(&security, 0, sizeof(security));
-        security.nLength = sizeof(security);
-        security.bInheritHandle = TRUE;
-        /* Apply this branch only when its contract condition is satisfied. */
-        if (!CreatePipe(&read_pipe, &write_pipe, &security, 0U)) {
-            return UMI_STATUS_IO_ERROR;
+        if (!CreatePipe(&read_pipe, &write_pipe, &security, 0U) ||
+            !SetHandleInformation(read_pipe, HANDLE_FLAG_INHERIT, 0U)) {
+            status = UMI_STATUS_IO_ERROR; goto cleanup;
         }
-        (void)SetHandleInformation(read_pipe, HANDLE_FLAG_INHERIT, 0U);
-        startup.dwFlags |= STARTF_USESTDHANDLES;
-        startup.hStdOutput = request->capture_stdout
-            ? write_pipe : GetStdHandle(STD_OUTPUT_HANDLE);
-        startup.hStdError = request->capture_stderr
-            ? write_pipe : GetStdHandle(STD_ERROR_HANDLE);
-        startup.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+        standardCopies[0] = UmiWindowsStandardHandle(STD_INPUT_HANDLE, 1, &security);
+        if (!request->capture_stdout)
+            standardCopies[1] = UmiWindowsStandardHandle(STD_OUTPUT_HANDLE, 0, &security);
+        if (!request->capture_stderr)
+            standardCopies[2] = UmiWindowsStandardHandle(STD_ERROR_HANDLE, 0, &security);
+        startup.StartupInfo.hStdInput = standardCopies[0];
+        startup.StartupInfo.hStdOutput = request->capture_stdout ? write_pipe : standardCopies[1];
+        startup.StartupInfo.hStdError = request->capture_stderr ? write_pipe : standardCopies[2];
+        if (startup.StartupInfo.hStdInput == NULL || startup.StartupInfo.hStdOutput == NULL ||
+            startup.StartupInfo.hStdError == NULL) { status = UMI_STATUS_IO_ERROR; goto cleanup; }
+        inherited[inheritedCount++] = write_pipe;
+        for (size_t i = 0U; i < 3U; ++i)
+            if (standardCopies[i] != NULL) inherited[inheritedCount++] = standardCopies[i];
+        SIZE_T attributeBytes = 0U;
+        (void)InitializeProcThreadAttributeList(NULL, 1U, 0U, &attributeBytes);
+        if (attributeBytes == 0U) { status = UMI_STATUS_IO_ERROR; goto cleanup; }
+        startup.lpAttributeList = malloc(attributeBytes);
+        if (startup.lpAttributeList == NULL) { status = UMI_STATUS_OUT_OF_MEMORY; goto cleanup; }
+        if (!InitializeProcThreadAttributeList(startup.lpAttributeList, 1U, 0U, &attributeBytes)) {
+            status = UMI_STATUS_IO_ERROR; goto cleanup;
+        }
+        attributesInitialised = 1;
+        if (!UpdateProcThreadAttribute(startup.lpAttributeList, 0U,
+                PROC_THREAD_ATTRIBUTE_HANDLE_LIST, inherited,
+                inheritedCount * sizeof(HANDLE), NULL, NULL)) {
+            status = UMI_STATUS_IO_ERROR; goto cleanup;
+        }
+        startup.StartupInfo.cb = sizeof(startup);
+        startup.StartupInfo.dwFlags |= STARTF_USESTDHANDLES;
+        creation_flags |= EXTENDED_STARTUPINFO_PRESENT;
     }
-
-    environment_block = umi_windows_environment_block(request);
-    /* A NULL block means "inherit the current environment" to
-     * CreateProcessA.  That is only correct when no overrides were requested;
-     * otherwise an allocation or Windows environment-read failure must abort
-     * the launch instead of silently dropping the caller's variables. */
-    if (request->environment_count > 0U && environment_block == NULL) {
-        if (write_pipe != NULL) (void)CloseHandle(write_pipe);
-        if (read_pipe != NULL) (void)CloseHandle(read_pipe);
-        return UMI_STATUS_OUT_OF_MEMORY;
+    if (lifetime == UMI_PROCESS_LIFETIME_TREE) {
+        JOBOBJECT_EXTENDED_LIMIT_INFORMATION limits;
+        memset(&limits, 0, sizeof(limits));
+        limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+        job = CreateJobObjectW(NULL, NULL);
+        if (job == NULL || !SetInformationJobObject(job, JobObjectExtendedLimitInformation,
+                &limits, sizeof(limits))) { status = UMI_STATUS_IO_ERROR; goto cleanup; }
+        /* No breakaway: a request must not run before ownership is established. */
+        creation_flags |= CREATE_SUSPENDED;
     }
-    created = CreateProcessA(NULL,
-                             command_line,
-                             NULL,
-                             NULL,
-                             write_pipe != NULL,
-                             creation_flags,
-                             environment_block,
-                             request->working_directory,
-                             &startup,
-                             &process);
-    free(environment_block);
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (write_pipe != NULL) {
-        (void)CloseHandle(write_pipe);
-        write_pipe = NULL;
+    if (umi_cancellation_token_is_requested(request->cancellation)) {
+        result->cancelled = 1; status = UMI_STATUS_CANCELLED; goto cleanup;
     }
-    /* Apply this branch only when its contract condition is satisfied. */
-    if (!created) {
-        /*
-         * Protect caller-owned memory by checking that required state is available before it is
-         * used.
-         */
-        if (read_pipe != NULL) (void)CloseHandle(read_pipe);
-        return UMI_STATUS_IO_ERROR;
+    created = CreateProcessW(wideProgram, wideCommand, NULL, NULL, write_pipe != NULL,
+        creation_flags, environment_block, wideDirectory, &startup.StartupInfo, &process) != 0;
+    if (!created) { status = UMI_STATUS_IO_ERROR; goto cleanup; }
+    if (write_pipe != NULL) { (void)CloseHandle(write_pipe); write_pipe = NULL; }
+    if (job != NULL && (!AssignProcessToJobObject(job, process.hProcess) ||
+                       ResumeThread(process.hThread) == (DWORD)-1)) {
+        (void)TerminateProcess(process.hProcess, 126U);
+        (void)WaitForSingleObject(process.hProcess, INFINITE);
+        status = UMI_STATUS_IO_ERROR;
+        goto cleanup;
     }
-
     result->launched = 1;
-    started = monotonic_milliseconds();
-    poll_interval = request->poll_interval_ms > 0U
-        ? request->poll_interval_ms : 10U;
-    /* Visit each bounded item once so every record receives the same rule. */
+    if (poll_interval > 100U) poll_interval = 100U;
     for (;;) {
-        DWORD wait_result;
         drain_windows_pipe(read_pipe, result, observer, rawObserver, context);
-        wait_result = WaitForSingleObject(process.hProcess, (DWORD)poll_interval);
-        /* Preserve the original failure result so the caller can respond to the correct cause. */
-        if (wait_result == WAIT_OBJECT_0) break;
-        /* Preserve the original failure result so the caller can respond to the correct cause. */
-        if (wait_result == WAIT_FAILED) {
+        DWORD waited = WaitForSingleObject(process.hProcess, (DWORD)poll_interval);
+        if (waited == WAIT_OBJECT_0) break;
+        if (waited == WAIT_FAILED) { status = UMI_STATUS_IO_ERROR; break; }
+        if (umi_cancellation_token_is_requested(request->cancellation)) {
+            result->cancelled = 1; status = UMI_STATUS_CANCELLED; break;
+        }
+        if (request->timeout_ms != 0U && monotonic_milliseconds() - started >= request->timeout_ms) {
+            result->timed_out = 1; status = UMI_STATUS_TIMEOUT; break;
+        }
+    }
+    if (status != UMI_STATUS_OK) {
+        DWORD terminationCode = result->cancelled ? 130U : result->timed_out ? 124U : 126U;
+        result->termination_requested = 1;
+        /* A successful job termination is already responsible for the root.
+         * Issuing a second TerminateProcess can race that asynchronous exit and
+         * falsely turn a valid cancellation into an access-denied error. */
+        BOOL terminated = job != NULL ? TerminateJobObject(job, terminationCode)
+                                     : TerminateProcess(process.hProcess, terminationCode);
+        if (!terminated && WaitForSingleObject(process.hProcess, 0U) != WAIT_OBJECT_0) {
             status = UMI_STATUS_IO_ERROR;
-            break;
+            if (job != NULL) { (void)CloseHandle(job); job = NULL; }
+            (void)TerminateProcess(process.hProcess, terminationCode);
         }
-        /*
-         * Protect caller-owned memory by checking that required state is available before it is
-         * used.
-         */
-        if (request->cancellation != NULL &&
-            umi_cancellation_token_is_requested(request->cancellation)) {
-            result->cancelled = 1;
-            result->termination_requested = 1;
-            (void)TerminateProcess(process.hProcess, 130U);
-            status = UMI_STATUS_CANCELLED;
-            break;
-        }
-        /* Apply this branch only when its contract condition is satisfied. */
-        if (request->timeout_ms > 0U &&
-            monotonic_milliseconds() - started >= request->timeout_ms) {
-            result->timed_out = 1;
-            result->termination_requested = 1;
-            (void)TerminateProcess(process.hProcess, 124U);
-            status = UMI_STATUS_TIMEOUT;
-            break;
-        }
-        status = UMI_STATUS_OK;
     }
     (void)WaitForSingleObject(process.hProcess, INFINITE);
+    if (!GetExitCodeProcess(process.hProcess, &exit_code)) status = UMI_STATUS_IO_ERROR;
+    if (job != NULL) {
+        /* A successful root must not leave helpers running after its request. */
+        if (!TerminateJobObject(job, 0U)) status = UMI_STATUS_IO_ERROR;
+        (void)CloseHandle(job); job = NULL;
+    }
     drain_windows_pipe(read_pipe, result, observer, rawObserver, context);
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (read_pipe != NULL) (void)CloseHandle(read_pipe);
-    (void)GetExitCodeProcess(process.hProcess, &exit_code);
-    (void)CloseHandle(process.hThread);
-    (void)CloseHandle(process.hProcess);
     result->exit_code = (int)exit_code;
     result->duration_ms = monotonic_milliseconds() - started;
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (result->cancelled) return UMI_STATUS_CANCELLED;
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (result->timed_out) return UMI_STATUS_TIMEOUT;
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status != UMI_STATUS_OK) return status;
-    return exit_code == 0U ? UMI_STATUS_OK : UMI_STATUS_INTERNAL_ERROR;
+    if (status == UMI_STATUS_OK && exit_code != 0U) status = UMI_STATUS_INTERNAL_ERROR;
+cleanup:
+    if (job != NULL) (void)CloseHandle(job);
+    if (created) { (void)CloseHandle(process.hThread); (void)CloseHandle(process.hProcess); }
+    if (read_pipe != NULL) (void)CloseHandle(read_pipe);
+    if (write_pipe != NULL) (void)CloseHandle(write_pipe);
+    for (size_t i = 0U; i < 3U; ++i) if (standardCopies[i] != NULL) (void)CloseHandle(standardCopies[i]);
+    if (attributesInitialised) DeleteProcThreadAttributeList(startup.lpAttributeList);
+    free(startup.lpAttributeList);
+    free(command_line); free(wideCommand); free(wideProgram); free(wideDirectory); free(environment_block);
+    return status;
 }
 
 #else
@@ -630,7 +365,7 @@ static void drain_posix_pipe(int descriptor, UmiProcessResult *result,
     /* Apply this branch only when its contract condition is satisfied. */
     if (descriptor < 0) return;
     /* Visit each bounded item once so every record receives the same rule. */
-    for (;;) {
+    for (size_t chunks = 0U; chunks < 64U; ++chunks) {
         count = read(descriptor, chunk, sizeof(chunk));
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (count > 0) {
@@ -653,159 +388,162 @@ static void drain_posix_pipe(int descriptor, UmiProcessResult *result,
  * Provide the process execute posix operation used by this module and its client
  * applications.
  */
+#include "process_posix_launch.inc"
+
 static UmiStatus umi_process_execute_posix(const UmiProcessRequest *request,
                                             UmiProcessResult *result,
                                             UmiProcessResultObserver observer, UmiProcessOutputObserver rawObserver,
-                                            void *context)
+                                            void *context, UmiProcessLifetime lifetime)
 {
     int pipe_descriptors[2] = {-1, -1};
+    int errorPipe[2] = {-1, -1};
     pid_t child;
     char *arguments[UMI_PROCESS_MAX_ARGUMENTS + 2U];
-    size_t index;
     int status_code = 0;
-    uint64_t started;
-    uint32_t poll_interval;
-    UmiStatus terminal_status = UMI_STATUS_OK;
-
-    /* Apply this branch only when its contract condition is satisfied. */
-    if ((request->capture_stdout || request->capture_stderr) &&
-        pipe(pipe_descriptors) != 0) {
-        return UMI_STATUS_IO_ERROR;
+    const uint64_t started = monotonic_milliseconds();
+    uint32_t poll_interval = request->poll_interval_ms > 0U ? request->poll_interval_ms : 10U;
+    UmiStatus terminal_status;
+    UmiPosixLaunch launch;
+    int childWaitable = 1;
+    int processError = 0;
+    /* An ignored SIGCHLD or automatic reaping would discard the root PID
+     * before group cleanup can use it safely. Do not launch under that policy. */
+    if (lifetime == UMI_PROCESS_LIFETIME_TREE) {
+        struct sigaction disposition;
+        if (sigaction(SIGCHLD, NULL, &disposition) != 0) return UMI_STATUS_IO_ERROR;
+        if (disposition.sa_handler == SIG_IGN || (disposition.sa_flags & SA_NOCLDWAIT) != 0)
+            return UMI_STATUS_INVALID_STATE;
+    }
+    terminal_status = UmiPosixLaunchPrepare(request, &launch);
+    if (terminal_status != UMI_STATUS_OK) { UmiPosixLaunchClear(&launch); return terminal_status; }
+    if (poll_interval > 100U) poll_interval = 100U;
+    if (((request->capture_stdout || request->capture_stderr) && !UmiPosixPipe(pipe_descriptors)) ||
+        !UmiPosixPipe(errorPipe)) {
+        terminal_status = UMI_STATUS_IO_ERROR;
+        goto cleanup;
+    }
+    if ((pipe_descriptors[0] >= 0 && fcntl(pipe_descriptors[0], F_SETFL, O_NONBLOCK) != 0) ||
+        fcntl(errorPipe[0], F_SETFL, O_NONBLOCK) != 0) {
+        terminal_status = UMI_STATUS_IO_ERROR;
+        goto cleanup;
     }
     arguments[0] = (char *)request->program;
-    /* Visit each bounded item once so every record receives the same rule. */
-    for (index = 0U; index < request->argument_count; ++index) {
+    for (size_t index = 0U; index < request->argument_count; ++index)
         arguments[index + 1U] = (char *)request->arguments[index];
-    }
     arguments[request->argument_count + 1U] = NULL;
-
-    child = fork();
-    /* Apply this branch only when its contract condition is satisfied. */
-    if (child < 0) {
-        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (pipe_descriptors[0] >= 0) {
-            (void)close(pipe_descriptors[0]);
-            (void)close(pipe_descriptors[1]);
-        }
-        return UMI_STATUS_IO_ERROR;
+    if (umi_cancellation_token_is_requested(request->cancellation)) {
+        result->cancelled = 1; terminal_status = UMI_STATUS_CANCELLED; goto cleanup;
     }
-    /* Apply this branch only when its contract condition is satisfied. */
+    child = fork();
+    if (child < 0) { terminal_status = UMI_STATUS_IO_ERROR; goto cleanup; }
     if (child == 0) {
-        /*
-         * Protect caller-owned memory by checking that required state is available before it is
-         * used.
-         */
-        if (request->working_directory != NULL &&
-            chdir(request->working_directory) != 0) {
-            _exit(126);
-        }
-        /* Visit each bounded item once so every record receives the same rule. */
-        for (index = 0U; index < request->environment_count; ++index) {
-            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-            if (setenv(request->environment[index].name,
-                       request->environment[index].value,
-                       1) != 0) {
-                _exit(126);
-            }
-        }
-        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        (void)close(errorPipe[0]);
+        /* Establish ownership before the executable can create descendants. */
+        if (lifetime == UMI_PROCESS_LIFETIME_TREE && setpgid(0, 0) != 0)
+            UmiPosixChildFail(errorPipe[1], errno);
+        if (request->working_directory != NULL && chdir(request->working_directory) != 0)
+            UmiPosixChildFail(errorPipe[1], errno);
         if (pipe_descriptors[1] >= 0) {
             (void)close(pipe_descriptors[0]);
-            /* Apply this branch only when its contract condition is satisfied. */
-            if (request->capture_stdout) {
-                (void)dup2(pipe_descriptors[1], STDOUT_FILENO);
-            }
-            /* Apply this branch only when its contract condition is satisfied. */
-            if (request->capture_stderr) {
-                (void)dup2(pipe_descriptors[1], STDERR_FILENO);
-            }
+            if (request->capture_stdout && dup2(pipe_descriptors[1], STDOUT_FILENO) < 0)
+                UmiPosixChildFail(errorPipe[1], errno);
+            if (request->capture_stderr && dup2(pipe_descriptors[1], STDERR_FILENO) < 0)
+                UmiPosixChildFail(errorPipe[1], errno);
             (void)close(pipe_descriptors[1]);
         }
-        execvp(request->program, arguments);
-        _exit(errno == ENOENT ? 127 : 126);
-    }
-
-    result->launched = 1;
-    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (pipe_descriptors[1] >= 0) {
-        int flags;
-        (void)close(pipe_descriptors[1]);
-        pipe_descriptors[1] = -1;
-        flags = fcntl(pipe_descriptors[0], F_GETFL, 0);
-        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (flags >= 0) {
-            (void)fcntl(pipe_descriptors[0], F_SETFL, flags | O_NONBLOCK);
+        int sawAccessDenied = 0;
+        int launchError = ENOENT;
+        for (size_t index = 0U; index < launch.pathCount; ++index) {
+            execve(launch.paths[index], arguments, launch.environment);
+            launchError = errno;
+            /* Retain execvp's executable-text fallback without allocating or
+             * modifying the inherited environment in a multithreaded child. */
+            if (launchError == ENOEXEC) {
+                char *shellArguments[UMI_PROCESS_MAX_ARGUMENTS + 3U];
+                shellArguments[0] = (char *)"/bin/sh";
+                shellArguments[1] = launch.paths[index];
+                for (size_t n = 0U; n < request->argument_count; ++n)
+                    shellArguments[n + 2U] = (char *)request->arguments[n];
+                shellArguments[request->argument_count + 2U] = NULL;
+                execve(shellArguments[0], shellArguments, launch.environment);
+                launchError = errno;
+                break;
+            }
+            if (launchError == EACCES) sawAccessDenied = 1;
+            else if (launchError != ENOENT && launchError != ENOTDIR) break;
         }
+        if (sawAccessDenied && (launchError == ENOENT || launchError == ENOTDIR)) launchError = EACCES;
+        UmiPosixChildFail(errorPipe[1], launchError);
     }
-    started = monotonic_milliseconds();
-    poll_interval = request->poll_interval_ms > 0U
-        ? request->poll_interval_ms : 10U;
-
-    /* Visit each bounded item once so every record receives the same rule. */
+    /* Both sides establish the group. This closes the interval in which a
+     * fast cancellation could signal a group the child had not created yet.
+     * EACCES means the child already exec'd after its own successful setpgid. */
+    if (lifetime == UMI_PROCESS_LIFETIME_TREE && setpgid(child, child) != 0 &&
+        errno != EACCES && errno != ESRCH) {
+        terminal_status = UMI_STATUS_IO_ERROR;
+        (void)kill(child, SIGKILL);
+    }
+    result->launched = 1;
+    (void)close(errorPipe[1]); errorPipe[1] = -1;
+    if (pipe_descriptors[1] >= 0) { (void)close(pipe_descriptors[1]); pipe_descriptors[1] = -1; }
     for (;;) {
-        pid_t wait_result;
+        siginfo_t information;
+        memset(&information, 0, sizeof(information));
         drain_posix_pipe(pipe_descriptors[0], result, observer, rawObserver, context);
-        wait_result = waitpid(child, &status_code, WNOHANG);
-        /* Preserve the original failure result so the caller can respond to the correct cause. */
-        if (wait_result == child) break;
-        /* Preserve the original failure result so the caller can respond to the correct cause. */
-        if (wait_result < 0) {
+        /* WNOWAIT keeps the root PID reserved until its owned process group
+         * has been cleaned. Never signal a numeric PID after reaping it. */
+        int waited = waitid(P_PID, (id_t)child, &information, WEXITED | WNOHANG | WNOWAIT);
+        if (waited < 0) {
+            if (errno == EINTR) continue;
+            childWaitable = errno != ECHILD;
             terminal_status = UMI_STATUS_IO_ERROR;
             break;
         }
-        /*
-         * Protect caller-owned memory by checking that required state is available before it is
-         * used.
-         */
-        if (request->cancellation != NULL &&
-            umi_cancellation_token_is_requested(request->cancellation)) {
-            result->cancelled = 1;
+        if (information.si_pid == child) break; /* Completed work wins over late Stop. */
+        if (terminal_status != UMI_STATUS_OK) break;
+        if (umi_cancellation_token_is_requested(request->cancellation)) {
+            result->cancelled = 1; terminal_status = UMI_STATUS_CANCELLED; break;
+        }
+        if (request->timeout_ms != 0U && monotonic_milliseconds() - started >= request->timeout_ms) {
+            result->timed_out = 1; terminal_status = UMI_STATUS_TIMEOUT; break;
+        }
+        struct timespec duration = {(time_t)(poll_interval / 1000U),
+            (long)(poll_interval % 1000U) * 1000000L};
+        (void)nanosleep(&duration, NULL);
+    }
+    if (childWaitable) {
+        if (lifetime == UMI_PROCESS_LIFETIME_TREE) {
+            if (kill(-child, SIGKILL) != 0 && errno != ESRCH) terminal_status = UMI_STATUS_IO_ERROR;
+        }
+        if (terminal_status != UMI_STATUS_OK) {
             result->termination_requested = 1;
-            (void)kill(child, SIGKILL);
-            terminal_status = UMI_STATUS_CANCELLED;
-            (void)waitpid(child, &status_code, 0);
-            break;
+            if (kill(child, SIGKILL) != 0 && errno != ESRCH) terminal_status = UMI_STATUS_IO_ERROR;
         }
-        /* Apply this branch only when its contract condition is satisfied. */
-        if (request->timeout_ms > 0U &&
-            monotonic_milliseconds() - started >= request->timeout_ms) {
-            result->timed_out = 1;
-            result->termination_requested = 1;
-            (void)kill(child, SIGKILL);
-            terminal_status = UMI_STATUS_TIMEOUT;
-            (void)waitpid(child, &status_code, 0);
-            break;
-        }
-        {
-            struct timespec duration;
-            duration.tv_sec = (time_t)(poll_interval / 1000U);
-            duration.tv_nsec = (long)(poll_interval % 1000U) * 1000000L;
-            (void)nanosleep(&duration, NULL);
-        }
+        pid_t reaped;
+        do { reaped = waitpid(child, &status_code, 0); } while (reaped < 0 && errno == EINTR);
+        if (reaped != child) terminal_status = UMI_STATUS_IO_ERROR;
+    }
+    ssize_t errorBytes;
+    do { errorBytes = read(errorPipe[0], &processError, sizeof(processError)); }
+    while (errorBytes < 0 && errno == EINTR);
+    if (errorBytes == (ssize_t)sizeof(processError)) {
+        result->launched = 0;
+        terminal_status = UMI_STATUS_IO_ERROR;
     }
     drain_posix_pipe(pipe_descriptors[0], result, observer, rawObserver, context);
-    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (pipe_descriptors[0] >= 0) (void)close(pipe_descriptors[0]);
-
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (WIFEXITED(status_code)) {
-        result->exit_code = WEXITSTATUS(status_code);
-    } else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (WIFSIGNALED(status_code)) {
-        result->exit_code = 128 + WTERMSIG(status_code);
-    } /* Use this fallback path when the earlier condition does not apply. */ else {
-        result->exit_code = -1;
-    }
+    if (childWaitable && WIFEXITED(status_code)) result->exit_code = WEXITSTATUS(status_code);
+    else if (childWaitable && WIFSIGNALED(status_code)) result->exit_code = 128 + WTERMSIG(status_code);
     result->duration_ms = monotonic_milliseconds() - started;
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (result->cancelled) return UMI_STATUS_CANCELLED;
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (result->timed_out) return UMI_STATUS_TIMEOUT;
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (terminal_status != UMI_STATUS_OK) return terminal_status;
-    return result->exit_code == 0
-        ? UMI_STATUS_OK
-        : UMI_STATUS_INTERNAL_ERROR;
+    if (terminal_status == UMI_STATUS_OK && result->exit_code != 0) terminal_status = UMI_STATUS_INTERNAL_ERROR;
+cleanup:
+    for (size_t i = 0U; i < 2U; ++i) {
+        if (pipe_descriptors[i] >= 0) (void)close(pipe_descriptors[i]);
+        if (errorPipe[i] >= 0) (void)close(errorPipe[i]);
+    }
+    UmiPosixLaunchClear(&launch);
+    return terminal_status;
 }
+
 #endif
 
 /*
@@ -822,7 +560,7 @@ UmiStatus umi_process_execute(const UmiProcessRequest *request,
  * publication boundary; it does not create another child-process runner. */
 static UmiStatus UmiProcessExecuteInternal(const UmiProcessRequest *request,
     UmiProcessResultObserver observer, UmiProcessOutputObserver rawObserver,
-    void *context, UmiProcessResult *out_result)
+    void *context, UmiProcessResult *out_result, UmiProcessLifetime lifetime)
 {
     UmiProcessResult local_result;
     UmiProcessResult *result = out_result != NULL ? out_result : &local_result;
@@ -836,6 +574,7 @@ static UmiStatus UmiProcessExecuteInternal(const UmiProcessRequest *request,
      */
     if (request == NULL || request->program == NULL ||
         request->program[0] == '\0' ||
+        (lifetime != UMI_PROCESS_LIFETIME_CHILD && lifetime != UMI_PROCESS_LIFETIME_TREE) ||
         request->argument_count > UMI_PROCESS_MAX_ARGUMENTS ||
         request->environment_count > UMI_PROCESS_MAX_ENVIRONMENT ||
         request->window_mode < UMI_PROCESS_WINDOW_INHERIT ||
@@ -855,14 +594,20 @@ static UmiStatus UmiProcessExecuteInternal(const UmiProcessRequest *request,
     for (index = 0U; index < request->environment_count; ++index) {
         if (request->environment[index].name == NULL ||
             request->environment[index].value == NULL ||
-            request->environment[index].name[0] == '\0') {
+            request->environment[index].name[0] == '\0' ||
+            strchr(request->environment[index].name, '=') != NULL) {
             return UMI_STATUS_INVALID_ARGUMENT;
         }
     }
+    /* A request stopped before launch must not execute even a short-lived tool. */
+    if (umi_cancellation_token_is_requested(request->cancellation)) {
+        result->cancelled = 1;
+        return UMI_STATUS_CANCELLED;
+    }
 #ifdef _WIN32
-    return umi_process_execute_windows(request, result, observer, rawObserver, context);
+    return umi_process_execute_windows(request, result, observer, rawObserver, context, lifetime);
 #else
-    return umi_process_execute_posix(request, result, observer, rawObserver, context);
+    return umi_process_execute_posix(request, result, observer, rawObserver, context, lifetime);
 #endif
 }
 
@@ -870,14 +615,22 @@ static UmiStatus UmiProcessExecuteInternal(const UmiProcessRequest *request,
 UmiStatus UmiProcessExecuteObserved(const UmiProcessRequest *request,
     UmiProcessResultObserver observer, void *context, UmiProcessResult *outResult)
 {
-    return UmiProcessExecuteInternal(request, observer, NULL, context, outResult);
+    return UmiProcessExecuteInternal(request, observer, NULL, context, outResult, UMI_PROCESS_LIFETIME_CHILD);
 }
 
 /* Raw observers receive bytes before the 64 KiB diagnostic tail can rotate. */
 UmiStatus UmiProcessExecuteStreamed(const UmiProcessRequest *request,
     UmiProcessOutputObserver observer, void *context, UmiProcessResult *outResult)
 {
-    return UmiProcessExecuteInternal(request, NULL, observer, context, outResult);
+    return UmiProcessExecuteInternal(request, NULL, observer, context, outResult, UMI_PROCESS_LIFETIME_CHILD);
+}
+
+/* Both observation forms share the same runner and one explicit lifetime. */
+UmiStatus UmiProcessExecuteWithLifetime(const UmiProcessRequest *request,
+    UmiProcessLifetime lifetime, UmiProcessResultObserver observer,
+    UmiProcessOutputObserver rawObserver, void *context, UmiProcessResult *outResult)
+{
+    return UmiProcessExecuteInternal(request, observer, rawObserver, context, outResult, lifetime);
 }
 
 /* Provide the process capture operation used by this module and its client applications. */

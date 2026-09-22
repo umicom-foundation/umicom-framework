@@ -129,3 +129,14 @@ int main(void)
     printf("Injected failures: %u checks, %u failures\n", checks, failures);
     return failures == 0U ? 0 : 1;
 }
+
+/* Retain injected process outcomes while checking the executor's ownership. */
+UmiStatus UmiProcessExecuteWithLifetime(const UmiProcessRequest *request,
+    UmiProcessLifetime lifetime, UmiProcessResultObserver observer,
+    UmiProcessOutputObserver rawObserver, void *context, UmiProcessResult *result)
+{
+    (void)context;
+    if (lifetime != UMI_PROCESS_LIFETIME_TREE || observer != NULL || rawObserver != NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_process_execute(request, result);
+}

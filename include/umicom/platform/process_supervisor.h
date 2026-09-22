@@ -110,6 +110,16 @@ UmiStatus umi_process_supervisor_submit(UmiProcessSupervisor *supervisor,
                                         const char *label,
                                         const UmiProcessRequest *request,
                                         UmiProcessJobId *out_job_id);
+/** Submit an asynchronous request with an explicit descendant lifetime.
+ * TREE owns ordinary descendant helpers until Stop, timeout or root completion.
+ * CHILD keeps the existing submit behaviour for intentional process hand-offs.
+ * Strings and the lifetime are copied before return; cancellation is controlled
+ * through the returned supervisor job ID, not the request's borrowed token.
+ */
+UmiStatus UmiProcessSupervisorSubmitWithLifetime(UmiProcessSupervisor *supervisor,
+    const char *label, const UmiProcessRequest *request,
+    UmiProcessLifetime lifetime, UmiProcessJobId *out_job_id);
+
 /**
  * Provide the process supervisor cancel operation used by this module and its client
  * applications.

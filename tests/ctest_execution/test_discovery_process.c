@@ -64,3 +64,14 @@ int main(int argc,char **argv)
     else REQUIRE(calls==1U && argumentsValid);
     umi_cancellation_token_destroy(token); umi_test_suite_destroy(suite); printf("discovery process %s passed\n",scenario); return 0;
 }
+
+/* Retain injected process outcomes while checking the executor's ownership. */
+UmiStatus UmiProcessExecuteWithLifetime(const UmiProcessRequest *request,
+    UmiProcessLifetime lifetime, UmiProcessResultObserver observer,
+    UmiProcessOutputObserver rawObserver, void *context, UmiProcessResult *result)
+{
+    (void)context;
+    if (lifetime != UMI_PROCESS_LIFETIME_TREE || observer != NULL || rawObserver != NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_process_execute(request, result);
+}

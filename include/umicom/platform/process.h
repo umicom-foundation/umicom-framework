@@ -128,6 +128,32 @@ typedef void (*UmiProcessOutputObserver)(const char *bytes, size_t length,
 UmiStatus UmiProcessExecuteStreamed(const UmiProcessRequest *request,
     UmiProcessOutputObserver observer, void *context, UmiProcessResult *outResult);
 
+/** Lifetime of a synchronous tool invocation. CHILD preserves the original
+ * runner contract. TREE owns an OS job/process group until the root returns:
+ * Stop, timeout and return clean up members still in that scope. This is not
+ * a security sandbox. POSIX programs can deliberately leave a process group.
+ */
+typedef enum UmiProcessLifetime {
+    UMI_PROCESS_LIFETIME_CHILD = 0,
+    UMI_PROCESS_LIFETIME_TREE = 1
+} UmiProcessLifetime;
+
+/** Execute with explicit ownership; both optional observers use context.
+ * Windows input strings are UTF-8 and are converted strictly to UTF-16.
+ * Captured bytes are not transcoded. Use absolute tool paths for reproducible
+ * selection. The parent environment and current directory are never changed.
+ * A pre-cancelled request does not launch. Call on a worker when the UI must
+ * remain responsive. TREE rejects a launch if Windows job assignment fails.
+ * Keep the token and all borrowed request values alive until this call returns.
+ * POSIX callers must leave child reaping to this runner: do not install
+ * SIGCHLD auto-reaping or let another thread wait for this request's child.
+ * Process-wide environment changes must be serialised with launch preparation.
+ * Existing request/result structures and entry points keep their layouts.
+ */
+UmiStatus UmiProcessExecuteWithLifetime(const UmiProcessRequest *request,
+    UmiProcessLifetime lifetime, UmiProcessResultObserver observer,
+    UmiProcessOutputObserver rawObserver, void *context, UmiProcessResult *outResult);
+
 /**
  * Provide the process capture operation used by this module and its client applications.
  */
