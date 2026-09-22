@@ -1,5 +1,5 @@
 {
-  "purpose": "Native rerun of the six failures visible in the supplied 22 September log. A skipped case is not accepted.",
+  "purpose": "Check native workbench startup, editor and workspace behaviour, package commands and application integration.",
   "tests": [
     {
       "name": "framework.ui_workstation.product.startup.lifetime.gtk4",
