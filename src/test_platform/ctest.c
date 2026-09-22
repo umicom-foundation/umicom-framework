@@ -173,3 +173,43 @@ UmiStatus UmiTestPlatformCtestParseJsonSized(const char *json, size_t length,
 
 /* The background path composes the same parser/capture implementation. */
 #include "ctest_background.inc"
+
+/* Resolve execution origin through the same metadata provider that discovered it. */
+UmiStatus UmiTestPlatformCtestMakeRunRequest(
+    const UmiTestPlatformItemSnapshot *item,
+    const UmiTestPlatformDiscoveryRegistry *discoveries,
+    UmiCtestJobRequest *outRequest)
+{
+    if (item == NULL || discoveries == NULL || outRequest == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(item->id, '\0', sizeof(item->id)) == NULL ||
+        memchr(item->name, '\0', sizeof(item->name)) == NULL ||
+        memchr(item->suite_id, '\0', sizeof(item->suite_id)) == NULL ||
+        memchr(item->framework, '\0', sizeof(item->framework)) == NULL ||
+        memchr(item->kind, '\0', sizeof(item->kind)) == NULL ||
+        memchr(item->uri, '\0', sizeof(item->uri)) == NULL)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (item->id[0] == '\0' || item->name[0] == '\0' || item->uri[0] == '\0' ||
+        item->suite_id[0] == '\0' ||
+        !item->discovered || strcmp(item->framework, "ctest") != 0 ||
+        strcmp(item->kind, "test") != 0) return UMI_STATUS_INVALID_STATE;
+    UmiTestPlatformDiscoverySnapshot discovery;
+    char identity[sizeof(discovery.id)];
+    int written = snprintf(identity, sizeof(identity), "discovery.%s", item->suite_id);
+    if (written < 0 || (size_t)written >= sizeof(identity))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiStatus status = umi_test_platform_discovery_registry_find(discoveries, identity, &discovery);
+    if (status != UMI_STATUS_OK) return status;
+    if (strcmp(discovery.provider, "ctest-json-v1") != 0 || discovery.state != 1 ||
+        strcmp(discovery.root_uri, item->uri) != 0) return UMI_STATUS_INVALID_STATE;
+    UmiCtestJobRequest request = {0};
+    memcpy(request.test_id, item->id, sizeof(item->id));
+    memcpy(request.name, item->name, sizeof(item->name));
+    memcpy(request.build_directory, item->uri, sizeof(item->uri));
+    memcpy(request.configuration, discovery.configuration, sizeof(discovery.configuration));
+    if (request.configuration[0] == '\0')
+        memcpy(request.configuration, "Debug", sizeof("Debug"));
+    request.enabled = item->enabled != 0;
+    *outRequest = request;
+    return UMI_STATUS_OK;
+}

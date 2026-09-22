@@ -398,3 +398,6 @@ UmiStatus UmiCtestRunSuite(const char *buildDirectory, const UmiTestSuite *suite
     }
     return firstFailure;
 }
+
+/* Queue-backed runs reuse this translation unit's verified CTest adapter. */
+#include "ctest_job.inc"

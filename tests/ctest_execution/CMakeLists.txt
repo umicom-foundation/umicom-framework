@@ -23,7 +23,12 @@ elseif(MSVC)
     add_compile_options(/W4 /WX)
 endif()
 
+find_package(Threads REQUIRED)
 set(shared_sources
+    "${framework_root}/src/platform/task.c"
+    "${framework_root}/src/platform/task_queue.c"
+    "${framework_root}/src/platform/threading.c"
+    "${framework_root}/src/platform/clock.c"
     "${framework_root}/src/platform/cancellation.c"
     "${framework_root}/src/testing/case.c"
     "${framework_root}/src/testing/suite.c"
@@ -31,6 +36,7 @@ set(shared_sources
     "${framework_root}/src/testing/ctest_adapter.c")
 add_library(umicom-ctest-checks-core STATIC ${shared_sources})
 target_include_directories(umicom-ctest-checks-core PUBLIC "${framework_root}/include")
+target_link_libraries(umicom-ctest-checks-core PUBLIC Threads::Threads)
 add_library(umicom-ctest-checks-process STATIC "${framework_root}/src/platform/process.c")
 target_include_directories(umicom-ctest-checks-process PUBLIC "${framework_root}/include")
 foreach(kind report execution suite mutation report_failures discovery discovery_process discovery_native)

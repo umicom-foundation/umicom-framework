@@ -17,6 +17,7 @@
 #define UMICOM_TEST_PLATFORM_CTEST_H
 
 #include <stddef.h>
+#include "umicom/testing/ctest_job.h"
 
 #include "umicom/base/status.h"
 #include "umicom/platform/cancellation.h"
@@ -165,6 +166,17 @@ UmiStatus UmiCtestDiscoveryJobCancel(UmiCtestDiscoveryJob *job);
  * payload early. A queued task already marked CANCELLED is safe to release.
  */
 UmiStatus UmiCtestDiscoveryJobDestroy(UmiCtestDiscoveryJob *job);
+
+/** Resolve a test's own JSON discovery record into an owned execution request.
+ * Verifies the provider, completion state, suite identifier and build root.
+ * The test-level working directory remains under CTest control. An absent
+ * configuration means Debug, matching the JSON discovery default. The whole
+ * output is unchanged on failure. No process is started and no registry changes.
+ */
+UmiStatus UmiTestPlatformCtestMakeRunRequest(
+    const UmiTestPlatformItemSnapshot *item,
+    const UmiTestPlatformDiscoveryRegistry *discoveries,
+    UmiCtestJobRequest *outRequest);
 
 #ifdef __cplusplus
 }
