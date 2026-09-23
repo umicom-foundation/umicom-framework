@@ -100,6 +100,39 @@ UmiStatus umi_debug_workbench_refresh_low_level(
     uint32_t instruction_count);
 
 /**
+ * Copy the selected disassembly instruction's adapter memory reference.  When
+ * no explicit selection exists, the current instruction is used.  This is the
+ * canonical address source for instruction stepping and instruction breakpoints.
+ */
+UmiStatus umi_debug_workbench_instruction_reference(
+    const UmiDebugDisassemblyView *disassembly,
+    char *out_reference,
+    size_t capacity);
+
+/**
+ * Advance the active stopped thread by one machine instruction.  step_into=0
+ * sends DAP next with instruction granularity; step_into!=0 sends DAP stepIn
+ * with instruction granularity.  The accepted request changes the adapter and
+ * inspection session to running; the normal debugger event pump publishes the
+ * following stopped event.
+ */
+UmiStatus umi_debug_workbench_step_instruction(
+    UmiDebugRuntimePlatform *platform,
+    int step_into,
+    uint32_t timeout_ms);
+
+/**
+ * Toggle an instruction breakpoint for the selected (or current) disassembly
+ * row and synchronise the complete enabled instruction-breakpoint set with the
+ * active DAP adapter.  The Framework registry is changed only after the adapter
+ * accepts the replacement set.
+ */
+UmiStatus umi_debug_workbench_toggle_instruction_breakpoint(
+    UmiDebugRuntimePlatform *platform,
+    uint32_t timeout_ms,
+    int *out_enabled);
+
+/**
  * Project a Framework register bank into a toolkit-neutral view model suitable for Studio,
  * headless tests and future frontends.
  */

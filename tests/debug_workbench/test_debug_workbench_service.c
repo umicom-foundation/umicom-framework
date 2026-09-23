@@ -118,6 +118,10 @@ static int low_level_projection_check(void)
     UMI_TEST_CHECK(value.kind == UMI_UI_VALUE_STRING);
     UMI_TEST_CHECK(strstr(value.string_value, "add") != NULL);
     UMI_TEST_CHECK(strstr(value.string_value, "%rax") != NULL);
+    UMI_TEST_CHECK(umi_debug_workbench_instruction_reference(
+                       disassembly, reference, sizeof(reference)) ==
+                   UMI_STATUS_OK);
+    UMI_TEST_CHECK(strcmp(reference, "0x401020") == 0);
 
     umi_ui_view_model_destroy(disassembly_view);
     umi_ui_view_model_destroy(register_view);

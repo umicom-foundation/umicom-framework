@@ -18,6 +18,11 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug/workbench/debug_workbench_service.h"
+#include "umicom/debug_runtime/decoders/breakpoints.h"
+#include "umicom/debug_runtime/requests/set_instruction_breakpoints.h"
+#include "umicom/debug_runtime/request_support.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /*
@@ -458,6 +463,266 @@ UmiStatus umi_debug_workbench_refresh_low_level(
     return umi_debug_runtime_platform_disassemble(
         platform, memory_reference, 0, 0, instruction_count,
         timeout_ms, &result);
+}
+
+UmiStatus umi_debug_workbench_instruction_reference(
+    const UmiDebugDisassemblyView *disassembly,
+    char *out_reference,
+    size_t capacity)
+{
+    UmiDebugInstruction instruction;
+    UmiStatus status;
+
+    if (disassembly == NULL || out_reference == NULL || capacity == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    out_reference[0] = '\0';
+    status = umi_debug_disassembly_view_selected(disassembly, &instruction);
+    if (status == UMI_STATUS_NOT_FOUND)
+        status = umi_debug_disassembly_view_current(disassembly, &instruction);
+    if (status != UMI_STATUS_OK) return status;
+    if (!instruction.valid || instruction.memory_reference[0] == '\0')
+        return UMI_STATUS_NOT_FOUND;
+    return copy_bounded_text(out_reference, capacity,
+                             instruction.memory_reference);
+}
+
+UmiStatus umi_debug_workbench_step_instruction(
+    UmiDebugRuntimePlatform *platform,
+    int step_into,
+    uint32_t timeout_ms)
+{
+    UmiDebugRuntimePlatformSnapshot snapshot;
+    UmiDebugRuntimeAdapter *adapter;
+    UmiDebugRuntimeEnvelope response;
+    UmiDebugAdvancedPlatform *advanced;
+    UmiDebugInspectionSession *inspection;
+    UmiDebugDisassemblyView *disassembly;
+    char arguments[192];
+    uint64_t sequence = 0U;
+    int written;
+    UmiStatus status;
+
+    if (platform == NULL || timeout_ms == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_debug_runtime_platform_snapshot(platform, &snapshot);
+    if (status != UMI_STATUS_OK) return status;
+    if (!snapshot.active || !snapshot.paused ||
+        snapshot.adapter.state != UMI_DEBUG_RUNTIME_ADAPTER_PAUSED ||
+        snapshot.active_thread_id == 0U)
+        return UMI_STATUS_INVALID_STATE;
+    adapter = umi_debug_runtime_platform_adapter(platform);
+    if (adapter == NULL) return UMI_STATUS_INVALID_STATE;
+
+    written = snprintf(arguments, sizeof(arguments),
+        "{\"threadId\":%llu,\"granularity\":\"instruction\"}",
+        (unsigned long long)snapshot.active_thread_id);
+    if (written < 0 || (size_t)written >= sizeof(arguments))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    status = umi_debug_runtime_request_raw(
+        adapter, step_into ? "stepIn" : "next", arguments,
+        "instruction", &sequence);
+    if (status == UMI_STATUS_OK)
+        status = umi_debug_runtime_adapter_wait_response(
+            adapter, sequence, timeout_ms, &response);
+    if (status != UMI_STATUS_OK) return status;
+    if (!response.success) return UMI_STATUS_UNAVAILABLE;
+
+    /* The stopped/continued event pump remains authoritative for the platform's
+     * eventual pause state.  Mark the public adapter/inspection models running
+     * immediately so frontends cannot issue a second instruction step while the
+     * first one is in flight. */
+    (void)umi_debug_runtime_adapter_set_state(
+        adapter, UMI_DEBUG_RUNTIME_ADAPTER_RUNNING);
+    advanced = umi_debug_runtime_platform_advanced(platform);
+    inspection = advanced != NULL
+        ? umi_debug_advanced_platform_inspection(advanced) : NULL;
+    if (inspection != NULL) {
+        (void)umi_debug_inspection_session_set_state(
+            inspection, UMI_DEBUG_INSPECTION_RUNNING);
+        disassembly = umi_debug_inspection_session_disassembly(inspection);
+        if (disassembly != NULL) (void)umi_debug_disassembly_view_clear(disassembly);
+    }
+    return UMI_STATUS_OK;
+}
+
+static uint64_t instruction_reference_hash(const char *text)
+{
+    uint64_t hash = UINT64_C(1469598103934665603);
+    if (text == NULL) return hash;
+    while (*text != '\0') {
+        hash ^= (unsigned char)*text++;
+        hash *= UINT64_C(1099511628211);
+    }
+    return hash;
+}
+
+static int same_instruction_breakpoint(
+    const UmiDebugAdvancedBreakpoint *breakpoint,
+    const UmiDebugInstruction *instruction)
+{
+    if (breakpoint == NULL || instruction == NULL ||
+        breakpoint->kind != UMI_DEBUG_ADVANCED_BREAKPOINT_INSTRUCTION)
+        return 0;
+    if (instruction->memory_reference[0] != '\0' &&
+        strcmp(breakpoint->reference, instruction->memory_reference) == 0 &&
+        breakpoint->instruction_offset == instruction->instruction_offset)
+        return 1;
+    return instruction->address != 0U && breakpoint->address == instruction->address;
+}
+
+UmiStatus umi_debug_workbench_toggle_instruction_breakpoint(
+    UmiDebugRuntimePlatform *platform,
+    uint32_t timeout_ms,
+    int *out_enabled)
+{
+    UmiDebugRuntimePlatformSnapshot snapshot;
+    UmiDebugRuntimeAdapter *adapter;
+    UmiDebugAdvancedPlatform *advanced;
+    UmiDebugInspectionSession *inspection;
+    UmiDebugDisassemblyView *disassembly;
+    UmiDebugAdvancedBreakpointRegistry *registry;
+    UmiDebugInstruction instruction;
+    UmiDebugAdvancedBreakpoint existing;
+    UmiDebugRuntimeInstructionBreakpoint *requests = NULL;
+    UmiDebugRuntimeBreakpointList decoded;
+    UmiDebugRuntimeEnvelope response;
+    size_t registry_count;
+    size_t index;
+    size_t request_count = 0U;
+    size_t target_response_index = SIZE_MAX;
+    int found = 0;
+    uint64_t sequence = 0U;
+    UmiStatus status;
+
+    if (platform == NULL || timeout_ms == 0U || out_enabled == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    *out_enabled = 0;
+    status = umi_debug_runtime_platform_snapshot(platform, &snapshot);
+    if (status != UMI_STATUS_OK) return status;
+    if (!snapshot.active || !snapshot.paused ||
+        snapshot.adapter.state != UMI_DEBUG_RUNTIME_ADAPTER_PAUSED)
+        return UMI_STATUS_INVALID_STATE;
+    if (!snapshot.capabilities.supports_instruction_breakpoints)
+        return UMI_STATUS_NOT_IMPLEMENTED;
+    adapter = umi_debug_runtime_platform_adapter(platform);
+    advanced = umi_debug_runtime_platform_advanced(platform);
+    inspection = advanced != NULL
+        ? umi_debug_advanced_platform_inspection(advanced) : NULL;
+    disassembly = inspection != NULL
+        ? umi_debug_inspection_session_disassembly(inspection) : NULL;
+    registry = inspection != NULL
+        ? umi_debug_inspection_session_advanced_breakpoints(inspection) : NULL;
+    if (adapter == NULL || disassembly == NULL || registry == NULL)
+        return UMI_STATUS_INVALID_STATE;
+
+    status = umi_debug_disassembly_view_selected(disassembly, &instruction);
+    if (status == UMI_STATUS_NOT_FOUND)
+        status = umi_debug_disassembly_view_current(disassembly, &instruction);
+    if (status != UMI_STATUS_OK) return status;
+    if (!instruction.valid || !instruction.can_breakpoint ||
+        instruction.memory_reference[0] == '\0')
+        return UMI_STATUS_NOT_IMPLEMENTED;
+
+    registry_count = umi_debug_advanced_breakpoint_registry_count(registry);
+    requests = (UmiDebugRuntimeInstructionBreakpoint *)calloc(
+        registry_count + 1U, sizeof(*requests));
+    if (requests == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+
+    for (index = 0U; index < registry_count; ++index) {
+        UmiDebugAdvancedBreakpoint item;
+        status = umi_debug_advanced_breakpoint_registry_at(registry, index, &item);
+        if (status != UMI_STATUS_OK) break;
+        if (item.kind != UMI_DEBUG_ADVANCED_BREAKPOINT_INSTRUCTION)
+            continue;
+        if (same_instruction_breakpoint(&item, &instruction)) {
+            existing = item;
+            found = 1;
+            continue; /* toggle-off request omits the selected breakpoint */
+        }
+        if (!item.enabled) continue;
+        status = copy_bounded_text(
+            requests[request_count].instruction_reference,
+            sizeof(requests[request_count].instruction_reference),
+            item.reference);
+        if (status != UMI_STATUS_OK) break;
+        requests[request_count].offset = item.instruction_offset;
+        status = copy_bounded_text(requests[request_count].condition,
+            sizeof(requests[request_count].condition), item.condition);
+        if (status != UMI_STATUS_OK) break;
+        status = copy_bounded_text(requests[request_count].hit_condition,
+            sizeof(requests[request_count].hit_condition), item.hit_condition);
+        if (status != UMI_STATUS_OK) break;
+        ++request_count;
+    }
+
+    if (status == UMI_STATUS_OK && !found) {
+        target_response_index = request_count;
+        status = copy_bounded_text(
+            requests[request_count].instruction_reference,
+            sizeof(requests[request_count].instruction_reference),
+            instruction.memory_reference);
+        if (status == UMI_STATUS_OK) {
+            requests[request_count].offset = instruction.instruction_offset;
+            ++request_count;
+        }
+    }
+
+    if (status == UMI_STATUS_OK)
+        status = umi_debug_runtime_request_set_instruction_breakpoints(
+            adapter, requests, request_count, &sequence);
+    if (status == UMI_STATUS_OK)
+        status = umi_debug_runtime_adapter_wait_response(
+            adapter, sequence, timeout_ms, &response);
+    if (status == UMI_STATUS_OK && !response.success)
+        status = UMI_STATUS_UNAVAILABLE;
+    if (status == UMI_STATUS_OK)
+        status = umi_debug_runtime_decode_breakpoints(response.json, &decoded);
+    if (status == UMI_STATUS_OK && decoded.count != request_count)
+        status = UMI_STATUS_PARSE_ERROR;
+
+    if (status == UMI_STATUS_OK && found) {
+        status = umi_debug_advanced_breakpoint_registry_remove(
+            registry, existing.id);
+        if (status == UMI_STATUS_OK)
+            status = umi_debug_disassembly_view_set_breakpoint(
+                disassembly, instruction.id, 0);
+        *out_enabled = 0;
+    } else if (status == UMI_STATUS_OK) {
+        UmiDebugAdvancedBreakpoint item;
+        (void)memset(&item, 0, sizeof(item));
+        item.struct_size = (uint32_t)sizeof(item);
+        item.api_version = UMI_DEBUG_ADVANCED_BREAKPOINT_API_VERSION;
+        (void)snprintf(item.id, sizeof(item.id), "instruction.%016llx",
+            (unsigned long long)(instruction.address != 0U
+                ? instruction.address
+                : instruction_reference_hash(instruction.memory_reference)));
+        (void)snprintf(item.session_id, sizeof(item.session_id), "%s",
+            snapshot.active_session_id);
+        item.kind = UMI_DEBUG_ADVANCED_BREAKPOINT_INSTRUCTION;
+        (void)snprintf(item.name, sizeof(item.name), "%.120s %.300s",
+            instruction.mnemonic, instruction.operands);
+        status = copy_bounded_text(item.reference, sizeof(item.reference),
+                                   instruction.memory_reference);
+        item.address = instruction.address;
+        item.instruction_offset = instruction.instruction_offset;
+        item.sequence = snapshot.revision + 1U;
+        item.revision = item.sequence;
+        item.enabled = 1;
+        item.verified = target_response_index < decoded.count
+            ? decoded.items[target_response_index].verified : 0;
+        item.stop_on_hit = 1;
+        if (status == UMI_STATUS_OK)
+            status = umi_debug_advanced_breakpoint_registry_upsert(
+                registry, &item);
+        if (status == UMI_STATUS_OK)
+            status = umi_debug_disassembly_view_set_breakpoint(
+                disassembly, instruction.id, 1);
+        *out_enabled = status == UMI_STATUS_OK;
+    }
+
+    free(requests);
+    return status;
 }
 
 static UmiStatus set_string(UmiUiViewModel *view,
