@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Following Source and Machine Instructions</title>
+<style>body{font:17px/1.65 system-ui,"Segoe UI",sans-serif;max-width:1050px;margin:auto;padding:28px;color:#183247}code,pre{font-family:Consolas,monospace}pre{background:#102638;color:#eef8ff;padding:18px;border-radius:8px;overflow:auto}h1,h2{color:#12415b}.note{border-left:4px solid #16828a;background:#eef9f8;padding:12px 16px}</style></head>
+<body><h1>Following Source and Machine Instructions</h1>
+<p>Umicom Framework keeps source locations, stack frames and disassembled instructions as separate debugger records. The debug navigation helper connects those records without opening windows or changing source files.</p>
+<h2>Why the views are separate</h2>
+<p>A C statement may compile into several machine instructions, and an Assembly source line may describe one or more instructions. The selected stack frame gives the current source context, while the disassembly view identifies the exact instruction.</p>
+<h2>Capture the current location</h2>
+<pre><code>UmiDebugWorkbenchNavigationSnapshot location;
+UmiStatus status = umi_debug_workbench_navigation_snapshot(platform, &amp;location);
+</code></pre>
+<p>When an instruction is selected, its source association takes precedence. Otherwise the active stack frame supplies the source URI and line.</p>
+<h2>Follow a source line</h2>
+<pre><code>status = umi_debug_workbench_navigation_follow_source(
+    platform,
+    "C:/projects/notes/count_byte.S",
+    18U,
+    &amp;location);
+</code></pre>
+<p>The helper searches only instructions already present in Framework's disassembly model. It does not ask a compiler to invent a mapping and does not edit a document.</p>
+<h2>Select an instruction</h2>
+<pre><code>status = umi_debug_workbench_navigation_select_instruction(
+    platform,
+    "instruction.4",
+    &amp;location);
+</code></pre>
+<div class="note">DAP frame identifier zero is valid. Check <code>has_frame</code> rather than treating a numeric zero as “no frame”.</div>
+</body></html>
