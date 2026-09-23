@@ -25,10 +25,17 @@
 #include "umicom/debug/workbench/thread_group.h"
 #include "umicom/debug/workbench/watch_expression_collection.h"
 #include "umicom/debug/workbench/debug_status_model.h"
+#include "umicom/debug/register_bank.h"
+#include "umicom/debug/disassembly_view.h"
+#include "umicom/debug_runtime/platform.h"
+#include "umicom/ui/view_model.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define UMI_DEBUG_WORKBENCH_LOW_LEVEL_ROW_LIMIT 24U
+#define UMI_DEBUG_WORKBENCH_LOW_LEVEL_INSTRUCTION_LIMIT 128U
 
 /**
  * Represent the debug workbench debug workbench service data shared with callers of this
@@ -69,6 +76,46 @@ UmiStatus umi_debug_workbench_debug_workbench_service_refresh_status(UmiDebugWor
  * service relies on it.
  */
 int umi_debug_workbench_debug_workbench_service_valid(const UmiDebugWorkbenchDebugWorkbenchService *service);
+
+/**
+ * Find the program-counter register in a Framework register bank and copy a bounded
+ * debugger memory reference suitable for a DAP disassemble request.  Common names used by
+ * x86/x86-64, ARM and RISC-V adapters are recognised.  The register model remains owned by
+ * the caller.
+ */
+UmiStatus umi_debug_workbench_program_counter_reference(
+    const UmiDebugRegisterBank *bank,
+    char *out_reference,
+    size_t capacity);
+
+/**
+ * Refresh the active stopped session's architecture registers and, where the adapter
+ * supports disassembly and exposes a program counter, refresh a bounded instruction window.
+ * The operation uses Framework's existing DAP runtime, register bank and disassembly model;
+ * no debugger protocol is implemented by the consuming application.
+ */
+UmiStatus umi_debug_workbench_refresh_low_level(
+    UmiDebugRuntimePlatform *platform,
+    uint32_t timeout_ms,
+    uint32_t instruction_count);
+
+/**
+ * Project a Framework register bank into a toolkit-neutral view model suitable for Studio,
+ * headless tests and future frontends.
+ */
+UmiStatus umi_debug_workbench_registers_view_create(
+    const char *view_id,
+    const UmiDebugRegisterBank *bank,
+    UmiUiViewModel **out_view);
+
+/**
+ * Project a Framework disassembly model into a toolkit-neutral view model suitable for
+ * Studio, headless tests and future frontends.
+ */
+UmiStatus umi_debug_workbench_disassembly_view_create(
+    const char *view_id,
+    const UmiDebugDisassemblyView *disassembly,
+    UmiUiViewModel **out_view);
 
 #ifdef __cplusplus
 }
