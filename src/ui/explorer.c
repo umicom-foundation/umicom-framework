@@ -75,6 +75,113 @@ static void insert_result(UmiUiExplorerSearchResults *results,
     results->items[position].score = score;
 }
 
+/* Return whether one character separates portable path components. */
+static int UmiUiExplorerPathSeparator(char value)
+{
+    return value == '/' || value == '\\';
+}
+
+/* Copy one complete or partial path component without silent truncation. */
+static UmiStatus UmiUiExplorerCopyRange(
+    char *destination,
+    size_t capacity,
+    const char *source,
+    size_t length)
+{
+    if (destination == NULL || capacity == 0U || source == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (length >= capacity) {
+        destination[0] = '\0';
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    if (length > 0U) {
+        (void)memcpy(destination, source, length);
+    }
+    destination[length] = '\0';
+    return UMI_STATUS_OK;
+}
+
+/*
+ * Add folder context to an existing File Index row without reading the
+ * filesystem or changing the indexed path. Frontends can therefore present a
+ * useful project hierarchy while File Index remains the single path authority.
+ */
+UmiStatus UmiUiExplorerDescribeFileIndexEntry(
+    const UmiFileIndexEntry *entry,
+    UmiUiExplorerFilePresentation *outPresentation)
+{
+    size_t relativeLength;
+    size_t nameLength;
+    size_t firstSeparator = SIZE_MAX;
+    size_t lastSeparator = SIZE_MAX;
+    size_t index;
+    size_t depth = 0U;
+    UmiStatus status;
+
+    if (entry == NULL || outPresentation == NULL ||
+        memchr(entry->relative_path, '\0', sizeof(entry->relative_path)) == NULL ||
+        memchr(entry->name, '\0', sizeof(entry->name)) == NULL ||
+        entry->relative_path[0] == '\0' || entry->name[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    (void)memset(outPresentation, 0, sizeof(*outPresentation));
+    relativeLength = strlen(entry->relative_path);
+    nameLength = strlen(entry->name);
+
+    status = UmiUiExplorerCopyRange(
+        outPresentation->name,
+        sizeof(outPresentation->name),
+        entry->name,
+        nameLength);
+    if (status == UMI_STATUS_OK) {
+        status = UmiUiExplorerCopyRange(
+            outPresentation->relativePath,
+            sizeof(outPresentation->relativePath),
+            entry->relative_path,
+            relativeLength);
+    }
+    if (status != UMI_STATUS_OK) return status;
+
+    for (index = 0U; index < relativeLength; ++index) {
+        if (!UmiUiExplorerPathSeparator(entry->relative_path[index])) {
+            continue;
+        }
+        if (firstSeparator == SIZE_MAX) firstSeparator = index;
+        lastSeparator = index;
+        if (index > 0U &&
+            !UmiUiExplorerPathSeparator(entry->relative_path[index - 1U]) &&
+            index + 1U < relativeLength &&
+            !UmiUiExplorerPathSeparator(entry->relative_path[index + 1U])) {
+            depth += 1U;
+        }
+    }
+
+    outPresentation->depth = depth;
+    outPresentation->workspaceRoot = lastSeparator == SIZE_MAX;
+
+    if (lastSeparator != SIZE_MAX) {
+        status = UmiUiExplorerCopyRange(
+            outPresentation->parentPath,
+            sizeof(outPresentation->parentPath),
+            entry->relative_path,
+            lastSeparator);
+        if (status != UMI_STATUS_OK) return status;
+    }
+
+    if (firstSeparator != SIZE_MAX) {
+        status = UmiUiExplorerCopyRange(
+            outPresentation->topLevel,
+            sizeof(outPresentation->topLevel),
+            entry->relative_path,
+            firstSeparator);
+        if (status != UMI_STATUS_OK) return status;
+    }
+
+    return UMI_STATUS_OK;
+}
+
 /*
  * Initialise ui explorer model from caller-provided values so later operations receive a
  * known state.

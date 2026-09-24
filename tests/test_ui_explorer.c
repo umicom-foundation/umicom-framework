@@ -49,5 +49,52 @@ int main(void)
     assert(found.selected == 1);
 
     umi_ui_explorer_model_destroy(model);
+
+    /* File Index rows can be presented with folder context without reading the
+     * filesystem or changing the indexed path. */
+    {
+        UmiFileIndexEntry entry = {0};
+        UmiUiExplorerFilePresentation presentation;
+
+        (void)snprintf(entry.name, sizeof(entry.name), "%s", "main.c");
+        (void)snprintf(
+            entry.relative_path,
+            sizeof(entry.relative_path),
+            "%s",
+            "src/app/main.c");
+        assert(UmiUiExplorerDescribeFileIndexEntry(
+            &entry, &presentation) == UMI_STATUS_OK);
+        assert(strcmp(presentation.name, "main.c") == 0);
+        assert(strcmp(presentation.parentPath, "src/app") == 0);
+        assert(strcmp(presentation.topLevel, "src") == 0);
+        assert(presentation.depth == 2U);
+        assert(presentation.workspaceRoot == 0);
+
+        (void)snprintf(
+            entry.relative_path,
+            sizeof(entry.relative_path),
+            "%s",
+            "CMakeLists.txt");
+        (void)snprintf(entry.name, sizeof(entry.name), "%s", "CMakeLists.txt");
+        assert(UmiUiExplorerDescribeFileIndexEntry(
+            &entry, &presentation) == UMI_STATUS_OK);
+        assert(presentation.parentPath[0] == '\0');
+        assert(presentation.topLevel[0] == '\0');
+        assert(presentation.depth == 0U);
+        assert(presentation.workspaceRoot == 1);
+
+        (void)snprintf(
+            entry.relative_path,
+            sizeof(entry.relative_path),
+            "%s",
+            "include\\umicom\\panel.h");
+        (void)snprintf(entry.name, sizeof(entry.name), "%s", "panel.h");
+        assert(UmiUiExplorerDescribeFileIndexEntry(
+            &entry, &presentation) == UMI_STATUS_OK);
+        assert(strcmp(presentation.parentPath, "include\\umicom") == 0);
+        assert(strcmp(presentation.topLevel, "include") == 0);
+        assert(presentation.depth == 2U);
+    }
+
     return 0;
 }

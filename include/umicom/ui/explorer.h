@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include "umicom/ui/types.h"
 #include "umicom/ui/breadcrumb.h"
+#include "umicom/platform/file_index.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -74,6 +75,31 @@ typedef struct UmiUiExplorerSearchResults {
     UmiUiExplorerSearchResult items[UMI_UI_EXPLORER_MAX_RESULTS];
     size_t count;
 } UmiUiExplorerSearchResults;
+
+/**
+ * Describe one indexed file for a project-explorer presentation.
+ *
+ * The File Index remains the source of filesystem truth. This structure adds
+ * only folder context used by desktop, web and future frontend renderers.
+ */
+typedef struct UmiUiExplorerFilePresentation {
+    char name[UMI_FILE_INDEX_NAME_CAPACITY];
+    char relativePath[UMI_PATH_CAPACITY];
+    char parentPath[UMI_PATH_CAPACITY];
+    char topLevel[UMI_FILE_INDEX_NAME_CAPACITY];
+    size_t depth;
+    int workspaceRoot;
+} UmiUiExplorerFilePresentation;
+
+/**
+ * Project one File Index entry into portable project-explorer context.
+ *
+ * Both '/' and '\' are accepted as path separators so a saved/indexed path can
+ * be presented consistently on Windows, Linux and future supported platforms.
+ */
+UmiStatus UmiUiExplorerDescribeFileIndexEntry(
+    const UmiFileIndexEntry *entry,
+    UmiUiExplorerFilePresentation *outPresentation);
 
 /**
  * Represent the ui explorer model data shared with callers of this public contract.
