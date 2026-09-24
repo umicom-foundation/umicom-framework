@@ -47,7 +47,19 @@ endif()
 file(MAKE_DIRECTORY "${_runtime_root}" "${UMI_DEPLOY_WORK}")
 # Products usually share build/bin. Serialise writes without introducing false
 # build dependencies between unrelated application executables.
-file(LOCK "${_runtime_root}/.umicom-runtime.lock" GUARD PROCESS TIMEOUT 300)
+#
+# Runtime preparation can copy GTK, GtkSourceView, schemas, icons, themes and
+# Framework resources for many products into the same shared build tree. A
+# parallel build may therefore wait longer than five minutes for another
+# product to finish legitimate staging. Keep the process-scoped lock, but let
+# CMake wait for the current owner instead of treating normal serialisation as
+# a deployment failure.
+if(FALSE)
+    # Previous fixed-timeout form retained for review. It could fail a healthy
+    # build solely because another application was still staging shared files.
+    file(LOCK "${_runtime_root}/.umicom-runtime.lock" GUARD PROCESS TIMEOUT 300)
+endif()
+file(LOCK "${_runtime_root}/.umicom-runtime.lock" GUARD PROCESS)
 set(_records "")
 
 macro(umicom_stage_owned_file source deployed relative)
