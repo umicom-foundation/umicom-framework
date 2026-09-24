@@ -433,6 +433,38 @@ static const char WORKBENCH_CSS_PANELS[] =
     ".umicom-context-purple .umicom-panel-header { border-top-color: #8b72d9; }"
     ".umicom-context-magenta .umicom-panel-header { border-top-color: #c468ad; }";
 
+
+/* Product panels share one visual hierarchy across Bank, TMS, Trader and
+ * future Framework applications. The rules use semantic palette tokens only;
+ * product repositories do not carry private colours or GTK-specific styling. */
+static const char WORKBENCH_CSS_PRODUCT[] =
+    ".umicom-view-model-panel-content { padding: 10px 12px; }"
+    ".umicom-product-status-card {"
+    "  margin: 2px 0 6px 0; padding: 10px 12px;"
+    "  border: 1px solid @umi_border; border-radius: 7px;"
+    "  background: @umi_surface_raised;"
+    "}"
+    ".umicom-product-status-card.empty {"
+    "  border-style: dashed; background: @umi_surface;"
+    "}"
+    ".umicom-product-status-card.warning { border-left: 3px solid @umi_warning; }"
+    ".umicom-product-status-card.error { border-left: 3px solid @umi_danger; }"
+    ".umicom-product-state { color: @umi_foreground; font-weight: 700; }"
+    ".umicom-product-message { color: @umi_muted; }"
+    ".umicom-view-model-metrics { padding: 2px 0; }"
+    ".umicom-view-model-rows {"
+    "  padding: 4px 0; border-top: 1px solid @umi_border;"
+    "}"
+    ".umicom-view-model-row { padding: 2px 4px; font-family: monospace; }"
+    ".umicom-view-model-actions { margin-top: 3px; }"
+    ".umicom-view-model-actions button { min-height: 28px; padding: 3px 8px; }"
+    ".umicom-technical-details { margin-top: 4px; color: @umi_muted; }"
+    ".umicom-empty-state {"
+    "  min-height: 140px; padding: 18px;"
+    "  border: 1px dashed @umi_border_strong; border-radius: 7px;"
+    "  background: @umi_surface; color: @umi_muted;"
+    "}";
+
 _Static_assert(sizeof(WORKBENCH_CSS_CHROME) <= 4096U,
                "GTK4 chrome CSS exceeds ISO C's portable string limit");
 _Static_assert(sizeof(WORKBENCH_CSS_CONTROLS) <= 4096U,
@@ -445,6 +477,8 @@ _Static_assert(sizeof(WORKBENCH_CSS_DESKTOP) <= 4096U,
                "GTK4 desktop CSS exceeds ISO C's portable string limit");
 _Static_assert(sizeof(WORKBENCH_CSS_PANELS) <= 4096U,
                "GTK4 panel CSS exceeds ISO C's portable string limit");
+_Static_assert(sizeof(WORKBENCH_CSS_PRODUCT) <= 4096U,
+               "GTK4 product CSS exceeds ISO C's portable string limit");
 
 /*
  * Provide the palette for workbench operation used by this module and its client
@@ -592,6 +626,7 @@ UmiStatus umi_gtk4_apply_theme(UmiGtk4Adapter *adapter,
                       WORKBENCH_CSS_EDITOR,
                       WORKBENCH_CSS_DESKTOP,
                       WORKBENCH_CSS_PANELS,
+                      WORKBENCH_CSS_PRODUCT,
                       profile_css != NULL ? profile_css : "", NULL);
     g_free(profile_css);
     /*

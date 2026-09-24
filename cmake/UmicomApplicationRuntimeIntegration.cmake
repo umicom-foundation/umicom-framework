@@ -54,6 +54,7 @@ target_link_libraries(umicom_application PUBLIC Umicom::platform)
 if(TARGET umicom_ui_gtk4)
     target_sources(umicom_ui_gtk4 PRIVATE
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/desk_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/desk_appearance_gtk4.c"
     )
 endif()
 

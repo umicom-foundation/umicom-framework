@@ -222,6 +222,86 @@ static const char *technical_property_label(const char *key)
         : key;
 }
 
+/*
+ * Product workstations keep internal coordination evidence available under
+ * Technical details instead of making protocol-style field names compete
+ * with the user's primary data. The toolkit-neutral properties themselves are
+ * unchanged, so other frontends and diagnostics retain the complete model.
+ */
+static bool is_product_technical_property(const char *key)
+{
+    static const char *const KEYS[] = {
+        "trading.revision",
+        "trading.account-id",
+        "trading.environment",
+        "trading.selected-order",
+        "trading.market-data-ready",
+        "trading.broker-ready",
+        "trading.risk-ready",
+        "trading.health-ready",
+        "trading.kill-switch-engaged",
+        "trading.row-count",
+        "chart.pane-count",
+        "chart.scale-count",
+        "chart.annotation-count",
+        "chart.drawing-count"
+    };
+    size_t index;
+
+    if (key == NULL) return false;
+    for (index = 0U; index < sizeof(KEYS) / sizeof(KEYS[0]); ++index) {
+        if (strcmp(key, KEYS[index]) == 0) return true;
+    }
+    return false;
+}
+
+/* Translate established property identifiers into concise product labels.
+ * Unknown keys keep their original spelling so new data is never hidden. */
+static const char *product_property_label(const char *key)
+{
+    if (key == NULL) return "";
+    if (strcmp(key, "trading.selected-instrument") == 0) return "Instrument";
+    if (strcmp(key, "trading.bid") == 0) return "Bid";
+    if (strcmp(key, "trading.ask") == 0) return "Ask";
+    if (strcmp(key, "trading.spread") == 0) return "Spread";
+    if (strcmp(key, "trading.depth-imbalance") == 0) return "Book imbalance";
+    if (strcmp(key, "trading.top-liquidity") == 0) return "Top liquidity";
+    if (strcmp(key, "trading.open") == 0) return "Open";
+    if (strcmp(key, "trading.high") == 0) return "High";
+    if (strcmp(key, "trading.low") == 0) return "Low";
+    if (strcmp(key, "trading.close") == 0) return "Close";
+    if (strcmp(key, "trading.volume") == 0) return "Volume";
+    if (strcmp(key, "chart.bar-count") == 0) return "Retained bars";
+    if (strcmp(key, "chart.study") == 0) return "Study";
+    if (strcmp(key, "chart.study-period") == 0) return "Study period";
+    if (strcmp(key, "alerts.rule-count") == 0) return "Alert rules";
+    if (strcmp(key, "alerts.active-count") == 0) return "Active alerts";
+    if (strcmp(key, "alerts.unacknowledged-count") == 0) return "Unacknowledged";
+    if (strcmp(key, "Command unavailable") == 0) return "Action availability";
+    return key;
+}
+
+/* Presentation state remains a model value. This mapping changes only the
+ * human-readable GTK label and avoids exposing enum-style words such as
+ * "empty" as if they were user instructions. */
+static const char *product_state_label(const char *state)
+{
+    if (state == NULL || state[0] == '\0') return "";
+    if (strcmp(state, "empty") == 0) return "No data yet";
+    if (strcmp(state, "offline") == 0) return "Offline";
+    if (strcmp(state, "loading") == 0) return "Loading";
+    if (strcmp(state, "ready") == 0) return "Ready";
+    if (strcmp(state, "busy") == 0) return "Working";
+    if (strcmp(state, "warning") == 0) return "Needs attention";
+    if (strcmp(state, "error") == 0) return "Unable to load";
+    if (strcmp(state, "permission") == 0 ||
+        strcmp(state, "permission-required") == 0) {
+        return "Permission required";
+    }
+    if (strcmp(state, "dormant") == 0) return "Not active";
+    return state;
+}
+
 /* Internal fields are consumed by specialised renderers and should not appear
  * again as user-facing metric rows. */
 static bool is_hidden_property(const char *key)
@@ -307,6 +387,12 @@ static GtkWidget *create_status_card(const UmiUiViewModel *view)
 
     value_text(has_state ? &state_value : NULL,
                state_buffer, sizeof(state_buffer));
+    if (has_state && state_value.kind == UMI_UI_VALUE_STRING) {
+        copy_display_text(
+            state_buffer,
+            sizeof(state_buffer),
+            product_state_label(state_value.string_value));
+    }
     value_text(has_message ? &message_value : NULL,
                message_buffer, sizeof(message_buffer));
     value_text(has_badge ? &badge_value : NULL,
@@ -324,6 +410,17 @@ static GtkWidget *create_status_card(const UmiUiViewModel *view)
     }
 
     gtk_widget_add_css_class(card, "umicom-product-status-card");
+    if (has_state && state_value.kind == UMI_UI_VALUE_STRING) {
+        if (strcmp(state_value.string_value, "empty") == 0 ||
+            strcmp(state_value.string_value, "offline") == 0 ||
+            strcmp(state_value.string_value, "dormant") == 0) {
+            gtk_widget_add_css_class(card, "empty");
+        } else if (strcmp(state_value.string_value, "warning") == 0) {
+            gtk_widget_add_css_class(card, "warning");
+        } else if (strcmp(state_value.string_value, "error") == 0) {
+            gtk_widget_add_css_class(card, "error");
+        }
+    }
     gtk_widget_add_css_class(state, "umicom-product-state");
     gtk_widget_add_css_class(badge, "umicom-mode-badge");
     gtk_widget_add_css_class(message, "umicom-product-message");
@@ -872,6 +969,15 @@ GtkWidget *umi_gtk4_view_model_panel_create(
                 UMI_STATUS_OK) {
                 continue;
             }
+            if (is_product_technical_property(property.key)) {
+                append_property_row(
+                    technical_metrics,
+                    technical_row++,
+                    product_property_label(property.key),
+                    &property.value);
+                technical_property_count += 1U;
+                continue;
+            }
             if (is_technical_property(property.key)) {
                 append_property_row(
                     technical_metrics,
@@ -901,6 +1007,16 @@ GtkWidget *umi_gtk4_view_model_panel_create(
                     row_property_count += 1U;
                 }
                 continue;
+            }
+            {
+                const char *display_label =
+                    product_property_label(property.key);
+                if (display_label != property.key) {
+                    append_property_row(
+                        metrics, metric_row++, display_label, &property.value);
+                    ordinary_property_count += 1U;
+                    continue;
+                }
             }
             append_property_row(
                 metrics, metric_row++, property.key, &property.value);
