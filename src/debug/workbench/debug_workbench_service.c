@@ -19,6 +19,17 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/debug/workbench/debug_workbench_service.h"
 #include "umicom/debug_runtime/decoders/breakpoints.h"
+
+/*
+ * Register refresh asks the Debug Runtime for scopes and variables directly.
+ * Include those public request contracts here so this translation unit does
+ * not depend on declarations arriving indirectly through another header.
+ * The existing debugger behaviour is preserved; this only makes the C23
+ * dependency explicit for strict compilation.
+ */
+#include "umicom/debug_runtime/requests/scopes.h"
+#include "umicom/debug_runtime/requests/variables.h"
+
 #include "umicom/debug_runtime/requests/set_instruction_breakpoints.h"
 #include "umicom/debug_runtime/request_support.h"
 #include <stdio.h>
