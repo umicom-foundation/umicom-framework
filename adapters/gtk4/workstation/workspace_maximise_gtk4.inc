@@ -143,6 +143,7 @@ UmiStatus umi_gtk4_workspace_layout_host_maximise_window(
     gtk_widget_set_vexpand(host->maximise_container, TRUE);
     gtk_widget_add_css_class(host->maximise_container, "umicom-workspace-maximised");
     bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+    gtk_widget_add_css_class(bar, "umicom-workspace-maximise-bar");
     label = gtk_label_new(window->title[0] != '\0' ? window->title : window->window_id);
     gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
     gtk_label_set_xalign(GTK_LABEL(label), 0.0F);
@@ -192,3 +193,6 @@ UmiStatus umi_gtk4_workspace_layout_host_restore_maximised(UmiGtk4WorkspaceLayou
     restore_maximised_presentation(host, 1);
     return UMI_STATUS_OK;
 }
+
+/* Responsive dock sizing extends the existing split host without replacing it. */
+#include "workspace_split_policy_gtk4.inc"

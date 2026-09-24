@@ -465,6 +465,37 @@ static const char WORKBENCH_CSS_PRODUCT[] =
     "  background: @umi_surface; color: @umi_muted;"
     "}";
 
+
+/* Workbench layout states use the same semantic palette as every product.
+ * These classes improve discoverability without changing the layout model. */
+static const char WORKBENCH_CSS_RESPONSIVE[] =
+    ".umicom-workspace-empty-state {"
+    "  min-width: 260px; max-width: 620px; padding: 22px 26px;"
+    "  border: 1px dashed @umi_border_strong; border-radius: 8px;"
+    "  background: @umi_surface; color: @umi_foreground;"
+    "}"
+    ".umicom-workspace-placeholder {"
+    "  padding: 14px 16px; background: @umi_surface;"
+    "  border: 1px dashed @umi_border; border-radius: 6px;"
+    "}"
+    ".umicom-workspace-maximised {"
+    "  background: @umi_background; color: @umi_foreground;"
+    "}"
+    ".umicom-workspace-maximise-bar {"
+    "  min-height: 34px; padding: 5px 8px;"
+    "  border-bottom: 1px solid @umi_border;"
+    "  background: @umi_surface_raised;"
+    "}"
+    ".umicom-workspace-maximise-bar button {"
+    "  min-height: 26px; padding: 3px 9px;"
+    "}"
+    ".umicom-workspace-layout-host paned > separator {"
+    "  min-width: 4px; min-height: 4px; background: @umi_border;"
+    "}"
+    ".umicom-workspace-layout-host paned > separator:hover {"
+    "  background: @umi_accent;"
+    "}";
+
 _Static_assert(sizeof(WORKBENCH_CSS_CHROME) <= 4096U,
                "GTK4 chrome CSS exceeds ISO C's portable string limit");
 _Static_assert(sizeof(WORKBENCH_CSS_CONTROLS) <= 4096U,
@@ -479,6 +510,8 @@ _Static_assert(sizeof(WORKBENCH_CSS_PANELS) <= 4096U,
                "GTK4 panel CSS exceeds ISO C's portable string limit");
 _Static_assert(sizeof(WORKBENCH_CSS_PRODUCT) <= 4096U,
                "GTK4 product CSS exceeds ISO C's portable string limit");
+_Static_assert(sizeof(WORKBENCH_CSS_RESPONSIVE) <= 4096U,
+               "GTK4 responsive workspace CSS exceeds ISO C's portable string limit");
 
 /*
  * Provide the palette for workbench operation used by this module and its client
@@ -627,6 +660,7 @@ UmiStatus umi_gtk4_apply_theme(UmiGtk4Adapter *adapter,
                       WORKBENCH_CSS_DESKTOP,
                       WORKBENCH_CSS_PANELS,
                       WORKBENCH_CSS_PRODUCT,
+                      WORKBENCH_CSS_RESPONSIVE,
                       profile_css != NULL ? profile_css : "", NULL);
     g_free(profile_css);
     /*
