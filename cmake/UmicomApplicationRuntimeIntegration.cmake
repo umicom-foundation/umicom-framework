@@ -421,6 +421,10 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiDeveloperPlatform.cmake")
 # services while keeping every application a thin presentation layer.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiTeacherPlatform.cmake")
 
+# Unified language/refactoring/AI/RAG/Teacher workbench orchestration reuses the
+# established engines above and exposes one bounded policy catalogue to Studio.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeveloperIntelligenceWorkbenchPlatform.cmake")
+
 # Stable extension ABI negotiation, trust/permission policy, package lifecycle,
 # isolated extension-host supervision, quarantine and recovery extend the
 # canonical Framework plug-in subsystem; applications remain thin consumers.

@@ -1,0 +1,101 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/developer_intelligence/developer_intelligence.h
+ *
+ * PURPOSE:
+ *   Aggregate the complete Language + AI developer-intelligence workbench API.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_DEVELOPER_INTELLIGENCE_H
+#define UMICOM_DEVELOPER_INTELLIGENCE_H
+
+#include "umicom/developer_intelligence/types.h"
+#include "umicom/developer_intelligence/service.h"
+#include "umicom/developer_intelligence/language/assembly_profile.h"
+#include "umicom/developer_intelligence/language/c23_profile.h"
+#include "umicom/developer_intelligence/language/call_hierarchy.h"
+#include "umicom/developer_intelligence/language/code_action_rank.h"
+#include "umicom/developer_intelligence/language/code_lens.h"
+#include "umicom/developer_intelligence/language/compilation_database.h"
+#include "umicom/developer_intelligence/language/completion_context.h"
+#include "umicom/developer_intelligence/language/completion_prefix.h"
+#include "umicom/developer_intelligence/language/completion_rank.h"
+#include "umicom/developer_intelligence/language/cpp_profile.h"
+#include "umicom/developer_intelligence/language/declaration_route.h"
+#include "umicom/developer_intelligence/language/diagnostic_dedupe.h"
+#include "umicom/developer_intelligence/language/diagnostic_merge.h"
+#include "umicom/developer_intelligence/language/document_link.h"
+#include "umicom/developer_intelligence/language/formatting_range.h"
+#include "umicom/developer_intelligence/language/hover_merge.h"
+#include "umicom/developer_intelligence/language/implementation_route.h"
+#include "umicom/developer_intelligence/language/include_graph.h"
+#include "umicom/developer_intelligence/language/inlay_hint_rank.h"
+#include "umicom/developer_intelligence/language/inline_value.h"
+#include "umicom/developer_intelligence/language/linked_editing.h"
+#include "umicom/developer_intelligence/language/project_template_score.h"
+#include "umicom/developer_intelligence/language/provider_failover.h"
+#include "umicom/developer_intelligence/language/provider_selection.h"
+#include "umicom/developer_intelligence/language/refactor_preview.h"
+#include "umicom/developer_intelligence/language/reference_rank.h"
+#include "umicom/developer_intelligence/language/rename_conflict.h"
+#include "umicom/developer_intelligence/language/rename_plan.h"
+#include "umicom/developer_intelligence/language/request_budget.h"
+#include "umicom/developer_intelligence/language/request_priority.h"
+#include "umicom/developer_intelligence/language/response_freshness.h"
+#include "umicom/developer_intelligence/language/selection_range.h"
+#include "umicom/developer_intelligence/language/semantic_token_delta.h"
+#include "umicom/developer_intelligence/language/semantic_token_range.h"
+#include "umicom/developer_intelligence/language/signature_active_parameter.h"
+#include "umicom/developer_intelligence/language/symbol_rank.h"
+#include "umicom/developer_intelligence/language/symbol_search.h"
+#include "umicom/developer_intelligence/language/type_definition_route.h"
+#include "umicom/developer_intelligence/language/type_hierarchy.h"
+#include "umicom/developer_intelligence/language/workspace_edit_validation.h"
+#include "umicom/developer_intelligence/ai/agent_plan.h"
+#include "umicom/developer_intelligence/ai/agent_step.h"
+#include "umicom/developer_intelligence/ai/approval_gate.h"
+#include "umicom/developer_intelligence/ai/change_review.h"
+#include "umicom/developer_intelligence/ai/checkpoint_policy.h"
+#include "umicom/developer_intelligence/ai/citation_coverage.h"
+#include "umicom/developer_intelligence/ai/citation_rank.h"
+#include "umicom/developer_intelligence/ai/code_completion.h"
+#include "umicom/developer_intelligence/ai/code_explanation.h"
+#include "umicom/developer_intelligence/ai/code_refactor.h"
+#include "umicom/developer_intelligence/ai/code_review.h"
+#include "umicom/developer_intelligence/ai/code_test_generation.h"
+#include "umicom/developer_intelligence/ai/context_budget.h"
+#include "umicom/developer_intelligence/ai/context_source_rank.h"
+#include "umicom/developer_intelligence/ai/conversation_memory.h"
+#include "umicom/developer_intelligence/ai/edit_risk.h"
+#include "umicom/developer_intelligence/ai/local_runtime_route.h"
+#include "umicom/developer_intelligence/ai/model_health.h"
+#include "umicom/developer_intelligence/ai/model_route.h"
+#include "umicom/developer_intelligence/ai/privacy_policy.h"
+#include "umicom/developer_intelligence/ai/prompt_budget.h"
+#include "umicom/developer_intelligence/ai/provider_fallback.h"
+#include "umicom/developer_intelligence/ai/rag_collection_rank.h"
+#include "umicom/developer_intelligence/ai/rag_source_rank.h"
+#include "umicom/developer_intelligence/ai/repository_change.h"
+#include "umicom/developer_intelligence/ai/repository_index.h"
+#include "umicom/developer_intelligence/ai/rerank_score.h"
+#include "umicom/developer_intelligence/ai/retrieval_fusion.h"
+#include "umicom/developer_intelligence/ai/retrieval_lexical.h"
+#include "umicom/developer_intelligence/ai/retrieval_vector.h"
+#include "umicom/developer_intelligence/ai/teacher_assessment.h"
+#include "umicom/developer_intelligence/ai/teacher_gap.h"
+#include "umicom/developer_intelligence/ai/teacher_hint.h"
+#include "umicom/developer_intelligence/ai/teacher_mastery.h"
+#include "umicom/developer_intelligence/ai/teacher_progress.h"
+#include "umicom/developer_intelligence/ai/teacher_recommendation.h"
+#include "umicom/developer_intelligence/ai/teacher_study_plan.h"
+#include "umicom/developer_intelligence/ai/tool_policy.h"
+#include "umicom/developer_intelligence/ai/tool_risk.h"
+#include "umicom/developer_intelligence/ai/workspace_memory.h"
+
+#endif
