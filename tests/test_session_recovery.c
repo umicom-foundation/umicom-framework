@@ -3,8 +3,10 @@
  * File: tests/test_session_recovery.c
  *
  * PURPOSE:
- *   Verify deterministic session persistence and atomic unsaved-document
- *   recovery records with source path, revision and complete content.
+ *   Verify deterministic session persistence, unsaved-document recovery and
+ *   per-user application directory resolution.  Writable application state
+ *   must have an explicit root and must never depend on the caller's current
+ *   working directory.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -18,6 +20,57 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+
+/* Verify the reusable application-path contract with an isolated temporary root. */
+static void TestApplicationPaths(const char *testRoot)
+{
+    UmiApplicationPathsConfig config =
+        UmiApplicationPathsConfigDefault("Studio");
+    UmiApplicationPaths paths;
+    UmiApplicationPathsConfig invalidConfig;
+    char expected[UMI_PATH_CAPACITY];
+
+    /* The normal operating-system location is absolute and independent from
+     * the directory used to launch the test process. */
+    assert(UmiApplicationPathsResolve(&config, &paths) == UMI_STATUS_OK);
+    assert(umi_path_is_absolute(paths.root));
+
+    config.baseOverride = testRoot;
+    assert(UmiApplicationPathsResolve(&config, &paths) == UMI_STATUS_OK);
+    assert(paths.structSize == (uint32_t)sizeof(paths));
+    assert(paths.apiVersion == UMI_APPLICATION_PATHS_API_VERSION);
+
+    assert(umi_path_join(testRoot, "Umicom", expected, sizeof(expected)) ==
+           UMI_STATUS_OK);
+    assert(umi_path_join(expected, "Studio", expected, sizeof(expected)) ==
+           UMI_STATUS_OK);
+    assert(umi_path_equal(paths.root, expected));
+    assert(umi_path_is_within(paths.root, paths.config));
+    assert(umi_path_is_within(paths.root, paths.state));
+    assert(umi_path_is_within(paths.root, paths.cache));
+    assert(umi_path_is_within(paths.root, paths.data));
+    assert(umi_path_is_within(paths.root, paths.logs));
+    assert(umi_path_is_within(paths.root, paths.recovery));
+
+    assert(UmiApplicationPathsPrepare(&paths) == UMI_STATUS_OK);
+    assert(umi_fs_is_directory(paths.root));
+    assert(umi_fs_is_directory(paths.config));
+    assert(umi_fs_is_directory(paths.state));
+    assert(umi_fs_is_directory(paths.cache));
+    assert(umi_fs_is_directory(paths.data));
+    assert(umi_fs_is_directory(paths.logs));
+    assert(umi_fs_is_directory(paths.recovery));
+
+    invalidConfig = UmiApplicationPathsConfigDefault("../Studio");
+    invalidConfig.baseOverride = testRoot;
+    assert(UmiApplicationPathsResolve(&invalidConfig, &paths) ==
+           UMI_STATUS_INVALID_ARGUMENT);
+
+    invalidConfig = UmiApplicationPathsConfigDefault("Studio");
+    invalidConfig.baseOverride = "relative-state-root";
+    assert(UmiApplicationPathsResolve(&invalidConfig, &paths) ==
+           UMI_STATUS_INVALID_ARGUMENT);
+}
 
 /*
  * Start this command or application, report setup failures, and return a process exit code
@@ -43,6 +96,9 @@ int main(void)
                        "umicom-session-recovery-test") == UMI_STATUS_OK);
     assert(umi_fs_remove_tree(test_root) == UMI_STATUS_OK);
     assert(umi_fs_make_directories(test_root) == UMI_STATUS_OK);
+
+    TestApplicationPaths(test_root);
+
     assert(umi_fs_join(session_path,
                        sizeof(session_path),
                        test_root,
