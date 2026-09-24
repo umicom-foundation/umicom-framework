@@ -376,6 +376,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomVcsAdvancedPlatform.cmake")
 # productivity and advanced VCS engines for thin Studio and Trader frontends.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomVcsWorkbenchPlatform.cmake")
 
+# Major developer operations projections connect the established Test Quality,
+# Debug Workbench, Terminal and VCS engines through one discoverable workbench
+# catalogue used by Studio and future developer applications.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeveloperOperationsPlatform.cmake")
+
 # Persistent terminal sessions, supervised process/service state, remote
 # workspaces, remote command/file operations, port forwarding and remote
 # language/debug bridges extend the canonical terminal target.
