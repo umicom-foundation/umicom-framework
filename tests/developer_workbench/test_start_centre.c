@@ -13,10 +13,12 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "umicom/developer_workbench/recent_projects.h"
 #include "umicom/developer_workbench/start_centre.h"
+#include "umicom/platform/filesystem.h"
 
 /*
  * Start this command or application, report setup failures, and return a process exit code
@@ -43,5 +45,78 @@ int main(void)
     assert(strcmp(snapshot.open_folder_command, "workspace.open-folder") == 0);
 
     umi_platform_recent_items_registry_destroy(registry);
+
+    /*
+     * Recent-work availability is tested separately so the established
+     * project snapshot checks above remain unchanged.
+     */
+    {
+        UmiRecentItemRegistry *workspaces = NULL;
+        UmiDeveloperWorkbenchRecentWorkSnapshot recent_work;
+        UmiRecentItemSnapshot item = {0};
+        char temporary[UMI_PATH_CAPACITY];
+        char available[UMI_PATH_CAPACITY];
+        char missing[UMI_PATH_CAPACITY];
+
+        assert(umi_fs_temp_directory(
+            temporary, sizeof(temporary)) == UMI_STATUS_OK);
+        assert(umi_fs_join(
+            available,
+            sizeof(available),
+            temporary,
+            "umicom-start-centre-available") == UMI_STATUS_OK);
+        assert(umi_fs_join(
+            missing,
+            sizeof(missing),
+            available,
+            "missing") == UMI_STATUS_OK);
+
+        (void)umi_fs_remove_tree(available);
+        assert(umi_fs_make_directories(available) == UMI_STATUS_OK);
+        assert(umi_platform_recent_items_registry_create(&workspaces) ==
+               UMI_STATUS_OK);
+
+        item.struct_size = (uint32_t)sizeof(item);
+        item.api_version = 1U;
+        (void)snprintf(item.id, sizeof(item.id), "%s", "workspace.available");
+        (void)snprintf(item.uri, sizeof(item.uri), "%s", available);
+        (void)snprintf(item.label, sizeof(item.label), "%s", "Available");
+        (void)snprintf(item.kind, sizeof(item.kind), "%s", "workspace");
+        item.last_opened = 100U;
+        item.open_count = 1U;
+        assert(umi_platform_recent_items_registry_upsert(
+            workspaces, &item) == UMI_STATUS_OK);
+
+        item = (UmiRecentItemSnapshot){0};
+        item.struct_size = (uint32_t)sizeof(item);
+        item.api_version = 1U;
+        (void)snprintf(item.id, sizeof(item.id), "%s", "workspace.missing");
+        (void)snprintf(item.uri, sizeof(item.uri), "%s", missing);
+        (void)snprintf(item.label, sizeof(item.label), "%s", "Missing");
+        (void)snprintf(item.kind, sizeof(item.kind), "%s", "workspace");
+        item.last_opened = 200U;
+        item.open_count = 2U;
+        item.pinned = 1;
+        assert(umi_platform_recent_items_registry_upsert(
+            workspaces, &item) == UMI_STATUS_OK);
+
+        assert(umi_developer_workbench_start_centre_recent_work_snapshot(
+            workspaces, "workspace", 8U, &recent_work) == UMI_STATUS_OK);
+        assert(recent_work.count == 2U);
+        assert(recent_work.pinned_count == 1U);
+        assert(recent_work.unavailable_count == 1U);
+        assert(strcmp(
+            recent_work.items[0].recent.id,
+            "workspace.missing") == 0);
+        assert(recent_work.items[0].available == 0);
+        assert(strcmp(
+            recent_work.items[1].recent.id,
+            "workspace.available") == 0);
+        assert(recent_work.items[1].available == 1);
+
+        umi_platform_recent_items_registry_destroy(workspaces);
+        assert(umi_fs_remove_tree(available) == UMI_STATUS_OK);
+    }
+
     return 0;
 }

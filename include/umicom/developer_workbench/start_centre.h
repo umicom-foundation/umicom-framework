@@ -47,6 +47,38 @@ UmiStatus umi_developer_workbench_start_centre_snapshot(
     const UmiRecentItemRegistry *recent_items,
     UmiDeveloperWorkbenchStartCentreSnapshot *out_snapshot);
 
+/*
+ * Project and workspace launchers need to distinguish a valid recent entry
+ * from one whose directory has moved or been removed. The registry remains the
+ * source of truth; this projection adds only read-only availability evidence.
+ */
+typedef struct UmiDeveloperWorkbenchRecentWorkItem {
+    UmiRecentItemSnapshot recent;
+    int available;
+} UmiDeveloperWorkbenchRecentWorkItem;
+
+typedef struct UmiDeveloperWorkbenchRecentWorkSnapshot {
+    UmiDeveloperWorkbenchRecentWorkItem
+        items[UMI_DEVELOPER_WORKBENCH_START_RECENT_CAPACITY];
+    size_t count;
+    size_t pinned_count;
+    size_t unavailable_count;
+    uint64_t revision;
+} UmiDeveloperWorkbenchRecentWorkSnapshot;
+
+/**
+ * Project one recent-work kind for a Start Centre or launcher.
+ *
+ * kind must be "project" or "workspace". Results preserve the Framework
+ * recent-item ordering: pinned entries first, then most recently opened work.
+ * A zero limit uses the full bounded Start Centre capacity.
+ */
+UmiStatus umi_developer_workbench_start_centre_recent_work_snapshot(
+    const UmiRecentItemRegistry *recent_items,
+    const char *kind,
+    size_t limit,
+    UmiDeveloperWorkbenchRecentWorkSnapshot *out_snapshot);
+
 #ifdef __cplusplus
 }
 #endif
