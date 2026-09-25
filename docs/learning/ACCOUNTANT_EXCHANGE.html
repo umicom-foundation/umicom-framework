@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Umicom — From a practice trade to a closed accounting period</title><meta name="description" content="A step-by-step introduction to local accounting, limit orders, settlement and period close in Umicom Accountant and Exchange."><link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADMAAAAzCAYAAAA6oTAqAAAEpUlEQVR4nO2ZwUsbWRzHv132ppnpi66gNUJm3WpoPHQSoyQotGbBsDTQlBbpTSjppcf9G/a0x14aCt5ENruWbdk1YGxBSdA0yR4MxEqJYKWFYjMktufdQ3dmJ8m8eW8mcTcs+Z6clzfz3sf3/f3eb95cuHhl7k/8T/TFfz2BTqoH063qwXSrejBWFA3JWI7Ma9cLoRnIXs+5jPXluTwVwIRrGMuReQyIDrx6805rJ6KAhdAMFkIzKJbK2MrsdWzMjsMMiA4sR+Yx4RrW2gaFfu3vi4IDwD9QsteDXzbSqByftD12R2GWI/MIei+3tA+IDuo9RBRwbymmrZJSq9sevyMwQe9lRINXTSfNkuz1wO26hGKpjGKpbAuqLZgJ1zBuhOQGSxnpQ+2M63l669mJpwt2C83vl75jQqj6ce03LQkQUcCtSBjS2CjzPqVWtwRlGSYaknEjKHP1zZYOsbKxbfibNDaK68EAN9RWZg/FUtm0HzeMlbhY2dhGtnQIAHASAicheF2pGPaVvR4shGZARIH5XBYUEyYakhG88g0XRPNKjEsSHtyP43WlgoePEtT7iChoUDyi2Y+aAIz2C5pevXmHZ5miFhdOQnD3zm2MS5J2zZqc+h/ngVITBREF/Pz7JhsmGrzKlaVWNrYbdvjFb8NYDIcb+rFgVFmFcrsuNVybroyZnmWLeJopatdOQvDgfpw6cSchqCqK6TNV6aHMMh8RBRBR0PYkKoy+BNErWzrE0+wf2t7hJAQBv69lNZrFC6KXUqvj8dq6ViUYJQkumGY1xwVgbCkj5fIF3mEMJXs91GynrxSoMKf1j5rV9KkWaA1wM+XyBawmk9wT10saG8W9pRh3fyrMh9oZsn8HuCpeSwGfbbX6U5K6v5iJt0qoHJ/wrUzzzs1rqXYgAGjvOiwptTqeZ3MNbcyY4bVUVVGQKxSQ2kwzJ2IkaWwUtyJhZiVgVgVQYcYlCXfv3ObaI1LptG0IXkvxFJ1UmIDPxwRpNy54zwO2MnstELHpKUyODOGHX7e0NvrKfE23VbuWshIXza/Uc5NuxPxTGHT0tfS3/HLGKhpZ4gExspRnZAg3p6fgGRlq6Dvo6MPp2ScAFmGqimI7S6li2crIUvFrs5ibdBv2V0EAE5iqorTEjJMQLIbDCPh8bdnMSDRLxa/NUu/RgwA2zwD0UFYTgFKrN6RfK5ZiiQqTKxSYe4taKefyBaTSacvFZOX4BI/X1rXrQUcf4tdnuSBOzz4h8Xy3oc30TdNq+cJjPdrBX2x6Cjf9XuY4ALBzcITEi92Wdq4zAM1Wfh9zIBaUvmQHzFNts57kS9g+qLTEiipLpzNWqmUWlJW4oK1Es2ydm6nW4yl1qoqCh48SWjxZiYudgyOs5/epK9Es24eAajzxlD36jZYnNspv3+PJy32U3763NCfbx7NVRUFqM41cvsBMEnrYwX7z2Ei82MXOwZGtObV9cM4DxZOyeePCTB37pKGHMst8px8b/W/XUkbq+MemqqJgNZlEKp02zXzqptcJCFW2EwCvAv7PCUJN0XOTbnzl6Mf6y/2Oj3XuMP+mep/Ou1U9mG5VD6Zb9ReztWucDqtdOAAAAABJRU5ErkJggg=="><style>*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:90px}body{margin:0;background:#f2f5f7;color:#203444;font:17px/1.75 "Segoe UI",Arial,sans-serif}.topbar{background:#102b3d;min-height:76px;display:flex;align-items:center;justify-content:space-between;padding:9px 24px;gap:20px;color:#e8eff4}.topbar a{display:block;line-height:0}.topbar img{display:block;max-width:100%;height:auto}.topbar span{font-size:14px;letter-spacing:.04em}main{max-width:1120px;margin:28px auto 70px;padding:0 24px}article{background:#fff;border-radius:13px;padding:48px 48px 34px;box-shadow:0 1px 3px #102b3d08}h1{font-size:38px;line-height:1.2;margin:10px 0 24px;letter-spacing:-.02em}h2{font-size:27px;line-height:1.3;margin:0 0 19px}h3{font-size:21px;line-height:1.4;margin:28px 0 11px}p{margin:0 0 19px}.lead{font-size:20px;line-height:1.6;color:#425969}.eyebrow{font-size:13px;font-weight:650;letter-spacing:.11em;text-transform:uppercase;color:#536c7e;margin-bottom:10px}section{padding-top:39px;margin-top:35px;border-top:1px solid #dae3e9}aside,nav{background:#f2f7fa;border-left:4px solid #337b96;border-radius:0 7px 7px 0;padding:21px 25px;margin:28px 0}nav h2{font-size:20px}nav p{margin:0}a{color:#155d7e;text-decoration-thickness:1px;text-underline-offset:3px}code{font-family:Consolas,"Liberation Mono",monospace;font-size:.92em;overflow-wrap:anywhere}p code,td code{background:#f3f5f7;border-radius:4px;padding:1px 4px}.table-wrap{overflow:auto;margin:23px 0}table{border-collapse:collapse;width:100%;font-size:15px;line-height:1.55}th,td{text-align:left;vertical-align:top;padding:12px 14px;border:1px solid #dce4eb}th{background:#edf3f7;font-weight:650}.codebox{position:relative;margin:23px 0;background:#122b3b;color:#f0f5fa;border-radius:8px;overflow:hidden}pre{margin:0;padding:44px 20px 22px;overflow:auto;font:14px/1.65 Consolas,"Liberation Mono",monospace;tab-size:4}pre code{font:inherit;white-space:pre;overflow-wrap:normal}.copy{position:absolute;right:10px;top:9px;border:1px solid #718493;background:#1e3a4c;color:white;border-radius:5px;padding:5px 12px;font:13px "Segoe UI",Arial;cursor:pointer}button:focus-visible,a:focus-visible{outline:3px solid #a37e25;outline-offset:3px}footer{display:flex;gap:14px;align-items:center;border-top:1px solid #dce4eb;margin-top:48px;padding-top:25px;font-size:14px;color:#536a79}footer img{background:#102b3d;border-radius:5px;object-fit:contain}@media(max-width:700px){body{font-size:16px}.topbar{padding:8px 13px;min-height:68px}.topbar span{display:none}.topbar img{width:180px}main{padding:0 10px;margin-top:14px}article{padding:29px 20px}h1{font-size:30px}h2{font-size:24px}.lead{font-size:18px}aside,nav{padding:17px}th,td{padding:9px;font-size:14px}pre{font-size:12.5px}section{margin-top:27px;padding-top:30px}}@media print{body{background:white;font-size:11pt}.topbar{background:#102b3d!important;print-color-adjust:exact}.topbar span{display:none}main{max-width:none;margin:0;padding:0}article{padding:14mm;box-shadow:none}.copy,nav{display:none}h1{font-size:27pt}h2{font-size:18pt;break-after:avoid}h3{break-after:avoid}section{break-before:auto}pre{white-space:pre-wrap;font-size:9pt}.codebox{background:#f4f6f8;color:#132c3c;border:1px solid #bccbd7;break-inside:avoid}pre code{white-space:pre-wrap}tr{break-inside:avoid}a{color:inherit}}</style></head><body>
+<header class="topbar"><a href="#top" aria-label="Umicom guide home"><img src="data:image/png;base64,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" alt="Umicom" width="202" height="55"></a><span>Learning with Umicom</span></header>
+<main id="top"><article>
+<p class="eyebrow">Umicom Accountant · Umicom Exchange</p>
+<h1>From a practice trade to a closed accounting period</h1>
+<p class="lead">Follow one small transaction from the buyer’s order to the seller’s balance. Along the way, you will create accounts, read a journal, see why funds are reserved and close a period without leaving unfinished work behind.</p>
+<p>You do not need previous accounting or programming experience. Work through the steps in order and keep the application beside this guide. Every name, amount and instrument in the exercise is fictional.</p>
+<aside><strong>Use practice data only.</strong> These operations run in a local simulation. They do not connect to a bank, broker, payment network or custody provider. Actor labels such as <code>maker</code> and <code>checker</code> demonstrate different responsibilities; they are not a sign-in or a security permission. Do not enter passwords, personal records or live financial instructions.</aside>
+<nav aria-label="Guide contents"><h2>Where to begin</h2><p><a href="#opening">Open your practice book</a> · <a href="#accounts">Create the accounts</a> · <a href="#funding">Record practice funding</a> · <a href="#market">Prepare the market</a> · <a href="#orders">Place the orders</a> · <a href="#settlement">Complete settlement</a> · <a href="#close">Reconcile and close</a> · <a href="#reports">Save and revisit reports</a> · <a href="#corrections">Correct a manual journal</a> · <a href="#developers">Build and share the source</a></p></nav>
+
+<section id="opening"><h2>1. Open your practice book</h2>
+<p>After the source has been built, open <strong>Umicom Accountant</strong> or <strong>Umicom Exchange</strong>. The new page is called <strong>Operations</strong>. The <strong>Existing layouts</strong> page keeps the previous workspace available. A panel there may still describe a service that has not been connected; the operations in this lesson use the new command form.</p>
+<p>The two applications open the same financial practice book by default. Its exact database path appears near the top of the Operations page. This is separate from Umicom Bank’s practice workspace. The book is saved through the Framework Data Server, not in the folder from which you happened to launch the program.</p>
+<p>Begin with an empty book: the overview should show zero records. When a book already contains work, keep it. For a separate exercise, the developer section explains how to select a new database file. Never delete a working database merely to make a lesson’s numbers match.</p>
+<h3>Learn the three identifiers</h3>
+<p>The <strong>Record identifier</strong> names the item you are working on, for example <code>buyer.cash</code>. It is different from the <strong>Request identifier</strong>, which names this particular submission. Leave the generated request identifier alone during an ordinary retry: it prevents the same request from being posted twice.</p>
+<p>Choose <strong>New request</strong> before preparing a different submission with the same operation. Changing the operation in the dropdown also prepares a new request. Review the actor, record and other visible fields, then choose <strong>Apply operation</strong>. Preparing the form alone does not change the book.</p>
+<p>An accepted submission displays its receipt and a <em>revision</em>, the book’s running count of accepted operations. A refused submission leaves that count unchanged. Read the message before trying again.</p>
+<h3>Use amounts without guessing their units</h3>
+<p>This exercise uses <code>GBP</code> with decimal scale <code>2</code>. The entry fields use <em>minor units</em>: <code>50000</code> means GBP 500.00, and <code>6000</code> means GBP 60.00. Enter whole numbers without commas, currency symbols or decimal points. The account and trial-balance reports show formatted amounts for easier reading.</p></section>
+
+<section id="accounts"><h2>2. Create three ledger accounts</h2>
+<p>A ledger account collects one kind of balance. Here, <code>control</code> represents the practice cash held for participants. The two participant accounts record how much of that cash belongs to the buyer and seller. That is why the participant accounts use <strong>Liability</strong>, rather than Asset, in this example.</p>
+<p>Choose <strong>Create ledger account</strong>. Set the actor to <code>operator</code>, currency to <code>GBP</code> and decimal scale to <code>2</code>. Create the following accounts one at a time. Choose <strong>New request</strong> between rows.</p>
+<div class="table-wrap"><table><thead><tr><th>Record identifier</th><th>Display name</th><th>Account class</th></tr></thead><tbody><tr><td><code>control</code></td><td>Practice cash control</td><td>Asset</td></tr><tr><td><code>buyer.cash</code></td><td>Practice buyer cash</td><td>Liability</td></tr><tr><td><code>seller.cash</code></td><td>Practice seller cash</td><td>Liability</td></tr></tbody></table></div>
+<p>Choose <strong>Ledger accounts</strong> in the report dropdown. All three balances should be zero. Creating an account does not put money into it.</p>
+<h3>Open the accounting period</h3>
+<p>Choose <strong>Open accounting period</strong>. Use record <code>september</code>, actor <code>operator</code>, first date <code>2026-09-01</code> and last date <code>2026-09-30</code>. Apply the operation. The <strong>Accounting periods</strong> report should show September as Open.</p>
+<p>The dates deliberately stay fixed throughout this lesson. The application checks real calendar dates and rejects overlapping periods. An open period is where this exercise’s dated journal entries will be posted.</p></section>
+
+<section id="funding"><h2>3. Record GBP 500.00 of practice funding</h2>
+<p>A <em>journal</em> records the two sides of a movement. In this practice funding entry, the cash-control asset increases by GBP 500.00 and the amount owed to the buyer increases by the same amount. No real deposit occurs.</p>
+<p>Choose <strong>Enter balanced journal</strong>. Use record <code>funding</code>, actor <code>maker</code>, reference identifier <code>september</code> and date <code>2026-09-25</code>. In Journal lines, enter exactly:</p>
+<div class="codebox"><button type="button" class="copy">Copy</button><pre><code>control,50000,0
+buyer.cash,0,50000</code></pre></div>
+<p>Each row is <code>account,debit-minor,credit-minor</code>. The total debit is 50000 and the total credit is 50000. Apply the operation, then open the <strong>Journals</strong> report. The entry is a <strong>Draft</strong>; account balances have not changed yet.</p>
+<p>Next choose <strong>Approve journal</strong>, keep record <code>funding</code> and change the actor to <code>checker</code>. Apply it. Finally choose <strong>Post journal</strong>, again using record <code>funding</code> and actor <code>checker</code>, and apply it.</p>
+<p>The application requires a different maker and checker label. Posting must use the recorded checker. For this lesson, changing the label lets you practise both responsibilities; it does not prove that two different people reviewed a real transaction.</p>
+<p>Return to <strong>Ledger accounts</strong>. The expected balances are control GBP 500.00, buyer.cash GBP 500.00 and seller.cash GBP 0.00. Repeat the unchanged successful Post request once. You should receive the original receipt, with no second posting.</p></section>
+
+<section id="market"><h2>4. Prepare participants and a practice instrument</h2>
+<p>A participant is the party placing an order. Choose <strong>Register exchange participant</strong> and create <code>buyer</code>, display name Practice buyer, linked to ledger account <code>buyer.cash</code>. Then choose New request and create <code>seller</code>, display name Practice seller, linked to <code>seller.cash</code>. Use actor <code>operator</code> for both.</p>
+<p>Now choose <strong>List instrument</strong>. Use record <code>practice</code>, display name Practice instrument, actor <code>operator</code>, currency GBP, scale 2, <strong>Minor units per tick</strong> 1, <strong>Units per lot</strong> 1 and <strong>Maximum lots per order</strong> 100.</p>
+<p>A <em>tick</em> is one price step in this model. With one minor unit per tick and one unit per lot, a price of 1000 ticks means GBP 10.00 per lot. A <em>lot</em> is the whole quantity used for an order. The exercise does not use fractional lots.</p>
+<p>The new instrument starts Halted. Choose <strong>Open or halt instrument</strong>, record <code>practice</code>, actor <code>operator</code>, and select <strong>Open</strong>. Apply it. Opening permits new orders; it does not create a price feed or connect to a market.</p>
+<h3>Give the seller simulated inventory</h3>
+<p>Choose <strong>Add simulated custody lots</strong>. Set record to <code>seller</code>, instrument to <code>practice</code>, quantity to <code>100</code> and actor to <code>custodian</code>. Apply it. The <strong>Custody lots</strong> report should show 100 booked and 100 available lots for the seller.</p>
+<p>This is an explicit addition of fictional inventory for the lesson. Custody lots belong to participants in this model; they are not silently booked as assets owned by the exchange.</p></section>
+
+<section id="orders"><h2>5. Place an order, then match part of it</h2>
+<p>Choose <strong>Place limit order</strong>. A limit specifies the worst price this order will accept. Use record <code>sell.1</code>, participant <code>seller</code>, instrument <code>practice</code>, side Sell, price <code>1000</code>, quantity <code>10</code>, date <code>2026-09-25</code> and actor <code>trader</code>.</p>
+<p>Apply it. In <strong>Order book and history</strong>, the order should be Resting with ten lots remaining. In Custody lots, the seller still owns 100 lots, but ten are reserved for the order. Only 90 are available for another sale.</p>
+<p>Choose <strong>New request</strong> and enter the opposing order: record <code>buy.1</code>, participant <code>buyer</code>, instrument <code>practice</code>, side Buy, price <code>1100</code>, quantity <code>6</code>, the same date and actor. Apply it.</p>
+<p>The buyer accepts up to GBP 11.00 per lot. The older seller was already offering at GBP 10.00, so the execution uses the seller’s resting price: six lots at GBP 10.00, a total of GBP 60.00. The buyer’s order is Filled; the seller’s order has four lots remaining.</p>
+<p>Open <strong>Fills and settlement</strong>. A <em>fill</em> is the part of an order that actually matched. In a new book the identifier is <code>system.fill.000001</code>. Read the identifier from your report rather than assuming it when practising in a book that already has trades.</p>
+<aside><strong>Matched is not settled.</strong> At this point the buyer’s booked cash is still GBP 500.00. GBP 60.00 is reserved for the fill, leaving GBP 440.00 available. The seller’s ten reserved lots comprise six for the unsettled fill and four for the remaining order. No cash journal has yet been posted for the fill.</aside>
+<p>The shared service also rejects an unfunded buy, an oversold quantity, an oversized order and a crossing self-trade. It processes better resting prices before worse ones; at the same price, the older accepted order has priority.</p></section>
+
+<section id="settlement"><h2>6. Clear the fill and settle both sides</h2>
+<p>Choose <strong>Clear fill locally</strong>, record <code>system.fill.000001</code> and actor <code>clearing</code>. Apply it. The fill report should now say Cleared, awaiting settlement. This records the local settlement obligation; it does not perform central-counterparty novation or send an external instruction.</p>
+<p>Choose <strong>Settle cash and lots locally</strong>. Use the same fill record, accounting period <code>september</code>, date <code>2026-09-25</code> and actor <code>settlement</code>. The settlement actor must differ from the clearing actor. Apply it.</p>
+<p>The service moves the two sides together: it transfers six custody lots from seller to buyer and posts GBP 60.00 from the buyer’s participant balance to the seller’s. A storage failure rejects the entire candidate change rather than leaving one side settled.</p>
+<div class="table-wrap"><table><thead><tr><th>What to inspect</th><th>Expected result after settlement</th></tr></thead><tbody><tr><td>Buyer cash</td><td>GBP 440.00 booked; no cash reserved for this completed fill</td></tr><tr><td>Seller cash</td><td>GBP 60.00 booked</td></tr><tr><td>Buyer custody</td><td>6 lots booked</td></tr><tr><td>Seller custody</td><td>94 lots booked; 4 still reserved for the resting order</td></tr><tr><td>Fill</td><td>Settled locally, with its generated journal identifier</td></tr></tbody></table></div>
+<p>In Journals, inspect the generated settlement entry. It debits <code>buyer.cash</code> and credits <code>seller.cash</code> by 6000 minor units. Here a debit reduces the buyer’s liability balance, while a credit increases the seller’s. The control balance remains GBP 500.00.</p>
+<p>Finish the remaining order before closing the period. Choose <strong>Cancel remaining order</strong>, record <code>sell.1</code>, participant <code>seller</code> and actor <code>trader</code>. Apply it. The four remaining lots are released; the earlier six-lot fill stays in the history.</p></section>
+
+<section id="close"><h2>7. Reconcile the balances and close the period</h2>
+<p><em>Reconciliation</em> compares the ledger with an observation from outside that ledger. In this lesson the expected figures are supplied below. In a real workflow, a separate statement or controlled source would supply the observation; copying a balance simply because it is displayed would not be an independent check.</p>
+<p>Choose <strong>Reconcile account balance</strong>, use actor <code>reconciler</code>, and submit these three observations. Choose New request between rows.</p>
+<div class="table-wrap"><table><thead><tr><th>Record identifier</th><th>Ledger account identifier</th><th>External balance in minor units</th></tr></thead><tbody><tr><td><code>reconciliation.1</code></td><td><code>control</code></td><td>50000</td></tr><tr><td><code>reconciliation.2</code></td><td><code>buyer.cash</code></td><td>44000</td></tr><tr><td><code>reconciliation.3</code></td><td><code>seller.cash</code></td><td>6000</td></tr></tbody></table></div>
+<p>The reconciliation report should show a match for each observation. A different observed number is recorded as a difference to investigate; it does not overwrite the ledger. Another posting would make the earlier observation stale and require a new check.</p>
+<p>Choose <strong>Prepare period close</strong>, record <code>september</code> and actor <code>closer</code>. Apply it. The service checks for unfinished journals, remaining orders, unsettled fills and missing, stale or unmatched reconciliations. An earlier period must already be closed.</p>
+<p>When those checks pass, the period waits for review. Choose <strong>Confirm period close</strong>, record <code>september</code> and actor <code>reviewer</code>. Apply it. The different reviewer label completes this simulated maker/checker step. The period should now read Closed.</p>
+<p>Select <strong>Trial balance</strong>. Enter period <code>september</code>, currency <code>GBP</code>, scale <code>2</code>, then choose <strong>Refresh report</strong>. The period’s debit and credit movements should each total GBP 560.00: GBP 500.00 of practice funding plus GBP 60.00 of settlement. The closing debit and credit balances each total GBP 500.00. Movements and closing balances answer different questions.</p>
+<p>A positive opening or closing amount in this report is a debit balance; a negative amount is a credit balance. Buyer GBP 440.00 and seller GBP 60.00 together account for the GBP 500.00 control asset. “The trial balance agrees” checks these totals; it is not a tax return or a full set of statutory financial statements.</p></section>
+
+<section id="reports"><h2>8. Save a report and return to the same work</h2>
+<p>First select the report you need and refresh it. <strong>Copy report</strong> copies the displayed text. To save a file, enter a new absolute path in the report path field, such as <code>C:\umicom\practice-september-trial-balance.txt</code>, then choose <strong>Save report</strong>. The parent folder must exist. The application will not overwrite an existing file.</p>
+<p>Close the application, reopen it and inspect the closed period and its journals. The accepted operations are replayed from the local database. Preparing a form or choosing a report does not create a new financial event.</p>
+<p>When both applications are open, use <strong>Reload shared book</strong> in the second window after a change in the first. The service refuses a stale writer rather than silently replacing another window’s changes. Review the reloaded values before trying your operation again.</p>
+<p>The <strong>Accepted operations</strong> report records each accepted request, actor label, record and revision. A failed reload keeps the last known view readable but blocks new writes until a complete reload succeeds. It never presents damaged stored data as an empty new book.</p></section>
+
+<section id="corrections"><h2>9. Correct a manual journal without erasing history</h2>
+<p>Keep the completed lesson as it is. For a separate practice correction, use an open period and a posted <em>manual</em> journal. Choose <strong>Prepare compensating journal</strong>. Give the correction a new Record identifier; put the original journal identifier in Reference identifier; choose the correction’s open accounting period and date.</p>
+<p>The result is another draft, with the original debits and credits exchanged. A different actor must approve it, and that checker posts it. Both entries remain visible, and reports include each on its own accounting date. The original does not disappear.</p>
+<p>Do not use this operation to reverse a settlement cash journal. That would leave the custody side inconsistent, so this service refuses it. A full trade-unwind workflow is not provided here. Likewise, <strong>Reopen unconfirmed review</strong> can reopen a prepared close before confirmation; it cannot reopen a finally closed period.</p>
+<h3>When an operation is refused</h3>
+<p>Check the record identifier first, then the actor, accounting date, state and units. A request conflict usually means an already-used request identifier now carries different fields: choose New request for a genuinely different submission. An unavailable balance may mean funds or lots are already reserved. A busy or stale-book result calls for Reload shared book and a review of the current values.</p>
+<p>For a storage error, keep the displayed database path and exact message. Do not repeatedly submit different request identifiers while the outcome is uncertain. Reopen or reload the book, inspect its accepted requests and retry the original request where appropriate.</p>
+<h3>How far this practice workspace goes</h3>
+<p>This is a bounded local book: up to 64 accounts, 16 periods, 32 instruments, 64 participants, 128 orders, fills, journals and reconciliation records in each catalogue, and 512 accepted operations overall. Journal entry supports two to eight lines. Historical records count towards these limits; reaching a limit does not delete them.</p>
+<p>It supports exact minor-unit accounting, whole-lot limit/GTC matching, reservations, local clearing and settlement, manual reconciliation and period review. It does not supply live connectivity, authenticated approvals, fees, tax, payroll, consolidation, foreign-exchange conversion, market orders, central-counterparty netting or statutory reporting. A future operational deployment needs those controls and integrations where relevant.</p></section>
+
+<section id="developers"><h2>10. Build the applications from source</h2>
+<p>This section is for readers working with the existing Windows Umicom development checkout. PowerShell is the command window; CMake prepares the build; the compiler creates the programs; CTest runs their automated checks. Run each block in order and stop when it reports a failure.</p>
+<h3>Merge the full source files</h3>
+<p>Close running Umicom applications. Extract the batch into a separate staging folder. Compare its <code>Umicom-Applications</code> folder with <code>C:\umicom\Umicom-Applications</code>, then merge Framework, Studio, Accountant and Exchange in that order, followed by the parent CMake helper. Copy the included files, not a replacement of the entire checkout. Preserve destination-only files and review newer local changes before accepting a whole-file replacement.</p>
+<p>The folder <code>Delivery-Evidence</code> contains source provenance and validation material. Keep it beside the extracted delivery; do not merge it into the application repositories. Existing source retained inside explained <code>#if 0</code> blocks is there for engineering review, not for deletion during the merge.</p>
+<p>The source baseline is Framework <code>53182902fa38</code>, Studio <code>6b832de62aa5</code>, Accountant <code>eb5b4c26354eb</code>, Exchange <code>c8e88d2aa078</code> and Applications <code>25c204fc60cd</code>. A different local commit is a reason to compare carefully, not to reset or discard work.</p>
+<h3>Configure</h3><div class="codebox"><button type="button" class="copy">Copy</button><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+$ErrorActionPreference = &quot;Stop&quot;
+$env:Path = &quot;C:\msys64\ucrt64\bin;$env:Path&quot;
+
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; `
+    --preset windows-ucrt64-all-debug `
+    -DBUILD_TESTING=ON `
+    -DUMICOM_BUILD_NATIVE_TOOL=ON
+
+if ($LASTEXITCODE -ne 0) { throw &quot;Configuration failed. Stop here.&quot; }</code></pre></div>
+<h3>Build every configured target</h3><p>The two-job limit keeps the build modest in resource use. Ninja’s <code>-k 0</code> continues independent work after an error so the log can show more than the first failure. It does not turn a failed build into a successful one.</p><div class="codebox"><button type="button" class="copy">Copy</button><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+$env:Path = &quot;C:\msys64\ucrt64\bin;$env:Path&quot;
+
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; `
+    --build `
+    --preset windows-ucrt64-all-debug `
+    --parallel 2 `
+    -- -k 0
+
+if ($LASTEXITCODE -ne 0) { throw &quot;Build failed. Do not run tests or commit yet.&quot; }</code></pre></div>
+<h3>Run the full test suite after the build succeeds</h3><div class="codebox"><button type="button" class="copy">Copy</button><pre><code>&amp; &quot;C:\msys64\ucrt64\bin\ctest.exe&quot; `
+    --preset windows-ucrt64-all-debug `
+    --parallel 2 `
+    --no-tests=error `
+    --output-on-failure
+
+if ($LASTEXITCODE -ne 0) { throw &quot;Tests failed. Review the failures before committing.&quot; }</code></pre></div>
+<p>For a closer look at the changes in this batch, run the following selection as well. It does not replace the full suite. A skipped display-dependent test is not a graphical pass.</p><div class="codebox"><button type="button" class="copy">Copy</button><pre><code>&amp; &quot;C:\msys64\ucrt64\bin\ctest.exe&quot; `
+    --preset windows-ucrt64-all-debug `
+    -R &#x27;^(framework\.finance_operations\.|framework\.developer_operations\.projection_coexistence$|accountant\.operations\.|exchange\.operations\.)&#x27; `
+    --parallel 2 `
+    --no-tests=error `
+    --output-on-failure
+
+if ($LASTEXITCODE -ne 0) { throw &quot;Focused tests failed.&quot; }</code></pre></div>
+<h3>Run the complete memory-only example</h3><p>These two small programs run the same public Framework workflow for their respective application compositions. They do not open or modify the graphical workspace’s database. Both should end with control GBP 500.00, buyer GBP 440.00, seller GBP 60.00 and a closed period.</p><div class="codebox"><button type="button" class="copy">Copy</button><pre><code>&amp; &quot;.\build\windows-ucrt64-all-debug\bin\umicom-accountant-operations-example.exe&quot;
+if ($LASTEXITCODE -ne 0) { throw &quot;Accountant example failed.&quot; }
+
+&amp; &quot;.\build\windows-ucrt64-all-debug\bin\umicom-exchange-operations-example.exe&quot;
+if ($LASTEXITCODE -ne 0) { throw &quot;Exchange example failed.&quot; }</code></pre></div>
+<p>Then double-click <code>umicom-accountant.exe</code> and <code>umicom-exchange.exe</code> inside <code>build\windows-ucrt64-all-debug\bin</code>. Check Operations and Existing layouts, then follow the lesson. The delivery’s headless checks do not replace this Windows and GTK runtime check.</p>
+<h3>Use a separate practice database</h3>
+<p>Close both applications first. Set the same absolute path in PowerShell before launching each application from that window. Choose a new filename; do not remove the existing book. A variable set in one PowerShell window does not automatically apply to an application launched elsewhere.</p>
+<div class="codebox"><button type="button" class="copy">Copy</button><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+$env:Path = &quot;C:\msys64\ucrt64\bin;$env:Path&quot;
+$env:UMICOM_FINANCE_OPERATIONS_DB = &quot;C:\umicom\practice\september-lesson.sqlite&quot;
+
+Start-Process &quot;.\build\windows-ucrt64-all-debug\bin\umicom-accountant.exe&quot;
+Start-Process &quot;.\build\windows-ucrt64-all-debug\bin\umicom-exchange.exe&quot;</code></pre></div>
+<p>The service creates the parent folder when possible. It reports an error rather than substituting an empty in-memory book when persistent storage cannot open. Close both applications before changing the path for another exercise.</p>
+
+<h2>11. Record and share the checked source</h2>
+<p>The Framework and application modules have separate Git histories. Publish each changed child repository first so the parent can point to commits that actually exist remotely. These commands use the established <code>main</code> branch; they stop when a checkout is detached or on another branch.</p>
+<p><strong>Review before staging.</strong> <code>git add -A</code> stages all changes in the current repository, including unrelated work. Keep passwords, databases, local build output and unrelated edits out of the commit. A commit is a saved source revision; a push sends that revision to the configured remote repository.</p>
+<h3>Framework first</h3><div class="codebox"><button type="button" class="copy">Copy</button><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\framework&quot;
+if ((git branch --show-current) -ne &quot;main&quot;) { throw &quot;Stop: this repository is not on main.&quot; }
+
+git status --short --branch
+git diff --check
+if ($LASTEXITCODE -ne 0) { throw &quot;Resolve the reported source formatting errors.&quot; }
+
+git add -A
+if ($LASTEXITCODE -ne 0) { throw &quot;Staging failed.&quot; }
+git diff --cached --stat
+
+git commit -m &quot;feat(framework): add accounting and exchange operations with projection compatibility&quot;
+if ($LASTEXITCODE -ne 0) { throw &quot;Commit failed. Stop here.&quot; }
+git push
+if ($LASTEXITCODE -ne 0) { throw &quot;Push failed. Stop before updating the parent.&quot; }</code></pre></div>
+<h3>Studio next</h3><p>This small integration change switches the status-strip projections to a distinct Framework interface. The executable-operation structure and the old compact-projection structure both remain intact; the application no longer includes their conflicting type names together.</p><div class="codebox"><button type="button" class="copy">Copy</button><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\studio&quot;
+if ((git branch --show-current) -ne &quot;main&quot;) { throw &quot;Stop: this repository is not on main.&quot; }
+
+git status --short --branch
+git diff --check
+if ($LASTEXITCODE -ne 0) { throw &quot;Resolve the reported source formatting errors.&quot; }
+
+git add -A
+if ($LASTEXITCODE -ne 0) { throw &quot;Staging failed.&quot; }
+git diff --cached --stat
+
+git commit -m &quot;fix(studio): use distinct developer projection contract&quot;
+if ($LASTEXITCODE -ne 0) { throw &quot;Commit failed. Stop here.&quot; }
+git push
+if ($LASTEXITCODE -ne 0) { throw &quot;Push failed. Stop before updating the parent.&quot; }</code></pre></div>
+<h3>Accountant</h3><div class="codebox"><button type="button" class="copy">Copy</button><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\accountant&quot;
+if ((git branch --show-current) -ne &quot;main&quot;) { throw &quot;Stop: this repository is not on main.&quot; }
+
+git status --short --branch
+git diff --check
+if ($LASTEXITCODE -ne 0) { throw &quot;Resolve the reported source formatting errors.&quot; }
+
+git add -A
+if ($LASTEXITCODE -ne 0) { throw &quot;Staging failed.&quot; }
+git diff --cached --stat
+
+git commit -m &quot;feat(accountant): integrate shared accounting operations&quot;
+if ($LASTEXITCODE -ne 0) { throw &quot;Commit failed. Stop here.&quot; }
+git push
+if ($LASTEXITCODE -ne 0) { throw &quot;Push failed. Stop before updating the parent.&quot; }</code></pre></div>
+<h3>Exchange</h3><div class="codebox"><button type="button" class="copy">Copy</button><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\applications\exchange&quot;
+if ((git branch --show-current) -ne &quot;main&quot;) { throw &quot;Stop: this repository is not on main.&quot; }
+
+git status --short --branch
+git diff --check
+if ($LASTEXITCODE -ne 0) { throw &quot;Resolve the reported source formatting errors.&quot; }
+
+git add -A
+if ($LASTEXITCODE -ne 0) { throw &quot;Staging failed.&quot; }
+git diff --cached --stat
+
+git commit -m &quot;feat(exchange): integrate shared order and settlement operations&quot;
+if ($LASTEXITCODE -ne 0) { throw &quot;Commit failed. Stop here.&quot; }
+git push
+if ($LASTEXITCODE -ne 0) { throw &quot;Push failed. Stop before updating the parent.&quot; }</code></pre></div>
+<h3>Applications parent last</h3><p>The repository-lock command records the child revisions after their commits have been pushed. The parent commit then records the updated pins together with the native-host selection change.</p><div class="codebox"><button type="button" class="copy">Copy</button><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+$env:Path = &quot;C:\msys64\ucrt64\bin;$env:Path&quot;
+
+if ((git branch --show-current) -ne &quot;main&quot;) { throw &quot;Stop: the parent is not on main.&quot; }
+
+&amp; &quot;.\build\windows-ucrt64-all-debug\bin\umicom.exe&quot; repo lock .
+if ($LASTEXITCODE -ne 0) { throw &quot;Repository lock failed. Do not commit stale pins.&quot; }
+
+git diff --submodule=log
+git diff --check
+if ($LASTEXITCODE -ne 0) { throw &quot;Resolve the reported source formatting errors.&quot; }
+
+git add -A
+if ($LASTEXITCODE -ne 0) { throw &quot;Parent staging failed.&quot; }
+git diff --cached --stat
+
+git commit -m &quot;chore(applications): enable and pin accountant exchange operations&quot;
+if ($LASTEXITCODE -ne 0) { throw &quot;Parent commit failed.&quot; }
+
+git push --recurse-submodules=check origin main
+if ($LASTEXITCODE -ne 0) { throw &quot;Parent push failed. Check the child repository pushes.&quot; }
+
+git submodule foreach --recursive &#x27;git status --short --branch&#x27;
+if ($LASTEXITCODE -ne 0) { throw &quot;Submodule status inspection failed.&quot; }</code></pre></div>
+<p>Finish by checking that the expected repositories have no unintended changes. No Bank, Trader, TMS or Desk source change is part of this delivery.</p>
+</section>
+<footer><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADMAAAAzCAYAAAA6oTAqAAAEpUlEQVR4nO2ZwUsbWRzHv132ppnpi66gNUJm3WpoPHQSoyQotGbBsDTQlBbpTSjppcf9G/a0x14aCt5ENruWbdk1YGxBSdA0yR4MxEqJYKWFYjMktufdQ3dmJ8m8eW8mcTcs+Z6clzfz3sf3/f3eb95cuHhl7k/8T/TFfz2BTqoH063qwXSrejBWFA3JWI7Ma9cLoRnIXs+5jPXluTwVwIRrGMuReQyIDrx6805rJ6KAhdAMFkIzKJbK2MrsdWzMjsMMiA4sR+Yx4RrW2gaFfu3vi4IDwD9QsteDXzbSqByftD12R2GWI/MIei+3tA+IDuo9RBRwbymmrZJSq9sevyMwQe9lRINXTSfNkuz1wO26hGKpjGKpbAuqLZgJ1zBuhOQGSxnpQ+2M63l669mJpwt2C83vl75jQqj6ce03LQkQUcCtSBjS2CjzPqVWtwRlGSYaknEjKHP1zZYOsbKxbfibNDaK68EAN9RWZg/FUtm0HzeMlbhY2dhGtnQIAHASAicheF2pGPaVvR4shGZARIH5XBYUEyYakhG88g0XRPNKjEsSHtyP43WlgoePEtT7iChoUDyi2Y+aAIz2C5pevXmHZ5miFhdOQnD3zm2MS5J2zZqc+h/ngVITBREF/Pz7JhsmGrzKlaVWNrYbdvjFb8NYDIcb+rFgVFmFcrsuNVybroyZnmWLeJopatdOQvDgfpw6cSchqCqK6TNV6aHMMh8RBRBR0PYkKoy+BNErWzrE0+wf2t7hJAQBv69lNZrFC6KXUqvj8dq6ViUYJQkumGY1xwVgbCkj5fIF3mEMJXs91GynrxSoMKf1j5rV9KkWaA1wM+XyBawmk9wT10saG8W9pRh3fyrMh9oZsn8HuCpeSwGfbbX6U5K6v5iJt0qoHJ/wrUzzzs1rqXYgAGjvOiwptTqeZ3MNbcyY4bVUVVGQKxSQ2kwzJ2IkaWwUtyJhZiVgVgVQYcYlCXfv3ObaI1LptG0IXkvxFJ1UmIDPxwRpNy54zwO2MnstELHpKUyODOGHX7e0NvrKfE23VbuWshIXza/Uc5NuxPxTGHT0tfS3/HLGKhpZ4gExspRnZAg3p6fgGRlq6Dvo6MPp2ScAFmGqimI7S6li2crIUvFrs5ibdBv2V0EAE5iqorTEjJMQLIbDCPh8bdnMSDRLxa/NUu/RgwA2zwD0UFYTgFKrN6RfK5ZiiQqTKxSYe4taKefyBaTSacvFZOX4BI/X1rXrQUcf4tdnuSBOzz4h8Xy3oc30TdNq+cJjPdrBX2x6Cjf9XuY4ALBzcITEi92Wdq4zAM1Wfh9zIBaUvmQHzFNts57kS9g+qLTEiipLpzNWqmUWlJW4oK1Es2ydm6nW4yl1qoqCh48SWjxZiYudgyOs5/epK9Es24eAajzxlD36jZYnNspv3+PJy32U3763NCfbx7NVRUFqM41cvsBMEnrYwX7z2Ei82MXOwZGtObV9cM4DxZOyeePCTB37pKGHMst8px8b/W/XUkbq+MemqqJgNZlEKp02zXzqptcJCFW2EwCvAv7PCUJN0XOTbnzl6Mf6y/2Oj3XuMP+mep/Ou1U9mG5VD6Zb9ReztWucDqtdOAAAAABJRU5ErkJggg==" alt="" width="34" height="34"><div><strong>Umicom Foundation</strong><br>Learn with real workflows, use fictional records, and keep the previous work understandable.</div></footer>
+</article></main>
+<script>document.querySelectorAll('.copy').forEach(button=>button.addEventListener('click',async()=>{const text=button.parentElement.querySelector('code').textContent;try{await navigator.clipboard.writeText(text);button.textContent='Copied';setTimeout(()=>button.textContent='Copy',1800);}catch(e){const selection=window.getSelection();const range=document.createRange();range.selectNodeContents(button.parentElement.querySelector('code'));selection.removeAllRanges();selection.addRange(range);button.textContent='Selected: press Ctrl+C';}}));</script></body></html>

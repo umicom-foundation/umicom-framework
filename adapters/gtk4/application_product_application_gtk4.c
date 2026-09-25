@@ -9,6 +9,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/suite_layout/gtk4_product_application.h"
+#include "umicom/application/suite_layout/gtk4_product_content_extension.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -28,6 +29,8 @@ typedef struct ProductApplicationState {
     guint startup_source;
     gulong windowsChangedSignal;
     int startup_failed;
+    /* Private extension state does not change the public configuration ABI. */
+    UmiApplicationProductGtk4ContentExtension contentExtension;
 } ProductApplicationState;
 
 /* Layout review must never report that a payment, render or other product
@@ -154,6 +157,11 @@ static void product_release_window(ProductApplicationState *state, GtkWindow **s
     gtk_window_destroy(window);
     if (state->window == NULL && state->startup_window == NULL)
         ProductStopWindowObservation(state);
+    /* Stop extension callbacks even when external code retains a detached
+     * widget after closing its window. Release is explicitly idempotent. */
+    if (state->window == NULL && state->startup_window == NULL &&
+        state->contentExtension.release != NULL)
+        state->contentExtension.release(state->contentExtension.context);
 }
 
 /* A retained GtkWindow can be destroyed without finalizing. Invalidate its
@@ -211,6 +219,9 @@ static void product_finish_startup_window(ProductApplicationState *state, int fa
 /* Release presentation controllers only after their host is detached. */
 static void product_content_dispose(ProductApplicationState *state)
 {
+    /* Additional services stop before their retained layouts are released. */
+    if (state->contentExtension.release != NULL)
+        state->contentExtension.release(state->contentExtension.context);
     umi_gtk4_ws_startup_splash_destroy(state->splash);
     state->splash = NULL;
     umi_application_product_gtk4_workstation_destroy(state->workstation);
@@ -243,6 +254,14 @@ static gboolean product_complete_startup(gpointer data)
     }
     content = status == UMI_STATUS_OK
         ? umi_application_product_gtk4_workstation_widget(state->workstation) : NULL;
+    /* Reuse the completed canonical host rather than bypassing its startup
+     * and window-lifetime recovery to construct a second application shell. */
+    if (content != NULL && state->contentExtension.build != NULL) {
+        GtkWidget *extended = NULL;
+        status = state->contentExtension.build(state->window, state->workstation,
+            content, state->contentExtension.context, &extended);
+        content = status == UMI_STATUS_OK ? extended : NULL;
+    }
     if (content == NULL) {
         char message[192];
         if (status == UMI_STATUS_OK) status = UMI_STATUS_INVALID_STATE;
@@ -342,6 +361,61 @@ int umi_application_product_gtk4_run(
     if (state.config.register_controllers == NULL) {
         state.config.register_controllers = register_preview_controllers;
         state.config.mode_badge = "Layout preview";
+    }
+    application = gtk_application_new(gtk_id, G_APPLICATION_DEFAULT_FLAGS);
+    g_free(gtk_id);
+    g_signal_connect(application, "activate", G_CALLBACK(product_activate), &state);
+    result = g_application_run(G_APPLICATION(application), argc, argv);
+    /* Cancel every callback borrowing stack state before returning to main. */
+    if (state.startup_source != 0U) {
+        g_source_remove(state.startup_source);
+        state.startup_source = 0U;
+    }
+    product_release_window(&state, &state.startup_window);
+    product_release_window(&state, &state.window);
+    ProductStopWindowObservation(&state);
+    product_content_dispose(&state);
+    g_object_unref(application);
+    return result != 0 ? result : state.startup_failed;
+}
+
+/* The existing public run implementation above remains intact for current
+ * callers and source-level integration checks. This additive entry point only
+ * selects an optional content extension; it shares every construction, splash,
+ * cancellation, window observation and disposal helper with that runner. */
+int umi_application_product_gtk4_run_with_content(
+    const UmiApplicationProductGtk4WorkstationConfig *config,
+    const UmiApplicationProductGtk4ContentExtension *extension,
+    int argc,
+    char **argv)
+{
+    ProductApplicationState state = {0};
+    const UmiApplicationExperienceDefinition *experience;
+    GtkApplication *application;
+    char *gtk_id;
+    int result;
+    if (config == NULL || config->application_id == NULL ||
+        config->title == NULL || config->title[0] == '\0' || argc < 0 ||
+        (argc > 0 && argv == NULL)) return 1;
+    experience = umi_application_experience_catalogue_find(config->application_id);
+    if (experience == NULL) {
+        (void)fprintf(stderr, "No Framework experience for %s\n", config->application_id);
+        return 1;
+    }
+    if (extension == NULL || extension->build == NULL || extension->release == NULL) return 1;
+    state.contentExtension = *extension;
+    state.config = *config;
+    state.config.application_id = experience->application_id;
+    /* Resolve legacy aliases once before recipe selection and GTK branding. */
+    gtk_id = g_strconcat(state.config.application_id, ".gtk", NULL);
+    if (!g_application_id_is_valid(gtk_id)) {
+        g_free(gtk_id);
+        return 1;
+    }
+    if (state.config.register_controllers == NULL) {
+        state.config.register_controllers = register_preview_controllers;
+        /* The inherited layout panels still report their own preview state.
+         * The additional service page uses the caller's explicit mode badge. */
     }
     application = gtk_application_new(gtk_id, G_APPLICATION_DEFAULT_FLAGS);
     g_free(gtk_id);

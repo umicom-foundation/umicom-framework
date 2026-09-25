@@ -9,6 +9,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/application/suite_layout/gtk4_product_application.h"
 
+#ifdef UMICOM_PRODUCT_FINANCE_OPERATIONS
+#include "umicom/ui/gtk4/finance_operations.h"
+#endif
+
 #ifndef UMICOM_PRODUCT_APPLICATION_ID
 #error "The product build must supply its canonical application identifier"
 #endif
@@ -20,11 +24,19 @@
  * state. Products attach their domain controllers when those services exist. */
 int main(int argc, char **argv)
 {
+#ifdef UMICOM_PRODUCT_FINANCE_OPERATIONS
+    /* Shared services now back the finance command forms. The existing
+     * workstation is composed into a Layouts page, not removed or re-created
+     * in either application. Other products retain the complete preview path. */
+    return UmiFinanceOperationsGtkRun(UMICOM_PRODUCT_APPLICATION_ID,
+        UMICOM_PRODUCT_TITLE, argc, argv);
+#else
     UmiApplicationProductGtk4WorkstationConfig config =
         umi_application_product_gtk4_workstation_config_default(
             UMICOM_PRODUCT_APPLICATION_ID, UMICOM_PRODUCT_TITLE, NULL, NULL);
     config.mode_badge = "Layout preview";
     return umi_application_product_gtk4_run(&config, argc, argv);
+#endif
 }
 
 #ifdef _WIN32

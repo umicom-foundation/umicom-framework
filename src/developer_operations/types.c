@@ -42,3 +42,10 @@ UmiStatus UmiDeveloperOperationSnapshotValidate(
     }
     return UMI_STATUS_OK;
 }
+
+/* The compatibility facade is compiled with the existing compact type owner.
+ * This keeps its old public symbols and complete implementation intact while
+ * allowing Studio to include both developer service families. The facade only
+ * delegates projections; it does not copy Test, Debug, Terminal or VCS engines.
+ * Its private include is intentionally compiled once, through this file. */
+#include "projection.inc"
