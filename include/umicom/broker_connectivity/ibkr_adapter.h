@@ -18,6 +18,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "umicom/base/status.h"
 #include "umicom/trading/types.h"
 
 #ifdef __cplusplus

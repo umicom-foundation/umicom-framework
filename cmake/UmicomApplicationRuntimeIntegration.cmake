@@ -317,6 +317,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomTreasuryRiskSettlementCollateralPlatfor
 # Payments and future applications remain thin Framework compositions.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomBankingPaymentsAccountingPlatform.cmake")
 
+# Cross-domain financial control, lifecycle, reconciliation, workflow and audit
+# composition completes the shared financial platform over the canonical
+# finance, payments, accounting and settlement engines.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomFinancialPlatformCoreCompletion.cmake")
+
 # Advanced order lifecycle, brokerage economics, smart routing, exchange matching,
 # auctions, consolidated markets and surveillance extend canonical trading;
 # Trader and Exchange remain thin Framework compositions.

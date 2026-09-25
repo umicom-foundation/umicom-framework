@@ -16,6 +16,7 @@
 #ifndef UMICOM_BROKER_CONNECTIVITY_PRETRADE_GUARD_H
 #define UMICOM_BROKER_CONNECTIVITY_PRETRADE_GUARD_H
 
+#include "umicom/base/status.h"
 #include "umicom/trading/types.h"
 
 #ifdef __cplusplus
