@@ -1,0 +1,108 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/strategy_research/strategy_research.h
+ *
+ * PURPOSE:
+ *   Aggregate deterministic strategy coding, backtest, replay, optimisation,
+ *   studies, performance and simulation-evidence contracts.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_STRATEGY_RESEARCH_H
+#define UMICOM_STRATEGY_RESEARCH_H
+
+#include "umicom/strategy_research/types.h"
+#include "umicom/strategy_research/service.h"
+#include "umicom/strategy_research/backtest_engine.h"
+#include "umicom/strategy_research/replay_engine.h"
+#include "umicom/strategy_research/optimisation_engine.h"
+#include "umicom/strategy_research/study_series.h"
+#include "umicom/strategy_research/simulation_evidence.h"
+#include "umicom/strategy_research/strategy_project.h"
+#include "umicom/strategy_research/backtest/average_loss.h"
+#include "umicom/strategy_research/backtest/average_win.h"
+#include "umicom/strategy_research/backtest/expectancy.h"
+#include "umicom/strategy_research/backtest/exposure.h"
+#include "umicom/strategy_research/backtest/gross_loss.h"
+#include "umicom/strategy_research/backtest/gross_profit.h"
+#include "umicom/strategy_research/backtest/loss_streak.h"
+#include "umicom/strategy_research/backtest/max_drawdown.h"
+#include "umicom/strategy_research/backtest/net_profit.h"
+#include "umicom/strategy_research/backtest/profit_factor.h"
+#include "umicom/strategy_research/backtest/recovery_factor.h"
+#include "umicom/strategy_research/backtest/trade_count.h"
+#include "umicom/strategy_research/backtest/turnover.h"
+#include "umicom/strategy_research/backtest/win_rate.h"
+#include "umicom/strategy_research/backtest/win_streak.h"
+#include "umicom/strategy_research/optimisation/budget.h"
+#include "umicom/strategy_research/optimisation/candidate_rank.h"
+#include "umicom/strategy_research/optimisation/early_stop.h"
+#include "umicom/strategy_research/optimisation/objective.h"
+#include "umicom/strategy_research/optimisation/overfit_gap.h"
+#include "umicom/strategy_research/optimisation/pareto.h"
+#include "umicom/strategy_research/optimisation/robustness.h"
+#include "umicom/strategy_research/optimisation/sensitivity.h"
+#include "umicom/strategy_research/optimisation/stability.h"
+#include "umicom/strategy_research/optimisation/walk_forward.h"
+#include "umicom/strategy_research/performance/annualised_return.h"
+#include "umicom/strategy_research/performance/annualised_volatility.h"
+#include "umicom/strategy_research/performance/calmar.h"
+#include "umicom/strategy_research/performance/downside_deviation.h"
+#include "umicom/strategy_research/performance/payoff_ratio.h"
+#include "umicom/strategy_research/performance/sharpe.h"
+#include "umicom/strategy_research/performance/sortino.h"
+#include "umicom/strategy_research/performance/stability.h"
+#include "umicom/strategy_research/performance/trade_efficiency.h"
+#include "umicom/strategy_research/performance/ulcer_index.h"
+#include "umicom/strategy_research/replay/checkpoint.h"
+#include "umicom/strategy_research/replay/clock_drift.h"
+#include "umicom/strategy_research/replay/data_quality.h"
+#include "umicom/strategy_research/replay/event_rate.h"
+#include "umicom/strategy_research/replay/gap_count.h"
+#include "umicom/strategy_research/replay/gap_ratio.h"
+#include "umicom/strategy_research/replay/progress.h"
+#include "umicom/strategy_research/replay/readiness.h"
+#include "umicom/strategy_research/replay/seek_distance.h"
+#include "umicom/strategy_research/replay/speed.h"
+#include "umicom/strategy_research/simulation/cash_change.h"
+#include "umicom/strategy_research/simulation/commission.h"
+#include "umicom/strategy_research/simulation/evidence_quality.h"
+#include "umicom/strategy_research/simulation/fill_ratio.h"
+#include "umicom/strategy_research/simulation/latency.h"
+#include "umicom/strategy_research/simulation/notional.h"
+#include "umicom/strategy_research/simulation/position_change.h"
+#include "umicom/strategy_research/simulation/provenance.h"
+#include "umicom/strategy_research/simulation/slippage.h"
+#include "umicom/strategy_research/simulation/trade_pnl.h"
+#include "umicom/strategy_research/strategy/entry_gate.h"
+#include "umicom/strategy_research/strategy/exit_gate.h"
+#include "umicom/strategy_research/strategy/position_size.h"
+#include "umicom/strategy_research/strategy/risk_reward.h"
+#include "umicom/strategy_research/strategy/signal_confidence.h"
+#include "umicom/strategy_research/strategy/signal_expiry.h"
+#include "umicom/strategy_research/strategy/signal_score.h"
+#include "umicom/strategy_research/strategy/stop_distance.h"
+#include "umicom/strategy_research/strategy/target_distance.h"
+#include "umicom/strategy_research/strategy/version_readiness.h"
+#include "umicom/strategy_research/study/atr.h"
+#include "umicom/strategy_research/study/bollinger_position.h"
+#include "umicom/strategy_research/study/crossover.h"
+#include "umicom/strategy_research/study/ema.h"
+#include "umicom/strategy_research/study/macd.h"
+#include "umicom/strategy_research/study/range.h"
+#include "umicom/strategy_research/study/rate_of_change.h"
+#include "umicom/strategy_research/study/resistance_distance.h"
+#include "umicom/strategy_research/study/rsi.h"
+#include "umicom/strategy_research/study/sma.h"
+#include "umicom/strategy_research/study/support_distance.h"
+#include "umicom/strategy_research/study/trend_strength.h"
+#include "umicom/strategy_research/study/volatility.h"
+#include "umicom/strategy_research/study/volume_ratio.h"
+#include "umicom/strategy_research/study/vwap.h"
+
+#endif

@@ -327,6 +327,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomTradingBrokerageExchangePlatform.cmake"
 # and linked contexts without moving reusable trading logic into Trader.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomProfessionalTradingWorkstationPlatform.cmake")
 
+# Deterministic strategy research composes canonical market, chart and replay
+# services for backtesting, optimisation, studies and simulation evidence.
+# Research outputs never grant live execution authority.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomStrategyResearchPlatform.cmake")
+
 # Physical commodity inventory/logistics/delivery and provider-neutral digital
 # asset network/custody/transfer services extend canonical finance while generic
 # execution and exchange semantics remain owned by canonical trading.
