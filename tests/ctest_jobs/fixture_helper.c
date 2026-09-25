@@ -1,4 +1,18 @@
-/* Umicom Framework test fixture | Sammy Hegab | Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ctest_jobs/fixture_helper.c
+ *
+ * PURPOSE:
+ *   Provide deterministic pass, fail, skip, wait, marker and large-output
+ *   process behaviours for the CTest job execution regressions.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef _WIN32
 #define _POSIX_C_SOURCE 200809L
 #endif

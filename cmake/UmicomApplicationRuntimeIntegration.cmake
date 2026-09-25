@@ -312,6 +312,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomSharedFinancialCorePlatform.cmake")
 # thin financial applications without duplicating domain engines in products.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomTreasuryRiskSettlementCollateralPlatform.cmake")
 
+# Open TMS composes the canonical treasury/finance engines into FX-forward,
+# liquidity, pricing, position, risk, settlement, accounting, reconciliation
+# and operational dashboard services while the product repository stays thin.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomOpenTmsPlatform.cmake")
+
 # Core banking customers/accounts/lending, governed payment lifecycles/rails and
 # double-entry accounting/ledger controls extend canonical finance; Bank, TMS,
 # Payments and future applications remain thin Framework compositions.

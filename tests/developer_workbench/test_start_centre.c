@@ -20,6 +20,21 @@
 #include "umicom/developer_workbench/start_centre.h"
 #include "umicom/platform/filesystem.h"
 
+/* Copy a fixture path only after proving it fits the bounded recent-item URI.
+ * The path-capacity mismatch is intentional: UMI_PATH_CAPACITY may exceed the
+ * persisted recent-item URI capacity, so silent truncation is not acceptable. */
+static void CopyRecentUri(char *destination, size_t capacity, const char *source)
+{
+    size_t length;
+
+    assert(destination != NULL);
+    assert(capacity > 0U);
+    assert(source != NULL);
+    length = strlen(source);
+    assert(length < capacity);
+    (void)memcpy(destination, source, length + 1U);
+}
+
 /*
  * Start this command or application, report setup failures, and return a process exit code
  * to the operating system.
@@ -79,7 +94,13 @@ int main(void)
         item.struct_size = (uint32_t)sizeof(item);
         item.api_version = 1U;
         (void)snprintf(item.id, sizeof(item.id), "%s", "workspace.available");
+        /* The former snprintf accepted a 2048-byte path source for a 1024-byte
+         * destination, so GCC correctly warned that the fixture URI could be
+         * truncated. Retain it for review; the active copy rejects overflow. */
+#if 0
         (void)snprintf(item.uri, sizeof(item.uri), "%s", available);
+#endif
+        CopyRecentUri(item.uri, sizeof(item.uri), available);
         (void)snprintf(item.label, sizeof(item.label), "%s", "Available");
         (void)snprintf(item.kind, sizeof(item.kind), "%s", "workspace");
         item.last_opened = 100U;
@@ -91,7 +112,13 @@ int main(void)
         item.struct_size = (uint32_t)sizeof(item);
         item.api_version = 1U;
         (void)snprintf(item.id, sizeof(item.id), "%s", "workspace.missing");
+        /* Preserve the previous bounded-format statement for review. The
+         * checked byte copy below makes a too-long fixture path a test failure
+         * instead of a warning-producing silent truncation. */
+#if 0
         (void)snprintf(item.uri, sizeof(item.uri), "%s", missing);
+#endif
+        CopyRecentUri(item.uri, sizeof(item.uri), missing);
         (void)snprintf(item.label, sizeof(item.label), "%s", "Missing");
         (void)snprintf(item.kind, sizeof(item.kind), "%s", "workspace");
         item.last_opened = 200U;

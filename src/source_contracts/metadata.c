@@ -3,7 +3,8 @@
  * File: src/source_contracts/metadata.c
  *
  * PURPOSE:
- *   Accept meaningful separate or combined attribution without rewriting source comments.
+ *   Accept meaningful separate, combined and retained compact attribution
+ *   comments without rewriting source ownership or licence information.
  *
  * Author: Sammy Hegab
  * Organisation: Umicom Foundation
@@ -37,6 +38,20 @@ static ScField fieldFor(const char *begin, size_t n)
     if (strcmp(key, "licence") == 0 || strcmp(key, "license") == 0 || strcmp(key, "spdxlicenseidentifier") == 0) return FIELD_LICENCE;
     return FIELD_NONE;
 }
+
+static bool RangeContains(const char *begin, size_t length, const char *needle)
+{
+    size_t needleLength;
+    size_t index;
+
+    if (begin == NULL || needle == NULL) return false;
+    needleLength = strlen(needle);
+    if (needleLength == 0U || needleLength > length) return false;
+    for (index = 0U; index + needleLength <= length; ++index) {
+        if (memcmp(begin + index, needle, needleLength) == 0) return true;
+    }
+    return false;
+}
 static void recordValue(UmiSourceAttribution *out, ScField field,
     const char *begin, const char *end)
 {
@@ -52,6 +67,109 @@ static void recordValue(UmiSourceAttribution *out, ScField field,
     case FIELD_COMBINED: out->combined = true; break;
     case FIELD_LICENCE: out->licence = true; break;
     default: break;
+    }
+}
+
+/* Earlier Framework test sources used a compact, pipe-delimited banner before
+ * the labelled metadata convention was introduced. Preserve those source
+ * files and recognise that established shape rather than weakening checks for
+ * arbitrary comments. A compact banner must provide a path-like first row,
+ * an attribution/licence row with three nonempty fields, and a separate prose
+ * purpose row. */
+static void ReadCompactLegacyAttribution(
+    const char *source,
+    size_t begin,
+    size_t end,
+    UmiSourceAttribution *out)
+{
+    bool file = false;
+    bool attribution = false;
+    bool licence = false;
+    bool purpose = false;
+    bool sawHeaderRow = false;
+    bool sawAttributionRow = false;
+
+    for (size_t i = begin + 2U; i < end;) {
+        size_t finish = i;
+        const char *a;
+        const char *b;
+        const char *firstPipe;
+        const char *secondPipe;
+        size_t pipeCount = 0U;
+
+        while (finish < end && source[finish] != '\n' && source[finish] != '\r') ++finish;
+        a = source + i;
+        b = source + finish;
+        while (a < b && (isspace((unsigned char)*a) || *a == '*')) ++a;
+        while (b > a && isspace((unsigned char)b[-1])) --b;
+
+        if (b > a) {
+            for (const char *p = a; p < b; ++p) {
+                if (*p == '|') ++pipeCount;
+            }
+            firstPipe = memchr(a, '|', (size_t)(b - a));
+            secondPipe = NULL;
+            if (firstPipe != NULL && firstPipe + 1 < b) {
+                secondPipe = memchr(firstPipe + 1, '|', (size_t)(b - firstPipe - 1));
+            }
+
+            if (!sawHeaderRow && firstPipe != NULL) {
+                const char *path = firstPipe + 1;
+                while (path < b && isspace((unsigned char)*path)) ++path;
+                if (path < b &&
+                    (RangeContains(path, (size_t)(b - path), ".c") ||
+                     RangeContains(path, (size_t)(b - path), ".inc"))) {
+                    file = true;
+                    sawHeaderRow = true;
+                }
+            } else if (sawHeaderRow && !sawAttributionRow && pipeCount >= 2U &&
+                       firstPipe != NULL && secondPipe != NULL) {
+                const char *authorBegin = a;
+                const char *authorEnd = firstPipe;
+                const char *organisationBegin = firstPipe + 1;
+                const char *organisationEnd = secondPipe;
+                const char *licenceBegin = secondPipe + 1;
+                const char *licenceEnd = b;
+                bool authorNonempty = false;
+                bool organisationNonempty = false;
+                bool licenceNonempty = false;
+
+                while (authorEnd > authorBegin && isspace((unsigned char)authorEnd[-1])) --authorEnd;
+                while (organisationBegin < organisationEnd && isspace((unsigned char)*organisationBegin)) ++organisationBegin;
+                while (organisationEnd > organisationBegin && isspace((unsigned char)organisationEnd[-1])) --organisationEnd;
+                while (licenceBegin < licenceEnd && isspace((unsigned char)*licenceBegin)) ++licenceBegin;
+                while (licenceEnd > licenceBegin && isspace((unsigned char)licenceEnd[-1])) --licenceEnd;
+                authorNonempty = authorEnd > authorBegin;
+                organisationNonempty = organisationEnd > organisationBegin;
+                licenceNonempty = licenceEnd > licenceBegin;
+                if (authorNonempty && organisationNonempty && licenceNonempty) {
+                    attribution = true;
+                    licence = true;
+                    sawAttributionRow = true;
+                }
+            } else if (sawAttributionRow && pipeCount == 0U) {
+                bool prose = false;
+                for (const char *p = a; p < b; ++p) {
+                    if (isalnum((unsigned char)*p)) {
+                        prose = true;
+                        break;
+                    }
+                }
+                if (prose && !(b - a >= 3 && a[0] == '-' && a[1] == '-' && a[2] == '-')) {
+                    purpose = true;
+                }
+            }
+        }
+
+        i = finish;
+        while (i < end && (source[i] == '\n' || source[i] == '\r')) ++i;
+    }
+
+    if (file && attribution && licence && purpose) {
+        out->file = true;
+        out->combined = true;
+        out->licence = true;
+        out->purpose = true;
     }
 }
 
@@ -101,6 +219,11 @@ int UmiSourceContractReadAttribution(const char *source, size_t length,
         } else recordValue(out, field, a, b);
         i = finish;
         while (i < end && (source[i] == '\n' || source[i] == '\r')) ++i;
+    }
+
+    if (!out->file || !out->purpose ||
+        !(out->author || out->organisation || out->combined) || !out->licence) {
+        ReadCompactLegacyAttribution(source, begin, end, out);
     }
     return 0;
 }

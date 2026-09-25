@@ -17,9 +17,24 @@
 /* Provide the group clicked operation used by this module and its client applications. */
 static void group_clicked(GtkButton *button,gpointer user_data)
 {
-    UmiWorkbenchContextHost *host=(UmiWorkbenchContextHost*)user_data;
-    const char *group=(const char*)g_object_get_data(G_OBJECT(button),UMI_WCH_DATA_GROUP);
-    GtkWidget *picker=gtk_widget_get_parent(GTK_WIDGET(button));
+    UmiWorkbenchContextHost *host;
+    const char *group;
+    GtkWidget *picker;
+
+    /* Retained controls may outlive the panel that originally owned them.
+     * A direct test/accessibility signal can bypass GTK's normal sensitivity
+     * gate, so reject detached or insensitive buttons before touching the
+     * borrowed host or rebuilding their former picker. This keeps stale
+     * controls inert during canvas retention and after owner teardown. */
+    if (button == NULL ||
+        !gtk_widget_get_sensitive(GTK_WIDGET(button)) ||
+        gtk_widget_get_root(GTK_WIDGET(button)) == NULL) {
+        return;
+    }
+
+    host=(UmiWorkbenchContextHost*)user_data;
+    group=(const char*)g_object_get_data(G_OBJECT(button),UMI_WCH_DATA_GROUP);
+    picker=gtk_widget_get_parent(GTK_WIDGET(button));
     /* Apply this operation only while the related capability or state is available. */
     if(host&&group){(void)umi_workbench_context_host_set_active_group(host,group);
         /* Apply this branch only when its contract condition is satisfied. */
