@@ -322,6 +322,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomBankingPaymentsAccountingPlatform.cmake
 # Trader and Exchange remain thin Framework compositions.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomTradingBrokerageExchangePlatform.cmake")
 
+# Professional trading workstation calculations extend the canonical trading UI
+# for watchlists, DOM, charts, tape, guarded execution, P&L, scanners, events
+# and linked contexts without moving reusable trading logic into Trader.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomProfessionalTradingWorkstationPlatform.cmake")
+
 # Physical commodity inventory/logistics/delivery and provider-neutral digital
 # asset network/custody/transfer services extend canonical finance while generic
 # execution and exchange semantics remain owned by canonical trading.
