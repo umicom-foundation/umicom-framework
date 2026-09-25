@@ -322,6 +322,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomBankingPaymentsAccountingPlatform.cmake
 # Trader and Exchange remain thin Framework compositions.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomTradingBrokerageExchangePlatform.cmake")
 
+# Provider-neutral broker sessions, paper execution, account/order/execution/
+# position synchronisation, pre-trade gates, audit and the IBKR boundary extend
+# canonical trading without allowing vendor types into the public C ABI.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomBrokerConnectivityExecutionPlatform.cmake")
+
 # Professional trading workstation calculations extend the canonical trading UI
 # for watchlists, DOM, charts, tape, guarded execution, P&L, scanners, events
 # and linked contexts without moving reusable trading logic into Trader.
