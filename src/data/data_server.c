@@ -353,6 +353,11 @@ UmiStatus umi_data_server_get(const UmiDataServer *server_const,
             status = UMI_STATUS_IO_ERROR;
         } /* Use this fallback path when the earlier condition does not apply. */ else {
             (void)sqlite3_bind_text(statement, 1, key, -1, SQLITE_TRANSIENT);
+            /* Distinguish exhausted input from a SQLite read failure. Banking
+             * recovery and every other repository must not interpret IO/step
+             * errors as an absent record. This replaces the branch below;
+             * its implementation is retained unchanged for engineering review. */
+#if 0
             /* Apply this branch only when its contract condition is satisfied. */
             if (sqlite3_step(statement) == SQLITE_ROW) {
                 const unsigned char *text = sqlite3_column_text(statement, 0);
@@ -366,6 +371,35 @@ UmiStatus umi_data_server_get(const UmiDataServer *server_const,
                 }
             } /* Use this fallback path when the earlier condition does not apply. */ else {
                 status = UMI_STATUS_NOT_FOUND;
+            }
+#endif
+            /* Data Server remains the authority for storage error semantics.
+             * Reject embedded NUL data rather than silently truncating a stored
+             * value to a different, apparently valid C string. */
+            {
+                int step_result = sqlite3_step(statement);
+                if (step_result == SQLITE_ROW) {
+                    const unsigned char *text = sqlite3_column_text(statement, 0);
+                    int bytes = sqlite3_column_bytes(statement, 0);
+                    if (text == NULL || bytes < 0) {
+                        set_error(server, "SQLite text conversion failed");
+                        status = UMI_STATUS_IO_ERROR;
+                    } else if (memchr(text, 0, (size_t)bytes) != NULL) {
+                        set_error(server, "Stored text contains an embedded NUL");
+                        status = UMI_STATUS_PARSE_ERROR;
+                    } else if ((size_t)bytes >= value_capacity) {
+                        status = UMI_STATUS_CAPACITY_EXCEEDED;
+                    } else {
+                        memcpy(value, text, (size_t)bytes);
+                        value[(size_t)bytes] = '\0';
+                        status = UMI_STATUS_OK;
+                    }
+                } else if (step_result == SQLITE_DONE) {
+                    status = UMI_STATUS_NOT_FOUND;
+                } else {
+                    set_error(server, sqlite3_errmsg(server->sqlite));
+                    status = UMI_STATUS_IO_ERROR;
+                }
             }
             (void)sqlite3_finalize(statement);
         }
@@ -708,6 +742,11 @@ UmiStatus umi_data_server_visit(const UmiDataServer *server_const,
             set_error(server, sqlite3_errmsg(server->sqlite));
             status = UMI_STATUS_IO_ERROR;
         } /* Use this fallback path when the earlier condition does not apply. */ else {
+            /* The former loop could report a complete successful enumeration
+             * after sqlite3_step failed. The explicit result loop replaces it;
+             * the previous implementation remains disabled for review, not
+             * physically deleted as part of this correctness repair. */
+#if 0
             /*
              * Continue only while work remains available; the loop body advances the state on each
              * pass.
@@ -719,6 +758,38 @@ UmiStatus umi_data_server_visit(const UmiDataServer *server_const,
                                  (const char *)(value != NULL ? value : (const unsigned char *)""),
                                  user_data);
                 /* Preserve the original failure result so the caller can respond to the correct cause. */
+                if (status != UMI_STATUS_OK) break;
+            }
+#endif
+            /* Repositories require a complete enumeration or an explicit error.
+             * A visitor failure still stops immediately with its own status. */
+            for (;;) {
+                int step_result = sqlite3_step(statement);
+                const unsigned char *key;
+                const unsigned char *value;
+                int key_bytes, value_bytes;
+                if (step_result == SQLITE_DONE) break;
+                if (step_result != SQLITE_ROW) {
+                    set_error(server, sqlite3_errmsg(server->sqlite));
+                    status = UMI_STATUS_IO_ERROR;
+                    break;
+                }
+                key = sqlite3_column_text(statement, 0);
+                value = sqlite3_column_text(statement, 1);
+                key_bytes = sqlite3_column_bytes(statement, 0);
+                value_bytes = sqlite3_column_bytes(statement, 1);
+                if (key == NULL || value == NULL || key_bytes < 0 || value_bytes < 0) {
+                    set_error(server, "SQLite text conversion failed during enumeration");
+                    status = UMI_STATUS_IO_ERROR;
+                    break;
+                }
+                if (memchr(key, 0, (size_t)key_bytes) != NULL ||
+                    memchr(value, 0, (size_t)value_bytes) != NULL) {
+                    set_error(server, "Stored key/value contains an embedded NUL");
+                    status = UMI_STATUS_PARSE_ERROR;
+                    break;
+                }
+                status = visitor((const char *)key, (const char *)value, user_data);
                 if (status != UMI_STATUS_OK) break;
             }
             (void)sqlite3_finalize(statement);
