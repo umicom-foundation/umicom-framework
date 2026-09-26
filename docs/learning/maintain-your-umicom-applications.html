@@ -1,0 +1,189 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Update, repair and remove Umicom applications — Umicom</title><meta name="description" content="A step-by-step public lesson on native application-file updates, exact-byte repair, selective removal and recovery."><link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADMAAAAzCAYAAAA6oTAqAAAEpUlEQVR4nO2ZwUsbWRzHv132ppnpi66gNUJm3WpoPHQSoyQotGbBsDTQlBbpTSjppcf9G/a0x14aCt5ENruWbdk1YGxBSdA0yR4MxEqJYKWFYjMktufdQ3dmJ8m8eW8mcTcs+Z6clzfz3sf3/f3eb95cuHhl7k/8T/TFfz2BTqoH063qwXSrejBWFA3JWI7Ma9cLoRnIXs+5jPXluTwVwIRrGMuReQyIDrx6805rJ6KAhdAMFkIzKJbK2MrsdWzMjsMMiA4sR+Yx4RrW2gaFfu3vi4IDwD9QsteDXzbSqByftD12R2GWI/MIei+3tA+IDuo9RBRwbymmrZJSq9sevyMwQe9lRINXTSfNkuz1wO26hGKpjGKpbAuqLZgJ1zBuhOQGSxnpQ+2M63l669mJpwt2C83vl75jQqj6ce03LQkQUcCtSBjS2CjzPqVWtwRlGSYaknEjKHP1zZYOsbKxbfibNDaK68EAN9RWZg/FUtm0HzeMlbhY2dhGtnQIAHASAicheF2pGPaVvR4shGZARIH5XBYUEyYakhG88g0XRPNKjEsSHtyP43WlgoePEtT7iChoUDyi2Y+aAIz2C5pevXmHZ5miFhdOQnD3zm2MS5J2zZqc+h/ngVITBREF/Pz7JhsmGrzKlaVWNrYbdvjFb8NYDIcb+rFgVFmFcrsuNVybroyZnmWLeJopatdOQvDgfpw6cSchqCqK6TNV6aHMMh8RBRBR0PYkKoy+BNErWzrE0+wf2t7hJAQBv69lNZrFC6KXUqvj8dq6ViUYJQkumGY1xwVgbCkj5fIF3mEMJXs91GynrxSoMKf1j5rV9KkWaA1wM+XyBawmk9wT10saG8W9pRh3fyrMh9oZsn8HuCpeSwGfbbX6U5K6v5iJt0qoHJ/wrUzzzs1rqXYgAGjvOiwptTqeZ3MNbcyY4bVUVVGQKxSQ2kwzJ2IkaWwUtyJhZiVgVgVQYcYlCXfv3ObaI1LptG0IXkvxFJ1UmIDPxwRpNy54zwO2MnstELHpKUyODOGHX7e0NvrKfE23VbuWshIXza/Uc5NuxPxTGHT0tfS3/HLGKhpZ4gExspRnZAg3p6fgGRlq6Dvo6MPp2ScAFmGqimI7S6li2crIUvFrs5ibdBv2V0EAE5iqorTEjJMQLIbDCPh8bdnMSDRLxa/NUu/RgwA2zwD0UFYTgFKrN6RfK5ZiiQqTKxSYe4taKefyBaTSacvFZOX4BI/X1rXrQUcf4tdnuSBOzz4h8Xy3oc30TdNq+cJjPdrBX2x6Cjf9XuY4ALBzcITEi92Wdq4zAM1Wfh9zIBaUvmQHzFNts57kS9g+qLTEiipLpzNWqmUWlJW4oK1Es2ydm6nW4yl1qoqCh48SWjxZiYudgyOs5/epK9Es24eAajzxlD36jZYnNspv3+PJy32U3763NCfbx7NVRUFqM41cvsBMEnrYwX7z2Ei82MXOwZGtObV9cM4DxZOyeePCTB37pKGHMst8px8b/W/XUkbq+MemqqJgNZlEKp02zXzqptcJCFW2EwCvAv7PCUJN0XOTbnzl6Mf6y/2Oj3XuMP+mep/Ou1U9mG5VD6Zb9ReztWucDqtdOAAAAABJRU5ErkJggg=="><style>*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:#183344;background:#f1f5f7;font:17px/1.75 "Segoe UI",Arial,sans-serif}.brand{background:#112d3e;padding:17px 28px}.brand img{width:202px;height:55px;object-fit:contain}.layout{display:grid;grid-template-columns:265px minmax(0,1000px);max-width:1410px;margin:30px auto;gap:30px;padding:0 22px}nav{position:sticky;top:20px;align-self:start;max-height:94vh;overflow:auto;padding:22px;background:white;border-radius:12px}nav strong{display:block;margin-bottom:15px}nav a{display:block;padding:9px 0;color:#315165;font-size:14px;line-height:1.45;text-decoration:none}nav a:hover{text-decoration:underline;color:#067369}main{padding:42px 48px;background:white;border-radius:14px;min-width:0}h1{font-size:40px;line-height:1.16;letter-spacing:-.6px;margin:0 0 28px}h2{font-size:26px;line-height:1.3;margin:48px 0 20px;scroll-margin-top:24px}p{margin:16px 0}strong{color:#152e40}a{color:#066d72}pre{background:#132a3a;color:#eef7fa;overflow:auto;border-radius:8px;padding:20px;font:14px/1.65 Consolas,monospace;tab-size:4}code{font: .91em Consolas,monospace;overflow-wrap:anywhere}pre code{white-space:pre;overflow-wrap:normal}table{border-collapse:collapse;width:100%;font-size:15px;line-height:1.6}th,td{text-align:left;vertical-align:top;border:1px solid #dce6eb;padding:12px}th{background:#ecf5f5}.table-wrap{overflow:auto;margin:25px 0}details{background:#eaf5f1;border-radius:8px;padding:17px 22px;margin:26px 0}summary{font-weight:700;cursor:pointer}.eyebrow{color:#0b726d;letter-spacing:.08em;text-transform:uppercase;font-size:12px;font-weight:bold}footer{margin-top:45px;border-top:1px solid #dae4e9;padding-top:24px;color:#526d7b;font-size:14px}@media(max-width:900px){.layout{display:block;margin:18px auto;padding:0 14px}nav{position:static;max-height:none;margin:0 0 18px}nav a{display:inline-block;vertical-align:top;width:49%;padding-right:10px}main{padding:32px 25px}h1{font-size:32px}}@media(max-width:540px){body{font-size:16px}.brand{padding:12px 18px}.layout{padding:0 10px}main{padding:26px 20px}h1{font-size:30px}h2{font-size:23px}nav{padding:20px}nav a{width:100%;padding:7px 0}pre{padding:16px;font-size:13px}td,th{min-width:135px}}@media print{body{background:white;font-size:11pt}.brand,nav{display:none}.layout{display:block;margin:0;padding:0}main{padding:0}h1{font-size:26pt}h2{break-after:avoid}pre{white-space:pre-wrap;background:#f4f7f8;color:#122b3d}pre code{white-space:pre-wrap}.table-wrap{overflow:visible}details{display:block}}</style></head><body><header class="brand"><img src="data:image/png;base64,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" alt="Umicom"></header><div class="layout"><nav aria-label="In this guide"><strong>In this guide</strong><a href="#lesson-1">Before you begin</a><a href="#lesson-2">1. Understand the three choices</a><a href="#lesson-3">2. Find the installed folder</a><a href="#lesson-4">3. Review an update without changing anything</a><a href="#lesson-5">4. Apply the reviewed update</a><a href="#lesson-6">5. Repair a missing or damaged file</a><a href="#lesson-7">6. Remove one application while keeping another</a><a href="#lesson-8">7. Recover an unfinished change</a><a href="#lesson-9">8. Undo a completed change</a><a href="#lesson-10">9. Read the recovery folder</a><a href="#lesson-11">10. Use the native command-line tool</a><a href="#lesson-12">11. A small C lesson: ownership and review</a><a href="#lesson-13">12. Practise, check and explain</a><a href="#lesson-14">When to stop and investigate</a></nav><main><p class="eyebrow">Umicom learning · installation and maintenance</p><h1>Update, repair and remove Umicom applications</h1>
+<p>A useful installer must do more than copy files once. It should help you replace an older application, put a missing library back, or remove an application you no longer use. It must also explain what happened when an operation stops halfway through.</p>
+<p>This guide follows <strong>Umicom Notes and a second installed application</strong>. You will first read an installation record, review a proposed change, and then inspect the result. You do not need to know C to follow the graphical steps. The last lesson opens the C interface for readers learning to build their own tools.</p>
+<h2 id="lesson-1">Before you begin</h2>
+<p>Use a practice installation and fictional documents for your first run. Keep a separate backup of anything important. Close <strong>all applications using that installation</strong>, including background processes, before applying maintenance. Reviewing a plan reads files; applying it changes application files.</p>
+<p>Use the new Setup Centre from a <strong>separately extracted, trusted release folder</strong>. Do not run the maintenance executable from the installation whose files you are replacing. On Windows, an executable or DLL that is still open can prevent a file move. Keep the release folder outside the installation folder.</p>
+<p>You need an installation created by the native Umicom installer, with its <code>umicom-install.umi</code> receipt. An older NSIS installation without that receipt is not automatically adopted. Do not invent or edit a receipt to make such an installation appear compatible.</p>
+<p>The maintained profile is a trusted, local application directory. Network shares, ambiguous paths, symbolic links/reparse points and multiply linked files are not supported maintenance inputs. The Linux build is also useful for native integration testing; it is not a replacement for a Linux distribution's package manager.</p>
+<h2 id="lesson-2">1. Understand the three choices</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Choice</th>
+<th>What it does</th>
+<th>Which release you need</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Update installed applications</strong></td>
+<td>Keeps the currently installed application set and replaces its recorded files with those from the selected release.</td>
+<td>A trusted release containing every installed application under the same application identifiers and entry paths.</td>
+</tr>
+<tr>
+<td><strong>Repair from the original release</strong></td>
+<td>Restores missing or damaged files to the exact bytes recorded in the installed receipt.</td>
+<td>The original matching payload, not merely a newer release with a similar name.</td>
+</tr>
+<tr>
+<td><strong>Remove checked applications</strong></td>
+<td>Moves unmodified files owned only by the selected applications into a recovery archive and removes their ownership from the receipt.</td>
+<td>No release folder is required.</td>
+</tr>
+</tbody>
+</table></div>
+<p>“Update” means <strong>use this explicitly selected release</strong>. This edition does not infer which release is newer from a version number, check an online channel or verify a publisher signature. Choosing an older compatible payload can change the application files back to older bytes. Check the release's identity and compatibility yourself before continuing.</p>
+<p>Shared files remain while another application is installed. When you remove the last application, its active receipt is archived too. Personal extra files are not searched for or deleted. Locally edited files belonging to an application being removed stay in their original locations, but cease to be installer-owned.</p>
+<p>This conservative removal does <strong>not reclaim the space occupied by retained recovery archives</strong>. It leaves directories, shortcuts and Windows registration alone. A shortcut may therefore remain after its target has been removed. Do not mistake that shortcut for proof that an application is still installed.</p>
+<h2 id="lesson-3">2. Find the installed folder</h2>
+<p>Open <code>Umicom-Setup.exe</code> from the extracted release and choose the <strong>Maintain applications</strong> tab. The original Applications, Umicom OS in QEMU and Boot media tabs remain available.</p>
+<p>In <strong>Installed folder</strong>, choose the directory containing <code>umicom-install.umi</code>, not its <code>bin</code> subdirectory. For example:</p>
+<pre><code class="language-text">C:\Users\YourName\AppData\Local\Umicom Applications
+    umicom-install.umi
+    bin\
+    share\
+</code></pre>
+<p>Click <strong>Load installed / pending</strong>. A normal installation shows its application list. If an unfinished change is found instead, the status area shows a transaction ID. Go to the recovery lesson below rather than starting another update.</p>
+<p>The application list belongs to a particular receipt. If another operation changes that receipt, the next review refuses the stale list. Load it again and make the selection from the new list; do not reuse an old selection by its position on screen.</p>
+<h2 id="lesson-4">3. Review an update without changing anything</h2>
+<p>Choose <strong>Update installed applications</strong>. In <strong>Offline release folder</strong>, select the directory containing <code>suite.umi</code> and <code>payload</code>. This is different from the installed folder.</p>
+<p>Click <strong>Review maintenance</strong>. Setup Centre first uses the Windows release inspector, then asks the shared maintenance service to compare the installed files with the proposed payload. It shows the installation path, before/after receipt identities, a plan fingerprint, application counts, replacement size and changed paths.</p>
+<p>Read those paths. <strong>Install replacement</strong> means new bytes will be written. <strong>Move to recovery archive</strong> means an old owned file is no longer in the selected release. Files marked <strong>Keep</strong> already agree. The graphical report is bounded; for a very large plan, the native review command prints the complete changed-path list.</p>
+<p>An update refuses an existing owned file that has been locally edited. This protects an unexpected change rather than deciding that it is disposable. Back up the file and investigate it. A repair is appropriate only after you have decided that the recorded original is the version that belongs there.</p>
+<p>At this point no application file has changed. Changing the installed folder, release folder, action or removal selection discards the review. A fingerprint is a compact check of the reviewed state; it is <strong>not a digital signature or permission from a publisher</strong>.</p>
+<h2 id="lesson-5">4. Apply the reviewed update</h2>
+<p>Check again that every application using this installation is closed. Click <strong>Apply reviewed maintenance</strong>, read the confirmation and continue only when the folder and operation are correct.</p>
+<p>The service re-reads the plan under an installation lock. It stages and checks replacement files before changing the active installation. It then records an unfinished transaction, moves original files into the archive, moves replacements into place and publishes the new receipt. The unfinished marker is retired only after the resulting owned state agrees.</p>
+<p>A second maintenance operation cannot proceed under the same lock. This lock does not stop an unrelated application or editor from changing files; closing those writers is still necessary.</p>
+<p>When the operation completes, retain its <strong>transaction ID</strong> and <strong>archive path</strong>. A completed copy operation does not prove that the application starts. Use <strong>Verify installation</strong> on the Applications tab with the same installation path, then open each updated application and exercise an ordinary workflow. A static file inspection and an actual application test answer different questions.</p>
+<h2 id="lesson-6">5. Repair a missing or damaged file</h2>
+<p>For a first repair exercise, use a disposable copy of a qualified practice installation. Move one known supporting file to a separate backup folder, without opening any application. Do not experiment on your only working installation.</p>
+<p>Load the installation on the maintenance tab, choose <strong>Repair from the original release</strong>, and select the saved release that supplied its recorded files. Click <strong>Review maintenance</strong>.</p>
+<p>A missing file appears as a replacement. A damaged owned file also appears as a replacement, but its current bytes are retained in the recovery archive. The repair does not silently throw away those bytes. A similarly named file from a different release is rejected when it does not match the receipt's size, hash and ownership.</p>
+<p>Apply the reviewed repair and verify the result. Repairing an already matching installation reports that no payload change is needed. Do not download an arbitrary DLL from an unrelated site to satisfy a missing-file message; use the matching Umicom release.</p>
+<h2 id="lesson-7">6. Remove one application while keeping another</h2>
+<p>Load the installation and choose <strong>Remove checked applications</strong>. Check only the application to remove. <strong>Check all</strong> and <strong>Check none</strong> affect this removal list; the checkboxes are not used to choose update or repair components.</p>
+<p>Click <strong>Review maintenance</strong>. Shared runtime files should remain when another application needs the shared installation. If a retained application's files are already damaged, removal refuses the operation and asks you to repair those files first.</p>
+<p>Apply the plan. The remaining application's receipt and files should still verify. Your unowned notes and other extra files remain. An edited file associated with the removed application remains too; the status records that it was preserved. Such a file can still exist physically even though the application is no longer in the active receipt.</p>
+<p>Removing the last application leaves the folder, personal extras and archive. It does not recursively erase that folder or remove Desktop and Start-menu shortcuts. Review any later space-reclamation work separately.</p>
+<h2 id="lesson-8">7. Recover an unfinished change</h2>
+<p>A cancelled operation, failed file move or terminated maintenance process may leave <code>umicom-maintenance.pending</code> in the installation root. It tells maintenance-aware receipt readers not to present a partly changed installation as a complete one.</p>
+<p>Reopen the current Setup Centre and choose <strong>Load installed / pending</strong>. Save the transaction ID and read the message. Click <strong>Recover unfinished change</strong> to restore the exact file snapshot from before the attempt. Recovery uses the retained original files; it does not need to download or execute an application.</p>
+<p>Recovery first checks the whole reversal. If a later edit or an unexpected file occupies a destination, it refuses to overwrite it. Preserve that file and investigate the conflict. <strong>Do not remove the pending marker or edit the journal to make the error disappear.</strong></p>
+<p>If recovery itself is interrupted, load the pending transaction again and repeat recovery. The service recognises the file moves already completed. Native tests exercise actual process termination during both maintenance and recovery; sudden power loss and filesystem/device durability still require platform-specific qualification.</p>
+<p>Use the current maintenance-aware tools. An older installer that predates the pending-marker contract does not know how to interpret this state.</p>
+<h2 id="lesson-9">8. Undo a completed change</h2>
+<p><strong>Undo completed change</strong> is different from recovery. It starts from a completed transaction and restores its earlier file snapshot only while the resulting installed state still agrees with the recorded transaction. Supply the transaction ID from the successful operation.</p>
+<p>A newer maintenance transaction or a local edit may make an older undo ineligible. That refusal protects later work. Do not force it by copying the old receipt over the current one.</p>
+<p>Undo is about <strong>application files</strong>, not database contents. It does not reverse a schema migration, a payment, a saved business transaction or an application's changed personal settings. An older executable may not understand data already changed by a newer application. Do not undo application files across such a change without a separately qualified data-recovery procedure.</p>
+<p>Undoing a repair restores the pre-repair snapshot, which may contain a missing file or damaged bytes. That is a faithful reversal, not a promise of a healthy application. Verify the restored state separately.</p>
+<h2 id="lesson-10">9. Read the recovery folder</h2>
+<p>A transaction uses a new directory under the installation:</p>
+<pre><code class="language-text">.umicom-maintenance/
+    owner.txt
+    lock
+    &lt;transaction-id&gt;/
+        identity.umi
+        plan.umi
+        before.umi
+        after.umi
+        old-receipt.umi
+        new/
+        old/
+        undone/
+</code></pre>
+<p>Not every file exists at every phase. <code>after.umi</code> is absent after removal of the last application. The <code>old</code> directory retains the original changed files; <code>new</code> holds staged replacements until they move into place. <code>undone</code> retains files moved aside during a reversal. The plan maps numbered slots to their real relative paths.</p>
+<p>The native service creates these records once per attempt and checks their hashes before recovery. A changed journal is an error. These files are <strong>not signed or tamper-proof against someone who controls the directory</strong>. Treat the installation and its archives as trusted local data, and keep a separate backup. There is no automatic archive-pruning operation in this edition.</p>
+<h2 id="lesson-11">10. Use the native command-line tool</h2>
+<p>The graphical interface and the command-line tool call the same Framework implementation. In the following PowerShell example, edit the two paths to match your own installation and trusted extracted release:</p>
+<pre><code class="language-powershell">$Tool = "C:\umicom\Umicom-Applications\build\windows-ucrt64-all-debug\bin\umicom-maintain.exe"
+$Installed = "C:\Users\YourName\AppData\Local\Umicom Applications"
+$Release = "C:\Users\YourName\Downloads\Umicom Release"
+
+&amp; $Tool review --root $Installed --action update --release $Release
+if ($LASTEXITCODE -ne 0) { throw "Review failed. Do not apply it." }
+</code></pre>
+<p>Read the output and copy the 64-character value after <strong>Plan:</strong>. Applying is deliberately a second command:</p>
+<pre><code class="language-powershell">$ReviewedPlan = Read-Host "Paste the plan fingerprint you reviewed"
+&amp; $Tool apply --root $Installed --action update --release $Release --expect-plan $ReviewedPlan
+if ($LASTEXITCODE -ne 0) { throw "Maintenance stopped. Read the pending state before continuing." }
+</code></pre>
+<p>For repair, use <code>--action repair</code> and the original release in <strong>both</strong> commands. For removal, omit <code>--release</code> and use an application identifier reported by the installed catalogue:</p>
+<pre><code class="language-text">umicom-maintain review --root &lt;absolute-installed-folder&gt; --action remove --remove &lt;application-id&gt;
+umicom-maintain apply --root &lt;absolute-installed-folder&gt; --action remove --remove &lt;application-id&gt; --expect-plan &lt;reviewed-fingerprint&gt;
+</code></pre>
+<p>The angle-bracket names above are placeholders, not commands to paste unchanged. Identifiers are exact catalogue values, not display titles. Use <code>--all</code> instead of <code>--remove</code> only after reviewing removal of every installed application.</p>
+<p>Check pending state with:</p>
+<pre><code class="language-powershell">&amp; $Tool pending --root $Installed
+$PendingExit = $LASTEXITCODE
+# 0: no pending marker; 3: pending transaction found; 1: inspection failed.
+# A malformed or unreadable marker is an error, not a clean installation.
+</code></pre>
+<p>Restore using the recorded transaction ID, not the plan fingerprint:</p>
+<pre><code class="language-powershell">$Transaction = Read-Host "Paste the transaction ID from the maintenance report"
+&amp; $Tool recover --root $Installed --transaction $Transaction
+if ($LASTEXITCODE -ne 0) { throw "Recovery refused or incomplete. Preserve the files and inspect the conflict." }
+</code></pre>
+<p>Use <code>undo</code> in place of <code>recover</code> only for a completed transaction that is still eligible. The plan fingerprint identifies proposed content; the transaction ID identifies a particular attempt. Repeating the same plan after recovery creates a different archive.</p>
+<h2 id="lesson-12">11. A small C lesson: ownership and review</h2>
+<p>The complete, compiled example is <code>examples/setup_maintenance/review_client.c</code>, with its declaration in <code>review_client.h</code>. It reads a current installed list, binds the review to that list and prints every planned row. It never calls Apply.</p>
+<pre><code class="language-c">UmiSetupMaintenanceConfig config = {
+    .installationRoot = installation,
+    .releaseRoot = release,
+    .action = UMI_SETUP_MAINTENANCE_UPDATE,
+    .removeMask = 0U,
+    .expectedReceipt = UmiSetupMaintenanceReceiptIdentity(installed)
+};
+status = UmiSetupMaintenancePlanCreate(&amp;config, &amp;plan, NULL, NULL, &amp;report);
+</code></pre>
+<p>A <strong>structure</strong> groups the inputs. An <strong>opaque pointer</strong> such as <code>plan</code> lets the caller use a service without depending on its private layout. The returned plan owns copies of the required configuration and its catalogues. A summary or row pointer is borrowed from that plan: use it while the plan is alive, and do not free it yourself.</p>
+<p>Read the example's <code>finish</code> path. Both owned objects are destroyed there, whether the review succeeded or failed. This is a practical reason to think about memory ownership before adding more buttons.</p>
+<p>The maintenance implementation combines three familiar ideas: a <strong>Command</strong> describes the requested action, a <strong>plan</strong> freezes the state being reviewed, and a <strong>journal</strong> retains what is needed to recover. The GUI only presents those services. It does not decide independently which files are safe to remove.</p>
+<h2 id="lesson-13">12. Practise, check and explain</h2>
+<p><strong>Exercise A — explain the difference.</strong> Which source would you select to repair a missing library: the newest release, or one that supplies the exact recorded bytes? Explain why.</p>
+<p><strong>Exercise B — preserve a document.</strong> In a disposable installation, add a fictional personal note outside the receipt's inventory. Remove one application. Check the note, the remaining application and the archive separately.</p>
+<p><strong>Exercise C — inspect without applying.</strong> Run the native review twice without changing the inputs. Compare the fingerprints. Then change only the proposed release and review again. Do not apply either plan until you can explain the changed rows.</p>
+<p><strong>Exercise D — recovery in the test laboratory.</strong> Build the source and run the <code>process-crash</code> and <code>recovery-process-crash</code> regression cases. Read their C source. They terminate a child process inside a newly created test fixture, then recover it. Do not imitate that interruption on your only working installation.</p>
+<details><summary>Check your answers</summary><p>A: repair uses matching recorded bytes; a newer release belongs to an update. B: personal extras stay, shared files remain while another application is installed, and retained archives consume space. C: an unchanged plan is reproducible; its fingerprint detects a change but authenticates no publisher. D: successful process-crash recovery does not by itself qualify sudden power-loss behaviour or Windows filesystem execution.</p></details>
+<h2 id="lesson-14">When to stop and investigate</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Message or observation</th>
+<th>Next step</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The displayed list is stale</td>
+<td>Load the installation again and review a new selection.</td>
+</tr>
+<tr>
+<td>A local edit blocks an update</td>
+<td>Preserve and investigate it; do not force replacement.</td>
+</tr>
+<tr>
+<td>The repair source does not agree</td>
+<td>Locate the original matching release.</td>
+</tr>
+<tr>
+<td>A pending marker is present</td>
+<td>Recover the recorded transaction before ordinary use.</td>
+</tr>
+<tr>
+<td>A journal or backup cannot be trusted</td>
+<td>Keep everything; investigate or restore from a separate verified backup.</td>
+</tr>
+<tr>
+<td>A file is in use or access is denied</td>
+<td>Close the owning application; do not blindly elevate or weaken permissions.</td>
+</tr>
+<tr>
+<td>A static inspection passes but startup fails</td>
+<td>Investigate the actual loader/resource/startup diagnostic. The inspection was not a runtime test.</td>
+</tr>
+</tbody>
+</table></div>
+<p>This edition maintains an existing native receipt and its application files. It does not add online updates, signed release channels, automatic version ordering, database migration, shortcut cleanup, application registration, a recursive uninstaller or physical boot-media writing. Those are separate capabilities, with separate acceptance tests.</p>
+<footer>Sammy Hegab · Umicom Foundation<br>Native application-file maintenance. Keep a separate backup of important work.</footer></main></div></body></html>

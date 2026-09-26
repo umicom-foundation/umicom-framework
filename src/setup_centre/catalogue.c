@@ -6,6 +6,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "internal.h"
+#include "maintenance_internal.h"
 #include <inttypes.h>
 static char *Field(char **cursor)
 {
@@ -101,6 +102,10 @@ UmiStatus ScDecode(const char *data,size_t length,UmiSetupBundle *b,int installe
                 break;
             }
 
+            /* Installer control records cannot be owned by a supplied payload.
+             * Keep the older receipt/catalogue check below for compatibility review. */
+            if(SmReserved(rel)) { status=UMI_STATUS_PARSE_ERROR; break; }
+
             if(ScEqualFold(rel,UMI_SETUP_RECEIPT)==0||ScEqualFold(rel,UMI_SETUP_CATALOGUE)==0) {
                 status=UMI_STATUS_PARSE_ERROR;
                 break;
@@ -190,6 +195,19 @@ static UmiStatus Open(const char *root,UmiSetupBundle **out,UmiSetupReport *r,in
     if(r)memset(r,0,sizeof *r);
     if(!out)return UMI_STATUS_INVALID_ARGUMENT;
     *out=NULL;
+
+    /* An old receipt is not a complete installation while native maintenance
+     * is in progress. The maintenance authority reads its frozen copy directly. */
+    if(installed) {
+        char pending[UMI_SETUP_PATH_CAPACITY];
+        UmiStatus gate=ScJoin(root,UMI_SETUP_MAINTENANCE_PENDING,pending);
+        if(gate==UMI_STATUS_OK)gate=ScFileRegular(pending,0,r);
+        if(gate==UMI_STATUS_OK) {
+            ScReport(r,UMI_STATUS_BUSY,"Installation maintenance is pending. Recover it before reading a complete receipt.");
+            return UMI_STATUS_BUSY;
+        }
+        if(gate!=UMI_STATUS_NOT_FOUND)return gate;
+    }
 
     char path[UMI_SETUP_PATH_CAPACITY];
     UmiStatus status=ScJoin(root,installed?UMI_SETUP_RECEIPT:UMI_SETUP_CATALOGUE,path);

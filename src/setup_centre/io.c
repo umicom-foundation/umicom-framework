@@ -6,6 +6,9 @@
  * ancestors are inspected; Windows handles deny deletion while in use.
  *---------------------------------------------------------------------------*/
 
+#if defined(__linux__) && !defined(_GNU_SOURCE)
+#define _GNU_SOURCE
+#endif
 #ifndef _WIN32
 #define _POSIX_C_SOURCE 200809L
 #endif
@@ -582,3 +585,6 @@ UmiStatus ScReadAt(const char *path,uint64_t offset,void *data,size_t length,uin
     return s;
 
 }
+
+/* Maintenance shares the checked native handles above, not a new path walker. */
+#include "maintenance_io.inc"

@@ -27,9 +27,24 @@
 #include <string.h>
 #include "umicom/setup_centre/win32.h"
 #include "umicom/setup_centre/execution.h"
+#include "umicom/setup_centre/maintenance.h"
 #include "umicom/release_inspector/inspection.h"
 #define WM_SETUP_PROGRESS (WM_APP+41)
 #define WM_SETUP_DONE (WM_APP+42)
+#define ID_MAINT_ROOT 6101
+#define ID_MAINT_ROOT_BROWSE 6102
+#define ID_MAINT_SOURCE 6103
+#define ID_MAINT_SOURCE_BROWSE 6104
+#define ID_MAINT_LOAD 6105
+#define ID_MAINT_ACTION 6106
+#define ID_MAINT_LIST 6107
+#define ID_MAINT_ALL 6108
+#define ID_MAINT_NONE 6109
+#define ID_MAINT_REVIEW 6110
+#define ID_MAINT_APPLY 6111
+#define ID_MAINT_ID 6112
+#define ID_MAINT_RECOVER 6113
+#define ID_MAINT_UNDO 6114
 #define ID_INSPECT 200
 enum {
     ID_TAB=100,ID_SOURCE,ID_SOURCE_BROWSE,ID_LOAD,ID_APPS,ID_ALL,ID_NONE,ID_DEST,ID_DEST_BROWSE,
@@ -42,6 +57,7 @@ enum {
 typedef enum JobKind {
     JOB_LOAD,JOB_REVIEW,JOB_INSTALL,JOB_VM_REVIEW,JOB_VM_RUN,JOB_MEDIA,JOB_VERIFY
     , JOB_INSPECT
+    ,JOB_MAINT_LOAD,JOB_MAINT_REVIEW,JOB_MAINT_APPLY,JOB_MAINT_RECOVER,JOB_MAINT_UNDO
 }
 JobKind;
 
@@ -50,6 +66,10 @@ typedef struct Ui Ui;
 typedef struct Job {
 
     Ui *ui;
+    UmiSetupMaintenancePlan *maintenancePlan;
+    UmiSetupMaintenanceReport maintenanceReport;
+    UmiSetupMaintenanceAction maintenanceAction;
+    char maintenanceReceipt[65];
     JobKind kind;
     UmiSetupReport report;
     UmiReleaseInspection inspection;
@@ -90,16 +110,26 @@ struct Ui {
     HFONT ownedFont;
     HBITMAP logo;
 
+    /* The fourth page needs more controls; retain the prior allocation for
+     * review. Add() now uses the actual array capacity instead of a magic limit. */
+#if 0
     Control controls[80];
+#endif
+    Control controls[112];
     size_t controlCount;
     Job *job;
     int page,closing,loaded;
 
     UmiSetupBundle *bundle;
+    UmiSetupBundle *maintenanceBundle;
+    UmiSetupMaintenancePlan *maintenancePlan;
     UmiSetupVmPlan *vmPlan;
     char fingerprint[65];
 
 };
+
+static void MaintenanceButtons(Ui *u);
+static void MaintenanceForget(Ui *u, int forgetList);
 
 static HWND Find(Ui *u,int id) {
     for(size_t i=0; i<u->controlCount; ++i)if(u->controls[i].id==id)return u->controls[i].window;
@@ -160,7 +190,11 @@ static int ReadText(Ui *u,int id,char *out,size_t capacity)
 static HWND Add(Ui *u,int id,int page,const wchar_t *className,const wchar_t *text,DWORD style,int x,int y,int width,int height)
 {
 
+    /* Match the owned storage rather than the earlier three-page bound. */
+#if 0
     if(u->controlCount==80U)return NULL;
+#endif
+    if(u->controlCount==sizeof(u->controls)/sizeof(u->controls[0]))return NULL;
 
     HWND h=CreateWindowExW(!wcscmp(className,L"EDIT")?WS_EX_CLIENTEDGE:0,className,text,WS_CHILD|WS_VISIBLE|style,0,0,0,0,u->window,(HMENU)(INT_PTR)id,u->instance,NULL);
 
@@ -208,6 +242,7 @@ static void Layout(Ui *u)
     }
 
     if(Find(u,ID_APPS))ListView_SetColumnWidth(Find(u,ID_APPS),0,MulDiv(width-80,(int)dpi,96));
+    if(Find(u,ID_MAINT_LIST))ListView_SetColumnWidth(Find(u,ID_MAINT_LIST),0,MulDiv(width-80,(int)dpi,96));
 
 }
 
@@ -226,6 +261,7 @@ static void Buttons(Ui *u)
     EnableWindow(Find(u,ID_VM_RUN),!busy&&u->vmPlan!=NULL);
 
     EnableWindow(Find(u,ID_STOP),busy);
+    MaintenanceButtons(u);
 
 }
 
@@ -300,6 +336,8 @@ static UmiStatus InspectSelection(Job *job)
     return status;
 }
 
+#include "setup_maintenance_ui.inc"
+
 static DWORD WINAPI Worker(void *opaque)
 {
 
@@ -310,6 +348,10 @@ static DWORD WINAPI Worker(void *opaque)
     };
 
     switch(j->kind) {
+        case JOB_MAINT_LOAD: case JOB_MAINT_REVIEW: case JOB_MAINT_APPLY:
+        case JOB_MAINT_RECOVER: case JOB_MAINT_UNDO:
+        MaintenanceWorker(j);
+        break;
 
         case JOB_LOAD:j->status=UmiSetupBundleOpen(j->source,&j->loaded,&j->report);
         break;
@@ -439,6 +481,22 @@ static void Start(Ui *u,JobKind kind)
 
     if(kind==JOB_MEDIA)valid=ReadText(u,ID_MEDIA_KERNEL,j->kernel,sizeof j->kernel)&&ReadText(u,ID_MEDIA_INITRD,j->initrd,sizeof j->initrd)&&ReadText(u,ID_MEDIA_DEST,j->destination,sizeof j->destination);
 
+    if(kind>=JOB_MAINT_LOAD) {
+        valid=ReadText(u,ID_MAINT_ROOT,j->destination,sizeof j->destination) &&
+            ReadText(u,ID_MAINT_SOURCE,j->source,sizeof j->source);
+        j->maintenanceAction=(UmiSetupMaintenanceAction)(1+(int)SendMessageW(Find(u,ID_MAINT_ACTION),CB_GETCURSEL,0,0));
+        j->selected=MaintenanceSelected(u);
+        const char *identity=UmiSetupMaintenanceReceiptIdentity(u->maintenanceBundle);
+        if(identity)strcpy(j->maintenanceReceipt,identity);
+        if(kind==JOB_MAINT_APPLY) {
+            const UmiSetupMaintenanceSummary *summary=UmiSetupMaintenancePlanSummary(u->maintenancePlan);
+            valid=valid&&summary!=NULL;
+            if(summary)strcpy(j->fingerprint,summary->fingerprint);
+        }
+        if(kind==JOB_MAINT_RECOVER||kind==JOB_MAINT_UNDO)
+            valid=valid&&ReadText(u,ID_MAINT_ID,j->fingerprint,sizeof j->fingerprint);
+    }
+
     if(!valid||umi_cancellation_token_create(&j->cancel)!=UMI_STATUS_OK) {
         free(j);
         Status(u,"A form field is too long or invalid.");
@@ -501,6 +559,8 @@ static void Done(Ui *u)
 
     if(j->kind==JOB_INSTALL)u->fingerprint[0]=0;
 
+    if(j->kind>=JOB_MAINT_LOAD)MaintenanceDone(u,j);
+
     /* Show the actual selection and command arguments before enabling a
       * consequential action. Hashes are change detectors, not a signature. */
     size_t capacity = UMI_PROCESS_OUTPUT_CAPACITY + 65536U;
@@ -541,12 +601,20 @@ static void Done(Ui *u)
             used += (size_t)snprintf(text+used,capacity-used,
                 "\r\nDesktop shortcut group: %s; Start menu group: %s.",
                 j->desktop?"yes":"no",j->menu?"yes":"no");
+        if (j->kind>=JOB_MAINT_LOAD && used < capacity) {
+            char *maintenance=MaintenanceText(u,j);
+            if(maintenance) {
+                used += (size_t)snprintf(text+used,capacity-used,"\r\n%s",maintenance);
+                free(maintenance);
+            }
+        }
         if (j->process->output[0] && used < capacity)
             (void)snprintf(text+used,capacity-used,"\r\nNative tool diagnostics:\r\n%s",j->process->output);
         Status(u,text);
         free(text);
     }
 
+    UmiSetupMaintenancePlanDestroy(j->maintenancePlan);
     UmiSetupBundleDestroy(j->loaded);
     free(j->plan);
     umi_cancellation_token_destroy(j->cancel);
@@ -639,6 +707,8 @@ static void Build(Ui *u)
     TabCtrl_InsertItem(tabs,1,&item);
     item.pszText=L"Boot media";
     TabCtrl_InsertItem(tabs,2,&item);
+    item.pszText=L"Maintain applications";
+    TabCtrl_InsertItem(tabs,3,&item);
 
     Edit(u,ID_SOURCE,ID_SOURCE_BROWSE,0,L"Offline release folder",125);
 
@@ -701,6 +771,8 @@ static void Build(Ui *u)
 
     Add(u,ID_MEDIA_PREPARE,2,L"BUTTON",L"Prepare boot-media source",BS_PUSHBUTTON|WS_TABSTOP,30,450,230,30);
 
+    MaintenanceBuild(u);
+
     Add(u,ID_STATUS,-1,L"EDIT",L"Load a trusted offline release to begin. No installation starts automatically.",ES_MULTILINE|ES_READONLY|ES_AUTOVSCROLL|WS_VSCROLL,20,-168,-40,112);
 
     Add(u,ID_PROGRESS,-1,PROGRESS_CLASSW,L"",0,20,-39,-190,16);
@@ -714,6 +786,7 @@ static void Build(Ui *u)
         wchar_t *last=wcsrchr(path,L'\\');
         if(last)*last=0;
         SetWindowTextW(Find(u,ID_SOURCE),path);
+        SetWindowTextW(Find(u,ID_MAINT_SOURCE),path);
     }
 
     PWSTR local=NULL;
@@ -721,6 +794,7 @@ static void Build(Ui *u)
         if(wcslen(local)<3900U) {
             swprintf(path,4096,L"%ls\\Umicom Applications",local);
             SetWindowTextW(Find(u,ID_DEST),path);
+            SetWindowTextW(Find(u,ID_MAINT_ROOT),path);
             swprintf(path,4096,L"%ls\\Umicom Media Preparation",local);
             SetWindowTextW(Find(u,ID_MEDIA_DEST),path);
         }
@@ -777,6 +851,9 @@ static LRESULT CALLBACK WindowProc(HWND window,UINT message,WPARAM w,LPARAM l)
                 u->page=TabCtrl_GetCurSel(Find(u,ID_TAB));
                 Layout(u);
             }
+            if(n->idFrom==ID_MAINT_LIST&&n->code==LVN_ITEMCHANGED&&!u->job) {
+                MaintenanceForget(u,0); Buttons(u);
+            }
             if(n->idFrom==ID_APPS&&n->code==LVN_ITEMCHANGED&&!u->job) {
                 u->fingerprint[0]=0;
                 Buttons(u);
@@ -789,6 +866,8 @@ static LRESULT CALLBACK WindowProc(HWND window,UINT message,WPARAM w,LPARAM l)
             if(u->job&&id!=ID_STOP)return 0;
 
             if(notification==EN_CHANGE) {
+                if(id==ID_MAINT_ROOT)MaintenanceForget(u,1);
+                if(id==ID_MAINT_SOURCE)MaintenanceForget(u,0);
                 if(id==ID_SOURCE) {
                     u->loaded=0;
                     u->fingerprint[0]=0;
@@ -803,6 +882,9 @@ static LRESULT CALLBACK WindowProc(HWND window,UINT message,WPARAM w,LPARAM l)
                 return 0;
             }
 
+            if(id==ID_MAINT_ACTION&&notification==CBN_SELCHANGE) {
+                MaintenanceForget(u,0); Buttons(u); return 0;
+            }
             if(id==ID_ARCH&&notification==CBN_SELCHANGE) {
                 free(u->vmPlan);
                 u->vmPlan=NULL;
@@ -811,6 +893,21 @@ static LRESULT CALLBACK WindowProc(HWND window,UINT message,WPARAM w,LPARAM l)
             }
 
             switch(id) {
+                case ID_MAINT_ROOT_BROWSE:Browse(u,ID_MAINT_ROOT,1,0);break;
+                case ID_MAINT_SOURCE_BROWSE:Browse(u,ID_MAINT_SOURCE,1,0);break;
+                case ID_MAINT_LOAD:Start(u,JOB_MAINT_LOAD);break;
+                case ID_MAINT_REVIEW:Start(u,JOB_MAINT_REVIEW);break;
+                case ID_MAINT_APPLY:
+                    if(MessageBoxW(window,L"Apply the reviewed file changes? Close all installed Umicom applications first. Original files will be retained in a recovery archive. No database migration or shortcut removal is performed.",L"Apply maintenance",MB_YESNO|MB_ICONWARNING)==IDYES)Start(u,JOB_MAINT_APPLY);
+                    break;
+                case ID_MAINT_RECOVER:case ID_MAINT_UNDO:
+                    if(MessageBoxW(window,L"Restore the previous file snapshot for this transaction? A pre-repair snapshot may already contain damaged files. Newer edits will not be overwritten. Close installed applications before continuing.",L"Restore previous files",MB_YESNO|MB_ICONWARNING)==IDYES)
+                        Start(u,id==ID_MAINT_RECOVER?JOB_MAINT_RECOVER:JOB_MAINT_UNDO);
+                    break;
+                case ID_MAINT_ALL:case ID_MAINT_NONE:
+                    for(size_t i=0;i<UmiSetupApplicationCount(u->maintenanceBundle);++i)
+                        ListView_SetCheckState(Find(u,ID_MAINT_LIST),(int)i,id==ID_MAINT_ALL);
+                    MaintenanceForget(u,0);break;
                 case ID_SOURCE_BROWSE:Browse(u,ID_SOURCE,1,0);
                 break;
                 case ID_DEST_BROWSE:Browse(u,ID_DEST,1,1);
@@ -895,6 +992,8 @@ static LRESULT CALLBACK WindowProc(HWND window,UINT message,WPARAM w,LPARAM l)
         return 0;
 
         case WM_DESTROY:UmiSetupBundleDestroy(u->bundle);
+        UmiSetupBundleDestroy(u->maintenanceBundle);
+        UmiSetupMaintenancePlanDestroy(u->maintenancePlan);
         free(u->vmPlan);
         if(u->logo)DeleteObject(u->logo);
         if(u->ownedFont)DeleteObject(u->ownedFont);
@@ -953,7 +1052,12 @@ static int RunWindow(void *instance,int show,int checkOnly)
         /* Construct the real controls without presenting a window, starting a
           * worker, reading a release or making any installation changes. */
         int passed = u->logo != NULL && u->job == NULL && u->bundle == NULL &&
+            /* Retain the previous three-page expectation; maintenance is the
+             * fourth page, while all three original pages remain present. */
+#if 0
             TabCtrl_GetItemCount(Find(u,ID_TAB)) == 3 &&
+#endif
+            TabCtrl_GetItemCount(Find(u,ID_TAB)) == 4 &&
             !IsWindowEnabled(Find(u,ID_INSTALL)) &&
             !IsWindowEnabled(Find(u,ID_VM_RUN)) &&
             !IsWindowEnabled(Find(u,ID_STOP)) &&
@@ -970,6 +1074,12 @@ static int RunWindow(void *instance,int show,int checkOnly)
         strcpy(u->fingerprint,"reviewed");
         SendMessageW(window,WM_COMMAND,MAKEWPARAM(ID_MENU,BN_CLICKED),0);
         passed = passed && u->fingerprint[0] == 0 && u->job == NULL;
+        u->page=3; Layout(u);
+        passed=passed && Find(u,ID_MAINT_ROOT)!=NULL && Find(u,ID_MAINT_REVIEW)!=NULL &&
+            !IsWindowEnabled(Find(u,ID_MAINT_APPLY)) && !IsWindowEnabled(Find(u,ID_MAINT_REVIEW)) &&
+            !IsWindowEnabled(Find(u,ID_MAINT_RECOVER)) && u->maintenancePlan==NULL &&
+            ((GetWindowLongW(Find(u,ID_MAINT_ROOT),GWL_STYLE)&WS_VISIBLE)!=0) &&
+            ((GetWindowLongW(Find(u,ID_QEMU),GWL_STYLE)&WS_VISIBLE)==0);
         DestroyWindow(window);
         MSG quit;
         (void)PeekMessageW(&quit,NULL,WM_QUIT,WM_QUIT,PM_REMOVE);

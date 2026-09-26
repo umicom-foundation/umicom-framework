@@ -106,3 +106,6 @@ if(WIN32 AND TARGET umicom-setup-centre AND NOT CMAKE_CROSSCOMPILING)
     cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" CALL umicom_setup_package_targets)
 endif()
 unset(_umi_setup_root)
+
+# Native maintenance extends the same installer authority and receipt format.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSetupMaintenance.cmake")

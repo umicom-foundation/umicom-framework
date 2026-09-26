@@ -39,6 +39,12 @@ function(umicom_setup_package_targets)
     # The installed inspector is available without a development toolchain.
     string(APPEND _list "data\tbin/umicom-release-inspect.exe\t$<TARGET_FILE:umicom-release-inspect>\n")
     string(APPEND _list "data\tshare/umicom/docs/check-a-windows-release.html\t${_framework}/docs/learning/check-a-windows-release.html\n")
+    # Maintenance is native Framework code. Keep its CLI beside installed
+    # tools, but run updates from the separately extracted release bootstrap.
+    if(TARGET umicom-maintain)
+        string(APPEND _list "data\tbin/umicom-maintain.exe\t$<TARGET_FILE:umicom-maintain>\n")
+        string(APPEND _list "data\tshare/umicom/docs/maintain-your-umicom-applications.html\t${_framework}/docs/learning/maintain-your-umicom-applications.html\n")
+    endif()
     set(_input "${CMAKE_BINARY_DIR}/umicom-deployment/$<CONFIG>/native-suite.tsv")
     file(GENERATE OUTPUT "${_input}" CONTENT "${_list}")
     set(UMICOM_SETUP_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/packages/$<CONFIG>/native-suite" CACHE STRING
@@ -57,4 +63,7 @@ function(umicom_setup_package_targets)
         COMMENT "Preparing native Umicom Setup and its explicit offline payload"
         VERBATIM)
     add_dependencies(umicom-native-installer umicom-release-inspect)
+    if(TARGET umicom-maintain)
+        add_dependencies(umicom-native-installer umicom-maintain)
+    endif()
 endfunction()
