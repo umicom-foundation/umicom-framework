@@ -1,0 +1,17 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomAiWorkspaceDependencies.cmake.in
+# PURPOSE: Resolve the exact optional dependencies used by the installed AI workspace target.
+# AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+# LICENCE: MIT
+#-----------------------------------------------------------------------------
+if(@UMICOM_AI_WORKSPACE_HTTP_BUILT@)
+    include(CMakeFindDependencyMacro)
+    find_dependency(PkgConfig)
+    if(NOT TARGET PkgConfig::UMICOM_AI_LOCAL_CURL)
+        pkg_check_modules(UMICOM_AI_LOCAL_CURL REQUIRED IMPORTED_TARGET GLOBAL libcurl>=7.85.0)
+    endif()
+    if(NOT TARGET PkgConfig::UMICOM_AI_LOCAL_JSONC)
+        pkg_check_modules(UMICOM_AI_LOCAL_JSONC REQUIRED IMPORTED_TARGET GLOBAL json-c>=0.15)
+    endif()
+endif()

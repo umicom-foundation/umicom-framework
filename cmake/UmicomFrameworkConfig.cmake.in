@@ -5,6 +5,10 @@ find_dependency(Threads)
 @UMICOM_FRAMEWORK_FIND_SQLITE@
 @UMICOM_FRAMEWORK_FIND_CAIRO@
 
+# Optional AI transport dependencies are installed only when that capability
+# is composed. Resolve them before importing static-library link interfaces;
+# a core-only Framework installation has no such fragment and remains unchanged.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiWorkspaceDependencies.cmake" OPTIONAL)
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomFrameworkTargets.cmake")
 # Expose the installed contract version so generated extensions do not copy a
 # numeric ABI value that can drift away from the Framework headers.

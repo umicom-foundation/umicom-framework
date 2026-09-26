@@ -1,0 +1,83 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: tests/ai_workspace/cases.cmake
+# PURPOSE: Register named, bounded AI workspace regression cases.
+# AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+# LICENCE: MIT
+#-----------------------------------------------------------------------------
+set(UMICOM_AI_WORKSPACE_CASES
+    empty_open_is_read_only
+    invalid_inputs_do_not_write
+    source_provenance_round_trip
+    duplicate_source_is_noop
+    utf8_validation
+    source_size_boundary
+    line_overflow_rejected
+    collection_capacity
+    source_capacity
+    search_natural_question
+    search_collection_isolation
+    search_no_match
+    search_tie_order
+    reranker_changes_order
+    invalid_reranker_fails
+    reranker_reentrancy_blocked
+    hybrid_uses_matching_vector
+    embedding_model_mismatch
+    embedding_stale_revision
+    embedding_reload_invalidation
+    embedding_mutation_invalidation
+    canonical_top_one_buffer_independent
+    canonical_last_slot_filled
+    canonical_embedding_bounds
+    canonical_embedding_nonfinite
+    prepare_does_not_generate
+    approval_required
+    review_run_success
+    repeat_run_does_not_repeat_callback
+    job_id_is_immutable
+    stale_evidence_blocks_approval
+    stale_evidence_blocks_run
+    reload_revokes_approval
+    denial_is_terminal
+    cancel_before_run
+    cancel_during_run
+    provider_failure_is_not_retried
+    reply_identity_checked
+    reply_finish_checked
+    reply_citation_checked
+    reply_empty_checked
+    reply_usage_checked
+    reply_termination_checked
+    reply_model_checked
+    provider_reentrancy_blocked
+    model_text_never_executes_tools
+    source_instructions_remain_data
+    policy_revocation_blocks_run
+    remote_policy_is_not_bypassed
+    tools_require_allowlist_and_review
+    tool_permission_change_blocks_run
+    maximum_response_round_trip
+    unicode_response_round_trip
+    deleted_source_retained_in_completed_job
+    storage_namespace_isolation
+    stale_writer_rejected
+    malformed_storage_rejected
+    extra_record_rejected
+    outer_transaction_not_owned
+    extractive_provider_is_labelled
+    preview_delimiter_in_passage
+    preview_delimiter_in_title
+    preview_question_cannot_become_source
+    saved_pending_output_rejected
+    saved_failed_success_status_rejected
+    saved_generation_permission_rejected
+    saved_tool_generation_fields_rejected
+    job_capacity
+)
+set(UMICOM_AI_WORKSPACE_SQLITE_CASES
+    sqlite_restart
+    sqlite_write_rollback
+    sqlite_uncertain_result_is_not_repeated
+    sqlite_separate_connection_stale_writer
+)

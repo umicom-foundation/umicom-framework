@@ -9,6 +9,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/application/suite_layout/gtk4_product_application.h"
 
+#ifdef UMICOM_PRODUCT_AI_WORKSPACE
+#include "umicom/ui/gtk4/ai_workspace.h"
+#endif
+
 #ifdef UMICOM_PRODUCT_FINANCE_OPERATIONS
 #include "umicom/ui/gtk4/finance_operations.h"
 #endif
@@ -24,6 +28,12 @@
  * state. Products attach their domain controllers when those services exist. */
 int main(int argc, char **argv)
 {
+#ifdef UMICOM_PRODUCT_AI_WORKSPACE
+    /* The AI products share one Framework-owned source/job workspace. Their
+     * previous catalogue layouts remain inside the same product host. */
+    return UmiAiWorkspaceGtkRun(UMICOM_PRODUCT_APPLICATION_ID,
+        UMICOM_PRODUCT_TITLE, argc, argv);
+#else
 #ifdef UMICOM_PRODUCT_FINANCE_OPERATIONS
     /* Shared services now back the finance command forms. The existing
      * workstation is composed into a Layouts page, not removed or re-created
@@ -37,6 +47,7 @@ int main(int argc, char **argv)
     config.mode_badge = "Layout preview";
     return umi_application_product_gtk4_run(&config, argc, argv);
 #endif
+#endif /* UMICOM_PRODUCT_AI_WORKSPACE */
 }
 
 #ifdef _WIN32

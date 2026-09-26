@@ -60,6 +60,13 @@ double umi_ai_retrieval_lexical_score(const char *query, const char *text)
 }
 
 /* Provide the ai retrieval rank operation used by this module and its client applications. */
+/*
+ * The old insertion path read an output slot before the first result filled
+ * it. It is retained below for engineering review, but no longer executes.
+ * The replacement only compares the last score when the result set was
+ * already full; caller buffer contents cannot change retrieval results.
+ */
+#if 0
 size_t umi_ai_retrieval_rank(const char *query,
                              const UmiAiChunk *chunks,
                              size_t chunk_count,
@@ -92,6 +99,32 @@ size_t umi_ai_retrieval_rank(const char *query,
         }
         results[pos].chunk = chunks[i];
         results[pos].score = score;
+    }
+    return count;
+}
+#endif
+
+/* Framework owns the bounded top-k insertion rule. Keeping this correction
+ * here protects every RAG consumer, including callers supplying uninitialised
+ * output storage. Equal-score candidates retain their original input order. */
+size_t umi_ai_retrieval_rank(const char *query, const UmiAiChunk *chunks,
+    size_t chunk_count, UmiAiRetrievalResult *results, size_t capacity)
+{
+    size_t count = 0U;
+    if (query == NULL || chunks == NULL || results == NULL || capacity == 0U) return 0U;
+    for (size_t index = 0U; index < chunk_count; ++index) {
+        double score = umi_ai_retrieval_lexical_score(query, chunks[index].text);
+        size_t position;
+        if (score <= 0.0) continue;
+        if (count < capacity) position = count++;
+        else {
+            if (score <= results[capacity - 1U].score) continue;
+            position = capacity - 1U;
+        }
+        while (position > 0U && score > results[position - 1U].score) {
+            results[position] = results[position - 1U]; --position;
+        }
+        results[position].chunk = chunks[index]; results[position].score = score;
     }
     return count;
 }

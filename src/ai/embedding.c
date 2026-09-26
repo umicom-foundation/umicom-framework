@@ -39,6 +39,11 @@ UmiStatus umi_ai_embedding_set(UmiAiEmbedding *embedding,
         dimension > UMI_AI_EMBEDDING_CAPACITY) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Reject invalid vector components before modifying caller-owned output.
+     * The public structure can be constructed without the setter, so cosine
+     * independently checks its dimension and finite values as well. */
+    for (size_t index = 0U; index < dimension; ++index)
+        if (!isfinite(values[index])) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(embedding, 0, sizeof(*embedding));
     (void)memcpy(embedding->values, values, dimension * sizeof(values[0]));
     embedding->dimension = dimension;
@@ -64,6 +69,11 @@ double umi_ai_embedding_cosine(const UmiAiEmbedding *left,
         left->dimension != right->dimension) {
         return 0.0;
     }
+    /* Caller-supplied records must not drive a read beyond the canonical
+     * fixed-size vector. Invalid vectors have no usable similarity. */
+    if (left->dimension > UMI_AI_EMBEDDING_CAPACITY) return 0.0;
+    for (size_t component = 0U; component < left->dimension; ++component)
+        if (!isfinite(left->values[component]) || !isfinite(right->values[component])) return 0.0;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < left->dimension; ++index) {
         double lv = (double)left->values[index];
