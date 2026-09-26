@@ -462,3 +462,8 @@ message(STATUS "Umicom cross-target, RISC-V and Umicom OS portability platform e
 # Boot and recovery remain in umicom-os. Normal user-space applications share
 # this bounded report reader instead of interpreting boot status independently.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomBootReport.cmake")
+
+
+# Normal desktop user-space shares observation and session-handoff contracts.
+# Minimal OS init/recovery remains independent of this capability.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDesktopSystem.cmake")
