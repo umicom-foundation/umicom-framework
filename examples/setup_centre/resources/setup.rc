@@ -1,0 +1,5 @@
+// Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+#include <windows.h>
+101 ICON "umicom.ico"
+102 BITMAP "umicom-logo.bmp"
+1 RT_MANIFEST "setup.manifest"

@@ -71,3 +71,7 @@ unset(_umi_desktop_system_root)
 # Native C owns launcher staging and verification. The earlier Python script
 # remains unchanged as an optional comparison and legacy-workflow alternative.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeLauncher.cmake")
+
+# Setup is a Framework-owned native bootstrap, not an app-local installer.
+# Keep the existing NSIS and script entry points as unchanged alternatives.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSetupCentre.cmake")
