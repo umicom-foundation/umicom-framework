@@ -251,3 +251,11 @@ UmiStatus UmiSetupVerifyInstallation(const char *root,UmiSetupReport *r)
     return s;
 
 }
+
+/* Release inspection reuses the receipt decoder and ownership rules rather
+ * than maintaining a second installed-application catalogue in its GUI. */
+UmiStatus UmiSetupInstalledBundleOpen(const char *root, UmiSetupBundle **outBundle,
+    UmiSetupReport *report)
+{
+    return Open(root, outBundle, report, 1);
+}

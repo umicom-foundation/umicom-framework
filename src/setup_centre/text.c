@@ -185,6 +185,12 @@ int ScNumber(const char *s,uint64_t *out)
     return 1;
 }
 
+/* The previous validator stopped its character scan at the first dot while
+ * finding a reserved device basename. As a result, a suffix could contain an
+ * alternate-stream colon or another forbidden character. Keep that complete
+ * implementation for review; the active replacement validates the whole
+ * component, then checks the basename separately. No existing API is renamed. */
+#if 0
 static int Component(const char *s,size_t n,int portable)
 {
 
@@ -210,6 +216,39 @@ static int Component(const char *s,size_t n,int portable)
 
     return 1;
 
+}
+
+#endif
+
+/* One Framework rule is used by release packing, installation and GUI paths.
+ * Separating syntax from basename classification prevents extensions from
+ * bypassing the portable Windows filename contract. UTF-8 is checked by the
+ * public caller. Superscript device digits are UTF-8 byte sequences here. */
+static int Component(const char *s, size_t n, int portable)
+{
+    if (n == 0U || n > 255U || (n == 1U && s[0] == '.') ||
+        (n == 2U && s[0] == '.' && s[1] == '.')) return 0;
+    if (!portable) return 1;
+    if (s[n-1U] == '.' || s[n-1U] == ' ') return 0;
+    size_t baseLength = n;
+    for (size_t i = 0U; i < n; ++i) {
+        if (strchr("<>:\"|?*\\", s[i]) != NULL) return 0;
+        if (s[i] == '.' && baseLength == n) baseLength = i;
+    }
+    char base[8] = {0};
+    if (baseLength >= sizeof base) return 1;
+    for (size_t i = 0U; i < baseLength; ++i)
+        base[i] = (char)Fold((unsigned char)s[i]);
+    if (!strcmp(base, "con") || !strcmp(base, "prn") ||
+        !strcmp(base, "aux") || !strcmp(base, "nul") ||
+        !strcmp(base, "conin$") || !strcmp(base, "conout$")) return 0;
+    if (!strncmp(base, "com", 3U) || !strncmp(base, "lpt", 3U)) {
+        if (baseLength == 4U && base[3] >= '1' && base[3] <= '9') return 0;
+        if (baseLength == 5U && (unsigned char)base[3] == 0xc2U &&
+            ((unsigned char)base[4] == 0xb9U || (unsigned char)base[4] == 0xb2U ||
+             (unsigned char)base[4] == 0xb3U)) return 0;
+    }
+    return 1;
 }
 
 UmiStatus UmiSetupValidateRelative(const char *s)

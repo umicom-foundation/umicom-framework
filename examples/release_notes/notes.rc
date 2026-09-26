@@ -1,0 +1,6 @@
+/* Umicom Foundation | Sammy Hegab | MIT
+ * Reuse the same existing installer resources, not another logo drawing. */
+#include <windows.h>
+101 ICON "umicom.ico"
+102 BITMAP "umicom-logo.bmp"
+1 RT_MANIFEST "setup.manifest"

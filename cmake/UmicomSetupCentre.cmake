@@ -98,6 +98,9 @@ install(FILES "${_umi_setup_root}/docs/learning/install-and-try-umicom.html"
 if(BUILD_TESTING)
     add_subdirectory("${_umi_setup_root}/tests/setup_centre" "${CMAKE_CURRENT_BINARY_DIR}/setup-centre-tests")
 endif()
+# Inspect through the native Framework contract before publishing a package.
+# The existing Setup Centre and alternative installer remain available.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomReleaseInspector.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomSetupPackage.cmake")
 if(WIN32 AND TARGET umicom-setup-centre AND NOT CMAKE_CROSSCOMPILING)
     cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" CALL umicom_setup_package_targets)

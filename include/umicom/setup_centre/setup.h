@@ -73,6 +73,12 @@ extern "C" {
 
     UmiStatus UmiSetupBundleOpen(const char *root, UmiSetupBundle **outBundle, UmiSetupReport *report);
 
+    /** Open the same canonical catalogue representation from an installed
+     * receipt. This reads metadata, not proof of byte integrity or authenticity;
+     * use verification/inspection before relying on its installed entries. */
+    UmiStatus UmiSetupInstalledBundleOpen(const char *root,
+        UmiSetupBundle **outBundle, UmiSetupReport *report);
+
     void UmiSetupBundleDestroy(UmiSetupBundle *bundle);
 
     size_t UmiSetupApplicationCount(const UmiSetupBundle *bundle);

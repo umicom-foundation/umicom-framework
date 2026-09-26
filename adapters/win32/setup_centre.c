@@ -27,8 +27,10 @@
 #include <string.h>
 #include "umicom/setup_centre/win32.h"
 #include "umicom/setup_centre/execution.h"
+#include "umicom/release_inspector/inspection.h"
 #define WM_SETUP_PROGRESS (WM_APP+41)
 #define WM_SETUP_DONE (WM_APP+42)
+#define ID_INSPECT 200
 enum {
     ID_TAB=100,ID_SOURCE,ID_SOURCE_BROWSE,ID_LOAD,ID_APPS,ID_ALL,ID_NONE,ID_DEST,ID_DEST_BROWSE,
     ID_DESKTOP,ID_MENU,ID_REVIEW,ID_INSTALL,ID_QEMU,ID_QEMU_BROWSE,ID_KERNEL,ID_KERNEL_BROWSE,
@@ -39,6 +41,7 @@ enum {
 
 typedef enum JobKind {
     JOB_LOAD,JOB_REVIEW,JOB_INSTALL,JOB_VM_REVIEW,JOB_VM_RUN,JOB_MEDIA,JOB_VERIFY
+    , JOB_INSPECT
 }
 JobKind;
 
@@ -49,6 +52,7 @@ typedef struct Job {
     Ui *ui;
     JobKind kind;
     UmiSetupReport report;
+    UmiReleaseInspection inspection;
     UmiStatus status;
 
     UmiSetupBundle *loaded;
@@ -83,6 +87,7 @@ struct Ui {
     HWND window;
     HINSTANCE instance;
     HFONT font;
+    HFONT ownedFont;
     HBITMAP logo;
 
     Control controls[80];
@@ -112,6 +117,26 @@ static wchar_t *Display(const char *text)
         return NULL;
     }
     return w;
+}
+
+/* Geometry and text use the same DPI. Keeping the stock-font fallback lets
+ * the window explain an error even if Windows cannot allocate a new font. */
+static void RefreshFont(Ui *u)
+{
+    UINT dpi = GetDpiForWindow(u->window);
+    if (!dpi) dpi = 96U;
+    LOGFONTW description = {0};
+    description.lfHeight = -MulDiv(9, (int)dpi, 72);
+    description.lfWeight = FW_NORMAL;
+    wcscpy(description.lfFaceName, L"Segoe UI");
+    HFONT replacement = CreateFontIndirectW(&description);
+    if (!replacement) return;
+    HFONT previous = u->ownedFont;
+    u->ownedFont = replacement;
+    u->font = replacement;
+    for (size_t i = 0U; i < u->controlCount; ++i)
+        SendMessageW(u->controls[i].window, WM_SETFONT, (WPARAM)replacement, TRUE);
+    if (previous) DeleteObject(previous);
 }
 
 static void Status(Ui *u,const char *text) {
@@ -194,6 +219,7 @@ static void Buttons(Ui *u)
     for(size_t i=0; i<u->controlCount; ++i)if(u->controls[i].id&&u->controls[i].id!=ID_STATUS&&u->controls[i].id!=ID_PROGRESS)EnableWindow(u->controls[i].window,!busy);
 
     EnableWindow(Find(u,ID_REVIEW),!busy&&u->loaded);
+    EnableWindow(Find(u,ID_INSPECT),!busy&&u->loaded);
 
     EnableWindow(Find(u,ID_INSTALL),!busy&&u->loaded&&u->fingerprint[0]);
 
@@ -255,6 +281,25 @@ static int Progress(const UmiSetupReport *r,void *opaque)
 
 }
 
+/* The callback stays on the worker thread. The shared inspection contract
+ * never launches a selected application or calls a Windows DLL entry point. */
+static int InspectionProgress(const UmiReleaseObservation *item, void *opaque)
+{
+    (void)item;
+    Job *job = opaque;
+    return umi_cancellation_token_is_requested(job->cancel);
+}
+
+static UmiStatus InspectSelection(Job *job)
+{
+    UmiStatus status = UmiReleaseInspectBundle(job->ui->bundle, job->selected,
+        InspectionProgress, job, &job->inspection);
+    (void)UmiReleaseInspectionSummary(&job->inspection, job->report.detail,
+        sizeof job->report.detail);
+    job->report.status = status;
+    return status;
+}
+
 static DWORD WINAPI Worker(void *opaque)
 {
 
@@ -269,11 +314,31 @@ static DWORD WINAPI Worker(void *opaque)
         case JOB_LOAD:j->status=UmiSetupBundleOpen(j->source,&j->loaded,&j->report);
         break;
 
+        /* Previously review proved recorded bytes only. Keep that execution
+         * path for review; the active path first checks the Windows inventory,
+         * then creates the same canonical installation fingerprint. */
+#if 0
         case JOB_REVIEW:j->status=UmiSetupReview(u->bundle,j->selected,j->destination,j->fingerprint,Progress,j,&j->report);
+        break;
+#endif
+        case JOB_REVIEW:
+        j->status=InspectSelection(j);
+        if(j->status==UMI_STATUS_OK)
+            j->status=UmiSetupReview(u->bundle,j->selected,j->destination,j->fingerprint,Progress,j,&j->report);
+        break;
+
+        case JOB_INSPECT:j->status=InspectSelection(j);
         break;
 
         case JOB_INSTALL:
+        /* Retain the earlier direct call. Rechecking structural dependencies
+         * before the canonical install catches changes since the review. */
+#if 0
         j->status=UmiSetupInstall(u->bundle,j->selected,j->destination,j->fingerprint,Progress,j,&j->report);
+#endif
+        j->status=InspectSelection(j);
+        if(j->status==UMI_STATUS_OK)
+            j->status=UmiSetupInstall(u->bundle,j->selected,j->destination,j->fingerprint,Progress,j,&j->report);
 
         if(j->status==UMI_STATUS_OK&&(j->desktop||j->menu)) {
 
@@ -311,7 +376,16 @@ static DWORD WINAPI Worker(void *opaque)
         case JOB_VM_RUN:j->status=UmiSetupVmRun(u->vmPlan,u->vmPlan->fingerprint,UmiSetupExecuteProcess,&process,&j->report);
         break;
 
+        /* The original byte-verification API remains available. The GUI now
+         * reports its installed Windows dependency/resource observations too. */
+#if 0
         case JOB_VERIFY:j->status=UmiSetupVerifyInstallation(j->destination,&j->report);
+        break;
+#endif
+        case JOB_VERIFY:
+        j->status=UmiReleaseInspectInstallation(j->destination,InspectionProgress,j,&j->inspection);
+        j->report.status=j->status;
+        (void)UmiReleaseInspectionSummary(&j->inspection,j->report.detail,sizeof j->report.detail);
         break;
 
         case JOB_MEDIA:j->status=UmiSetupMediaPrepare(j->kernel,j->initrd,j->destination,&j->report);
@@ -455,6 +529,18 @@ static void Done(Ui *u)
             for (size_t i=0;i<plan->argumentCount;++i)
                 used += (size_t)snprintf(text+used,capacity-used,"\r\n  %s",plan->arguments[i]);
         }
+        if ((j->kind==JOB_REVIEW || j->kind==JOB_INSTALL || j->kind==JOB_INSPECT ||
+                j->kind==JOB_VERIFY) && used < capacity) {
+            char summary[512] = {0};
+            (void)UmiReleaseInspectionSummary(&j->inspection,summary,sizeof summary);
+            used += (size_t)snprintf(text+used,capacity-used,
+                "\r\n%s\r\n%s\r\nUse umicom-release-inspect for a full JSON report.",
+                summary,j->inspection.firstIssue);
+        }
+        if (j->kind==JOB_REVIEW && j->status==UMI_STATUS_OK && used < capacity)
+            used += (size_t)snprintf(text+used,capacity-used,
+                "\r\nDesktop shortcut group: %s; Start menu group: %s.",
+                j->desktop?"yes":"no",j->menu?"yes":"no");
         if (j->process->output[0] && used < capacity)
             (void)snprintf(text+used,capacity-used,"\r\nNative tool diagnostics:\r\n%s",j->process->output);
         Status(u,text);
@@ -533,6 +619,7 @@ static void Build(Ui *u)
 {
 
     u->font=(HFONT)GetStockObject(DEFAULT_GUI_FONT);
+    RefreshFont(u);
 
     HWND picture=Add(u,0,-1,L"STATIC",L"",SS_BITMAP,20,15,185,43);
     u->logo=LoadBitmapW(u->instance,MAKEINTRESOURCEW(102));
@@ -579,6 +666,8 @@ static void Build(Ui *u)
     Add(u,ID_INSTALL,0,L"BUTTON",L"Install reviewed selection",BS_PUSHBUTTON|WS_TABSTOP,205,488,205,30);
 
     Add(u,ID_VERIFY,0,L"BUTTON",L"Verify installation",BS_PUSHBUTTON|WS_TABSTOP,435,488,175,30);
+
+    Add(u,ID_INSPECT,0,L"BUTTON",L"Inspect selected Windows files",BS_PUSHBUTTON|WS_TABSTOP,630,488,280,30);
 
     Edit(u,ID_QEMU,ID_QEMU_BROWSE,1,L"QEMU program",125);
     Edit(u,ID_KERNEL,ID_KERNEL_BROWSE,1,L"Umicom Linux kernel",166);
@@ -675,6 +764,7 @@ static LRESULT CALLBACK WindowProc(HWND window,UINT message,WPARAM w,LPARAM l)
         }
 
         case WM_DPICHANGED: {
+            RefreshFont(u);
             RECT *r=(RECT *)l;
             SetWindowPos(window,NULL,r->left,r->top,r->right-r->left,r->bottom-r->top,SWP_NOZORDER|SWP_NOACTIVATE);
             Layout(u);
@@ -733,6 +823,14 @@ static LRESULT CALLBACK WindowProc(HWND window,UINT message,WPARAM w,LPARAM l)
                 case ID_INSTALL:Start(u,JOB_INSTALL);
                 break;
                 case ID_VERIFY:Start(u,JOB_VERIFY);
+                break;
+                case ID_INSPECT:Start(u,JOB_INSPECT);
+                break;
+
+                /* Shortcut consent is part of the visible review. A changed
+                 * checkbox requires a fresh review rather than silently adding
+                 * filesystem effects to an already reviewed install. */
+                case ID_DESKTOP:case ID_MENU:u->fingerprint[0]=0;
                 break;
 
                 case ID_ALL:case ID_NONE:for(size_t i=0; i<UmiSetupApplicationCount(u->bundle); ++i)ListView_SetCheckState(Find(u,ID_APPS),(int)i,id==ID_ALL);
@@ -799,6 +897,7 @@ static LRESULT CALLBACK WindowProc(HWND window,UINT message,WPARAM w,LPARAM l)
         case WM_DESTROY:UmiSetupBundleDestroy(u->bundle);
         free(u->vmPlan);
         if(u->logo)DeleteObject(u->logo);
+        if(u->ownedFont)DeleteObject(u->ownedFont);
         PostQuitMessage(0);
         return 0;
 
@@ -863,6 +962,14 @@ static int RunWindow(void *instance,int show,int checkOnly)
         Layout(u);
         passed = passed && ((GetWindowLongW(Find(u,ID_QEMU),GWL_STYLE) & WS_VISIBLE) != 0) &&
             ((GetWindowLongW(Find(u,ID_APPS),GWL_STYLE) & WS_VISIBLE) == 0);
+        passed = passed && Find(u,ID_INSPECT) != NULL &&
+            !IsWindowEnabled(Find(u,ID_INSPECT)) && u->ownedFont != NULL;
+        strcpy(u->fingerprint,"reviewed");
+        SendMessageW(window,WM_COMMAND,MAKEWPARAM(ID_DESKTOP,BN_CLICKED),0);
+        passed = passed && u->fingerprint[0] == 0;
+        strcpy(u->fingerprint,"reviewed");
+        SendMessageW(window,WM_COMMAND,MAKEWPARAM(ID_MENU,BN_CLICKED),0);
+        passed = passed && u->fingerprint[0] == 0 && u->job == NULL;
         DestroyWindow(window);
         MSG quit;
         (void)PeekMessageW(&quit,NULL,WM_QUIT,WM_QUIT,PM_REMOVE);

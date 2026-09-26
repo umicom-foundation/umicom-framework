@@ -36,6 +36,9 @@ function(umicom_setup_package_targets)
     string(APPEND _list "data\tshare/umicom/licences/Umicom-LICENSE.txt\t${_framework}/LICENSE\n")
     string(APPEND _list "data\tshare/umicom/docs/install-and-try-umicom.html\t${_framework}/docs/learning/install-and-try-umicom.html\n")
     string(APPEND _list "data\tbin/umicom-setup.exe\t$<TARGET_FILE:umicom-setup>\n")
+    # The installed inspector is available without a development toolchain.
+    string(APPEND _list "data\tbin/umicom-release-inspect.exe\t$<TARGET_FILE:umicom-release-inspect>\n")
+    string(APPEND _list "data\tshare/umicom/docs/check-a-windows-release.html\t${_framework}/docs/learning/check-a-windows-release.html\n")
     set(_input "${CMAKE_BINARY_DIR}/umicom-deployment/$<CONFIG>/native-suite.tsv")
     file(GENERATE OUTPUT "${_input}" CONTENT "${_list}")
     set(UMICOM_SETUP_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/packages/$<CONFIG>/native-suite" CACHE STRING
@@ -45,7 +48,13 @@ function(umicom_setup_package_targets)
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${_output_parent}"
         COMMAND "$<TARGET_FILE:umicom-setup>" pack --list "${_input}"
             --output "${UMICOM_SETUP_OUTPUT_DIRECTORY}" --bootstrap "$<TARGET_FILE:umicom-setup-centre>"
+        # Failure retains the new directory for diagnosis, but fails the build
+        # target. The report is observation evidence, not a signed release gate.
+        COMMAND "$<TARGET_FILE:umicom-release-inspect>" release
+            --root "${UMICOM_SETUP_OUTPUT_DIRECTORY}"
+            --output "${UMICOM_SETUP_OUTPUT_DIRECTORY}/release-inspection.json"
         DEPENDS umicom-setup umicom-setup-centre umicom-windows-runtime
         COMMENT "Preparing native Umicom Setup and its explicit offline payload"
         VERBATIM)
+    add_dependencies(umicom-native-installer umicom-release-inspect)
 endfunction()
