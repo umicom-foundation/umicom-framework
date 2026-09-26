@@ -8,6 +8,9 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/suite_layout/gtk4_product_application.h"
+#ifdef UMICOM_PRODUCT_CREATIVE_WORKSPACE
+#include "umicom/ui/gtk4/creative_workspace.h"
+#endif
 #ifdef UMICOM_PRODUCT_ENTERPRISE_WORKSPACE
 #include "umicom/ui/gtk4/enterprise_workspace.h"
 #endif
@@ -31,6 +34,13 @@
  * state. Products attach their domain controllers when those services exist. */
 int main(int argc, char **argv)
 {
+#ifdef UMICOM_PRODUCT_CREATIVE_WORKSPACE
+    /* Creative applications share Framework authoring and export services.
+     * Every prior host stays intact below; the creative surface also retains
+     * its canonical workstation under Existing layouts. */
+    return UmiCreativeGtkRun(UMICOM_PRODUCT_APPLICATION_ID,
+        UMICOM_PRODUCT_TITLE, UMICOM_CREATIVE_PROFILE, argc, argv);
+#else
 #ifdef UMICOM_PRODUCT_ENTERPRISE_WORKSPACE
     /* Enterprise products reuse Framework-owned data, review and policy views.
      * Every earlier product path remains below, selected by its own build. */
@@ -58,6 +68,7 @@ int main(int argc, char **argv)
 #endif
 #endif /* UMICOM_PRODUCT_AI_WORKSPACE */
 #endif /* UMICOM_PRODUCT_ENTERPRISE_WORKSPACE */
+#endif /* UMICOM_PRODUCT_CREATIVE_WORKSPACE */
 }
 
 #ifdef _WIN32

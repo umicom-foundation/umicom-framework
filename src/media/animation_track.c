@@ -184,6 +184,11 @@ UmiStatus umi_media_animation_track_remove(
     return UMI_STATUS_OK;
 }
 
+/* The former sampler is retained for review. It held the preceding STEP
+ * value at an exact interior keyframe and could overflow when subtracting
+ * opposite-sign finite endpoints. The replacement below preserves the public
+ * API and endpoint clamping, but gives exact timestamps their own value. */
+#if 0
 /* Sample a clamped deterministic value from ordered keyframes. */
 UmiStatus umi_media_animation_track_sample(
     const UmiMediaAnimationTrack *track,
@@ -224,6 +229,47 @@ UmiStatus umi_media_animation_track_sample(
     progress = (time_seconds - left->time_seconds) /
         (right->time_seconds - left->time_seconds);
     *out_value = left->value + (right->value - left->value) * progress;
+    return UMI_STATUS_OK;
+}
+
+#endif
+
+/* Interpolation remains Framework-owned: creative, chart and game callers all
+ * receive the same endpoint rules. Same-sign endpoints use a bounded difference;
+ * opposite-sign endpoints use a convex sum without an overflowing subtraction. */
+UmiStatus umi_media_animation_track_sample(
+    const UmiMediaAnimationTrack *track,
+    double time_seconds,
+    double *out_value)
+{
+    if (track == NULL || out_value == NULL || !isfinite(time_seconds))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (track->count == 0U) return UMI_STATUS_INVALID_STATE;
+    if (time_seconds <= track->keyframes[0].time_seconds) {
+        *out_value = track->keyframes[0].value;
+        return UMI_STATUS_OK;
+    }
+    if (time_seconds >= track->keyframes[track->count - 1U].time_seconds) {
+        *out_value = track->keyframes[track->count - 1U].value;
+        return UMI_STATUS_OK;
+    }
+    size_t upper = lower_bound(track, time_seconds);
+    const UmiMediaAnimationKeyframe *right = &track->keyframes[upper];
+    const UmiMediaAnimationKeyframe *left = &track->keyframes[upper - 1U];
+    if (right->time_seconds == time_seconds) {
+        *out_value = right->value;
+        return UMI_STATUS_OK;
+    }
+    if (left->interpolation == UMI_MEDIA_ANIMATION_STEP) {
+        *out_value = left->value;
+        return UMI_STATUS_OK;
+    }
+    double progress = (time_seconds - left->time_seconds) /
+        (right->time_seconds - left->time_seconds);
+    if ((left->value >= 0.0) == (right->value >= 0.0))
+        *out_value = left->value + (right->value - left->value) * progress;
+    else
+        *out_value = (1.0 - progress) * left->value + progress * right->value;
     return UMI_STATUS_OK;
 }
 
