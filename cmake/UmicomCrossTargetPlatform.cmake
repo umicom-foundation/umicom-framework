@@ -457,3 +457,8 @@ umicom_add_cross_target_test(
 endif()
 
 message(STATUS "Umicom cross-target, RISC-V and Umicom OS portability platform enabled")
+
+
+# Boot and recovery remain in umicom-os. Normal user-space applications share
+# this bounded report reader instead of interpreting boot status independently.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomBootReport.cmake")
