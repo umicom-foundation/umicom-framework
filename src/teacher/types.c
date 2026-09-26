@@ -67,6 +67,10 @@ const char *umi_teacher_state_text(UmiTeacherState state) {
     }
 }
 /* Provide the teacher percent operation used by this module and its client applications. */
+/* The previous multiply-first calculation can wrap for valid uint64_t
+ * counters. It is retained for engineering review; the active implementation
+ * below computes the same floored percentage without overflowing a product. */
+#if 0
 uint32_t umi_teacher_percent(uint64_t value, uint64_t maximum) {
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (maximum == 0U) return 0U;
@@ -74,6 +78,27 @@ uint32_t umi_teacher_percent(uint64_t value, uint64_t maximum) {
     if (value >= maximum) return 100U;
     return (uint32_t)((value * UINT64_C(100)) / maximum);
 }
+#endif
+/* Keep percentage arithmetic in Framework. Add the proper fraction 100 times,
+ * subtracting the denominator before an addition could overflow. This bounded
+ * loop is exact, portable C23 and needs neither floating point nor extensions. */
+uint32_t umi_teacher_percent(uint64_t value, uint64_t maximum)
+{
+    uint64_t remainder = 0U;
+    uint32_t result = 0U;
+    if (maximum == 0U) return 0U;
+    if (value >= maximum) return 100U;
+    for (uint32_t step = 0U; step < 100U; ++step) {
+        if (remainder >= maximum - value) {
+            remainder -= maximum - value;
+            ++result;
+        } else {
+            remainder += value;
+        }
+    }
+    return result;
+}
+
 /*
  * Provide the teacher clamp score operation used by this module and its client
  * applications.

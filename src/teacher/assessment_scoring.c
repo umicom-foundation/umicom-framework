@@ -31,6 +31,10 @@ void umi_teacher_assessment_scoring_init(UmiTeacherAssessmentScoring *rubric) { 
  * Provide the teacher assessment scoring configure operation used by this module and its
  * client applications.
  */
+/* The old 32-bit sum could wrap to 100 and admit invalid weights.
+ * Retain that implementation for review; the checked implementation replaces
+ * it without changing this public API or the existing default rubric. */
+#if 0
 UmiStatus umi_teacher_assessment_scoring_configure(UmiTeacherAssessmentScoring *rubric,uint32_t correctness_weight,uint32_t quality_weight,uint32_t efficiency_weight,uint32_t minimum_score) { /* Protect caller-owned memory by checking that required state is available before it is used. */ if(rubric==NULL || correctness_weight+quality_weight+efficiency_weight!=100U || minimum_score>100U) return UMI_STATUS_INVALID_ARGUMENT;
     rubric->correctness_weight=correctness_weight;
     rubric->quality_weight=quality_weight;
@@ -38,6 +42,22 @@ UmiStatus umi_teacher_assessment_scoring_configure(UmiTeacherAssessmentScoring *
     rubric->minimum_score=minimum_score;
     return UMI_STATUS_OK;
     }
+#endif
+UmiStatus umi_teacher_assessment_scoring_configure(
+    UmiTeacherAssessmentScoring *rubric, uint32_t correctness_weight,
+    uint32_t quality_weight, uint32_t efficiency_weight, uint32_t minimum_score)
+{
+    /* Validation precedes mutation so a rejected configuration is atomic. */
+    if (rubric == NULL || (uint64_t)correctness_weight + quality_weight +
+        efficiency_weight != UINT64_C(100) || minimum_score > 100U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    rubric->correctness_weight = correctness_weight;
+    rubric->quality_weight = quality_weight;
+    rubric->efficiency_weight = efficiency_weight;
+    rubric->minimum_score = minimum_score;
+    return UMI_STATUS_OK;
+}
+
 /*
  * Provide the teacher assessment scoring compute operation used by this module and its
  * client applications.
