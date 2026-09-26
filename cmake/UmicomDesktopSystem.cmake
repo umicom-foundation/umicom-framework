@@ -67,3 +67,7 @@ endif()
 install(FILES "${_umi_desktop_system_root}/docs/learning/desk-system-centre.html"
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)
 unset(_umi_desktop_system_root)
+
+# Native C owns launcher staging and verification. The earlier Python script
+# remains unchanged as an optional comparison and legacy-workflow alternative.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeLauncher.cmake")
