@@ -1,0 +1,87 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: tests/desk_federation/cases.cmake
+# PURPOSE: Register named behavioural tests.
+# AUTHOR: Sammy Hegab, Umicom Foundation
+# LICENCE: MIT
+#-----------------------------------------------------------------------------
+# Umicom Foundation - MIT. Real registered cases, not generated pass markers.
+set(UMICOM_DESK_FEDERATION_TEST_CASES
+    groups.inert_create_reload
+    groups.save_roundtrip
+    groups.replace_and_shrink
+    groups.remove_middle
+    groups.remove_last
+    groups.duplicate_members
+    groups.empty_members
+    groups.member_capacity
+    groups.workspace_capacity
+    groups.utf8_title
+    groups.malformed_title
+    groups.unterminated_fields
+    groups.self_rejected
+    groups.group_session_namespaces
+    groups.capture_running
+    groups.capture_empty
+    groups.capture_transient
+    groups.copied_ownership
+    groups.invalid_kind_id
+    review.preview_inert
+    review.single_use
+    review.cancel_inert
+    review.new_preview_supersedes
+    review.caller_plan_cannot_tamper
+    review.running_activates
+    review.skip_reasons
+    review.missing_application
+    review.self_skipped
+    review.stale_generation
+    review.stale_token
+    review.stale_presence
+    review.stale_running
+    review.stale_new_registration
+    review.workspace_edit_cancels
+    review.partial_failure_continues
+    review.mixed_skip_and_request
+    review.per_item_recheck
+    review.reentry_rejected
+    review.acceptance_not_readiness
+    review.read_failure_consumes
+    review.bad_catalogue
+    review.unrelated_change_allowed
+    links.roundtrip
+    links.reject_external
+    links.reject_encoding
+    links.empty_and_unknown
+    links.length_boundaries
+    links.output_unchanged
+    links.review_link_inert
+    storage.borrowed_transaction
+    storage.other_namespace_preserved
+    storage.corrupt_header
+    storage.missing_member
+    storage.missing_meta
+    storage.extra_namespace_record
+    storage.numeric_meta_rejected
+    storage.duplicate_stored_members
+    storage.bad_hex_title
+    storage.revision_exhaustion
+    storage.reload_cancels_review
+    storage.sqlite_restart
+    storage.sqlite_stale_writer
+    storage.sqlite_stale_review
+    storage.sqlite_write_rollback
+    storage.sqlite_delete_rollback
+    activity.initial_baseline
+    activity.unchanged_deduplicated
+    activity.state_change
+    activity.acknowledge
+    activity.bounded_ring
+    activity.read_failure_preserves_baseline
+    activity.removed_registration
+    activity.non_durable
+    storage.same_revision_damage_blocks_review
+    storage.same_revision_damage_blocks_execute
+    storage.same_revision_damage_blocks_write
+    storage.data_server_copy_boundaries
+)

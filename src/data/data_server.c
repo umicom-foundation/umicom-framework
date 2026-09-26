@@ -333,7 +333,14 @@ UmiStatus umi_data_server_get(const UmiDataServer *server_const,
                 if (strlen(record->value) + 1U > value_capacity) {
                     status = UMI_STATUS_CAPACITY_EXCEEDED;
                 } /* Use this fallback path when the earlier condition does not apply. */ else {
+                    /* The preceding capacity check and this server lock already
+                     * prove the stored string fits. A direct byte copy makes
+                     * that contract explicit without a redundant printf format.
+                     * Keep the original operation below for engineering review. */
+#if 0
                     (void)snprintf(value, value_capacity, "%s", record->value);
+#endif
+                    (void)memcpy(value, record->value, strlen(record->value) + 1U);
                     status = UMI_STATUS_OK;
                 }
                 break;

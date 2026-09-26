@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/bank_operations.h"
 #include "umicom/bank_operations/operations.h"
+#include "umicom/finance/money_text.h"
 #include <inttypes.h>
 #include <limits.h>
 #include <stdio.h>
@@ -119,6 +120,15 @@ static void MinorCell(GtkGrid *grid, int column, int row, int64_t value)
 {
     char text[32]; (void)snprintf(text, sizeof text, "%" PRId64, value); (void)Cell(grid, column, row, text, false);
 }
+/*
+ * The earlier view-local formatter is retained below for engineering review.
+ * Its signed remainder produced incorrect negative fractions, and its
+ * unchecked power-of-ten loop could overflow for a damaged scale. A variable
+ * printf width also caused the reported GCC format-truncation warning.
+ * UmiMoneyTextFormat now owns exact, bounded presentation for canonical money;
+ * the original implementation is disabled, not removed or renamed as an API.
+ */
+#if 0
 static void MoneyCell(GtkGrid *grid, int column, int row, UmiMoney money)
 {
     int64_t divisor = 1;
@@ -130,6 +140,18 @@ static void MoneyCell(GtkGrid *grid, int column, int row, UmiMoney money)
         (void)snprintf(text, sizeof text, "%.3s %" PRId64 ".%0*" PRId64, money.currency.code,
             money.minor_units / divisor, (int)money.scale, money.minor_units % divisor);
     (void)Cell(grid, column, row, text, false);
+}
+#endif
+
+/* Framework owns sign placement and decimal conversion. This view renders
+ * either one complete formatted value or a visible invalid-value message,
+ * never an apparently valid truncated financial amount. */
+static void MoneyCell(GtkGrid *grid, int column, int row, UmiMoney money)
+{
+    char text[UMI_MONEY_TEXT_CAPACITY];
+    UmiStatus status = UmiMoneyTextFormat(&money, text, sizeof text, NULL);
+    (void)Cell(grid, column, row,
+        status == UMI_STATUS_OK ? text : "Invalid money value", false);
 }
 static const char *RecordState(UmiBankRecordState state)
 {

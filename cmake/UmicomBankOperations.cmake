@@ -99,3 +99,7 @@ endif()
 install(FILES "${_umicom_bank_operations_root}/docs/BANK_OPERATIONS.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs" COMPONENT Framework)
 unset(_umicom_bank_operations_root)
+
+# Money presentation is reusable Framework behaviour, not GTK-only arithmetic.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomMoneyText.cmake")
+target_link_libraries(umicom_bank_operations PUBLIC Umicom::money_text)
