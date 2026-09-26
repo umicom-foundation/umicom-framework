@@ -1,0 +1,93 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: tests/enterprise_workspace/cases.cmake
+# PURPOSE: Register each focused enterprise regression by its actual boundary.
+# AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+# LICENCE: MIT
+#-----------------------------------------------------------------------------
+set(UMICOM_ENTERPRISE_WORKSPACE_CASES
+    csv_lf
+    csv_crlf
+    csv_bom
+    csv_quoted
+    csv_multiline
+    csv_unicode
+    csv_zero
+    csv_maximum
+    csv_overflow
+    csv_negative
+    csv_plus
+    csv_decimal
+    csv_space
+    csv_header
+    csv_extra
+    csv_missing
+    csv_duplicate
+    csv_bad_id
+    csv_empty_label
+    csv_unclosed
+    csv_quote_tail
+    csv_bare_quote
+    csv_bare_cr
+    csv_empty
+    csv_surrogate
+    csv_control
+    csv_blank_record
+    csv_embedded_nul
+    csv_label_boundary
+    csv_row_boundary
+    csv_uppercase_recipe
+    empty_open
+    viewer_denied
+    dataset_idempotent
+    dataset_capacity
+    recipe_disabled
+    preview_read_only
+    prepare_idempotent
+    job_capacity
+    unapproved_denied
+    self_review_denied
+    reason_required
+    reject_final
+    cancel_author
+    cancel_other_denied
+    stale_review
+    stale_target
+    paused_execution
+    recipe_revoked
+    cancel_approved
+    nested_transaction
+    apply_workflow
+    execute_idempotent
+    reload_applied
+    update_provenance
+    unchanged_preserves_generation
+    copied_projection
+    stale_workspace
+    stale_noop
+    audit_capacity
+    namespace_isolation
+    wire_roundtrip
+    wire_invalid
+    memory_capacity_rollback
+    orphan_storage
+    missing_chunk
+    changed_chunk
+    unknown_owned_key
+    malformed_head
+    policy_explicit_deny
+    policy_role_fallback
+    policy_last_match
+    sqlite_restart
+    sqlite_two_writers
+    sqlite_write_failure
+    sqlite_read_error
+    row_capacity
+    frozen_input_copy
+    invalid_arguments
+    nested_open
+    policy_revoked_after_approval
+    policy_resource_scope
+    adversarial_bytes
+    sqlite_rollback_fault
+)

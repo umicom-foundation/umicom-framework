@@ -53,6 +53,16 @@ UmiStatus umi_authorisation_check(const UmiAuthorisationService *service, const 
     if (service == NULL || principal == NULL || capability == NULL || resource == NULL || out_decision == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     out_decision->allowed = 0; out_decision->reason[0] = '\0';
     policy = umi_policy_engine_authorize(service->policy, principal, capability, resource);
+    /* An explicit policy denial is a decision, not the absence of a rule.
+     * Keep the policy engine's existing last-matching-rule order, but do not
+     * let a broad role grant override its selected denial. Role fallback
+     * remains available only when no policy rule matched this request.
+     * The previous allow and role paths are retained below for review. */
+    if (policy.effect == UMI_POLICY_DENY && policy.matched_principal != NULL) {
+        (void)snprintf(out_decision->reason, sizeof(out_decision->reason),
+            "denied by explicit policy");
+        return UMI_STATUS_OK;
+    }
     /* Apply this branch only when its contract condition is satisfied. */
     if (policy.effect == UMI_POLICY_ALLOW) {
         out_decision->allowed = 1; (void)snprintf(out_decision->reason, sizeof(out_decision->reason), "allowed by explicit policy"); return UMI_STATUS_OK;

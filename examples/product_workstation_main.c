@@ -8,6 +8,9 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/suite_layout/gtk4_product_application.h"
+#ifdef UMICOM_PRODUCT_ENTERPRISE_WORKSPACE
+#include "umicom/ui/gtk4/enterprise_workspace.h"
+#endif
 
 #ifdef UMICOM_PRODUCT_AI_WORKSPACE
 #include "umicom/ui/gtk4/ai_workspace.h"
@@ -28,6 +31,12 @@
  * state. Products attach their domain controllers when those services exist. */
 int main(int argc, char **argv)
 {
+#ifdef UMICOM_PRODUCT_ENTERPRISE_WORKSPACE
+    /* Enterprise products reuse Framework-owned data, review and policy views.
+     * Every earlier product path remains below, selected by its own build. */
+    return UmiEnterpriseWorkspaceGtkRun(UMICOM_PRODUCT_APPLICATION_ID,
+        UMICOM_PRODUCT_TITLE, argc, argv);
+#else
 #ifdef UMICOM_PRODUCT_AI_WORKSPACE
     /* The AI products share one Framework-owned source/job workspace. Their
      * previous catalogue layouts remain inside the same product host. */
@@ -48,6 +57,7 @@ int main(int argc, char **argv)
     return umi_application_product_gtk4_run(&config, argc, argv);
 #endif
 #endif /* UMICOM_PRODUCT_AI_WORKSPACE */
+#endif /* UMICOM_PRODUCT_ENTERPRISE_WORKSPACE */
 }
 
 #ifdef _WIN32
