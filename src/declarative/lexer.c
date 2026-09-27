@@ -41,6 +41,8 @@ UmiStatus umi_decl_lexer_split_line(const char *line, UmiDeclTokenLine *out_toke
     while (line[i] != '\0') {
         size_t length = 0U;
         char quote = '\0';
+        /* A missing closing quote is an incomplete edit, not accepted text. */
+        int quoteClosed = 0;
         /*
          * Continue only while work remains available; the loop body advances the state on each
          * pass.
@@ -60,6 +62,7 @@ UmiStatus umi_decl_lexer_split_line(const char *line, UmiDeclTokenLine *out_toke
             /* Apply this branch only when its contract condition is satisfied. */
             if (quote != '\0') {
                 /* Apply this branch only when its contract condition is satisfied. */
+                if (line[i] == quote) quoteClosed = 1;
                 if (line[i] == quote) { i += 1U; break; }
             } else /* Apply this branch only when its contract condition is satisfied. */ if (isspace((unsigned char)line[i]) || line[i] == '#') {
                 break;
@@ -68,6 +71,7 @@ UmiStatus umi_decl_lexer_split_line(const char *line, UmiDeclTokenLine *out_toke
             if (length + 1U >= UMI_DECL_TEXT_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
             out_tokens->tokens[out_tokens->count][length++] = line[i++];
         }
+        if (quote != '\0' && !quoteClosed) return UMI_STATUS_PARSE_ERROR;
         out_tokens->tokens[out_tokens->count][length] = '\0';
         out_tokens->count += 1U;
         /* Apply this branch only when its contract condition is satisfied. */

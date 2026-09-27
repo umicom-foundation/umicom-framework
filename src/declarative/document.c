@@ -128,6 +128,7 @@ UmiStatus umi_decl_document_clone(const UmiDeclDocument *source, UmiDeclDocument
      * used.
      */
     if (source == NULL || out_document == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_document = NULL; /* A failed clone must not publish a stale owner. */
     status = umi_decl_document_create(source->application_id, &copy);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
@@ -159,6 +160,7 @@ UmiStatus umi_decl_document_set_version(UmiDeclDocument *document, UmiDeclVersio
      * used.
      */
     if (document == NULL || version.major == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    if (document->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     document->version = version;
     document->revision += 1U;
     return UMI_STATUS_OK;
@@ -176,6 +178,9 @@ UmiStatus umi_decl_document_add_node(UmiDeclDocument *document, const UmiDeclNod
      * used.
      */
     if (document == NULL || node == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Validate public records before persisting them into Framework ownership. */
+    if (UmiDeclNodeValidate(node) != UMI_STATUS_OK) return UMI_STATUS_INVALID_STATE;
+    if (document->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (find_index(document, node->node_id) >= 0) return UMI_STATUS_ALREADY_EXISTS;
     status = ensure_capacity(document, document->node_count + 1U);
@@ -198,6 +203,9 @@ UmiStatus umi_decl_document_update_node(UmiDeclDocument *document, const UmiDecl
      * used.
      */
     if (document == NULL || node == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Validate public records before persisting them into Framework ownership. */
+    if (UmiDeclNodeValidate(node) != UMI_STATUS_OK) return UMI_STATUS_INVALID_STATE;
+    if (document->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     index = find_index(document, node->node_id);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index < 0) return UMI_STATUS_NOT_FOUND;
@@ -210,6 +218,11 @@ UmiStatus umi_decl_document_update_node(UmiDeclDocument *document, const UmiDecl
  * Provide the decl document remove node operation used by this module and its client
  * applications.
  */
+/* ENGINEERING NOTE: The former recursive removal erased a child before
+ * recursing into its identity, so the recursive call returned NOT_FOUND and
+ * left deeper descendants behind. Retain it for review; the active operation
+ * computes the complete descendant set before compacting the owned array. */
+#if 0
 UmiStatus umi_decl_document_remove_node(UmiDeclDocument *document, const char *node_id)
 {
     size_t i = 0U;
@@ -247,6 +260,48 @@ UmiStatus umi_decl_document_remove_node(UmiDeclDocument *document, const char *n
     /* Apply this branch only when its contract condition is satisfied. */
     if (removed) document->revision += 1U;
     return removed ? UMI_STATUS_OK : UMI_STATUS_NOT_FOUND;
+}
+#endif
+
+/* Mark first, compact second: this preserves unrelated order, handles any
+ * insertion order and avoids recursion even for deep or cyclic input graphs.
+ * One explicit removal is one document revision. No allocation can fail after
+ * mutation begins. This is removal of requested model data, not source code. */
+UmiStatus umi_decl_document_remove_node(UmiDeclDocument *document, const char *node_id)
+{
+    unsigned char erase[UMI_DECL_MAX_COMPONENTS] = {0};
+    ptrdiff_t root;
+    ptrdiff_t parents[UMI_DECL_MAX_COMPONENTS];
+    size_t kept = 0U;
+    int changed;
+    if (document == NULL || !umi_decl_id_is_valid(node_id)) return UMI_STATUS_INVALID_ARGUMENT;
+    root = find_index(document, node_id);
+    if (root < 0) return UMI_STATUS_NOT_FOUND;
+    if (document->node_count > UMI_DECL_MAX_COMPONENTS) return UMI_STATUS_INVALID_STATE;
+    if (document->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    erase[(size_t)root] = 1U;
+    for (size_t i = 0U; i < document->node_count; ++i)
+        parents[i] = find_index(document, document->nodes[i].parent_id);
+    do {
+        changed = 0;
+        for (size_t i = 0U; i < document->node_count; ++i) {
+            if (erase[i]) continue;
+            if (parents[i] >= 0 && erase[(size_t)parents[i]]) {
+                erase[i] = 1U;
+                changed = 1;
+            }
+        }
+    } while (changed);
+    for (size_t i = 0U; i < document->node_count; ++i)
+        if (!erase[i]) {
+            if (kept != i) document->nodes[kept] = document->nodes[i];
+            ++kept;
+        }
+    memset(document->nodes + kept, 0,
+        (document->node_count - kept) * sizeof document->nodes[0]);
+    document->node_count = kept;
+    ++document->revision;
+    return UMI_STATUS_OK;
 }
 
 /*

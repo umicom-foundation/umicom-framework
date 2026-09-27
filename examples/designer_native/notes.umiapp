@@ -1,0 +1,24 @@
+# Umicom Notes practice model | Sammy Hegab, Umicom Foundation | MIT
+application umicom.notes.practice
+version 1.0.0
+component window window -
+property window title "Umicom Notes - practice workspace"
+property window width 800
+property window height 600
+component content pane window
+property content spacing 12
+component heading label content
+property heading text "Write a draft, then count its characters. Closing discards the draft."
+component title text content
+property title text "Workshop plan"
+property title placeholder "Note title"
+component notes editor content
+property notes text "Prepare the Notes exercise."
+property notes wrap true
+component count button content
+property count title "Count characters"
+property count action text.count
+property count source notes
+property count target result
+component result label content
+property result text "Choose Count characters after editing the draft."

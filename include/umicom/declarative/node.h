@@ -61,6 +61,13 @@ UmiStatus umi_decl_node_get_attribute(const UmiDeclNode *node, const char *name,
  */
 UmiStatus umi_decl_node_remove_attribute(UmiDeclNode *node, const char *name);
 
+/** Validate the bounded public record without changing it. No heap allocation
+ * or toolkit is involved. This checks identities, counts, terminated fields,
+ * value kinds and unique property names; parent existence is a document rule.
+ * Node edit failures now leave the complete node unchanged. Keep all node and
+ * document operations on their owning thread, or provide external exclusion. */
+UmiStatus UmiDeclNodeValidate(const UmiDeclNode *node);
+
 #ifdef __cplusplus
 }
 #endif

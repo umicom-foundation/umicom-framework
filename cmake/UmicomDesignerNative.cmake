@@ -1,0 +1,40 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+include(GNUInstallDirs)
+get_filename_component(_native_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+if(NOT TARGET Umicom::declarative)
+    message(FATAL_ERROR "Native designer tools require the canonical Umicom::declarative target.")
+endif()
+add_library(umicom_designer_native STATIC
+    "${_native_root}/src/designer_native/native_project.c"
+    "${_native_root}/src/designer_native/publish.c")
+add_library(Umicom::designer_native ALIAS umicom_designer_native)
+set_target_properties(umicom_designer_native PROPERTIES EXPORT_NAME designer_native
+    C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+target_link_libraries(umicom_designer_native PUBLIC Umicom::declarative)
+target_include_directories(umicom_designer_native PUBLIC
+    $<BUILD_INTERFACE:${_native_root}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+umicom_apply_warnings(umicom_designer_native)
+umicom_apply_sanitizers(umicom_designer_native)
+foreach(_tool IN ITEMS project project-example)
+    if(_tool STREQUAL "project")
+        set(_source cli.c)
+    else()
+        set(_source main.c)
+    endif()
+    add_executable(umicom-designer-${_tool} "${_native_root}/examples/designer_native/${_source}")
+    set_target_properties(umicom-designer-${_tool} PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-designer-${_tool} PRIVATE Umicom::designer_native)
+    umicom_apply_warnings(umicom-designer-${_tool})
+    umicom_apply_sanitizers(umicom-designer-${_tool})
+endforeach()
+install(TARGETS umicom_designer_native EXPORT UmicomFrameworkTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS umicom-designer-project umicom-designer-project-example RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES "${_native_root}/include/umicom/designer/native_project.h" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/designer)
+if(BUILD_TESTING)
+    # CMake forbids add_subdirectory during deferred composition. Include the
+    # explicitly rooted test definitions without changing canonical source paths.
+    set(_native_test_source "${_native_root}/tests/designer_native")
+    set(_native_test_binary "${CMAKE_CURRENT_BINARY_DIR}/designer-native-tests")
+    include("${_native_test_source}/CMakeLists.txt")
+endif()
