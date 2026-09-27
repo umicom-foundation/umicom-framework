@@ -32,7 +32,14 @@ if(UMICOM_DATA_SAFETY_SQLITE)
     find_package(SQLite3 QUIET)
     if(SQLite3_FOUND)
         target_compile_definitions(umicom_data PRIVATE UMICOM_HAS_SQLITE=1)
+        # The legacy statement remains for source review. Both the build and
+        # installed consumer use the same preferred dependency target name.
+        if(FALSE)
         target_link_libraries(umicom_data PUBLIC SQLite::SQLite3)
+        endif()
+        include("${_framework}/cmake/UmicomSQLiteTarget.cmake")
+        umicom_resolve_sqlite_target(_umi_data_sqlite)
+        target_link_libraries(umicom_data PUBLIC ${_umi_data_sqlite})
     endif()
 endif()
 umicom_apply_warnings(umicom_data)
@@ -45,7 +52,13 @@ install(EXPORT UmicomDataSafetyTargets NAMESPACE Umicom:: DESTINATION ${CMAKE_IN
 set(_config "include(CMakeFindDependencyMacro)\n")
 if(UMICOM_DATA_SAFETY_SQLITE AND SQLite3_FOUND)
     string(APPEND _config "find_dependency(SQLite3)\n")
+    string(APPEND _config "include(\"\${CMAKE_CURRENT_LIST_DIR}/UmicomSQLiteTarget.cmake\")\n")
+    string(APPEND _config "umicom_resolve_sqlite_target(_umi_data_safety_sqlite)\n")
 endif()
 string(APPEND _config "include(\"\${CMAKE_CURRENT_LIST_DIR}/UmicomDataSafetyTargets.cmake\")\n")
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/UmicomDataSafetyConfig.cmake" "${_config}")
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/UmicomDataSafetyConfig.cmake" DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UmicomDataSafety)
+
+# The exported dependency must resolve on older and newer CMake consumers too.
+install(FILES "${_framework}/cmake/UmicomSQLiteTarget.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UmicomDataSafety)

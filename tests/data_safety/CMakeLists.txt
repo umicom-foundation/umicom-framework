@@ -10,7 +10,15 @@ if(UMICOM_DATA_SAFETY_SQLITE)
     find_package(SQLite3 QUIET)
     if(SQLite3_FOUND)
         target_compile_definitions(umicom-data-safety-test PRIVATE UMICOM_HAS_SQLITE=1)
+        # Keep the former link statement for review. CMake 4.3 renamed the
+        # imported target; the shared resolver retains older-CMake compatibility
+        # without suppressing author warnings or changing the SQLite library.
+        if(FALSE)
         target_link_libraries(umicom-data-safety-test PRIVATE SQLite::SQLite3)
+        endif()
+        include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/UmicomSQLiteTarget.cmake")
+        umicom_resolve_sqlite_target(_umi_data_safety_sqlite)
+        target_link_libraries(umicom-data-safety-test PRIVATE ${_umi_data_safety_sqlite})
     endif()
 endif()
 set_target_properties(umicom-data-safety-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)

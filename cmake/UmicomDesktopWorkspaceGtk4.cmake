@@ -42,3 +42,8 @@ if(BUILD_TESTING)
         umicom_register_validation_target(umicom-desktop-workspace-gtk4-test)
     endif()
 endif()
+
+
+# The reusable viewport and its component gallery supplement existing Desk UI.
+# No prior widget, workspace entry point or saved-layout implementation is removed.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkbenchViewportGtk4.cmake")

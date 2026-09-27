@@ -99,3 +99,7 @@ endif()
 # Shared transaction ownership is tested alongside the existing desktop
 # consumers; application-local storage implementations are not introduced.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomDataSafety.cmake")
+
+
+# Resolve canonical workbench layouts without embedding a second UI data model.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkbenchViewport.cmake")
