@@ -95,3 +95,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomBootMedia.cmake")
 if(TARGET Umicom::data)
     include("${CMAKE_CURRENT_LIST_DIR}/UmicomDesktopWorkspace.cmake")
 endif()
+
+# Shared transaction ownership is tested alongside the existing desktop
+# consumers; application-local storage implementations are not introduced.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDataSafety.cmake")

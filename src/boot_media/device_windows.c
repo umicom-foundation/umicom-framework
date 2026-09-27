@@ -106,10 +106,36 @@ static UmiStatus Observe(HANDLE h,unsigned number,UmiBootMediaDevice *out)
     return UMI_STATUS_UNAVAILABLE;
 
 #endif
+    /* Retain the former unconditional SDK query for engineering review.
+     * Some MinGW SDKs do not declare this query or its result type. The active
+     * query below is feature-gated and refuses unknown or malformed replies;
+     * missing declarations must never make a disk eligible for writing. */
+#if 0
     GET_DISK_ATTRIBUTES attributes;
     memset(&attributes,0,sizeof attributes);
     attributes.Version=sizeof attributes;
     if (DeviceIoControl(h,IOCTL_DISK_GET_DISK_ATTRIBUTES,NULL,0,&attributes,sizeof attributes,&got,NULL))out->readOnly=(attributes.Attributes&DISK_ATTRIBUTE_READ_ONLY)!=0;
+#endif
+
+    /* Windows defines the complete response in winioctl.h. Use only the
+     * documented SDK symbols; do not invent SDK typedefs or private IOCTL
+     * numbers. A reduced SDK can build the ordinary-file tools, but physical
+     * acquisition remains unavailable without the required declarations. */
+#if defined(IOCTL_DISK_GET_DISK_ATTRIBUTES) && defined(DISK_ATTRIBUTE_READ_ONLY) && defined(DISK_ATTRIBUTE_OFFLINE)
+    GET_DISK_ATTRIBUTES checkedAttributes;
+    memset(&checkedAttributes,0,sizeof checkedAttributes);
+    checkedAttributes.Version=(DWORD)sizeof checkedAttributes;
+    got=0;
+    if (!DeviceIoControl(h,IOCTL_DISK_GET_DISK_ATTRIBUTES,NULL,0,
+        &checkedAttributes,(DWORD)sizeof checkedAttributes,&got,NULL))return UMI_STATUS_UNAVAILABLE;
+    if (got<sizeof checkedAttributes || checkedAttributes.Version!=sizeof checkedAttributes ||
+        checkedAttributes.Reserved1!=0)return UMI_STATUS_PARSE_ERROR;
+    if ((checkedAttributes.Attributes&DISK_ATTRIBUTE_OFFLINE)!=0)return UMI_STATUS_UNAVAILABLE;
+    out->readOnly=(checkedAttributes.Attributes&DISK_ATTRIBUTE_READ_ONLY)!=0;
+#else
+    out->readOnly=1;
+    return UMI_STATUS_UNAVAILABLE;
+#endif
 
     /* This read-only control query must give a definite writable/write-protected
      * answer. Missing attribute support is not converted into "writable". */

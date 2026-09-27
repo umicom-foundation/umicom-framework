@@ -1,0 +1,23 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# Additive regression and teaching integration; the existing data target remains
+# the sole implementation. This helper never adds a competing Data Server.
+include_guard(GLOBAL)
+get_filename_component(_umi_data_safety_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+if(TARGET Umicom::data)
+    add_executable(umicom-data-transaction-example "${_umi_data_safety_root}/examples/data_safety/notes_transaction.c")
+    target_link_libraries(umicom-data-transaction-example PRIVATE Umicom::data)
+    set_target_properties(umicom-data-transaction-example PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-data-transaction-example)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-data-transaction-example)
+    endif()
+    if(BUILD_TESTING)
+        add_test(NAME framework.data_safety.example COMMAND umicom-data-transaction-example)
+    endif()
+endif()
+if(BUILD_TESTING)
+    add_subdirectory("${_umi_data_safety_root}/tests/data_safety" "${CMAKE_CURRENT_BINARY_DIR}/data-safety-tests")
+endif()
+unset(_umi_data_safety_root)

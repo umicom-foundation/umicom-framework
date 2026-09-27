@@ -149,6 +149,31 @@ UmiStatus umi_data_server_visit(const UmiDataServer *server,
 UmiStatus umi_data_server_snapshot(const UmiDataServer *server,
                                    UmiDataServerSnapshot *out_snapshot);
 
+
+/* Transaction safety contract:
+ * - A successful begin reserves this server for the calling thread until its
+ *   commit/rollback completes. Competing data operations return BUSY; they do
+ *   not wait for a transaction to finish. Finish on the same worker thread.
+ * - SQLite automatic abort is recorded; ordinary work is refused until its
+ *   owner acknowledges the loss with rollback (which returns IO_ERROR).
+ * - After a rollback error with an active backend transaction, only another
+ *   rollback and diagnostic observations are permitted.
+ * - Visitor strings are borrowed under the lock. Do not block, destroy this
+ *   server, longjmp, or wait for another worker in a visitor. Direct data API
+ *   re-entry on an enumerated server returns BUSY. Cross-server lock ordering
+ *   remains the caller's responsibility.
+ * - Destruction still requires externally quiesced/joined workers. Ending a
+ *   thread does not clean up its transaction; there is no forced owner takeover.
+ * - last_error now returns a thread-local copy valid until the next legacy
+ *   last_error call on that thread, even for another server. Use CopyError
+ *   below for caller-owned lifetime. A diagnostic is not a per-request history.
+ * Legacy count returns zero on failure. Use CountChecked to distinguish an
+ * empty database from BUSY, invalid recovery state or a storage error.
+ */
+UmiStatus UmiDataServerCountChecked(const UmiDataServer *server, size_t *outCount);
+UmiStatus UmiDataServerCopyError(const UmiDataServer *server,
+    char *outText, size_t capacity);
+
 #ifdef __cplusplus
 }
 #endif
