@@ -1,0 +1,62 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+add_executable(umicom-build-review-test "${CMAKE_CURRENT_LIST_DIR}/test_review.c")
+target_link_libraries(umicom-build-review-test PRIVATE Umicom::build_review Umicom::compiler Umicom::platform)
+set_target_properties(umicom-build-review-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+if(COMMAND umicom_apply_warnings)
+    umicom_apply_warnings(umicom-build-review-test)
+endif()
+if(COMMAND umicom_apply_sanitizers)
+    umicom_apply_sanitizers(umicom-build-review-test)
+endif()
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-build-review-test)
+endif()
+function(review_cases group)
+    foreach(name IN LISTS ARGN)
+        add_test(NAME framework.build_review.${group}.${name} COMMAND umicom-build-review-test ${group} ${name})
+        set_tests_properties(framework.build_review.${group}.${name} PROPERTIES TIMEOUT 30 LABELS "framework;build-review")
+    endforeach()
+endfunction()
+review_cases(grammar gcc drive backslash msvc line_only ansi fatal cmake_error cmake_warning cmake_dev cmake_author cmake_deprecation tool crlf ordinary position_overflow message_capacity code_capacity null escape)
+review_cases(collection normal overflow full revision unterminated severity counts)
+review_cases(invalid count profile command output path message code severity position empty_message phase state status)
+review_cases(outcome success created running failed cancelled timeout inconsistent_success inconsistent_failure inconsistent_cancel inconsistent_timeout)
+review_cases(history empty invalid_args ring detached invalid_record concurrent)
+review_cases(view filter search invalid_filter invalid_minimum bad_index safe_text maximum_output dropped render)
+review_cases(import normal empty long_line capacity embedded_nul too_large)
+review_cases(mutation deterministic)
+add_test(NAME framework.build_review.example COMMAND umicom-build-review-example)
+add_test(NAME framework.build_review.cli_self_test COMMAND umicom-build-review --self-test)
+add_test(NAME framework.build_review.cli_help COMMAND umicom-build-review --help)
+
+# Native allocator wrappers are confined to this test executable. The shipped
+# library has no failure-injection globals or alternate allocation path.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    add_executable(umicom-build-review-allocation-test "${CMAKE_CURRENT_LIST_DIR}/test_allocation.c")
+    target_link_libraries(umicom-build-review-allocation-test PRIVATE Umicom::build_review)
+    target_link_options(umicom-build-review-allocation-test PRIVATE -Wl,--wrap=calloc -Wl,--wrap=malloc)
+    set_target_properties(umicom-build-review-allocation-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-build-review-allocation-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-build-review-allocation-test)
+    endif()
+    foreach(_case first second render)
+        add_test(NAME framework.build_review.allocation.${_case} COMMAND umicom-build-review-allocation-test ${_case})
+        set_tests_properties(framework.build_review.allocation.${_case} PROPERTIES TIMEOUT 30)
+    endforeach()
+endif()
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang" AND NOT CMAKE_C_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+    add_test(NAME framework.build_review.real_compiler
+        COMMAND "${CMAKE_COMMAND}" "-DCOMPILER=${CMAKE_C_COMPILER}" "-DCLI=$<TARGET_FILE:umicom-build-review>"
+            "-DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/real-compiler-review" -P "${CMAKE_CURRENT_LIST_DIR}/real_compiler.cmake")
+    set_tests_properties(framework.build_review.real_compiler PROPERTIES TIMEOUT 60)
+endif()
+
+add_test(NAME framework.build_review.practice_project
+    COMMAND "${CMAKE_COMMAND}" "-DPROJECT=${CMAKE_CURRENT_LIST_DIR}/../../examples/build_review/notes_project"
+        "-DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/notes-build-practice" "-DCOMPILER=${CMAKE_C_COMPILER}"
+        "-DCTEST=${CMAKE_CTEST_COMMAND}" "-DGENERATOR=${CMAKE_GENERATOR}"
+        -P "${CMAKE_CURRENT_LIST_DIR}/practice_project.cmake")
+set_tests_properties(framework.build_review.practice_project PROPERTIES TIMEOUT 120)

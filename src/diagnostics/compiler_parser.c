@@ -173,6 +173,11 @@ static int LevelAt(const char *p, UmiDiagnosticSeverity *severity,
 static UmiStatus ParseCMake(const char *text, UmiCompilerDiagnosticFields *fields)
 {
     const char *location, *command, *end;
+    /* A table of complete prefixes extends the existing Error/Warning/dev
+     * handling to author and deprecation diagnostics without suppressing them.
+     * The old dispatch remains below for public review. Author warnings use
+     * the same canonical location path, not a second application parser. */
+#if 0
     if (strncmp(text, "CMake Error at ", 15U) == 0) {
         fields->severity = UMI_DIAGNOSTIC_ERROR; location = text + 15U;
     } else if (strncmp(text, "CMake Warning at ", 17U) == 0) {
@@ -180,6 +185,28 @@ static UmiStatus ParseCMake(const char *text, UmiCompilerDiagnosticFields *field
     } else if (strncmp(text, "CMake Warning (dev) at ", 23U) == 0) {
         fields->severity = UMI_DIAGNOSTIC_WARNING; location = text + 23U;
     } else return UMI_STATUS_NOT_FOUND;
+#endif
+    static const struct {
+        const char *prefix;
+        UmiDiagnosticSeverity severity;
+    } headers[] = {
+        {"CMake Error at ", UMI_DIAGNOSTIC_ERROR},
+        {"CMake Warning at ", UMI_DIAGNOSTIC_WARNING},
+        {"CMake Warning (dev) at ", UMI_DIAGNOSTIC_WARNING},
+        {"CMake Warning (author) at ", UMI_DIAGNOSTIC_WARNING},
+        {"CMake Deprecation Warning at ", UMI_DIAGNOSTIC_WARNING},
+        {"CMake Deprecation Error at ", UMI_DIAGNOSTIC_ERROR}
+    };
+    location = NULL;
+    for (size_t i = 0U; i < sizeof headers / sizeof headers[0]; ++i) {
+        size_t length = strlen(headers[i].prefix);
+        if (strncmp(text, headers[i].prefix, length) == 0) {
+            fields->severity = headers[i].severity;
+            location = text + length;
+            break;
+        }
+    }
+    if (location == NULL) return UMI_STATUS_NOT_FOUND;
     end = text + strlen(text);
     command = LastDelimiter(location, end, '(');
     if (command != NULL && command > location && command[-1] == ' ') --command;

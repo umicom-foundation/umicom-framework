@@ -164,3 +164,27 @@ UmiStatus UmiBuildHistoryReserveOperationId(UmiBuildHistory *history, uint64_t *
     (void)umi_mutex_unlock(history->mutex);
     return UMI_STATUS_OK;
 }
+
+/* The review owns copies, not ring-buffer indices. Copy under the existing
+ * mutex so concurrent append/clear cannot mix two history generations. */
+UmiStatus UmiBuildHistoryCopyRecent(const UmiBuildHistory *history,
+    UmiBuildResult *outResults, size_t capacity,
+    size_t *outCount, size_t *outOmitted)
+{
+    UmiStatus status;
+    size_t copied, omitted;
+    if (outCount != NULL) *outCount = 0U;
+    if (outOmitted != NULL) *outOmitted = 0U;
+    if (history == NULL || outResults == NULL || outCount == NULL ||
+        outOmitted == NULL || outCount == outOmitted || capacity == 0U ||
+        capacity > UMI_BUILD_HISTORY_MAX) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_mutex_lock(history->mutex);
+    if (status != UMI_STATUS_OK) return status;
+    copied = history->count < capacity ? history->count : capacity;
+    omitted = history->count - copied;
+    for (size_t i = 0U; i < copied; ++i)
+        outResults[i] = history->items[(history->head + omitted + i) % history->capacity];
+    status = umi_mutex_unlock(history->mutex);
+    if (status == UMI_STATUS_OK) { *outCount = copied; *outOmitted = omitted; }
+    return status;
+}

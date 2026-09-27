@@ -103,3 +103,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomDataSafety.cmake")
 
 # Resolve canonical workbench layouts without embedding a second UI data model.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkbenchViewport.cmake")
+
+# Read-only operation reviews compose the existing history and compiler grammar.
+# Target completion is deferred until the canonical dependencies are declared.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomBuildReviewIntegration.cmake")
