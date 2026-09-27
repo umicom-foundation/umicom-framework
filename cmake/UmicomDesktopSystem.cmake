@@ -85,3 +85,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomOsImage.cmake")
 if(TARGET Umicom::data)
     include("${CMAKE_CURRENT_LIST_DIR}/UmicomVmManager.cmake")
 endif()
+
+# Reviewed media transfer belongs to Framework, not another application-local
+# copier. Existing media preparation and VM workflows remain unchanged.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomBootMedia.cmake")

@@ -1,0 +1,6 @@
+// Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+// Reuse the canonical setup bitmap/icon; only this executable manifest differs.
+#include <windows.h>
+101 ICON "umicom.ico"
+102 BITMAP "umicom-logo.bmp"
+1 RT_MANIFEST "media.manifest"

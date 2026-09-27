@@ -627,7 +627,30 @@ static void Done(Ui *u)
 
 }
 
+/* The private helper's old name collides with the Windows Shell Folder COM
+ * typedef. Keep its complete implementation for review; BrowseExistingFolder
+ * below retains the same picker behaviour and PIDL ownership. */
+#if 0
 static int Folder(Ui *u,wchar_t out[4096])
+{
+    BROWSEINFOW b= {
+        0
+    };
+    b.hwndOwner=u->window;
+    b.lpszTitle=L"Choose an existing folder";
+    b.ulFlags=BIF_RETURNONLYFSDIRS|BIF_NEWDIALOGSTYLE;
+    PIDLIST_ABSOLUTE pidl=SHBrowseForFolderW(&b);
+    if(!pidl)return 0;
+    BOOL ok=SHGetPathFromIDListW(pidl,out);
+    CoTaskMemFree(pidl);
+    return ok!=0;
+}
+
+#endif
+
+/* A specific private name avoids a Windows SDK ordinary-identifier collision
+ * without renaming an SDK type or changing the public installer contract. */
+static int BrowseExistingFolder(Ui *u,wchar_t out[4096])
 {
     BROWSEINFOW b= {
         0
@@ -649,7 +672,11 @@ static void Browse(Ui *u,int destination,int folder,int newChild)
         0
     };
     if(folder) {
+        /* Retain the superseded call beside its equivalent named replacement. */
+#if 0
         if(!Folder(u,path))return;
+#endif
+        if(!BrowseExistingFolder(u,path))return;
         if(newChild) {
             size_t n=wcslen(path);
             const wchar_t *suffix=destination==ID_MEDIA_DEST?L"\\Umicom Media Preparation":L"\\Umicom Applications";

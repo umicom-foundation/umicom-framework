@@ -11,6 +11,10 @@
 #endif
 #define WIN32_LEAN_AND_MEAN
 #include <winsock2.h>
+/* MinGW exposes the modern interface table only after the IPv6 socket
+ * definitions are visible. Include them before iphlpapi.h consumes netioapi.h;
+ * the existing 64-bit counters and FreeMibTable ownership stay unchanged. */
+#include <ws2ipdef.h>
 #include <windows.h>
 #include <tlhelp32.h>
 #include <iphlpapi.h>

@@ -50,9 +50,24 @@ int FixtureCreate(Fixture *f)
     char base[4096];
     CHECK(WideCharToMultiByte(CP_UTF8,WC_ERR_INVALID_CHARS,temp,-1,base,sizeof base,NULL,NULL)>0);
     size_t length=strlen(base);
+    /* Retain the old stripping rule for review. A temporary directory that
+     * is a drive root must keep its separator so the shared join stays absolute. */
+#if 0
     while(length&& (base[length-1U]=='/'||base[length-1U]=='\\'))base[--length]=0;
+#endif
+    while(length>3U&& (base[length-1U]=='/'||base[length-1U]=='\\'))base[--length]=0;
 
+    /* The former whole-path formatting could silently truncate a long UTF-8
+     * temporary directory. Preserve it for review, but construct only a bounded
+     * leaf and delegate path capacity validation to the existing shared join. */
+#if 0
     (void)snprintf(f->root,sizeof f->root,"%s/umicom-setup-%lu-%llu",base,(unsigned long)GetCurrentProcessId(),(unsigned long long)GetTickCount64());
+#endif
+    char leaf[96];
+    int leafLength=snprintf(leaf,sizeof leaf,"umicom-setup-%lu-%llu",
+        (unsigned long)GetCurrentProcessId(),(unsigned long long)GetTickCount64());
+    CHECK(leafLength>0&&(size_t)leafLength<sizeof leaf);
+    OK(ScJoin(base,leaf,f->root));
     UmiSetupReport initial= {
         0
     };
