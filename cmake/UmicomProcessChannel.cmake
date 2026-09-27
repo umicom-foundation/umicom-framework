@@ -1,0 +1,31 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# Native interactive child transport. Existing synchronous process APIs remain.
+include_guard(GLOBAL)
+include(GNUInstallDirs)
+find_package(Threads REQUIRED)
+set(_umi_channel_root "${CMAKE_CURRENT_LIST_DIR}/..")
+add_library(umicom_process_channel STATIC "${_umi_channel_root}/src/platform/process_channel.c")
+add_library(Umicom::process_channel ALIAS umicom_process_channel)
+set_target_properties(umicom_process_channel PROPERTIES EXPORT_NAME process_channel
+    C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+target_include_directories(umicom_process_channel PUBLIC
+    $<BUILD_INTERFACE:${_umi_channel_root}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+if(WIN32)
+    target_sources(umicom_process_channel PRIVATE "${_umi_channel_root}/src/platform/process_channel_windows.c")
+    target_link_libraries(umicom_process_channel PRIVATE bcrypt)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    target_sources(umicom_process_channel PRIVATE "${_umi_channel_root}/src/platform/process_channel_linux.c")
+else()
+    target_sources(umicom_process_channel PRIVATE "${_umi_channel_root}/src/platform/process_channel_unsupported.c")
+endif()
+target_link_libraries(umicom_process_channel PRIVATE Threads::Threads)
+if(COMMAND umicom_apply_warnings)
+    umicom_apply_warnings(umicom_process_channel)
+endif()
+if(COMMAND umicom_apply_sanitizers)
+    umicom_apply_sanitizers(umicom_process_channel)
+endif()
+install(TARGETS umicom_process_channel EXPORT UmicomFrameworkTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+install(FILES "${_umi_channel_root}/include/umicom/platform/process_channel.h" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/platform COMPONENT Framework)
+unset(_umi_channel_root)

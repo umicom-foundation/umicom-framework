@@ -588,3 +588,41 @@ UmiStatus ScReadAt(const char *path,uint64_t offset,void *data,size_t length,uin
 
 /* Maintenance shares the checked native handles above, not a new path walker. */
 #include "maintenance_io.inc"
+
+/* Native runtime bundles must preserve runnable host programs on POSIX. This
+ * explicit facade reuses the same parent/regular-file checks as installation;
+ * it does not change ScCopy's deliberately non-executable data-file default. */
+UmiStatus UmiSetupFileGrantOwnerExecute(const char *path,UmiSetupReport *report)
+{
+    ScHandle handle;
+    UmiStatus status=Open(&handle,path,0,0,NULL,report);
+    if(status!=UMI_STATUS_OK)return status;
+#ifndef _WIN32
+    struct stat info;
+    if(fstat(handle.file,&info)!=0||info.st_uid!=geteuid()||info.st_nlink!=1)
+        status=UMI_STATUS_PERMISSION_DENIED;
+    else if(fchmod(handle.file,0700)!=0)status=UMI_STATUS_IO_ERROR;
+#endif
+    Close(&handle);
+    return status;
+}
+
+/* A managed virtual disk must not be a second name for someone else's file.
+ * Reuse the same checked open/ancestor policy, then inspect the opened object. */
+UmiStatus UmiSetupFileSingleLink(const char *path,UmiSetupReport *report)
+{
+    ScHandle handle;uint64_t bytes=0;
+    UmiStatus status=Open(&handle,path,0,0,&bytes,report);
+    if(status!=UMI_STATUS_OK)return status;
+#ifdef _WIN32
+    BY_HANDLE_FILE_INFORMATION info;
+    if(!GetFileInformationByHandle(handle.file,&info)||info.nNumberOfLinks!=1U)
+        status=UMI_STATUS_PERMISSION_DENIED;
+#else
+    struct stat info;
+    if(fstat(handle.file,&info)!=0||info.st_nlink!=1||info.st_uid!=geteuid())
+        status=UMI_STATUS_PERMISSION_DENIED;
+#endif
+    Close(&handle);
+    return status;
+}

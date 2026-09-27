@@ -66,3 +66,6 @@ if(BUILD_TESTING)
     add_subdirectory("${_umi_os_image_root}/tests/os_image" "${CMAKE_CURRENT_BINARY_DIR}/os-image-tests")
 endif()
 unset(_umi_os_image_root)
+
+# Share a verified bundle projection without exposing image-parser internals.
+target_sources(umicom_os_image PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../src/os_image/bundle_info.c")

@@ -79,3 +79,9 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomSetupCentre.cmake")
 # Native host image assembly and observed boot checks share Framework services.
 # The earlier OS Python tool remains unchanged as an alternative implementation.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomOsImage.cmake")
+
+# The VM manager is an independent product, not a dependency of the installer
+# bootstrap. A minimal host without a Data Server keeps its previous composition.
+if(TARGET Umicom::data)
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomVmManager.cmake")
+endif()

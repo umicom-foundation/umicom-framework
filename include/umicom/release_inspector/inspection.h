@@ -74,6 +74,10 @@ typedef struct UmiReleaseInspection {
     int runtimeTested; /* Always zero: this API never starts or loads a program. */
     char firstIssue[320];
 } UmiReleaseInspection;
+/* Extended provider profile: paths below share/umicom/qemu/ resolve private
+ * imports ONLY against share/umicom/qemu/bin/. The general bin rule below is
+ * retained for existing applications; the isolated provider must not satisfy
+ * an import accidentally from the unrelated Umicom runtime directory. */
 /** Reads selected/shared inventory. Only bin/<name>.exe application entries and
  * bin/<name>.dll private dependency resolution are qualified by this profile.
  * DLLs in resource/module subdirectories are also inspected, but their normal

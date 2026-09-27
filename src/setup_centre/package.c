@@ -154,6 +154,22 @@ UmiStatus ScImportReports(const char *listFile,UmiSetupBundle *b,UmiSetupReport 
 
         char *p=line,*kind=Next(&p,'\t');
 
+        /* Optional provider files have explicit application ownership. This
+         * keeps a QEMU runtime out of a Notes-only installation and lets normal
+         * maintenance retain shared files while retiring provider-only files.
+         * Existing app/shared/data formats remain unchanged. */
+        if(!strcmp(kind,"owned")) {
+            char *id=Next(&p,'\t'),*relative=Next(&p,'\t'),*source=Next(&p,'\t');
+            unsigned owner=SC_SHARED;
+            if(!id||!relative||!source||p||!ScToken(id))s=UMI_STATUS_PARSE_ERROR;
+            else {
+                for(size_t i=0;i<b->appCount;++i)if(!strcmp(b->apps[i].id,id))owner=(unsigned)i;
+                if(owner==SC_SHARED)s=UMI_STATUS_PARSE_ERROR;
+                else s=AddSource(b,relative,source,NULL,owner,r);
+            }
+            continue;
+        }
+
         if(!strcmp(kind,"app")||!strcmp(kind,"shared")) {
             char *id=Next(&p,'\t'),*title=Next(&p,'\t'),*report=Next(&p,'\t');
             if(!id||!title||!report||p||!ScToken(id)||!strcmp(id,"shared")||!ScUtf8(title)||!*title||strlen(title)>=192U)s=UMI_STATUS_PARSE_ERROR;

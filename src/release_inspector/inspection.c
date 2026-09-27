@@ -108,6 +108,14 @@ static int Imported(InspectionContext *c,const char *path,const UmiReleasePeInfo
         char location[UMI_SETUP_RELATIVE_CAPACITY];
         const char *name=info->imports[i];
         (void)snprintf(location,sizeof location,"bin/%s",name);
+        /* A bundled QEMU is a separate loader namespace. Never satisfy its
+         * private import from Umicom's unrelated main bin inventory. This
+         * profile requires runtime programs and DLLs in its private bin. */
+        char providerPrefix[19]={0};
+        if(strlen(path)>=18U)memcpy(providerPrefix,path,18U);
+        if(!ScEqualFold(providerPrefix,"share/umicom/qemu/"))
+            (void)snprintf(location,sizeof location,"share/umicom/qemu/bin/%s",name);
+
         const ScFile *file=FindFile(c->bundle,location);
         int selected=file && ScSelected(file,c->selected);
         if(info->delayed[i])++c->result->delayedImports;

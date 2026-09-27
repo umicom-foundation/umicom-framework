@@ -109,3 +109,7 @@ unset(_umi_setup_root)
 
 # Native maintenance extends the same installer authority and receipt format.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomSetupMaintenance.cmake")
+
+# Public checked-file facade reuses the existing native bootstrap implementation.
+# The installer executable remains independent of the VM application's Data Server.
+target_sources(umicom_setup_centre PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../src/setup_centre/files.c")
