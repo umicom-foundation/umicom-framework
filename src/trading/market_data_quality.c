@@ -24,6 +24,11 @@
  * Provide the market data quality score operation used by this module and its client
  * applications.
  */
+/* The signed subtraction below can overflow for valid int64_t timestamps.
+ * The replacement compares signed times first, then subtracts unsigned values.
+ * The prior implementation is retained for engineering review; public semantics
+ * for ordinary timestamps and the zero-quality sentinel are unchanged. */
+#if 0
 double umi_market_data_quality_score(const UmiQuote *quote,
                                      int64_t now_ms,
                                      int64_t max_age_ms)
@@ -40,4 +45,22 @@ double umi_market_data_quality_score(const UmiQuote *quote,
     }
 
     return 1.0 - (double)age_ms / (double)max_age_ms;
+}
+#endif
+
+/* Framework owns freshness arithmetic so every consumer handles the full
+ * timestamp range consistently, rather than correcting it in a widget. */
+double umi_market_data_quality_score(const UmiQuote *quote,
+                                     int64_t now_ms,
+                                     int64_t max_age_ms)
+{
+    if (!umi_quote_valid(quote) || max_age_ms <= 0 ||
+        now_ms < quote->event_time_ms) {
+        return 0.0;
+    }
+    /* Once ordered, unsigned subtraction is the exact mathematical distance
+     * even when the two signed timestamps straddle zero. */
+    const uint64_t age = (uint64_t)now_ms - (uint64_t)quote->event_time_ms;
+    if (age >= (uint64_t)max_age_ms) return 0.0;
+    return 1.0 - (double)age / (double)max_age_ms;
 }

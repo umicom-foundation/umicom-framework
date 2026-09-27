@@ -110,3 +110,8 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomBuildReviewIntegration.cmake")
 
 # Native designer export consumes the existing declarative model; legacy generators remain intact.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomDesignerNativeIntegration.cmake")
+
+
+# The market tape is a shared consumer of canonical trading records; renderer
+# attachment waits until the complete product composition declares its targets.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomMarketTapeIntegration.cmake")
