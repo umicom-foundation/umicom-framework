@@ -89,3 +89,9 @@ endif()
 # Reviewed media transfer belongs to Framework, not another application-local
 # copier. Existing media preparation and VM workflows remain unchanged.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomBootMedia.cmake")
+
+# Persistent desktop drafts and checkpoints use the canonical Data Server.
+# Minimal report-only hosts retain their existing dependency composition.
+if(TARGET Umicom::data)
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomDesktopWorkspace.cmake")
+endif()
