@@ -47,3 +47,17 @@ endif()
 include("${UMICOM_DESKTOP_SYSTEM_SOURCE}/cmake/UmicomDesktopSystem.cmake")
 install(EXPORT UmicomFrameworkTargets FILE UmicomDesktopSystemConfig.cmake
     NAMESPACE Umicom:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UmicomDesktopSystem)
+
+# The standalone composition now also consumes native installer and image tools.
+# Their process port must be backed by the same canonical implementation, not
+# merely an alias named platform that contains only the boot-report reader.
+# Retain the original subset definition above and extend its owned sources.
+if(TARGET umicom_desktop_platform_subset)
+    target_sources(umicom_desktop_platform_subset PRIVATE
+        "${UMICOM_DESKTOP_SYSTEM_SOURCE}/src/platform/process.c"
+        "${UMICOM_DESKTOP_SYSTEM_SOURCE}/src/platform/cancellation.c")
+    install(FILES
+        "${UMICOM_DESKTOP_SYSTEM_SOURCE}/include/umicom/platform/process.h"
+        "${UMICOM_DESKTOP_SYSTEM_SOURCE}/include/umicom/platform/cancellation.h"
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/platform)
+endif()

@@ -1,0 +1,247 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Build and check a small Umicom operating system</title><link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADMAAAAzCAYAAAA6oTAqAAAEpUlEQVR4nO2ZwUsbWRzHv132ppnpi66gNUJm3WpoPHQSoyQotGbBsDTQlBbpTSjppcf9G/a0x14aCt5ENruWbdk1YGxBSdA0yR4MxEqJYKWFYjMktufdQ3dmJ8m8eW8mcTcs+Z6clzfz3sf3/f3eb95cuHhl7k/8T/TFfz2BTqoH063qwXSrejBWFA3JWI7Ma9cLoRnIXs+5jPXluTwVwIRrGMuReQyIDrx6805rJ6KAhdAMFkIzKJbK2MrsdWzMjsMMiA4sR+Yx4RrW2gaFfu3vi4IDwD9QsteDXzbSqByftD12R2GWI/MIei+3tA+IDuo9RBRwbymmrZJSq9sevyMwQe9lRINXTSfNkuz1wO26hGKpjGKpbAuqLZgJ1zBuhOQGSxnpQ+2M63l669mJpwt2C83vl75jQqj6ce03LQkQUcCtSBjS2CjzPqVWtwRlGSYaknEjKHP1zZYOsbKxbfibNDaK68EAN9RWZg/FUtm0HzeMlbhY2dhGtnQIAHASAicheF2pGPaVvR4shGZARIH5XBYUEyYakhG88g0XRPNKjEsSHtyP43WlgoePEtT7iChoUDyi2Y+aAIz2C5pevXmHZ5miFhdOQnD3zm2MS5J2zZqc+h/ngVITBREF/Pz7JhsmGrzKlaVWNrYbdvjFb8NYDIcb+rFgVFmFcrsuNVybroyZnmWLeJopatdOQvDgfpw6cSchqCqK6TNV6aHMMh8RBRBR0PYkKoy+BNErWzrE0+wf2t7hJAQBv69lNZrFC6KXUqvj8dq6ViUYJQkumGY1xwVgbCkj5fIF3mEMJXs91GynrxSoMKf1j5rV9KkWaA1wM+XyBawmk9wT10saG8W9pRh3fyrMh9oZsn8HuCpeSwGfbbX6U5K6v5iJt0qoHJ/wrUzzzs1rqXYgAGjvOiwptTqeZ3MNbcyY4bVUVVGQKxSQ2kwzJ2IkaWwUtyJhZiVgVgVQYcYlCXfv3ObaI1LptG0IXkvxFJ1UmIDPxwRpNy54zwO2MnstELHpKUyODOGHX7e0NvrKfE23VbuWshIXza/Uc5NuxPxTGHT0tfS3/HLGKhpZ4gExspRnZAg3p6fgGRlq6Dvo6MPp2ScAFmGqimI7S6li2crIUvFrs5ibdBv2V0EAE5iqorTEjJMQLIbDCPh8bdnMSDRLxa/NUu/RgwA2zwD0UFYTgFKrN6RfK5ZiiQqTKxSYe4taKefyBaTSacvFZOX4BI/X1rXrQUcf4tdnuSBOzz4h8Xy3oc30TdNq+cJjPdrBX2x6Cjf9XuY4ALBzcITEi92Wdq4zAM1Wfh9zIBaUvmQHzFNts57kS9g+qLTEiipLpzNWqmUWlJW4oK1Es2ydm6nW4yl1qoqCh48SWjxZiYudgyOs5/epK9Es24eAajzxlD36jZYnNspv3+PJy32U3763NCfbx7NVRUFqM41cvsBMEnrYwX7z2Ei82MXOwZGtObV9cM4DxZOyeePCTB37pKGHMst8px8b/W/XUkbq+MemqqJgNZlEKp02zXzqptcJCFW2EwCvAv7PCUJN0XOTbnzl6Mf6y/2Oj3XuMP+mep/Ou1U9mG5VD6Zb9ReztWucDqtdOAAAAABJRU5ErkJggg=="><style>
+:root{--ink:#173044;--muted:#526777;--nav:#102d3e;--accent:#087c83;--paper:#fff;--line:#d6e3e9;--bg:#f1f5f7}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font:17px/1.75 "Segoe UI",Arial,sans-serif;color:var(--ink);background:var(--bg)}.top{background:var(--nav);padding:14px 28px}.top img{width:183px;max-height:55px;object-fit:contain;object-position:left;display:block}.hero{max-width:1130px;margin:40px auto 26px;padding:40px 46px;background:var(--paper);border:1px solid var(--line);border-radius:16px}.eyebrow{font-size:13px;font-weight:700;letter-spacing:.1em;color:var(--accent);text-transform:uppercase}.hero h1{font-size:clamp(30px,4.4vw,50px);line-height:1.14;margin:12px 0 18px}.hero .lead{font-size:20px;color:var(--muted);max-width:850px}.meta{font-size:14px;color:var(--muted)}.layout{max-width:1130px;margin:auto;display:grid;grid-template-columns:255px minmax(0,1fr);gap:25px;align-items:start}nav{position:sticky;top:18px;background:white;border:1px solid var(--line);border-radius:12px;padding:20px;font-size:14px;max-height:90vh;overflow:auto}nav h2{font-size:17px;margin:0 0 12px}nav a{display:block;padding:7px 0;color:#294b60;text-decoration:none;line-height:1.45}nav a:hover{text-decoration:underline}main{min-width:0}section{scroll-margin-top:24px;background:white;border:1px solid var(--line);border-radius:12px;padding:32px 34px;margin:0 0 24px}h2{font-size:26px;line-height:1.25;margin:0 0 20px}h3{font-size:21px;line-height:1.35;margin-top:28px}p{margin:0 0 18px}a{color:#006d81}code{font-family:Consolas,"Liberation Mono",monospace;font-size:.89em;overflow-wrap:anywhere}p code,td code{background:#eef4f6;padding:2px 4px;border-radius:4px}pre{margin:22px 0;padding:19px 20px;background:#112b3b;color:#eaf4f6;border-radius:9px;overflow-x:auto;line-height:1.55;tab-size:4}pre code{white-space:pre;overflow-wrap:normal;font-size:13px}table{border-collapse:collapse;width:100%;font-size:15px;margin:22px 0}th,td{border:1px solid var(--line);padding:12px;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#edf5f7}.note{padding:18px 20px;border-left:4px solid var(--accent);background:#eef8f8;border-radius:0 8px 8px 0;margin:24px 0}details{border:1px solid var(--line);border-radius:8px;padding:14px 17px;margin-bottom:12px}summary{font-weight:600;cursor:pointer}details p{margin:14px 0 0}footer{max-width:1130px;margin:20px auto 50px;padding:20px;font-size:14px;color:var(--muted)}@media(max-width:850px){.hero{margin:20px 14px;padding:26px}.layout{display:block;margin:0 14px}nav{position:static;max-height:none;margin-bottom:20px}nav a{padding:6px 0}section{padding:26px}.hero .lead{font-size:18px}}@media(max-width:450px){body{font-size:16px}.top{padding:12px 20px}.hero{padding:24px 20px}section{padding:23px 19px}h2{font-size:23px}table{font-size:13px}th,td{padding:8px}pre{padding:14px;max-width:100%}pre code{font-size:12px}}@media print{body{background:white;color:black;font-size:11pt}.top{background:white}.top img{filter:drop-shadow(0 0 1px #777)}nav{display:none}.layout{display:block}.hero,section{border:0;box-shadow:none;margin:0;padding:14px 0}section{break-before:page}pre{white-space:pre-wrap;background:#f4f4f4;color:black;border:1px solid #aaa}pre code{white-space:pre-wrap}a{color:inherit}footer{margin:0}}
+</style></head><body><header class="top"><img src="data:image/png;base64,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" alt="Umicom"></header><div class="hero"><div class="eyebrow">Umicom learning library · Native systems</div><h1>Build and check a small Umicom operating system</h1><p class="lead">Start with a file archive, capture the source you intend to build, and learn what a real boot result needs to show.</p><p class="meta">Sammy Hegab · Umicom Foundation · C23 · Linux / WSL host workflow</p></div><div class="layout"><nav aria-label="Contents"><h2>In this guide</h2><a href="#start">1. Understand what you are building</a><a href="#folders">2. Put the files in the right places</a><a href="#prerequisites">3. Check your Linux build environment</a><a href="#host-tool">4. Build and test the native host tool</a><a href="#buildroot">5. Select the pinned Buildroot source</a><a href="#prepare">6. Capture a new image workspace</a><a href="#build">7. Configure and build the guest</a><a href="#pack">8. Assemble and inspect the root filesystem</a><a href="#normal">9. Run a normal QEMU boot check</a><a href="#recovery">10. Check recovery independently</a><a href="#x86">11. Repeat with x86-64</a><a href="#code">12. Read the C example and make one change</a><a href="#trouble">13. When a step stops</a><a href="#exercises">14. Check your understanding</a><a href="#windows">15. Use the host tools from Windows appropriately</a><a href="#references">16. Read further</a></nav><main><section id="start"><h2>1. Understand what you are building</h2>
+<p>You do not need to replace Windows to learn how an operating system starts. In this lesson, you will prepare a small Umicom OS image and run it in an explicitly selected virtual machine. Your working documents stay on the host computer; the supplied guest profile has no host disk, shared folder or network interface attached.</p>
+<p>The <strong>host</strong> is the computer doing the work. When you use Windows and a Linux terminal in WSL, that Linux environment is the build host. The <strong>guest</strong> is the small operating system started by QEMU. Compiling a host tool does not compile the guest kernel, and opening a file successfully does not prove that a guest booted.</p>
+<div class="note"><strong>This lesson supplies source and tools, not a prebuilt OS.</strong> The native components and fixture tests have been exercised. The selected Buildroot cross-build, actual guest boots, Windows execution and BIOS/UEFI boot remain acceptance work for the target environment. Expected boot results below are things to establish, not results already obtained.</div>
+<p>The operating-system profile contains a Linux kernel, a small initialisation program, two one-shot checks and a restricted recovery console. It is a text-console foundation. It does not yet provide a graphical desktop, disk installation or persistent guest documents.</p>
+<table><thead><tr><th>Part</th><th>What it does</th></tr></thead><tbody>
+<tr><td>Framework host tool</td><td>Checks inputs, records their identity, starts explicitly chosen build tools, creates the archive and evaluates observations.</td></tr>
+<tr><td>Buildroot</td><td>Builds the selected cross-toolchain, Linux kernel and guest programs using the existing Umicom recipes.</td></tr>
+<tr><td>Guest init</td><td>Runs as process 1, prepares the guest environment, supervises the two checks and retains recovery.</td></tr>
+<tr><td>Framework probe</td><td>Uses the actual in-memory Data Server to check commit and rollback inside normal guest operation.</td></tr>
+<tr><td>QEMU</td><td>Starts the selected machine profile. Its serial output supplies observations that the native tool can evaluate.</td></tr>
+</tbody></table>
+<p>Reusable host behaviour belongs to Umicom Framework. The kernel choices, initialisation program and independent recovery implementation belong to <code>umicomOS</code>. This division lets a later installer use the same tools without creating a second image engine.</p>
+</section><section id="folders"><h2>2. Put the files in the right places</h2>
+<p>Merge the source folders into their matching checkouts. Keep the spelling of <code>umicomOS</code>, including its capital letters. Do not copy it into an application module named <code>os</code>.</p>
+<pre><code class="language-text">C:\umicom\
+    Umicom-Applications\
+        framework\
+    umicomOS\
+        framework\
+        boot\foundation\
+        image\native\
+        tools\os-image\</code></pre>
+<p>The two <code>framework</code> directories are checkouts of the same Framework repository. The build examples below explicitly select the one inside <code>Umicom-Applications</code>. After publication, align the OS checkout's Framework submodule using the separate Build-and-Git instructions.</p>
+<p>The new native workflow uses <code>.umi</code> records. The older Python tool remains available, but its prepared JSON directories are not interchangeable with the new native records. Start a new native workspace rather than renaming old metadata.</p>
+<p>Do not work directly inside an earlier release or an existing image output. These commands deliberately refuse to merge new output into an existing destination.</p>
+</section><section id="prerequisites"><h2>3. Check your Linux build environment</h2>
+<p>Use a normal Linux account, either on Linux itself or inside WSL. Run the configure and build stages as that account, not as root. Administrator privileges may be needed to install host packages; they are not needed to build this image.</p>
+<p>You need a C23 compiler, CMake, Ninja, Git and GNU Make. The focused source was tested with GCC 14.2 and Clang 17. GNU <code>gzip</code> and <code>cpio</code> are useful independent readers used by a regression test. Image construction additionally needs Buildroot's documented host prerequisites, and booting needs the appropriate QEMU system emulator.</p>
+<pre><code class="language-bash">cc --version
+cmake --version
+ninja --version
+git --version
+make --version
+gzip --version
+cpio --version
+id -u</code></pre>
+<p>The final command prints your numeric user identity. Zero means root: switch to your normal account before continuing. A missing command or compiler without C23 support needs to be resolved through your Linux distribution's installation instructions before configuration.</p>
+<p>Follow the <a href="https://buildroot.org/downloads/manual/manual.html#requirement">Buildroot host requirements</a> for its additional tools. Check the selected release's own manual as well. A successful build of the small host tool does not establish that every cross-build dependency is installed.</p>
+<div class="note"><strong>Keep build output in Linux storage.</strong> The examples use <code>$HOME/umicom-builds</code>. They read the repositories through <code>/mnt/c</code> in WSL, but do not build the cross-toolchain there. This avoids mixing the host's source checkout with generated image contents. All selected build paths must be absolute and contain no spaces or shell metacharacters in this profile.</div>
+<p>Buildroot may download its required source archives during its build. The native Umicom tool does not implement a downloader, and the absence of a guest network device does not prevent the <em>host's build tools</em> from using the network.</p>
+</section><section id="host-tool"><h2>4. Build and test the native host tool</h2>
+<p>Open your Linux terminal and define three paths. <code>OS</code> names the operating-system checkout, <code>FW</code> selects the Framework implementation, and <code>BUILD</code> names generated host-tool output. On a native Linux computer, replace the first two with your actual checkout locations.</p>
+<pre><code class="language-bash">set -eu
+
+OS=&quot;/mnt/c/umicom/umicomOS&quot;
+FW=&quot;/mnt/c/umicom/Umicom-Applications/framework&quot;
+BUILD=&quot;$HOME/umicom-builds/os-image&quot;
+
+mkdir -p &quot;$HOME/umicom-builds&quot;
+
+test &quot;$(id -u)&quot; -ne 0 || {
+    echo &quot;Use your normal Linux account, not root.&quot;
+    exit 1
+}
+
+cmake -S &quot;$OS/tools/os-image&quot; -B &quot;$BUILD&quot; -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DUMICOM_OS_FRAMEWORK_SOURCE=&quot;$FW&quot;
+
+cmake --build &quot;$BUILD&quot; --parallel 2
+
+ctest --test-dir &quot;$BUILD&quot; --parallel 2 \
+    --no-tests=error --output-on-failure
+
+TOOL=&quot;$BUILD/bin/umicom-os-image&quot;
+&quot;$TOOL&quot; --self-test
+&quot;$BUILD/bin/umicom-os-image-archive-example&quot;</code></pre>
+<p><code>set -eu</code> stops this shell sequence when a command fails or an unset variable is used. Do not continue through a configuration or test failure. These are terminal instructions; the feature implementation is the native C executable, not a shell script.</p>
+<p>The self-check should print:</p>
+<pre><code class="language-text">Native archive self-check passed. No file, build or guest was started.</code></pre>
+<p>The example creates a Notes welcome archive entirely in memory. Its final message is:</p>
+<pre><code class="language-text">Practice complete. The archive stayed in memory; no files were extracted and no guest was started.</code></pre>
+<p>Passing these checks establishes that the selected host build runs its tests. The pipeline tests intentionally use synthetic image headers and a named inert process. They do not start a Linux guest.</p>
+</section><section id="buildroot"><h2>5. Select the pinned Buildroot source</h2>
+<p>A repeatable project names the source it expects. The existing Umicom recipes select Buildroot <strong>2025.02.18</strong> at commit <code>d030e36bbc9669230c015be971b14b6e062cfdde</code> and Linux <strong>6.12.109</strong>. This batch keeps those choices rather than silently updating them.</p>
+<p>Use a new, dedicated directory for the external Buildroot source. The commands below fetch one release tag, check out its exact commit and print the result. They do not alter either Umicom repository.</p>
+<pre><code class="language-bash">BR=&quot;$HOME/src/buildroot-umicom&quot;
+mkdir -p &quot;$HOME/src&quot;
+
+test ! -e &quot;$BR&quot; || {
+    echo &quot;That Buildroot directory already exists. Inspect it; do not overwrite it.&quot;
+    exit 1
+}
+
+git init &quot;$BR&quot;
+git -C &quot;$BR&quot; remote add origin https://github.com/buildroot/buildroot.git
+git -C &quot;$BR&quot; fetch --depth 1 origin tag 2025.02.18
+git -C &quot;$BR&quot; checkout --detach d030e36bbc9669230c015be971b14b6e062cfdde
+git -C &quot;$BR&quot; rev-parse HEAD
+git -C &quot;$BR&quot; status --short</code></pre>
+<p>The printed commit must match the one above, and the status should be empty. Detached HEAD is deliberate for this <em>external dependency checkout</em>; it does not change the direct-to-main policy of the Umicom repositories. A failed fetch or a mismatched commit is a stop condition, not a reason to choose the latest branch automatically.</p>
+<p>The native <code>prepare</code> stage performs its own clean-commit check using the explicitly supplied Git executable. The profile at <code>umicomOS/image/native/profile.umi</code> also records the expected Linux source-archive SHA-256. Hash agreement identifies bytes; it is not a publisher-signature check or a security assessment of a release.</p>
+</section><section id="prepare"><h2>6. Capture a new image workspace</h2>
+<p>Begin with the RISC-V profile. It allows the same learning workflow to explore a different processor architecture without changing the source-level ownership rules.</p>
+<pre><code class="language-bash">RUN=&quot;$HOME/umicom-builds/native-riscv-b25&quot;
+
+&quot;$TOOL&quot; prepare \
+    --os &quot;$OS&quot; \
+    --framework &quot;$FW&quot; \
+    --buildroot &quot;$BR&quot; \
+    --output &quot;$RUN&quot; \
+    --arch riscv64 \
+    --git /usr/bin/git</code></pre>
+<p>Preparation validates the declared source list, then reads, hashes and copies its files into <code>inputs</code>. It does not recursively copy all your repositories. The completion record is <code>input-manifest.umi</code>; its SHA-256 becomes the image's <strong>source identifier</strong>.</p>
+<p>The current profile captures 36 selected files. That identity is specific to those captured bytes, not a claim that the entire repository or compiler installation has been recorded. Absolute checkout locations are kept separately, so they do not change the source identifier.</p>
+<p>The expected completion message says that no kernel build or guest boot was attempted. You can inspect the manifest as text. Do not edit its captured source files as a way to patch a build: a subsequent check will reject the mismatch. Change the original source deliberately and prepare another new workspace.</p>
+<div class="note"><strong>A refused destination protects earlier work.</strong> When the output already exists, keep it and choose a new <code>RUN</code>. A partial preparation is not a completed workspace and is not silently removed.</div>
+</section><section id="build"><h2>7. Configure and build the guest</h2>
+<p>Configuration turns the selected profile into Buildroot settings. Building then compiles the cross-toolchain, kernel and guest programs. These are separate operations so a configuration change cannot silently become part of an already reviewed build.</p>
+<pre><code class="language-bash">&quot;$TOOL&quot; configure --output &quot;$RUN&quot; --make /usr/bin/make
+
+&quot;$TOOL&quot; build --output &quot;$RUN&quot; --make /usr/bin/make --jobs 2</code></pre>
+<p>The native tool supplies argument arrays to Framework's process runner. It selects an out-of-tree build directory, the captured external recipes and a workspace-specific downloads directory. Buildroot still uses its normal build tools and recipes; native orchestration does not mean that Linux or Buildroot has been reimplemented.</p>
+<p>After configuration, <code>configured.umi</code> records the exact generated configuration. After a successful build, the tool checks important kernel settings, the three static guest executables, the kernel image and the selected Linux source archive. It writes <code>built.umi</code> only after those checks agree.</p>
+<p>Expect the first cross-build to do substantially more work than the host-tool build. Each invocation has a four-hour limit and a 64 MiB captured-output limit. Build output is retained in memory and saved at command return; this edition is not a live, durable log viewer. Ctrl+C in the Linux host requests cancellation of the owned process group. Do not repeatedly press it while cleanup is completing.</p>
+<p>Failed build attempts retain their output and can be retried after addressing the cause. A failed configuration that created its build directory needs a new prepared workspace. A successful build marker is not overwritten. A sudden host termination can leave an attempt without final logs or a result; treat it as incomplete.</p>
+<p>No kernel or guest binary is produced by a unit-test fixture for distribution. Only the real build above can produce the requested guest build inputs. Its success still needs the boot checks later in this lesson.</p>
+</section><section id="pack"><h2>8. Assemble and inspect the root filesystem</h2>
+<p>The root filesystem is the guest's first set of files. The native packer admits a fixed list rather than copying your host filesystem. It describes the two required character-device entries inside the archive; it does not create device nodes on the host.</p>
+<pre><code class="language-bash">&quot;$TOOL&quot; pack --output &quot;$RUN&quot; --bundle &quot;$RUN/bundle&quot;
+&quot;$TOOL&quot; verify --bundle &quot;$RUN/bundle&quot;
+&quot;$TOOL&quot; archive --file &quot;$RUN/bundle/umicom-rootfs.cpio.gz&quot;</code></pre>
+<p>A RISC-V bundle contains exactly these four files:</p>
+<pre><code class="language-text">bundle/
+    Image
+    umicom-rootfs.cpio.gz
+    input-manifest.umi
+    image.umi</code></pre>
+<p>The x86-64 variant uses <code>bzImage</code> instead of <code>Image</code>. The archive includes the initialisation program, platform check, Framework probe, configuration and generated source/package information.</p>
+<p>The packer produces canonical <em>newc</em> inside gzip framing. Its DEFLATE blocks store the bytes without attempting compression, keeping the implementation small and dependency-free. The result is deliberately larger than a highly compressed archive. The reader accepts this stored-block profile and canonical raw newc, not every possible gzip stream.</p>
+<p>Verification checks the complete bundle inventory, sizes, hashes, archive structure, permitted entries and recorded source relationships. It does not extract files or start code. The bundle's manifest continues to say <code>boot	not-run</code>; boot results are stored separately rather than modifying the image to claim success.</p>
+<p>For an independent view, the standard tools below list the archive without extracting it. Check both commands if your shell does not preserve failures in a pipeline; the regression suite performs the independent checks itself.</p>
+<pre><code class="language-bash">gzip -t &quot;$RUN/bundle/umicom-rootfs.cpio.gz&quot;
+gzip -dc &quot;$RUN/bundle/umicom-rootfs.cpio.gz&quot; | cpio -it</code></pre>
+<p>Do not add a log or a README inside the bundle and expect verification to ignore it. Put notes beside the bundle. The exact-inventory check is intentional.</p>
+</section><section id="normal"><h2>9. Run a normal QEMU boot check</h2>
+<p>Install the QEMU system emulator appropriate to your Linux distribution. Select the actual native executable, not a script wrapper, and confirm its location before the first run.</p>
+<pre><code class="language-bash">/usr/bin/qemu-system-riscv64 --version
+
+&quot;$TOOL&quot; boot \
+    --bundle &quot;$RUN/bundle&quot; \
+    --qemu /usr/bin/qemu-system-riscv64 \
+    --mode normal \
+    --result &quot;$RUN/boot-normal&quot; \
+    --timeout 90</code></pre>
+<p>This automated profile uses the RISC-V <code>virt</code> machine, TCG, one virtual CPU, 256 MiB RAM and QEMU's default OpenSBI path. It uses a serial console, not a graphical window. There is no guest network, host-disk attachment or shared folder in the supplied arguments.</p>
+<p>The new result directory records the requested input identities, captured console bytes and outcome:</p>
+<pre><code class="language-text">boot-normal/
+    request.umi
+    console.log
+    result.umi</code></pre>
+<p>Normal acceptance requires the init marker, successful <code>platform-check</code>, successful <code>framework-probe</code>, a matching source identifier, a final report of two completed services, and a shutdown marker. The process must also exit successfully. A zero process exit by itself is not enough.</p>
+<p>A missing QEMU executable returns exit code <strong>77</strong>: the boot was unavailable or not run, not passed. A timeout is a failure to establish the requested result. Inspect the retained console rather than replacing it with a manually edited success line.</p>
+<p>The recorded QEMU hash helps identify the selected executable; it is not protection against choosing a malicious program that imitates a guest. Use a trusted QEMU distribution. This command is a direct-kernel boot check, not a BIOS, UEFI, Secure Boot, ISO or physical-media test.</p>
+</section><section id="recovery"><h2>10. Check recovery independently</h2>
+<p>A normal boot cannot prove that recovery works. Start a separate run with forced recovery:</p>
+<pre><code class="language-bash">&quot;$TOOL&quot; boot \
+    --bundle &quot;$RUN/bundle&quot; \
+    --qemu /usr/bin/qemu-system-riscv64 \
+    --mode recovery \
+    --result &quot;$RUN/boot-recovery&quot; \
+    --timeout 90</code></pre>
+<p>This automated mode requests recovery and automatic shutdown. It is not an interactive console session. The normal services must not run: the expected final report has <code>planned=2</code>, <code>completed=0</code>, recovery state and requested-recovery reason.</p>
+<p>Compare the two console files. Normal mode exercises the Framework Data Server probe; forced recovery demonstrates the separate recovery path. Both reports must identify the same captured source set, but their service counts and states differ.</p>
+<p>Each new run needs a new result directory. Reusing a directory is refused so a previous success cannot be mistaken for the current attempt. Running the checks never changes the bundle's <code>boot=not-run</code> field: the result belongs to the particular run and selected QEMU executable.</p>
+</section><section id="x86"><h2>11. Repeat with x86-64</h2>
+<p>Architecture is an explicit input, not a label added after compilation. Prepare and build a separate workspace for x86-64:</p>
+<pre><code class="language-bash">RUN_X86=&quot;$HOME/umicom-builds/native-x86-b25&quot;
+
+&quot;$TOOL&quot; prepare --os &quot;$OS&quot; --framework &quot;$FW&quot; --buildroot &quot;$BR&quot; \
+    --output &quot;$RUN_X86&quot; --arch x86_64 --git /usr/bin/git
+&quot;$TOOL&quot; configure --output &quot;$RUN_X86&quot; --make /usr/bin/make
+&quot;$TOOL&quot; build --output &quot;$RUN_X86&quot; --make /usr/bin/make --jobs 2
+&quot;$TOOL&quot; pack --output &quot;$RUN_X86&quot; --bundle &quot;$RUN_X86/bundle&quot;
+&quot;$TOOL&quot; verify --bundle &quot;$RUN_X86/bundle&quot;
+
+&quot;$TOOL&quot; boot --bundle &quot;$RUN_X86/bundle&quot; \
+    --qemu /usr/bin/qemu-system-x86_64 --mode normal \
+    --result &quot;$RUN_X86/boot-normal&quot; --timeout 90
+&quot;$TOOL&quot; boot --bundle &quot;$RUN_X86/bundle&quot; \
+    --qemu /usr/bin/qemu-system-x86_64 --mode recovery \
+    --result &quot;$RUN_X86/boot-recovery&quot; --timeout 90</code></pre>
+<p>The x86 profile uses QEMU's <code>q35</code> machine and the selected <code>bzImage</code>. Its validation results stand on their own. Success for one architecture must not be copied into the other's release record.</p>
+<p>Before considering redistribution, collect Buildroot's legal-information output:</p>
+<pre><code class="language-bash">&quot;$TOOL&quot; legal-info --output &quot;$RUN_X86&quot; --make /usr/bin/make</code></pre>
+<p>Read its notices and warnings. This command gathers information through the selected Buildroot recipes; it does not certify that all obligations for every distributed component have been met. It does not bundle QEMU.</p>
+</section><section id="code"><h2>12. Read the C example and make one change</h2>
+<p>Open <code>framework/examples/os_image/archive_lesson.c</code> in Studio. The program deliberately stays in memory so the first lesson cannot accidentally install files or start a guest.</p>
+<p>An entry describes a name, a mode, optional device numbers and a byte span. Directory entries have no content. The file entry points at a constant welcome message. The array is the proposed archive; it is not an instruction to write those paths on the host.</p>
+<pre><code class="language-c">static const unsigned char message[] = &quot;Umicom Notes practice workspace\n&quot;;
+UmiOsImageEntry files[] = {
+    { &quot;etc&quot;, 0040755U, 0, 0, NULL, 0 },
+    { &quot;etc/umicom&quot;, 0040755U, 0, 0, NULL, 0 },
+    { &quot;etc/umicom/welcome.txt&quot;, 0100444U, 0, 0,
+      message, sizeof message - 1U }
+};</code></pre>
+<p>The leading zero on the mode constants means octal notation. The mode contains both entry type and permissions. This is why a directory and a read-only file have different values. <code>sizeof message - 1U</code> excludes the C string terminator; the archive member stores the actual text bytes.</p>
+<p><code>UmiOsImageArchiveBuild</code> returns allocated bytes. The caller owns that allocation and calls <code>free</code>. <code>UmiOsImageArchiveOpen</code> creates an independently owned reader object. Names and data returned by <code>UmiOsImageArchiveAt</code> are borrowed views that remain valid only until the reader is destroyed.</p>
+<p>Read the complete file's cleanup path. Both reader destruction and freeing the returned bytes occur even when an intermediate operation fails. This is a small example of explicit ownership at a stable C boundary.</p>
+<p>Change the welcome message, rebuild and run the example. Its file size changes, but it should still say that no file was extracted and no guest was started. Then try a traversal name such as <code>../welcome.txt</code>; it must be rejected. Restore the valid example and rerun the tests before committing your exercise.</p>
+</section><section id="trouble"><h2>13. When a step stops</h2>
+<table><thead><tr><th>What you see</th><th>What it means and what to do</th></tr></thead><tbody>
+<tr><td>Output already exists</td><td>The tool is preserving earlier data. Inspect that directory and choose a new one; do not delete evidence just to obtain a successful command.</td></tr>
+<tr><td>Buildroot identity differs</td><td>The selected commit or working tree does not match the profile. Review the dedicated external checkout and its status.</td></tr>
+<tr><td>Captured inputs changed</td><td>A recorded file no longer agrees. Prepare another workspace from the intended sources instead of editing the manifest.</td></tr>
+<tr><td>Configuration differs</td><td>The exact generated settings changed. Intentional configuration work requires a new reviewed preparation; a source-identical-looking filename is not sufficient.</td></tr>
+<tr><td>Another operation owns the workspace</td><td>The native lock is held or invalid. Let the owning process finish. Do not bypass its lock file while work is running.</td></tr>
+<tr><td>Build failed or was cancelled</td><td>Read its attempt output after the command returns. Fix host prerequisites or recipes, then use the appropriate retry/new-workspace path.</td></tr>
+<tr><td>ELF or kernel mismatch</td><td>The file's structure or architecture is outside the chosen profile. Renaming an executable does not change its machine code.</td></tr>
+<tr><td>Archive format unavailable</td><td>The reader intentionally supports canonical newc and its stored-gzip profile, not every compression mode. Do not interpret that as permission to skip integrity checks.</td></tr>
+<tr><td>Boot exit 77</td><td>The required execution capability was unavailable. Record NOT RUN and arrange the real target test.</td></tr>
+<tr><td>Exit zero, boot check failed</td><td>The console did not prove the expected sequence, identity and final state. Read it for a panic, missing service, repeated record or wrong mode.</td></tr>
+</tbody></table>
+<p>Archive members are limited to 32 MiB each, 128 entries and 64 MiB of raw archive content. The fixed guest uses 24 entries. Source manifests are bounded to 256 files and 64 MiB combined. These are deliberate input controls, not promises that all future OS profiles fit them.</p>
+<p>There is no automatic source cleanup, raw-disk writer, ISO producer, USB erase operation or optical burner in this tool. Use the separate distribution workstreams for those capabilities rather than changing a filename extension and calling the result bootable.</p>
+</section><section id="exercises"><h2>14. Check your understanding</h2>
+<p>Answer these questions after running the memory example. The later practical tasks require the real build and guest environment; do not mark them complete based on a fixture.</p>
+<details><summary>Why are preparation, packing and booting three different results?</summary><p>Preparation records selected source bytes. Packing creates and checks a fixed artifact set. Booting observes execution in a particular machine configuration. None of the first two proves the third.</p></details>
+<details><summary>Does a matching SHA-256 tell you who published a file?</summary><p>No. It compares bytes with a recorded value. Publisher authentication needs an independently trusted signature and its verification policy.</p></details>
+<details><summary>Why must recovery complete zero normal services?</summary><p>Forced recovery intentionally avoids the normal path. Its result must show that separation rather than quietly running the checks it is meant to bypass.</p></details>
+<details><summary>Can the in-memory lesson free an entry returned by ArchiveAt?</summary><p>No. It is a borrowed view owned by the archive object. Destroy the reader, and separately free the output allocation created by ArchiveBuild.</p></details>
+<details><summary>What does a native pipeline test using an inert C executable establish?</summary><p>It can establish argument handling, state checks, cancellation and interpretation of controlled output. It does not establish that Buildroot compiled a real guest or that QEMU booted it.</p></details>
+<h3>Practical milestones</h3>
+<p>First, modify and rebuild the welcome archive example. Next, create two native preparations from the same selected bytes and compare their source identifiers. Then change one declared source file in a disposable source copy and confirm that a new preparation receives a different identity.</p>
+<p>With a qualified build host, complete normal and recovery runs for one architecture and retain their request, console and result records. Finally, repeat for the other architecture. Explain which results are still missing before describing either profile as a distributable operating system.</p>
+</section><section id="windows"><h2>15. Use the host tools from Windows appropriately</h2>
+<p>The full Windows Applications build includes the new library, command-line source and memory example. The supplied Windows file adapter and entry point have not been compiled or run in the delivery environment; run the target-platform checks before relying on them.</p>
+<pre><code class="language-powershell">Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+$env:Path = &quot;C:\msys64\ucrt64\bin;$env:Path&quot;
+
+&amp; &quot;.\build\windows-ucrt64-all-debug\bin\umicom-os-image.exe&quot; --self-test
+if ($LASTEXITCODE -ne 0) { throw &quot;Native image self-test failed.&quot; }
+
+&amp; &quot;.\build\windows-ucrt64-all-debug\bin\umicom-os-image-archive-example.exe&quot;
+if ($LASTEXITCODE -ne 0) { throw &quot;Archive lesson failed.&quot; }</code></pre>
+<p>These commands exercise host functionality. <code>prepare</code>, <code>configure</code>, <code>build</code> and <code>legal-info</code> still require Linux or WSL. The public library does not install signal handlers; GUI hosts must provide their own cancellation token and run blocking work on a worker thread.</p>
+<p>This batch does not add an OS-builder page to Setup Centre. It supplies the Framework capability and explicit command-line workflow that such a page can consume later. The existing installer, maintenance, VM and boot-media pages remain unchanged.</p>
+</section><section id="references"><h2>16. Read further</h2>
+<p>The implementation follows documented formats and existing Umicom contracts. These references help connect the practice to the wider systems tools:</p>
+<p><a href="https://www.kernel.org/doc/html/v6.7/driver-api/early-userspace/buffer-format.html">Linux: initramfs buffer format</a> describes the archive format and compression framing. The native reader deliberately accepts a narrower canonical profile.</p>
+<p><a href="https://buildroot.org/downloads/manual/manual.html">Buildroot user manual</a> covers host requirements, external trees, out-of-tree output and legal information. Consult the matching pinned release documentation when a setting differs.</p>
+<p><a href="https://www.qemu.org/docs/master/system/riscv/virt.html">QEMU: RISC-V virt machine</a> and <a href="https://www.qemu.org/docs/master/system/target-riscv.html">RISC-V system emulation</a> describe the selected machine and firmware context. The exact installed QEMU version is part of your local qualification.</p>
+<p>The developer contract is <code>framework/docs/development/native-os-image.md</code>. It records limits, ownership, thread rules, state formats and the boundary between observed output and actual trust. Keep the separate build and Git instructions beside this guide when integrating the source delivery.</p>
+</section></main></div><footer>Umicom Foundation · Use practice workspaces and retain each result. Source inspection, build success and guest execution answer different questions.</footer></body></html>

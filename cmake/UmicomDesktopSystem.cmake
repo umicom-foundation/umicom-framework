@@ -75,3 +75,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeLauncher.cmake")
 # Setup is a Framework-owned native bootstrap, not an app-local installer.
 # Keep the existing NSIS and script entry points as unchanged alternatives.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomSetupCentre.cmake")
+
+# Native host image assembly and observed boot checks share Framework services.
+# The earlier OS Python tool remains unchanged as an alternative implementation.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomOsImage.cmake")
