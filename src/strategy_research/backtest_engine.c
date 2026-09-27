@@ -17,6 +17,11 @@
 #include <math.h>
 #include <string.h>
 
+/* The original accumulator is retained for source review. It accepted NaN and
+ * infinity, and committed counts before checking representable arithmetic.
+ * The replacement below validates a candidate before publishing any change.
+ * Public structures and legacy metric conventions are deliberately retained. */
+#if 0
 UmiStatus umi_strategy_backtest_state_init(
     UmiStrategyBacktestState *state,
     double initialEquity)
@@ -167,4 +172,102 @@ UmiStatus umi_strategy_backtest_snapshot(
     outSnapshot->maxWinStreak = state->maxWinStreak;
     outSnapshot->maxLossStreak = state->maxLossStreak;
     return UMI_STATUS_OK;
+}
+#endif
+
+/* Framework owns this check so research hosts cannot disagree about whether
+ * a rejected trade has changed their shared accumulator. */
+static int BacktestStateValid(const UmiStrategyBacktestState *s)
+{
+    if (s == NULL) return 0;
+    const double values[] = {s->initialEquity,s->equity,s->peakEquity,
+        s->grossProfit,s->grossLoss,s->netProfit,s->turnover,s->commission,
+        s->slippage,s->maxDrawdown,s->totalWin,s->totalLoss};
+    for (size_t i=0; i<sizeof values/sizeof values[0]; ++i)
+        if (!isfinite(values[i])) return 0;
+    return s->initialEquity>0.0 && s->peakEquity>0.0 &&
+        s->turnover>=0.0 && s->commission>=0.0 && s->slippage>=0.0 &&
+        s->grossProfit>=0.0 && s->grossLoss<=0.0 && s->maxDrawdown>=0.0 &&
+        s->totalWin>=0.0 && s->totalLoss<=0.0 &&
+        s->winCount<=s->tradeCount && s->lossCount==s->tradeCount-s->winCount &&
+        s->winStreak<=s->winCount && s->lossStreak<=s->lossCount;
+}
+UmiStatus umi_strategy_backtest_state_init(UmiStrategyBacktestState *state, double initialEquity)
+{
+    if (state==NULL || !isfinite(initialEquity) || initialEquity<=0.0)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStrategyBacktestState value={0};
+    value.initialEquity=initialEquity; value.equity=initialEquity;
+    value.peakEquity=initialEquity; *state=value;
+    return UMI_STATUS_OK;
+}
+UmiStatus umi_strategy_backtest_add_trade(UmiStrategyBacktestState *state,
+    double entryPrice, double exitPrice, double signedQuantity,
+    double commission, double slippage, uint64_t entryMilliseconds, uint64_t exitMilliseconds)
+{
+    if (!BacktestStateValid(state) || !isfinite(entryPrice) || !isfinite(exitPrice) ||
+        !isfinite(signedQuantity) || !isfinite(commission) || !isfinite(slippage) ||
+        entryPrice<=0.0 || exitPrice<=0.0 || signedQuantity==0.0 ||
+        commission<0.0 || slippage<0.0 || exitMilliseconds<entryMilliseconds)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    uint64_t duration=exitMilliseconds-entryMilliseconds;
+    if (state->tradeCount==UINT64_MAX || duration>UINT64_MAX-state->exposureMilliseconds)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    double costs=commission+slippage;
+    double gross=(exitPrice-entryPrice)*signedQuantity;
+    double pnl=gross-costs;
+    double turnover=fabs(entryPrice*signedQuantity)+fabs(exitPrice*signedQuantity);
+    if (!isfinite(costs) || !isfinite(gross) || !isfinite(pnl) || !isfinite(turnover))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiStrategyBacktestState next=*state;
+    next.tradeCount++; next.commission+=commission; next.slippage+=slippage;
+    next.turnover+=turnover; next.exposureMilliseconds+=duration;
+    if (next.tradeCount==1U) next.firstTradeMilliseconds=entryMilliseconds;
+    next.lastTradeMilliseconds=exitMilliseconds;
+    if (pnl>=0.0) {
+        next.grossProfit+=pnl; next.totalWin+=pnl; next.winCount++;
+        next.winStreak++; next.lossStreak=0;
+        if(next.winStreak>next.maxWinStreak) next.maxWinStreak=next.winStreak;
+    } else {
+        next.grossLoss+=pnl; next.totalLoss+=pnl; next.lossCount++;
+        next.lossStreak++; next.winStreak=0;
+        if(next.lossStreak>next.maxLossStreak) next.maxLossStreak=next.lossStreak;
+    }
+    next.netProfit+=pnl; next.equity=next.initialEquity+next.netProfit;
+    if(next.equity>next.peakEquity) next.peakEquity=next.equity;
+    double drawdown=next.peakEquity-next.equity;
+    if(!isfinite(drawdown)) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if(drawdown>next.maxDrawdown) next.maxDrawdown=drawdown;
+    if(!BacktestStateValid(&next)) return UMI_STATUS_CAPACITY_EXCEEDED;
+    *state=next; return UMI_STATUS_OK;
+}
+UmiStatus umi_strategy_backtest_snapshot(const UmiStrategyBacktestState *state,
+    UmiStrategyBacktestSnapshot *outSnapshot)
+{
+    if(outSnapshot==NULL || !BacktestStateValid(state)) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStrategyBacktestSnapshot v={0};
+    v.initialEquity=state->initialEquity; v.endingEquity=state->equity;
+    v.grossProfit=state->grossProfit; v.grossLoss=state->grossLoss;
+    v.netProfit=state->netProfit; v.maxDrawdown=state->maxDrawdown;
+    v.maxDrawdownPercent=(state->maxDrawdown/state->peakEquity)*100.0;
+    /* Legacy conventions: zero-profit trades count as wins; a no-loss profit
+     * factor remains the existing 100 sentinel. New reports label it unavailable. */
+    v.profitFactor=state->grossLoss<0.0 ? state->grossProfit/fabs(state->grossLoss)
+        : (state->grossProfit>0.0 ? 100.0 : 0.0);
+    v.winRate=state->tradeCount ? ((double)state->winCount/(double)state->tradeCount)*100.0 : 0.0;
+    v.averageWin=state->winCount ? state->totalWin/(double)state->winCount : 0.0;
+    v.averageLoss=state->lossCount ? state->totalLoss/(double)state->lossCount : 0.0;
+    v.expectancy=state->tradeCount ? state->netProfit/(double)state->tradeCount : 0.0;
+    v.turnover=state->turnover; v.commission=state->commission; v.slippage=state->slippage;
+    uint64_t elapsed=state->lastTradeMilliseconds>=state->firstTradeMilliseconds
+        ? state->lastTradeMilliseconds-state->firstTradeMilliseconds : 0;
+    v.exposurePercent=elapsed ? ((double)state->exposureMilliseconds/(double)elapsed)*100.0 : 0.0;
+    if(v.exposurePercent>100.0) v.exposurePercent=100.0;
+    v.tradeCount=state->tradeCount; v.winCount=state->winCount; v.lossCount=state->lossCount;
+    v.maxWinStreak=state->maxWinStreak; v.maxLossStreak=state->maxLossStreak;
+    if(!isfinite(v.maxDrawdownPercent) || !isfinite(v.profitFactor) ||
+       !isfinite(v.winRate) || !isfinite(v.averageWin) || !isfinite(v.averageLoss) ||
+       !isfinite(v.expectancy) || !isfinite(v.exposurePercent))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    *outSnapshot=v; return UMI_STATUS_OK;
 }

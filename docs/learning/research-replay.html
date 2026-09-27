@@ -1,0 +1,158 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Replay a trading idea one observation at a time</title><link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADMAAAAzCAYAAAA6oTAqAAAEpUlEQVR4nO2ZwUsbWRzHv132ppnpi66gNUJm3WpoPHQSoyQotGbBsDTQlBbpTSjppcf9G/a0x14aCt5ENruWbdk1YGxBSdA0yR4MxEqJYKWFYjMktufdQ3dmJ8m8eW8mcTcs+Z6clzfz3sf3/f3eb95cuHhl7k/8T/TFfz2BTqoH063qwXSrejBWFA3JWI7Ma9cLoRnIXs+5jPXluTwVwIRrGMuReQyIDrx6805rJ6KAhdAMFkIzKJbK2MrsdWzMjsMMiA4sR+Yx4RrW2gaFfu3vi4IDwD9QsteDXzbSqByftD12R2GWI/MIei+3tA+IDuo9RBRwbymmrZJSq9sevyMwQe9lRINXTSfNkuz1wO26hGKpjGKpbAuqLZgJ1zBuhOQGSxnpQ+2M63l669mJpwt2C83vl75jQqj6ce03LQkQUcCtSBjS2CjzPqVWtwRlGSYaknEjKHP1zZYOsbKxbfibNDaK68EAN9RWZg/FUtm0HzeMlbhY2dhGtnQIAHASAicheF2pGPaVvR4shGZARIH5XBYUEyYakhG88g0XRPNKjEsSHtyP43WlgoePEtT7iChoUDyi2Y+aAIz2C5pevXmHZ5miFhdOQnD3zm2MS5J2zZqc+h/ngVITBREF/Pz7JhsmGrzKlaVWNrYbdvjFb8NYDIcb+rFgVFmFcrsuNVybroyZnmWLeJopatdOQvDgfpw6cSchqCqK6TNV6aHMMh8RBRBR0PYkKoy+BNErWzrE0+wf2t7hJAQBv69lNZrFC6KXUqvj8dq6ViUYJQkumGY1xwVgbCkj5fIF3mEMJXs91GynrxSoMKf1j5rV9KkWaA1wM+XyBawmk9wT10saG8W9pRh3fyrMh9oZsn8HuCpeSwGfbbX6U5K6v5iJt0qoHJ/wrUzzzs1rqXYgAGjvOiwptTqeZ3MNbcyY4bVUVVGQKxSQ2kwzJ2IkaWwUtyJhZiVgVgVQYcYlCXfv3ObaI1LptG0IXkvxFJ1UmIDPxwRpNy54zwO2MnstELHpKUyODOGHX7e0NvrKfE23VbuWshIXza/Uc5NuxPxTGHT0tfS3/HLGKhpZ4gExspRnZAg3p6fgGRlq6Dvo6MPp2ScAFmGqimI7S6li2crIUvFrs5ibdBv2V0EAE5iqorTEjJMQLIbDCPh8bdnMSDRLxa/NUu/RgwA2zwD0UFYTgFKrN6RfK5ZiiQqTKxSYe4taKefyBaTSacvFZOX4BI/X1rXrQUcf4tdnuSBOzz4h8Xy3oc30TdNq+cJjPdrBX2x6Cjf9XuY4ALBzcITEi92Wdq4zAM1Wfh9zIBaUvmQHzFNts57kS9g+qLTEiipLpzNWqmUWlJW4oK1Es2ydm6nW4yl1qoqCh48SWjxZiYudgyOs5/epK9Es24eAajzxlD36jZYnNspv3+PJy32U3763NCfbx7NVRUFqM41cvsBMEnrYwX7z2Ei82MXOwZGtObV9cM4DxZOyeePCTB37pKGHMst8px8b/W/XUkbq+MemqqJgNZlEKp02zXzqptcJCFW2EwCvAv7PCUJN0XOTbnzl6Mf6y/2Oj3XuMP+mep/Ou1U9mG5VD6Zb9ReztWucDqtdOAAAAABJRU5ErkJggg=="><style>*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#f3f6f8;color:#193041;font:17px/1.72 "Segoe UI",Arial,sans-serif}a{color:#006d80}header{background:#112e3d;padding:20px 5vw;display:flex;align-items:center;gap:20px;color:white}header img{width:176px;height:auto}.edition{margin-left:auto;font-size:14px}.cover{max-width:1100px;margin:32px auto 20px;padding:36px 44px;background:white;border-top:5px solid #118482;border-radius:12px}.cover h1{font-size:clamp(30px,4vw,47px);line-height:1.15;margin:14px 0}.label{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#08736f;font-weight:700}.layout{display:grid;grid-template-columns:265px minmax(0,1fr);gap:22px;max-width:1330px;margin:0 auto 40px;padding:0 24px}nav{align-self:start;position:sticky;top:18px;background:white;border:1px solid #dce4e9;border-radius:10px;padding:18px;max-height:90vh;overflow:auto}nav a{display:block;text-decoration:none;font-size:14px;padding:5px 0;border-bottom:1px solid #edf1f4}article{background:white;min-width:0;padding:32px 44px;border-radius:12px;border:1px solid #e3e9ed}h2{margin-top:2.1em;font-size:27px;line-height:1.3;border-top:1px solid #dce4e9;padding-top:24px;scroll-margin-top:24px}h3{font-size:21px}p{margin:0 0 1.05em}pre{background:#132c3b;color:#ecf4f7;padding:20px;border-radius:8px;overflow:auto;font:14px/1.6 Consolas,monospace}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}pre code{font:inherit;overflow-wrap:normal}table{border-collapse:collapse;width:100%;font-size:15px;margin:22px 0;display:block;overflow-x:auto}th,td{border:1px solid #cfdae1;padding:10px 12px;text-align:left;vertical-align:top}th{background:#eaf4f4}blockquote{border-left:4px solid #158786;background:#edf7f7;margin:24px 0;padding:16px 22px}footer{max-width:1100px;margin:24px auto;padding:24px;display:flex;align-items:center;gap:18px;font-size:14px;color:#52636e}footer img{width:46px;height:46px}ul,ol{padding-left:24px}li{margin:.3em 0}@media(max-width:950px){.layout{display:block}nav{position:static;max-height:none;margin-bottom:18px}.cover{margin:20px 18px;padding:26px}article{padding:22px 24px}.layout{padding:0 18px}h2{font-size:24px}}@media(max-width:540px){body{font-size:16px}header{padding:16px 20px}header img{width:135px}.edition{font-size:12px}.cover{padding:22px}.layout{padding:0 12px}article{padding:18px}pre{font-size:12px;padding:14px}}@media print{nav{display:none}.layout{display:block;padding:0}header{background:white;color:black}.cover,article{border:0;margin:0;padding:20px}body{background:white}pre{white-space:pre-wrap;background:#f2f5f6;color:black}h2{break-after:avoid}table{display:table}footer{border-top:1px solid #ddd}}</style></head><body><header><img alt="Umicom" src="data:image/png;base64,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"><span class="edition">Batch 34 · Beginner guide</span></header><div class="cover"><div class="label">Umicom Foundation · Native development</div><h1>Replay a trading idea one observation at a time</h1></div><div class="layout"><nav aria-label="Contents"><strong>Contents</strong><a href="#section-1">1. Meet the three parts of the exercise</a><a href="#section-2">2. Build the practice program</a><a href="#section-3">3. Run the eight-quote example</a><a href="#section-4">4. Understand the trace rather than just the total</a><a href="#section-5">5. Compare the delay assumptions</a><a href="#section-6">6. Read a quote file</a><a href="#section-7">7. Change the C strategy in Studio</a><a href="#section-8">8. Step, pause and cancel through the C contract</a><a href="#section-9">9. Read the fingerprint correctly</a><a href="#section-10">10. Why a rejected calculation must leave the old result alone</a><a href="#section-11">11. Practise and check your answers</a><a href="#section-12">12. Boundaries and next steps</a></nav><article>
+<p>A research program should be able to explain not just its final result, but the sequence that produced it. This lesson uses eight fictional quotes and a short C strategy. You will see a decision, the later quote that can fill it, the fee, the resulting position and the final result.</p>
+<p>Nothing in this exercise connects to a broker, sends a real order or writes an account balance. The calculations are an inspectable research model, not a forecast of investment returns. You do not need a market-data subscription to complete the lesson.</p>
+<h2 id="section-1">1. Meet the three parts of the exercise</h2>
+<p>An <strong>observation</strong> is a quote at a recorded time. The <strong>bid</strong> is the price used here when selling; the <strong>ask</strong> is the price used here when buying. Their difference is the spread. Each observation also carries a sequence number and available sizes.</p>
+<p>A <strong>strategy</strong> is a C function that examines the current observation and asks for a target position: long, short, flat, or hold the existing instruction. A long position benefits from a price rise; a short position benefits from a fall. This example uses only long and flat.</p>
+<p>The <strong>replay owner</strong> holds a copied dataset, steps through it in order and applies the selected fill model. It does not accept a decision and fill it using the quote the strategy has already examined. The earliest possible fill is the next observation, and only after the configured delay and size check.</p>
+<p>The flow is <strong>previous instruction → possible fill → current view → new strategy decision</strong>. Keeping those stages separate makes it possible to ask whether a result depended on information that was not yet available.</p>
+<h2 id="section-2">2. Build the practice program</h2>
+<p>Merge the source delivery into the matching Framework directory first. The complete suite commands are in Build-and-Git.md. For an isolated practice build, open PowerShell and run:</p>
+<pre><code class="language-powershell">Set-Location "C:\umicom\Umicom-Applications"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+
+&amp; "C:\msys64\ucrt64\bin\cmake.exe" `
+    -S ".\framework\examples\research_replay" `
+    -B ".\build\research-replay" `
+    -G Ninja `
+    -DCMAKE_BUILD_TYPE=Debug `
+    -DCMAKE_C_COMPILER="C:/msys64/ucrt64/bin/gcc.exe"
+if ($LASTEXITCODE -ne 0) { throw "Configuration failed." }
+
+&amp; "C:\msys64\ucrt64\bin\cmake.exe" --build ".\build\research-replay" --parallel 2
+if ($LASTEXITCODE -ne 0) { throw "Build failed." }
+
+&amp; "C:\msys64\ucrt64\bin\ctest.exe" `
+    --test-dir ".\build\research-replay" `
+    --no-tests=error --output-on-failure
+if ($LASTEXITCODE -ne 0) { throw "A test failed." }
+</code></pre>
+<p>This builds the real canonical quote and backtest sources needed by the exercise, not the entire installed product family. A successful result here does not replace a full Windows application build. The new workflow is a native command-line tool and a reusable library; this delivery does not add a new Trader or Studio window.</p>
+<h2 id="section-3">3. Run the eight-quote example</h2>
+<pre><code class="language-powershell">$Replay = ".\build\research-replay\bin\umicom-research-replay.exe"
+&amp; $Replay demo
+if ($LASTEXITCODE -ne 0) { throw "The demonstration failed." }
+</code></pre>
+<p>The program prints a trace followed by a summary. Its default settings are 10,000 units of initial simulated equity, one unit per position, a 0.10 fee per executed side, zero extra slippage and zero additional latency. Even at zero latency, an instruction cannot fill on the observation that created it.</p>
+<p>The rule in <code>strategy.c</code> asks for a long position when the midpoint is below 100 and asks to become flat when it is above 102. Those numbers are chosen to make the lesson easy to inspect. They are not a suggested trading strategy.</p>
+<table>
+<thead>
+<tr>
+<th>Observation</th>
+<th>What the example does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Midpoint 99.50 produces a request to become long. No fill occurs yet.</td>
+</tr>
+<tr>
+<td>2</td>
+<td>The request buys at ask 101.00 and pays 0.10.</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Midpoint 103.50 produces a request to become flat.</td>
+</tr>
+<tr>
+<td>4</td>
+<td>The request sells at bid 104.00 and pays another 0.10.</td>
+</tr>
+<tr>
+<td>5–8</td>
+<td>A second cycle buys at 100.00 and sells at 102.00.</td>
+</tr>
+</tbody>
+</table>
+<p>For the first completed trade, <code>(104 − 101) × 1 − 0.10 − 0.10 = 2.80</code>. The second contributes 1.80. The completed example therefore reports <strong>4.60 closed net P&amp;L</strong>, <strong>0.40 total fees</strong> and <strong>10,004.60 marked equity</strong>, with no open position or pending instruction.</p>
+<p>P&amp;L means profit and loss. These are the outcomes of this particular fictional input and fill model. They do not measure the quality of a live strategy.</p>
+<h2 id="section-4">4. Understand the trace rather than just the total</h2>
+<p><code>fill_units</code> is signed: positive means buying and negative means selling. A zero means no execution occurred on that observation. <code>position</code> is −1, 0 or +1; the configured units determine its size.</p>
+<p><code>pending</code> tells you whether there is still a request awaiting execution. <code>target</code> matters only when pending is true. An instruction can remain pending because its latency has not elapsed or the displayed size is insufficient. This model makes no partial fill: the whole required quantity must be available. Reversing directly from long to short requires two units of sell-side capacity when the position size is one.</p>
+<p><code>equity</code> includes the open position marked at bid for a long or ask for a short, less fees already paid. It is not a cash-account ledger. The model has no margin, borrowing costs, tax, corporate actions or multi-currency conversion.</p>
+<p>After buying at 101 on observation 2, the bid is only 100. The immediate marked result therefore includes the spread and the entry fee. It is normal for equity to fall at entry even when no completed trade has yet been recorded.</p>
+<h2 id="section-5">5. Compare the delay assumptions</h2>
+<pre><code class="language-powershell">&amp; $Replay sweep
+if ($LASTEXITCODE -ne 0) { throw "The comparison failed." }
+</code></pre>
+<p>The command runs three independent instances with delays of 0, 100 and 200 milliseconds. It uses the same observations and the same C rule in each instance. There is no ranking or automatic selection of a winning strategy.</p>
+<table>
+<thead>
+<tr>
+<th>Delay</th>
+<th>Completed trades</th>
+<th>Closed net P&amp;L</th>
+<th>Final marked equity</th>
+<th>Final state</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0 ms</td>
+<td>2</td>
+<td>4.60</td>
+<td>10,004.60</td>
+<td>Flat, no pending request</td>
+</tr>
+<tr>
+<td>100 ms</td>
+<td>2</td>
+<td>4.60</td>
+<td>10,004.60</td>
+<td>Flat, no pending request</td>
+</tr>
+<tr>
+<td>200 ms</td>
+<td>1</td>
+<td>−6.20</td>
+<td>9,991.70</td>
+<td>Long, with a pending request</td>
+</tr>
+</tbody>
+</table>
+<p>The longer delay changes which quote can fill an instruction. Notice that the 200 ms run has processed every input but still holds an open position. <strong>Completed replay means all selected observations were processed, not that all positions were liquidated.</strong> The program does not invent a final sale to make the report look complete.</p>
+<p>A useful comparison therefore includes costs, open positions and unfilled requests, not only closed profit.</p>
+<h2 id="section-6">6. Read a quote file</h2>
+<p>The included <code>quotes.csv</code> contains the same eight observations. The exact header is:</p>
+<pre><code class="language-text">sequence,time_ms,bid,ask,bid_size,ask_size
+1,0,99,100,10,10
+2,100,100,101,10,10
+</code></pre>
+<p>Run it explicitly:</p>
+<pre><code class="language-powershell">&amp; $Replay csv ".\framework\examples\research_replay\quotes.csv"
+if ($LASTEXITCODE -ne 0) { throw "The input or research run was rejected." }
+</code></pre>
+<p>The command reads the selected ordinary file and writes results to the terminal. It does not overwrite an output file. Use a copy of the CSV for exercises, outside the source repository.</p>
+<p>Rows must contain exactly six unquoted fields. Decimal numbers, decimal exponents, LF and CRLF line endings are supported. Comments, blank rows, byte-order marks, embedded zero bytes, quoted fields, hexadecimal numbers and non-finite values are rejected. The C numeric locale must use a full stop; the library does not change locale behind the caller's back.</p>
+<p>Sequence numbers must be consecutive and nonzero. Times must be nonnegative and cannot move backwards. Equal timestamps are permitted because sequence order still distinguishes observations. Replay does not sort a broken file or silently fill a sequence gap.</p>
+<p>The CLI labels imported rows with the generic <strong>WORKSHOP / PRACTICE / GBP</strong> identity. It is a teaching importer, not an instrument-master lookup. Applications using the C API supply their own consistent canonical instrument. Only one instrument and a multiplier of one are supported in this profile.</p>
+<h2 id="section-7">7. Change the C strategy in Studio</h2>
+<p>Open <code>framework/examples/research_replay/strategy.c</code> in Studio. <code>PracticeStrategy</code> receives a borrowed <code>UmiResearchView</code>, a pointer to its threshold settings, and an output target. It returns a Framework status.</p>
+<p>The view contains the current quote, its index, the current position, equity and pending instruction. It does not hand the callback the future dataset. A trusted callback could still obtain outside information or do other work; this is an interface discipline, not a security sandbox.</p>
+<p><code>HOLD</code> preserves a pending request. Repeating a new directional target replaces the previous instruction and restarts its latency. That is why the example returns HOLD while an instruction is waiting. Once the position is already at a requested target, requesting that target cancels any conflicting pending instruction.</p>
+<p>The library owns its copied observations and trace. The application owns the callback's user data and must keep it alive until the replay is destroyed. Do not destroy or re-enter the replay from inside its callback.</p>
+<p>Try changing the entry and exit thresholds in <code>main.c</code>, update the strategy tag to describe the changed example, rebuild and compare the trace. A strategy tag is only a caller-supplied label. It is not a verified hash of the compiled code.</p>
+<h2 id="section-8">8. Step, pause and cancel through the C contract</h2>
+<p>Create a run with <code>UmiResearchReplayCreate</code>. It validates and copies the whole input before returning a handle. <code>UmiResearchReplayStep</code> commits one observation. <code>UmiResearchReplayRun</code> commits up to a supplied observation budget. Calling neither function pauses progress naturally; there is no hidden timer.</p>
+<p><code>UmiResearchReplayCancel</code> ends an active run between calls. A cancelled run remains inspectable but cannot resume. Create a new run with freshly initialised strategy state to start again. All methods are synchronous and single-owner. A UI can schedule small budgets or give a worker sole ownership, but concurrent calls on the same handle are not supported.</p>
+<p>A callback error or arithmetic failure puts the run into FAILED. The current candidate step is not published, so its tentative fill does not appear in the committed trace. Callback side effects outside the library cannot be undone. The failure is terminal rather than automatically retrying possibly changed strategy state.</p>
+<p>Take a copied snapshot with <code>UmiResearchReplaySnapshot</code> and read committed rows with <code>UmiResearchReplayTraceAt</code>. Destroy the replay after callers have stopped using it. No database or live market authority is involved.</p>
+<h2 id="section-9">9. Read the fingerprint correctly</h2>
+<p>Every run records a SHA-256 fingerprint of its canonical instrument, observations, numerical configuration, fill-model identifier and caller-supplied strategy tag. Padding bytes and unused string storage are excluded. Numerical fields use an explicit binary64 representation and fixed byte order.</p>
+<p>Changing an observation or a cost assumption changes this fingerprint. Stepping the same input in different-sized batches does not. The fingerprint is <strong>not a digital signature</strong>, an entitlement to external data, or an attestation of the strategy binary. Save the actual source/compiler/build identity separately for more demanding research.</p>
+<p>Repeated runs were checked under the delivery's compiler configurations. Bit-for-bit equality across every processor, compiler optimisation mode or floating-point environment is not promised.</p>
+<h2 id="section-10">10. Why a rejected calculation must leave the old result alone</h2>
+<p>The shared completed-trade accumulator now rejects NaN and infinity, checks counter and floating-point overflow, and validates a candidate before replacing the previous state. A failed trade therefore cannot quietly increment the trade count while leaving invalid equity behind.</p>
+<p>Its public interface and earlier metric conventions remain available. For compatibility, the old accumulator counts zero-net trades as wins and retains its old no-loss profit-factor sentinel. The new replay snapshot supplies <code>profitFactorAvailable</code>; do not interpret a legacy sentinel as a measured ratio. The new marked drawdown percentage uses each drawdown's contemporaneous peak rather than treating a later peak as the denominator.</p>
+<h2 id="section-11">11. Practise and check your answers</h2>
+<p><strong>Exercise A:</strong> Change sequence 4 to sequence 5 in a copied CSV. Does the run sort the data or reject it? <strong>Answer:</strong> It rejects the broken continuity before beginning the replay.</p>
+<p><strong>Exercise B:</strong> Reduce observation 2's ask size to 0.5. Can a one-unit buy partially fill? <strong>Answer:</strong> No. This profile waits for enough displayed size. The later execution price can therefore change.</p>
+<p><strong>Exercise C:</strong> Add a long signal on the final observation. Does it fill at that observation's ask? <strong>Answer:</strong> No. It remains pending because there is no later observation.</p>
+<p><strong>Exercise D:</strong> Cancel after three steps. Is the trace empty? <strong>Answer:</strong> No. The three committed observations remain inspectable. Cancellation does not erase completed work or pretend the remaining data was processed.</p>
+<p><strong>Exercise E:</strong> Increase the price-impact setting by ten basis points in a copied C experiment. Should you subtract that cost again from closed P&amp;L? <strong>Answer:</strong> No. The adverse price adjustment is already in the fill prices. The separately displayed slippage amount explains the effect rather than charging it twice.</p>
+<h2 id="section-12">12. Boundaries and next steps</h2>
+<p>There can be at most 65,536 observations in one copied run and at most 16 MiB in a CSV input. This is a full-fill, single-position, single-instrument research model. It does not simulate queue priority, partial fills, broker rejects, live latency distributions, session calendars or instrument-specific financing.</p>
+<p>The example source, tests and installed-SDK client make a practical starting point for further work. They do not replace the existing market tape, strategy services, live risk authority or Trader GUI. Keep real provider connectivity and any privileged operation separately controlled.</p>
+<p>No GUI, Windows runtime or full application-suite pass is claimed by this guide. Build and exercise those targets on the intended host before marking an integrated product release as qualified.</p>
+</article></div><footer><img alt="Umicom icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADMAAAAzCAYAAAA6oTAqAAAEpUlEQVR4nO2ZwUsbWRzHv132ppnpi66gNUJm3WpoPHQSoyQotGbBsDTQlBbpTSjppcf9G/a0x14aCt5ENruWbdk1YGxBSdA0yR4MxEqJYKWFYjMktufdQ3dmJ8m8eW8mcTcs+Z6clzfz3sf3/f3eb95cuHhl7k/8T/TFfz2BTqoH063qwXSrejBWFA3JWI7Ma9cLoRnIXs+5jPXluTwVwIRrGMuReQyIDrx6805rJ6KAhdAMFkIzKJbK2MrsdWzMjsMMiA4sR+Yx4RrW2gaFfu3vi4IDwD9QsteDXzbSqByftD12R2GWI/MIei+3tA+IDuo9RBRwbymmrZJSq9sevyMwQe9lRINXTSfNkuz1wO26hGKpjGKpbAuqLZgJ1zBuhOQGSxnpQ+2M63l669mJpwt2C83vl75jQqj6ce03LQkQUcCtSBjS2CjzPqVWtwRlGSYaknEjKHP1zZYOsbKxbfibNDaK68EAN9RWZg/FUtm0HzeMlbhY2dhGtnQIAHASAicheF2pGPaVvR4shGZARIH5XBYUEyYakhG88g0XRPNKjEsSHtyP43WlgoePEtT7iChoUDyi2Y+aAIz2C5pevXmHZ5miFhdOQnD3zm2MS5J2zZqc+h/ngVITBREF/Pz7JhsmGrzKlaVWNrYbdvjFb8NYDIcb+rFgVFmFcrsuNVybroyZnmWLeJopatdOQvDgfpw6cSchqCqK6TNV6aHMMh8RBRBR0PYkKoy+BNErWzrE0+wf2t7hJAQBv69lNZrFC6KXUqvj8dq6ViUYJQkumGY1xwVgbCkj5fIF3mEMJXs91GynrxSoMKf1j5rV9KkWaA1wM+XyBawmk9wT10saG8W9pRh3fyrMh9oZsn8HuCpeSwGfbbX6U5K6v5iJt0qoHJ/wrUzzzs1rqXYgAGjvOiwptTqeZ3MNbcyY4bVUVVGQKxSQ2kwzJ2IkaWwUtyJhZiVgVgVQYcYlCXfv3ObaI1LptG0IXkvxFJ1UmIDPxwRpNy54zwO2MnstELHpKUyODOGHX7e0NvrKfE23VbuWshIXza/Uc5NuxPxTGHT0tfS3/HLGKhpZ4gExspRnZAg3p6fgGRlq6Dvo6MPp2ScAFmGqimI7S6li2crIUvFrs5ibdBv2V0EAE5iqorTEjJMQLIbDCPh8bdnMSDRLxa/NUu/RgwA2zwD0UFYTgFKrN6RfK5ZiiQqTKxSYe4taKefyBaTSacvFZOX4BI/X1rXrQUcf4tdnuSBOzz4h8Xy3oc30TdNq+cJjPdrBX2x6Cjf9XuY4ALBzcITEi92Wdq4zAM1Wfh9zIBaUvmQHzFNts57kS9g+qLTEiipLpzNWqmUWlJW4oK1Es2ydm6nW4yl1qoqCh48SWjxZiYudgyOs5/epK9Es24eAajzxlD36jZYnNspv3+PJy32U3763NCfbx7NVRUFqM41cvsBMEnrYwX7z2Ei82MXOwZGtObV9cM4DxZOyeePCTB37pKGHMst8px8b/W/XUkbq+MemqqJgNZlEKp02zXzqptcJCFW2EwCvAv7PCUJN0XOTbnzl6Mf6y/2Oj3XuMP+mep/Ou1U9mG5VD6Zb9ReztWucDqtdOAAAAABJRU5ErkJggg=="><span>Sammy Hegab · Umicom Foundation<br>Public learning and development material · 28 September 2026</span></footer></body></html>
