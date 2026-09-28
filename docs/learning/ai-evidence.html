@@ -1,0 +1,222 @@
+<!doctype html>
+<!-- Umicom Foundation | Public learning guide | C23 source examples | MIT -->
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Keep the sources behind an AI draft · Umicom</title><meta name="description" content="A step-by-step introduction to inspected retrieval, saved AI jobs and frozen source citations in Umicom Framework."><link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADMAAAAzCAYAAAA6oTAqAAAEpUlEQVR4nO2ZwUsbWRzHv132ppnpi66gNUJm3WpoPHQSoyQotGbBsDTQlBbpTSjppcf9G/a0x14aCt5ENruWbdk1YGxBSdA0yR4MxEqJYKWFYjMktufdQ3dmJ8m8eW8mcTcs+Z6clzfz3sf3/f3eb95cuHhl7k/8T/TFfz2BTqoH063qwXSrejBWFA3JWI7Ma9cLoRnIXs+5jPXluTwVwIRrGMuReQyIDrx6805rJ6KAhdAMFkIzKJbK2MrsdWzMjsMMiA4sR+Yx4RrW2gaFfu3vi4IDwD9QsteDXzbSqByftD12R2GWI/MIei+3tA+IDuo9RBRwbymmrZJSq9sevyMwQe9lRINXTSfNkuz1wO26hGKpjGKpbAuqLZgJ1zBuhOQGSxnpQ+2M63l669mJpwt2C83vl75jQqj6ce03LQkQUcCtSBjS2CjzPqVWtwRlGSYaknEjKHP1zZYOsbKxbfibNDaK68EAN9RWZg/FUtm0HzeMlbhY2dhGtnQIAHASAicheF2pGPaVvR4shGZARIH5XBYUEyYakhG88g0XRPNKjEsSHtyP43WlgoePEtT7iChoUDyi2Y+aAIz2C5pevXmHZ5miFhdOQnD3zm2MS5J2zZqc+h/ngVITBREF/Pz7JhsmGrzKlaVWNrYbdvjFb8NYDIcb+rFgVFmFcrsuNVybroyZnmWLeJopatdOQvDgfpw6cSchqCqK6TNV6aHMMh8RBRBR0PYkKoy+BNErWzrE0+wf2t7hJAQBv69lNZrFC6KXUqvj8dq6ViUYJQkumGY1xwVgbCkj5fIF3mEMJXs91GynrxSoMKf1j5rV9KkWaA1wM+XyBawmk9wT10saG8W9pRh3fyrMh9oZsn8HuCpeSwGfbbX6U5K6v5iJt0qoHJ/wrUzzzs1rqXYgAGjvOiwptTqeZ3MNbcyY4bVUVVGQKxSQ2kwzJ2IkaWwUtyJhZiVgVgVQYcYlCXfv3ObaI1LptG0IXkvxFJ1UmIDPxwRpNy54zwO2MnstELHpKUyODOGHX7e0NvrKfE23VbuWshIXza/Uc5NuxPxTGHT0tfS3/HLGKhpZ4gExspRnZAg3p6fgGRlq6Dvo6MPp2ScAFmGqimI7S6li2crIUvFrs5ibdBv2V0EAE5iqorTEjJMQLIbDCPh8bdnMSDRLxa/NUu/RgwA2zwD0UFYTgFKrN6RfK5ZiiQqTKxSYe4taKefyBaTSacvFZOX4BI/X1rXrQUcf4tdnuSBOzz4h8Xy3oc30TdNq+cJjPdrBX2x6Cjf9XuY4ALBzcITEi92Wdq4zAM1Wfh9zIBaUvmQHzFNts57kS9g+qLTEiipLpzNWqmUWlJW4oK1Es2ydm6nW4yl1qoqCh48SWjxZiYudgyOs5/epK9Es24eAajzxlD36jZYnNspv3+PJy32U3763NCfbx7NVRUFqM41cvsBMEnrYwX7z2Ei82MXOwZGtObV9cM4DxZOyeePCTB37pKGHMst8px8b/W/XUkbq+MemqqJgNZlEKp02zXzqptcJCFW2EwCvAv7PCUJN0XOTbnzl6Mf6y/2Oj3XuMP+mep/Ou1U9mG5VD6Zb9ReztWucDqtdOAAAAABJRU5ErkJggg=="><style>
+:root{--ink:#173143;--muted:#506673;--nav:#102d3e;--accent:#146b75;--line:#dbe4e9;--paper:#fff;--bg:#f3f6f8}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font:17px/1.72 system-ui,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}a{color:var(--accent)}.top{background:var(--nav);padding:18px max(24px,calc((100vw - 1240px)/2));display:flex;gap:22px;align-items:center;color:white}.top img{width:202px;height:55px;object-fit:contain}.top span{font-size:13px;letter-spacing:.1em;text-transform:uppercase}.layout{max-width:1290px;margin:30px auto;display:grid;grid-template-columns:265px minmax(0,1fr);gap:28px;padding:0 22px}nav{position:sticky;top:22px;align-self:start;max-height:calc(100vh - 44px);overflow:auto;font-size:13px;padding:20px;background:white;border:1px solid var(--line);border-radius:12px}nav b{display:block;margin-bottom:12px;font-size:15px}nav a{display:block;text-decoration:none;padding:8px 0;border-top:1px solid #edf1f3}main{min-width:0}.hero,section{background:white;padding:36px 42px;border:1px solid var(--line);border-radius:12px;margin-bottom:23px}.hero{padding-top:40px;border-top:5px solid var(--accent)}.kicker{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);font-weight:750}h1{font-size:clamp(32px,4vw,48px);line-height:1.12;margin:14px 0 24px}h2{font-size:28px;line-height:1.25;margin:0 0 24px}h3{font-size:21px}.lead{font-size:20px;color:var(--muted)}.note{padding:18px 20px;border-left:4px solid var(--accent);background:#eef7f8;margin:24px 0}.code-label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:#dfeaf0;padding:8px 13px;margin-top:24px;border-radius:8px 8px 0 0}pre{margin:0 0 24px;overflow:auto;background:#102b3b;color:#eaf2f6;padding:18px;border-radius:0 0 8px 8px;font:13px/1.65 Consolas,monospace;tab-size:4}code{font-family:Consolas,monospace;font-size:.91em;overflow-wrap:anywhere}pre code{font-size:inherit;overflow-wrap:normal;white-space:pre}table{border-collapse:collapse;width:100%;font-size:14px;table-layout:fixed;margin:24px 0}th,td{padding:12px;border:1px solid var(--line);text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#eef3f6}td:first-child{font-weight:600;width:28%}details{border:1px solid var(--line);padding:18px;border-radius:8px}summary{cursor:pointer;font-weight:650}li{margin:15px 0}footer{text-align:center;color:var(--muted);padding:28px;font-size:13px}section{scroll-margin-top:22px}@media(max-width:980px){.layout{display:block;max-width:820px}nav{position:static;max-height:none;margin-bottom:24px}nav a{display:inline-block;margin-right:20px;max-width:100%}.hero,section{padding:30px}h2{font-size:25px}}@media(max-width:540px){body{font-size:16px}.top{padding:15px 20px;flex-wrap:wrap;gap:3px}.layout{padding:0 12px;margin-top:18px}.hero,section{padding:23px 20px}nav{padding:17px}nav a{display:block;margin:0}h1{font-size:34px}h2{font-size:25px}table{font-size:12px}th,td{padding:8px}pre{font-size:12px}.lead{font-size:18px}}@media print{.top,nav{display:none}.layout{display:block;margin:0;padding:0}.hero,section{border:0;border-radius:0;box-shadow:none;padding:20px 0}section{break-before:page}pre{white-space:pre-wrap;color:#111;background:#f5f5f5}pre code{white-space:pre-wrap}details{display:block}body{background:white;font-size:11pt}a{color:inherit}}
+</style></head><body><header class="top"><img src="data:image/png;base64,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" alt="Umicom" width="202" height="55"><span>Framework learning library</span></header><div class="layout"><nav aria-label="Contents"><b>In this guide</b><a href="#begin">Start with a question you can check</a><a href="#terms">Learn the five names used in the window</a><a href="#native">1. Run the complete memory lesson</a><a href="#practice">2. Give the graphical exercise its own workspace</a><a href="#sources">3. Add two short handbook passages</a><a href="#select">4. Inspect retrieval, then preserve its order</a><a href="#run">5. Review, approve and run the saved request</a><a href="#inspect">6. Follow references to their frozen passages</a><a href="#change">7. Change a source without rewriting history</a><a href="#model">8. Make a separate, explicit local-model request</a><a href="#code">9. Read the complete C lesson</a><a href="#trouble">When the result is not what you expected</a><a href="#practice-questions">Exercises and answers</a><a href="#limits">The boundaries of this lesson</a></nav><main><header class="hero"><div class="kicker">Sources, drafts and responsible checking</div><h1>Keep the sources behind an AI draft</h1><p class="lead">Inspect the passages, preserve the selection and return to the exact text a draft was given.</p><p>Build a small Umicom Notes knowledge collection and learn the difference between a reference that exists and a statement that is supported.</p></header><section id="begin"><h2>Start with a question you can check</h2>
+<p>You have asked an assistant how to save a note. Its answer looks sensible and ends with <code>[S1]</code>. What does that mark actually prove? It tells you which supplied passage to inspect. It does not prove that the sentence before it is correct.</p>
+<p>In this lesson you will supply two short pages from a fictional Umicom Notes handbook. You will inspect the search results, keep that exact selection for a draft, and then follow each source reference back to its saved text. Finally, you will amend one passage and see why an old answer must not silently acquire a new source.</p>
+<div class="note"><strong>Three different jobs.</strong> Retrieval chooses useful passages. A provider produces a draft. A person checks whether the draft is supported. Umicom records these stages separately.</div>
+<p>The first exercise runs entirely in memory with the labelled <strong>Extractive preview (not an LLM)</strong>. It copies from the supplied references; it is not a learned language model. An optional later exercise uses your separately prepared local model server. Nothing is downloaded or started automatically.</p>
+<p>You need the matching Framework source and a working native build. Windows and the graphical steps are local acceptance exercises: the delivery’s headless checks do not establish that your installed GUI or model works.</p>
+</section><section id="terms"><h2>Learn the five names used in the window</h2>
+<table><thead><tr><th>Name</th><th>What it means here</th></tr></thead><tbody>
+<tr><td>Collection</td><td>A named group of source passages, such as the Notes handbook.</td></tr>
+<tr><td>Passage</td><td>A selected piece of text, with its own stable ID, title, original line label and revision.</td></tr>
+<tr><td>Job</td><td>A saved request: provider, model label, prompt, supplied passages and review state.</td></tr>
+<tr><td>Frozen evidence</td><td>The exact passage copies supplied to that job. Editing the current handbook does not replace them.</td></tr>
+<tr><td>Inspection</td><td>A read-only snapshot of a job, its literal references and comparisons with currently loaded sources.</td></tr>
+</tbody></table>
+<p>A <em>revision</em> is a counter describing a saved state. The corpus revision changes when its collection of sources changes. A source has its own revision too. These numbers help detect stale work; they are not signatures or authenticated user identities.</p>
+<p>The current source is the passage now loaded in the workspace. The original file is a different thing. This lesson pastes text; the program neither opens that original file nor proves that your line labels match it.</p>
+</section><section id="native"><h2>1. Run the complete memory lesson</h2>
+<p>After merging the batch, build your Applications workspace using the accompanying Build-and-Git instructions. Open PowerShell in the repository and run:</p>
+<div class="code-label">PowerShell</div><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+$env:Path = &quot;C:\msys64\ucrt64\bin;$env:Path&quot;
+$Tool = &quot;.\build\windows-ucrt64-all-debug\bin\umicom-ai-evidence.exe&quot;
+&amp; $Tool --self-test
+if ($LASTEXITCODE -ne 0) { throw &quot;The memory lesson failed.&quot; }</code></pre>
+<p>The expected output is:</p>
+<div class="code-label">Expected output</div><pre><code>Selected passages: 2. Reference targets exist; prose still needs checking.
+One source changed. The saved citation still resolves to the frozen passage.
+Practice complete. Extractive preview, not model inference; no network, files or tools were used.</code></pre>
+<p>This is a real native workflow through Framework’s memory Data Server, source search, saved job, approval, extractive provider and evidence inspection. It is not a test of a neural model. The program closes the source services before copying a line from the retained inspection, which also checks its memory ownership.</p>
+<p>Run <code>&amp; $Tool demo</code> to print the inspection as well. The command writes to the console, not to a report file. Do not confuse a successful demonstration with a successful full application test suite.</p>
+</section><section id="practice"><h2>2. Give the graphical exercise its own workspace</h2>
+<p>Use fictional text, not customer records, passwords or private trading data. Close any existing RAG instance, then launch a new one with a practice database path:</p>
+<div class="code-label">PowerShell</div><pre><code>$env:UMICOM_AI_WORKSPACE_DB = Join-Path $env:LOCALAPPDATA &quot;umicom\ai-workspace\evidence-practice.sqlite&quot;
+&amp; &quot;.\build\windows-ucrt64-all-debug\bin\umicom-rag.exe&quot;
+if ($LASTEXITCODE -ne 0) { throw &quot;RAG exited with an error.&quot; }</code></pre>
+<p>The application creates its parent directory when needed and reuses an existing database at that location. It does not erase an earlier practice session. Inside the application choose <strong>AI workspace</strong> and check the displayed path before entering text. <strong>Existing layouts</strong> remains available beside it.</p>
+<p>The same shared AI workspace adapter serves LLM and AI Creator. This lesson uses RAG because its Sources page is the natural starting point. Changing the product does not create a second implementation of retrieval or evidence inspection.</p>
+<p>After closing the practice application, remove the temporary setting from this PowerShell session:</p>
+<div class="code-label">PowerShell</div><pre><code>Remove-Item Env:UMICOM_AI_WORKSPACE_DB -ErrorAction SilentlyContinue</code></pre>
+<p>That command removes only the environment setting. It does not delete the database.</p>
+</section><section id="sources"><h2>3. Add two short handbook passages</h2>
+<p>Open <strong>Sources</strong>. Set <strong>Collection ID</strong> to <code>notes</code> and <strong>Collection name</strong> to <code>Umicom Notes handbook</code>. Choose <strong>Save collection</strong>.</p>
+<p>For the first passage, enter <code>save</code> as its ID, <code>Saving a note</code> as its title, and <code>10</code> as its first source line. Paste the following text and choose <strong>Save passage</strong>:</p>
+<div class="code-label">Passage: save</div><pre><code>Save checkpoint commits the current note.
+Closing without saving discards the draft.</code></pre>
+<p>For the second passage, use ID <code>review</code>, title <code>Checking a draft</code>, and first source line <code>30</code>:</p>
+<div class="code-label">Passage: review</div><pre><code>Read the source passage before using a draft.
+A citation alone does not prove the answer is correct.</code></pre>
+<p>Choose <strong>Save passage</strong> again. The catalogue should show two sources in the Notes collection. Last-line labels are calculated from the pasted text. There is no need to pad a passage with blank lines merely because it originally began at line 30.</p>
+<p>Saving the same ID later replaces its current version, rather than creating a second ID. Historical jobs retain their original copies. Keep IDs stable when you are deliberately editing the same source.</p>
+</section><section id="select"><h2>4. Inspect retrieval, then preserve its order</h2>
+<p>In <strong>Search question</strong>, enter <code>saving draft</code> and choose <strong>Inspect retrieval</strong>. This uses the existing lexical search and contacts no model. Read both displayed passages, not merely their ranking scores.</p>
+<p>The result text explains how many of the first displayed passages will be retained. The graphical selection is bounded to the first four, or fewer when fewer are found. It is not a new per-row checkbox selector.</p>
+<p>Go to <strong>Drafts and review</strong>, choose <strong>New job</strong>, select <strong>Grounded draft</strong>, and keep <strong>Extractive preview (not an LLM)</strong> with model ID <code>extractive-preview</code>. Use the question:</p>
+<div class="code-label">Drafting instruction</div><pre><code>Explain how to save and check a note. Cite the supplied sources.</code></pre>
+<p>Choose the new <strong>Prepare inspected results</strong> button. This freezes the copied results in their inspected order; it does not run another search using the differently worded drafting instruction. The first supplied passage becomes <code>[S1]</code>, the second becomes <code>[S2]</code>.</p>
+<div class="note"><strong>The earlier route remains.</strong> <strong>Prepare for review</strong> still performs the existing automatic lexical selection. Choose that button when you deliberately want that behaviour. The new button is the explicit route for keeping the inspected result set.</div>
+<p>Do not edit a source between inspection and preparation and expect the old results to be accepted as current. A changed corpus revision is refused. Inspect again and review the new text. The same public C interface can accept canonical hybrid or reranked results, but the GUI search in this lesson remains lexical.</p>
+</section><section id="run"><h2>5. Review, approve and run the saved request</h2>
+<p>Read the <strong>Frozen request, source references and returned draft</strong> area. Check its prompt, provider, model label and passages. Editing a form after a job has been prepared does not silently rewrite that saved job. Use a new job for changed inputs.</p>
+<p>Choose <strong>Approve selected job</strong>, then <strong>Run approved job</strong>. The writer and reviewer labels are local records of a decision, not authenticated accounts. Opening a page or inspecting a result is not approval.</p>
+<p>The extractive response is deliberately limited. It shows the evidence path without suggesting that an LLM was invoked. Check that the saved state says the operation succeeded; a failed, cancelled or unfinished job is not an answer merely because a text box contains earlier content.</p>
+<p>The existing running-job controls remain: source edits are paused while the worker runs, cancellation is explicit, and the owner joins that worker before releasing its services. This batch does not introduce an unattended agent or a new background writer.</p>
+</section><section id="inspect"><h2>6. Follow references to their frozen passages</h2>
+<p>Open the new <strong>Evidence inspection</strong> page and choose <strong>Inspect selected job evidence</strong>. The selected job is the one prepared or loaded on the Drafts page. Inspection does not approve, run or alter it.</p>
+<p>The report shows the saved prompt, requested provider/model, loaded workspace revision, prepared and current corpus revisions, returned-output state, reference counts, source status, frozen text and literal reference locations. A length-limited response stays labelled as length-limited.</p>
+<p>Read a claim in the returned draft, find its <code>[S1]</code> or <code>[S2]</code> marker, and compare the claim with that passage. Ask: does the passage actually say this? Has the draft added an assumption? Is important context missing?</p>
+<table><thead><tr><th>Report result</th><th>Interpretation</th></tr></thead><tbody>
+<tr><td>Known reference</td><td>The numbered source exists in this job. Its statement still needs checking.</td></tr>
+<tr><td>Unknown source</td><td>The marker names a source that was not supplied.</td></tr>
+<tr><td>Malformed reference</td><td>A literal marker is incomplete or outside the supported syntax.</td></tr>
+<tr><td>Not cited</td><td>A supplied passage has no recognised reference in the response. That alone does not prove the answer is wrong.</td></tr>
+<tr><td>No response present</td><td>There is no successful retained draft to inspect. A pending job can still show its supplied sources.</td></tr>
+</tbody></table>
+<p>Offsets count UTF-8 bytes from zero, not visual columns. A non-ASCII character can occupy several bytes. The scanner reads literal markers even inside quotes or code blocks; it does not claim to understand Markdown or sentence meaning. Legacy <code>[S01]</code> remains resolvable but is flagged as noncanonical.</p>
+</section><section id="change"><h2>7. Change a source without rewriting history</h2>
+<p>Return to Sources and save passage <code>save</code> with this replacement text:</p>
+<div class="code-label">Replacement passage</div><pre><code>The current handbook has been amended; inspect the saved source version.</code></pre>
+<p>Keep its ID and first line, then inspect the earlier completed job again. The report now labels that source <strong>Changed since preparation</strong>. Its old text remains under the frozen citation. The replacement appears separately as <strong>Current comparison only (NOT the cited passage)</strong>.</p>
+<p>Removing the current passage instead marks it removed from the loaded workspace. The saved source copy remains in the earlier job. That is useful history, not permission to keep using an outdated answer.</p>
+<p>The inspection is itself a snapshot. Press the inspection button again for newer loaded state. When another application changes the shared database, use <strong>Reload shared workspace</strong> first. Inspection does not silently reload a database or repair corruption.</p>
+<p>A job that has not run may be refused after any corpus change. Create and review a new job against the new source state rather than bypassing that check.</p>
+</section><section id="model"><h2>8. Make a separate, explicit local-model request</h2>
+<p>This optional exercise needs a compatible inference server and model that you have already obtained and reviewed. This delivery includes neither. Check that your Umicom build reports <strong>Local HTTP transport compiled</strong>. AUTO leaves it unavailable when the development dependencies are absent; ON makes them an explicit configure requirement.</p>
+<p>The existing provider sends a bounded, non-streaming request to <code>/v1/chat/completions</code> on <code>127.0.0.1</code>. The upstream llama.cpp server documents that endpoint and served model naming; use the model identifier actually returned by your selected server, or its configured alias. Consult the <a href="https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md">official server reference</a> for your version.</p>
+<p>With your reviewed server already listening on port 8080 and serving the identifier <code>local-model</code>, run:</p>
+<div class="code-label">PowerShell</div><pre><code>&amp; $Tool local --port 8080 --model local-model --acknowledge-local
+if ($LASTEXITCODE -ne 0) {
+    throw &quot;The local model request failed or was unavailable. No automatic retry.&quot;
+}</code></pre>
+<p>This sends only the example’s built-in fictional passages and prompt. It does not scan your repository, launch a server, download a model or submit a tool request. The CLI uses a ten-second deadline; a cold or slow model may time out. Wait for your server to be ready before testing. Exit 77 means unavailable, not a pass.</p>
+<p>For the graphical route, the existing <code>UMICOM_AI_WORKSPACE_PORT</code> environment setting selects the port before the application starts. Choose <strong>Configured local model</strong>, set its actual model ID, prepare a new job, review and run it. The existing graphical provider uses a thirty-second timeout.</p>
+<div class="note"><strong>Inspect what comes back.</strong> A valid response and existing citation targets do not demonstrate that a learned model followed its evidence. No real model was run in the delivery tests. The native local HTTP tests use an inert C peer and establish transport/error handling only.</div>
+</section><section id="code"><h2>9. Read the complete C lesson</h2>
+<p>The file <code>framework/examples/ai_evidence/lesson.c</code> is the complete implementation used by the tool. It allocates the runtime and bounded results, creates sources, searches, prepares the exact selection, approves, runs and inspects. A single cleanup path releases the owned objects.</p>
+<p>Notice the order near the end: the workspace and Data Server close before a line is copied from the review. That works because the inspection owns its text. A borrowed pointer into the closed workspace would not have that lifetime.</p>
+<div class="code-label">C23 · complete lesson.c</div><pre><code>/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/ai_evidence/lesson.c
+ * PURPOSE: Follow selected Notes passages through review, generation and source change.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+#include &quot;lesson.h&quot;
+#include &quot;umicom/ai_workspace/providers.h&quot;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+UmiStatus UmiAiEvidenceLesson(FILE *output, bool verbose, bool local, uint16_t port, const char *model)
+{
+    UmiDataServer *data = NULL; UmiAiWorkspace *workspace = NULL;
+    UmiAiWorkspaceCancellation *cancellation = NULL; UmiAiEvidenceReview *review = NULL;
+    UmiAiRuntime *runtime = calloc(1U, sizeof *runtime);
+    UmiAiWorkspaceEvidence *selected = calloc(UMI_AI_WORKSPACE_MAX_EVIDENCE, sizeof *selected);
+    char *report = calloc(UMI_AI_EVIDENCE_REPORT_CAPACITY, 1U);
+    UmiStatus status = UMI_STATUS_OUT_OF_MEMORY;
+    if (runtime == NULL || selected == NULL || report == NULL) goto cleanup;
+    umi_ai_runtime_init(runtime);
+#define STEP(expression) do { status = (expression); if (status != UMI_STATUS_OK) goto cleanup; } while (0)
+    STEP(umi_data_server_create_memory(&amp;data));
+    STEP(UmiAiWorkspaceCancellationCreate(&amp;cancellation));
+    UmiAiProvider provider = {0};
+    STEP(local ? UmiAiWorkspaceLocalProviderCreate(port, 10000U, cancellation, &amp;provider) :
+        UmiAiWorkspaceExtractiveProviderCreate(&amp;provider));
+    status = umi_ai_provider_registry_add(&amp;runtime-&gt;providers, &amp;provider);
+    if (status != UMI_STATUS_OK) {
+        if (provider.destroy != NULL) provider.destroy(provider.instance);
+        goto cleanup;
+    }
+    STEP(UmiAiWorkspaceCreate(data, runtime, &quot;notes.lesson&quot;, &amp;workspace));
+    STEP(UmiAiWorkspacePutCollection(workspace, &quot;notes&quot;, &quot;Umicom Notes handbook&quot;));
+    STEP(UmiAiWorkspacePutSource(workspace, &quot;save&quot;, &quot;notes&quot;, &quot;Saving a note&quot;,
+        &quot;Save checkpoint commits the current note.\nClosing without saving discards the draft.\n&quot;, 10U));
+    STEP(UmiAiWorkspacePutSource(workspace, &quot;review&quot;, &quot;notes&quot;, &quot;Checking a draft&quot;,
+        &quot;Read the source passage before using a draft.\nA citation alone does not prove the answer is correct.\n&quot;, 30U));
+    UmiAiWorkspaceSnapshot snapshot;
+    STEP(UmiAiWorkspaceSnapshotRead(workspace, &amp;snapshot));
+    size_t count = 0U;
+    STEP(UmiAiWorkspaceSearch(workspace, &quot;notes&quot;, &quot;saving draft&quot;, NULL, NULL, NULL,
+        selected, UMI_AI_WORKSPACE_MAX_EVIDENCE, &amp;count));
+    if (count != 2U) { status = UMI_STATUS_INTERNAL_ERROR; goto cleanup; }
+    const char *providerId = local ? &quot;umicom.local-chat&quot; : &quot;umicom.extractive-preview&quot;;
+    const char *modelId = local ? model : &quot;extractive-preview&quot;;
+    STEP(UmiAiWorkspacePrepareEvidence(workspace, &quot;lesson&quot;, providerId, modelId,
+        &quot;notes&quot;, &quot;Explain how to save and check a note. Cite the supplied sources.&quot;, &quot;writer&quot;,
+        256U, snapshot.corpusRevision, selected, count));
+    STEP(UmiAiWorkspaceReview(workspace, &quot;lesson&quot;, &quot;reviewer&quot;, true));
+    STEP(UmiAiWorkspaceRun(workspace, &quot;lesson&quot;, cancellation));
+    STEP(UmiAiEvidenceCapture(workspace, &quot;lesson&quot;, &amp;review));
+    UmiAiEvidenceSummary summary;
+    STEP(UmiAiEvidenceSummaryRead(review, &amp;summary));
+    if (!summary.hasResponse || !summary.referenceBindingsValid) { status = UMI_STATUS_INTERNAL_ERROR; goto cleanup; }
+    if (verbose) { STEP(UmiAiEvidenceFormat(review, report, UMI_AI_EVIDENCE_REPORT_CAPACITY, NULL)); fputs(report, output); }
+    fprintf(output, &quot;Selected passages: %zu. Reference targets exist; prose still needs checking.\n&quot;, summary.sourceCount);
+    UmiAiEvidenceDestroy(review); review = NULL;
+    STEP(UmiAiWorkspacePutSource(workspace, &quot;save&quot;, &quot;notes&quot;, &quot;Saving a note&quot;,
+        &quot;The current handbook has been amended; inspect the saved source version.\n&quot;, 10U));
+    STEP(UmiAiEvidenceCapture(workspace, &quot;lesson&quot;, &amp;review));
+    STEP(UmiAiEvidenceSummaryRead(review, &amp;summary));
+    if (summary.changedSources != 1U) { status = UMI_STATUS_INTERNAL_ERROR; goto cleanup; }
+    /* Reports own their copies. Close all services before demonstrating that
+     * an old citation still resolves to its original text. */
+    UmiAiWorkspaceDestroy(workspace); workspace = NULL;
+    umi_data_server_destroy(data); data = NULL;
+    for (size_t i = 0U; i &lt; summary.sourceCount; ++i) {
+        UmiAiEvidenceSourceCheck source;
+        STEP(UmiAiEvidenceSourceAt(review, i, &amp;source));
+        if (strcmp(source.frozen.id, &quot;save&quot;) == 0) {
+            char line[160]; STEP(UmiAiEvidenceCopyLines(review, i, 10U, 10U, line, sizeof line, NULL));
+            if (strcmp(line, &quot;Save checkpoint commits the current note.\n&quot;) != 0) { status = UMI_STATUS_INTERNAL_ERROR; goto cleanup; }
+        }
+    }
+    fputs(&quot;One source changed. The saved citation still resolves to the frozen passage.\n&quot;, output);
+    fputs(local ? &quot;Practice complete. One explicitly requested local model call; no tools or source files were executed.\n&quot; :
+        &quot;Practice complete. Extractive preview, not model inference; no network, files or tools were used.\n&quot;, output);
+cleanup:
+    UmiAiEvidenceDestroy(review); UmiAiWorkspaceDestroy(workspace);
+    umi_data_server_destroy(data);
+    if (runtime != NULL) { umi_ai_runtime_destroy(runtime); free(runtime); }
+    UmiAiWorkspaceCancellationDestroy(cancellation); free(selected); free(report);
+    return status;
+#undef STEP
+}</code></pre>
+<p>The public header documents each ownership and error rule. Request construction now uses a private candidate: an invalid later passage leaves the caller’s previous request untouched instead of publishing a half-built request. This is a general C programming technique for failure-atomic output.</p>
+<p>The installed-client project is another small complete example. It links <code>Umicom::ai_workspace</code> through <code>find_package(UmicomFramework CONFIG REQUIRED)</code> and uses public headers only. Its result says that two reference targets exist; it deliberately makes no claim about the truth of those statements.</p>
+</section><section id="trouble"><h2>When the result is not what you expected</h2>
+<table><thead><tr><th>Observation</th><th>Next check</th></tr></thead><tbody>
+<tr><td>No inspected passages</td><td>Save the correct collection and sources, check Collection ID, then run Inspect retrieval. Stop-word-only questions are not useful lexical searches.</td></tr>
+<tr><td>State changed or busy</td><td>A source or corpus changed. Reload when another window wrote the database, inspect again and prepare a new job.</td></tr>
+<tr><td>The job ID already exists</td><td>Use New job for changed prompt, model or selection. An existing ID is not a mutable draft slot.</td></tr>
+<tr><td>HTTP transport unavailable</td><td>Check configure output and curl/json-c development availability. The offline preview remains a separately labelled option.</td></tr>
+<tr><td>Model mismatch or malformed response</td><td>Check the actual server identifier and compatible non-streaming response. Do not treat a fixture or substituted response as inference.</td></tr>
+<tr><td>Capacity exceeded</td><td>Reduce the passage/response/selection size. No apparently successful truncated inspection is substituted.</td></tr>
+<tr><td>Old text in the evidence page</td><td>It is a captured report. Inspect again for current loaded state; reload first when another application changed storage.</td></tr>
+</tbody></table>
+<p>Keep personal details out of shared logs. Reports can contain every supplied passage and the whole retained draft. This feature does not add automatic redaction, encryption or telemetry.</p>
+</section><section id="practice-questions"><h2>Exercises and answers</h2>
+<ol>
+<li><strong>Change the drafting question after inspecting retrieval.</strong> Prepare with the new button. Which passages are retained?</li>
+<li><strong>Change a passage before preparation.</strong> Should the old inspection still be accepted as current?</li>
+<li><strong>Inspect a pending job.</strong> What can the report show without a successful response?</li>
+<li><strong>Inspect a completed job after source removal.</strong> Should the citation silently point to another source?</li>
+<li><strong>Consider “The notebook is encrypted [S1]”.</strong> Does a known marker establish encryption?</li>
+<li><strong>Read the cleanup code.</strong> Which object owns the saved passage after the workspace closes?</li>
+</ol>
+<details><summary>Compare your answers</summary>
+<p><strong>1.</strong> The inspected ordered copies, not results from another lexical search. The changed prompt is independently saved and reviewed.</p>
+<p><strong>2.</strong> No. The corpus/source checks reject a stale selection; inspect and review again.</p>
+<p><strong>3.</strong> The frozen request, supplied passages, revisions and current-source comparisons. There is no successful returned draft yet.</p>
+<p><strong>4.</strong> No. The frozen original remains available and its current source is marked removed.</p>
+<p><strong>5.</strong> No. Read the source. A numbered target can exist while the claim is unsupported.</p>
+<p><strong>6.</strong> The immutable evidence review owns its copied text. Destroy it only after all readers finish.</p>
+</details>
+</section><section id="limits"><h2>The boundaries of this lesson</h2>
+<p>The current workspace supports 16 collections, 64 sources, 32 jobs and four passages per grounded job. A passage or prompt is limited to 1,535 UTF-8 bytes, a returned draft to 2,047 bytes, and an inspection to 128 literal references. The formatted report reserves 32,768 bytes including its terminator. These are explicit capacities, not an invitation to truncate inputs silently.</p>
+<p>The existing C provider, Data Server and job lifecycle are reused. There is no new model downloader, learned embedding engine, persistent vector index, large-file importer, autonomous editor or generation of images/audio in this update. Earlier scripts and examples remain alternatives; the new feature and primary fixtures are native C.</p>
+<p>The available automated evidence covers native execution, real local HTTP transport against an inert fixture, ownership, failure atomicity and SQLite reload. Windows, GTK and a genuine neural-model run need their own acceptance results. Build the whole Applications tree and exercise installed products before treating a focused test as release qualification.</p>
+<p>For developer contracts read <code>docs/development/ai-evidence.md</code>. For residual risks read <code>docs/development/ai-evidence-risk-review.md</code>. The separate Build-and-Git document contains the full build, test and publication sequence.</p>
+</section></main></div><footer>Sammy Hegab · Umicom Foundation · Public learning edition<br>Source implementation and examples: C23 · No model or private dataset included.</footer></body></html>

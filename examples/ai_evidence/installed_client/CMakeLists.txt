@@ -1,0 +1,12 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+cmake_minimum_required(VERSION 3.24)
+project(UmicomEvidenceClient LANGUAGES C)
+include(CTest)
+find_package(UmicomFramework CONFIG REQUIRED)
+add_executable(evidence-client main.c)
+set_target_properties(evidence-client PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED ON C_EXTENSIONS OFF)
+target_link_libraries(evidence-client PRIVATE Umicom::ai_workspace)
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(evidence-client PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror)
+endif()
+add_test(NAME evidence_client COMMAND evidence-client)

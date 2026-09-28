@@ -15,6 +15,7 @@
 
 
 #include "umicom/ui/gtk4/ai_workspace.h"
+#include "umicom/ai_workspace/evidence.h"
 #include <inttypes.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -41,6 +42,12 @@ struct UmiAiWorkspaceGtkPanel {
     GPtrArray *signalObjects;
     char selectedId[UMI_AI_WORKSPACE_ID_CAPACITY];
     GThread *worker; AiWorkItem *work; guint pollSource;
+    /* Retained copied search results, never borrowed workspace pointers. The
+     * corpus revision is checked by Framework before preparing a new job. */
+    UmiAiWorkspaceEvidence inspected[UMI_AI_WORKSPACE_MAX_EVIDENCE];
+    size_t inspectedCount;
+    uint64_t inspectedCorpusRevision;
+    GtkTextBuffer *evidenceInspection;
     bool closed;
 };
 static bool Available(UmiAiWorkspaceGtkPanel *panel) { return panel != NULL && !panel->closed && panel->worker == NULL; }
@@ -204,6 +211,17 @@ static void Search(GtkButton *button, gpointer data)
     for (size_t i = 0U; i < count; ++i)
         g_string_append_printf(text, "%s | score %.3f | lines %u–%u\n%s\n\n", results[i].source.id, results[i].score,
             results[i].source.firstLine, results[i].source.lastLine, results[i].source.text);
+    panel->inspectedCount = 0U;
+    if (status == UMI_STATUS_OK) {
+        UmiAiWorkspaceSnapshot snapshot;
+        status = UmiAiWorkspaceSnapshotRead(panel->workspace, &snapshot);
+        if (status == UMI_STATUS_OK) {
+            panel->inspectedCount = count < UMI_AI_WORKSPACE_MAX_EVIDENCE ? count : UMI_AI_WORKSPACE_MAX_EVIDENCE;
+            panel->inspectedCorpusRevision = snapshot.corpusRevision;
+            for (size_t i = 0U; i < panel->inspectedCount; ++i) panel->inspected[i] = results[i];
+            g_string_append_printf(text, "\nPrepare inspected results freezes the first %zu displayed passages, in this order. It does not repeat the search.\n", panel->inspectedCount);
+        }
+    }
     gtk_text_buffer_set_text(panel->search, text->str, -1); g_string_free(text, TRUE); g_free(results); Message(panel, status);
 }
 static void NewJob(GtkButton *button, gpointer data)
@@ -235,6 +253,42 @@ static void Prepare(GtkButton *button, gpointer data)
         kind == UMI_AI_WORKSPACE_TOOL ? "{}" : prompt, Value(panel->actor), kind == UMI_AI_WORKSPACE_TOOL ? 0U : 512U);
     if (status == UMI_STATUS_OK) g_strlcpy(panel->selectedId, Value(panel->jobId), sizeof(panel->selectedId));
     g_free(prompt); Refresh(panel); Message(panel, status);
+}
+/* Both buttons use the same Framework job lifecycle. This route preserves
+ * the copied retrieval selection; the earlier automatic lexical route stays
+ * available. Editing a question does not silently choose different passages. */
+static void PrepareInspected(GtkButton *button, gpointer data)
+{
+    UmiAiWorkspaceGtkPanel *panel = data; (void)button; if (!Available(panel)) return;
+    if (gtk_drop_down_get_selected(panel->kind) != 0U || panel->inspectedCount == 0U) {
+        gtk_label_set_text(panel->message, "Choose Grounded draft, inspect retrieval, then prepare its selected passages."); return;
+    }
+    char *prompt = BufferText(panel->prompt);
+    const char *provider = gtk_drop_down_get_selected(panel->provider) == 0U ?
+        "umicom.extractive-preview" : "umicom.local-chat";
+    UmiStatus status = UmiAiWorkspacePrepareEvidence(panel->workspace, Value(panel->jobId),
+        provider, Value(panel->modelId), Value(panel->collectionId), prompt, Value(panel->actor),
+        512U, panel->inspectedCorpusRevision, panel->inspected, panel->inspectedCount);
+    if (status == UMI_STATUS_OK) g_strlcpy(panel->selectedId, Value(panel->jobId), sizeof(panel->selectedId));
+    g_free(prompt); Refresh(panel); Message(panel, status);
+}
+/* Reading evidence never approves or runs a job. The renderer consumes one
+ * owned snapshot and does not reinterpret a model answer as GTK markup. */
+static void InspectEvidence(GtkButton *button, gpointer data)
+{
+    UmiAiWorkspaceGtkPanel *panel = data; (void)button; if (!Available(panel)) return;
+    UmiAiEvidenceReview *review = NULL;
+    UmiStatus status = UmiAiEvidenceCapture(panel->workspace, panel->selectedId, &review);
+    char *text = NULL;
+    if (status == UMI_STATUS_OK) {
+        text = g_try_malloc(UMI_AI_EVIDENCE_REPORT_CAPACITY);
+        status = text != NULL ? UmiAiEvidenceFormat(review, text, UMI_AI_EVIDENCE_REPORT_CAPACITY, NULL) : UMI_STATUS_OUT_OF_MEMORY;
+    }
+    if (status == UMI_STATUS_OK) {
+        gtk_text_buffer_set_text(panel->evidenceInspection, text, -1);
+        gtk_label_set_text(panel->message, "Inspection captured. No job, source or approval was changed. Inspect again for a newer loaded snapshot.");
+    } else Message(panel, status);
+    g_free(text); UmiAiEvidenceDestroy(review);
 }
 static void Approve(GtkButton *button, gpointer data)
 {
@@ -362,11 +416,18 @@ UmiStatus UmiAiWorkspaceGtkPanelCreate(UmiAiWorkspace *workspace, UmiAiRuntime *
     gtk_text_buffer_set_text(panel->prompt, "When does the workshop open?", -1);
     row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8); gtk_box_append(GTK_BOX(drafts), row);
     Button(panel, row, "Prepare for review", "ai.job.prepare", G_CALLBACK(Prepare));
+    Button(panel, row, "Prepare inspected results", "ai.job.prepare_inspected", G_CALLBACK(PrepareInspected));
     panel->approve = GTK_BUTTON(Button(panel, row, "Approve selected job", "ai.job.approve", G_CALLBACK(Approve)));
     panel->deny = GTK_BUTTON(Button(panel, row, "Reject selected job", "ai.job.reject", G_CALLBACK(Deny)));
     panel->run = GTK_BUTTON(Button(panel, row, "Run approved job", "ai.job.run", G_CALLBACK(Run)));
     panel->review = TextArea(drafts, "Frozen request, source references and returned draft", "ai.job.review", 230, false);
     panel->history = TextArea(history, "Saved jobs — copy an ID to Load job on the Drafts page", "ai.history", 260, false);
+    GtkWidget *evidencePage = Page(panel, "Evidence inspection");
+    row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8); gtk_box_append(GTK_BOX(evidencePage), row);
+    Button(panel, row, "Inspect selected job evidence", "ai.evidence.inspect", G_CALLBACK(InspectEvidence));
+    panel->evidenceInspection = TextArea(evidencePage,
+        "Frozen passages, current-source comparison and literal citation locations",
+        "ai.evidence.report", 320, false);
     row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8); gtk_box_append(GTK_BOX(panel->forms), row);
     Button(panel, row, "Reload shared workspace", "ai.workspace.reload", G_CALLBACK(Reload));
     GtkWidget *notice = gtk_label_new("Editing the form does not change a saved job. Retrieved text and model output never authorise actions. Check the sources before using a draft.");

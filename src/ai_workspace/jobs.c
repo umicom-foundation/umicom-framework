@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "workspace_internal.h"
+#include "evidence_internal.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -55,6 +56,11 @@ static UmiStatus AwJobBinding(UmiAiWorkspace *workspace, const UmiAiWorkspaceJob
     if (!preparing && job->providerKind != provider->kind) return UMI_STATUS_BUSY;
     return umi_ai_policy_check_provider(&workspace->runtime->policy, provider->kind, 1);
 }
+/* The lexical-only entry point is preserved below for engineering review.
+ * AwPrepareSelected now owns both preparation routes so inspected hybrid or
+ * manually selected results can reach the same durable job without a second
+ * lexical search. Existing callers retain their lexical behaviour and ABI. */
+#if 0
 UmiStatus UmiAiWorkspacePrepare(UmiAiWorkspace *workspace, const char *jobId,
     UmiAiWorkspaceJobKind kind, const char *providerId, const char *modelId,
     const char *collectionId, const char *prompt, const char *requestedBy, uint32_t maxOutputTokens)
@@ -107,6 +113,99 @@ UmiStatus UmiAiWorkspacePrepare(UmiAiWorkspace *workspace, const char *jobId,
     if (status != UMI_STATUS_OK) { free(next); return status; }
     return AwPublish(workspace, next, false);
 }
+#endif
+
+/* One command constructor owns validation, provider policy, frozen passages
+ * and the atomic Data Server publish. Selected sources are compared with the
+ * authoritative workspace before any candidate is committed. */
+static UmiStatus AwPrepareSelected(UmiAiWorkspace *workspace, const char *jobId,
+    UmiAiWorkspaceJobKind kind, const char *providerId, const char *modelId,
+    const char *collectionId, const char *prompt, const char *requestedBy, uint32_t maxOutputTokens,
+    bool selected, uint64_t expectedCorpusRevision,
+    const UmiAiWorkspaceEvidence *evidence, size_t evidenceCount)
+{
+    UmiStatus status = AwReady(workspace); AwState *next; size_t existing;
+    const char *collection = collectionId != NULL ? collectionId : "";
+    const char *model = modelId != NULL ? modelId : "";
+    if (status != UMI_STATUS_OK) return status;
+    if (!AwIdValid(jobId, UMI_AI_WORKSPACE_ID_CAPACITY) || !AwIdValid(providerId, UMI_AI_ID_CAPACITY) ||
+        !AwTextValid(model, UMI_AI_ID_CAPACITY, kind == UMI_AI_WORKSPACE_TOOL) ||
+        !AwTextValid(prompt, UMI_AI_WORKSPACE_PASSAGE_CAPACITY, false) ||
+        !AwIdValid(requestedBy, UMI_AI_WORKSPACE_ID_CAPACITY) || kind < UMI_AI_WORKSPACE_DRAFT || kind > UMI_AI_WORKSPACE_TOOL ||
+        (kind != UMI_AI_WORKSPACE_TOOL && (maxOutputTokens == 0U || maxOutputTokens > 4096U)) ||
+        (kind == UMI_AI_WORKSPACE_TOOL && (maxOutputTokens != 0U || model[0] != '\0')) ||
+        (kind == UMI_AI_WORKSPACE_GROUNDED_DRAFT ? !AwIdValid(collection, UMI_AI_WORKSPACE_ID_CAPACITY) : collection[0] != '\0'))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (selected) {
+        status = AwEvidenceSelectionCheck(workspace, collection, expectedCorpusRevision, evidence, evidenceCount);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    existing = AwJobIndex(workspace->state, jobId);
+    if (existing != SIZE_MAX) {
+        const UmiAiWorkspaceJob *job = &workspace->state->jobs[existing];
+        if (selected) {
+            if (job->evidenceCount != evidenceCount) return UMI_STATUS_ALREADY_EXISTS;
+            for (size_t i = 0U; i < evidenceCount; ++i)
+                if (!AwEvidenceSourceEqual(&job->evidence[i].source, &evidence[i].source))
+                    return UMI_STATUS_ALREADY_EXISTS;
+        }
+        return job->kind == kind && job->maxOutputTokens == maxOutputTokens &&
+            strcmp(job->providerId, providerId) == 0 && strcmp(job->modelId, model) == 0 &&
+            strcmp(job->collectionId, collection) == 0 && strcmp(job->prompt, prompt) == 0 &&
+            strcmp(job->requestedBy, requestedBy) == 0 ? UMI_STATUS_OK : UMI_STATUS_ALREADY_EXISTS;
+    }
+    if (workspace->state->jobCount >= UMI_AI_WORKSPACE_MAX_JOBS) return UMI_STATUS_CAPACITY_EXCEEDED;
+    next = malloc(sizeof(*next)); if (next == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    *next = *workspace->state;
+    UmiAiWorkspaceJob *job = &next->jobs[next->jobCount++]; memset(job, 0, sizeof(*job));
+    (void)AwTextCopy(job->id, sizeof(job->id), jobId, false);
+    (void)AwTextCopy(job->providerId, sizeof(job->providerId), providerId, false);
+    (void)AwTextCopy(job->modelId, sizeof(job->modelId), model, true);
+    (void)AwTextCopy(job->collectionId, sizeof(job->collectionId), collection, true);
+    (void)AwTextCopy(job->prompt, sizeof(job->prompt), prompt, false);
+    (void)AwTextCopy(job->requestedBy, sizeof(job->requestedBy), requestedBy, false);
+    job->kind = kind; job->state = UMI_AI_WORKSPACE_REVIEW; job->maxOutputTokens = maxOutputTokens;
+    job->corpusRevision = next->corpusRevision;
+    status = AwJobBinding(workspace, job, true);
+    if (status == UMI_STATUS_OK && kind == UMI_AI_WORKSPACE_TOOL) {
+        UmiAiTool *tool = umi_ai_tool_registry_find(&workspace->runtime->tools, providerId);
+        (void)AwTextCopy(job->permission, sizeof(job->permission), tool->permission, false);
+    } else if (status == UMI_STATUS_OK) {
+        UmiAiProvider *provider = umi_ai_provider_registry_find(&workspace->runtime->providers, providerId);
+        job->providerKind = provider->kind;
+    }
+    if (status == UMI_STATUS_OK && kind == UMI_AI_WORKSPACE_GROUNDED_DRAFT) {
+        if (selected) {
+            job->evidenceCount = evidenceCount;
+            for (size_t i = 0U; i < evidenceCount; ++i) job->evidence[i] = evidence[i];
+        } else {
+            status = UmiAiWorkspaceSearch(workspace, collection, prompt, NULL, NULL, NULL,
+                job->evidence, UMI_AI_WORKSPACE_MAX_EVIDENCE, &job->evidenceCount);
+        }
+        if (status == UMI_STATUS_OK && job->evidenceCount == 0U) status = UMI_STATUS_NOT_FOUND;
+    }
+    if (status != UMI_STATUS_OK) { free(next); return status; }
+    return AwPublish(workspace, next, false);
+}
+
+UmiStatus UmiAiWorkspacePrepare(UmiAiWorkspace *workspace, const char *jobId,
+    UmiAiWorkspaceJobKind kind, const char *providerId, const char *modelId,
+    const char *collectionId, const char *prompt, const char *requestedBy, uint32_t maxOutputTokens)
+{
+    return AwPrepareSelected(workspace, jobId, kind, providerId, modelId, collectionId,
+        prompt, requestedBy, maxOutputTokens, false, 0U, NULL, 0U);
+}
+UmiStatus UmiAiWorkspacePrepareEvidence(UmiAiWorkspace *workspace,
+    const char *jobId, const char *providerId, const char *modelId,
+    const char *collectionId, const char *prompt, const char *requestedBy,
+    uint32_t maxOutputTokens, uint64_t expectedCorpusRevision,
+    const UmiAiWorkspaceEvidence *evidence, size_t evidenceCount)
+{
+    return AwPrepareSelected(workspace, jobId, UMI_AI_WORKSPACE_GROUNDED_DRAFT,
+        providerId, modelId, collectionId, prompt, requestedBy, maxOutputTokens,
+        true, expectedCorpusRevision, evidence, evidenceCount);
+}
+
 UmiStatus UmiAiWorkspaceReview(UmiAiWorkspace *workspace, const char *jobId,
     const char *reviewedBy, bool approve)
 {

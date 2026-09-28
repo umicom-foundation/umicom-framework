@@ -183,3 +183,7 @@ endfunction()
 install(FILES "${_umicom_ai_workspace_root}/docs/learning/AI_WORKSPACE.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/learning" COMPONENT Framework)
 unset(_umicom_ai_workspace_root)
+
+# Reuse the existing workspace owner for inspected retrieval and citation views.
+# This extension introduces no alternative runtime, storage or transport.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiEvidence.cmake")

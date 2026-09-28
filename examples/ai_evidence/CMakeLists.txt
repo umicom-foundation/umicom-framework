@@ -1,0 +1,72 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+cmake_minimum_required(VERSION 3.24)
+project(UmicomAiEvidenceHost LANGUAGES C)
+include(CTest)
+include(GNUInstallDirs)
+find_package(Threads REQUIRED)
+get_filename_component(_root "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
+set(UMICOM_AI_EVIDENCE_FRAMEWORK_SOURCE "${_root}" CACHE PATH "Actual Framework source")
+set(FW "${UMICOM_AI_EVIDENCE_FRAMEWORK_SOURCE}")
+option(UMICOM_AI_EVIDENCE_SQLITE "Build the actual SQLite Data Server backend" ON)
+option(UMICOM_AI_EVIDENCE_SANITIZERS "Instrument this focused host with ASan and UBSan" OFF)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+set(CMAKE_C_STANDARD 23)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
+
+# This explicitly labelled dependency-subset host uses canonical implementation
+# files. It is not the complete SDK or an application build. The normal product
+# composition uses its already-created Umicom::ai and Umicom::data targets.
+function(umicom_apply_warnings target)
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror -UNDEBUG)
+    endif()
+endfunction()
+function(umicom_apply_sanitizers target)
+    if(UMICOM_AI_EVIDENCE_SANITIZERS AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(${target} PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
+        target_link_options(${target} PUBLIC -fsanitize=address,undefined)
+    endif()
+endfunction()
+add_library(umicom_data STATIC "${FW}/src/data/data_server.c" "${FW}/src/base/status.c")
+add_library(Umicom::data ALIAS umicom_data)
+set_target_properties(umicom_data PROPERTIES EXPORT_NAME data)
+target_include_directories(umicom_data PUBLIC $<BUILD_INTERFACE:${FW}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+target_link_libraries(umicom_data PUBLIC Threads::Threads)
+if(UMICOM_AI_EVIDENCE_SQLITE)
+    find_package(SQLite3 REQUIRED)
+    include("${FW}/cmake/UmicomSQLiteTarget.cmake")
+    umicom_resolve_sqlite_target(sqlite_target)
+    target_link_libraries(umicom_data PUBLIC ${sqlite_target})
+    target_compile_definitions(umicom_data PRIVATE UMICOM_HAS_SQLITE=1)
+endif()
+add_library(umicom_ai STATIC
+    "${FW}/src/ai/runtime.c" "${FW}/src/ai/policy.c"
+    "${FW}/src/ai/provider.c" "${FW}/src/ai/provider_registry.c"
+    "${FW}/src/ai/tool_registry.c" "${FW}/src/ai/retrieval.c"
+    "${FW}/src/ai/embedding.c" "${FW}/src/ai/reranker.c")
+add_library(Umicom::ai ALIAS umicom_ai)
+set_target_properties(umicom_ai PROPERTIES EXPORT_NAME ai)
+target_include_directories(umicom_ai PUBLIC $<BUILD_INTERFACE:${FW}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+if(NOT WIN32)
+    target_link_libraries(umicom_ai PUBLIC m)
+endif()
+foreach(t umicom_data umicom_ai)
+    umicom_apply_warnings(${t})
+    umicom_apply_sanitizers(${t})
+endforeach()
+include("${FW}/cmake/UmicomAiWorkspace.cmake")
+install(TARGETS umicom_data umicom_ai EXPORT UmicomFrameworkTargets ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+install(DIRECTORY "${FW}/include/umicom/ai" "${FW}/include/umicom/data" "${FW}/include/umicom/base"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom")
+install(FILES "${FW}/cmake/UmicomSQLiteTarget.cmake" DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework")
+file(WRITE "${CMAKE_BINARY_DIR}/UmicomFrameworkConfig.cmake"
+    "include(CMakeFindDependencyMacro)\nfind_dependency(Threads)\n")
+if(UMICOM_AI_EVIDENCE_SQLITE)
+    file(APPEND "${CMAKE_BINARY_DIR}/UmicomFrameworkConfig.cmake"
+        "find_dependency(SQLite3)\ninclude(\"\${CMAKE_CURRENT_LIST_DIR}/UmicomSQLiteTarget.cmake\")\numicom_resolve_sqlite_target(_umi_sqlite)\n")
+endif()
+file(APPEND "${CMAKE_BINARY_DIR}/UmicomFrameworkConfig.cmake"
+    "include(\"\${CMAKE_CURRENT_LIST_DIR}/UmicomAiWorkspaceDependencies.cmake\")\ninclude(\"\${CMAKE_CURRENT_LIST_DIR}/UmicomFrameworkTargets.cmake\")\n")
+install(FILES "${CMAKE_BINARY_DIR}/UmicomFrameworkConfig.cmake" DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework")
+install(EXPORT UmicomFrameworkTargets NAMESPACE Umicom:: DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework")
