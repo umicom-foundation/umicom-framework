@@ -103,3 +103,6 @@ unset(_umicom_bank_operations_root)
 # Money presentation is reusable Framework behaviour, not GTK-only arithmetic.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomMoneyText.cmake")
 target_link_libraries(umicom_bank_operations PUBLIC Umicom::money_text)
+
+# Reviewed forms and commands use the same banking transition and repository.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomBankReview.cmake")

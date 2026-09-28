@@ -71,4 +71,7 @@ UmiStatus BankRequireFunds(const BankState *state, int accountIndex,
 UmiStatus BankApplyCustomerAccount(BankState *, const UmiBankActor *, const UmiBankCommand *);
 UmiStatus BankApplyTransfer(BankState *, const UmiBankActor *, const UmiBankCommand *);
 UmiStatus BankApplyCardHold(BankState *, const UmiBankActor *, const UmiBankCommand *);
+/** Candidate preparation never writes or returns mutable service state. */
+UmiStatus BankPrepare(const UmiBankOperations *, const UmiBankActor *,
+    const UmiBankCommand *, BankState **outCandidate, UmiBankReceipt *outReceipt);
 #endif

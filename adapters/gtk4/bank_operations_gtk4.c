@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/bank_operations.h"
 #include "umicom/bank_operations/operations.h"
+#include "umicom/bank_operations/review.h"
 #include "umicom/finance/money_text.h"
 #include <inttypes.h>
 #include <limits.h>
@@ -25,6 +26,8 @@
  * owns widgets, input conversion and copied projections, never a second ledger. */
 typedef struct BankUi {
     UmiBankOperations *operations;
+    UmiBankReview *review; /* Owned; no database or widget lifetime is borrowed. */
+    GtkTextBuffer *reviewBuffer; /* Borrowed from the review page. */
     GtkWindow *window;
     GtkDropDown *action;
     GtkDropDown *identity;
@@ -68,6 +71,7 @@ static void Message(BankUi *ui, UmiStatus status)
 static void UiFree(gpointer data)
 {
     BankUi *ui = data;
+    UmiBankReviewDestroy(ui->review); ui->review = NULL;
     UmiBankOperationsDestroy(ui->operations);
     g_free(ui->path);
     g_free(ui);
@@ -84,6 +88,7 @@ static void UiClosed(GtkWidget *widget, gpointer data)
     BankUi *ui = data;
     (void)widget;
     ui->closed = true;
+    UmiBankReviewDestroy(ui->review); ui->review = NULL;
     UmiBankOperationsDestroy(ui->operations);
     ui->operations = NULL;
 }
@@ -336,11 +341,56 @@ static bool ReadCommand(BankUi *ui, UmiBankActor *actor, UmiBankCommand *command
     command->timestampMillis = ui->timestampMillis; command->expectedRevision = ui->displayedRevision;
     return umi_financial_date_is_valid(command->businessDate);
 }
+/* Only a review of the exact current form can be submitted. Clearing a review
+ * changes no financial state: previews are not holds, approvals or receipts. */
+static void InvalidateReview(BankUi *ui)
+{
+    UmiBankReviewDestroy(ui->review); ui->review = NULL;
+    if (ui->submit != NULL) gtk_widget_set_sensitive(GTK_WIDGET(ui->submit), FALSE);
+    if (ui->reviewBuffer != NULL) gtk_text_buffer_set_text(ui->reviewBuffer,
+        "No current review. Choose Review command before submitting.", -1);
+}
+static void ReviewEdited(GtkEditable *editable, gpointer data)
+{
+    BankUi *ui = SignalUi(data); (void)editable;
+    if (ui != NULL) InvalidateReview(ui);
+}
+static void ReviewSelectionChanged(GObject *object, GParamSpec *spec, gpointer data)
+{
+    BankUi *ui = SignalUi(data); (void)object; (void)spec;
+    if (ui != NULL) InvalidateReview(ui);
+}
+static void ReviewCommand(GtkButton *button, gpointer data)
+{
+    BankUi *ui = SignalUi(data);
+    UmiBankActor actor; UmiBankCommand command; UmiStatus status;
+    char *text;
+    (void)button;
+    if (ui == NULL) return;
+    InvalidateReview(ui);
+    if (!ReadCommand(ui, &actor, &command)) { Message(ui, UMI_STATUS_INVALID_ARGUMENT); return; }
+    status = UmiBankOperationsReview(ui->operations, &actor, &command, &ui->review);
+    if (status != UMI_STATUS_OK) { Message(ui, status); return; }
+    text = g_try_malloc(UMI_BANK_REVIEW_TEXT_CAPACITY);
+    if (text == NULL) { InvalidateReview(ui); Message(ui, UMI_STATUS_OUT_OF_MEMORY); return; }
+    status = UmiBankReviewDescribe(ui->review, text, UMI_BANK_REVIEW_TEXT_CAPACITY, NULL);
+    if (status == UMI_STATUS_OK) {
+        char *valid = g_utf8_make_valid(text, -1);
+        gtk_text_buffer_set_text(ui->reviewBuffer, valid, -1);
+        g_free(valid);
+        gtk_widget_set_sensitive(GTK_WIDGET(ui->submit), TRUE);
+        gtk_notebook_set_current_page(ui->pages, 7);
+        gtk_label_set_text(ui->message, "Review prepared. Nothing committed; no new reservation or payment. Inspect the Command review page.");
+    } else { InvalidateReview(ui); Message(ui, status); }
+    g_free(text);
+}
+
 static void NewRequest(GtkButton *button, gpointer data)
 {
     BankUi *ui = SignalUi(data); char *id; GDateTime *now;
     (void)button;
     if (ui == NULL) return;
+    InvalidateReview(ui);
     id = g_uuid_string_random(); now = g_date_time_new_now_local();
     gtk_editable_set_text(GTK_EDITABLE(ui->request), id); g_free(id);
     ui->timestampMillis = (int64_t)(g_get_real_time() / 1000);
@@ -348,6 +398,10 @@ static void NewRequest(GtkButton *button, gpointer data)
         gtk_editable_set_text(GTK_EDITABLE(ui->date), date); g_free(date); g_date_time_unref(now); }
     gtk_label_set_text(ui->message, "New request prepared. Review fields and the test identity before submitting.");
 }
+/* Retained for engineering review: this older handler executed the form
+ * immediately. The replacement binds execution to the Framework-owned review,
+ * so changed fields or state cannot silently alter an inspected command. */
+#if 0
 static void Submit(GtkButton *button, gpointer data)
 {
     BankUi *ui = SignalUi(data); UmiBankActor actor; UmiBankCommand command; UmiBankReceipt receipt; UmiStatus status;
@@ -363,10 +417,40 @@ static void Submit(GtkButton *button, gpointer data)
         gtk_label_set_text(ui->message, message);
     } else Message(ui, status);
 }
+#endif
+static void Submit(GtkButton *button, gpointer data)
+{
+    BankUi *ui = SignalUi(data);
+    UmiBankActor actor; UmiBankCommand command; UmiBankReceipt receipt;
+    UmiStatus status; bool matches = false;
+    (void)button;
+    if (ui == NULL) return;
+    if (ui->review == NULL) {
+        gtk_label_set_text(ui->message, "Choose Review command before submitting."); return;
+    }
+    if (!ReadCommand(ui, &actor, &command)) {
+        InvalidateReview(ui); Message(ui, UMI_STATUS_INVALID_ARGUMENT); return;
+    }
+    status = UmiBankReviewMatches(ui->review, &actor, &command, &matches);
+    if (status != UMI_STATUS_OK || !matches) {
+        InvalidateReview(ui); Message(ui, status != UMI_STATUS_OK ? status : UMI_STATUS_BUSY); return;
+    }
+    status = UmiBankOperationsExecuteReviewed(ui->operations, &actor, ui->review, &receipt);
+    InvalidateReview(ui);
+    if (status == UMI_STATUS_OK) {
+        char message[240]; Refresh(ui);
+        (void)snprintf(message, sizeof message, "%s at revision %" PRIu64
+            ". Use New request and Review command before changing this command. No network payment occurred.",
+            receipt.idempotent ? "Existing receipt returned; no duplicate posting" : "Committed locally", receipt.revision);
+        gtk_label_set_text(ui->message, message);
+    } else Message(ui, status);
+}
+
 static void Reload(GtkButton *button, gpointer data)
 {
     BankUi *ui = SignalUi(data); UmiStatus status; (void)button;
     if (ui == NULL) return;
+    InvalidateReview(ui);
     status = UmiBankOperationsReload(ui->operations); Message(ui, status);
     if (status == UMI_STATUS_OK) Refresh(ui);
 }
@@ -522,6 +606,7 @@ static void OpenWorkspace(GtkButton *button, gpointer data)
     ui->hint = GTK_LABEL(gtk_label_new(NULL)); gtk_label_set_wrap(ui->hint, TRUE); gtk_box_append(GTK_BOX(box), GTK_WIDGET(ui->hint));
     toolbar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8); gtk_box_append(GTK_BOX(box), toolbar);
     buttonWidget = gtk_button_new_with_label("New request"); g_signal_connect_object(buttonWidget, "clicked", G_CALLBACK(NewRequest), G_OBJECT(ui->window), 0); gtk_box_append(GTK_BOX(toolbar), buttonWidget);
+    buttonWidget = gtk_button_new_with_label("Review command"); g_signal_connect_object(buttonWidget, "clicked", G_CALLBACK(ReviewCommand), G_OBJECT(ui->window), 0); gtk_box_append(GTK_BOX(toolbar), buttonWidget);
     ui->submit = GTK_BUTTON(gtk_button_new_with_label("Submit command")); g_signal_connect_object(ui->submit, "clicked", G_CALLBACK(Submit), G_OBJECT(ui->window), 0); gtk_box_append(GTK_BOX(toolbar), GTK_WIDGET(ui->submit));
     buttonWidget = gtk_button_new_with_label("Reload committed data"); g_signal_connect_object(buttonWidget, "clicked", G_CALLBACK(Reload), G_OBJECT(ui->window), 0); gtk_box_append(GTK_BOX(toolbar), buttonWidget);
     ui->statementAccount = GTK_ENTRY(gtk_entry_new()); gtk_entry_set_placeholder_text(ui->statementAccount, "Statement account ID");
@@ -533,7 +618,29 @@ static void OpenWorkspace(GtkButton *button, gpointer data)
     ui->customers = Page(ui->pages, "Customers"); ui->accounts = Page(ui->pages, "Accounts");
     ui->transfers = Page(ui->pages, "Transfers / beneficiaries"); ui->cards = Page(ui->pages, "Cards / holds");
     ui->ledger = Page(ui->pages, "Ledger / statement"); ui->reconciliation = Page(ui->pages, "Reconciliation"); ui->audit = Page(ui->pages, "Audit");
+    /* The review page displays one owned prediction and never edits the ledger. */
+    {
+        GtkWidget *scroll = gtk_scrolled_window_new(), *view = gtk_text_view_new();
+        gtk_text_view_set_editable(GTK_TEXT_VIEW(view), FALSE);
+        gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(view), FALSE);
+        gtk_text_view_set_monospace(GTK_TEXT_VIEW(view), TRUE);
+        gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view), GTK_WRAP_WORD_CHAR);
+        ui->reviewBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
+        gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), view);
+        gtk_notebook_append_page(ui->pages, scroll, gtk_label_new("Command review"));
+    }
     gtk_box_append(GTK_BOX(box), GTK_WIDGET(ui->pages));
+    /* Edits invalidate the prediction immediately; Submit rechecks as defence
+     * in depth in case a caller changes the form without an edit notification. */
+    {
+        GtkEntry *entries[] = {ui->request, ui->id, ui->owner, ui->source,
+            ui->destination, ui->name, ui->minor, ui->currency, ui->scale, ui->date};
+        for (size_t i = 0U; i < G_N_ELEMENTS(entries); ++i)
+            g_signal_connect_object(entries[i], "changed", G_CALLBACK(ReviewEdited), G_OBJECT(ui->window), 0);
+        g_signal_connect_object(ui->identity, "notify::selected", G_CALLBACK(ReviewSelectionChanged), G_OBJECT(ui->window), 0);
+        g_signal_connect_object(ui->recordState, "notify::selected", G_CALLBACK(ReviewSelectionChanged), G_OBJECT(ui->window), 0);
+    }
+    InvalidateReview(ui);
     directory = g_build_filename(g_get_user_data_dir(), "Umicom", "Bank", NULL);
     ui->path = g_build_filename(directory, "bank-operations-simulation.sqlite", NULL);
     status = g_path_is_absolute(ui->path) && g_mkdir_with_parents(directory, 0700) == 0 ?

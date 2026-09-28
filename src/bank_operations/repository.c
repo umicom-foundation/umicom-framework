@@ -121,6 +121,32 @@ UmiStatus BankRepositoryLoad(UmiBankOperations *operations, BankState **outState
     return UMI_STATUS_OK;
 }
 
+/* A high-water number alone cannot establish that cached state still belongs
+ * to the persisted event stream. Check every known canonical record and reject
+ * missing/extra/changed events inside the transaction before appending. This is
+ * consistency validation, not cryptographic authentication or automatic repair. */
+static UmiStatus CheckKnownHistory(UmiBankOperations *operations, uint64_t revision)
+{
+    BankInventory inventory = {0U, revision};
+    UmiStatus status = umi_data_server_visit(operations->server, CountEvent, &inventory);
+    char key[80], expected[BANK_RECORD_TEXT_CAPACITY], stored[BANK_RECORD_TEXT_CAPACITY];
+    if (status != UMI_STATUS_OK) return status;
+    if (inventory.count != operations->state->counts.events)
+        return UMI_STATUS_PARSE_ERROR;
+    for (size_t i = 0U; i < inventory.count; ++i) {
+        const UmiBankAuditEvent *event = &operations->state->events[i];
+        status = BankEncode(event, expected, sizeof expected);
+        if (status != UMI_STATUS_OK) return status;
+        EventKey(event->revision, key);
+        status = umi_data_server_get(operations->server, key, stored, sizeof stored);
+        if (status == UMI_STATUS_NOT_FOUND || status == UMI_STATUS_CAPACITY_EXCEEDED)
+            return UMI_STATUS_PARSE_ERROR;
+        if (status != UMI_STATUS_OK) return status;
+        if (strcmp(expected, stored) != 0) return UMI_STATUS_BUSY;
+    }
+    return UMI_STATUS_OK;
+}
+
 UmiStatus BankRepositoryCommit(UmiBankOperations *operations,
     const UmiBankAuditEvent *event, uint64_t expectedRevision)
 {
@@ -135,6 +161,7 @@ UmiStatus BankRepositoryCommit(UmiBankOperations *operations,
     if (status != UMI_STATUS_OK) return status;
     status = ReadRevision(operations->server, &current);
     if (status == UMI_STATUS_OK && current != expectedRevision) status = UMI_STATUS_BUSY;
+    if (status == UMI_STATUS_OK) status = CheckKnownHistory(operations, current);
     EventKey(event->revision, key);
     if (status == UMI_STATUS_OK) {
         UmiStatus probe = umi_data_server_get(operations->server, key, existing, sizeof existing);

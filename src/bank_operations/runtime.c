@@ -136,6 +136,10 @@ UmiStatus UmiBankOperationsReload(UmiBankOperations *operations)
     return status;
 }
 
+/* The previous executor is retained for review. Candidate construction now
+ * lives in BankPrepare so preview and execution cannot grow different financial
+ * rules. Only the repository commit publishes the prepared state. */
+#if 0
 UmiStatus UmiBankOperationsExecute(UmiBankOperations *operations,
     const UmiBankActor *actor, const UmiBankCommand *command, UmiBankReceipt *outReceipt)
 {
@@ -169,6 +173,66 @@ UmiStatus UmiBankOperationsExecute(UmiBankOperations *operations,
     operations->state = candidate;
     outReceipt->revision = candidate->counts.revision;
     outReceipt->requestId = command->requestId;
+    return UMI_STATUS_OK;
+}
+
+#endif
+
+/* One validation/idempotency/candidate path serves both callers. Receipt fields
+ * here are provisional; the public executor publishes them only after commit. */
+UmiStatus BankPrepare(const UmiBankOperations *operations,
+    const UmiBankActor *actor, const UmiBankCommand *command,
+    BankState **outCandidate, UmiBankReceipt *outReceipt)
+{
+    UmiStatus status;
+    BankState *candidate;
+    if (outCandidate != NULL) *outCandidate = NULL;
+    if (outReceipt != NULL) memset(outReceipt, 0, sizeof *outReceipt);
+    if (operations == NULL || outCandidate == NULL || outReceipt == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (operations->poisoned || operations->state == NULL) return UMI_STATUS_INVALID_STATE;
+    status = BankCommandValid(actor, command);
+    if (status != UMI_STATUS_OK) return status;
+    for (size_t i = 0U; i < operations->state->counts.events; ++i) {
+        const UmiBankAuditEvent *event = &operations->state->events[i];
+        if (strcmp(event->command.requestId.value, command->requestId.value) == 0) {
+            if (!BankSameRequest(event, actor, command)) return UMI_STATUS_ALREADY_EXISTS;
+            outReceipt->revision = event->revision;
+            outReceipt->requestId = command->requestId;
+            outReceipt->idempotent = true;
+            return UMI_STATUS_OK;
+        }
+    }
+    if (command->expectedRevision != operations->state->counts.revision) return UMI_STATUS_BUSY;
+    candidate = malloc(sizeof *candidate);
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    memcpy(candidate, operations->state, sizeof *candidate);
+    status = BankApply(candidate, actor, command);
+    if (status != UMI_STATUS_OK) { free(candidate); return status; }
+    outReceipt->revision = candidate->counts.revision;
+    outReceipt->requestId = command->requestId;
+    *outCandidate = candidate;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiBankOperationsExecute(UmiBankOperations *operations,
+    const UmiBankActor *actor, const UmiBankCommand *command, UmiBankReceipt *outReceipt)
+{
+    BankState *candidate = NULL;
+    UmiBankReceipt prepared;
+    UmiStatus status;
+    if (outReceipt == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    memset(outReceipt, 0, sizeof *outReceipt);
+    status = BankPrepare(operations, actor, command, &candidate, &prepared);
+    if (status != UMI_STATUS_OK) return status;
+    if (candidate != NULL) {
+        status = BankRepositoryCommit(operations,
+            &candidate->events[candidate->counts.events - 1U], operations->state->counts.revision);
+        if (status != UMI_STATUS_OK) { free(candidate); return status; }
+        free(operations->state);
+        operations->state = candidate;
+    }
+    *outReceipt = prepared;
     return UMI_STATUS_OK;
 }
 
