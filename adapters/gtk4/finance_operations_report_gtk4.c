@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "finance_operations_internal.h"
+#include "umicom/finance_operations/close_review.h"
 #include <inttypes.h>
 #include <string.h>
 
@@ -98,6 +99,28 @@ static UmiStatus AppendReport(UmiFinanceOperationsGtkPanel *panel, guint view,
             g_string_append_printf(text, "\n  %s; prepared by %s; closed by %s\n\n",
                 period.status == UMI_ACCOUNTING_PERIOD_OPEN ? "Open" : period.status == UMI_ACCOUNTING_PERIOD_SOFT_CLOSED ? "Close awaiting review" : "Closed",
                 period.preparedBy.value[0] ? period.preparedBy.value : "—", period.closedBy.value[0] ? period.closedBy.value : "—");
+        }
+        /* Shared controls, not a second UI policy: capture each period from
+         * the loaded revision and release its owned report after rendering. */
+        for (size_t index = 0U; index < counts->periods; ++index) {
+            UmiFinanceOperationPeriod period;
+            UmiFinanceCloseReview *review = NULL;
+            size_t required = 0U;
+            status = UmiFinanceOperationsPeriodAt(panel->operations, index, &period);
+            if (status == UMI_STATUS_OK)
+                status = UmiFinanceCloseReviewCreate(panel->operations, period.id.value, &review);
+            if (status != UMI_STATUS_OK) return status;
+            status = UmiFinanceCloseReviewFormat(review, NULL, 0U, &required);
+            if (status != UMI_STATUS_CAPACITY_EXCEEDED || required == 0U) {
+                UmiFinanceCloseReviewDestroy(review); return UMI_STATUS_INTERNAL_ERROR;
+            }
+            char *formatted = g_try_malloc(required);
+            if (!formatted) { UmiFinanceCloseReviewDestroy(review); return UMI_STATUS_OUT_OF_MEMORY; }
+            status = UmiFinanceCloseReviewFormat(review, formatted, required, NULL);
+            if (status == UMI_STATUS_OK) { g_string_append(text, formatted); g_string_append_c(text, '\n'); }
+            g_free(formatted);
+            UmiFinanceCloseReviewDestroy(review);
+            if (status != UMI_STATUS_OK) return status;
         }
     } else if (view == 3U) {
         g_string_append(text, "JOURNALS — amounts below are minor units\n\n");

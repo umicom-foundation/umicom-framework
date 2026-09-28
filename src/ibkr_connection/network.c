@@ -64,7 +64,17 @@ static UmiStatus Open(void *context,uint16_t port)
     s->socket=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
     if(s->socket==UMI_BAD_SOCKET)return UMI_STATUS_IO_ERROR;
     u_long nonblocking=1;
+    /* Winsock declares cmd as signed long, while MinGW defines FIONBIO as an
+     * unsigned command word. Preserve that word explicitly at the API boundary;
+     * this is not a negative byte count or a change to nonblocking behaviour.
+     * The previous implicit conversion remains below for engineering review. */
+#if 0
     if(ioctlsocket(s->socket,FIONBIO,&nonblocking)!=0||!SetHandleInformation((HANDLE)s->socket,HANDLE_FLAG_INHERIT,0))return UMI_STATUS_IO_ERROR;
+#endif
+    _Static_assert(sizeof(long) == sizeof(u_long), "Winsock command widths must agree");
+    _Static_assert((u_long)(long)FIONBIO == (u_long)FIONBIO,
+                   "Winsock nonblocking command bits must survive the conversion");
+    if(ioctlsocket(s->socket,(long)FIONBIO,&nonblocking)!=0||!SetHandleInformation((HANDLE)s->socket,HANDLE_FLAG_INHERIT,0))return UMI_STATUS_IO_ERROR;
 #else
     s->socket=socket(AF_INET,SOCK_STREAM,0);
     if(s->socket==UMI_BAD_SOCKET)return UMI_STATUS_IO_ERROR;

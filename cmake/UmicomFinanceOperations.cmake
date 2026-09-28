@@ -151,3 +151,7 @@ endfunction()
 install(FILES "${_umicom_finance_operations_root}/docs/learning/ACCOUNTANT_EXCHANGE.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/learning" COMPONENT Framework)
 unset(_umicom_finance_operations_root)
+
+# Close diagnostics and execution share the canonical evaluator; all callers
+# retain the existing financial service, persistence and command contracts.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomFinanceCloseReview.cmake")

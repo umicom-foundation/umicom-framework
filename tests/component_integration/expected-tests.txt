@@ -186,3 +186,7 @@ COMMON|framework.research_replay.slippage
 COMMON|framework.research_replay.step_budget
 COMMON|framework.research_replay.timestamp
 COMMON|framework.research_replay.timestamp_boundary
+
+# The native adapter loopback is now part of the retained broker suite.
+# Keep exact inventory validation rather than ignoring additional registrations.
+COMMON|framework.ibkr_connection.native_nonblocking_adapter

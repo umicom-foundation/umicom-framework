@@ -123,3 +123,14 @@ else()
     target_compile_options(umicom-ibkr-canonical-mapping-test PRIVATE -UNDEBUG)
 endif()
 add_test(NAME framework.ibkr_connection.canonical_mapping COMMAND umicom-ibkr-canonical-mapping-test)
+
+# Native transport regression uses an ephemeral loopback listener on both hosts;
+# no TWS/Gateway configuration is read and no financial message is transmitted.
+add_executable(umicom-ibkr-native-adapter-test "${CMAKE_CURRENT_LIST_DIR}/test_native_adapter.c")
+target_link_libraries(umicom-ibkr-native-adapter-test PRIVATE Umicom::ibkr_connection)
+if(WIN32)
+    target_link_libraries(umicom-ibkr-native-adapter-test PRIVATE ws2_32)
+endif()
+umicom_ibkr_target(umicom-ibkr-native-adapter-test)
+add_test(NAME framework.ibkr_connection.native_nonblocking_adapter COMMAND umicom-ibkr-native-adapter-test)
+set_tests_properties(framework.ibkr_connection.native_nonblocking_adapter PROPERTIES TIMEOUT 10)

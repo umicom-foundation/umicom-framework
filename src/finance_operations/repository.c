@@ -64,6 +64,33 @@ static UmiStatus ScanEvent(const char *key, const char *value, void *context)
     return UMI_STATUS_OK;
 }
 
+/* A matching high-water revision is necessary but not sufficient: another
+ * writer or manual repair may have changed an older event without moving it.
+ * Compare the canonical prefix inside the same Data Server transaction as the
+ * append. Do not repair external changes or overwrite the caller's loaded view.
+ * Enumeration only counts keys; it never re-enters the Data Server callback. */
+static UmiStatus VerifyLoadedPrefix(UmiFinanceOperations *operations, uint64_t revision)
+{
+    EventScan scan = {revision, 0U};
+    UmiStatus status = umi_data_server_visit(operations->server, ScanEvent, &scan);
+    if (status != UMI_STATUS_OK) return status;
+    if (revision != operations->state->counts.events || scan.count != (size_t)revision)
+        return UMI_STATUS_PARSE_ERROR;
+    for (size_t i = 0; i < scan.count; ++i) {
+        char key[96], expected[FINANCE_RECORD_CAPACITY], stored[FINANCE_RECORD_CAPACITY];
+        status = EventKey((uint64_t)i + 1U, key, sizeof key);
+        if (status == UMI_STATUS_OK)
+            status = FinanceEncode(&operations->state->commands[i], expected, sizeof expected);
+        if (status == UMI_STATUS_OK)
+            status = umi_data_server_get(operations->server, key, stored, sizeof stored);
+        if (status == UMI_STATUS_NOT_FOUND || status == UMI_STATUS_CAPACITY_EXCEEDED)
+            return UMI_STATUS_PARSE_ERROR;
+        if (status != UMI_STATUS_OK) return status;
+        if (strcmp(expected, stored) != 0) return UMI_STATUS_BUSY;
+    }
+    return UMI_STATUS_OK;
+}
+
 static UmiStatus Rollback(UmiFinanceOperations *operations, UmiStatus previous)
 {
     UmiStatus status = umi_data_server_rollback(operations->server);
@@ -120,6 +147,7 @@ UmiStatus FinanceRepositoryCommit(UmiFinanceOperations *operations,
     if (status != UMI_STATUS_OK) return status;
     status = ReadRevision(operations->server, &actualRevision);
     if (status == UMI_STATUS_OK && actualRevision != operations->state->counts.revision) status = UMI_STATUS_BUSY;
+    if (status == UMI_STATUS_OK) status = VerifyLoadedPrefix(operations, actualRevision);
     if (status == UMI_STATUS_OK) status = EventKey(actualRevision + 1U, key, sizeof(key));
     if (status == UMI_STATUS_OK) {
         status = umi_data_server_get(operations->server, key, previous, sizeof(previous));

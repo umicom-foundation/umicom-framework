@@ -236,6 +236,10 @@ static UmiStatus Reconcile(FinanceState *state, const UmiFinanceOperationCommand
 /* Preparing a close freezes the period, not the whole application. Future
  * periods may continue. The close checks dated unfinished work plus current
  * reconciliation evidence for every posted account; no old evidence is erased. */
+/* The original fail-fast predicate is preserved for comparison. The shared
+ * evaluator below now also explains every blocking record to both financial
+ * frontends. Close execution still uses that same predicate, not GUI policy. */
+#if 0
 static UmiStatus CloseReady(const FinanceState *state, size_t periodIndex)
 {
     const UmiFinanceOperationPeriod *period = &state->periods[periodIndex];
@@ -270,6 +274,11 @@ static UmiStatus CloseReady(const FinanceState *state, size_t periodIndex)
         if (!balance.balanced) return UMI_STATUS_INVALID_STATE;
     }
     return UMI_STATUS_OK;
+}
+#endif
+static UmiStatus CloseReady(const FinanceState *state, size_t periodIndex)
+{
+    return FinanceEvaluateClose(state, periodIndex, NULL);
 }
 
 static UmiStatus ChangePeriod(FinanceState *state, const UmiFinanceOperationCommand *command)

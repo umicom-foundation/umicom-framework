@@ -80,4 +80,9 @@ UmiStatus FinanceDecode(const char *, UmiFinanceOperationCommand *);
 bool FinanceSameCommand(const UmiFinanceOperationCommand *, const UmiFinanceOperationCommand *);
 UmiStatus FinanceRepositoryLoad(UmiFinanceOperations *, FinanceState **out);
 UmiStatus FinanceRepositoryCommit(UmiFinanceOperations *, const UmiFinanceOperationCommand *);
+/* One evaluator serves the diagnostic snapshot and the authoritative close.
+ * A NULL report avoids allocation in the command execution path. */
+struct UmiFinanceCloseReview;
+UmiStatus FinanceEvaluateClose(const FinanceState *state, size_t periodIndex,
+    struct UmiFinanceCloseReview *report);
 #endif
