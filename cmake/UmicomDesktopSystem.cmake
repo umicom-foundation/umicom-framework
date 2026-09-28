@@ -121,3 +121,8 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomResearchReplayIntegration.cmake")
 
 # Native read-only Paper/Live connections remain separate from order execution.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomIbkrConnectionIntegration.cmake")
+
+
+# Check the late integration route as well as each isolated component build.
+# These checks are build configuration only; no broker or application is started.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomComponentIntegrationChecks.cmake")

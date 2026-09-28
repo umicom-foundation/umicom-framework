@@ -1,5 +1,10 @@
 # Umicom Foundation | Sammy Hegab | MIT
+# Resolve test sources beside this list file, not in the deferred
+# caller directory. The prior relative-path command is retained for review.
+if(FALSE)
 add_executable(umicom-market-tape-test test_tape.c)
+endif()
+add_executable(umicom-market-tape-test "${CMAKE_CURRENT_LIST_DIR}/test_tape.c")
 target_link_libraries(umicom-market-tape-test PRIVATE Umicom::market_tape)
 umicom_market_tape_target(umicom-market-tape-test)
 set(_cases config empty invalid_instrument capacity duplicate_instrument unknown unopened
@@ -18,13 +23,23 @@ add_test(NAME framework.market_tape.self_test COMMAND umicom-market-tape --self-
 add_test(NAME framework.market_tape.practice_demo COMMAND umicom-market-tape demo)
 add_test(NAME framework.market_tape.lesson COMMAND umicom-market-tape-example)
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    # Resolve test sources beside this list file, not in the deferred
+    # caller directory. The prior relative-path command is retained for review.
+    if(FALSE)
     add_executable(umicom-market-tape-alloc-test test_alloc.c)
+    endif()
+    add_executable(umicom-market-tape-alloc-test "${CMAKE_CURRENT_LIST_DIR}/test_alloc.c")
     target_link_libraries(umicom-market-tape-alloc-test PRIVATE Umicom::market_tape)
     target_link_options(umicom-market-tape-alloc-test PRIVATE -Wl,--wrap=calloc)
     umicom_market_tape_target(umicom-market-tape-alloc-test)
     add_test(NAME framework.market_tape.allocation_failures COMMAND umicom-market-tape-alloc-test)
 endif()
+# Resolve test sources beside this list file, not in the deferred
+# caller directory. The prior relative-path command is retained for review.
+if(FALSE)
 add_executable(umicom-market-tape-edge-test test_edges.c)
+endif()
+add_executable(umicom-market-tape-edge-test "${CMAKE_CURRENT_LIST_DIR}/test_edges.c")
 target_link_libraries(umicom-market-tape-edge-test PRIVATE Umicom::market_tape)
 umicom_market_tape_target(umicom-market-tape-edge-test)
 foreach(_case practice_controls practice_bad_input timestamp_zero custom_interval gap_newer_timestamp

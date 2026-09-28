@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Build the application, keep every test — Umicom</title><link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADMAAAAzCAYAAAA6oTAqAAAEpUlEQVR4nO2ZwUsbWRzHv132ppnpi66gNUJm3WpoPHQSoyQotGbBsDTQlBbpTSjppcf9G/a0x14aCt5ENruWbdk1YGxBSdA0yR4MxEqJYKWFYjMktufdQ3dmJ8m8eW8mcTcs+Z6clzfz3sf3/f3eb95cuHhl7k/8T/TFfz2BTqoH063qwXSrejBWFA3JWI7Ma9cLoRnIXs+5jPXluTwVwIRrGMuReQyIDrx6805rJ6KAhdAMFkIzKJbK2MrsdWzMjsMMiA4sR+Yx4RrW2gaFfu3vi4IDwD9QsteDXzbSqByftD12R2GWI/MIei+3tA+IDuo9RBRwbymmrZJSq9sevyMwQe9lRINXTSfNkuz1wO26hGKpjGKpbAuqLZgJ1zBuhOQGSxnpQ+2M63l669mJpwt2C83vl75jQqj6ce03LQkQUcCtSBjS2CjzPqVWtwRlGSYaknEjKHP1zZYOsbKxbfibNDaK68EAN9RWZg/FUtm0HzeMlbhY2dhGtnQIAHASAicheF2pGPaVvR4shGZARIH5XBYUEyYakhG88g0XRPNKjEsSHtyP43WlgoePEtT7iChoUDyi2Y+aAIz2C5pevXmHZ5miFhdOQnD3zm2MS5J2zZqc+h/ngVITBREF/Pz7JhsmGrzKlaVWNrYbdvjFb8NYDIcb+rFgVFmFcrsuNVybroyZnmWLeJopatdOQvDgfpw6cSchqCqK6TNV6aHMMh8RBRBR0PYkKoy+BNErWzrE0+wf2t7hJAQBv69lNZrFC6KXUqvj8dq6ViUYJQkumGY1xwVgbCkj5fIF3mEMJXs91GynrxSoMKf1j5rV9KkWaA1wM+XyBawmk9wT10saG8W9pRh3fyrMh9oZsn8HuCpeSwGfbbX6U5K6v5iJt0qoHJ/wrUzzzs1rqXYgAGjvOiwptTqeZ3MNbcyY4bVUVVGQKxSQ2kwzJ2IkaWwUtyJhZiVgVgVQYcYlCXfv3ObaI1LptG0IXkvxFJ1UmIDPxwRpNy54zwO2MnstELHpKUyODOGHX7e0NvrKfE23VbuWshIXza/Uc5NuxPxTGHT0tfS3/HLGKhpZ4gExspRnZAg3p6fgGRlq6Dvo6MPp2ScAFmGqimI7S6li2crIUvFrs5ibdBv2V0EAE5iqorTEjJMQLIbDCPh8bdnMSDRLxa/NUu/RgwA2zwD0UFYTgFKrN6RfK5ZiiQqTKxSYe4taKefyBaTSacvFZOX4BI/X1rXrQUcf4tdnuSBOzz4h8Xy3oc30TdNq+cJjPdrBX2x6Cjf9XuY4ALBzcITEi92Wdq4zAM1Wfh9zIBaUvmQHzFNts57kS9g+qLTEiipLpzNWqmUWlJW4oK1Es2ydm6nW4yl1qoqCh48SWjxZiYudgyOs5/epK9Es24eAajzxlD36jZYnNspv3+PJy32U3763NCfbx7NVRUFqM41cvsBMEnrYwX7z2Ei82MXOwZGtObV9cM4DxZOyeePCTB37pKGHMst8px8b/W/XUkbq+MemqqJgNZlEKp02zXzqptcJCFW2EwCvAv7PCUJN0XOTbnzl6Mf6y/2Oj3XuMP+mep/Ou1U9mG5VD6Zb9ReztWucDqtdOAAAAABJRU5ErkJggg=="><style>*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#f2f6f8;color:#183040;font:17px/1.75 "Segoe UI",system-ui,sans-serif}.top{background:#102d3d;padding:18px 30px;display:flex;align-items:center;gap:22px;color:#fff}.top img{width:170px;height:auto}.top span{font-size:14px;letter-spacing:.04em}.shell{max-width:1360px;margin:auto;display:grid;grid-template-columns:260px minmax(0,1fr);gap:28px;padding:32px 24px}nav{position:sticky;top:20px;align-self:start;background:white;border:1px solid #d8e3e9;padding:22px;border-radius:12px}nav h2{font-size:17px;margin:0 0 14px}nav a{display:block;font-size:14px;line-height:1.5;padding:9px 0;color:#195b7f;text-decoration:none;border-top:1px solid #edf2f4}main{min-width:0}section{background:white;border:1px solid #d8e3e9;border-radius:12px;padding:38px 42px;margin-bottom:24px}h1{font-size:clamp(30px,4vw,44px);line-height:1.15;margin:10px 0 25px}h2{font-size:27px;line-height:1.3;margin:0 0 24px}h3{font-size:21px;line-height:1.3;margin-top:30px}.eyebrow{color:#0c6e77;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase}.lead{font-size:20px;color:#294c5e}.note{border-left:4px solid #18777e;background:#edf8f7;padding:18px 22px;margin:25px 0}.note p{margin:8px 0 0}.flow{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:26px 0}.flow span{flex:1;min-width:160px;text-align:center;border:1px solid #cbdde7;border-radius:9px;padding:18px;font-weight:700;background:#f7fafc}.flow small{font-weight:400;font-size:13px}code{font-family:"Cascadia Code",Consolas,monospace;font-size:.87em;overflow-wrap:anywhere}pre{background:#0d2230;color:#e8f3f9;padding:22px;border-radius:10px;overflow:auto;font-size:14px;line-height:1.6}pre code{white-space:pre;overflow-wrap:normal;font-size:inherit}a{color:#0e638e}table{width:100%;border-collapse:collapse;font-size:14px;min-width:480px}th,td{border:1px solid #d7e3e9;padding:12px;text-align:left;vertical-align:top}th{background:#edf5f8}.scroll{overflow:auto}details{border:1px solid #d6e3e8;border-radius:8px;padding:16px;margin:22px 0}summary{cursor:pointer;font-weight:700}footer{text-align:center;padding:30px 20px;color:#516977;font-size:13px}@media(max-width:950px){.shell{display:block;padding:18px}nav{position:static;margin-bottom:20px}section{padding:28px}nav a{padding:6px 0}.top{padding:16px 20px}}@media(max-width:540px){body{font-size:16px}.top{display:block}.top span{display:block;margin-top:8px}.shell{padding:12px}section{padding:24px 19px}h2{font-size:24px}pre{padding:16px}.flow b{display:none}}@media print{nav{display:none}.shell{display:block}section{border:0;break-inside:avoid}pre{white-space:pre-wrap;color:black;background:#f1f1f1}.top{background:white;color:black}}</style></head><body><header class="top"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMoAAAA3CAYAAABNadVvAAAMwklEQVR4nO2df0zTZx7H3zsuJZlSKCCmjIIiqGC5rNDRHU3NCSwCyyp4CuocAaLAMsMSlbmMc0acNzfQ5QhmwDxdmFMEThjLECM/FghkOKCXs0MniJNuMj2hQtldIDF3f0BL+/1+2+/TFuSHz+svePr0eT4lffN8fj3tcx4bVP8DhUKxye/m2wAKZTFAhUKhEECFQqEQQIVCoRBAhUKhEECFQqEQ8NSEolaGIz1+o+n3GKUC4dKQp7U9heIUv5/rDdZJxEiP3wgvdzf8qBsyjYvchYhRKhCjVKBHexNN7Z1zbQqF4jBzJhQvdzekx2/EOonYNOYtXG762UPoBmBGMOHSEPzjSiMGBn+eK5MoFIeZE6Gkx29ElHQta9zL3c3qc0TuQuzZsdV0uuhHx+bCNArFIWZVKFHStVBHyWwKgo9waQhWS15Aj/YmerQ3qWAoC4JZEco6iRivKcMt3CwuhkcNROuZu2M0fqEsBJ5ztiny4I5XeQVipLDiG1NAL3IX4s/xsQj09+N9nn50jAqGEzESszOwMyoIPhhBV+N5FJVroJtvs5YgDgtFrQzHa1HhRHM7tLdx7kor52OB/n6IjookFkxTeyd6tDftsnWpknW6DocVy81GJtFXdwSb8uk/lNnGbqHYE4ecu9KKDu1tAICnSARPkQj9AwOcc8OlIYhRKiByF/KuSwUDANlo6EyG1IUxbNDg2KYDKJ0Xm5YuxDGKWhmOqA3BRAJhniBBgYHYl5WJ/oEBFJeWcT6nR3sTd3W/mARjC5G7ENsSXnnGazDL4coUCQC4eSLoqduy9OEVClc9xBo/6obwdXuPKQ7xFImwK3k7ggIDTb/bwvykIBWM8RSqrr/Ga9/Sogk/6BIQLLEcnbjzA2rnxZ6lDa9Q1FEyomzWuSutFpX3uFdiERcbazGPTyhG7BXMaskLROsuLTTYl3cWwhPJiPadilPG7nfibwcL0T7Pli1FiE4UW3zd0YO69h7T754iEfZlZVoVhadIhBG9nsg4c8HYypCJ3IUQuQufvZpL73mkqs/PtxXPBLxCMW87MadDext1HRpTbcRTJEKkPIJ1ijAhFYk5+tExnKm4bKrecwX8z6RQKE8NuwuOzDgE4HazuLje1W3vdhaES0OsZsXsEUlWSR0Oyxn/AH6qh9+2Qtbcgupm7FxlOTbWVYLQ7MqZgV0n0btfBgvLprNP9fJk5OyJx6t/CIBQMP3Yk0mM6X7AN1WfIvdS/9RYaALeSU9AoiwI/h6CmXmP7qG5vAD7jPN4XgfLNgaSzRl4f7sK8jVirHATzDwwOY7BXg1q677Ax3XsvbjWOZSkgnKdGMLnBTOJhSeTmDAMQ9vbiZqSInzea22Fg2jpSkCwxdg9XJSnIzc0Ae+kb8FOecCMjdN/i/avK5Ff0jRVK5LIkJW6GzuiguHvPZPcmHh8D+3155F3qmnWakq8Qnk0Nm5yv8zTvQA7WLfF9a5uXKiqcsjIQH8/7Nmx1aHnzieSE1/i21gxXJkPuAggXCXDztxiyNcdwbHHb+Dk66FYwcxiuQggXBmMxNxibFjnZH1EEoMPjr+NtFBuDwGC5fB/UYWcF1XYqa7EgT0laHZkHRcBXD3EiIhKRERUAjI7ziMz5zy0hGZ65BRDY+NvEb8nD/IwL7zRsgFl+1XwF7DXcPUIQPSuPNSt8YL6rcpZEQuvUIZHDeiYDtaNkLpZwJSrdaGyymr9xBak1fuBwZ8XntvlJkMa759HgGD1hyjnXUyAYHUuyv+5Dal1DtgiScalM9lQepFNX/FiMopLRrA5m/Ems3MdQAD/qAxUXvDEvl1F3MKzIADxqQT2KbLRYDu/Mz0vA5/tb0PcqSH+yTzwCoVZUSd1s5wRCADTXRU+9KNjaO647tAeiwtPKNW7gTp7g3cFCj7JsOPNPYVQnozj6kozYTq2DgAI1ybi5Kl+yPbX2/9kpxBAqsqA8tRxpzOBxDccjdkskmC9obER+Sc+ckgkgf5+yM1K4xWJfnQM1fXXUFD6+QK+wzKO7kuFiJNHwy+1EBdvj1udOfFAg9K81+Enfx0pRW0YnGTPcV0lQ5qdFkj2Z2DrKrZ/MqHrRFF+Jvzk0YjbfxZXdJYbTjw2YMInlHcdDPfhYtEB/FEeDb+kAzh4rpPT9hXK7SggOAWASQy2lCAlaWq9oo4RTFibariH2oLp15Bfi+7HHHMkQUgk2ZYH3hMlKDAQu5K3E9VAGhob0XCt0SFDSN2sxdQgOdh4HFsKpu3srUfuoSCEVSey206e9OFi9gEcm/Zz2suPIHfdl7i0mVG/8vDEBrssECMnKpgdI91vw96kIyZXSNt6HnvvTuJSyW746FpRceZLlHaZuysyHFJxrGPQ4NieAyg1+mc6DSpOa1Bx4yg6Tqngbz7XJQDKJBnQqbFp8cSNSqTkGl0+DT7OOQvp1YOIZp1kI2j+JB37pk88bV0RtvisxZ3sUIadXvDfBeCCzW154RVKZEQEr0icjUNI7883tXeyBLL1pTCs9/XBX79qsnvvuWUIPacZYtZVof9+IqSMajruaPAXRsTZ/q9fMbZZDP7ON1tsQRhzLwDab4+w4wVdJVJetZYtUyDIlz3a11I4IxJzWkvQfFuFNMbdPf/VMQBsCWUcXS1nGcF3PdrvZiPai5E8GO7DZWa8duYnDGaHMjJpswP/ibLGekZrRK/H9e5uh08Re+IQ5jVh1frV2CoPg7fbMof2nnP+o8cg6000hP8+YU8dGxthD14awoNcmXNCSQjASlY/2BB09jrsKcHw51in/6q1IHkIXb+OIG2tp+WwjxhZgI2GTQPGfiS0yTDM0aoziIcGINjxe4NWcfjilq0GRxJIRMLlZoX4+iDppTCE+PpYzPV2W4ZHht8ctmfWeTKB0fm2wUPAdpcwicf2eq1czZc869Q+NqAYntYncOKAbU8Jh4Qyotc7nM0ywudqcblZmZtehmr9as75C0okCxoBPBQAnH5D2l4nbSVHemxyEg+c3Xae4M16cbWceIpEiIuNxfvvHkLcK/ypYnswtquYi0S1fjW+eHPn3IrExRVsd14GD45Ez6KhbQSPWYNiSJR2rnNhiOMNLoZko7VmWRnkvhwFyeF7i7az2akPwDMXDEl13hxmgdDYAGme7g3x9cF7W2KQuellZ8xkUf+Q4+6+bxBymJ6gOhlyjiB20aDrg47jpUr/dBSJrP8KChTXNKC3+kN8oGbeaNFAN8yxzuaDyOJIFkhSdyOaK4mg+YrQ8IUHr1Cud/P3ZxlrLLu2k6WRmQwM/oyC0s9Np4i32zK8tyUG722JYcUiTB4ZfkNZ83d27ae7r2fn5l0CsPXdo8iSiwGIoUw9io53FVhh18oLjUrU3OBIFPiqUFx+Dp+9lYjEhBjk5H6IhqtHkSgRQLhKgbT3y3DnaimKU4yCaWKki6fxkOGdkpP4IEk2dRpLZNiRexJ12RxJCIMGNQXOV8jnC94Y5XpXN/rvDBC1rETKIxC0JpAoE3ZX9wtE7kJWNmvrS2FIkkuJjG+7dRdlLfaJBADwzW30pYey6hmuEhUOl6hw2P4VFywVBY1Iu5QMKdOFdAtAfHoO4q08z9UrAEEvzLi07XlfoV2RDaUHY95KGdLyZEjLs2XFONrPFS7q68lEwfyIXo+Ga4243tWNuNhYRMojrM41umORERE2BcPMZtmT7q3p0qL11oDjsYmuCDVdsZAqrDT2LSV0JdhbEoyrOfalmv/deRZ7LXqkKpGS74+WEwkItitum0Rf3XGklC/e0wSwM0YZ0etxoaqKqD2FL+A3xijmcQifSNpu3cUbn17E5e9vOB3Al55gt20wmbjThCtL4LN/dOUHsPkEd1sMiyfj6Ksv4u66bS3Epj1FuPITyUIAJofQXLJvSXwqjMPp4eLSMpM7ZisuMT9hikvLTFk0b7dlyIx+mTcGAaYEcrnLeXFYoKvF3iQt0vJz8baKce/hQT+aq/+Oj8o1yKmOmb095xFd9RFEVQchLe9N7FAEI9h7OVzN7sdMGIah1TTh4rmzqLB6hwRAby32bquFVJ2Bt9UxUK71gvB583stkxh71I+utkZ8XFBL3F6/0HH6A/CMLfckrS7mRUqSWOTm/Yeo+f4Gbt5/6IyJFIrTOP2RqubxC1/Aby4k7+W23ayylu/Qduuus+ZRKLPCrH1IN4lgSO7LO5zJolDmkFn/2gfSDNmjcct4g7pZlIXMnH2RkDFD1tDYaPNevbFgSAVCWcg4HcyTEimfCvaNdRXV+tVY4bYcl7+/8TS2p1Cc4qkJhUJZzNCvz6ZQCKBCoVAIoEKhUAigQqFQCKBCoVAIoEKhUAigQqFQCKBCoVAIoEKhUAigQqFQCPg/5QHz9eCNg5AAAAAASUVORK5CYII=" alt="Umicom"><span>Learning by building real applications</span></header><div class="shell"><nav aria-label="Guide contents"><h2>In this guide</h2><a href="#start">Build the application, keep every test</a><a href="#stages">1. Know which stage failed</a><a href="#deferred">2. Understand the late integration step</a><a href="#merge">3. Merge the update into matching folders</a><a href="#build">4. Build, then run the tests</a><a href="#lesson">5. Run one program that uses all three components</a><a href="#ownership">6. Follow the C ownership</a><a href="#isolated">7. Practise with the smaller integration laboratory</a><a href="#troubleshooting">8. Read failures without discarding evidence</a><a href="#exercises">9. Check your understanding</a><a href="#reference">Reference and next steps</a></nav><main><section id="start"><div class="eyebrow">Umicom learning library · Build integration</div><h1>Build the application, keep every test</h1><p class="lead">An application is assembled from several pieces. Each piece may compile by itself, yet the combined application can still fail before the compiler starts. This guide shows how to recognise that difference and check the complete arrangement without removing tests.</p><p>You will rebuild the shared components, run their existing checks together and compile a small C program that uses a market tape, a historical replay and read-only Paper/Live settings. The observations are fictional. The program does not connect to a broker.</p><div class="note"><strong>Before you begin</strong><p>Keep a separate copy of any important work. Use a practice build directory, close running Umicom applications and review file replacements before merging them. The steps here do not require deleting your source or build cache.</p></div></section><section id="stages"><h2>1. Know which stage failed</h2><div class="flow"><span>Configure<br><small>Describe the build</small></span><b>→</b><span>Build<br><small>Compile and link</small></span><b>→</b><span>Test<br><small>Exercise behaviour</small></span></div><p><strong>Configuration</strong> is CMake reading the project descriptions. A <em>target</em> is an item it should build, such as a library or executable. A <em>dependency</em> is another target that item needs. CMake writes instructions for Ninja only after this description is valid.</p><p><strong>Compilation</strong> turns C source into object files. <strong>Linking</strong> joins those objects with the required libraries. <strong>CTest</strong> then runs registered checks; a successful compilation does not establish that those checks passed.</p><p>When a log says <code>Subdirectories may not be created during deferred execution</code>, CMake has not completed its description. The later Ninja message about rebuilding <code>build.ninja</code> is a consequence of that failure. It is not evidence that hundreds of application source files are individually broken.</p></section><section id="deferred"><h2>2. Understand the late integration step</h2><p>Framework needs some components to wait until their canonical dependency targets have been declared. Its integration functions therefore run at the end of the parent CMake directory. This is a <em>deferred call</em>.</p><p>The faulty route tried to create test subdirectories at that late point. The corrected route reads the same test definitions with <code>include()</code>. Every test source is identified relative to the file containing its definition, rather than relative to whichever application happens to be calling it.</p><pre><code class="cmake"># A test source belongs beside this CMake list file.
+add_executable(umicom-market-tape-test
+    &quot;${CMAKE_CURRENT_LIST_DIR}/test_tape.c&quot;)</code></pre><p>The library, test names, test logic and arguments remain. The earlier registration commands are kept in explained <code>if(FALSE)</code> blocks for source review. Do not reactivate those blocks in a deferred integration path.</p><p><strong>Do not use <code>BUILD_TESTING=OFF</code> as the repair.</strong> That can hide the failing test-registration route while also hiding the checks you need.</p></section><section id="merge"><h2>3. Merge the update into matching folders</h2><p>Extract the source package into a staging folder. Match <code>Umicom-Applications</code> to <code>C:\umicom\Umicom-Applications</code>, and <code>umicomOS</code> to <code>C:\umicom\umicomOS</code>. Merge Framework first. The OS additions are a small host entry into the same Framework laboratory, not a second implementation.</p><p>Use the manifest when reviewing replacements. Keep <code>Build-and-Git.md</code>, <code>Manifest.json</code> and <code>Validation.txt</code> outside the repositories. Do not replace whole folders or delete files that exist only in your checkout.</p><p>Open PowerShell in your normal account, then configure:</p><pre><code class="powershell">Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+
+$ErrorActionPreference = &quot;Stop&quot;
+$env:Path = &quot;C:\msys64\ucrt64\bin;$env:Path&quot;
+
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; `
+    --preset windows-ucrt64-all-debug `
+    -DBUILD_TESTING=ON `
+    -DUMICOM_BUILD_NATIVE_TOOL=ON `
+    -DUMICOM_BOOT_MEDIA_ENABLE_DEVICE_WRITES=OFF
+
+if ($LASTEXITCODE -ne 0) {
+    throw &quot;Configuration failed. Stop here.&quot;
+}</code></pre><p>Stop at the first failed stage. Successful configuration should reach both <strong>Configuring done</strong> and <strong>Generating done</strong>. A new error from another source location needs its own investigation; it should not be hidden with a warning-suppression flag.</p></section><section id="build"><h2>4. Build, then run the tests</h2><p>After configuration succeeds, build the complete application tree:</p><pre><code class="powershell">Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+$env:Path = &quot;C:\msys64\ucrt64\bin;$env:Path&quot;
+
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; `
+    --build `
+    --preset windows-ucrt64-all-debug `
+    --parallel 2 `
+    -- -k 0
+
+if ($LASTEXITCODE -ne 0) {
+    throw &quot;Full build failed. Do not proceed to tests or commits.&quot;
+}</code></pre><p>Only after the full build succeeds, run the complete suite:</p><pre><code class="powershell">&amp; &quot;C:\msys64\ucrt64\bin\ctest.exe&quot; `
+    --preset windows-ucrt64-all-debug `
+    --parallel 2 `
+    --no-tests=error `
+    --output-on-failure
+
+if ($LASTEXITCODE -ne 0) {
+    throw &quot;The full test suite failed. Review the failures before committing.&quot;
+}</code></pre><p>The focused selection below is useful when investigating these components, but it does not replace the complete suite.</p><pre><code class="powershell">&amp; &quot;C:\msys64\ucrt64\bin\ctest.exe&quot; `
+    --preset windows-ucrt64-all-debug `
+    -R &#x27;^framework\.(component_integration|market_tape|research_replay|ibkr_connection)\.&#x27; `
+    --parallel 2 `
+    --no-tests=error `
+    --output-on-failure
+
+if ($LASTEXITCODE -ne 0) {
+    throw &quot;Component integration or retained regression tests failed.&quot;
+}</code></pre><p><code>--no-tests=error</code> stops an empty selection from looking successful. The integration checks go further: they compare the actual test names with an expected inventory. A matching total is not enough if one test was accidentally replaced by another.</p><p>Platform-specific checks are registered only on their supported platform. A Linux socket test does not become a Windows socket test because both builds use CMake.</p></section><section id="lesson"><h2>5. Run one program that uses all three components</h2><p>The complete source is <code>framework/examples/component_integration/main.c</code>. The example has no network or file-write call. It creates its own fictional tape and historical replay, then validates separate Paper and Live settings without connecting.</p><pre><code class="powershell">&amp; &quot;.\build\windows-ucrt64-all-debug\bin\umicom-component-integration-example.exe&quot;
+if ($LASTEXITCODE -ne 0) {
+    throw &quot;The memory-only component example failed.&quot;
+}</code></pre><p>The expected output is:</p><pre><code class="text">WORKSHOP bar: open 100.00, high 101.00, low 99.00, close 100.50, volume 8
+Historical replay: 4 observations; final equity 9998.50; no open position.
+Paper and Live configuration: read-only; Live acknowledgement required.
+Practice complete. No broker connection, file write or real order was made.</code></pre><p>The tape combines four trades into one bar. The replay requests a long position, fills it on a later quote and closes it on another later quote. The result is <strong>9,998.50</strong> from an initial <strong>10,000.00</strong>, because the example crosses the quoted spread. This is an explanation of the supplied fictional calculation, not a performance forecast.</p><p>The final policy check confirms that Live configuration needs an acknowledgement and that both configurations remain read-only. A successful configuration check is not a provider login or permission to trade.</p></section><section id="ownership"><h2>6. Follow the C ownership</h2><p>The <code>tape</code> and <code>replay</code> handles each belong to the example until their corresponding destroy call. The tape snapshot has its own allocation. The final cleanup path releases all three, including after a failed check.</p><p>The strategy callback receives a borrowed view: it may read that view during the callback but must not free it. The Framework, not the callback, decides when a simulated request becomes eligible for a fill. These ownership rules remain useful when the same components are later used by a graphical application.</p><details><summary>Read the complete, compiled C example</summary><pre><code class="c">/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/component_integration/main.c
+ *
+ * PURPOSE:
+ *   Use three public Framework components in one native consumer. A fictional
+ *   tape and historical strategy share instrument records. Paper/Live options
+ *   are validated separately; neither mode opens a socket or enables orders.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+#include &quot;umicom/trading/market_tape.h&quot;
+#include &quot;umicom/strategy_research/research_replay.h&quot;
+#include &quot;umicom/broker_connectivity/connection.h&quot;
+#include &lt;math.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+/* The callback requests simulated positions, not broker orders. The replay
+ * service decides whether an instruction is eligible on a later observation. */
+static UmiStatus PracticeStrategy(const UmiResearchView *view, void *context,
+    UmiResearchDirection *target)
+{
+    (void)context;
+    if (view == NULL || target == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *target = view-&gt;observationIndex == 0U ? UMI_RESEARCH_LONG :
+        view-&gt;observationIndex == 2U ? UMI_RESEARCH_FLAT : UMI_RESEARCH_HOLD;
+    return UMI_STATUS_OK;
+}
+
+int main(void)
+{
+    UmiMarketTape *tape = NULL;
+    UmiResearchReplay *replay = NULL;
+    UmiMarketTapeSnapshot *tapeView = calloc(1U, sizeof(*tapeView));
+    UmiMarketTapeConfig tapeConfig = UmiMarketTapeConfigDefault();
+    UmiResearchConfig researchConfig = UmiResearchConfigDefault();
+    UmiResearchSnapshot result = {0};
+    UmiResearchObservation observations[4] = {0};
+    const double prices[4] = {100.0, 101.0, 99.0, 100.5};
+    UmiInstrument instrument = {.instrument_id = {&quot;WORKSHOP&quot;}, .symbol = &quot;WORKSHOP&quot;,
+        .venue = &quot;PRACTICE&quot;, .currency = {&quot;GBP&quot;}, .multiplier = 1.0};
+    UmiStatus status = UMI_STATUS_OK;
+    size_t processed = 0U;
+    int exitCode = 1;
+    if (tapeView == NULL) {
+        fputs(&quot;Cannot allocate the owned tape snapshot.\n&quot;, stderr);
+        return 1;
+    }
+    status = UmiMarketTapeCreate(&amp;tapeConfig, &amp;tape);
+    if (status == UMI_STATUS_OK) status = UmiMarketTapeRegister(tape, &amp;instrument);
+    if (status == UMI_STATUS_OK) status = UmiMarketTapeBegin(tape, &amp;instrument.instrument_id, 1U, 1U);
+    for (size_t i = 0U; i &lt; 4U &amp;&amp; status == UMI_STATUS_OK; ++i) {
+        UmiMarketTapePacket packet = {0};
+        int64_t timestamp = 1000 + (int64_t)i * 200;
+        packet.kind = UMI_MARKET_TAPE_TRADE;
+        packet.generation = 1U;
+        packet.sequence = (uint64_t)i + 1U;
+        packet.receivedTimeMs = timestamp;
+        packet.value.trade = (UmiTradeTick){instrument, prices[i], 2.0, timestamp};
+        status = UmiMarketTapeApply(tape, &amp;packet, NULL);
+        observations[i].sequence = (uint64_t)i + 1U;
+        observations[i].quote.instrument = instrument;
+        observations[i].quote.bid = prices[i] - 0.5;
+        observations[i].quote.ask = prices[i] + 0.5;
+        observations[i].quote.bid_size = 10.0;
+        observations[i].quote.ask_size = 10.0;
+        observations[i].quote.event_time_ms = timestamp;
+    }
+    if (status == UMI_STATUS_OK) status = UmiMarketTapeRead(tape, 1800, tapeView);
+    if (status != UMI_STATUS_OK || tapeView-&gt;barCount != 1U) {
+        if (status == UMI_STATUS_OK) status = UMI_STATUS_INTERNAL_ERROR;
+        goto finished;
+    }
+    researchConfig.initialEquity = 10000.0;
+    researchConfig.units = 1.0;
+    researchConfig.commissionPerUnit = 0.0;
+    researchConfig.slippageBps = 0.0;
+    researchConfig.latencyMilliseconds = 0U;
+    status = UmiResearchReplayCreate(&amp;researchConfig, observations, 4U,
+        PracticeStrategy, NULL, &amp;replay);
+    if (status == UMI_STATUS_OK) status = UmiResearchReplayRun(replay, 4U, &amp;processed);
+    if (status == UMI_STATUS_OK) status = UmiResearchReplaySnapshot(replay, &amp;result);
+    if (status != UMI_STATUS_OK || processed != 4U || result.state != UMI_RESEARCH_COMPLETED ||
+        result.position != 0 || result.fills != 2U || fabs(result.equity - 9998.5) &gt; 0.000001) {
+        if (status == UMI_STATUS_OK) status = UMI_STATUS_INTERNAL_ERROR;
+        goto finished;
+    }
+    UmiIbkrConnectionOptions paper = UmiIbkrConnectionOptionsDefault();
+    UmiIbkrConnectionOptions live = paper;
+    live.environment = UMI_TRADING_LIVE;
+    live.adapter.paperOnly = 0;
+    live.adapter.port = UmiIbkrDefaultPort(UMI_IBKR_TWS, UMI_TRADING_LIVE);
+    if (UmiIbkrConnectionValidate(&amp;paper) != UMI_STATUS_OK ||
+        UmiIbkrConnectionValidate(&amp;live) != UMI_STATUS_PERMISSION_DENIED) {
+        status = UMI_STATUS_INTERNAL_ERROR;
+        goto finished;
+    }
+    live.acknowledgeLive = true;
+    if (UmiIbkrConnectionValidate(&amp;live) != UMI_STATUS_OK ||
+        !paper.adapter.readOnly || !live.adapter.readOnly) {
+        status = UMI_STATUS_INTERNAL_ERROR;
+        goto finished;
+    }
+    printf(&quot;WORKSHOP bar: open %.2f, high %.2f, low %.2f, close %.2f, volume %.0f\n&quot;,
+        tapeView-&gt;bars[0].open, tapeView-&gt;bars[0].high, tapeView-&gt;bars[0].low,
+        tapeView-&gt;bars[0].close, tapeView-&gt;bars[0].volume);
+    printf(&quot;Historical replay: %zu observations; final equity %.2f; no open position.\n&quot;,
+        processed, result.equity);
+    puts(&quot;Paper and Live configuration: read-only; Live acknowledgement required.&quot;);
+    puts(&quot;Practice complete. No broker connection, file write or real order was made.&quot;);
+    exitCode = 0;
+finished:
+    if (exitCode != 0) fprintf(stderr, &quot;Component check failed (status %d).\n&quot;, (int)status);
+    UmiResearchReplayDestroy(replay);
+    UmiMarketTapeDestroy(tape);
+    free(tapeView);
+    return exitCode;
+}
+</code></pre></details></section><section id="isolated"><h2>7. Practise with the smaller integration laboratory</h2><p>This is useful for learning and focused investigation. It builds real canonical source subsets, not substitute trading services. It is smaller than the complete Framework and does not qualify the installed applications.</p><pre><code class="powershell">Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+$env:Path = &quot;C:\msys64\ucrt64\bin;$env:Path&quot;
+
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; `
+    -S &quot;.\framework\examples\component_integration&quot; `
+    -B &quot;.\build\component-integration&quot; `
+    -G Ninja `
+    -DCMAKE_BUILD_TYPE=Release
+if ($LASTEXITCODE -ne 0) { throw &quot;Laboratory configuration failed.&quot; }
+
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; `
+    --build &quot;.\build\component-integration&quot; --parallel 2
+if ($LASTEXITCODE -ne 0) { throw &quot;Laboratory build failed.&quot; }
+
+&amp; &quot;C:\msys64\ucrt64\bin\ctest.exe&quot; `
+    --test-dir &quot;.\build\component-integration&quot; `
+    --parallel 2 --no-tests=error --output-on-failure
+if ($LASTEXITCODE -ne 0) { throw &quot;Laboratory tests failed.&quot; }
+
+&amp; &quot;.\build\component-integration\bin\umicom-component-integration-example.exe&quot;
+if ($LASTEXITCODE -ne 0) { throw &quot;Laboratory example failed.&quot; }</code></pre><p>The laboratory requests integration in a child directory before its owner targets exist, just as the failing route did. It then verifies that the deferred callbacks construct the expected libraries and register the tests.</p><div class="scroll"><table><thead><tr><th>Check</th><th>Question it answers</th></tr></thead><tbody><tr><td>Deferred / immediate / mixed</td><td>Do late, direct and mixed integration paths retain the same checks?</td></tr><tr><td>Repeated / reconfigure</td><td>Do repeated requests and reused build directories avoid missing or duplicate registrations?</td></tr><tr><td>Missing / partial owners</td><td>Does an unrelated host avoid acquiring fabricated dependencies?</td></tr><tr><td>Tests off</td><td>Does the explicit no-tests product configuration still build its tools?</td></tr><tr><td>Regenerate</td><td>Can a private copied project rebuild its Ninja description automatically?</td></tr><tr><td>Installed</td><td>Can another C project consume the exported SDK targets?</td></tr></tbody></table></div><p>Each probe receives a new directory below the build tree. Logs and failed attempts remain available for inspection. The regeneration case edits only its own private copy of the fixture, never your repository source.</p></section><section id="troubleshooting"><h2>8. Read failures without discarding evidence</h2><h3>Configuration still fails</h3><p>Check that both the component CMake file and its matching test <code>CMakeLists.txt</code> were merged. Replacing only <code>add_subdirectory</code> with <code>include</code> is not sufficient when the test source paths remain relative to the caller.</p><h3>No tests matched</h3><p>Keep <code>BUILD_TESTING=ON</code>, rerun configuration and inspect the test names. <code>ctest -N</code> lists registrations; it does not run them. An empty list is not a pass.</p><h3>A probe failed</h3><p>Its error reports the retained directory. Read the configure, build and test logs in that order. Preserve the first substantive message as well as the final exit status.</p><h3>Native checks pass but a window fails</h3><p>A headless source check does not test GTK ownership, Windows DLL loading, display scaling or account authentication. Record that application failure separately. This update does not change the broker's read-only boundary or the physical-media write policy.</p></section><section id="exercises"><h2>9. Check your understanding</h2><h3>Questions</h3><p>1. Why does a failed configuration prevent Ninja from compiling the application?</p><p>2. Why would disabling tests conceal this particular defect?</p><p>3. Two configurations each list 186 checks. What must you compare before concluding they kept the same coverage?</p><p>4. Does the example's Live configuration prove the provider is logged in to a Live account?</p><p>5. Who releases the tape snapshot, and why is there one cleanup path?</p><details><summary>Answers and explanations</summary><p>1. Ninja needs a valid generated build description. CMake has not produced one when configuration fails.</p><p>2. The faulty call was inside test registration. Removing that route avoids the symptom but removes the checks as well.</p><p>3. Compare identities, arguments and supported-platform conditions, then actually execute the checks. The new matrix compares the exact identities and runs the retained suites.</p><p>4. No. It validates local settings only. This example opens no connection, and a port or selected mode cannot attest a provider login.</p><p>5. The caller owns its allocated snapshot and frees it. A common cleanup path prevents successful and failed paths from forgetting an owned object.</p></details></section><section id="reference"><h2>Reference and next steps</h2><p>The CMake reference explains <a href="https://cmake.org/cmake/help/latest/command/cmake_language.html">deferred calls</a>, <a href="https://cmake.org/cmake/help/latest/command/add_subdirectory.html">directory processing</a> and <a href="https://cmake.org/cmake/help/latest/variable/CMAKE_CURRENT_LIST_DIR.html">list-file locations</a>. The engineering contract for this repair is <code>docs/development/component-integration.md</code>.</p><p>Complete the installed application's own acceptance journey after the build and tests. The broader treasury lifecycle, authenticated broker access, GUI qualification and boot-media work are separate milestones; a recovered build graph does not silently complete them.</p></section></main></div><footer>Umicom Foundation · Sammy Hegab · C23 examples and native build tools</footer></body></html>

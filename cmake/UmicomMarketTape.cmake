@@ -45,7 +45,13 @@ foreach(_tool IN ITEMS umicom-market-tape umicom-market-tape-example)
     install(TARGETS ${_tool} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Framework)
 endforeach()
 if(BUILD_TESTING)
+    # Deferred component completion may add targets and tests, but may not
+    # create CMake subdirectories. Keep the former registration for review;
+    # the same test definitions now use their own absolute source paths.
+    if(FALSE)
     add_subdirectory("${_umi_tape_root}/tests/market_tape" "${CMAKE_CURRENT_BINARY_DIR}/market-tape-tests")
+    endif()
+    include("${_umi_tape_root}/tests/market_tape/CMakeLists.txt")
 endif()
 install(FILES "${_umi_tape_root}/docs/learning/market-tape.html"
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)

@@ -1,5 +1,10 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# Resolve test sources beside this list file, not in the deferred
+# caller directory. The prior relative-path command is retained for review.
+if(FALSE)
 add_executable(umicom-ibkr-connection-test test_connection.c)
+endif()
+add_executable(umicom-ibkr-connection-test "${CMAKE_CURRENT_LIST_DIR}/test_connection.c")
 target_include_directories(umicom-ibkr-connection-test PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../../src/ibkr_connection")
 target_link_libraries(umicom-ibkr-connection-test PRIVATE Umicom::ibkr_connection)
 umicom_ibkr_target(umicom-ibkr-connection-test)
@@ -81,7 +86,12 @@ add_test(NAME framework.ibkr_connection.policy_lesson COMMAND umicom-broker-prof
 add_test(NAME framework.ibkr_connection.cli_self_test COMMAND umicom-broker-connect --self-test)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    # Resolve test sources beside this list file, not in the deferred
+    # caller directory. The prior relative-path command is retained for review.
+    if(FALSE)
     add_executable(umicom-ibkr-loopback-test test_loopback.c)
+    endif()
+    add_executable(umicom-ibkr-loopback-test "${CMAKE_CURRENT_LIST_DIR}/test_loopback.c")
     target_link_libraries(umicom-ibkr-loopback-test PRIVATE Umicom::ibkr_connection)
     umicom_ibkr_target(umicom-ibkr-loopback-test)
     foreach(_mode IN ITEMS paper live)
@@ -89,7 +99,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         set_tests_properties(framework.ibkr_connection.loopback_${_mode} PROPERTIES TIMEOUT 15)
     endforeach()
     if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        # Resolve test sources beside this list file, not in the deferred
+        # caller directory. The prior relative-path command is retained for review.
+        if(FALSE)
         add_executable(umicom-ibkr-allocation-test test_alloc.c)
+        endif()
+        add_executable(umicom-ibkr-allocation-test "${CMAKE_CURRENT_LIST_DIR}/test_alloc.c")
         target_include_directories(umicom-ibkr-allocation-test PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../../src/ibkr_connection")
         target_link_libraries(umicom-ibkr-allocation-test PRIVATE Umicom::ibkr_connection)
         target_link_options(umicom-ibkr-allocation-test PRIVATE -Wl,--wrap=calloc -Wl,--wrap=malloc)

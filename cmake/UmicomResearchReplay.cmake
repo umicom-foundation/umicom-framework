@@ -49,6 +49,12 @@ install(TARGETS umicom-research-replay RUNTIME DESTINATION ${CMAKE_INSTALL_BINDI
 install(FILES "${_umi_research_root}/docs/learning/research-replay.html"
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)
 if(BUILD_TESTING)
+    # Deferred component completion may add targets and tests, but may not
+    # create CMake subdirectories. Keep the former registration for review;
+    # the same test definitions now use their own absolute source paths.
+    if(FALSE)
     add_subdirectory("${_umi_research_root}/tests/research_replay" "${CMAKE_CURRENT_BINARY_DIR}/research-replay-tests")
+    endif()
+    include("${_umi_research_root}/tests/research_replay/CMakeLists.txt")
 endif()
 unset(_umi_research_root)

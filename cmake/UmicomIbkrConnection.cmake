@@ -40,7 +40,13 @@ foreach(_target IN ITEMS umicom-broker-connect umicom-broker-profile-example)
     install(TARGETS ${_target} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Framework)
 endforeach()
 if(BUILD_TESTING)
+    # Deferred component completion may add targets and tests, but may not
+    # create CMake subdirectories. Keep the former registration for review;
+    # the same test definitions now use their own absolute source paths.
+    if(FALSE)
     add_subdirectory("${_umi_ibkr_root}/tests/ibkr_connection" "${CMAKE_CURRENT_BINARY_DIR}/ibkr-connection-tests")
+    endif()
+    include("${_umi_ibkr_root}/tests/ibkr_connection/CMakeLists.txt")
 endif()
 install(FILES "${_umi_ibkr_root}/docs/learning/paper-live-connections.html"
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)

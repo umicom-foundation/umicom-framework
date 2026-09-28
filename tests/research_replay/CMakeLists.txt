@@ -1,5 +1,11 @@
 # Umicom Foundation | Sammy Hegab | MIT
+# Resolve test sources beside this list file, not in the deferred
+# caller directory. The prior relative-path command is retained for review.
+if(FALSE)
 add_executable(umicom-research-replay-test test_replay.c
+    "${CMAKE_CURRENT_LIST_DIR}/../../examples/research_replay/strategy.c")
+endif()
+add_executable(umicom-research-replay-test "${CMAKE_CURRENT_LIST_DIR}/test_replay.c"
     "${CMAKE_CURRENT_LIST_DIR}/../../examples/research_replay/strategy.c")
 target_include_directories(umicom-research-replay-test PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../../examples/research_replay")
 target_link_libraries(umicom-research-replay-test PRIVATE Umicom::research_replay)
@@ -48,7 +54,12 @@ add_test(NAME framework.research_replay.cli_demo COMMAND umicom-research-replay 
 add_test(NAME framework.research_replay.cli_csv COMMAND umicom-research-replay csv "${CMAKE_CURRENT_LIST_DIR}/../../examples/research_replay/quotes.csv")
 add_test(NAME framework.research_replay.cli_sweep COMMAND umicom-research-replay sweep)
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    # Resolve test sources beside this list file, not in the deferred
+    # caller directory. The prior relative-path command is retained for review.
+    if(FALSE)
     add_executable(umicom-research-allocation-test test_alloc.c "${CMAKE_CURRENT_LIST_DIR}/../../examples/research_replay/strategy.c")
+    endif()
+    add_executable(umicom-research-allocation-test "${CMAKE_CURRENT_LIST_DIR}/test_alloc.c" "${CMAKE_CURRENT_LIST_DIR}/../../examples/research_replay/strategy.c")
     target_include_directories(umicom-research-allocation-test PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../../examples/research_replay")
     target_link_libraries(umicom-research-allocation-test PRIVATE Umicom::research_replay)
     target_link_options(umicom-research-allocation-test PRIVATE -Wl,--wrap=calloc)
