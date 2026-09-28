@@ -1,0 +1,42 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+find_package(PkgConfig QUIET)
+if(PkgConfig_FOUND)
+    pkg_check_modules(IBKR_GTK4 QUIET IMPORTED_TARGET GLOBAL gtk4>=4.10)
+endif()
+if(NOT TARGET PkgConfig::IBKR_GTK4)
+    message(STATUS "IBKR connection workbench unavailable: GTK4 >= 4.10 not found")
+    return()
+endif()
+set(_ibkr_gtk_root "${CMAKE_CURRENT_LIST_DIR}/..")
+add_library(umicom_ibkr_connection_gtk4 STATIC "${_ibkr_gtk_root}/adapters/gtk4/ibkr_connection.c")
+add_library(Umicom::ibkr_connection_gtk4 ALIAS umicom_ibkr_connection_gtk4)
+set_target_properties(umicom_ibkr_connection_gtk4 PROPERTIES EXPORT_NAME ibkr_connection_gtk4)
+target_link_libraries(umicom_ibkr_connection_gtk4 PUBLIC Umicom::ibkr_connection PkgConfig::IBKR_GTK4)
+umicom_ibkr_target(umicom_ibkr_connection_gtk4)
+install(TARGETS umicom_ibkr_connection_gtk4 EXPORT UmicomFrameworkTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+install(FILES "${_ibkr_gtk_root}/include/umicom/broker_connectivity/connection_gtk4.h"
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/broker_connectivity COMPONENT Framework)
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/UmicomIbkrGtkDependencies.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework COMPONENT Framework)
+add_executable(umicom-broker-workbench "${_ibkr_gtk_root}/examples/ibkr_connection/gtk_main.c")
+target_link_libraries(umicom-broker-workbench PRIVATE Umicom::ibkr_connection_gtk4)
+umicom_ibkr_target(umicom-broker-workbench)
+if(COMMAND umicom_apply_application_branding)
+    umicom_apply_application_branding(TARGET umicom-broker-workbench
+        PRODUCT_NAME "Umicom Broker Connections" INTERNAL_NAME "umicom-broker-workbench"
+        APPLICATION_ID "org.umicom.broker-connections" VERSION_MAJOR 1 VERSION_MINOR 0 VERSION_PATCH 0
+        RESOURCE_ROOT "${_ibkr_gtk_root}/resources" DESKTOP_ENTRY WINDOWS_GUI)
+endif()
+install(TARGETS umicom-broker-workbench RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Framework)
+if(BUILD_TESTING)
+    add_executable(umicom-ibkr-gtk-test "${_ibkr_gtk_root}/tests/ibkr_connection/test_gtk.c")
+    target_link_libraries(umicom-ibkr-gtk-test PRIVATE Umicom::ibkr_connection_gtk4)
+    umicom_ibkr_target(umicom-ibkr-gtk-test)
+    foreach(_case IN ITEMS construction default_paper mode_ports live_ack retained_controls independent_windows retained_parent)
+        add_test(NAME framework.ibkr_connection.gtk_${_case} COMMAND umicom-ibkr-gtk-test ${_case})
+        set_tests_properties(framework.ibkr_connection.gtk_${_case} PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 20)
+    endforeach()
+endif()
+unset(_ibkr_gtk_root)

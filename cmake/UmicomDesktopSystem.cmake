@@ -118,3 +118,6 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomMarketTapeIntegration.cmake")
 
 # Research reuses canonical quotes, backtest aggregation and native hashing.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomResearchReplayIntegration.cmake")
+
+# Native read-only Paper/Live connections remain separate from order execution.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomIbkrConnectionIntegration.cmake")

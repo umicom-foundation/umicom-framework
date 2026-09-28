@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/broker_connectivity/ibkr_adapter.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -32,6 +33,14 @@ UmiStatus umi_ibkr_adapter_config_validate(const UmiIbkrAdapterConfig *config)
 {
     if (config == NULL || config->host[0] == '\0' ||
         config->port == 0U || config->clientId < 0) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Fixed buffers must terminate before a later adapter uses them. The
+     * boolean policy values are exact flags, not arbitrary integers. */
+    if (memchr(config->host, 0, sizeof config->host) == NULL ||
+        memchr(config->account, 0, sizeof config->account) == NULL ||
+        (config->paperOnly != 0 && config->paperOnly != 1) ||
+        (config->readOnly != 0 && config->readOnly != 1)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     return UMI_STATUS_OK;
@@ -70,6 +79,21 @@ UmiStatus umi_ibkr_adapter_map_order(
     if (request == NULL || outMessage == NULL ||
         umi_ibkr_adapter_config_validate(config) != UMI_STATUS_OK ||
         request->quantity <= 0.0) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Validate the whole candidate before touching caller-owned output.
+     * NaN defeats ordinary comparisons, and an invalid side must never be
+     * translated into SELL. This is validation only, not trading authority. */
+    if (!isfinite(request->quantity) || !isfinite(request->limit_price) ||
+        !isfinite(request->stop_price) ||
+        (request->side != UMI_SIDE_BUY && request->side != UMI_SIDE_SELL) ||
+        (request->environment != UMI_TRADING_SIMULATION &&
+         request->environment != UMI_TRADING_PAPER &&
+         request->environment != UMI_TRADING_LIVE) ||
+        ((request->type == UMI_ORDER_LIMIT || request->type == UMI_ORDER_STOP_LIMIT) &&
+         request->limit_price <= 0.0) ||
+        ((request->type == UMI_ORDER_STOP || request->type == UMI_ORDER_STOP_LIMIT) &&
+         request->stop_price <= 0.0)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     if (config->readOnly) return UMI_STATUS_PERMISSION_DENIED;

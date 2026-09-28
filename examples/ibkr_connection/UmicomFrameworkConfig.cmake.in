@@ -1,0 +1,12 @@
+@PACKAGE_INIT@
+include(CMakeFindDependencyMacro)
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomIbkrGtkDependencies.cmake" OPTIONAL)
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomFrameworkTargets.cmake")
+foreach(_component IN LISTS UmicomFramework_FIND_COMPONENTS)
+    if(TARGET Umicom::${_component})
+        set(UmicomFramework_${_component}_FOUND TRUE)
+    else()
+        set(UmicomFramework_${_component}_FOUND FALSE)
+    endif()
+endforeach()
+check_required_components(UmicomFramework)

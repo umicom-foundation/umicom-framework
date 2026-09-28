@@ -1,0 +1,200 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Umicom — Paper and Live broker connections</title><link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADMAAAAzCAYAAAA6oTAqAAAEpUlEQVR4nO2ZwUsbWRzHv132ppnpi66gNUJm3WpoPHQSoyQotGbBsDTQlBbpTSjppcf9G/a0x14aCt5ENruWbdk1YGxBSdA0yR4MxEqJYKWFYjMktufdQ3dmJ8m8eW8mcTcs+Z6clzfz3sf3/f3eb95cuHhl7k/8T/TFfz2BTqoH063qwXSrejBWFA3JWI7Ma9cLoRnIXs+5jPXluTwVwIRrGMuReQyIDrx6805rJ6KAhdAMFkIzKJbK2MrsdWzMjsMMiA4sR+Yx4RrW2gaFfu3vi4IDwD9QsteDXzbSqByftD12R2GWI/MIei+3tA+IDuo9RBRwbymmrZJSq9sevyMwQe9lRINXTSfNkuz1wO26hGKpjGKpbAuqLZgJ1zBuhOQGSxnpQ+2M63l669mJpwt2C83vl75jQqj6ce03LQkQUcCtSBjS2CjzPqVWtwRlGSYaknEjKHP1zZYOsbKxbfibNDaK68EAN9RWZg/FUtm0HzeMlbhY2dhGtnQIAHASAicheF2pGPaVvR4shGZARIH5XBYUEyYakhG88g0XRPNKjEsSHtyP43WlgoePEtT7iChoUDyi2Y+aAIz2C5pevXmHZ5miFhdOQnD3zm2MS5J2zZqc+h/ngVITBREF/Pz7JhsmGrzKlaVWNrYbdvjFb8NYDIcb+rFgVFmFcrsuNVybroyZnmWLeJopatdOQvDgfpw6cSchqCqK6TNV6aHMMh8RBRBR0PYkKoy+BNErWzrE0+wf2t7hJAQBv69lNZrFC6KXUqvj8dq6ViUYJQkumGY1xwVgbCkj5fIF3mEMJXs91GynrxSoMKf1j5rV9KkWaA1wM+XyBawmk9wT10saG8W9pRh3fyrMh9oZsn8HuCpeSwGfbbX6U5K6v5iJt0qoHJ/wrUzzzs1rqXYgAGjvOiwptTqeZ3MNbcyY4bVUVVGQKxSQ2kwzJ2IkaWwUtyJhZiVgVgVQYcYlCXfv3ObaI1LptG0IXkvxFJ1UmIDPxwRpNy54zwO2MnstELHpKUyODOGHX7e0NvrKfE23VbuWshIXza/Uc5NuxPxTGHT0tfS3/HLGKhpZ4gExspRnZAg3p6fgGRlq6Dvo6MPp2ScAFmGqimI7S6li2crIUvFrs5ibdBv2V0EAE5iqorTEjJMQLIbDCPh8bdnMSDRLxa/NUu/RgwA2zwD0UFYTgFKrN6RfK5ZiiQqTKxSYe4taKefyBaTSacvFZOX4BI/X1rXrQUcf4tdnuSBOzz4h8Xy3oc30TdNq+cJjPdrBX2x6Cjf9XuY4ALBzcITEi92Wdq4zAM1Wfh9zIBaUvmQHzFNts57kS9g+qLTEiipLpzNWqmUWlJW4oK1Es2ydm6nW4yl1qoqCh48SWjxZiYudgyOs5/epK9Es24eAajzxlD36jZYnNspv3+PJy32U3763NCfbx7NVRUFqM41cvsBMEnrYwX7z2Ei82MXOwZGtObV9cM4DxZOyeePCTB37pKGHMst8px8b/W/XUkbq+MemqqJgNZlEKp02zXzqptcJCFW2EwCvAv7PCUJN0XOTbnzl6Mf6y/2Oj3XuMP+mep/Ou1U9mG5VD6Zb9ReztWucDqtdOAAAAABJRU5ErkJggg=="><style>*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#f2f5f7;color:#173042;font:17px/1.72 "Segoe UI",Arial,sans-serif}header{background:#102b3b;padding:18px max(22px,5vw)}header img{width:202px;height:auto;display:block}main{max-width:1120px;margin:30px auto 70px;background:#fff;border-radius:14px;padding:clamp(24px,5vw,60px);box-shadow:0 5px 25px #1730420b}h1{font-size:clamp(30px,4.2vw,44px);line-height:1.15;margin:0 0 25px}h2{font-size:25px;line-height:1.3;margin-top:46px;padding-top:10px;border-bottom:1px solid #d5e1e7;padding-bottom:12px}p{margin:15px 0}a{color:#075b8c}code{font-family:Consolas,monospace;font-size:.92em}pre{background:#112938;color:#f3f7fb;padding:22px;border-radius:9px;overflow:auto;font-size:14px;line-height:1.6}pre code{white-space:pre}p code,td code{overflow-wrap:anywhere}blockquote{margin:25px 0;padding:10px 22px;border-left:5px solid #ce9d38;background:#fff8e9}table{width:100%;border-collapse:collapse;font-size:15px;line-height:1.6;margin:24px 0}td,th{text-align:left;vertical-align:top;border:1px solid #cedde4;padding:12px;overflow-wrap:anywhere}th{background:#eaf2f6}footer{border-top:1px solid #d5e1e7;margin-top:42px;padding-top:20px;color:#536c7a;font-size:14px}.toc{background:#eef5f8;border-radius:10px;padding:16px 22px;font-size:15px}.toc ul{list-style:none;padding:0;margin:0}.toc li{margin:7px 0}@media(max-width:650px){main{margin:0;border-radius:0;padding:26px 19px}h2{font-size:23px}pre{padding:14px;font-size:12px}table{font-size:13px}td,th{padding:8px}header{padding:12px 19px}}@media print{body{background:#fff}main{margin:0;box-shadow:none;max-width:none}header{background:#102b3b}pre{white-space:pre-wrap;overflow:visible}pre code{white-space:pre-wrap}h2{break-after:avoid}table{break-inside:avoid}}</style></head><body><header><img alt="Umicom" src="data:image/png;base64,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"></header><main><h1>Connect to Paper or Live without enabling orders</h1>
+<p>A connection and a trade are different actions. In this lesson you will choose a broker environment, open a read-only connection, identify the accounts that the provider reports, and inspect one account's values and positions. Nothing in this connection tool places, changes or cancels an order.</p>
+<p>Begin with the offline example. Then use a Paper login to check the real connection on your computer. The same controls also offer Live read-only access when you deliberately select it.</p>
+<blockquote>
+<p><strong>Development scope.</strong> This is a native C23 implementation of a limited TWS framed-field protocol, negotiated from version 151 to 176. It is not the official IBKR SDK and does not decode the newer protobuf protocol. The delivery tests use an inert local peer, not an authenticated TWS session. Actual provider compatibility, Windows execution and the graphical interface still require local acceptance. Do not treat the guide as evidence that those checks have already passed.</p>
+</blockquote>
+<h2>1. Understand the two choices</h2>
+<p><strong>Paper</strong> means that you intend to connect to a paper-account session. <strong>Live</strong> means that you intend to inspect a live-account session. The selection does not change the login in TWS or IB Gateway. That login is made in the provider's own application, with its own authentication. Keep passwords and two-factor codes there; Umicom has no field for them.</p>
+<p>Both Umicom choices are read-only. Live selection additionally requires an acknowledgement. This is a reminder about the account you intend to access, not an execution permission.</p>
+<p>IBKR documents separate default socket ports for its two programs and two environments. They can be changed in the provider's settings. Use the configured port, not a guess. <a href="https://www.interactivebrokers.com/campus/trading-lessons/installing-configuring-tws-for-the-api/">Provider setup instructions</a></p>
+<table>
+<thead>
+<tr>
+<th>Provider program</th>
+<th style="text-align:right">Paper default</th>
+<th style="text-align:right">Live default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Trader Workstation (TWS)</td>
+<td style="text-align:right">7497</td>
+<td style="text-align:right">7496</td>
+</tr>
+<tr>
+<td>IB Gateway</td>
+<td style="text-align:right">4002</td>
+<td style="text-align:right">4001</td>
+</tr>
+</tbody>
+</table>
+<p>The connection window always reports <strong>Server mode attested: NO</strong>. Neither a familiar port nor a particular account prefix proves which environment is behind a local socket. Confirm the login in TWS/Gateway and compare the account identifier before reading its data.</p>
+<h2>2. Build the tools and run the offline example</h2>
+<p>Merge the accompanying full files into the matching directories. Use the delivered Build-and-Git instructions for the complete application build and tests. The smaller build below isolates this component; it does not replace the full suite.</p>
+<p>Open PowerShell and run:</p>
+<pre><code class="language-powershell">Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+$ErrorActionPreference = &quot;Stop&quot;
+$env:Path = &quot;C:\msys64\ucrt64\bin;$env:Path&quot;
+
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; `
+    -S &quot;.\framework\examples\ibkr_connection&quot; `
+    -B &quot;.\build\broker-connection-lab&quot; `
+    -G Ninja -DCMAKE_BUILD_TYPE=Debug
+if ($LASTEXITCODE -ne 0) { throw &quot;Configuration failed.&quot; }
+
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; `
+    --build &quot;.\build\broker-connection-lab&quot; --parallel 2
+if ($LASTEXITCODE -ne 0) { throw &quot;Build failed.&quot; }
+
+&amp; &quot;C:\msys64\ucrt64\bin\ctest.exe&quot; `
+    --test-dir &quot;.\build\broker-connection-lab&quot; `
+    --parallel 2 --no-tests=error --output-on-failure
+if ($LASTEXITCODE -ne 0) { throw &quot;Tests failed.&quot; }
+
+&amp; &quot;.\build\broker-connection-lab\bin\umicom-broker-profile-example.exe&quot;
+if ($LASTEXITCODE -ne 0) { throw &quot;The example failed.&quot; }
+</code></pre>
+<p>Expected output:</p>
+<pre><code class="language-text">Paper TWS default: 7497; Live TWS default: 7496
+Both profiles are read-only. A port number does not prove the account mode.
+Practice complete. No socket, file, order or network request was created.
+</code></pre>
+<p>The example validates two configurations in memory. Passing it proves neither a network connection nor a broker login. Linux/WSL developers can build the same source with CMake and Ninja; the source package's host-tool entry is <code>umicomOS/tools/broker-connect</code>.</p>
+<h2>3. Prepare the provider application</h2>
+<p>Open TWS or IB Gateway yourself. For the first connection exercise, choose the Paper login, finish authentication and wait for the application to finish loading.</p>
+<p>In the provider's API settings, enable socket clients and <strong>keep Read-Only API enabled</strong>. The provider's read-only setting blocks API orders; coordinate that setting with any other API clients using the same session. Record the configured socket port. These controls are described in the <a href="https://www.interactivebrokers.com/campus/trading-lessons/installing-configuring-tws-for-the-api/">IBKR setup lesson</a>.</p>
+<p>Umicom connects only to <code>127.0.0.1</code>, which means the same operating-system network host. It does not use DNS, ask for a remote server, create a tunnel or change the provider's settings. For the Windows exercise, run both programs on Windows. Do not assume that a program running inside WSL or a VM shares the Windows loopback endpoint.</p>
+<p>Each concurrently connected API client needs its own identifier. This component defaults to <strong>35</strong> and refuses zero. Choose another positive identifier when a different program or connection already uses 35. Opening a second Umicom window does not automatically allocate a new identifier.</p>
+<h2>4. Open the connection window</h2>
+<p>In a GUI-enabled full build, open Trader and choose <strong>Open Paper / Live broker connections</strong>. The existing simulation and linked market tape remain separate. This button does not turn their values into broker observations.</p>
+<p>You can also open the standalone graphical program:</p>
+<pre><code class="language-text">C:\umicom\Umicom-Applications\build\windows-ucrt64-all-debug\bin\umicom-broker-workbench.exe
+</code></pre>
+<p>For the smaller laboratory build, the program is under <code>build\broker-connection-lab\bin</code> instead. Its GTK libraries must be available; the smaller SDK build does not create a redistributable GTK runtime bundle. When GTK development files are unavailable, CMake says so and builds only the native tools and applicable tests.</p>
+<p>The window starts disconnected. Choose <strong>Paper</strong>, choose <strong>TWS</strong> or <strong>IB Gateway</strong>, check the port and choose a unique client ID. Changing program or environment resets the suggested port and clears the Live acknowledgement. A custom port can then be entered explicitly.</p>
+<p>Choose <strong>Connect read-only</strong>. The profile fields are locked while this connection is active. The program opens the local socket, negotiates its protocol, waits for the account list and API-ready identifier, then checks the provider clock. The official API describes the readiness callback as the point after which client requests should be sent. <a href="https://www.interactivebrokers.com/docs/tws-api/doc/connectivity/establishing-an-api-connection">Connection sequence</a></p>
+<p>The state should eventually read <strong>Read-only API ready</strong>. A successful TCP connection alone is insufficient. An unsupported protocol, timeout or provider error ends the attempt and leaves a readable explanation.</p>
+<h2>5. Inspect one account</h2>
+<p>The account selector is populated only from the list received on this connection. IBKR describes this list as the accounts available to the logged-in user. <a href="https://www.interactivebrokers.com/docs/tws-api/doc/account-portfolio-data/managed-accounts/receive-managed-accounts">Managed accounts</a></p>
+<p>Compare the identifier with the provider application. Select the intended account and choose <strong>Read selected account once</strong>. The component requests four summary tags: <code>NetLiquidation</code>, <code>TotalCashValue</code>, <code>BuyingPower</code> and <code>AvailableFunds</code>, together with position observations. The provider requests may cover all accounts authorised to the login; only rows for your exact selected identifier are retained in the displayed snapshot.</p>
+<p>Summary and positions arrive separately. Each has its own completion indicator and reception time. A partial response remains <strong>INCOMPLETE</strong>, even when some rows have arrived. Zero positions is a complete empty result only after the provider's end marker has arrived. Missing information is never filled with practice values or a made-up zero.</p>
+<p>Values stay in the provider's textual representation. This preserves decimal quantity strings and avoids turning an unset or display-only value into booked money. Position rows carry contract identity and contract details alongside quantity and average cost. They are observations, not a replacement for the Framework financial position/ledger authority.</p>
+<p>The tool cancels the two read subscriptions after their initial end markers. Those are <strong>subscription cancellations, not order cancellations</strong>. Captured responses do not continue updating. Their displayed ages continue to increase while the connection is healthy. A heartbeat checks transport responsiveness; it does not refresh account balances.</p>
+<p>IBKR's documentation separates account-summary and position requests and describes their subscription/end-marker behaviour. Large adviser and broker account structures need separate qualification and may require different requests. <a href="https://www.interactivebrokers.com/docs/tws-api/doc/account-portfolio-data/account-summary/requesting-account-summary">Account summary</a> · <a href="https://www.interactivebrokers.com/docs/tws-api/doc/account-portfolio-data/positions/request-positions">Positions</a></p>
+<h2>6. Refresh, disconnect and switch environment</h2>
+<p>Each connection permits one selected-account read. To refresh, inspect another account or change the environment, choose <strong>Disconnect</strong> and then explicitly connect again. A new connection owns new input buffers, a new account list and new readiness state. An old response cannot silently become part of the new session.</p>
+<p>Disconnecting retains the last rows with a stale indication so you can see what was received. Connecting again clears that old display. There is no automatic reconnect, automatic Paper fallback or automatic Live promotion.</p>
+<p>For Live inspection, first confirm the Live login in the provider, select <strong>Live</strong> in Umicom, check the endpoint and acknowledge the read-only access. Then connect and verify the returned account identifier. This still cannot send an order. Closing the connection window closes its socket, including when another owner has retained a reference to a closed widget.</p>
+<h2>7. Use the command-line tool</h2>
+<p>These commands open a real local connection <strong>when you run them</strong>. Run the offline <code>--self-test</code> first. The path below is for the full Applications build.</p>
+<pre><code class="language-powershell">Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+$Broker = &quot;.\build\windows-ucrt64-all-debug\bin\umicom-broker-connect.exe&quot;
+
+&amp; $Broker --self-test
+if ($LASTEXITCODE -ne 0) { throw &quot;Policy self-test failed.&quot; }
+
+# Explicit read-only connection: list available accounts, then disconnect.
+&amp; $Broker connect --mode paper --program tws
+if ($LASTEXITCODE -ne 0) { throw &quot;Paper connection inspection failed.&quot; }
+</code></pre>
+<p>Live is equally explicit:</p>
+<pre><code class="language-powershell">&amp; $Broker connect --mode live --program tws --acknowledge-live
+if ($LASTEXITCODE -ne 0) { throw &quot;Live connection inspection failed.&quot; }
+</code></pre>
+<p>For Gateway, use <code>--program gateway</code>. To match a deliberately changed endpoint, add <code>--port</code> followed by the configured port. Use <code>--client-id</code> to choose another positive client identifier.</p>
+<p>To inspect data, copy an exact identifier returned by the account-list command. Do not use the placeholder as an account:</p>
+<pre><code class="language-powershell">$Account = &quot;REPLACE_WITH_AN_EXACT_RETURNED_ACCOUNT_ID&quot;
+&amp; $Broker connect --mode paper --program tws --account $Account
+if ($LASTEXITCODE -ne 0) { throw &quot;The selected-account response did not complete.&quot; }
+</code></pre>
+<p>Successful output includes the requested mode, the explicit absence of environment attestation, the protocol version and actual returned identifiers. Account rows depend on your account; there is deliberately no fixed “successful balance” in this lesson. The command exits with failure if validation, transport or completion fails. It never switches to simulated output to make the command appear successful.</p>
+<h2>8. Follow the C ownership boundary</h2>
+<p>The complete example is <code>framework/examples/ibkr_connection/lesson.c</code>. It starts from <code>UmiIbkrConnectionOptionsDefault</code>, constructs the Live alternative, and demonstrates that validation refuses Live until it is acknowledged. Its policy labels are separate from the provider environment.</p>
+<p>The full command-line client in <code>main.c</code> then shows the complete lifecycle:</p>
+<pre><code class="language-text">Validate → Create → Open → Pump → Read account → Copy → Close / Destroy
+</code></pre>
+<p><code>Create</code> allocates owned state but opens no socket. <code>Open</code> is the explicit external action. <code>Pump</code> performs bounded nonblocking work, using a monotonic timestamp supplied by the host. <code>Copy</code> returns an independent snapshot. <code>Destroy</code> closes and releases the owned state.</p>
+<p>All calls for one connection must run on one owner at a time. Do not pump on one thread while destroying the same object on another. The GTK adapter uses its main context; the CLI uses one polling loop. Applications should compose this service instead of implementing another broker socket inside a chart.</p>
+<p>The separate <code>client</code> directory contains an installable-SDK consumer. It constructs Paper and Live objects and releases them without opening either. After installing the focused SDK to a <strong>separate prefix</strong>, build it with:</p>
+<pre><code class="language-powershell">&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; `
+    --install &quot;.\build\broker-connection-lab&quot; `
+    --prefix &quot;C:\umicom\Practice\BrokerSDK&quot;
+if ($LASTEXITCODE -ne 0) { throw &quot;SDK installation failed.&quot; }
+
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; `
+    -S &quot;.\framework\examples\ibkr_connection\client&quot; `
+    -B &quot;.\build\broker-sdk-client&quot; -G Ninja `
+    -DCMAKE_PREFIX_PATH=&quot;C:/umicom/Practice/BrokerSDK&quot;
+if ($LASTEXITCODE -ne 0) { throw &quot;Client configuration failed.&quot; }
+
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; --build &quot;.\build\broker-sdk-client&quot;
+if ($LASTEXITCODE -ne 0) { throw &quot;Client build failed.&quot; }
+
+&amp; &quot;C:\msys64\ucrt64\bin\ctest.exe&quot; `
+    --test-dir &quot;.\build\broker-sdk-client&quot; --no-tests=error --output-on-failure
+if ($LASTEXITCODE -ne 0) { throw &quot;Client test failed.&quot; }
+</code></pre>
+<p>Do not install this dependency-subset SDK over a complete Framework SDK.</p>
+<h2>9. Troubleshoot the right layer</h2>
+<table>
+<thead>
+<tr>
+<th>What you see</th>
+<th>What to check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Local socket refused</td>
+<td>Provider running and fully logged in; configured port; socket access enabled; both programs on the same host.</td>
+</tr>
+<tr>
+<td>Waiting for readiness, then timeout</td>
+<td>Provider approval prompt, API settings, protocol compatibility and unique client identifier. Do not call it connected merely because TCP opened.</td>
+</tr>
+<tr>
+<td>Requested Live access refused locally</td>
+<td>Confirm your intended provider login and select the explicit Live acknowledgement. No order setting needs enabling.</td>
+</tr>
+<tr>
+<td>Duplicate-client error</td>
+<td>Disconnect the older client or choose another positive client ID. Do not automatically reuse zero.</td>
+</tr>
+<tr>
+<td>Unsupported or malformed response</td>
+<td>Retain the error and provider version privately. The bounded native field protocol may need an adapter update; do not disable validation.</td>
+</tr>
+<tr>
+<td>Summary or positions incomplete</td>
+<td>The response failed, timed out or exceeded capacity. Reconnect after resolving the cause. Do not use the partial rows as a complete portfolio.</td>
+</tr>
+<tr>
+<td>Another-account selection refused</td>
+<td>Choose an exact identifier supplied on this connection, not a guessed prefix or an identifier from a different login.</td>
+</tr>
+<tr>
+<td>Old rows after disconnect</td>
+<td>They are retained and labelled stale, not continuing to update.</td>
+</tr>
+</tbody>
+</table>
+<p>No provider credentials or observations are written to a database by this component. However, console output, screenshots, terminal history and process dumps can reveal account information. Share only the minimum redacted diagnostic needed for support.</p>
+<h2>10. Limits and acceptance</h2>
+<p>This profile supports 32 account identifiers, 64 retained summary rows and 64 retained positions for the selected account. Frame bodies are capped at 64 KiB. Each pump processes at most 64 frames and reads at most 64 KiB. Default handshake/request deadlines are ten seconds; the public options permit 100–60,000 ms. The UI and CLI use the default. Excess capacity or malformed input stops the observation rather than silently cropping a portfolio.</p>
+<p>Connection success does not qualify trading. This delivery has no order transmission, order cancellation, modification, fills reconciliation, live market-data subscription, saved profile database or reconnect recovery. Existing simulation, replay and order services are not replaced or armed by this window.</p>
+<p>A useful local acceptance record identifies the built Umicom commit, operating system, provider version, requested mode, configured endpoint, readiness result, selected-account response markers and clean disconnect. Check Paper first. Live read-only acceptance is a separate deliberate exercise. Never include passwords, authentication codes or unredacted account values in the source repository.</p>
+<h2>11. Exercises and answers</h2>
+<p><strong>Exercise A.</strong> Run the profile example without TWS open. Why does it still succeed?<br />
+<strong>Answer:</strong> it validates memory-only options. It does not call the socket-opening operation.</p>
+<p><strong>Exercise B.</strong> Change the Paper port to the usual Live port in a practice configuration. Has that proved the environment?<br />
+<strong>Answer:</strong> no. Port defaults are editable routing choices. The requested mode remains intent; the provider login must be checked separately.</p>
+<p><strong>Exercise C.</strong> Receive three position rows but no end marker. Is this a three-position portfolio?<br />
+<strong>Answer:</strong> it is a partial observation. The response may still be missing records.</p>
+<p><strong>Exercise D.</strong> Read a completed snapshot, wait one minute and receive a successful heartbeat. Are the account values now one minute newer?<br />
+<strong>Answer:</strong> no. The heartbeat checks the connection. The snapshot retains its original reception time.</p>
+<p><strong>Exercise E.</strong> Select Live and leave the acknowledgement clear. Choose Connect.<br />
+<strong>Answer:</strong> the local validation refuses to open the connection. No test order is needed.</p>
+<p><strong>Exercise F.</strong> Explain which component owns the socket.<br />
+<strong>Answer:</strong> the Framework connection owns it. Trader attaches the view; closing that view releases its connection through the shared lifecycle.</p>
+<footer>Umicom Foundation · C23 learning guide · September 2026<br>Provider authentication remains in TWS / IB Gateway. No execution authority is granted by this lesson.</footer></main></body></html>
