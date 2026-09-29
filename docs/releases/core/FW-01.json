@@ -1,0 +1,126 @@
+{
+  "batch_id": "FW-01",
+  "checkpoint": 1,
+  "status": "native checkpoint delivered; major batch open; owner scope acceptance pending",
+  "active_product": "Umicom Framework",
+  "release_contract_ref": "CORE_RELEASE_CONTRACT.md",
+  "base_commits": {
+    "applications": "ae5d287d99171db87915f4b04172c2397e0e8259",
+    "framework": "3f54d603b0726d534fa8a035a8bc3298b5f8533f"
+  },
+  "user_outcome": "Inspect the proposed Core release contract and refuse missing or mismatched evidence without inventing a stable release.",
+  "included_scope": [
+    "selected pinned source anchors",
+    "47 named proposed Core requirements",
+    "native evidence codec and evaluator attached to Umicom::distribution",
+    "retained thread/queue regression tests",
+    "public Notes evidence lesson"
+  ],
+  "excluded_scope_requiring_approval": [],
+  "framework_owners": [
+    "Umicom::distribution",
+    "existing Umicom::platform for retained validation"
+  ],
+  "application_integration": [
+    "existing Applications all-debug composition receives the Framework target; no application source changes"
+  ],
+  "planned_distinct_changed_files": {
+    "min": 220,
+    "max": 320,
+    "current_checkpoint_paths": [
+      "cmake/UmicomDesktopSystem.cmake",
+      "cmake/UmicomReleaseBaseline.cmake",
+      "docs/learning/understand-a-framework-release.html",
+      "docs/releases/core/BLOCKERS.md",
+      "docs/releases/core/CAPABILITY_MAP.json",
+      "docs/releases/core/CHECKPOINTS.md",
+      "docs/releases/core/CORE_RELEASE_CONTRACT.md",
+      "docs/releases/core/CORE_REQUIREMENTS.tsv",
+      "docs/releases/core/ENVIRONMENT_MATRIX.md",
+      "docs/releases/core/EVIDENCE_FORMAT.md",
+      "docs/releases/core/FOCUSED_TEST_INVENTORY.json",
+      "docs/releases/core/FW-01.json",
+      "docs/releases/core/PENDING_EVIDENCE.tsv",
+      "docs/releases/core/REFERENCE_JOURNEYS.md",
+      "docs/releases/core/SOURCE_BASELINE.json",
+      "examples/release_baseline/README.md",
+      "examples/release_baseline/client/CMakeLists.txt",
+      "examples/release_baseline/client/main.c",
+      "examples/release_baseline/review_notes_release.c",
+      "include/umicom/distribution/runtime/evidence.h",
+      "src/distribution/runtime/evidence.c",
+      "src/distribution/runtime/evidence_internal.h",
+      "src/distribution/runtime/evidence_text.c",
+      "tests/release_baseline/CMakeLists.txt",
+      "tests/release_baseline/check_composition.cmake",
+      "tests/release_baseline/check_pending.cmake",
+      "tests/release_baseline/test_allocation.c",
+      "tests/release_baseline/test_evidence.c",
+      "tools/release_baseline/CMakeLists.txt",
+      "tools/release_baseline/README.md",
+      "tools/release_baseline/UmicomReleaseBaselineConfig.cmake.in",
+      "tools/release_baseline/main.c"
+    ],
+    "major_batch_complete": false,
+    "note": "Planning target across all five checkpoints; no filler or repeated copies counted. Major entry inventory is not yet complete."
+  },
+  "checkpoints": [
+    {
+      "number": 1,
+      "state": "native source delivered"
+    },
+    {
+      "number": 2,
+      "state": "next: full header/target/test owner inventory"
+    },
+    {
+      "number": 3,
+      "state": "pending: named native host and service evidence"
+    },
+    {
+      "number": 4,
+      "state": "pending: GUI and installed consumer"
+    },
+    {
+      "number": 5,
+      "state": "pending: consolidation and owner acceptance"
+    }
+  ],
+  "mandatory_test_environments": [
+    "Windows 11 UCRT64 x86-64 Debug and Release with actual GTK4",
+    "Named Linux x86-64 profile, proposed Debian 13, Debug and Release with actual GTK4"
+  ],
+  "actual_test_runs": [
+    {
+      "scope": "checkpoint focused Linux subset",
+      "configuration": "GCC Release",
+      "tests": 115,
+      "failed": 0
+    },
+    {
+      "scope": "checkpoint focused Linux subset",
+      "configuration": "Clang Debug ASan UBSan leak detection",
+      "tests": 115,
+      "failed": 0
+    },
+    {
+      "scope": "installed focused public client",
+      "tests": 1,
+      "failed": 0
+    }
+  ],
+  "open_blockers": [
+    "full Core inventory not complete",
+    "Windows and GTK4 not executed",
+    "complete Applications build not executed",
+    "independent artefact and source-tree attestation not implemented by metadata checker",
+    "finite Core contract owner acceptance pending"
+  ],
+  "preserved_implementations": [
+    "all existing source lines retained; no production C replacements",
+    "previous thread and queue code unchanged"
+  ],
+  "product_owner_acceptance": null,
+  "next_action": "Continue FW-01 checkpoint 2; no new product campaign.",
+  "current_checkpoint_repository_file_count": 32
+}

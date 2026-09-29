@@ -1,0 +1,87 @@
+{
+  "scope": "checkpoint-1 selected anchors, not the full Core capability inventory",
+  "state": "no entry is release-qualified",
+  "rows": [
+    {
+      "capability": "distribution-release-policy",
+      "target": "Umicom::distribution",
+      "header": "include/umicom/distribution/runtime/release_gate.h",
+      "source": "src/distribution/runtime/release_gate.c",
+      "build_anchor": "cmake/UmicomCrossPlatformDistributionPlatform.cmake",
+      "consumer": "Native baseline evaluator",
+      "evidence_state": "source observed; canonical function exercised by new tests",
+      "lead_batch": "FW-18"
+    },
+    {
+      "capability": "thread-lifetime",
+      "target": "Umicom::platform",
+      "header": "include/umicom/platform/threading.h",
+      "source": "src/platform/threading.c",
+      "build_anchor": "cmake/UmicomThreadSafety.cmake",
+      "consumer": "Notes worker example and queue",
+      "evidence_state": "retained native tests rerun; Windows not verified",
+      "lead_batch": "FW-04"
+    },
+    {
+      "capability": "queue-shutdown",
+      "target": "Umicom::platform",
+      "header": "include/umicom/platform/task_queue.h",
+      "source": "src/platform/task_queue.c",
+      "build_anchor": "cmake/UmicomQueueShutdown.cmake",
+      "consumer": "Notes queue shutdown example",
+      "evidence_state": "retained native tests rerun; GUI handlers not retrofitted",
+      "lead_batch": "FW-05"
+    },
+    {
+      "capability": "cooperative-cancellation",
+      "target": "Umicom::platform",
+      "header": "include/umicom/platform/cancellation.h",
+      "source": "src/platform/cancellation.c",
+      "build_anchor": "examples/queue_shutdown/CMakeLists.txt",
+      "consumer": "Canonical tasks and queue",
+      "evidence_state": "used by retained native tests; wider application audit pending",
+      "lead_batch": "FW-05"
+    },
+    {
+      "capability": "clock",
+      "target": "Umicom::platform",
+      "header": "include/umicom/platform/clock.h",
+      "source": "src/platform/clock.c",
+      "build_anchor": "examples/queue_shutdown/CMakeLists.txt",
+      "consumer": "Canonical task wait budgets",
+      "evidence_state": "source anchor checked; whole clock qualification not claimed",
+      "lead_batch": "FW-06"
+    },
+    {
+      "capability": "runtime-capability-discovery",
+      "target": null,
+      "header": "include/umicom/runtime/capability_registry.h",
+      "source": "src/runtime/capability_registry.c",
+      "build_anchor": null,
+      "consumer": "Runtime and module composition",
+      "evidence_state": "public contract observed; owner and all consumers to resolve at checkpoint 2",
+      "lead_batch": "FW-16"
+    },
+    {
+      "capability": "native-source-contracts",
+      "target": null,
+      "header": "include/umicom/source_contracts/source_contracts.h",
+      "source": "tools/source_contracts/main.c",
+      "build_anchor": null,
+      "consumer": "Source/header/workbench checks",
+      "evidence_state": "CLI source observed; implementation inventory and execution pending",
+      "lead_batch": "FW-03"
+    }
+  ],
+  "unassessed_core_areas": [
+    "complete public-header set",
+    "complete build graph",
+    "Data Server migrations and recovery",
+    "security identities and secrets",
+    "full GUI widget catalogue",
+    "all document/layout owners",
+    "installed package maintenance",
+    "provider and extension boundaries"
+  ],
+  "classification_rule": "Unknown is not absent; observed source is not a verified native or installed workflow."
+}

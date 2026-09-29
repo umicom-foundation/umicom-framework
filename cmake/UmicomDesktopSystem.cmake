@@ -133,3 +133,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomThreadSafety.cmake")
 
 # Shutdown polling reuses the canonical platform queue and native thread owner.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomQueueShutdown.cmake")
+
+# Core release evidence is evaluated by the existing distribution owner.
+# This does not activate another application campaign or declare Core stable.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomReleaseBaseline.cmake")

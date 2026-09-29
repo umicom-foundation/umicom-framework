@@ -1,0 +1,51 @@
+# Core release proposal, not an accepted or qualified release. All records mandatory.
+UMICOM-RELEASE-CONTRACT	1
+candidate	fw01-core-scope-proposal
+source	3f54d603b0726d534fa8a035a8bc3298b5f8533f
+require	scope.accepted	other	governance	Review	review	FW-01	Owner accepts the finite Core release contract and named host profiles
+require	source.inventory	other	governance	Review	analysis	FW-01	Map mandatory capabilities to verified owners APIs consumers and test inventories
+require	windows.build.debug	compatibility	windows11-ucrt64-x86_64	Debug	native	FW-02	Clean and incremental full Core build on the named native host
+require	windows.tests.debug	tests	windows11-ucrt64-x86_64	Debug	native	FW-19	Execute the frozen mandatory test inventory without required skips or Not Run
+require	windows.build.release	compatibility	windows11-ucrt64-x86_64	Release	native	FW-02	Clean and incremental full Core build on the named native host
+require	windows.tests.release	tests	windows11-ucrt64-x86_64	Release	native	FW-19	Execute the frozen mandatory test inventory without required skips or Not Run
+require	windows.abi	compatibility	windows11-ucrt64-x86_64	Release	native	FW-03	Compile public headers and link an independent installed SDK consumer
+require	windows.ownership	tests	windows11-ucrt64-x86_64	Debug	native	FW-04	Exercise ownership allocation failure and invalid output publication
+require	windows.shutdown	tests	windows11-ucrt64-x86_64	Debug	native	FW-05	Run actual window close cancellation and late worker completion journeys
+require	windows.paths	tests	windows11-ucrt64-x86_64	Release	native	FW-06	Exercise Unicode paths unrelated working directories and process failure
+require	windows.data	tests	windows11-ucrt64-x86_64	Release	native	FW-07	Verify transactions stale writers migration failure and backup restore
+require	windows.gui	frontend	windows11-ucrt64-x86_64	Release	installed	FW-10	Use the installed Notes GUI with two independent documents and windows
+require	windows.components	frontend	windows11-ucrt64-x86_64	Release	installed	FW-11	Exercise every component promised in the accepted Core widget catalogue
+require	windows.layouts	frontend	windows11-ucrt64-x86_64	Release	installed	FW-12	Restore layouts and linked contexts without crossing document identities
+require	windows.recovery	tests	windows11-ucrt64-x86_64	Release	installed	FW-13	Recover interrupted document work with accurate saved and unsaved state
+require	windows.designer	compatibility	windows11-ucrt64-x86_64	Release	native	FW-15	Compile and run generated application source while preserving handwritten code
+require	windows.sdk	compatibility	windows11-ucrt64-x86_64	Release	installed	FW-17	Build an independent reference application without Framework private headers
+require	windows.install	frontend	windows11-ucrt64-x86_64	Release	installed	FW-18	Launch by icon on a clean machine without source tree or developer PATH
+require	windows.maintenance	tests	windows11-ucrt64-x86_64	Release	installed	FW-18	Upgrade repair and remove the product while preserving user documents
+require	windows.accessibility	frontend	windows11-ucrt64-x86_64	Release	installed	FW-19	Pass keyboard accessibility DPI and measured responsiveness budgets
+require	linux.build.debug	compatibility	debian13-x86_64-proposed	Debug	native	FW-02	Clean and incremental full Core build on the named native host
+require	linux.tests.debug	tests	debian13-x86_64-proposed	Debug	native	FW-19	Execute the frozen mandatory test inventory without required skips or Not Run
+require	linux.build.release	compatibility	debian13-x86_64-proposed	Release	native	FW-02	Clean and incremental full Core build on the named native host
+require	linux.tests.release	tests	debian13-x86_64-proposed	Release	native	FW-19	Execute the frozen mandatory test inventory without required skips or Not Run
+require	linux.abi	compatibility	debian13-x86_64-proposed	Release	native	FW-03	Compile public headers and link an independent installed SDK consumer
+require	linux.ownership	tests	debian13-x86_64-proposed	Debug	native	FW-04	Exercise ownership allocation failure and invalid output publication
+require	linux.shutdown	tests	debian13-x86_64-proposed	Debug	native	FW-05	Run actual window close cancellation and late worker completion journeys
+require	linux.paths	tests	debian13-x86_64-proposed	Release	native	FW-06	Exercise Unicode paths unrelated working directories and process failure
+require	linux.data	tests	debian13-x86_64-proposed	Release	native	FW-07	Verify transactions stale writers migration failure and backup restore
+require	linux.gui	frontend	debian13-x86_64-proposed	Release	installed	FW-10	Use the installed Notes GUI with two independent documents and windows
+require	linux.components	frontend	debian13-x86_64-proposed	Release	installed	FW-11	Exercise every component promised in the accepted Core widget catalogue
+require	linux.layouts	frontend	debian13-x86_64-proposed	Release	installed	FW-12	Restore layouts and linked contexts without crossing document identities
+require	linux.recovery	tests	debian13-x86_64-proposed	Release	installed	FW-13	Recover interrupted document work with accurate saved and unsaved state
+require	linux.designer	compatibility	debian13-x86_64-proposed	Release	native	FW-15	Compile and run generated application source while preserving handwritten code
+require	linux.sdk	compatibility	debian13-x86_64-proposed	Release	installed	FW-17	Build an independent reference application without Framework private headers
+require	linux.install	frontend	debian13-x86_64-proposed	Release	installed	FW-18	Launch by icon on a clean machine without source tree or developer PATH
+require	linux.maintenance	tests	debian13-x86_64-proposed	Release	installed	FW-18	Upgrade repair and remove the product while preserving user documents
+require	linux.accessibility	frontend	debian13-x86_64-proposed	Release	installed	FW-19	Pass keyboard accessibility DPI and measured responsiveness budgets
+require	events.backpressure	tests	cross-platform	Release	native	FW-08	Verify bounded events subscriber destruction and acknowledgement ordering
+require	security.boundaries	tests	cross-platform	Release	native	FW-09	Reject unauthorised and revoked actions without exposing secrets
+require	providers.failure	tests	cross-platform	Release	native	FW-16	Contain optional provider failures and enforce required capabilities
+require	packages.publisher	signature	package	Release	review	FW-18	Independently verify publisher signatures and package trust policy
+require	packages.bytes	checksum	package	Release	analysis	FW-18	Independently hash final packages and their dependency manifests
+require	licences.inventory	other	package	Release	review	FW-18	Review dependency licences notices and redistribution conditions
+require	guides.clean-install	other	cross-platform	Release	installed	FW-20	Follow public beginner instructions against the actual installed release
+require	defects.disposition	other	governance	Review	review	FW-19	Resolve critical and high defects and record accepted lower-severity limitations
+require	owner.release	other	governance	Review	review	FW-20	Owner reviews actual evidence and explicitly accepts the candidate release

@@ -1,0 +1,66 @@
+{
+  "active_product": "Umicom Framework",
+  "batch": "FW-01",
+  "checkpoint": 1,
+  "applications_commit": "ae5d287d99171db87915f4b04172c2397e0e8259",
+  "framework_commit": "3f54d603b0726d534fa8a035a8bc3298b5f8533f",
+  "snapshot_kind": "selected dependency bytes, NOT complete repository snapshot",
+  "verified_anchors": [
+    {
+      "path": "src/platform/threading.c",
+      "git_blob": "e53edb69acc62a020abc4d5643eb743979cf36fa",
+      "sha256": "05164627c147696a6ef8362888fc9031071614480bcc3f5a7c6df3a4c90a68a8",
+      "evidence": "current connector Git blob matched to local dependency bytes",
+      "not_claimed": "full-tree identity or host qualification"
+    },
+    {
+      "path": "src/platform/task_queue.c",
+      "git_blob": "17d1c5f719fb1f9ff833b912b1ef4fb17c481a66",
+      "sha256": "342e7a958f8534f44dfc217c5fad331ce75aadee1e4e3a25b33d4be19c46b470",
+      "evidence": "current connector Git blob matched to local dependency bytes",
+      "not_claimed": "full-tree identity or host qualification"
+    },
+    {
+      "path": "src/platform/cancellation.c",
+      "git_blob": "73440b7040ad7bb8b4a02d53c967f9e8597f0f33",
+      "sha256": "7234aef8e045c01f3504020ab552b26d4e56d7910a4453845a142b4a2a0225ff",
+      "evidence": "current connector Git blob matched to local dependency bytes",
+      "not_claimed": "full-tree identity or host qualification"
+    },
+    {
+      "path": "src/platform/clock.c",
+      "git_blob": "76e22ce7e18682b47440d9c447875580c632b374",
+      "sha256": "b78342af78c80e5321a80ade2a07dfcdd472df5c38adcc338a1926eb27cbb9fa",
+      "evidence": "current connector Git blob matched to local dependency bytes",
+      "not_claimed": "full-tree identity or host qualification"
+    },
+    {
+      "path": "cmake/UmicomDesktopSystem.cmake",
+      "git_blob": "81e422cd7b89336daa954de707a8e74ca736d5bd",
+      "sha256": "0ab5f17f9992d7572d524eaa908e8c6d474f04d7c64ce3b9021b90cd24345174",
+      "evidence": "current connector Git blob matched to local dependency bytes",
+      "not_claimed": "full-tree identity or host qualification"
+    },
+    {
+      "path": "src/distribution/runtime/release_gate.c",
+      "git_blob": "aa7e547ed52fcc3cc170635be4b39359a837d418",
+      "sha256": "7597e882490d8278f6316bd8361c930ca05b31174bc74bc761019cfb399c9744",
+      "evidence": "current connector Git blob matched to local dependency bytes",
+      "not_claimed": "full-tree identity or host qualification"
+    },
+    {
+      "path": "include/umicom/distribution/runtime/release_gate.h",
+      "git_blob": "a3fff8482f07ea47fd3513cf71c64a2f74654572",
+      "sha256": "0db43d01219736a8728c1b96cf2a4cde18c4ed12d8ab108b0faccd90848120f7",
+      "evidence": "current connector Git blob matched to local dependency bytes",
+      "not_claimed": "full-tree identity or host qualification"
+    },
+    {
+      "path": "include/umicom/distribution/runtime/types.h",
+      "git_blob": "2516d0da0a08cc98ff70e79b45ca2ce0e9c974d3",
+      "sha256": "da5b5d54d121ffd4019f0238bb92cb58f42de3812fc572c83c3a75d491cb6434",
+      "evidence": "current connector Git blob matched to local dependency bytes",
+      "not_claimed": "full-tree identity or host qualification"
+    }
+  ]
+}

@@ -1,0 +1,277 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Know what a Framework release has actually passed</title><link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADMAAAAzCAYAAAA6oTAqAAAEpUlEQVR4nO2ZwUsbWRzHv132ppnpi66gNUJm3WpoPHQSoyQotGbBsDTQlBbpTSjppcf9G/a0x14aCt5ENruWbdk1YGxBSdA0yR4MxEqJYKWFYjMktufdQ3dmJ8m8eW8mcTcs+Z6clzfz3sf3/f3eb95cuHhl7k/8T/TFfz2BTqoH063qwXSrejBWFA3JWI7Ma9cLoRnIXs+5jPXluTwVwIRrGMuReQyIDrx6805rJ6KAhdAMFkIzKJbK2MrsdWzMjsMMiA4sR+Yx4RrW2gaFfu3vi4IDwD9QsteDXzbSqByftD12R2GWI/MIei+3tA+IDuo9RBRwbymmrZJSq9sevyMwQe9lRINXTSfNkuz1wO26hGKpjGKpbAuqLZgJ1zBuhOQGSxnpQ+2M63l669mJpwt2C83vl75jQqj6ce03LQkQUcCtSBjS2CjzPqVWtwRlGSYaknEjKHP1zZYOsbKxbfibNDaK68EAN9RWZg/FUtm0HzeMlbhY2dhGtnQIAHASAicheF2pGPaVvR4shGZARIH5XBYUEyYakhG88g0XRPNKjEsSHtyP43WlgoePEtT7iChoUDyi2Y+aAIz2C5pevXmHZ5miFhdOQnD3zm2MS5J2zZqc+h/ngVITBREF/Pz7JhsmGrzKlaVWNrYbdvjFb8NYDIcb+rFgVFmFcrsuNVybroyZnmWLeJopatdOQvDgfpw6cSchqCqK6TNV6aHMMh8RBRBR0PYkKoy+BNErWzrE0+wf2t7hJAQBv69lNZrFC6KXUqvj8dq6ViUYJQkumGY1xwVgbCkj5fIF3mEMJXs91GynrxSoMKf1j5rV9KkWaA1wM+XyBawmk9wT10saG8W9pRh3fyrMh9oZsn8HuCpeSwGfbbX6U5K6v5iJt0qoHJ/wrUzzzs1rqXYgAGjvOiwptTqeZ3MNbcyY4bVUVVGQKxSQ2kwzJ2IkaWwUtyJhZiVgVgVQYcYlCXfv3ObaI1LptG0IXkvxFJ1UmIDPxwRpNy54zwO2MnstELHpKUyODOGHX7e0NvrKfE23VbuWshIXza/Uc5NuxPxTGHT0tfS3/HLGKhpZ4gExspRnZAg3p6fgGRlq6Dvo6MPp2ScAFmGqimI7S6li2crIUvFrs5ibdBv2V0EAE5iqorTEjJMQLIbDCPh8bdnMSDRLxa/NUu/RgwA2zwD0UFYTgFKrN6RfK5ZiiQqTKxSYe4taKefyBaTSacvFZOX4BI/X1rXrQUcf4tdnuSBOzz4h8Xy3oc30TdNq+cJjPdrBX2x6Cjf9XuY4ALBzcITEi92Wdq4zAM1Wfh9zIBaUvmQHzFNts57kS9g+qLTEiipLpzNWqmUWlJW4oK1Es2ydm6nW4yl1qoqCh48SWjxZiYudgyOs5/epK9Es24eAajzxlD36jZYnNspv3+PJy32U3763NCfbx7NVRUFqM41cvsBMEnrYwX7z2Ei82MXOwZGtObV9cM4DxZOyeePCTB37pKGHMst8px8b/W/XUkbq+MemqqJgNZlEKp02zXzqptcJCFW2EwCvAv7PCUJN0XOTbnzl6Mf6y/2Oj3XuMP+mep/Ou1U9mG5VD6Zb9ReztWucDqtdOAAAAABJRU5ErkJggg=="><style>*{box-sizing:border-box}body{margin:0;background:#f1f5f7;color:#163047;font:17px/1.7 "Segoe UI",Arial,sans-serif}.brand{background:#112d3b;padding:16px 5%;}.brand img{width:185px;height:auto}main{max-width:1050px;margin:32px auto 70px;padding:42px 52px;background:white;border-radius:16px}h1{font-size:2.5rem;line-height:1.17}h2{margin-top:2.3em;font-size:1.55rem}h3{margin-top:1.8em}a{color:#006078}pre{overflow:auto;padding:22px;border-radius:9px;background:#102533;color:#e5f0f6;font:14px/1.6 Consolas,monospace}code{overflow-wrap:anywhere}.note{padding:18px 23px;background:#eaf4f6;border-left:5px solid #08798c}.warning{background:#fff5e4;border-left-color:#b77416}.table{overflow:auto}table{border-collapse:collapse;width:100%}th,td{padding:13px;border:1px solid #d5e1e6;text-align:left;vertical-align:top}th{background:#edf4f7}nav{display:flex;gap:12px;flex-wrap:wrap;margin:24px 0}small{color:#536c7d}details{margin:20px 0}summary{cursor:pointer;font-weight:bold}footer{border-top:1px solid #d5e1e6;margin-top:42px;padding-top:16px;font-size:14px}@media(max-width:650px){main{margin:12px 10px;padding:28px 20px}h1{font-size:2rem}body{font-size:16px}}@media print{body{background:white}main{margin:0;padding:0}.brand{display:none}pre{white-space:pre-wrap}}</style></head><body><header class="brand"><img alt="Umicom" src="data:image/png;base64,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"></header><main><p><small>Umicom Framework · Practical release engineering · FW-01 checkpoint 1</small></p>
+<h1>Know what a Framework release has actually passed</h1>
+<p>You have compiled a Notes application and its worker tests pass. Can someone now install it, open two notes, save their changes and close it safely? Those are different questions. This guide shows how to keep each question visible instead of letting one successful test stand for the whole product.</p>
+<div class="note"><strong>The aim:</strong> read a release contract, recognise missing evidence, and keep a useful test result without exaggerating what it proves.</div>
+<nav><a href="#start">Build the tools</a><a href="#lesson">Run the lesson</a><a href="#core">Read the Core contract</a><a href="#records">Understand the records</a><a href="#exercise">Practise</a></nav>
+<h2 id="start">1. Build the tools in a separate folder</h2>
+<p>Close Umicom applications before merging the checkpoint. Copy only the supplied files into their matching Framework locations. Keep other files and your local edits. The build folder below is a small laboratory: it does not replace the normal all-application build.</p>
+<pre>Set-Location "C:\umicom\Umicom-Applications"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+
+&amp; "C:\msys64\ucrt64\bin\cmake.exe" `
+    -S ".\framework\tools\release_baseline" `
+    -B ".\build\fw01-baseline" `
+    -G Ninja -DCMAKE_BUILD_TYPE=Debug
+if ($LASTEXITCODE -ne 0) { throw "Configuration failed." }
+
+&amp; "C:\msys64\ucrt64\bin\cmake.exe" --build ".\build\fw01-baseline" --parallel 2
+if ($LASTEXITCODE -ne 0) { throw "Build failed." }
+
+&amp; "C:\msys64\ucrt64\bin\ctest.exe" `
+    --test-dir ".\build\fw01-baseline" --parallel 2 `
+    --no-tests=error --output-on-failure
+if ($LASTEXITCODE -ne 0) { throw "Tests failed." }</pre>
+<p>Configuration prepares the build instructions. Compilation produces the executables. CTest runs their checks. Stop at a failed prerequisite; a missing test executable is not a passed test.</p>
+<h2 id="lesson">2. Run a small Notes release example</h2>
+<pre>&amp; ".\build\fw01-baseline\bin\umicom-release-baseline-example.exe"
+if ($LASTEXITCODE -ne 0) { throw "The lesson failed." }</pre>
+<p>The example constructs five fictional requirements and just one fictional Linux test receipt. It does not launch Notes or run a real compiler inside the example. The expected output is:</p>
+<pre>One Linux test receipt is present; four required release records are missing.
+The Windows Notes journey is not a Linux test result. Release remains blocked.
+Practice complete. Memory only; no test, window, artefact or repository was opened.</pre>
+<p>The Linux result is kept. It is simply not allowed to answer a different question about an installed Windows window.</p>
+<h2 id="core">3. Read the proposed Framework Core contract</h2>
+<pre>$Tool = ".\build\fw01-baseline\bin\umicom-release-baseline.exe"
+$Core = ".\framework\docs\releases\core"
+&amp; $Tool show "$Core\CORE_REQUIREMENTS.tsv"
+if ($LASTEXITCODE -ne 0) { throw "Contract could not be read." }</pre>
+<p>The contract has 47 named requirements. Each tells you the expected host, configuration, evidence kind and responsible Framework batch. The candidate label and source revision are expected context supplied by the author, not a live inspection of your Git checkout.</p>
+<p>Now check the deliberately empty product-evidence book:</p>
+<pre>&amp; $Tool check "$Core\CORE_REQUIREMENTS.tsv" "$Core\PENDING_EVIDENCE.tsv"
+if ($LASTEXITCODE -ne 1) { throw "Expected the proposed release to remain blocked." }</pre>
+<p>Exit code <code>1</code> is expected here. It means the release evidence is incomplete, not that compilation failed. All 47 Core-release requirements remain missing in this initial book. The parser and queue regression results are kept separately; they are not the full Core acceptance evidence.</p>
+<div class="note warning"><strong>Do not change missing rows to passed to remove the warning.</strong> A zero exit code only means the supplied metadata is internally consistent. This tool does not verify signatures, read the referenced logs, check artefact bytes, authenticate a reviewer or authorise publishing.</div>
+<h2 id="records">4. Understand what a record means</h2>
+<div class="table"><table><tr><th>Record element</th><th>Question it answers</th></tr><tr><td>Requirement ID</td><td>Which precise acceptance item does this result address?</td></tr><tr><td>Candidate and source</td><td>Which proposed build context does the producer claim to have checked?</td></tr><tr><td>Profile and configuration</td><td>Was it Windows or Linux? Debug or Release?</td></tr><tr><td>Kind</td><td>Native test, installed journey, analysis or human review?</td></tr><tr><td>Counts and outcome</td><td>Do the supplied totals agree? Were any items failed, skipped or not run?</td></tr><tr><td>Digest and reference</td><td>Which artefact and record should a reviewer independently inspect?</td></tr></table></div>
+<p>The small text format is tab-separated ASCII. It is not a script. A result must contain the literal word <code>asserted</code> because it is a producer's assertion. Unknown IDs, duplicate records, invalid counts or malformed input are rejected. A valid but stale or incomplete result remains a blocker.</p>
+<p>Counts alone cannot detect a missing test replaced by a different test. Exact CTest inventories, original logs and the actual package must still be checked. That work belongs to the next Framework checkpoints, not an assumption hidden in this tool.</p>
+<h2>5. Keep ownership straightforward in C</h2>
+<p><code>UmiReleaseContractParse</code> and <code>UmiReleaseEvidenceParse</code> copy their inputs. After success, the original text buffer may be released. A failed parse leaves the output pointer unchanged. The caller owns the resulting objects and releases each once after its readers have finished.</p>
+<p>The evaluator constructs a complete candidate assessment before replacing the caller's output. It delegates the final combination to Framework's existing distribution gate. It does not create a second runtime capability registry or add availability flags to applications.</p>
+<details><summary>Read the complete compiled Notes example</summary><pre>/*-----------------------------------------------------------------------------
+ * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+ * File: examples/release_baseline/review_notes_release.c
+ * Purpose: Show why a Linux test receipt cannot complete a Windows Notes release.
+ *---------------------------------------------------------------------------*/
+#include &quot;umicom/distribution/runtime/evidence.h&quot;
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+int main(void)
+{
+    /* These fictional receipts explain policy. They are not real test evidence
+     * for Notes or any Framework product and must never enter the release book. */
+    const char contractText[] =
+        &quot;UMICOM-RELEASE-CONTRACT\t1\ncandidate\tnotes-practice\n&quot;
+        &quot;source\t1111111111111111111111111111111111111111\n&quot;
+        &quot;require\tsign\tsignature\tpackage\tRelease\treview\tFW-18\tInspect publisher identity\n&quot;
+        &quot;require\tbytes\tchecksum\tpackage\tRelease\tanalysis\tFW-18\tCheck the installed package bytes\n&quot;
+        &quot;require\tabi\tcompatibility\tlinux-x86_64\tRelease\tnative\tFW-03\tBuild an independent Notes client\n&quot;
+        &quot;require\tunit\ttests\tlinux-x86_64\tRelease\tnative\tFW-05\tRun Notes worker tests\n&quot;
+        &quot;require\twindow\tfrontend\twindows11-x86_64\tRelease\tinstalled\tFW-10\tUse both Notes windows after installation\n&quot;;
+    const char evidenceText[] =
+        &quot;UMICOM-RELEASE-EVIDENCE\t1\n&quot;
+        &quot;result\tunit\tnotes-practice\t1111111111111111111111111111111111111111\tlinux-x86_64\tRelease\tnative\tpassed\t8\t8\t0\t0\t0\tasserted\t&quot;
+        &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\tpractice/worker.txt\n&quot;;
+    UmiReleaseContract *contract = NULL;
+    UmiReleaseEvidence *evidence = NULL;
+    UmiReleaseEvidenceAssessment assessment;
+    UmiStatus status = UmiReleaseContractParse(contractText,strlen(contractText),&amp;contract);
+    if (status == UMI_STATUS_OK) status = UmiReleaseEvidenceParse(evidenceText,strlen(evidenceText),&amp;evidence);
+    if (status == UMI_STATUS_OK) status = UmiReleaseEvidenceAssess(contract,evidence,&amp;assessment);
+    bool correct = status == UMI_STATUS_OK &amp;&amp; assessment.reportedComplete == 1U &amp;&amp; assessment.missing == 4U &amp;&amp; !assessment.readyForOwnerReview;
+    if (correct) {
+        (void)puts(&quot;One Linux test receipt is present; four required release records are missing.&quot;);
+        (void)puts(&quot;The Windows Notes journey is not a Linux test result. Release remains blocked.&quot;);
+        (void)puts(&quot;Practice complete. Memory only; no test, window, artefact or repository was opened.&quot;);
+    }
+    UmiReleaseEvidenceDestroy(evidence); UmiReleaseContractDestroy(contract);
+    return correct &amp;&amp; ferror(stdout) == 0 ? 0 : 1;
+}
+</pre></details>
+<h2 id="exercise">6. Practise without changing the release book</h2>
+<p>Work on copies of the lesson's fictional records. First change its source revision: the old receipt must no longer satisfy the new context. Next mark one counted case skipped while leaving the outcome as passed: the checker must reject completion. Finally add a receipt for an unknown requirement: it must be an input error, not silently discarded evidence.</p>
+<p>Review questions: Why is a matching digest string not proof that the file was checked? Why does a completed Linux test not complete an installed Windows journey? Why must a new candidate have its own source and artefact record?</p>
+<details><summary>Answers</summary><p>A digest in a text file is only a supplied value until someone independently hashes the artefact and compares it. The native host, configuration and operation differ between those journeys. A new candidate can contain different source, dependencies or packaging even when an old component test still passes; its evidence must identify and test that actual candidate.</p></details>
+<h2>When something does not work</h2>
+<p><strong>Input refused:</strong> check tabs, exact field names, duplicate IDs, lowercase hexadecimal values and count totals. <strong>Missing evidence:</strong> record and investigate the required work rather than hiding it. <strong>Wrong context:</strong> rerun against the intended candidate and host; do not relabel an old result. <strong>File error:</strong> use the named local files and inspect their access permissions.</p>
+<p>Files are read-only. The tool opens only the explicit contract/evidence files, not referenced logs. Use ordinary trusted local files; network-mounted paths can still use filesystem network access. This is not a file-access sandbox.</p>
+<h2>Where this leaves the project</h2>
+<p>Umicom Framework remains the active product. FW-01 remains the active major batch. This is checkpoint 1, not the completed 220–320-file major delivery and not a stable Core release. Continue with the public-header, owner and test-registration inventory in checkpoint 2. The other product campaigns remain queued.</p>
+<h2 id="delivery">Merge, validate and publish this checkpoint</h2><details><summary>Complete build, test, installation and Git steps</summary><h1>FW-01 checkpoint 1 — Merge, build, test and publish</h1>
+<p>Active product: Umicom Framework. This is the first checkpoint of the five-checkpoint <strong>Release baseline and capability contracts</strong> major batch. It does not complete FW-01, certify Core or activate an application/OS campaign.</p>
+<h2>1. Inspect and merge</h2>
+<p>Close Umicom applications. Extract the source ZIP outside the checkout. Use Beyond Compare to merge <code>Umicom-Applications</code> into <code>C:\umicom\Umicom-Applications</code>. Keep destination-only files and preserve newer or uncommitted work. Do not merge the evidence archive's <code>Dependencies</code> or <code>Originals</code> over your source.</p>
+<p>Only Framework source/documents change. Applications will subsequently record its new Framework pin. No application-module or <code>umicomOS</code> source commit is required. Leave their ongoing work untouched.</p>
+<pre><code class="language-powershell">$ErrorActionPreference = &quot;Stop&quot;
+Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+git status --short --branch
+if ($LASTEXITCODE -ne 0) { throw &quot;Cannot inspect the parent repository.&quot; }
+if ((git branch --show-current) -ne &quot;main&quot;) { throw &quot;Parent is not on main. Preserve work before switching.&quot; }
+git -C &quot;.\framework&quot; status --short --branch
+if ($LASTEXITCODE -ne 0) { throw &quot;Cannot inspect Framework.&quot; }
+if ((git -C &quot;.\framework&quot; branch --show-current) -ne &quot;main&quot;) { throw &quot;Framework is not on main. Preserve detached work before switching.&quot; }
+</code></pre>
+<p>After merging, check these files exist:</p>
+<pre><code class="language-powershell">$Required = @(
+    &quot;.\framework\cmake\UmicomReleaseBaseline.cmake&quot;,
+    &quot;.\framework\include\umicom\distribution\runtime\evidence.h&quot;,
+    &quot;.\framework\docs\releases\core\CORE_REQUIREMENTS.tsv&quot;,
+    &quot;.\framework\docs\releases\core\PENDING_EVIDENCE.tsv&quot;
+)
+foreach ($File in $Required) {
+    if (-not (Test-Path -LiteralPath $File -PathType Leaf)) { throw &quot;Missing delivered file: $File&quot; }
+}
+</code></pre>
+<h2>2. Fast Framework checkpoint build</h2>
+<p>This uses real canonical distribution/platform implementation files but is a focused dependency subset. It is not a substitute for the complete application build.</p>
+<pre><code class="language-powershell">Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+$env:Path = &quot;C:\msys64\ucrt64\bin;$env:Path&quot;
+
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; `
+    -S &quot;.\framework\tools\release_baseline&quot; `
+    -B &quot;.\build\fw01-baseline&quot; `
+    -G Ninja `
+    -DCMAKE_BUILD_TYPE=Debug
+if ($LASTEXITCODE -ne 0) { throw &quot;Checkpoint configuration failed.&quot; }
+
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; --build &quot;.\build\fw01-baseline&quot; --parallel 2
+if ($LASTEXITCODE -ne 0) { throw &quot;Checkpoint build failed.&quot; }
+
+&amp; &quot;C:\msys64\ucrt64\bin\ctest.exe&quot; `
+    --test-dir &quot;.\build\fw01-baseline&quot; `
+    --parallel 2 --no-tests=error --output-on-failure
+if ($LASTEXITCODE -ne 0) { throw &quot;Checkpoint tests failed.&quot; }
+</code></pre>
+<p>Linux registers 115 selected tests in the default focused Ninja profile. Windows excludes the Linux allocation wrapper and the earlier POSIX-only cases; inspect actual registration rather than borrowing the Linux count. No Windows execution is claimed by this delivery.</p>
+<h2>3. Configure the complete workspace</h2>
+<p>Keep physical-device writing disabled. This does not change your existing local-model HTTP configuration.</p>
+<pre><code class="language-powershell">Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+$env:Path = &quot;C:\msys64\ucrt64\bin;$env:Path&quot;
+
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; `
+    --preset windows-ucrt64-all-debug `
+    -DBUILD_TESTING=ON `
+    -DUMICOM_BUILD_NATIVE_TOOL=ON `
+    -DUMICOM_BOOT_MEDIA_ENABLE_DEVICE_WRITES=OFF
+if ($LASTEXITCODE -ne 0) { throw &quot;Full configuration failed. Stop here.&quot; }
+</code></pre>
+<h2>4. Full build and tests</h2>
+<p>Ninja's <code>-k 0</code> permits independent build work to continue after a failure; a nonzero overall result still blocks every subsequent test/publication step.</p>
+<pre><code class="language-powershell">Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+$env:Path = &quot;C:\msys64\ucrt64\bin;$env:Path&quot;
+
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; `
+    --build `
+    --preset windows-ucrt64-all-debug `
+    --parallel 2 `
+    -- -k 0
+if ($LASTEXITCODE -ne 0) { throw &quot;Full build failed. Do not proceed to tests or commits.&quot; }
+</code></pre>
+<p>After the full build succeeds:</p>
+<pre><code class="language-powershell">&amp; &quot;C:\msys64\ucrt64\bin\ctest.exe&quot; `
+    --preset windows-ucrt64-all-debug `
+    --parallel 2 `
+    --no-tests=error `
+    --output-on-failure
+if ($LASTEXITCODE -ne 0) { throw &quot;Full tests failed. Review failures before committing.&quot; }
+</code></pre>
+<p>Additional focused checks:</p>
+<pre><code class="language-powershell">&amp; &quot;C:\msys64\ucrt64\bin\ctest.exe&quot; `
+    --preset windows-ucrt64-all-debug `
+    -R '^framework\.(release_baseline|queue_shutdown|thread_safety)\.' `
+    --parallel 2 --no-tests=error --output-on-failure
+if ($LASTEXITCODE -ne 0) { throw &quot;Release baseline or retained lifecycle checks failed.&quot; }
+</code></pre>
+<p>Required skips and Not Run cases are not passes. The full suite is a compatibility check; it does not certify all applications.</p>
+<h2>5. Run the lesson and read the actual proposal</h2>
+<pre><code class="language-powershell">&amp; &quot;.\build\windows-ucrt64-all-debug\bin\umicom-release-baseline-example.exe&quot;
+if ($LASTEXITCODE -ne 0) { throw &quot;The Notes release lesson failed.&quot; }
+
+$Baseline = &quot;.\build\windows-ucrt64-all-debug\bin\umicom-release-baseline.exe&quot;
+$Core = &quot;.\framework\docs\releases\core&quot;
+&amp; $Baseline show &quot;$Core\CORE_REQUIREMENTS.tsv&quot;
+if ($LASTEXITCODE -ne 0) { throw &quot;Core contract could not be read.&quot; }
+
+&amp; $Baseline check &quot;$Core\CORE_REQUIREMENTS.tsv&quot; &quot;$Core\PENDING_EVIDENCE.tsv&quot;
+if ($LASTEXITCODE -ne 1) { throw &quot;Expected an explicitly blocked Core proposal.&quot; }
+</code></pre>
+<p>The last exit value is <strong>expected to be 1</strong>, with 47 missing requirements. It is an evidence refusal, not a failed build. Do not manufacture passed rows. The checker validates assertions, not signatures, log authenticity, actual hashes or the complete test-name set.</p>
+<h2>6. Separate installed SDK exercise</h2>
+<p>Use a new destination, not an existing installation:</p>
+<pre><code class="language-powershell">$Sdk = &quot;C:\umicom\Practice\FW01-Evidence-SDK&quot;
+if (Test-Path -LiteralPath $Sdk) { throw &quot;Choose a new SDK practice directory.&quot; }
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; --install &quot;.\build\fw01-baseline&quot; --prefix $Sdk
+if ($LASTEXITCODE -ne 0) { throw &quot;Focused SDK installation failed.&quot; }
+
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; `
+    -S &quot;.\framework\examples\release_baseline\client&quot; `
+    -B &quot;.\build\fw01-client&quot; -G Ninja `
+    -DCMAKE_BUILD_TYPE=Debug &quot;-DCMAKE_PREFIX_PATH=$Sdk&quot;
+if ($LASTEXITCODE -ne 0) { throw &quot;SDK client configuration failed.&quot; }
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; --build &quot;.\build\fw01-client&quot; --parallel 2
+if ($LASTEXITCODE -ne 0) { throw &quot;SDK client build failed.&quot; }
+&amp; &quot;C:\msys64\ucrt64\bin\ctest.exe&quot; --test-dir &quot;.\build\fw01-client&quot; --no-tests=error --output-on-failure
+if ($LASTEXITCODE -ne 0) { throw &quot;SDK client failed.&quot; }
+</code></pre>
+<p>This proves the focused public evidence interface can be consumed after installation. It does not satisfy the complete installed-Core or clean-machine GUI requirements.</p>
+<h2>7. Commit Framework first</h2>
+<p>Review the entire staged change. <code>git add -A</code> includes unrelated changes, so exclude personal documents, credentials and generated outputs. Never force-push or create an empty commit merely to follow this example.</p>
+<pre><code class="language-powershell">$ErrorActionPreference = &quot;Stop&quot;
+Set-Location &quot;C:\umicom\Umicom-Applications\framework&quot;
+if ((git branch --show-current) -ne &quot;main&quot;) { throw &quot;Framework is not on main.&quot; }
+git status --short --branch
+if ($LASTEXITCODE -ne 0) { throw &quot;Framework status failed.&quot; }
+git diff --check
+if ($LASTEXITCODE -ne 0) { throw &quot;Resolve formatting errors.&quot; }
+git add -A
+if ($LASTEXITCODE -ne 0) { throw &quot;Framework staging failed.&quot; }
+git diff --cached --check
+if ($LASTEXITCODE -ne 0) { throw &quot;Staged Framework validation failed.&quot; }
+git diff --cached --stat
+
+git commit -m &quot;feat(framework): begin FW-01 Core release baseline and evidence checks&quot;
+if ($LASTEXITCODE -ne 0) { throw &quot;Framework commit failed.&quot; }
+git push origin main
+if ($LASTEXITCODE -ne 0) { throw &quot;Framework push failed. Stop before updating the parent.&quot; }
+</code></pre>
+<h2>8. Applications parent last</h2>
+<p>Regenerate the existing native repository lock only after Framework is published. No application-module source or OS pin update is required by this checkpoint.</p>
+<pre><code class="language-powershell">$ErrorActionPreference = &quot;Stop&quot;
+Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+$env:Path = &quot;C:\msys64\ucrt64\bin;$env:Path&quot;
+if ((git branch --show-current) -ne &quot;main&quot;) { throw &quot;Applications is not on main.&quot; }
+git status --short --branch
+if ($LASTEXITCODE -ne 0) { throw &quot;Parent status failed.&quot; }
+
+&amp; &quot;.\build\windows-ucrt64-all-debug\bin\umicom.exe&quot; repo lock .
+if ($LASTEXITCODE -ne 0) { throw &quot;Repository locking failed. Do not commit stale pins.&quot; }
+git diff --submodule=log
+git add -A
+if ($LASTEXITCODE -ne 0) { throw &quot;Parent staging failed.&quot; }
+git diff --cached --check
+if ($LASTEXITCODE -ne 0) { throw &quot;Staged parent validation failed.&quot; }
+git diff --cached --submodule=log
+
+git commit -m &quot;chore(applications): pin FW-01 release baseline checkpoint&quot;
+if ($LASTEXITCODE -ne 0) { throw &quot;Parent commit failed.&quot; }
+git push --recurse-submodules=check origin main
+if ($LASTEXITCODE -ne 0) { throw &quot;Parent push failed. Check Framework publication.&quot; }
+git status --short --branch
+git submodule foreach --recursive 'git status --short --branch'
+if ($LASTEXITCODE -ne 0) { throw &quot;Submodule inspection failed.&quot; }
+</code></pre>
+<h2>9. Linux and sanitizer alternatives</h2>
+<p>Run from the Applications root, using distinct build directories:</p>
+<pre><code class="language-sh">cmake -S framework/tools/release_baseline -B build/fw01-native -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build/fw01-native --parallel 2
+ctest --test-dir build/fw01-native --parallel 2 --no-tests=error --output-on-failure
+
+cmake -S framework/tools/release_baseline -B build/fw01-asan -G Ninja -DCMAKE_C_COMPILER=clang -DCMAKE_BUILD_TYPE=Debug -DUMICOM_RELEASE_BASELINE_SANITIZERS=ON
+cmake --build build/fw01-asan --parallel 2
+ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 ctest --test-dir build/fw01-asan --parallel 2 --no-tests=error --output-on-failure
+</code></pre>
+<p>Stop if any prerequisite fails. Nine composition cases create separate ordinary Release child builds; do not present those child processes as sanitizer-instrumented. No real application GUI, external account, model, broker, OS guest or physical disk is started.</p>
+<h2>Resume</h2>
+<p>Continue <strong>FW-01 checkpoint 2</strong>: complete public-header/owner and build/test-registration inventory. Do not move to another product or declare FW-01 closed from this checkpoint's focused results.</p>
+</details><footer>Umicom Foundation · Public development guide · C23-first · Source-preserving checkpoint</footer></main></body></html>
