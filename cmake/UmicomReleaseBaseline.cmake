@@ -48,3 +48,6 @@ if(TARGET umicom_distribution)
 else()
     cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" CALL umicom_release_baseline_complete)
 endif()
+# Inventory inspection extends the same owner without changing evidence rules.
+# Include here so both the full product and focused SDK use identical wiring.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomReleaseInventory.cmake")

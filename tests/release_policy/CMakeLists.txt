@@ -1,0 +1,42 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+add_executable(umicom-release-policy-tests "${CMAKE_CURRENT_LIST_DIR}/test_policy.c")
+target_link_libraries(umicom-release-policy-tests PRIVATE Umicom::distribution)
+set_target_properties(umicom-release-policy-tests PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+if(COMMAND umicom_apply_warnings)
+    umicom_apply_warnings(umicom-release-policy-tests)
+endif()
+if(COMMAND umicom_apply_sanitizers)
+    umicom_apply_sanitizers(umicom-release-policy-tests)
+endif()
+foreach(_case IN ITEMS roundtrip parse_errors decisions drift context edit_errors large empty)
+    add_test(NAME "framework.release_policy.${_case}" COMMAND umicom-release-policy-tests "${_case}")
+    set_tests_properties("framework.release_policy.${_case}" PROPERTIES TIMEOUT 60 LABELS "framework;release-policy;FW-01")
+endforeach()
+add_test(NAME framework.release_policy.cli COMMAND "${CMAKE_COMMAND}"
+    "-DTOOL=$<TARGET_FILE:umicom-release-inventory>"
+    "-DDEST=${CMAKE_CURRENT_BINARY_DIR}/release-policy-cli"
+    -P "${CMAKE_CURRENT_LIST_DIR}/check_cli.cmake")
+set_tests_properties(framework.release_policy.cli PROPERTIES TIMEOUT 60 LABELS "framework;release-policy;FW-01")
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    add_executable(umicom-release-policy-allocation "${CMAKE_CURRENT_LIST_DIR}/test_allocation.c")
+    target_link_libraries(umicom-release-policy-allocation PRIVATE Umicom::distribution)
+    target_link_options(umicom-release-policy-allocation PRIVATE -Wl,--wrap=calloc -Wl,--wrap=malloc)
+    set_target_properties(umicom-release-policy-allocation PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-release-policy-allocation)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-release-policy-allocation)
+    endif()
+    add_test(NAME framework.release_policy.allocation COMMAND umicom-release-policy-allocation)
+    set_tests_properties(framework.release_policy.allocation PROPERTIES TIMEOUT 60 LABELS "framework;release-policy;FW-01")
+endif()
+if(UMICOM_RELEASE_INVENTORY_COMPOSITION_TESTS)
+    foreach(_mode IN ITEMS OFF ON)
+        add_test(NAME "framework.release_policy.headers.${_mode}" COMMAND "${CMAKE_COMMAND}"
+            "-DROOT=${CMAKE_CURRENT_LIST_DIR}/../.." "-DCOMPILER=${CMAKE_C_COMPILER}"
+            "-DDEST=${CMAKE_CURRENT_BINARY_DIR}/public-header-composition-${_mode}" "-DDEFER=${_mode}"
+            -P "${CMAKE_CURRENT_LIST_DIR}/check_headers.cmake")
+        set_tests_properties("framework.release_policy.headers.${_mode}" PROPERTIES TIMEOUT 180 LABELS "framework;release-policy;headers;FW-01")
+    endforeach()
+endif()

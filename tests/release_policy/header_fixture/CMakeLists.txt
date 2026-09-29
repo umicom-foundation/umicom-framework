@@ -1,0 +1,15 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+cmake_minimum_required(VERSION 3.24)
+project(UmicomPublicHeaderConsumerFixture LANGUAGES C)
+include(CTest)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_subdirectory("${ROOT}/tools/release_baseline" baseline)
+# The synthetic headers live only in the fixture's binary tree.
+set(_include "${CMAKE_CURRENT_BINARY_DIR}/fixture-include")
+file(MAKE_DIRECTORY "${_include}")
+file(WRITE "${_include}/valid.h" "#ifndef FIXTURE_VALID_H\n#define FIXTURE_VALID_H\n#include <stddef.h>\ntypedef struct FixtureValid { size_t value; } FixtureValid;\n#endif\n")
+file(WRITE "${_include}/invalid.h" "#ifndef FIXTURE_INVALID_H\n#define FIXTURE_INVALID_H\ntypedef struct FixtureInvalid { UmicomDeliberatelyMissingHeaderType value; } FixtureInvalid;\n#endif\n")
+add_library(fixture-header-owner INTERFACE)
+target_include_directories(fixture-header-owner INTERFACE "${_include}")
+umicom_add_public_header_compile_check(fixture-header-valid fixture-header-owner "${_include}" valid.h)
+umicom_add_public_header_compile_check(fixture-header-invalid fixture-header-owner "${_include}" invalid.h)
