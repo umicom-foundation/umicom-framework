@@ -1,0 +1,46 @@
+# Umicom Foundation | MIT | Native study tests
+set(UMICOM_EDUCATION_STUDY_CASES
+    capture_empty
+    capture_no_write
+    capture_immutable
+    capture_after_close
+    capture_occupied
+    capture_invalid
+    item_bounds
+    snapshot_bounds
+    search_all
+    search_ascii
+    search_course
+    search_invalid_course
+    search_invalid_utf8
+    search_capacity
+    search_private_note
+    filters_initial
+    filters_progress
+    route_first
+    route_course
+    route_partial
+    route_complete
+    route_invalid
+    route_no_mutation
+    courses_independent
+    next_empty
+    next_complete
+    next_invalid
+    recovery_blocked
+    state_changed_read
+    state_changed_noop
+    state_changed_name
+    state_changed_note
+    state_equivalent_history
+    state_other_learner
+    sqlite_changed_state
+    library_catalogue
+    library_search
+    library_invalid
+    library_html
+    library_html_capacity
+    library_html_invalid
+    reference_progress
+    many_captures
+)

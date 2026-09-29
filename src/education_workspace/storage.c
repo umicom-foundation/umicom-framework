@@ -109,6 +109,24 @@ UmiStatus EwLoad(UmiEducationWorkspace *w,EwState *out)
     RecordCheck check={w,0U,count};status=umi_data_server_visit(w->server,CountRecord,&check);
     return status!=UMI_STATUS_OK?status:check.count!=(size_t)count+1U?UMI_STATUS_PARSE_ERROR:UMI_STATUS_OK;
 }
+/* Replayed state must agree with what the learner actually inspected, not
+ * merely have the same event count. This comparison is semantic: C structure
+ * padding and the derived prerequisite flag are not persisted properties.
+ * The original revision check remains below. No history or record is deleted.
+ * This refuses a change atop altered progress; it does not authenticate the
+ * journal, and equivalent histories with identical final state remain equal. */
+static bool SameLearningState(const EwState *left,const EwState *right)
+{
+    if (left->revision!=right->revision || strcmp(left->displayName,right->displayName)!=0)
+        return false;
+    for (size_t i=0U;i<UMI_EDUCATION_LESSONS;++i) {
+        const UmiEducationProgress *a=&left->lessons[i],*b=&right->lessons[i];
+        if (a->read!=b->read || a->hintViewed!=b->hintViewed || a->quizPassed!=b->quizPassed ||
+            a->attempts!=b->attempts || a->latestScore!=b->latestScore || a->bestScore!=b->bestScore ||
+            strcmp(a->note,b->note)!=0) return false;
+    }
+    return true;
+}
 UmiStatus EwCommit(UmiEducationWorkspace *w,EwAction action,size_t index,
     const char *payload,UmiEducationFeedback *feedback)
 {
@@ -122,6 +140,7 @@ UmiStatus EwCommit(UmiEducationWorkspace *w,EwAction action,size_t index,
     if (status!=UMI_STATUS_OK) {free(fresh);return status;}
     status=EwLoad(w,fresh);
     if (status==UMI_STATUS_OK && fresh->revision!=w->state.revision) status=UMI_STATUS_BUSY;
+    if (status==UMI_STATUS_OK && !SameLearningState(fresh,&w->state)) status=UMI_STATUS_BUSY;
     if (status==UMI_STATUS_OK) status=EwApply(fresh,action,index,payload,&result);
     /* Read, hint and unchanged note actions are no-ops, but still check the
      * authoritative revision before returning. Quiz submissions are attempts. */

@@ -185,3 +185,7 @@ install(FILES "${_umicom_education_root}/docs/learning/EDUCATION_WORKSPACE.html"
 unset(_umicom_education_root)
 unset(_umicom_education_resources)
 unset(_umicom_education_project_files)
+
+# Study planning reuses the same catalogue, progress service and GUI owner.
+# Existing course exports, assessments and persistence remain authoritative.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomEducationStudy.cmake")

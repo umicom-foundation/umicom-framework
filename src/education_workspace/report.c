@@ -59,3 +59,37 @@ UmiStatus UmiEducationReportHtml(const UmiEducationWorkspace *w,char *output,
 
 const char *UmiEducationLogoDataUri(void) {return EDUCATION_LOGO;}
 const char *UmiEducationIconDataUri(void) {return EDUCATION_ICON;}
+
+/* The public library index shares this existing two-pass HTML writer and the
+ * original Umicom assets. No second renderer or private learner data is used. */
+#include "umicom/education_workspace/study.h"
+static void RenderLibrary(Writer *writer)
+{
+    Text(writer,"<!doctype html><html lang=\"en-GB\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Umicom learning library</title><link rel=\"icon\" href=\"");
+    Text(writer,UmiEducationIconDataUri());
+    Text(writer,"\"><style>body{font:17px/1.65 system-ui;margin:0;background:#f2f5f7;color:#203243}header{background:#102b3d;padding:20px}header img{width:175px}main{max-width:960px;margin:auto;padding:26px}section{padding:24px;background:white;border-radius:10px;margin:18px 0}a{color:#125d7b}h1{line-height:1.2}code{overflow-wrap:anywhere}nav a{display:inline-block;padding:6px 12px;border:1px solid #b8ced8;margin:4px;border-radius:6px}.notice{border-left:4px solid #17687b;padding:16px;background:#e6f2f4}@media print{body{background:white}section{break-inside:avoid}}</style></head><body><header><img alt=\"Umicom\" src=\"");
+    Text(writer,UmiEducationLogoDataUri());
+    Text(writer,"\"></header><main><h1>Find a guide, then try its project</h1><p>Start with the C, Assembly and Framework practicum. Then choose a product workflow that interests you. Each guide explains its own prerequisites and limits.</p><p class=\"notice\">This catalogue does not mark lessons read, grant quiz credit or prove that a feature works on your computer. The links are local: keep this index beside the supplied guides. A missing file means that guide is not installed in this copy.</p><p>Use your browser's Find command to search this page. The native <code>umicom-study library TERM</code> command searches the same catalogue without opening files.</p><nav aria-label=\"Guide contents\">");
+    for (size_t i=0U;i<UmiEducationLibraryCount();++i) {
+        const UmiEducationLibraryEntry *e=UmiEducationLibraryAt(i);
+        Text(writer,"<a href=\"#");Escaped(writer,e->id);Text(writer,"\">");Escaped(writer,e->category);Text(writer,": ");Escaped(writer,e->title);Text(writer,"</a>");
+    }
+    Text(writer,"</nav>");
+    for (size_t i=0U;i<UmiEducationLibraryCount();++i) {
+        const UmiEducationLibraryEntry *e=UmiEducationLibraryAt(i);
+        Text(writer,"<section id=\"");Escaped(writer,e->id);Text(writer,"\"><p>");Escaped(writer,e->category);
+        Text(writer,"</p><h2><a href=\"");Escaped(writer,e->guideFile);Text(writer,"\">");Escaped(writer,e->title);Text(writer,"</a></h2><p>");Escaped(writer,e->boundary);
+        Text(writer,"</p><p>Framework source: <code>");Escaped(writer,e->examplePath);Text(writer,"</code></p></section>");
+    }
+    Text(writer,"<footer>Umicom Foundation · Learn, build, test and explain. This index contains no personal learning records.</footer></main></body></html>");
+}
+UmiStatus UmiEducationLibraryHtml(char *output,size_t capacity,size_t *required)
+{
+    if (output!=NULL&&capacity!=0U) output[0]='\0';
+    if (required==NULL||(output==NULL&&capacity!=0U)) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status=UmiEducationLibraryValidate();if(status!=UMI_STATUS_OK)return status;
+    Writer writer={NULL,0U};RenderLibrary(&writer);*required=writer.used+1U;
+    if(output==NULL)return UMI_STATUS_OK;
+    if(capacity<*required)return UMI_STATUS_CAPACITY_EXCEEDED;
+    writer.output=output;writer.used=0U;RenderLibrary(&writer);output[writer.used]='\0';return UMI_STATUS_OK;
+}

@@ -2,6 +2,7 @@
  * Author: Sammy Hegab, Umicom Foundation. Licence: MIT.
  * Reusable presentation belongs in Framework; application modules stay thin. */
 #include "education_workspace_private.h"
+#include "education_study_private.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
@@ -46,6 +47,8 @@ void EwGtkStatus(UmiEducationGtkPanel *p,UmiStatus status,const char *success)
 }
 void EwGtkRefresh(UmiEducationGtkPanel *p,bool loadNote)
 {
+    /* Saved progress or selection may change; a study capture is never silently refreshed. */
+    EwGtkStudyInvalidate(p);
     const UmiEducationLesson *l=UmiEducationLessonAt(p->lessonIndex);
     UmiEducationProgress progress={0};UmiEducationSnapshot snapshot={0};
     gtk_label_set_text(p->heading,l->title);gtk_label_set_text(p->explanation,l->explanation);
@@ -130,6 +133,8 @@ UmiEducationGtkPanel *UmiEducationGtkCreate(void)
     p->reportPath=Entry(p->root,"New learning-record HTML file (absolute path; must not exist)","","education.report-path");
     Button(p->root,"Export learning record","export-record",p);
     p->status=GTK_LABEL(Label("No learning record has been opened. No compiler or student program runs inside this panel."));Tag(GTK_WIDGET(p->status),"education.status");gtk_box_append(GTK_BOX(p->root),GTK_WIDGET(p->status));
+    /* Append the shared study projection; retain all existing learner controls. */
+    EwGtkStudyAppend(p);
     g_signal_connect(p->lessonSelect,"notify::selected",G_CALLBACK(LessonChanged),p);
     g_signal_connect(p->note,"changed",G_CALLBACK(NoteChanged),p);EwGtkRefresh(p,true);return p;
 }

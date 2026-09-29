@@ -1,0 +1,867 @@
+{
+  "date": "2026-09-29",
+  "current_delivery": 42,
+  "future_count": 46,
+  "carry_forward": [
+    43,
+    54
+  ],
+  "proposed_extension": [
+    55,
+    88
+  ],
+  "source_note": "Planning basis: the current September batch sequence (including the previously supplied Batches 35–54 roadmap), the visible delivery records, the live Applications submodule inventory at 6478c2c5e0be7220aa06b290f4ce5874cad6b7bf, and the historical Umicom architecture/product documents. Batches 43–54 retain the earlier plan. Batches 55–88 are a proposed extension introduced by this consolidation, not previously completed work or a claim of prior approval. Historical batch/volume numbering is not silently renumbered into this series.",
+  "open_milestones": [
+    {
+      "scope": "19–27 / OS and delivery",
+      "remaining": "Host tools and selected installer/VM/media paths were delivered, but real graphical/physical boot and complete maintenance qualification remain separate.",
+      "follow_up": "43, 51–53, 84–86"
+    },
+    {
+      "scope": "31–32 / Studio and designer",
+      "remaining": "Read-only build review and native export do not complete editor/debugger/Git or interactive designer authoring.",
+      "follow_up": "45–46, 79–80"
+    },
+    {
+      "scope": "35 / Broker",
+      "remaining": "Paper/Live inspection is read-only; authenticated provider qualification and transmission/reconciliation remain open.",
+      "follow_up": "43, 49–50, 64"
+    },
+    {
+      "scope": "36 / Shared finance and TMS",
+      "remaining": "The delivery repaired build integration; it did not complete the expanded front-to-back TMS milestone.",
+      "follow_up": "56–58, 60, 82–83"
+    },
+    {
+      "scope": "37–38 / Bank and finance",
+      "remaining": "Command review, close blockers and integrity checks do not complete products, real payments, exchange operations or authenticated approvals.",
+      "follow_up": "49, 59–62, 82–83"
+    },
+    {
+      "scope": "39 / AI",
+      "remaining": "Selected evidence and citation inspection do not constitute qualified neural inference, scalable RAG or agent execution.",
+      "follow_up": "65–67"
+    },
+    {
+      "scope": "40 / Enterprise",
+      "remaining": "Dataset browsing and re-preparation do not complete a query editor, scheduler, external integrations or signed extensions.",
+      "follow_up": "68–70"
+    },
+    {
+      "scope": "41 / Creative",
+      "remaining": "PCM16 clip editing/export does not complete audio playback, video timelines, CAD, games or mobile builds.",
+      "follow_up": "71–76"
+    },
+    {
+      "scope": "42 / Education",
+      "remaining": "This batch supplies native study planning and a curated 22-guide index. Expanded courses, verified practical execution and lesson package management remain open.",
+      "follow_up": "77–78, 87"
+    }
+  ],
+  "batches": [
+    {
+      "number": 43,
+      "title": "Windows and GTK Integration Qualification",
+      "status": "carry-forward planned",
+      "products": [
+        "Framework",
+        "all 24 applications",
+        "installers"
+      ],
+      "planned_work": "Compile and exercise the real GTK and Win32 adapters; clean-machine startup, private DLLs/resources, Unicode paths, unrelated working directories, DPI, accessibility and multi-window lifecycle.",
+      "learning_project": "Install Notes on a clean Windows account, deliberately remove a required resource, diagnose it and restore correct startup.",
+      "acceptance_gate": "Named Windows build and installed-product journeys; no missing or disabled tests hidden by a success label."
+    },
+    {
+      "number": 44,
+      "title": "Framework Lifetime, Cancellation and Concurrency",
+      "status": "carry-forward planned",
+      "products": [
+        "Framework",
+        "Studio",
+        "Desk",
+        "Operations",
+        "all workers"
+      ],
+      "planned_work": "Audit owner/borrower contracts, callback lifetimes, worker join and shutdown, cancellation, lock ordering, event subscriptions and completion after window closure.",
+      "learning_project": "Cancel a Notes indexer and close the window while it runs; show that no callback touches a destroyed owner.",
+      "acceptance_gate": "Race/lifetime regression tests on the actual operating systems, alongside sanitizers and failure injection."
+    },
+    {
+      "number": 45,
+      "title": "Studio Editing, Debugging and Version Control",
+      "status": "carry-forward planned",
+      "products": [
+        "Framework",
+        "Studio"
+      ],
+      "planned_work": "Finish document save/reload/conflict recovery, multi-project navigation, language-server actions, debugger state, registers/memory, terminal sessions, Git staging/compare/merge and exact test provenance.",
+      "learning_project": "Create a Notes project, fix a bounds error in the debugger, run its test, inspect and publish the intended change.",
+      "acceptance_gate": "One complete IDE workflow from new project to installed executable, including failed build and recovery paths."
+    },
+    {
+      "number": 46,
+      "title": "Visual Designer Editing and Round-Trip Generation",
+      "status": "carry-forward planned",
+      "products": [
+        "Framework",
+        "Studio",
+        "all application designers"
+      ],
+      "planned_work": "Connect palette, hierarchy, typed properties, events, bindings, responsive layouts and preview to the native exporter; review regeneration without losing handwritten source.",
+      "learning_project": "Build a Notes/account-summary window, regenerate it and preserve a handwritten command handler.",
+      "acceptance_gate": "The generated project compiles and runs; unsupported features are rejected rather than silently omitted."
+    },
+    {
+      "number": 47,
+      "title": "Market Recorder, Historical Data and Feed Recovery",
+      "status": "carry-forward planned",
+      "products": [
+        "Framework",
+        "Trader",
+        "Studio"
+      ],
+      "planned_work": "Durable market capture, indexed ranges, corrections, depth deltas, separate event/arrival clocks, provider generations, missing segments and bounded backpressure.",
+      "learning_project": "Record a permitted practice stream, inspect a gap and replay an explicitly repaired dataset.",
+      "acceptance_gate": "Real capture adapter plus restart/replay consistency and data-rights review; reconnect is not represented as historical repair."
+    },
+    {
+      "number": 48,
+      "title": "Multi-Instrument Research and Reproducible Experiments",
+      "status": "carry-forward planned",
+      "products": [
+        "Framework",
+        "Trader",
+        "Studio"
+      ],
+      "planned_work": "Multi-stream ordering, partial-fill models, rejected instructions, fees, run manifests, strategy-binary identity, seek/checkpoints, parameter grids and walk-forward experiments.",
+      "learning_project": "Compare two C strategies on frozen data, change costs, and separate training from unseen-period results.",
+      "acceptance_gate": "No-look-ahead checks, independent accounting and retained input/configuration/binary identity; no promise of profit."
+    },
+    {
+      "number": 49,
+      "title": "Identity, Secrets, Approval and Package Trust",
+      "status": "carry-forward planned",
+      "products": [
+        "Framework",
+        "Security Centre",
+        "all consequential-action consumers"
+      ],
+      "planned_work": "Authenticated and revocable sessions, capability grants, secret providers, signed metadata, trust rotation, exact-input approvals, expiry and denial explanations.",
+      "learning_project": "Revoke an approval before a fictional transfer; reject a modified signed test package.",
+      "acceptance_gate": "Tampering, expiry, confused-deputy and key-rotation tests; required security fixes are pulled forward before any dependent action."
+    },
+    {
+      "number": 50,
+      "title": "Engine, Data and Risk Server Process Boundaries",
+      "status": "carry-forward planned",
+      "products": [
+        "Framework",
+        "Operations",
+        "TMS",
+        "Trader",
+        "Bank"
+      ],
+      "planned_work": "Real supervised processes, bounded messages, deadlines, fenced ownership, durable inbox/outbox, retries, dead letters and dependency-aware shutdown.",
+      "learning_project": "Terminate an engine during a fictional trade workflow, then recover without duplicate postings.",
+      "acceptance_gate": "Actual multi-process recovery evidence; clients never bypass Data Server to reach its database."
+    },
+    {
+      "number": 51,
+      "title": "Installer, Runtime Bundles and VM User Experience",
+      "status": "carry-forward planned",
+      "products": [
+        "Framework",
+        "Setup Centre",
+        "VM Manager",
+        "Desk",
+        "all apps"
+      ],
+      "planned_work": "Component registration, native update/repair/removal, shortcut ownership, signed offline releases, qualified QEMU bundle, path selection, console, graceful shutdown and disk-checkpoint inspection.",
+      "learning_project": "Install two applications and a VM component; repair one file, boot the guest and remove one application without deleting the other.",
+      "acceptance_gate": "Clean Windows install/maintenance and real QEMU tests; runtime redistribution is reviewed separately."
+    },
+    {
+      "number": 52,
+      "title": "Graphical Umicom OS and Persistent User Sessions",
+      "status": "carry-forward planned",
+      "products": [
+        "umicomOS",
+        "Framework",
+        "Desk",
+        "OS Control Centre"
+      ],
+      "planned_work": "Boot a qualified graphical Linux profile using an established display stack, persistent user storage, session management, display/input configuration and an independent recovery route.",
+      "learning_project": "Save a note in the guest, restart and recover it; reject a bad system update.",
+      "acceptance_gate": "Actual graphical boot and persistent-volume tests per claimed architecture; the kernel/recovery remain independent of Framework."
+    },
+    {
+      "number": 53,
+      "title": "Physical USB and Optical-Media Qualification",
+      "status": "carry-forward planned",
+      "products": [
+        "Framework",
+        "Setup Centre",
+        "umicomOS"
+      ],
+      "planned_work": "Stable device identity, system-disk exclusion, narrow elevation, explicit erase review, exclusive acquisition, flush/read-back, interruption handling and safe eject; optical burning qualified separately.",
+      "learning_project": "Start with a disposable virtual disk, then use an explicitly identified spare device and verify its boot route.",
+      "acceptance_gate": "Real supported hardware tests for wrong-device refusal, replacement/removal and incomplete writes. Device writes stay disabled until qualified."
+    },
+    {
+      "number": 54,
+      "title": "Integrated Release Candidate and Public Capstones",
+      "status": "carry-forward planned",
+      "products": [
+        "Framework",
+        "all qualified applications",
+        "qualified OS profile"
+      ],
+      "planned_work": "Freeze a named candidate and capability matrix; package version-matched examples, dependencies, known limitations, cross-application journeys and recovery tests.",
+      "learning_project": "Build Notes, replay research, reconcile a fictional financial workflow and boot the qualified OS.",
+      "acceptance_gate": "Reproduce the declared subset on a clean supported host. This is not a declaration that every long-term product feature is complete."
+    },
+    {
+      "number": 55,
+      "title": "Desk Federation and Cross-Application Sessions",
+      "status": "proposed extension",
+      "products": [
+        "Framework",
+        "Desk",
+        "all applications"
+      ],
+      "planned_work": "Complete launcher/taskbar, application groups, deep links, cross-application context, notifications, window switching, session restore and controlled application management.",
+      "learning_project": "Resume a workspace containing Studio, Trader and a note without crossing account or project contexts.",
+      "acceptance_gate": "Restart and failed-launch tests preserve the correct application identities and session ownership."
+    },
+    {
+      "number": 56,
+      "title": "Shared Financial Reference and Money Platform Completion",
+      "status": "proposed extension",
+      "products": [
+        "Framework",
+        "Bank",
+        "TMS",
+        "Trader",
+        "Accountant",
+        "Exchange"
+      ],
+      "planned_work": "Complete common money/rounding, currencies, calendars, parties, books, accounts, instruments, business dates, state migrations and reference-data governance.",
+      "learning_project": "Trace one fictional instrument and amount through all financial consumers without duplicate identity or rounding rules.",
+      "acceptance_gate": "Contract compatibility, independent arithmetic/calendar checks and controlled migration of existing practice data."
+    },
+    {
+      "number": 57,
+      "title": "Open TMS Front-to-Back Trade Lifecycle",
+      "status": "proposed extension",
+      "products": [
+        "Framework",
+        "TMS",
+        "Accountant",
+        "Operations"
+      ],
+      "planned_work": "Complete FX forwards, amendments, cancellations, deposits and loans, cashflows, positions, settlement obligations, accounting events and restartable end-of-day orchestration.",
+      "learning_project": "Capture, amend, value, settle and reconcile a GBP/USD forward through each owning service.",
+      "acceptance_gate": "Cash, positions and ledger reconcile after interruption at each lifecycle stage."
+    },
+    {
+      "number": 58,
+      "title": "Pricing, Portfolio Risk, Liquidity and ALM",
+      "status": "proposed extension",
+      "products": [
+        "Framework",
+        "TMS",
+        "Trader",
+        "Bank"
+      ],
+      "planned_work": "Retained market snapshots, curves/calibration, sensitivities, scenarios, portfolio aggregation, cash ladders, liquidity forecasts and governed advanced-model adapters.",
+      "learning_project": "Explain a portfolio change from market inputs through valuation and liquidity exposure.",
+      "acceptance_gate": "Independent numerical references, deterministic populations, explicit missing data and stated model limits."
+    },
+    {
+      "number": 59,
+      "title": "Bank Products, Servicing and Lending",
+      "status": "proposed extension",
+      "products": [
+        "Framework",
+        "Bank",
+        "TMS"
+      ],
+      "planned_work": "Account templates, deposits, interest, fees, holds, standing instructions, loan schedules, arrears, customer lifecycle and authenticated approval flows.",
+      "learning_project": "Open practice products, accrue interest, process a repayment and explain booked/held/available balances.",
+      "acceptance_gate": "Double-entry and restart invariants, permissions and explicit treatment of rounding and backdated changes."
+    },
+    {
+      "number": 60,
+      "title": "Payments, Statements and External Banking Adapters",
+      "status": "proposed extension",
+      "products": [
+        "Framework",
+        "Bank",
+        "TMS",
+        "Integration Studio"
+      ],
+      "planned_work": "Payment routing, cut-offs, message generation, acknowledgements, repair/reversal, statements, nostro/vostro reconciliation and separately qualified network adapters.",
+      "learning_project": "Follow a fictional payment through rejection, repair and matched statement confirmation.",
+      "acceptance_gate": "Real authorised test-channel evidence; a sent message is not treated as settlement and timeouts do not trigger duplicate transfers."
+    },
+    {
+      "number": 61,
+      "title": "Accountant Full Close and Financial Reporting",
+      "status": "proposed extension",
+      "products": [
+        "Framework",
+        "Accountant",
+        "Bank",
+        "TMS"
+      ],
+      "planned_work": "Charts and sub-ledgers, accruals, deferrals, depreciation, revaluation, budgets, consolidation, eliminations, period controls and reproducible statements.",
+      "learning_project": "Close a multi-currency practice group and explain each consolidation adjustment.",
+      "acceptance_gate": "Independent trial-balance/report checks; corrections preserve the original journals and approval history."
+    },
+    {
+      "number": 62,
+      "title": "Exchange Matching and Venue Operations",
+      "status": "proposed extension",
+      "products": [
+        "Framework",
+        "Exchange",
+        "Trader",
+        "Operations"
+      ],
+      "planned_work": "Expanded order types, partial matching, cancel/replace, auctions, session states, self-trade controls, surveillance, fee schedules and recovery of venue state.",
+      "learning_project": "Match a practice order book through a session transition and a restart.",
+      "acceptance_gate": "Deterministic price/time rules, independent book invariants and separation of matching from settlement."
+    },
+    {
+      "number": 63,
+      "title": "Trader Professional Workstation Completion",
+      "status": "proposed extension",
+      "products": [
+        "Framework",
+        "Trader",
+        "Studio"
+      ],
+      "planned_work": "Integrated watchlists, richer charts/studies, Time & Sales, DOM/price ladder, positions/P&L, alerts, scanners, economic calendar and correct linked account/market contexts.",
+      "learning_project": "Investigate a market event across all linked panels while retaining source age and account identity.",
+      "acceptance_gate": "Actual provider and graphical journeys; no fabricated live values or empty panels presented as completed features."
+    },
+    {
+      "number": 64,
+      "title": "Broker Paper and Deliberate Live Execution",
+      "status": "proposed extension",
+      "products": [
+        "Framework",
+        "Trader",
+        "Risk",
+        "Operations"
+      ],
+      "planned_work": "Qualify the broker adapter, market subscriptions, orders/fills, cancel/replace, reconnect reconciliation, durable request identity, pre-trade risk, kill controls and execution audit.",
+      "learning_project": "Complete paper-order partial-fill/cancel recovery before a separately authorised restricted live acceptance procedure.",
+      "acceptance_gate": "Live execution needs explicit environment/account selection plus identity, risk, reconciliation and provider qualification. Existing Live access remains read-only until then."
+    },
+    {
+      "number": 65,
+      "title": "Local AI Runtime and Model Operations",
+      "status": "proposed extension",
+      "products": [
+        "Framework",
+        "LLM",
+        "Studio",
+        "Operations"
+      ],
+      "planned_work": "Real local inference, model/provider compatibility, resource budgets, streaming cancellation, supervised workers, permitted accelerator paths and model inventory.",
+      "learning_project": "Run a small supported model, cancel a request and recover from provider loss without leaking resources.",
+      "acceptance_gate": "Actual inference evidence kept separate from inert HTTP fixtures and extractive previews."
+    },
+    {
+      "number": 66,
+      "title": "RAG Ingestion and Scalable Retrieval",
+      "status": "proposed extension",
+      "products": [
+        "Framework",
+        "RAG",
+        "Studio",
+        "Database Studio"
+      ],
+      "planned_work": "Versioned ingestion, chunking, embeddings, durable indexes, hybrid retrieval, reranking, source permissions, deletion propagation and navigable citations.",
+      "learning_project": "Index a changing Notes handbook and show which answer used which immutable passage.",
+      "acceptance_gate": "Scale and source-revision tests; citations are checked structurally without claiming automatic truth verification."
+    },
+    {
+      "number": 67,
+      "title": "AI Creator and Governed Helix Workflows",
+      "status": "proposed extension",
+      "products": [
+        "Framework",
+        "Creator",
+        "Studio",
+        "LLM",
+        "Operations"
+      ],
+      "planned_work": "Resumable text/media jobs and reviewed tools; candidate source directories, bounded specialist workers, approved test execution and controlled promotion.",
+      "learning_project": "Generate a candidate Notes improvement, review its source diff and test results, then explicitly accept it.",
+      "acceptance_gate": "Models cannot bypass command authority, edit running production state, or push repositories automatically."
+    },
+    {
+      "number": 68,
+      "title": "Database Studio Operational Completion",
+      "status": "proposed extension",
+      "products": [
+        "Framework Data Server",
+        "Database Studio",
+        "Operations"
+      ],
+      "planned_work": "Schema browsing, controlled query sessions, explain plans, paged results, parameter binding, migration review, backup/restore and supported database adapters.",
+      "learning_project": "Inspect a practice schema, run a bounded query and recover a failed migration through Data Server.",
+      "acceptance_gate": "Real database adapter tests, resource limits and preserved database authority; no application-local SQL engine."
+    },
+    {
+      "number": 69,
+      "title": "Integration Studio and Operations Execution",
+      "status": "proposed extension",
+      "products": [
+        "Framework",
+        "Integration Studio",
+        "Operations"
+      ],
+      "planned_work": "Mapping/flow designer, real connectors, scheduler, bounded retries, dead letters, replay, correlated service health, incidents and operational runbooks.",
+      "learning_project": "Recover a failed stock-list flow without duplicating its accepted records.",
+      "acceptance_gate": "At least one authorised real connector, crash/retry tests and business-level completion indicators."
+    },
+    {
+      "number": 70,
+      "title": "Security Centre and Marketplace Operations",
+      "status": "proposed extension",
+      "products": [
+        "Framework",
+        "Security Centre",
+        "Marketplace",
+        "Setup Centre"
+      ],
+      "planned_work": "Permission inspection, session revocation, trust-store management, signed package provenance, extension isolation, activation review and rollback.",
+      "learning_project": "Inspect requested permissions, reject a tampered extension and revoke its active capability.",
+      "acceptance_gate": "Actual isolated-host and update paths with auditable outcomes; a manifest is not treated as a trusted signature."
+    },
+    {
+      "number": 71,
+      "title": "Media Studio Timeline and Video Workflow",
+      "status": "proposed extension",
+      "products": [
+        "Framework media services",
+        "Media Studio",
+        "Creator"
+      ],
+      "planned_work": "Supported video/audio import, timeline trim, caption/title tracks, preview, render jobs, codec adapters, cancellation and new-file export.",
+      "learning_project": "Create and export a short captioned workshop clip while keeping the original assets.",
+      "acceptance_gate": "Actual decodes/renders and independently inspected output; storyboard HTML is not labelled encoded video."
+    },
+    {
+      "number": 72,
+      "title": "Music Studio Playback, Mixing and Recording",
+      "status": "proposed extension",
+      "products": [
+        "Framework audio services",
+        "Music Studio"
+      ],
+      "planned_work": "Real audio-device playback, multi-track arrangement, mixing, metering, automation, supported recording, device changes and render/export.",
+      "learning_project": "Play a workshop tune, mix two tracks and export a checked result without blocking the audio callback.",
+      "acceptance_gate": "Real-device tests, callback lifetime/resource budgets and independent audio-format checks."
+    },
+    {
+      "number": 73,
+      "title": "CAD and Kitchen Designer Parametric Workflows",
+      "status": "proposed extension",
+      "products": [
+        "Framework designer/geometry services",
+        "CAD",
+        "Kitchen Designer"
+      ],
+      "planned_work": "Measured 2D/3D geometry, constraints, snapping, units, drawing interchange, parametric cabinets, materials, dimensions and bills of materials.",
+      "learning_project": "Design a measured room and cabinetry, change one dimension and reconcile the material list.",
+      "acceptance_gate": "Independent geometric/unit checks, undo/redo and round-trip file tests; visual placement alone is not dimensional proof."
+    },
+    {
+      "number": 74,
+      "title": "Games Runtime and Scene Editor",
+      "status": "proposed extension",
+      "products": [
+        "Framework scene/input/runtime services",
+        "Games",
+        "Studio"
+      ],
+      "planned_work": "Scene/entity lifecycle, input actions, animation, collision/physics boundaries, assets, save state, debugging and reproducible packaging.",
+      "learning_project": "Build a small workshop exploration scene with keyboard/controller input and saved state.",
+      "acceptance_gate": "Real frame/input tests and asset lifetime checks on declared platforms."
+    },
+    {
+      "number": 75,
+      "title": "Web Studio Native Runtime and Deployment",
+      "status": "proposed extension",
+      "products": [
+        "Framework native web services",
+        "Web Studio",
+        "Studio"
+      ],
+      "planned_work": "Server-driven UI, routing, forms, sessions, accessibility, static assets, realtime channels, API contracts and deployable host profiles.",
+      "learning_project": "Build and deploy a Notes web application backed by the same service contracts.",
+      "acceptance_gate": "Actual HTTP/browser and permission/session tests; a visual HTML prototype is not a deployed application."
+    },
+    {
+      "number": 76,
+      "title": "Mobile Studio and Portable Application Profiles",
+      "status": "proposed extension",
+      "products": [
+        "Framework",
+        "Mobile Studio",
+        "Studio",
+        "Bank/Notes profiles"
+      ],
+      "planned_work": "Touch/responsive components, lifecycle, offline state, mobile build hosts, packaging, device permissions and supported native adapter boundaries.",
+      "learning_project": "Build a Notes profile for a named mobile target and recover it after suspension.",
+      "acceptance_gate": "Actual supported-device/emulator journeys; required platform-language glue is isolated and justified."
+    },
+    {
+      "number": 77,
+      "title": "Education Studio Courses and Verified Practical Work",
+      "status": "proposed extension",
+      "products": [
+        "Framework education/teacher services",
+        "Education",
+        "Studio"
+      ],
+      "planned_work": "Expand the full beginner-to-advanced curriculum, prerequisites, versioned lesson packages, controlled practical runners, retained test provenance and instructor support.",
+      "learning_project": "Progress from a first C record to a tested, packaged Notes application and a financial capstone.",
+      "acceptance_gate": "Quiz credit, self-reported study and verified executable results remain distinct; no untrusted code is run without a qualified boundary."
+    },
+    {
+      "number": 78,
+      "title": "AuthorEngine, Bits to Banking and Public Documentation",
+      "status": "proposed extension",
+      "products": [
+        "Framework publishing services",
+        "AuthorEngine",
+        "Education",
+        "Studio",
+        "project websites"
+      ],
+      "planned_work": "Single-source manuals, public API/help generation, searchable offline books, examples tied to source versions, accessible assets and release-linked publishing.",
+      "learning_project": "Publish a chapter from the same tested source example used in Education Studio.",
+      "acceptance_gate": "Broken-link/example checks and explicit source/version/licence attribution; existing volumes retained rather than silently replaced."
+    },
+    {
+      "number": 79,
+      "title": "Native Compiler, SDK and Toolchain Productisation",
+      "status": "proposed extension",
+      "products": [
+        "Framework compiler/build/package services",
+        "Studio",
+        "Education"
+      ],
+      "planned_work": "Qualify native compiler/IR tools, toolchain discovery, installed C ABI SDKs, source-built dependency profiles, cross compilation and reproducible artifacts.",
+      "learning_project": "Build a small library, consume it from a clean SDK installation and inspect generated machine code.",
+      "acceptance_gate": "Language conformance and ABI/link tests; an experimental compiler is not claimed to replace a mature compiler before qualification."
+    },
+    {
+      "number": 80,
+      "title": "Multi-Frontend Component Conformance",
+      "status": "proposed extension",
+      "products": [
+        "Framework GUI contracts",
+        "GTK4 primary",
+        "optional adapters"
+      ],
+      "planned_work": "Finish shared widget catalogue, layouts, accessibility and semantic conformance across selected GTK4, native web and justified Qt/wxWidgets/Wt adapter profiles.",
+      "learning_project": "Render the same Notes command/view model on two supported frontends without duplicate domain logic.",
+      "acceptance_gate": "Per-adapter compilation, lifecycle, input and accessibility evidence; no promise that every toolkit is already implemented."
+    },
+    {
+      "number": 81,
+      "title": "Digital Assets, Crypto Exchange and UmiCOIN Research",
+      "status": "proposed extension",
+      "products": [
+        "Framework finance/digital-asset services",
+        "proposed digital-asset product profiles"
+      ],
+      "planned_work": "Networks, custody boundaries, deposits/withdrawals, finality/reorganisation handling, token supply, proof-of-liabilities and exchange/accounting integration.",
+      "learning_project": "Use an isolated test network to reconcile token movements and a deliberate reorganisation.",
+      "acceptance_gate": "No production keys or real funds by default; supported network/security and legal requirements reviewed before deployment."
+    },
+    {
+      "number": 82,
+      "title": "Clearing, Margin, Collateral and Custody",
+      "status": "proposed extension",
+      "products": [
+        "Framework",
+        "Exchange",
+        "TMS",
+        "Bank",
+        "proposed CCP/custody profiles"
+      ],
+      "planned_work": "Clearing obligations, netting, margin, collateral eligibility/haircuts, custody movements, repo/securities lending and bounded default-management experiments.",
+      "learning_project": "Trace a practice cleared trade through collateral allocation and reconciled cash/securities settlement.",
+      "acceptance_gate": "Independent financial calculations and failure recovery; institutional CCP qualification remains a separate claim."
+    },
+    {
+      "number": 83,
+      "title": "Regulatory Reporting and Data Governance",
+      "status": "proposed extension",
+      "products": [
+        "Framework",
+        "TMS",
+        "Bank",
+        "Accountant",
+        "Exchange",
+        "Operations"
+      ],
+      "planned_work": "Lineage, data-quality rules, immutable report populations, maker/checker submissions, acknowledgements, restatements, retention and jurisdiction adapters.",
+      "learning_project": "Produce a versioned practice report, reject a missing source and reconcile a restatement.",
+      "acceptance_gate": "Implement any real obligation from current authoritative rules at delivery time; no generic compliance certification."
+    },
+    {
+      "number": 84,
+      "title": "Umicom OS System Administration and Recovery",
+      "status": "proposed extension",
+      "products": [
+        "umicomOS",
+        "Framework user space",
+        "Desk",
+        "OS Control Centre"
+      ],
+      "planned_work": "Processes, storage, networking, service control, user management, privileged-operation review, system installer, updates and rollback/recovery architecture.",
+      "learning_project": "Diagnose a failed service and select a known system generation without destroying personal data.",
+      "acceptance_gate": "Actual VM/system tests with narrow privilege boundaries and independently bootable recovery."
+    },
+    {
+      "number": 85,
+      "title": "Umicom OS RISC-V and Further Hardware Ports",
+      "status": "proposed extension",
+      "products": [
+        "umicomOS",
+        "Framework portability",
+        "Studio toolchains"
+      ],
+      "planned_work": "Qualify RISC-V boot/userland, board support, device drivers, cross builds and selected ARM/other platform experiments.",
+      "learning_project": "Cross-build, boot and run a native Umicom lesson on a named supported board or emulator.",
+      "acceptance_gate": "Per-platform real boot evidence, ABI and device tests; portability headers alone do not count."
+    },
+    {
+      "number": 86,
+      "title": "Backup, Disaster Recovery, Scale and Resilience",
+      "status": "proposed extension",
+      "products": [
+        "Framework",
+        "Operations",
+        "Data/Engine/Risk services",
+        "all persistent apps"
+      ],
+      "planned_work": "Consistent backup/restore, migration recovery, retention, failover/fencing, stress/load baselines, resource limits and long-running failure campaigns.",
+      "learning_project": "Restore a practice estate and reconcile authoritative business and learning state.",
+      "acceptance_gate": "Measured recovery objectives, integrity checks and actual restore drills; sanitizer success is not universal race/leak proof."
+    },
+    {
+      "number": 87,
+      "title": "Accessibility, Localisation and Learning Usability",
+      "status": "proposed extension",
+      "products": [
+        "Framework",
+        "all applications",
+        "Education",
+        "documentation"
+      ],
+      "planned_work": "Keyboard/screen-reader journeys, high contrast, international text/input, locale-neutral storage, explicit display formatting and reviewed translations.",
+      "learning_project": "Complete a Notes and learning workflow using keyboard and assistive technology in two supported locales.",
+      "acceptance_gate": "Human and automated accessibility tests plus unchanged canonical financial/storage semantics."
+    },
+    {
+      "number": 88,
+      "title": "Whole-Portfolio Release Qualification",
+      "status": "proposed extension",
+      "products": [
+        "Framework",
+        "all release-scoped apps",
+        "qualified Umicom OS"
+      ],
+      "planned_work": "Close remaining gates, publish a supported-capability matrix and packages, freeze matched manuals and run installation, migration, interoperability and recovery capstones.",
+      "learning_project": "Reproduce the declared product suite from checkout through clean-host installation and published user journeys.",
+      "acceptance_gate": "Only evidenced capabilities enter the release claim. Unfinished domains remain visible in the next planning revision."
+    }
+  ],
+  "products": {
+    "Umicom Framework": [
+      43,
+      44,
+      49,
+      50,
+      56,
+      79,
+      80,
+      86,
+      87,
+      88
+    ],
+    "Umicom Studio IDE": [
+      45,
+      46,
+      48,
+      67,
+      76,
+      77,
+      78,
+      79,
+      80
+    ],
+    "Umicom Trader": [
+      47,
+      48,
+      58,
+      62,
+      63,
+      64,
+      81,
+      82
+    ],
+    "Umicom Open TMS": [
+      50,
+      56,
+      57,
+      58,
+      60,
+      82,
+      83
+    ],
+    "Umicom Bank": [
+      49,
+      56,
+      58,
+      59,
+      60,
+      82,
+      83
+    ],
+    "Umicom Accountant": [
+      56,
+      61,
+      82,
+      83
+    ],
+    "Umicom Exchange": [
+      56,
+      62,
+      81,
+      82,
+      83
+    ],
+    "Umicom Desk": [
+      43,
+      51,
+      52,
+      55,
+      84,
+      87
+    ],
+    "Umicom OS Control Centre": [
+      52,
+      53,
+      84,
+      85
+    ],
+    "Umicom LLM": [
+      65,
+      67,
+      86
+    ],
+    "Umicom RAG": [
+      66,
+      67,
+      86
+    ],
+    "Umicom AI Creator": [
+      65,
+      66,
+      67,
+      71
+    ],
+    "Umicom Music Studio": [
+      72,
+      86,
+      87
+    ],
+    "Umicom Media Studio": [
+      67,
+      71,
+      86,
+      87
+    ],
+    "Umicom CAD": [
+      46,
+      73,
+      80,
+      87
+    ],
+    "Umicom Kitchen Designer": [
+      46,
+      73,
+      80,
+      87
+    ],
+    "Umicom Games": [
+      74,
+      79,
+      80
+    ],
+    "Umicom Web Studio": [
+      75,
+      80,
+      87
+    ],
+    "Umicom Mobile Studio": [
+      76,
+      80,
+      87
+    ],
+    "Umicom Database Studio": [
+      50,
+      68,
+      86
+    ],
+    "Umicom Integration Studio": [
+      50,
+      60,
+      69,
+      83
+    ],
+    "Umicom Operations": [
+      44,
+      50,
+      69,
+      84,
+      86
+    ],
+    "Umicom Security Centre": [
+      49,
+      70,
+      86
+    ],
+    "Umicom Marketplace": [
+      49,
+      51,
+      70
+    ],
+    "Umicom Education Studio": [
+      42,
+      77,
+      78,
+      87
+    ],
+    "umicomOS repository": [
+      51,
+      52,
+      53,
+      84,
+      85,
+      86,
+      88
+    ]
+  }
+}
