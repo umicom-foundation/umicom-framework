@@ -137,6 +137,22 @@ UmiStatus UmiThreadTryGetExitCode(const UmiThread *thread, int *outExitCode);
  * UNAVAILABLE, leaves its output unchanged, and consumes the join obligation. */
 UmiStatus UmiThreadRelease(UmiThread **inOutThread);
 
+/** Return whether this build supplies a genuinely nonblocking native join.
+ * Windows and non-Android Linux are supported. Other platforms return zero;
+ * no implementation substitutes a potentially blocking join. This is a build
+ * capability, not a guarantee that any particular thread has finished. */
+int UmiThreadCanTryJoin(void);
+
+/** Join only when native thread teardown has finished. BUSY leaves the owned
+ * handle joinable and unchanged. OK consumes its join obligation, not its
+ * owner reference: release it separately. Rejoining is INVALID_ARGUMENT;
+ * self-join is INVALID_STATE on supported platforms. Native failures return
+ * INTERNAL_ERROR; unsupported builds return NOT_IMPLEMENTED.
+ * OK does not mean the callback succeeded or returned an int. Query its result
+ * separately using UmiThreadTryGetExitCode. Like blocking join, owner-side
+ * join/observe/release calls must be serialised, and must own a live reference. */
+UmiStatus UmiThreadTryJoin(UmiThread *thread);
+
 #ifdef __cplusplus
 }
 #endif

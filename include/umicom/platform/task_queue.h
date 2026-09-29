@@ -104,6 +104,46 @@ UmiStatus UmiTaskQueueCancelAll(UmiTaskQueue *queue);
 UmiStatus UmiTaskQueueRequestShutdown(UmiTaskQueue *queue,
     int cancelPending, int cancelRunning);
 
+/** Phase of the queue's existing lifecycle, not a task outcome. */
+typedef enum UmiTaskQueuePhase {
+    UMI_TASK_QUEUE_ACCEPTING = 0,
+    UMI_TASK_QUEUE_STOP_REQUESTED = 1,
+    UMI_TASK_QUEUE_JOINING = 2,
+    UMI_TASK_QUEUE_STOPPED = 3
+} UmiTaskQueuePhase;
+
+typedef struct UmiTaskQueueShutdownSnapshot {
+    UmiTaskQueuePhase phase;
+    UmiTaskQueueStats tasks;
+    int nonblockingJoinAvailable;
+} UmiTaskQueueShutdownSnapshot;
+
+/** Copy a coherent phase and task-counter observation under the queue mutex.
+ * Does not request a stop or reload any state. Failure leaves output untouched.
+ * STOPPED means every worker was joined; zero running/queued tasks alone does
+ * not prove native completion. The plain-value copy owns no queue pointers. */
+UmiStatus UmiTaskQueueCaptureShutdown(const UmiTaskQueue *queue,
+    UmiTaskQueueShutdownSnapshot *outSnapshot);
+
+/** After RequestShutdown, reap only native workers that have already stopped.
+ * Does not wait for worker callbacks or thread-local teardown. BUSY means a
+ * worker is still alive or another join pass owns the queue. Repeated passes
+ * retain partial join progress. OK is idempotent and means all workers joined.
+ * An accepting queue or a call from its worker returns INVALID_STATE. A worker
+ * that exits without returning through the task runner is unsupported: do not
+ * treat stranded task accounting as successful shutdown. No forced exit.
+ * Queue mutex acquisition and OS scheduling are not real-time guarantees. */
+UmiStatus UmiTaskQueueTryFinishShutdown(UmiTaskQueue *queue);
+
+/** Release a STOPPED queue and clear the caller pointer on success. Never
+ * starts a stop or performs a blocking join. BUSY preserves a non-stopped queue.
+ * A native thread-handle release failure preserves the queue for retry; earlier
+ * successful handle releases stay released. NULL owned queue is an OK no-op.
+ * The lifecycle owner must first exclude ALL concurrent queue users, callbacks,
+ * polling sources and aliases. A stopped queue is not a reference-counted
+ * lifetime object. Callers retain their separate task references and payloads. */
+UmiStatus UmiTaskQueueReleaseStopped(UmiTaskQueue **inOutQueue);
+
 #ifdef __cplusplus
 }
 #endif

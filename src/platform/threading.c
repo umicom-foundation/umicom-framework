@@ -13,6 +13,11 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+/* Linux exposes its nonblocking native join through the GNU feature profile.
+ * Keep this private to the implementation, before any system header. */
+#if defined(__linux__) && !defined(_GNU_SOURCE)
+#define _GNU_SOURCE
+#endif
 #ifndef _WIN32
 #define _POSIX_C_SOURCE 200809L
 #endif
@@ -728,4 +733,49 @@ UmiStatus UmiThreadRelease(UmiThread **inOutThread)
     *inOutThread = NULL;
     ThreadReleaseReference(thread);
     return UMI_STATUS_OK;
+}
+
+
+/* A returned callback result does not prove native thread teardown is complete:
+ * thread-local destructors can still be executing. Poll the native join boundary
+ * rather than treating the completion atomic as permission to release owners.
+ * Existing blocking join and reference-counted release remain unchanged. */
+int UmiThreadCanTryJoin(void)
+{
+#if defined(UMICOM_THREAD_DISABLE_TRY_JOIN)
+    return 0;
+#elif defined(_WIN32) || (defined(__linux__) && !defined(__ANDROID__))
+    return 1;
+#else
+    return 0;
+#endif
+}
+
+UmiStatus UmiThreadTryJoin(UmiThread *thread)
+{
+    if (thread == NULL || thread->joined) return UMI_STATUS_INVALID_ARGUMENT;
+#if defined(UMICOM_THREAD_DISABLE_TRY_JOIN)
+    return UMI_STATUS_NOT_IMPLEMENTED;
+#elif defined(_WIN32)
+    DWORD result;
+    if (thread->handle == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (GetCurrentThreadId() == thread->identifier) return UMI_STATUS_INVALID_STATE;
+    result = WaitForSingleObject(thread->handle, 0U);
+    if (result == WAIT_TIMEOUT) return UMI_STATUS_BUSY;
+    if (result != WAIT_OBJECT_0) return UMI_STATUS_INTERNAL_ERROR;
+    thread->joined = 1;
+    return UMI_STATUS_OK;
+#elif defined(__linux__) && !defined(__ANDROID__)
+    int result;
+    if (pthread_equal(pthread_self(), thread->handle)) return UMI_STATUS_INVALID_STATE;
+    result = pthread_tryjoin_np(thread->handle, NULL);
+    if (result == EBUSY) return UMI_STATUS_BUSY;
+    if (result != 0) return UMI_STATUS_INTERNAL_ERROR;
+    thread->joined = 1;
+    /* Native completion succeeds even when pthread_exit supplied no int.
+     * UmiThreadTryGetExitCode independently reports result availability. */
+    return UMI_STATUS_OK;
+#else
+    return UMI_STATUS_NOT_IMPLEMENTED;
+#endif
 }

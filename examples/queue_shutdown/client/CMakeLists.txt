@@ -1,0 +1,10 @@
+# Umicom Foundation | Sammy Hegab | MIT
+cmake_minimum_required(VERSION 3.24)
+project(UmicomShutdownClient LANGUAGES C)
+include(CTest)
+find_package(UmicomQueueShutdown CONFIG REQUIRED)
+add_executable(umicom-shutdown-client main.c)
+target_link_libraries(umicom-shutdown-client PRIVATE Umicom::platform)
+set_target_properties(umicom-shutdown-client PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+add_test(NAME installed.shutdown.client COMMAND umicom-shutdown-client)
+set_tests_properties(installed.shutdown.client PROPERTIES TIMEOUT 30 SKIP_RETURN_CODE 77)

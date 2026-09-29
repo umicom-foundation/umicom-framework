@@ -130,3 +130,6 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomComponentIntegrationChecks.cmake")
 # Exercise the canonical thread owner used by every application. The check host
 # does not create another thread runtime or change any application command.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomThreadSafety.cmake")
+
+# Shutdown polling reuses the canonical platform queue and native thread owner.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomQueueShutdown.cmake")

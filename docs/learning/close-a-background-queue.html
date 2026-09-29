@@ -1,0 +1,214 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Close a background queue without losing its work</title><link href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADMAAAAzCAYAAAA6oTAqAAAEpUlEQVR4nO2ZwUsbWRzHv132ppnpi66gNUJm3WpoPHQSoyQotGbBsDTQlBbpTSjppcf9G/a0x14aCt5ENruWbdk1YGxBSdA0yR4MxEqJYKWFYjMktufdQ3dmJ8m8eW8mcTcs+Z6clzfz3sf3/f3eb95cuHhl7k/8T/TFfz2BTqoH063qwXSrejBWFA3JWI7Ma9cLoRnIXs+5jPXluTwVwIRrGMuReQyIDrx6805rJ6KAhdAMFkIzKJbK2MrsdWzMjsMMiA4sR+Yx4RrW2gaFfu3vi4IDwD9QsteDXzbSqByftD12R2GWI/MIei+3tA+IDuo9RBRwbymmrZJSq9sevyMwQe9lRINXTSfNkuz1wO26hGKpjGKpbAuqLZgJ1zBuhOQGSxnpQ+2M63l669mJpwt2C83vl75jQqj6ce03LQkQUcCtSBjS2CjzPqVWtwRlGSYaknEjKHP1zZYOsbKxbfibNDaK68EAN9RWZg/FUtm0HzeMlbhY2dhGtnQIAHASAicheF2pGPaVvR4shGZARIH5XBYUEyYakhG88g0XRPNKjEsSHtyP43WlgoePEtT7iChoUDyi2Y+aAIz2C5pevXmHZ5miFhdOQnD3zm2MS5J2zZqc+h/ngVITBREF/Pz7JhsmGrzKlaVWNrYbdvjFb8NYDIcb+rFgVFmFcrsuNVybroyZnmWLeJopatdOQvDgfpw6cSchqCqK6TNV6aHMMh8RBRBR0PYkKoy+BNErWzrE0+wf2t7hJAQBv69lNZrFC6KXUqvj8dq6ViUYJQkumGY1xwVgbCkj5fIF3mEMJXs91GynrxSoMKf1j5rV9KkWaA1wM+XyBawmk9wT10saG8W9pRh3fyrMh9oZsn8HuCpeSwGfbbX6U5K6v5iJt0qoHJ/wrUzzzs1rqXYgAGjvOiwptTqeZ3MNbcyY4bVUVVGQKxSQ2kwzJ2IkaWwUtyJhZiVgVgVQYcYlCXfv3ObaI1LptG0IXkvxFJ1UmIDPxwRpNy54zwO2MnstELHpKUyODOGHX7e0NvrKfE23VbuWshIXza/Uc5NuxPxTGHT0tfS3/HLGKhpZ4gExspRnZAg3p6fgGRlq6Dvo6MPp2ScAFmGqimI7S6li2crIUvFrs5ibdBv2V0EAE5iqorTEjJMQLIbDCPh8bdnMSDRLxa/NUu/RgwA2zwD0UFYTgFKrN6RfK5ZiiQqTKxSYe4taKefyBaTSacvFZOX4BI/X1rXrQUcf4tdnuSBOzz4h8Xy3oc30TdNq+cJjPdrBX2x6Cjf9XuY4ALBzcITEi92Wdq4zAM1Wfh9zIBaUvmQHzFNts57kS9g+qLTEiipLpzNWqmUWlJW4oK1Es2ydm6nW4yl1qoqCh48SWjxZiYudgyOs5/epK9Es24eAajzxlD36jZYnNspv3+PJy32U3763NCfbx7NVRUFqM41cvsBMEnrYwX7z2Ei82MXOwZGtObV9cM4DxZOyeePCTB37pKGHMst8px8b/W/XUkbq+MemqqJgNZlEKp02zXzqptcJCFW2EwCvAv7PCUJN0XOTbnzl6Mf6y/2Oj3XuMP+mep/Ou1U9mG5VD6Zb9ReztWucDqtdOAAAAABJRU5ErkJggg==" rel="icon"/><style>*{box-sizing:border-box}body{margin:0;background:#f2f5f7;color:#193041;font:17px/1.7 system-ui,"Segoe UI",sans-serif}header{background:#102c3e;padding:16px 26px}header img{max-width:202px;height:auto;display:block}main{max-width:1080px;margin:28px auto 60px;padding:40px 46px;background:#fff;border-radius:12px}h1{font-size:clamp(28px,4vw,40px);line-height:1.2}h2{font-size:25px;line-height:1.35;margin-top:45px}h3{font-size:20px;margin-top:30px}a{color:#075a8f}nav{background:#eff5f8;padding:20px;border-radius:10px}nav a{display:inline-block;margin:5px 20px 5px 0}code{font-family:Consolas,"Liberation Mono",monospace;overflow-wrap:anywhere}pre{background:#102333;color:#eaf4fa;padding:22px;border-radius:9px;overflow:auto;font:14px/1.55 Consolas,monospace;white-space:pre}pre code{overflow-wrap:normal}.notice{border-left:4px solid #146b7a;padding:16px 21px;background:#edf7f8;margin:25px 0}.warning{border-left-color:#b36a12;background:#fff6e9}.table{overflow:auto;margin:22px 0}table{border-collapse:collapse;width:100%}th,td{border:1px solid #d2dde4;padding:12px 14px;vertical-align:top;text-align:left}th{background:#e9f1f5}li{margin:8px 0}.small,footer{color:#526875;font-size:14px}details{border:1px solid #d6e0e5;border-radius:8px;padding:14px;margin:14px 0}summary{cursor:pointer;font-weight:650}.flow{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:20px;border:1px solid #cee0e5;border-radius:9px}.flow span{background:#eef6f8;padding:12px;border-radius:8px}footer{border-top:1px solid #d7e0e6;margin-top:48px;padding-top:20px}@media(max-width:720px){main{margin:0;padding:25px 20px;border-radius:0}header{padding:15px 20px}table{min-width:580px}.flow{flex-direction:column;align-items:stretch}pre{padding:16px;font-size:12px}h2{margin-top:34px}}@media print{body,main{background:white}main{margin:0;max-width:none;padding:0}header{background:#102c3e}nav{display:none}pre{white-space:pre-wrap;color:black;background:#eee}a{color:inherit}}</style></head><body><header><img alt="Umicom" src="data:image/png;base64,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"/></header><main><h1>Close a background queue without losing its work</h1>
+<p>A Notes application may be indexing documents when its user presses Close. The window must not freeze, but its controller must not free text that a worker is still reading. This lesson separates asking work to stop from proving that it has stopped.</p>
+<p>You will build a small C application that indexes three in-memory note snapshots. You will run it once with a drain policy and once with cancellation. No file is saved, no window is opened and no external service is contacted.</p>
+<nav aria-label="Contents"><a href="#three">Three completion boundaries</a><a href="#build">Build the lesson</a><a href="#drain">Drain the queue</a><a href="#cancel">Request cancellation</a><a href="#ownership">Memory ownership</a><a href="#source">Complete C source</a><a href="#errors">Failures and recovery</a><a href="#practice">Practice questions</a></nav>
+<section id="three"><h2>1. Learn the three completion boundaries</h2>
+<p>A task can finish its callback before the queue updates its totals. Later, the queue can become idle while its worker threads are still leaving the operating system. Thread-local cleanup is one reason these moments differ.</p>
+<div class="flow" role="group" aria-label="Shutdown sequence"><span>Close admission</span><b>→</b><span>Request drain or cancellation</span><b>→</b><span>Poll native completion</span><b>→</b><span>Release the stopped queue</span></div>
+<div class="table"><table><thead><tr><th>Observation</th><th>What it establishes</th><th>What it does not establish</th></tr></thead><tbody>
+<tr><td>A task result is available</td><td>The task runner recorded a result.</td><td>Every queue worker has exited.</td></tr>
+<tr><td>The queue is idle</td><td>No task is currently queued or running in the queue accounting.</td><td>Native thread teardown has completed.</td></tr>
+<tr><td>Shutdown completion returns OK</td><td>All workers were joined and queue accounting is empty.</td><td>Every task succeeded, or every external action was reversed.</td></tr></tbody></table></div>
+<p><code>UmiTaskQueueTryFinishShutdown</code> checks the last boundary without waiting for a running callback or its native cleanup. <code>UMI_STATUS_BUSY</code> means “keep the owner alive and check again later”. It does not mean “give up and free the queue”.</p>
+<div class="notice"><strong>Keep the old route where it belongs.</strong> <code>umi_task_queue_shutdown</code> still waits for workers. Command-line tools and shutdown threads can use it deliberately. This update does not turn existing blocking callers into asynchronous code automatically.</div></section>
+<section id="build"><h2>2. Build the Notes queue lesson</h2>
+<p>Merge the complete source batch first. Open PowerShell and run the following commands in order. The small laboratory compiles the real Framework thread, task, queue, clock and cancellation implementations. It does not substitute a demonstration queue.</p><pre><code>Set-Location &quot;C:\umicom\Umicom-Applications&quot;
+$env:Path = &quot;C:\msys64\ucrt64\bin;$env:Path&quot;
+
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; `
+    -S &quot;.\tools\queue-shutdown&quot; `
+    -B &quot;.\build\queue-shutdown&quot; `
+    -G Ninja `
+    -DCMAKE_BUILD_TYPE=Debug
+if ($LASTEXITCODE -ne 0) { throw &quot;Configuration failed.&quot; }
+
+&amp; &quot;C:\msys64\ucrt64\bin\cmake.exe&quot; `
+    --build &quot;.\build\queue-shutdown&quot; --parallel 2
+if ($LASTEXITCODE -ne 0) { throw &quot;Build failed.&quot; }
+
+&amp; &quot;C:\msys64\ucrt64\bin\ctest.exe&quot; `
+    --test-dir &quot;.\build\queue-shutdown&quot; `
+    --parallel 2 --no-tests=error --output-on-failure
+if ($LASTEXITCODE -ne 0) { throw &quot;Tests failed.&quot; }</code></pre>
+<p>The laboratory also registers the earlier thread-lifetime tests. Test counts differ by platform because POSIX thread-local cleanup, signals and Linux linker-wrapper tests are not Windows tests. A skipped case is not a pass.</p>
+<p>The executable is <code>build\queue-shutdown\bin\umicom-queue-shutdown.exe</code>. Keep this laboratory separate from the full Applications build, which is still required before publishing the shared update.</p></section>
+<section id="drain"><h2>3. Let accepted work drain</h2>
+<p>Run:</p><pre><code>&amp; &quot;.\build\queue-shutdown\bin\umicom-queue-shutdown.exe&quot; drain</code></pre>
+<p>The first worker waits at a practice gate so that the controller can demonstrate closing admission while work is still alive. The controller requests shutdown with both cancellation flags set to zero, makes a nonblocking completion pass, then opens that gate. Accepted work finishes; new submissions are refused.</p><pre><code>Admission closed. The controller can process another event while workers finish.
+Stopped: submitted=3, completed=3, cancelled=0, failed=0.
+Notes word counts: 8, 7, 8.
+Practice complete. Every worker was joined before its text snapshots left scope.</code></pre>
+<p>The word counter recognises spaces, tabs and line endings. It teaches task ownership, not a full international-language tokenizer. The three texts and all result counters remain in memory.</p></section>
+<section id="cancel"><h2>4. Cancel work that no longer needs to run</h2>
+<p>Run the cancellation version:</p><pre><code>&amp; &quot;.\build\queue-shutdown\bin\umicom-queue-shutdown.exe&quot; cancel</code></pre>
+<p>This time the controller calls <code>UmiTaskQueueRequestShutdown(queue, 1, 1)</code>. The queue removes queued work and requests cancellation of its active callback. The callback checks its cancellation token and returns normally. The controller still waits for native completion through later polling passes before releasing the queue.</p><pre><code>Admission closed. The controller can process another event while workers finish.
+Stopped: submitted=3, completed=3, cancelled=3, failed=0.
+Practice complete. Every worker was joined before its text snapshots left scope.</code></pre>
+<div class="notice warning"><strong>Cancellation is not rollback.</strong> A callback may already have written a file or sent a message before observing cancellation. The queue does not undo those effects. A callback that ignores cancellation remains running; its owners must remain alive.</div>
+<p>Completed includes cancelled and failed tasks. Always inspect those separate counters rather than interpreting <code>completed == submitted</code> as “all work succeeded”.</p></section>
+<section id="ownership"><h2>5. Keep ownership visible</h2>
+<p>The Notes Master Controller owns its queue, task references and text snapshots. Its indexing worker reads those snapshots and writes its designated result. The queue retains accepted task records, but it does not retain arbitrary caller buffers.</p>
+<div class="table"><table><thead><tr><th>Object</th><th>Owner and release point</th></tr></thead><tbody>
+<tr><td>Text snapshot and result storage</td><td>The controller keeps them alive until the worker has finished using them. This lesson keeps them until all workers are joined.</td></tr>
+<tr><td>Task returned by create</td><td>The caller owns one reference and releases it with <code>umi_task_destroy</code>. A successful submission adds the queue’s separate reference.</td></tr>
+<tr><td>Queue</td><td>The lifecycle owner excludes all other queue users, confirms STOPPED, then calls <code>UmiTaskQueueReleaseStopped</code>.</td></tr>
+<tr><td>Captured shutdown snapshot</td><td>A plain-value copy. It remains readable after the queue is released, but it describes the earlier capture—not current activity.</td></tr></tbody></table></div>
+<p>The existing thread-lifetime reference fix remains intact. A thread record surviving early owner release does not keep the worker’s <code>user_data</code> alive, and does not turn the queue into a reference-counted object.</p>
+<h3>Connecting this pattern to a future graphical close handler</h3>
+<p>On Close, stop admitting new work and record that shutdown was requested. Schedule one completion pass per event-loop callback. On BUSY, return control to the toolkit. On OK, remove polling sources, exclude remaining aliases, and release the stopped queue and its context.</p>
+<p>Do not copy the CLI’s sleep loop into a GTK callback. Do not block inside a worker while waiting for a UI action whose handler is blocked in a join. This delivery supplies the native contracts and executable lesson; it does not rewrite or qualify Studio’s or Desk’s close handler.</p></section>
+<section id="source"><h2>6. Read the complete C source</h2>
+<p>The file below is the compiled <code>framework/examples/queue_shutdown/notes_index.c</code>. Start with <code>CountWords</code>, then follow the controller from create to submit, request, poll and release.</p><pre><code>/*-----------------------------------------------------------------------------
+ * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+ * File: examples/queue_shutdown/notes_index.c
+ * A Notes Master Controller owns the text snapshots and the queue. It stops
+ * admission, optionally cancels work, then polls native completion before
+ * releasing either owner. No files, windows or external services are opened.
+ *---------------------------------------------------------------------------*/
+#include &quot;umicom/platform/task_queue.h&quot;
+#include &quot;umicom/platform/threading.h&quot;
+#include &quot;umicom/platform/clock.h&quot;
+#include &lt;stdatomic.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;inttypes.h&gt;
+
+typedef struct NotesIndex {
+    atomic_int permitted;
+    atomic_int entered;
+    const char *text;
+    size_t words;
+} NotesIndex;
+
+static UmiStatus CountWords(UmiTaskContext *context, void *data)
+{
+    NotesIndex *index = data;
+    int inWord = 0;
+    atomic_store_explicit(&amp;index-&gt;entered, 1, memory_order_release);
+    /* This gate makes the ownership exercise repeatable. A real indexer would
+     * receive its complete input snapshot before submission, then scan it. */
+    while (!atomic_load_explicit(&amp;index-&gt;permitted, memory_order_acquire)) {
+        if (umi_task_context_is_cancelled(context)) return UMI_STATUS_CANCELLED;
+        umi_thread_sleep_ms(1U);
+    }
+    for (const unsigned char *p = (const unsigned char *)index-&gt;text; *p != 0U; ++p) {
+        int whitespace = *p == &#x27; &#x27; || *p == &#x27;\t&#x27; || *p == &#x27;\r&#x27; || *p == &#x27;\n&#x27;;
+        if (umi_task_context_is_cancelled(context)) return UMI_STATUS_CANCELLED;
+        if (!whitespace &amp;&amp; !inWord) ++index-&gt;words;
+        inWord = !whitespace;
+    }
+    return UMI_STATUS_OK;
+}
+
+static uint64_t Now(void)
+{
+    UmiClock clock = umi_clock_system();
+    return clock.monotonic_nanoseconds(&amp;clock);
+}
+
+int main(int argc, char **argv)
+{
+    int cancel;
+    UmiTaskQueue *queue = NULL;
+    UmiTask *tasks[3] = {NULL, NULL, NULL};
+    NotesIndex notes[3];
+    const char *text[3] = {
+        &quot;Save the workshop notes before closing the window.&quot;,
+        &quot;A queued search owns its input snapshot.&quot;,
+        &quot;Cancellation is a request, not proof of completion.&quot;
+    };
+    UmiTaskQueueConfig config = {1U, 4U};
+    UmiTaskQueueShutdownSnapshot snapshot;
+    UmiStatus status = UMI_STATUS_OK;
+    uint64_t start;
+    if (argc != 2 || (strcmp(argv[1], &quot;drain&quot;) &amp;&amp; strcmp(argv[1], &quot;cancel&quot;) &amp;&amp;
+        strcmp(argv[1], &quot;--self-test&quot;))) {
+        puts(&quot;Usage: umicom-queue-shutdown drain|cancel|--self-test&quot;);
+        return argc == 2 &amp;&amp; !strcmp(argv[1], &quot;--help&quot;) ? 0 : 2;
+    }
+    cancel = !strcmp(argv[1], &quot;cancel&quot;);
+    if (!UmiThreadCanTryJoin()) {
+        puts(&quot;NOT RUN: this build has no nonblocking native join adapter.&quot;);
+        return 77;
+    }
+    for (size_t i = 0U; i &lt; 3U; ++i) {
+        atomic_init(&amp;notes[i].permitted, i != 0U);
+        atomic_init(&amp;notes[i].entered, 0);
+        notes[i].text = text[i];
+        notes[i].words = 0U;
+    }
+    status = umi_task_queue_create(&amp;config, &amp;queue);
+    if (status != UMI_STATUS_OK) goto cleanup;
+    for (size_t i = 0U; i &lt; 3U; ++i) {
+        UmiTaskConfig task = {&quot;Index Notes snapshot&quot;, CountWords, &amp;notes[i], NULL, NULL};
+        status = umi_task_create(&amp;task, &amp;tasks[i]);
+        if (status == UMI_STATUS_OK) status = umi_task_queue_submit(queue, tasks[i]);
+        if (status != UMI_STATUS_OK) goto cleanup;
+    }
+    start = Now();
+    while (!atomic_load_explicit(&amp;notes[0].entered, memory_order_acquire)) {
+        if (Now() - start &gt; 5000000000ULL) { status = UMI_STATUS_TIMEOUT; goto cleanup; }
+        umi_thread_sleep_ms(1U);
+    }
+    status = UmiTaskQueueRequestShutdown(queue, cancel, cancel);
+    if (status != UMI_STATUS_OK) goto cleanup;
+    status = UmiTaskQueueTryFinishShutdown(queue);
+    if (status != UMI_STATUS_OK &amp;&amp; status != UMI_STATUS_BUSY) goto cleanup;
+    puts(&quot;Admission closed. The controller can process another event while workers finish.&quot;);
+    atomic_store_explicit(&amp;notes[0].permitted, 1, memory_order_release);
+    start = Now();
+    while ((status = UmiTaskQueueTryFinishShutdown(queue)) == UMI_STATUS_BUSY) {
+        /* A GTK host schedules the next pass in its event loop instead of
+         * sleeping in a UI callback. This command-line lesson yields here. */
+        if (Now() - start &gt; 5000000000ULL) { status = UMI_STATUS_TIMEOUT; goto cleanup; }
+        umi_thread_sleep_ms(1U);
+    }
+    if (status != UMI_STATUS_OK) goto cleanup;
+    status = UmiTaskQueueCaptureShutdown(queue, &amp;snapshot);
+    if (status != UMI_STATUS_OK) goto cleanup;
+    printf(&quot;Stopped: submitted=%&quot; PRIu64 &quot;, completed=%&quot; PRIu64
+        &quot;, cancelled=%&quot; PRIu64 &quot;, failed=%&quot; PRIu64 &quot;.\n&quot;,
+        snapshot.tasks.submitted, snapshot.tasks.completed,
+        snapshot.tasks.cancelled, snapshot.tasks.failed);
+    if (!cancel) printf(&quot;Notes word counts: %zu, %zu, %zu.\n&quot;,
+        notes[0].words, notes[1].words, notes[2].words);
+    status = UmiTaskQueueReleaseStopped(&amp;queue);
+    if (status != UMI_STATUS_OK) goto cleanup;
+    puts(&quot;Practice complete. Every worker was joined before its text snapshots left scope.&quot;);
+cleanup:
+    if (queue != NULL) {
+        atomic_store(&amp;notes[0].permitted, 1);
+        (void)UmiTaskQueueRequestShutdown(queue, 1, 1);
+        /* CLI error cleanup may wait. A graphical controller instead retains
+         * its context and keeps polling; never free a busy worker&#x27;s payload. */
+        UmiStatus joined = umi_task_queue_shutdown(queue, 1);
+        if (joined == UMI_STATUS_OK) (void)UmiTaskQueueReleaseStopped(&amp;queue);
+        else fprintf(stderr, &quot;Shutdown cleanup failed (%d).\n&quot;, (int)joined);
+    }
+    for (size_t i = 0U; i &lt; 3U; ++i) umi_task_destroy(tasks[i]);
+    if (status != UMI_STATUS_OK) fprintf(stderr, &quot;Notes exercise failed (%d).\n&quot;, (int)status);
+    return status == UMI_STATUS_OK ? 0 : 1;
+}</code></pre>
+<h3>Use the installed public SDK</h3>
+<p>The package also includes <code>examples/queue_shutdown/client</code>. It includes only public headers, runs one task, joins the workers and releases the queue. Its CMake project uses <code>find_package(UmicomQueueShutdown CONFIG REQUIRED)</code> and links <code>Umicom::platform</code>. The delivery’s Build-and-Git document gives the install and client commands.</p></section>
+<section id="errors"><h2>7. Handle errors without discarding the owner</h2>
+<div class="table"><table><thead><tr><th>Result</th><th>Next action</th></tr></thead><tbody>
+<tr><td>INVALID_STATE before a stop</td><td>Choose a shutdown policy and call RequestShutdown first. The polling call does not silently stop a usable queue.</td></tr>
+<tr><td>BUSY</td><td>Keep the queue and callback context. Return to other work and make another pass later.</td></tr>
+<tr><td>Native join failure</td><td>Keep the owner and record the failure. A later pass retains any workers already joined successfully. Investigate repeated failures.</td></tr>
+<tr><td>Release failure</td><td>The queue pointer remains owned. Earlier successful native-handle releases remain released; retry the stopped-queue release after investigation.</td></tr>
+<tr><td>NOT_IMPLEMENTED</td><td>This build has no supported nonblocking join. Use an explicitly chosen blocking lifecycle worker, not a hidden fallback on the UI thread.</td></tr></tbody></table></div>
+<p>The native polling profile supports Windows and non-Android Linux. Other platforms report unsupported. The included fallback test compiles the real implementation with polling disabled and checks that the existing blocking route still works.</p>
+<p>Queue locking and native scheduling are not real-time guarantees. Cancelling a large pending queue takes time proportional to its retained tasks. Set a user-facing deadline in the controller, but retain the context after that deadline until shutdown really completes.</p>
+<p>Task callbacks must return through the task runner. Forced thread termination, jumping out of a callback, and calling <code>pthread_exit</code> from a queued task are not supported recovery mechanisms. A direct native-thread test covers a missing integer result; it does not make an abruptly exited queued task valid.</p></section>
+<section id="practice"><h2>8. Check your understanding</h2>
+<details><summary>Why can zero queued and running tasks still be insufficient?</summary><p>The worker can be performing native thread-local cleanup. The regression test deliberately holds that cleanup open and verifies that queue polling returns BUSY despite idle task counters.</p></details>
+<details><summary>Can you discard task payloads after cancelling the task?</summary><p>No. Cancellation is a request. Keep the payload until the callback has finished using it. This lesson uses successful queue shutdown completion as its conservative release point.</p></details>
+<details><summary>Why does releasing a stopped queue take a pointer to the owner pointer?</summary><p>Successful release clears that pointer. A failure keeps it available for investigation and retry. Other uncoordinated aliases are still the caller’s responsibility.</p></details>
+<details><summary>Exercise: make one task return an I/O error.</summary><p>Return <code>UMI_STATUS_IO_ERROR</code> from a practice task. After a drained shutdown, the queue should be STOPPED, completed should include that task, and failed should increase. Completion of the queue is not success of its jobs.</p></details>
+<details><summary>Exercise: keep the practice gate closed after cancellation.</summary><p>A cooperative worker returns CANCELLED without needing the gate. A non-cooperative worker remains BUSY until it can return. Never test this by freeing the worker’s context while it is alive.</p></details>
+</section>
+<section><h2>Platform references and delivery scope</h2><p>The Linux implementation uses <a href="https://man7.org/linux/man-pages/man3/pthread_tryjoin_np.3.html">pthread_tryjoin_np</a>. The Windows implementation uses <a href="https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitforsingleobject">WaitForSingleObject with a zero timeout</a>. Both are hidden behind Framework’s C interface.</p>
+<p>Native Linux tests, address/undefined-behaviour sanitizers and a separate ThreadSanitizer run were exercised for this delivery. Windows execution, GTK integration, the full Applications build and OS boot are not claimed here. Read the accompanying Validation record for exact configurations and counts.</p>
+<p>This continues the lifecycle/cancellation work in roadmap item 44. Windows/GTK integration qualification remains an open item; the unfinished Umicoin work is neither required nor represented as implemented.</p></section>
+<footer>Umicom Foundation · C23 learning project · Shared implementation: Umicom Framework · No real documents, networks, databases or financial operations are used by the lesson.</footer></main></body></html>

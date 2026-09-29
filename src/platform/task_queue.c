@@ -431,3 +431,116 @@ UmiTaskQueueStats umi_task_queue_stats(const UmiTaskQueue *queue)
     (void)umi_mutex_unlock(mutable_queue->mutex);
     return stats;
 }
+
+
+/* Shutdown completion belongs beside the canonical worker state, not inside
+ * each GUI adapter. These additive operations preserve the existing blocking
+ * shutdown, cancellation, queue retention and task-result conventions. */
+UmiStatus UmiTaskQueueCaptureShutdown(const UmiTaskQueue *queue,
+    UmiTaskQueueShutdownSnapshot *outSnapshot)
+{
+    UmiTaskQueueShutdownSnapshot candidate;
+    UmiTaskQueue *mutableQueue;
+    UmiStatus status;
+    if (queue == NULL || outSnapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    mutableQueue = (UmiTaskQueue *)queue;
+    status = umi_mutex_lock(mutableQueue->mutex);
+    if (status != UMI_STATUS_OK) return status;
+    memset(&candidate, 0, sizeof(candidate));
+    candidate.phase = queue->stopped ? UMI_TASK_QUEUE_STOPPED :
+        queue->joining ? UMI_TASK_QUEUE_JOINING :
+        queue->stopping ? UMI_TASK_QUEUE_STOP_REQUESTED : UMI_TASK_QUEUE_ACCEPTING;
+    candidate.tasks.worker_count = queue->worker_count;
+    candidate.tasks.capacity = queue->capacity;
+    candidate.tasks.queued = queue->queued;
+    candidate.tasks.running = queue->running;
+    candidate.tasks.submitted = queue->submitted;
+    candidate.tasks.completed = queue->completed;
+    candidate.tasks.cancelled = queue->cancelled;
+    candidate.tasks.failed = queue->failed;
+    candidate.nonblockingJoinAvailable = UmiThreadCanTryJoin();
+    status = umi_mutex_unlock(mutableQueue->mutex);
+    if (status == UMI_STATUS_OK) *outSnapshot = candidate;
+    return status;
+}
+
+UmiStatus UmiTaskQueueTryFinishShutdown(UmiTaskQueue *queue)
+{
+    UmiStatus status;
+    int pending = 0;
+    if (queue == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (umiExecutingQueue == queue) return UMI_STATUS_INVALID_STATE;
+    status = umi_mutex_lock(queue->mutex);
+    if (status != UMI_STATUS_OK) return status;
+    if (queue->stopped) {
+        (void)umi_mutex_unlock(queue->mutex);
+        return UMI_STATUS_OK;
+    }
+    if (!queue->stopping) {
+        (void)umi_mutex_unlock(queue->mutex);
+        return UMI_STATUS_INVALID_STATE;
+    }
+    if (queue->joining) {
+        (void)umi_mutex_unlock(queue->mutex);
+        return UMI_STATUS_BUSY;
+    }
+    if (!UmiThreadCanTryJoin()) {
+        (void)umi_mutex_unlock(queue->mutex);
+        return UMI_STATUS_NOT_IMPLEMENTED;
+    }
+    queue->joining = 1;
+    (void)umi_mutex_unlock(queue->mutex);
+
+    /* The joining flag exclusively owns workerJoined, shared with the legacy
+     * blocking join loop. Do not hold the queue mutex over a native join call.
+     * Visit later slots even if an earlier worker is still alive. */
+    for (size_t index = 0U; index < queue->worker_count; ++index) {
+        if (queue->workers[index] == NULL || queue->workerJoined[index]) continue;
+        status = UmiThreadTryJoin(queue->workers[index]);
+        if (status == UMI_STATUS_BUSY) {
+            pending = 1;
+            continue;
+        }
+        if (status != UMI_STATUS_OK) break;
+        queue->workerJoined[index] = 1;
+    }
+    (void)umi_mutex_lock(queue->mutex);
+    if (status == UMI_STATUS_OK || status == UMI_STATUS_BUSY) {
+        if (pending) status = UMI_STATUS_BUSY;
+        else if (queue->queued != 0U || queue->running != 0U)
+            status = UMI_STATUS_INVALID_STATE;
+        else {
+            queue->stopped = 1;
+            status = UMI_STATUS_OK;
+        }
+    }
+    queue->joining = 0;
+    (void)umi_mutex_unlock(queue->mutex);
+    return status;
+}
+
+UmiStatus UmiTaskQueueReleaseStopped(UmiTaskQueue **inOutQueue)
+{
+    UmiTaskQueue *queue;
+    UmiStatus status;
+    if (inOutQueue == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    queue = *inOutQueue;
+    if (queue == NULL) return UMI_STATUS_OK;
+    if (umiExecutingQueue == queue) return UMI_STATUS_INVALID_STATE;
+    status = umi_mutex_lock(queue->mutex);
+    if (status != UMI_STATUS_OK) return status;
+    if (!queue->stopped || queue->joining) {
+        (void)umi_mutex_unlock(queue->mutex);
+        return UMI_STATUS_BUSY;
+    }
+    (void)umi_mutex_unlock(queue->mutex);
+    /* Exclusive lifecycle ownership is required here. Preserve the queue if
+     * closing a native handle fails, rather than losing its only owner pointer. */
+    for (size_t index = 0U; index < queue->worker_count; ++index) {
+        status = UmiThreadRelease(&queue->workers[index]);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    *inOutQueue = NULL;
+    umi_task_queue_destroy(queue); /* stopped; all handles already released */
+    return UMI_STATUS_OK;
+}
