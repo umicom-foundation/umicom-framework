@@ -6,6 +6,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "creative_workspace_private.h"
+#include "umicom/ui/gtk4/creative_audio.h"
 #include <string.h>
 /* Each connected object is retained until its signal has been disconnected.
  * A caller retaining a button beyond the panel lifetime gets an inert widget. */
@@ -189,6 +190,12 @@ UmiStatus UmiCreativeGtkPanelCreate(UmiDataServer * server, const char * profile
     gtk_paned_set_resize_start_child(GTK_PANED(paned), FALSE);
     gtk_paned_set_position(GTK_PANED(paned), 330);
     BuildForms(p, GTK_NOTEBOOK(notebook));
+    /* Audio clips share Framework decoding and export. This independent page
+     * does not change project notes, the saved model, or earlier tab indices. */
+    if (strcmp(profile, "music") == 0 || strcmp(profile, "media") == 0) {
+        GtkWidget *audioPage = Page(GTK_NOTEBOOK(notebook), "Audio clip");
+        gtk_box_append(GTK_BOX(audioPage), UmiCreativeAudioGtkCreate());
+    }
     GtkWidget * right = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
     gtk_paned_set_end_child(GTK_PANED(paned), right);
     p -> canvas = gtk_drawing_area_new();

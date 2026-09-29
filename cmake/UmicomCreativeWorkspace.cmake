@@ -154,3 +154,6 @@ endfunction()
 install(FILES "${_umicom_creative_root}/docs/learning/CREATIVE_WORKSPACE.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/learning" COMPONENT Framework)
 unset(_umicom_creative_root)
+
+# The native clip tools reuse this service's owned export and file contracts.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomCreativeAudio.cmake")

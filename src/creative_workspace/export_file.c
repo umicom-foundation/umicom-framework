@@ -6,6 +6,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "internal.h"
+#include "audio_internal.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -104,3 +105,11 @@ UmiStatus UmiCreativeExportWriteNew(const UmiCreativeExport * exported, const ch
     return status;
 }
 
+
+/* Audio import reuses the export path policy so applications cannot drift into
+ * different Windows device-name/alternate-stream rules. Kept private to the
+ * creative service; publication still uses the established writer above. */
+bool UmiCreativeLocalPathValid(const char *path)
+{
+    return AbsolutePath(path);
+}
