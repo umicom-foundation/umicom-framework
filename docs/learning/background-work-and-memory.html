@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Umicom — Background work and memory ownership</title><link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADMAAAAzCAYAAAA6oTAqAAAEpUlEQVR4nO2ZwUsbWRzHv132ppnpi66gNUJm3WpoPHQSoyQotGbBsDTQlBbpTSjppcf9G/a0x14aCt5ENruWbdk1YGxBSdA0yR4MxEqJYKWFYjMktufdQ3dmJ8m8eW8mcTcs+Z6clzfz3sf3/f3eb95cuHhl7k/8T/TFfz2BTqoH063qwXSrejBWFA3JWI7Ma9cLoRnIXs+5jPXluTwVwIRrGMuReQyIDrx6805rJ6KAhdAMFkIzKJbK2MrsdWzMjsMMiA4sR+Yx4RrW2gaFfu3vi4IDwD9QsteDXzbSqByftD12R2GWI/MIei+3tA+IDuo9RBRwbymmrZJSq9sevyMwQe9lRINXTSfNkuz1wO26hGKpjGKpbAuqLZgJ1zBuhOQGSxnpQ+2M63l669mJpwt2C83vl75jQqj6ce03LQkQUcCtSBjS2CjzPqVWtwRlGSYaknEjKHP1zZYOsbKxbfibNDaK68EAN9RWZg/FUtm0HzeMlbhY2dhGtnQIAHASAicheF2pGPaVvR4shGZARIH5XBYUEyYakhG88g0XRPNKjEsSHtyP43WlgoePEtT7iChoUDyi2Y+aAIz2C5pevXmHZ5miFhdOQnD3zm2MS5J2zZqc+h/ngVITBREF/Pz7JhsmGrzKlaVWNrYbdvjFb8NYDIcb+rFgVFmFcrsuNVybroyZnmWLeJopatdOQvDgfpw6cSchqCqK6TNV6aHMMh8RBRBR0PYkKoy+BNErWzrE0+wf2t7hJAQBv69lNZrFC6KXUqvj8dq6ViUYJQkumGY1xwVgbCkj5fIF3mEMJXs91GynrxSoMKf1j5rV9KkWaA1wM+XyBawmk9wT10saG8W9pRh3fyrMh9oZsn8HuCpeSwGfbbX6U5K6v5iJt0qoHJ/wrUzzzs1rqXYgAGjvOiwptTqeZ3MNbcyY4bVUVVGQKxSQ2kwzJ2IkaWwUtyJhZiVgVgVQYcYlCXfv3ObaI1LptG0IXkvxFJ1UmIDPxwRpNy54zwO2MnstELHpKUyODOGHX7e0NvrKfE23VbuWshIXza/Uc5NuxPxTGHT0tfS3/HLGKhpZ4gExspRnZAg3p6fgGRlq6Dvo6MPp2ScAFmGqimI7S6li2crIUvFrs5ibdBv2V0EAE5iqorTEjJMQLIbDCPh8bdnMSDRLxa/NUu/RgwA2zwD0UFYTgFKrN6RfK5ZiiQqTKxSYe4taKefyBaTSacvFZOX4BI/X1rXrQUcf4tdnuSBOzz4h8Xy3oc30TdNq+cJjPdrBX2x6Cjf9XuY4ALBzcITEi92Wdq4zAM1Wfh9zIBaUvmQHzFNts57kS9g+qLTEiipLpzNWqmUWlJW4oK1Es2ydm6nW4yl1qoqCh48SWjxZiYudgyOs5/epK9Es24eAajzxlD36jZYnNspv3+PJy32U3763NCfbx7NVRUFqM41cvsBMEnrYwX7z2Ei82MXOwZGtObV9cM4DxZOyeePCTB37pKGHMst8px8b/W/XUkbq+MemqqJgNZlEKp02zXzqptcJCFW2EwCvAv7PCUJN0XOTbnzl6Mf6y/2Oj3XuMP+mep/Ou1U9mG5VD6Zb9ReztWucDqtdOAAAAABJRU5ErkJggg=="><style>*{box-sizing:border-box}body{margin:0;background:#f2f5f7;color:#183244;font:17px/1.7 system-ui,-apple-system,"Segoe UI",sans-serif}header{background:#102d3d;padding:18px max(22px,calc((100vw - 1100px)/2));}header img{width:202px;height:55px;object-fit:contain}main{max-width:1100px;margin:28px auto;background:white;padding:52px 58px;border-radius:14px}h1{font-size:clamp(32px,4vw,47px);line-height:1.15;margin:12px 0 24px}h2{font-size:27px;line-height:1.3;margin-top:48px}p{max-width:930px}.intro{font-size:21px;color:#3b596b}.eyebrow{font-size:12px;letter-spacing:.14em;color:#147385;font-weight:700}.notice{background:#eaf5f7;border-left:4px solid #138193;padding:18px 22px}nav{display:flex;gap:12px 22px;flex-wrap:wrap;border-block:1px solid #d5e1e7;margin:30px 0;padding:20px 0}a{color:#126c89;text-underline-offset:3px}pre{overflow:auto;padding:22px;border-radius:8px;background:#102b3b;color:#eaf6ff;font:14px/1.6 ui-monospace,Consolas,monospace}code{font: .9em ui-monospace,Consolas,monospace;overflow-wrap:anywhere}pre code{font:inherit;overflow-wrap:normal}table{border-collapse:collapse;width:100%;font-size:16px}th,td{border:1px solid #d4e2e8;padding:13px;text-align:left;vertical-align:top}th{background:#edf5f8}.flow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:28px 0}.flow div{border:1px solid #ccdee6;background:#f1f8fa;padding:18px;flex:1;min-width:180px}.flow span{font-size:24px;color:#167b84}details{padding:14px 0;border-bottom:1px solid #dce6eb}summary{font-weight:650;cursor:pointer}footer{max-width:1100px;margin:20px auto 50px;padding:0 24px;font-size:14px;color:#536c79}@media(max-width:650px){main{margin:0;padding:26px 21px;border-radius:0}.flow{display:block}.flow div{margin:8px 0}.flow span{display:block;text-align:center}h2{font-size:24px}pre{font-size:12px;padding:15px}table{font-size:14px}td,th{padding:8px}}@media print{header{background:white}main{margin:0;padding:0}nav{display:none}pre{white-space:pre-wrap;background:#f3f5f7;color:black}details{break-inside:avoid}}</style></head><body><header><img src="data:image/png;base64,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" alt="Umicom"></header><main>
+<p class="eyebrow">UMICOM · PRACTICAL C DEVELOPMENT</p>
+<h1>Let background work finish before you release its memory</h1>
+<p class="intro">Build a small Notes indexer, run it on a worker thread, and learn which object must stay alive at each step. The same ownership rules apply to an editor, a market-data worker and an operating-system service.</p>
+<div class="notice"><strong>Practice scope.</strong> This lesson counts the words in one sentence held in memory. It does not edit your notes, open a database, contact a broker or start an OS guest.</div>
+<nav aria-label="Contents"><a href="#start">Build the lesson</a><a href="#ownership">Understand ownership</a><a href="#observe">Observe and join</a><a href="#cancel">Cancel cooperatively</a><a href="#source">Complete C source</a><a href="#tests">Run the checks</a><a href="#answers">Exercises and answers</a></nav>
+<section id="start"><h2>1. Start with a Notes draft</h2>
+<p>An application sometimes has work that should not run inside a button handler: indexing text, inspecting a large document or preparing a preview. A <em>worker thread</em> runs a function while the application continues with other tasks.</p>
+<p>That does not give the worker its own copy of every object it uses. In this example, the controller owns a <code>NotesIndex</code> structure. The worker borrows its address, reads the sentence and writes the word count. The controller keeps that structure alive until the worker has been joined.</p>
+<p>First merge the supplied files into their matching repository paths. Open PowerShell and run this smaller build before the complete application build. It compiles the actual Framework thread implementation, not a second implementation inside the example.</p>
+<pre><code>Set-Location "C:\umicom\Umicom-Applications"
+$ErrorActionPreference = "Stop"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+
+&amp; "C:\msys64\ucrt64\bin\cmake.exe" `
+    -S ".\tools\thread-safety" `
+    -B ".\build\thread-safety" `
+    -G Ninja `
+    -DCMAKE_BUILD_TYPE=Debug
+if ($LASTEXITCODE -ne 0) { throw "Configuration failed." }
+
+&amp; "C:\msys64\ucrt64\bin\cmake.exe" `
+    --build ".\build\thread-safety" --parallel 2
+if ($LASTEXITCODE -ne 0) { throw "Build failed." }
+
+&amp; ".\build\thread-safety\bin\umicom-thread-lifecycle.exe" --self-test
+if ($LASTEXITCODE -ne 0) { throw "The lesson failed." }</code></pre>
+<p>The expected output is:</p>
+<pre><code>Notes index: 8 words. The worker was joined before its data left scope.
+Practice complete. No file, database, window or network was opened.</code></pre>
+<p>The count is based on spaces, tabs and line breaks. It is a small indexing example, not a language-aware word segmentation engine. Punctuation remains part of a word.</p></section>
+<section id="ownership"><h2>2. Separate the handle from the work</h2>
+<p>A thread handle is the controller’s way to refer to a native thread. Releasing that handle does not mean the callback has stopped. Native handle closure on Windows and detachment on POSIX both leave a running callback running; the platform references at the end explain these native rules.</p>
+<div class="flow" aria-label="Thread control block owners"><div><strong>Controller reference</strong><br>Released when the owning handle is closed.</div><span aria-hidden="true">＋</span><div><strong>Worker reference</strong><br>Released after the callback wrapper finishes using its result.</div><span aria-hidden="true">→</span><div><strong>Private block reclaimed</strong><br>Only after both references are gone.</div></div>
+<p>The Framework now keeps those two ownership interests separate. It allocates one private control block, initialises both references before the native worker can run, and frees the block only after both owners have released it.</p>
+<p>This fixes the case where a controller releases its handle while the worker is still inside the callback. Previously, the wrapper could return from the callback and write its exit code into an allocation that had already been freed.</p>
+<p><strong>The fix does not take ownership of your callback data.</strong> A pointer to a window, document, buffer or stack variable still needs its own lifetime rule. The example’s stack structure stays in scope through <code>umi_thread_join</code>. Do not replace that join with release and then let the structure leave scope.</p></section>
+<section id="observe"><h2>3. Observe a result, then join</h2>
+<p><code>UmiThreadTryGetExitCode</code> is a nonblocking observation. It returns <code>UMI_STATUS_BUSY</code> while the callback is running. After an ordinary callback return, it copies the integer result and returns <code>UMI_STATUS_OK</code>. An unsuccessful observation leaves the caller’s result variable unchanged.</p>
+<p>The callback’s integer result and a Framework status are different things. The example chooses callback result <code>0</code> for completed counting and <code>2</code> for cooperative cancellation. The call to <code>umi_thread_join</code> separately reports whether joining worked.</p>
+<table><thead><tr><th>Operation</th><th>What it establishes</th></tr></thead><tbody><tr><td>TryGetExitCode</td><td>The callback published an integer result, or is still busy. It does not wait for the complete native exit.</td></tr><tr><td>join</td><td>The native thread has ended, including its native exit cleanup. Self-join is refused.</td></tr><tr><td>Release</td><td>The controller has relinquished its owning handle. It does not stop or join the callback.</td></tr></tbody></table>
+<p>A callback can return before thread-local-storage destructors finish. The regression suite deliberately holds one such destructor and observes the callback result while native teardown is still in progress. This is why an available result is not interchangeable with a join.</p>
+<p>The controller operations on a handle must be serialised. Do not race a release against a join or observation through a second copy of the same pointer. The reference count is private worker/controller accounting, not a general shared-pointer API.</p>
+<p>For a graphical application, do not blindly wait on a long-running job inside the GUI event loop. Its controller should request cancellation, retain the affected state and arrange orderly completion. This lesson does not introduce a new GTK scheduling service.</p></section>
+<section id="cancel"><h2>4. Cancel by agreement</h2>
+<p>The worker checks an atomic cancellation flag between characters. Atomic access lets the controller communicate that request without an unsynchronised read/write of an ordinary integer.</p>
+<pre><code>&amp; ".\build\thread-safety\bin\umicom-thread-lifecycle.exe" cancel
+if ($LASTEXITCODE -ne 0) { throw "The cancellation lesson failed." }</code></pre>
+<p>The expected output is:</p>
+<pre><code>The Notes index was cancelled before counting; the worker was joined.
+Practice complete. No file, database, window or network was opened.</code></pre>
+<p>This version queues cancellation before starting, so the exercise is repeatable. A real Cancel command can set the same atomic flag while the worker is running, provided the flag itself remains alive. After the callback acknowledges cancellation by returning, the controller still joins it and releases the handle.</p>
+<p>Forcibly terminating a thread is not the same operation. This portable API does not promise to repair locks, files or application state after forced native termination. POSIX cleanup coverage protects the Framework control block on native exit paths; it does not make arbitrary callback cancellation safe.</p></section>
+<section><h2>5. Use the checked release when errors matter</h2>
+<p><code>UmiThreadRelease(&amp;thread)</code> clears the caller’s pointer only after the native handle has been successfully closed or detached. A failed native release leaves the pointer owned by the caller. Releasing an already-empty handle is a successful no-op.</p>
+<p>The earlier <code>umi_thread_destroy</code> function remains available as a compatibility wrapper. Its <code>void</code> return type cannot explain a native release failure, so new controller code should use the checked operation where that distinction matters.</p>
+<p>None of these operations repairs an invalid pointer or permits a double release through a saved alias. Settle the ownership rule first: one controller owns one handle and decides when it is relinquished.</p></section>
+<section id="source"><h2>6. Read the complete implementation of the lesson</h2>
+<p>The file is <code>framework/examples/thread_safety/notes_worker.c</code>. The interesting sequence is near the end: start, optionally observe, join, release, and only then read the completed count and leave the scope.</p>
+<pre><code>/*-----------------------------------------------------------------------------
+ * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+ * Count words in a Notes draft on a worker, then join before releasing its data.
+ * This is the complete memory-only lesson; it performs no application edits.
+ *---------------------------------------------------------------------------*/
+#include &quot;umicom/platform/threading.h&quot;
+#include &lt;stdatomic.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+typedef struct NotesIndex {
+    const char *text;
+    size_t words;
+    atomic_int cancelRequested;
+} NotesIndex;
+
+static int CountWords(void *context)
+{
+    NotesIndex *index = context;
+    int inWord = 0;
+    for (const unsigned char *p = (const unsigned char *)index-&gt;text; *p; ++p) {
+        if (atomic_load_explicit(&amp;index-&gt;cancelRequested, memory_order_relaxed))
+            return 2;
+        int space = *p == &#x27; &#x27; || *p == &#x27;\n&#x27; || *p == &#x27;\r&#x27; || *p == &#x27;\t&#x27;;
+        if (!space &amp;&amp; !inWord) ++index-&gt;words;
+        inWord = !space;
+    }
+    return 0;
+}
+int main(int argc, char **argv)
+{
+    if (argc &gt; 2 || (argc == 2 &amp;&amp; strcmp(argv[1], &quot;--self-test&quot;) &amp;&amp; strcmp(argv[1], &quot;cancel&quot;))) {
+        fputs(&quot;Usage: umicom-thread-lifecycle [--self-test|cancel]\n&quot;, stderr);
+        return 2;
+    }
+    NotesIndex index = {0};
+    index.text = &quot;Save the workshop notes before closing the window.&quot;;
+    atomic_init(&amp;index.cancelRequested, 0);
+    UmiThread *thread = NULL;
+    int result = -1;
+    const int cancelling = argc == 2 &amp;&amp; !strcmp(argv[1], &quot;cancel&quot;);
+    /* A queued cancellation is deterministic in this lesson. In an application,
+     * its controller sets this atomic flag when the user presses Cancel. */
+    if (cancelling) atomic_store(&amp;index.cancelRequested, 1);
+    UmiStatus status = umi_thread_start(CountWords, &amp;index, &amp;thread);
+    if (status != UMI_STATUS_OK) { fprintf(stderr,&quot;Start failed: %d\n&quot;,(int)status); return 1; }
+    status = UmiThreadTryGetExitCode(thread, &amp;result);
+    if (status != UMI_STATUS_OK &amp;&amp; status != UMI_STATUS_BUSY) {
+        /* Even an observation error is not a reason to free a live context. */
+        (void)umi_thread_join(thread, NULL); (void)UmiThreadRelease(&amp;thread); return 1;
+    }
+    status = umi_thread_join(thread, &amp;result);
+    if (status != UMI_STATUS_OK) {
+        fprintf(stderr,&quot;Join failed: %d. Caller data must stay alive.\n&quot;,(int)status);
+        /* This executable now ends the process; a GUI must retain the context. */
+        return 1;
+    }
+    if (UmiThreadRelease(&amp;thread) != UMI_STATUS_OK || thread != NULL) return 1;
+    if (cancelling) {
+        if (result != 2 || index.words != 0U) return 1;
+        puts(&quot;The Notes index was cancelled before counting; the worker was joined.&quot;);
+    } else {
+        if (result != 0 || index.words != 8U) return 1;
+        printf(&quot;Notes index: %zu words. The worker was joined before its data left scope.\n&quot;,index.words);
+    }
+    puts(&quot;Practice complete. No file, database, window or network was opened.&quot;);
+    return 0;
+}
+</code></pre></section>
+<section id="tests"><h2>7. Run the regression checks</h2>
+<pre><code>&amp; "C:\msys64\ucrt64\bin\ctest.exe" `
+    --test-dir ".\build\thread-safety" `
+    --parallel 2 --no-tests=error --output-on-failure
+if ($LASTEXITCODE -ne 0) { throw "Thread regression tests failed." }</code></pre>
+<p>The checks cover ordinary and extreme integer results, release while a worker is running, failed allocation, failed native release, self-join and retained mutex/condition behaviour. On Linux, linker wrappers inspect exact allocation release and interrupted-sleep remainders. POSIX-only cases are not counted as Windows passes.</p>
+<p>A failed test is not repaired by disabling it or suppressing its warning. Keep its name and output, then investigate the boundary it was checking. The delivery’s validation record distinguishes this focused build from the complete repository suite.</p>
+<p>The smaller SDK can also be installed and consumed by the separate client in <code>examples/thread_safety/client</code>. Use the supplied build instructions for that exercise. Keep a focused SDK prefix separate from an installation of the full Framework.</p></section>
+<section><h2>8. Use the OS host without booting a guest</h2>
+<p>The separate OS repository has a thin host at <code>umicomOS/tools/thread-safety</code>. It selects the same Framework example; it contains no duplicate worker implementation and does not build a kernel or boot a virtual machine.</p>
+<pre><code>cmake -S /mnt/c/umicom/umicomOS/tools/thread-safety \
+    -B "$HOME/umicom-builds/thread-safety" -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DUMICOM_FRAMEWORK_SOURCE=/mnt/c/umicom/Umicom-Applications/framework
+cmake --build "$HOME/umicom-builds/thread-safety" --parallel 2
+ctest --test-dir "$HOME/umicom-builds/thread-safety" \
+    --parallel 2 --no-tests=error --output-on-failure</code></pre>
+<p>These commands belong in a Linux or WSL shell. Use <code>set -e</code> first when running them as one shell script so a failed step stops the sequence. The Windows all-application build remains a separate acceptance step.</p></section>
+<section id="answers"><h2>9. Practise and explain</h2>
+<details><summary>Why can a released handle still have a running worker?</summary><p>Release relinquishes the controller’s native handle. It does not instruct the callback to return. Framework must retain the private block until the worker finishes using it.</p></details>
+<details><summary>Can the NotesIndex structure leave scope as soon as release succeeds?</summary><p>No. It is caller-owned callback data, not the private Framework block. Join before it leaves scope, or provide a separate, correctly synchronised lifetime that outlasts all worker and exit-cleanup uses.</p></details>
+<details><summary>Why does the lesson accept both BUSY and OK from its first observation?</summary><p>The scheduler may already have finished the short callback. The example must be correct whichever thread happens to run first.</p></details>
+<details><summary>What changes when an observation succeeds?</summary><p>You have the callback’s result and its published work. Native thread teardown may still be running. Joining remains the way to establish that the whole native thread has ended.</p></details>
+<details><summary>Change the sentence and predict its new count.</summary><p>Use only the lesson’s documented whitespace rules, then update the expected value in the example, rebuild and run it. For example, “Review the saved notes.” contains four words.</p></details>
+<details><summary>Why are original implementations retained in disabled blocks?</summary><p>They preserve the earlier design for review. Active replacements explain their ownership change. Deciding to remove the obsolete source is a separate maintenance decision.</p></details>
+</section>
+<section><h2>Platform references and limits</h2>
+<p>The native thread rules used here are documented by <a href="https://pubs.opengroup.org/onlinepubs/9699919799/functions/pthread_detach.html">POSIX pthread_detach</a>, <a href="https://pubs.opengroup.org/onlinepubs/9799919799.2024edition/functions/pthread_join.html">POSIX pthread_join</a>, <a href="https://pubs.opengroup.org/onlinepubs/9799919799/functions/nanosleep.html">POSIX nanosleep</a>, and <a href="https://learn.microsoft.com/en-us/windows/win32/api/handleapi/nf-handleapi-closehandle">Microsoft CloseHandle</a>.</p>
+<p>Mutex recursion differences, condition-variable clock selection, GUI shutdown orchestration, forced native termination and repository-wide race detection are outside this focused change. A passed native test does not certify every application using the service.</p></section>
+</main><footer>Umicom Foundation · Complete C23 practice source · Framework-owned implementation</footer></body></html>

@@ -35,6 +35,15 @@
 #include "umicom/platform/threading.h"
 
 #include <stdlib.h>
+#include <stdatomic.h>
+
+/* The controller and the worker each own one reference to the private control
+ * block. Native detach/handle closure does not end a running callback. Keep the
+ * block alive until both owners have released it; caller data is still borrowed.
+ * A completion observation publishes the callback result, not native thread
+ * teardown. Join remains the operation that waits for that teardown. */
+static void ThreadReleaseReference(UmiThread *thread);
+static void ThreadWorkerCleanup(void *context);
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -45,6 +54,8 @@ struct UmiCondition { CONDITION_VARIABLE value; };
 struct UmiThread {
     HANDLE handle;
     DWORD identifier;
+    atomic_uint references;
+    atomic_int completion; /* 0: executing; 1: returned an int; 2: no result. */
     int exit_code;
     int joined;
     UmiThreadEntry entry;
@@ -55,11 +66,28 @@ struct UmiThread {
  * Provide the thread entry win32 operation used by this module and its client
  * applications.
  */
+/* Publishing a result must not write to storage already released by the controller.
+ * The worker now retains its own lifetime reference and copies the exit result
+ * before releasing that reference.
+ * The prior implementation is retained for engineering review. */
+#if 0
 static DWORD WINAPI umi_thread_entry_win32(LPVOID value)
 {
     UmiThread *thread = (UmiThread *)value;
     thread->exit_code = thread->entry(thread->user_data);
     return (DWORD)thread->exit_code;
+}
+#endif
+
+static DWORD WINAPI umi_thread_entry_win32(LPVOID value)
+{
+    UmiThread *thread = (UmiThread *)value;
+    const int result = thread->entry(thread->user_data);
+    thread->exit_code = result;
+    atomic_store_explicit(&thread->completion, 1, memory_order_release);
+    ThreadWorkerCleanup(thread);
+    /* Cleanup may free the block. Return the local result, never read it again. */
+    return (DWORD)result;
 }
 
 /* Initialise mutex from caller-provided values so later operations receive a known state. */
@@ -233,6 +261,8 @@ UmiStatus umi_thread_start(UmiThreadEntry entry,
      * used.
      */
     if (thread == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    atomic_init(&thread->references, 2U);
+    atomic_init(&thread->completion, 0);
     thread->entry = entry;
     thread->user_data = user_data;
     thread->handle = CreateThread(NULL, 0U, umi_thread_entry_win32,
@@ -260,10 +290,15 @@ UmiStatus umi_thread_join(UmiThread *thread, int *out_exit_code)
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     /* Apply this branch only when its contract condition is satisfied. */
+    /* Waiting on oneself cannot complete; refuse it before an infinite wait. */
+    if (GetCurrentThreadId() == thread->identifier) return UMI_STATUS_INVALID_STATE;
     if (WaitForSingleObject(thread->handle, INFINITE) != WAIT_OBJECT_0) {
         return UMI_STATUS_INTERNAL_ERROR;
     }
     thread->joined = 1;
+    /* Joining reclaimed the native join obligation even when no int returned. */
+    if (atomic_load_explicit(&thread->completion, memory_order_acquire) != 1)
+        return UMI_STATUS_UNAVAILABLE;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -273,6 +308,11 @@ UmiStatus umi_thread_join(UmiThread *thread, int *out_exit_code)
 }
 
 /* Release or reset state held by thread so the same storage can be reused safely. */
+/* Unconditional free could race the still-running entry wrapper. The checked
+ * release closes/detaches the native handle and drops only the controller
+ * reference. Destruction remains nonblocking and does not cancel the callback.
+ * The prior implementation is retained for engineering review. */
+#if 0
 void umi_thread_destroy(UmiThread *thread)
 {
     /*
@@ -286,6 +326,15 @@ void umi_thread_destroy(UmiThread *thread)
      */
     if (thread->handle != NULL) CloseHandle(thread->handle);
     free(thread);
+}
+#endif
+
+void umi_thread_destroy(UmiThread *thread)
+{
+    /* Preserve the void compatibility API. New controller code can inspect a
+     * native release failure using UmiThreadRelease instead. */
+    UmiThread *owned = thread;
+    (void)UmiThreadRelease(&owned);
 }
 
 /* Provide the thread sleep ms operation used by this module and its client applications. */
@@ -312,6 +361,8 @@ struct UmiCondition { pthread_cond_t value; };
 struct UmiThread {
     pthread_t handle;
     int joined;
+    atomic_uint references;
+    atomic_int completion; /* 0: executing; 1: returned an int; 2: no result. */
     int exit_code;
     UmiThreadEntry entry;
     void *user_data;
@@ -321,10 +372,29 @@ struct UmiThread {
  * Provide the thread entry posix operation used by this module and its client
  * applications.
  */
+/* Detaching only releases the native join obligation; it does not finish the
+ * callback. A worker-owned reference now protects the result storage until the
+ * wrapper has finished with it, including POSIX cleanup paths.
+ * The prior implementation is retained for engineering review. */
+#if 0
 static void *umi_thread_entry_posix(void *value)
 {
     UmiThread *thread = (UmiThread *)value;
     thread->exit_code = thread->entry(thread->user_data);
+    return NULL;
+}
+#endif
+
+static void *umi_thread_entry_posix(void *value)
+{
+    UmiThread *thread = (UmiThread *)value;
+    /* The cleanup also releases Framework memory if a foreign POSIX callback
+     * exits through pthread_exit or deferred cancellation. That is not a normal
+     * integer result, and does not make forced cancellation generally safe. */
+    pthread_cleanup_push(ThreadWorkerCleanup, thread);
+    thread->exit_code = thread->entry(thread->user_data);
+    atomic_store_explicit(&thread->completion, 1, memory_order_release);
+    pthread_cleanup_pop(1);
     return NULL;
 }
 
@@ -518,6 +588,8 @@ UmiStatus umi_thread_start(UmiThreadEntry entry,
      * used.
      */
     if (thread == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    atomic_init(&thread->references, 2U);
+    atomic_init(&thread->completion, 0);
     thread->entry = entry;
     thread->user_data = user_data;
     /* Apply this branch only when its contract condition is satisfied. */
@@ -539,10 +611,15 @@ UmiStatus umi_thread_join(UmiThread *thread, int *out_exit_code)
      */
     if (thread == NULL || thread->joined) return UMI_STATUS_INVALID_ARGUMENT;
     /* Apply this branch only when its contract condition is satisfied. */
+    /* POSIX does not define joining the calling thread as a valid operation. */
+    if (pthread_equal(pthread_self(), thread->handle)) return UMI_STATUS_INVALID_STATE;
     if (pthread_join(thread->handle, NULL) != 0) {
         return UMI_STATUS_INTERNAL_ERROR;
     }
     thread->joined = 1;
+    /* Joining reclaimed the native join obligation even when no int returned. */
+    if (atomic_load_explicit(&thread->completion, memory_order_acquire) != 1)
+        return UMI_STATUS_UNAVAILABLE;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -552,6 +629,11 @@ UmiStatus umi_thread_join(UmiThread *thread, int *out_exit_code)
 }
 
 /* Release or reset state held by thread so the same storage can be reused safely. */
+/* Unconditional free could race the still-running entry wrapper. The checked
+ * release closes/detaches the native handle and drops only the controller
+ * reference. Destruction remains nonblocking and does not cancel the callback.
+ * The prior implementation is retained for engineering review. */
+#if 0
 void umi_thread_destroy(UmiThread *thread)
 {
     /*
@@ -563,6 +645,15 @@ void umi_thread_destroy(UmiThread *thread)
     if (!thread->joined) (void)pthread_detach(thread->handle);
     free(thread);
 }
+#endif
+
+void umi_thread_destroy(UmiThread *thread)
+{
+    /* Preserve the void compatibility API. New controller code can inspect a
+     * native release failure using UmiThreadRelease instead. */
+    UmiThread *owned = thread;
+    (void)UmiThreadRelease(&owned);
+}
 
 /* Provide the thread sleep ms operation used by this module and its client applications. */
 void umi_thread_sleep_ms(uint32_t milliseconds)
@@ -570,7 +661,15 @@ void umi_thread_sleep_ms(uint32_t milliseconds)
     struct timespec duration;
     duration.tv_sec = (time_t)(milliseconds / 1000U);
     duration.tv_nsec = (long)(milliseconds % 1000U) * 1000000L;
+/* A signal could return from the old sleep before its requested interval elapsed.
+ * Resume the POSIX-reported remainder; stop rather than loop on other errors.
+ * The prior implementation is retained for engineering review. */
+#if 0
     (void)nanosleep(&duration, NULL);
+#endif
+
+    /* A signal is not completion of the requested delay. Resume its remainder. */
+    while (nanosleep(&duration, &duration) != 0 && errno == EINTR) { }
 }
 
 /* Provide the thread current id operation used by this module and its client applications. */
@@ -580,3 +679,53 @@ uint64_t umi_thread_current_id(void)
 }
 
 #endif
+
+
+/* Private lifetime accounting is shared by both native adapters. The last
+ * release acquires the other owner's writes before reclaiming the allocation. */
+static void ThreadReleaseReference(UmiThread *thread)
+{
+    if (atomic_fetch_sub_explicit(&thread->references, 1U,
+                                  memory_order_acq_rel) == 1U)
+        free(thread);
+}
+
+static void ThreadWorkerCleanup(void *context)
+{
+    UmiThread *thread = (UmiThread *)context;
+    if (atomic_load_explicit(&thread->completion, memory_order_relaxed) == 0)
+        atomic_store_explicit(&thread->completion, 2, memory_order_release);
+    ThreadReleaseReference(thread);
+}
+
+UmiStatus UmiThreadTryGetExitCode(const UmiThread *thread, int *outExitCode)
+{
+    int completion;
+    if (thread == NULL || outExitCode == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    completion = atomic_load_explicit(&thread->completion, memory_order_acquire);
+    if (completion == 0) return UMI_STATUS_BUSY;
+    if (completion != 1) return UMI_STATUS_UNAVAILABLE;
+    *outExitCode = thread->exit_code;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiThreadRelease(UmiThread **inOutThread)
+{
+    UmiThread *thread;
+    if (inOutThread == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    thread = *inOutThread;
+    if (thread == NULL) return UMI_STATUS_OK;
+#ifdef _WIN32
+    if (thread->handle != NULL && !CloseHandle(thread->handle))
+        return UMI_STATUS_IO_ERROR;
+    thread->handle = NULL;
+#else
+    if (!thread->joined && pthread_detach(thread->handle) != 0)
+        return UMI_STATUS_INTERNAL_ERROR;
+#endif
+    /* Clear the caller's handle before the final reference can free the block.
+     * This is ownership transfer, not synchronisation with other callers. */
+    *inOutThread = NULL;
+    ThreadReleaseReference(thread);
+    return UMI_STATUS_OK;
+}

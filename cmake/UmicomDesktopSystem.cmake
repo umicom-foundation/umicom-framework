@@ -126,3 +126,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomIbkrConnectionIntegration.cmake")
 # Check the late integration route as well as each isolated component build.
 # These checks are build configuration only; no broker or application is started.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomComponentIntegrationChecks.cmake")
+
+# Exercise the canonical thread owner used by every application. The check host
+# does not create another thread runtime or change any application command.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomThreadSafety.cmake")

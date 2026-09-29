@@ -108,6 +108,35 @@ void umi_thread_sleep_ms(uint32_t milliseconds);
  */
 uint64_t umi_thread_current_id(void);
 
+/** Observe an entry callback without waiting. OK copies its integer result;
+ * BUSY means the callback has not returned. UNAVAILABLE means POSIX cleanup ran
+ * without an integer result. On failure, outExitCode is unchanged.
+ *
+ * This is NOT a join: native TLS destructors may still be executing. Keep the
+ * handle alive during this call. Join before releasing caller data that any
+ * thread-exit cleanup can still use. */
+UmiStatus UmiThreadTryGetExitCode(const UmiThread *thread, int *outExitCode);
+
+/** Release the controller's one owning handle, clearing it on success. NULL
+ * storage is invalid; an already-empty handle is a successful no-op. A native
+ * release error leaves the handle owned by the caller so it can be investigated.
+ *
+ * An unjoined POSIX thread is detached; a Windows handle is closed. This does
+ * not stop, cancel or join the callback. Framework retains its own control block
+ * until the worker releases it. user_data and anything it points to remain the
+ * caller's responsibility, and must live until their last worker use.
+ *
+ * Controller operations on one handle must be serialised. Do not destroy,
+ * release, poll or join through another pointer while release is running. Native
+ * asynchronous cancellation, ExitThread and TerminateThread are outside this
+ * portable contract. Prefer cooperative cancellation followed by join.
+ *
+ * umi_thread_destroy remains a void compatibility wrapper around this operation.
+ * umi_thread_join refuses self-join with INVALID_STATE. A joined POSIX callback
+ * that left via native exit/cancellation has no int result: join returns
+ * UNAVAILABLE, leaves its output unchanged, and consumes the join obligation. */
+UmiStatus UmiThreadRelease(UmiThread **inOutThread);
+
 #ifdef __cplusplus
 }
 #endif
