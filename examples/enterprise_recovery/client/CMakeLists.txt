@@ -1,0 +1,12 @@
+# Umicom Foundation | Sammy Hegab | MIT
+cmake_minimum_required(VERSION 3.24)
+project(UmicomEnterpriseRecoveryClient LANGUAGES C)
+find_package(UmicomFramework CONFIG REQUIRED)
+add_executable(umicom-enterprise-recovery-client main.c)
+set_target_properties(umicom-enterprise-recovery-client PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+target_link_libraries(umicom-enterprise-recovery-client PRIVATE Umicom::enterprise_workspace)
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(umicom-enterprise-recovery-client PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror)
+endif()
+enable_testing()
+add_test(NAME enterprise_recovery.public_sdk COMMAND umicom-enterprise-recovery-client)

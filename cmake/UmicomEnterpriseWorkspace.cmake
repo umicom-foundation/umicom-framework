@@ -113,3 +113,6 @@ endfunction()
 install(FILES "${_umicom_enterprise_root}/docs/learning/ENTERPRISE_WORKSPACE.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/learning" COMPONENT Framework)
 unset(_umicom_enterprise_root)
+
+# Reuse the existing enterprise service for owned pages and inspected recovery.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomEnterpriseRecovery.cmake")

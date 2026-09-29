@@ -68,4 +68,8 @@ UmiStatus EwsCurrent(UmiEnterpriseWorkspace *workspace);
 UmiStatus EwsSave(UmiEnterpriseWorkspace *workspace, const EwsState *state);
 UmiStatus EwsCommit(UmiEnterpriseWorkspace *workspace, EwsState *next,
     UmiEnterpriseActor actor, const char *action, const char *target, const char *detail);
+/* Internal shared preparation for original imports and reviewed recovery. */
+UmiStatus EwsPrepareJob(UmiEnterpriseWorkspace *workspace, UmiEnterpriseActor actor,
+    const char *jobId, const char *datasetId, const char *recipeId, const char *csv,
+    size_t length, const char *originJob, UmiEnterpriseIssue *outIssue);
 #endif

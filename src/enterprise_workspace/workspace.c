@@ -236,6 +236,10 @@ UmiStatus UmiEnterpriseWorkspacePreview(const UmiEnterpriseWorkspace *workspace,
     if (workspace == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return EwsPreview(workspace->state, datasetId, recipeId, csv, length, outPreview, outIssue);
 }
+/* The original preparation path is retained for review. Shared EwsPrepareJob
+ * below adds re-preparation lineage in the existing atomic job/audit commit;
+ * original imports keep the same validation, idempotency and persisted shape. */
+#if 0
 UmiStatus UmiEnterpriseWorkspacePrepare(UmiEnterpriseWorkspace *workspace,
     UmiEnterpriseActor actor, const char *jobId, const char *datasetId,
     const char *recipeId, const char *csv, size_t length, UmiEnterpriseIssue *outIssue)
@@ -276,6 +280,57 @@ UmiStatus UmiEnterpriseWorkspacePrepare(UmiEnterpriseWorkspace *workspace,
     job->info.unchangedCount = job->preview.unchangedCount;
     return EwsCommit(workspace, next, actor, "job.prepare", jobId, "Frozen CSV and before/after rows saved for review");
 }
+#endif
+/* Both entry points now use one parser, candidate and Data Server authority. */
+UmiStatus EwsPrepareJob(UmiEnterpriseWorkspace *workspace,
+    UmiEnterpriseActor actor, const char *jobId, const char *datasetId,
+    const char *recipeId, const char *csv, size_t length, const char *originJob, UmiEnterpriseIssue *outIssue)
+{
+    UmiStatus status;
+    EwsState *next;
+    EwsJob *job;
+    size_t found;
+    if (outIssue != NULL) (void)memset(outIssue, 0, sizeof(*outIssue));
+    if (!EwsId(jobId) || !EwsId(datasetId) || EwsRecipeIndex(recipeId) == SIZE_MAX ||
+        csv == NULL || length == 0U || length >= UMI_ENTERPRISE_CSV_CAPACITY || !EwsUtf8(csv, length, true)) return UMI_STATUS_INVALID_ARGUMENT;
+    if (originJob != NULL && !EwsId(originJob)) return UMI_STATUS_INVALID_ARGUMENT;
+    status = Permit(workspace, actor, "enterprise.job.prepare", datasetId);
+    if (status != UMI_STATUS_OK) return status;
+    found = EwsJobIndex(workspace->state, jobId);
+    if (found != SIZE_MAX) {
+        const EwsJob *old = &workspace->state->jobs[found];
+        return strcmp(old->info.author, actor.principal) == 0 && strcmp(old->info.datasetId, datasetId) == 0 &&
+            strcmp(old->info.recipeId, recipeId) == 0 && strlen(old->csv) == length && memcmp(old->csv, csv, length) == 0
+            ? EwsCurrent(workspace) : UMI_STATUS_ALREADY_EXISTS;
+    }
+    if (workspace->state->jobCount >= UMI_ENTERPRISE_MAX_JOBS) return UMI_STATUS_CAPACITY_EXCEEDED;
+    next = Candidate(workspace); if (next == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    job = &next->jobs[next->jobCount];
+    status = EwsPreview(next, datasetId, recipeId, csv, length, &job->preview, outIssue);
+    if (status != UMI_STATUS_OK) { free(next); return status; }
+    ++next->jobCount;
+    (void)EwsCopy(job->info.id, sizeof(job->info.id), jobId);
+    (void)EwsCopy(job->info.datasetId, sizeof(job->info.datasetId), datasetId);
+    (void)EwsCopy(job->info.recipeId, sizeof(job->info.recipeId), recipeId);
+    (void)EwsCopy(job->info.author, sizeof(job->info.author), actor.principal);
+    (void)memcpy(job->csv, csv, length); job->csv[length] = '\0';
+    job->info.state = UMI_ENTERPRISE_JOB_REVIEW;
+    job->info.preparedRevision = next->revision + 1U;
+    job->info.datasetGeneration = job->preview.datasetGeneration;
+    job->info.rowCount = job->preview.rowCount;
+    job->info.insertCount = job->preview.insertCount;
+    job->info.updateCount = job->preview.updateCount;
+    job->info.unchangedCount = job->preview.unchangedCount;
+    return EwsCommit(workspace, next, actor, originJob != NULL ? "job.reprepare" : "job.prepare", jobId,
+        originJob != NULL ? originJob : "Frozen CSV and before/after rows saved for review");
+}
+UmiStatus UmiEnterpriseWorkspacePrepare(UmiEnterpriseWorkspace *workspace,
+    UmiEnterpriseActor actor, const char *jobId, const char *datasetId,
+    const char *recipeId, const char *csv, size_t length, UmiEnterpriseIssue *outIssue)
+{
+    return EwsPrepareJob(workspace, actor, jobId, datasetId, recipeId, csv, length, NULL, outIssue);
+}
+
 UmiStatus UmiEnterpriseWorkspaceReview(UmiEnterpriseWorkspace *workspace,
     UmiEnterpriseActor actor, const char *jobId, bool approve, const char *reason)
 {

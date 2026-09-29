@@ -8,6 +8,7 @@
 
 #include "umicom/ui/gtk4/enterprise_workspace.h"
 #include "umicom/enterprise_workspace/practice.h"
+#include "umicom/enterprise_workspace/recovery.h"
 #include <glib/gstdio.h>
 #include <inttypes.h>
 #include <string.h>
@@ -26,6 +27,15 @@ struct UmiEnterpriseWorkspaceGtkPanel {
     char loadedJob[UMI_ENTERPRISE_ID_CAPACITY];
     uint64_t loadedRevision;
     bool ownsWorkspace;
+    /* Owned query/recovery snapshots are independent of the live workspace.
+     * They are released on replacement and before destroying the controller. */
+    UmiEnterpriseDatasetView *queryView;
+    UmiEnterpriseRecoveryReview *recovery;
+    GtkEntry *queryText, *newJob;
+    GtkDropDown *querySort;
+    GtkTextBuffer *queryReport, *recoveryReport;
+    GtkWidget *prepareAgain;
+    size_t queryOffset;
 };
 static const char *StatusText(UmiStatus status)
 {
@@ -119,6 +129,8 @@ static void Refresh(UmiEnterpriseWorkspaceGtkPanel *panel)
 static void ForgetReview(UmiEnterpriseWorkspaceGtkPanel *panel)
 {
     panel->loadedJob[0]='\0';panel->loadedRevision=0U;
+    UmiEnterpriseRecoveryReviewDestroy(panel->recovery);panel->recovery=NULL;
+    if(panel->prepareAgain!=NULL)gtk_widget_set_sensitive(panel->prepareAgain,FALSE);
 }
 static void Changed(GObject *object,GParamSpec *property,gpointer data)
 {
@@ -200,6 +212,82 @@ static void CheckAccess(GtkButton *button,gpointer data)
     UmiStatus status=UmiEnterpriseWorkspaceCheckAccess(panel->workspace,Actor(panel),gtk_editable_get_text(GTK_EDITABLE(panel->capability)),gtk_editable_get_text(GTK_EDITABLE(panel->resource)),&decision);
     if(status!=UMI_STATUS_OK)Say(panel,status);
     else {char *message=g_strdup_printf("%s: %s. This check does not execute the action.",decision.allowed?"Allowed":"Denied",decision.reason);gtk_label_set_text(panel->message,message);g_free(message);}
+}
+/* The query remains a labelled frozen view until explicitly recaptured.
+ * Navigating pages never reruns the query or mixes revisions. */
+static void RenderQuery(UmiEnterpriseWorkspaceGtkPanel *panel)
+{
+    if(panel->queryView==NULL)return;
+    UmiEnterpriseRowPage rows;UmiEnterpriseDatasetViewInfo info;
+    UmiStatus status=UmiEnterpriseDatasetViewDescribe(panel->queryView,&info);
+    if(status==UMI_STATUS_OK)status=UmiEnterpriseDatasetViewPage(panel->queryView,panel->queryOffset,16U,&rows);
+    if(status!=UMI_STATUS_OK){Say(panel,status);return;}
+    GString *text=g_string_new(NULL);
+    g_string_append_printf(text,"Frozen dataset %s | generation %" PRIu64 " | workspace revision %" PRIu64 "\n"
+        "%zu matched of %zu rows | offset %zu | this page %zu\n"
+        "Capture again to see later changes. Sorting compares UTF-8 bytes.\n\n",
+        info.dataset.id,info.dataset.generation,info.workspaceRevision,info.matchedRows,info.dataset.rowCount,rows.offset,rows.count);
+    for(size_t i=0U;i<rows.count;++i)g_string_append_printf(text,"%s | %s | quantity %" PRIu64 " | source %s\n",
+        rows.rows[i].id,rows.rows[i].label,rows.rows[i].quantity,rows.rows[i].sourceJob);
+    SetReport(panel->queryReport,text);
+}
+static void CaptureQuery(GtkButton *button,gpointer data)
+{
+    UmiEnterpriseWorkspaceGtkPanel *panel=data;(void)button;if(!Ready(panel))return;
+    UmiEnterpriseRowQuery query;UmiEnterpriseRowQueryInit(&query);
+    const char *filter=gtk_editable_get_text(GTK_EDITABLE(panel->queryText));size_t length=strlen(filter);
+    UmiEnterpriseDatasetViewDestroy(panel->queryView);panel->queryView=NULL;panel->queryOffset=0U;
+    gtk_text_buffer_set_text(panel->queryReport,"No captured query.",-1);
+    if(length>=sizeof(query.text)){Say(panel,UMI_STATUS_CAPACITY_EXCEEDED);return;}
+    memcpy(query.text,filter,length+1U);
+    guint selected=gtk_drop_down_get_selected(panel->querySort);
+    if(selected>=6U){Say(panel,UMI_STATUS_INVALID_ARGUMENT);return;}
+    query.sort=(UmiEnterpriseRowSort)(selected/2U+1U);query.descending=(selected%2U)!=0U;
+    UmiStatus status=UmiEnterpriseDatasetViewCapture(panel->workspace,Actor(panel),
+        gtk_editable_get_text(GTK_EDITABLE(panel->dataset)),&query,&panel->queryView);
+    Say(panel,status);if(status==UMI_STATUS_OK)RenderQuery(panel);
+}
+static void QueryPage(GtkButton *button,gpointer data)
+{
+    UmiEnterpriseWorkspaceGtkPanel *panel=data;
+    if(panel->queryView==NULL){gtk_label_set_text(panel->message,"Capture the dataset before browsing pages.");return;}
+    UmiEnterpriseDatasetViewInfo info;UmiStatus status=UmiEnterpriseDatasetViewDescribe(panel->queryView,&info);
+    if(status!=UMI_STATUS_OK){Say(panel,status);return;}
+    if(GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button),"forward"))!=0){
+        if(info.matchedRows>panel->queryOffset && info.matchedRows-panel->queryOffset>16U)panel->queryOffset+=16U;
+    }else if(panel->queryOffset>=16U)panel->queryOffset-=16U;
+    RenderQuery(panel);
+}
+static void RecoveryInputsChanged(GtkEditable *entry,gpointer data)
+{
+    (void)entry;ForgetReview(data);
+}
+static void InspectRecovery(GtkButton *button,gpointer data)
+{
+    UmiEnterpriseWorkspaceGtkPanel *panel=data;(void)button;if(!Ready(panel))return;
+    ForgetReview(panel);UmiEnterpriseIssue issue={0};
+    UmiStatus status=UmiEnterpriseRecoveryInspect(panel->workspace,Actor(panel),
+        gtk_editable_get_text(GTK_EDITABLE(panel->job)),&panel->recovery,&issue);
+    if(status==UMI_STATUS_OK){
+        char *report=g_try_malloc(32768U);
+        if(report==NULL)status=UMI_STATUS_OUT_OF_MEMORY;
+        else {status=UmiEnterpriseRecoveryFormat(panel->recovery,report,32768U);
+            if(status==UMI_STATUS_OK) gtk_text_buffer_set_text(panel->recoveryReport,report,-1);
+        g_free(report);}
+    }
+    if(status!=UMI_STATUS_OK){ForgetReview(panel);gtk_text_buffer_set_text(panel->recoveryReport,"Recovery inspection unavailable. No new job was created.",-1);}
+    else gtk_widget_set_sensitive(panel->prepareAgain,TRUE);
+    Say(panel,status);
+}
+static void PrepareRecovery(GtkButton *button,gpointer data)
+{
+    UmiEnterpriseWorkspaceGtkPanel *panel=data;(void)button;if(!Ready(panel))return;
+    if(panel->recovery==NULL){gtk_label_set_text(panel->message,"Inspect the original job before preparing another one.");return;}
+    const char *newId=gtk_editable_get_text(GTK_EDITABLE(panel->newJob));
+    UmiStatus status=UmiEnterpriseRecoveryPrepare(panel->workspace,Actor(panel),panel->recovery,newId,NULL);
+    if(status==UMI_STATUS_OK)gtk_editable_set_text(GTK_EDITABLE(panel->job),newId);
+    ForgetReview(panel);Say(panel,status);Refresh(panel);
+    if(status==UMI_STATUS_OK)gtk_label_set_text(panel->message,"New job saved without approval. Select a reviewer, load the new frozen job, and inspect its changed values.");
 }
 static void OpenStorage(GtkButton *button,gpointer data)
 {
@@ -284,6 +372,25 @@ UmiStatus UmiEnterpriseWorkspaceGtkPanelCreate(UmiEnterpriseWorkspace *workspace
     page=Page(pages,"Recipes");buttons=GTK_BOX(gtk_box_new(GTK_ORIENTATION_HORIZONTAL,8));gtk_box_append(page,GTK_WIDGET(buttons));
     button=Button(buttons,"Enable selected recipe","enterprise.enable",G_CALLBACK(RecipeAction),panel);g_object_set_data(G_OBJECT(button),"enabled",GINT_TO_POINTER(1));
     (void)Button(buttons,"Disable selected recipe","enterprise.disable",G_CALLBACK(RecipeAction),panel);panel->recipeReport=Text(page,"enterprise.recipes",false,"");
+    /* Existing pages keep their positions. Shared browsing and recovery are
+     * additional capabilities, not replacements for the original reports. */
+    page=Page(pages,"Dataset browser");
+    panel->queryText=Entry(page,"Literal filter","enterprise.query.text","",191);
+    const char *sorts[]={"ID ascending","ID descending","Label ascending","Label descending","Quantity ascending","Quantity descending",NULL};
+    panel->querySort=GTK_DROP_DOWN(gtk_drop_down_new_from_strings(sorts));Tag(GTK_WIDGET(panel->querySort),"enterprise.query.sort");gtk_box_append(page,GTK_WIDGET(panel->querySort));
+    (void)Button(page,"Capture dataset","enterprise.query.capture",G_CALLBACK(CaptureQuery),panel);
+    buttons=GTK_BOX(gtk_box_new(GTK_ORIENTATION_HORIZONTAL,8));gtk_box_append(page,GTK_WIDGET(buttons));
+    (void)Button(buttons,"Previous page","enterprise.query.previous",G_CALLBACK(QueryPage),panel);
+    button=Button(buttons,"Next page","enterprise.query.next",G_CALLBACK(QueryPage),panel);g_object_set_data(G_OBJECT(button),"forward",GINT_TO_POINTER(1));
+    panel->queryReport=Text(page,"enterprise.query.report",false,"Use the Dataset ID above. Filtering never changes the saved rows.");
+    page=Page(pages,"Import recovery");
+    panel->newJob=Entry(page,"New job ID","enterprise.recovery.new-job","stock-reprepared",63);
+    (void)Button(page,"Inspect original job again","enterprise.recovery.inspect",G_CALLBACK(InspectRecovery),panel);
+    panel->prepareAgain=Button(page,"Prepare new reviewed job","enterprise.recovery.prepare",G_CALLBACK(PrepareRecovery),panel);
+    gtk_widget_set_sensitive(panel->prepareAgain,FALSE);
+    panel->recoveryReport=Text(page,"enterprise.recovery.report",false,"Use a non-applied Job ID above. Re-preparation uses its frozen CSV, not the editable Import text. The original is retained; a new approval is required.");
+    g_signal_connect(panel->job,"changed",G_CALLBACK(RecoveryInputsChanged),panel);
+    g_signal_connect(panel->dataset,"changed",G_CALLBACK(RecoveryInputsChanged),panel);
     int initial=strstr(applicationId,"integration")!=NULL?1:strstr(applicationId,"operations")!=NULL?2:strstr(applicationId,"security")!=NULL?3:strstr(applicationId,"marketplace")!=NULL?4:0;
     gtk_notebook_set_current_page(pages,initial);
     if(workspace!=NULL){gtk_widget_set_sensitive(panel->open,FALSE);Refresh(panel);gtk_label_set_text(panel->message,"Injected practice workspace is ready. Select a practice role before changing data.");}
@@ -308,6 +415,8 @@ void UmiEnterpriseWorkspaceGtkPanelDestroy(UmiEnterpriseWorkspaceGtkPanel *panel
 {
     if(panel==NULL)return;
     Disconnect(panel->root,panel);
+    UmiEnterpriseDatasetViewDestroy(panel->queryView);panel->queryView=NULL;
+    UmiEnterpriseRecoveryReviewDestroy(panel->recovery);panel->recovery=NULL;
     if(panel->ownsWorkspace)UmiEnterpriseWorkspaceDestroy(panel->workspace);
     panel->workspace=NULL;umi_data_server_destroy(panel->ownedData);UmiEnterprisePracticeAccessDestroy(panel->ownedAccess);
     g_object_unref(panel->root);g_free(panel);

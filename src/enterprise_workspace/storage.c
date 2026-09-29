@@ -130,6 +130,36 @@ UmiStatus EwsLoad(UmiEnterpriseWorkspace *workspace, EwsState *state,
     if (status == UMI_STATUS_OK) (void)EwsCopy(outHead, EWS_HEAD_CAPACITY, textHead);
     return status;
 }
+/* A matching head alone cannot establish that the chunks are still the ones
+ * loaded by this workspace. Compare the canonical saved representation and
+ * exact owned-key inventory while the caller holds the Data Server transaction.
+ * This refuses externally changed/corrupt storage; it never silently repairs it.
+ * The FNV head remains the existing format, not an authentication mechanism. */
+static UmiStatus VerifyLoadedBytes(UmiEnterpriseWorkspace *workspace)
+{
+    Head head = {0};
+    char *expected = NULL, chunk[EWS_CHUNK_SIZE + 1U], key[96];
+    size_t length = 0U, used = 0U;
+    UmiStatus status;
+    if (workspace->head[0] == '\0') return CheckInventory(workspace->data, 0U, false);
+    status = ParseHead(workspace->head, &head);
+    if (status == UMI_STATUS_OK) status = CheckInventory(workspace->data, head.chunks, true);
+    if (status == UMI_STATUS_OK) status = EwsEncode(workspace->state, &expected, &length);
+    if (status == UMI_STATUS_OK && (length != head.bytes || workspace->state->revision != head.revision ||
+        Fingerprint(expected, length) != head.hash)) status = UMI_STATUS_BUSY;
+    for (size_t i = 0U; status == UMI_STATUS_OK && i < head.chunks; ++i) {
+        size_t amount = length - used;
+        if (amount > EWS_CHUNK_SIZE) amount = EWS_CHUNK_SIZE;
+        ChunkKey(i, key, sizeof(key));
+        status = umi_data_server_get(workspace->data, key, chunk, sizeof(chunk));
+        if (status == UMI_STATUS_NOT_FOUND) status = UMI_STATUS_PARSE_ERROR;
+        if (status == UMI_STATUS_OK && (strlen(chunk) != amount ||
+            memcmp(chunk, expected + used, amount) != 0)) status = UMI_STATUS_BUSY;
+        used += amount;
+    }
+    free(expected);
+    return status;
+}
 /* Used even for idempotent no-ops: a stale view must not falsely report that
  * another process's pause or recipe setting already has the requested value. */
 UmiStatus EwsCurrent(UmiEnterpriseWorkspace *workspace)
@@ -144,6 +174,7 @@ UmiStatus EwsCurrent(UmiEnterpriseWorkspace *workspace)
     if (status == UMI_STATUS_NOT_FOUND && workspace->head[0] == '\0') status = CheckInventory(workspace->data, 0U, false);
     else if (status == UMI_STATUS_NOT_FOUND) status = UMI_STATUS_BUSY;
     else if (status == UMI_STATUS_OK && strcmp(head, workspace->head) != 0) status = UMI_STATUS_BUSY;
+    if (status == UMI_STATUS_OK) status = VerifyLoadedBytes(workspace);
     return Rollback(workspace, status);
 }
 UmiStatus EwsSave(UmiEnterpriseWorkspace *workspace, const EwsState *state)
@@ -170,6 +201,7 @@ UmiStatus EwsSave(UmiEnterpriseWorkspace *workspace, const EwsState *state)
         if (strcmp(current, workspace->head) != 0) status = UMI_STATUS_BUSY;
         else status = ParseHead(current, &old);
     }
+    if (status == UMI_STATUS_OK) status = VerifyLoadedBytes(workspace);
     for (size_t i = 0U; status == UMI_STATUS_OK && i < chunks; ++i) {
         size_t length = bytes - used;
         if (length > EWS_CHUNK_SIZE) length = EWS_CHUNK_SIZE;
