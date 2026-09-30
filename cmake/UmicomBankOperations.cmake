@@ -106,3 +106,15 @@ target_link_libraries(umicom_bank_operations PUBLIC Umicom::money_text)
 
 # Reviewed forms and commands use the same banking transition and repository.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomBankReview.cmake")
+
+# Interest uses the existing portable banking arithmetic and the same event log.
+target_sources(umicom_bank_operations PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../src/bank_operations/interest.c")
+# The calculator already belongs to Umicom::finance, linked above. No second
+# finance library or duplicate source compilation is needed.
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomBankInterest.cmake")
+
+target_sources(umicom_bank_operations PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../src/bank_operations/statement_text.c")
+
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/practice-interest.md"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)

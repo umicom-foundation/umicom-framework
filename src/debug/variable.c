@@ -18,6 +18,26 @@
  * contract does not expose toolkit objects, C++ types, or private structures.
  */
 #include "umicom/debug/variable.h"
+#include "../base/snapshot_registry_internal.h"
+/* Every field is described with its actual C member size; no string scan can
+ * escape a supplied array. Domain values and legacy size/version normalisation
+ * stay with the owning service. Diagnostics never copy a record's contents. */
+static const UmiSnapshotTextField snapshot_text_fields[] = {
+    UMI_SNAPSHOT_TEXT_FIELD(UmiDebugVariableSnapshot, id, 1),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiDebugVariableSnapshot, scope_id, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiDebugVariableSnapshot, name, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiDebugVariableSnapshot, value, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiDebugVariableSnapshot, type, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiDebugVariableSnapshot, evaluate_name, 0)
+};
+
+UmiStatus umi_debug_variable_snapshot_validate(const UmiDebugVariableSnapshot *item,
+    UmiSnapshotValidation *outValidation)
+{
+    return UmiSnapshotValidateTextFields(item, sizeof(*item), snapshot_text_fields,
+        sizeof(snapshot_text_fields) / sizeof(snapshot_text_fields[0]), outValidation);
+}
+
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -82,6 +102,14 @@ void umi_debug_variable_registry_destroy(UmiDebugVariableRegistry *registry) { f
  */
 UmiStatus umi_debug_variable_registry_upsert(UmiDebugVariableRegistry *registry, const UmiDebugVariableSnapshot *item)
 {
+    /* Validate before ID lookup or mutation. The previous copy/terminator
+     * implementation remains below for review and for normalising valid input.
+     * Malformed arrays are now rejected instead of scanned beyond their bounds
+     * or silently truncated. Reusable enforcement belongs in Framework. */
+    UmiStatus validation = umi_debug_variable_snapshot_validate(item, NULL);
+    if (validation != UMI_STATUS_OK) return validation;
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -190,3 +218,11 @@ void umi_debug_variable_registry_clear(UmiDebugVariableRegistry *registry)
     if (registry == NULL) return;
     memset(registry->items,0,sizeof(registry->items)); registry->count=0U; registry->revision += 1U;
 }
+
+/* Stage a complete value-only registry before publishing a batch. Existing
+ * upsert semantics run against the private copy, so any failed row leaves the
+ * caller's count, records and revision unchanged. No application duplicate is
+ * needed, and the original single-record implementation remains available. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_debug_variable_registry_upsert_many,
+    UmiDebugVariableRegistry, UmiDebugVariableSnapshot,
+    umi_debug_variable_snapshot_validate, umi_debug_variable_registry_upsert, UMI_DEBUG_VARIABLE_CAPACITY)

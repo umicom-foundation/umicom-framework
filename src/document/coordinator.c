@@ -60,6 +60,8 @@ struct UmiDocumentCoordinator {
     UmiDocumentCoordinatorEntry entries[UMI_DOCUMENT_MAX_WORKING_COPIES];
     size_t count;
     uint64_t next_untitled;
+    /* Provider callbacks must not start overlapping saves through this owner. */
+    int save_in_progress;
 };
 
 /* Inspection is a provider read; it must never bypass that provider with a
@@ -695,6 +697,12 @@ static UmiStatus CheckSaveDestination(UmiDocumentCoordinator *coordinator,
     return UMI_STATUS_OK;
 }
 
+/* The original save path acknowledged whichever revision was current after
+ * the provider returned, and retained an array entry across callbacks. The
+ * checked snapshot implementation below replaces it so edits and tab closure
+ * cannot redirect a completion or erase a newer draft. Retain this complete
+ * implementation for architectural review until its owner approves removal. */
+#if 0
 /* Provide the save index as operation used by this module and its client applications. */
 static UmiStatus save_index_as(UmiDocumentCoordinator *coordinator,
                                size_t index,
@@ -757,6 +765,107 @@ static UmiStatus save_index_as(UmiDocumentCoordinator *coordinator,
     if (status == UMI_STATUS_OK) status = refresh_view(coordinator, index);
     return status;
 }
+#endif
+
+/* Array positions can change when a provider callback closes another tab.
+ * The captured store ID and view ID together identify the original target. */
+static size_t FindSaveTarget(const UmiDocumentCoordinator *coordinator,
+    UmiDocumentId documentId, const char *viewId)
+{
+    for (size_t index = 0U; index < coordinator->count; ++index) {
+        if (coordinator->entries[index].document_id == documentId &&
+            strcmp(coordinator->entries[index].view_id, viewId) == 0) return index;
+    }
+    return SIZE_MAX;
+}
+
+/* Framework owns both sides of the save contract: immutable input to the
+ * provider and checked publication back into the store/view. Applications
+ * therefore need no separate revision checks or duplicated persistence rules. */
+static UmiStatus SaveCapturedIndex(UmiDocumentCoordinator *coordinator,
+    size_t index, const char *path)
+{
+    char destination[UMI_PATH_CAPACITY];
+    /* Own the caller's spelling across callbacks; the provider still receives
+     * the same resource text as before. Store/path checks normalise separately. */
+    UmiStatus status = umi_path_copy(destination, sizeof(destination), path);
+    if (status != UMI_STATUS_OK) return status;
+    const UmiDocumentId documentId = coordinator->entries[index].document_id;
+    char viewId[UMI_UI_ID_CAPACITY];
+    (void)snprintf(viewId, sizeof(viewId), "%s", coordinator->entries[index].view_id);
+    status = CheckSaveDestination(coordinator, documentId, destination);
+    if (status != UMI_STATUS_OK) return status;
+    status = sync_index(coordinator, index);
+    if (status != UMI_STATUS_OK) return status;
+    UmiDocumentSnapshot before;
+    status = umi_document_store_snapshot(coordinator->store, documentId, &before);
+    if (status != UMI_STATUS_OK) return status;
+    if (coordinator->entries[index].baseline.valid && before.has_path &&
+        umi_path_equal(before.path, destination)) {
+        int changed = 0;
+        status = CheckExternalIndex(coordinator, index, &changed);
+        index = FindSaveTarget(coordinator, documentId, viewId);
+        if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+        if (status == UMI_STATUS_NOT_FOUND || (status == UMI_STATUS_OK && changed))
+            return UMI_STATUS_INVALID_STATE;
+        if (status != UMI_STATUS_OK) return status;
+    }
+    /* A read callback may have opened a different document at this destination. */
+    status = CheckSaveDestination(coordinator, documentId, destination);
+    if (status != UMI_STATUS_OK) return status;
+    UmiUiDocumentViewModel *views = umi_ui_workbench_documents(coordinator->workbench);
+    UmiUiDocumentTextInfo expectedText;
+    status = UmiUiDocumentViewModelTextInfo(views, viewId, &expectedText);
+    if (status != UMI_STATUS_OK) return status;
+    char *text = NULL;
+    status = UmiDocumentStoreCopySnapshot(coordinator->store, documentId, &before, &text);
+    if (status != UMI_STATUS_OK) return status;
+    UmiDocumentCoordinatorEntry *entry = &coordinator->entries[index];
+    const UmiDocumentFingerprint baseline = entry->baseline;
+    UmiDocumentSaveOptions options = umi_document_save_options_default();
+    options.encoding = entry->encoding == UMI_DOCUMENT_ENCODING_UNKNOWN ||
+        entry->encoding == UMI_DOCUMENT_ENCODING_BINARY
+        ? UMI_DOCUMENT_ENCODING_UTF8 : entry->encoding;
+    options.include_bom = options.encoding == UMI_DOCUMENT_ENCODING_UTF8_BOM ||
+        options.encoding == UMI_DOCUMENT_ENCODING_UTF16_LE ||
+        options.encoding == UMI_DOCUMENT_ENCODING_UTF16_BE;
+    options.line_ending = entry->line_ending;
+    UmiDocumentSaveResult result;
+    status = umi_document_saver_write(&coordinator->provider, destination, text,
+        before.length, &options, &result);
+    umi_document_store_free_text(text);
+    if (status != UMI_STATUS_OK) return status;
+
+    index = FindSaveTarget(coordinator, documentId, viewId);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    UmiUiDocumentTextInfo latestText;
+    status = UmiUiDocumentViewModelTextInfo(views, viewId, &latestText);
+    if (status != UMI_STATUS_OK) return status;
+    entry = &coordinator->entries[index];
+    if (latestText.text_revision != expectedText.text_revision ||
+        entry->baseline.valid != baseline.valid ||
+        (baseline.valid && !umi_document_fingerprint_equal(&entry->baseline, &baseline)))
+        return UMI_STATUS_INVALID_STATE;
+    status = UmiDocumentStoreMarkSavedSnapshot(coordinator->store, &before, destination);
+    if (status != UMI_STATUS_OK) return status;
+    entry->baseline = result.fingerprint;
+    entry->conflict = UMI_DOCUMENT_CONFLICT_NONE;
+    return refresh_view(coordinator, index);
+}
+
+/* Reset the reentrancy guard on every return, including provider/allocation
+ * failures. This is an owner-thread guard, not cross-thread synchronisation. */
+static UmiStatus save_index_as(UmiDocumentCoordinator *coordinator,
+    size_t index, const char *path)
+{
+    if (coordinator->save_in_progress) return UMI_STATUS_BUSY;
+    if (index >= coordinator->count || path == NULL || path[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    coordinator->save_in_progress = 1;
+    UmiStatus status = SaveCapturedIndex(coordinator, index, path);
+    coordinator->save_in_progress = 0;
+    return status;
+}
 
 /*
  * Provide the document coordinator save active operation used by this module and its
@@ -784,6 +893,12 @@ UmiStatus umi_document_coordinator_save_active(
     return save_index_as(coordinator, index, snapshot.path);
 }
 
+/* This original index-based batch is retained for review. Provider callbacks
+ * can compact the entry array or open new tabs, so advancing an array index
+ * can skip an original document or include a new one. The ID-based batch below
+ * replaces iteration only; preflight, partial results and dirty-state handling
+ * remain part of the shared Framework contract. */
+#if 0
 /* Save All uses the same working-copy and conflict boundary as Save. There is
  * no cross-file transaction: a later I/O failure preserves earlier successful
  * saves and reports their count. Unsaved names are rejected before any write. */
@@ -822,6 +937,65 @@ UmiStatus UmiDocumentCoordinatorSaveAll(UmiDocumentCoordinator *coordinator,
             }
             continue;
         }
+        status = save_index_as(coordinator, index, snapshot.path);
+        if (status != UMI_STATUS_OK) return status;
+        if (outSaved != NULL) ++*outSaved;
+    }
+    return UMI_STATUS_OK;
+}
+#endif
+
+/* A batch owns its starting identities, not their later positions. New tabs
+ * wait for the next batch; a captured tab which closes produces an explicit
+ * failure after any earlier acknowledged saves. No cross-file rollback occurs. */
+UmiStatus UmiDocumentCoordinatorSaveAll(UmiDocumentCoordinator *coordinator,
+    size_t *outSaved)
+{
+    if (outSaved != NULL) *outSaved = 0U;
+    if (coordinator == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (coordinator->save_in_progress) return UMI_STATUS_BUSY;
+    const size_t count = coordinator->count;
+    UmiDocumentId targets[UMI_DOCUMENT_MAX_WORKING_COPIES];
+    for (size_t index = 0U; index < count; ++index) {
+        targets[index] = coordinator->entries[index].document_id;
+        UmiStatus status = sync_index(coordinator, index);
+        if (status != UMI_STATUS_OK) return status;
+        UmiDocumentSnapshot snapshot;
+        status = umi_document_store_snapshot(coordinator->store, targets[index], &snapshot);
+        if (status != UMI_STATUS_OK) return status;
+        if (!coordinator->entries[index].pristine_virtual && snapshot.dirty && !snapshot.has_path)
+            return UMI_STATUS_INVALID_STATE;
+    }
+    for (size_t target = 0U; target < count; ++target) {
+        size_t index = SIZE_MAX;
+        for (size_t candidate = 0U; candidate < coordinator->count; ++candidate) {
+            if (coordinator->entries[candidate].document_id == targets[target]) {
+                index = candidate;
+                break;
+            }
+        }
+        if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+        /* A prior provider callback may have edited this pending document.
+         * Apply the ordinary save's draft synchronisation before inspecting it. */
+        UmiStatus status = sync_index(coordinator, index);
+        if (status != UMI_STATUS_OK) return status;
+        UmiDocumentSnapshot snapshot;
+        status = umi_document_store_snapshot(coordinator->store, targets[target], &snapshot);
+        if (status != UMI_STATUS_OK) return status;
+        if (coordinator->entries[index].pristine_virtual) continue;
+        if (!snapshot.dirty) {
+            UmiUiDocumentViewModel *views = umi_ui_workbench_documents(coordinator->workbench);
+            UmiUiDocumentViewSnapshot view;
+            status = umi_ui_document_view_model_find(views, coordinator->entries[index].view_id, &view);
+            if (status != UMI_STATUS_OK) return status;
+            if (view.dirty) {
+                view.dirty = 0;
+                status = umi_ui_document_view_model_upsert(views, &view);
+                if (status != UMI_STATUS_OK) return status;
+            }
+            continue;
+        }
+        if (!snapshot.has_path) return UMI_STATUS_INVALID_STATE;
         status = save_index_as(coordinator, index, snapshot.path);
         if (status != UMI_STATUS_OK) return status;
         if (outSaved != NULL) ++*outSaved;

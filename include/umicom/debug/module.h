@@ -23,6 +23,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "umicom/base/status.h"
+#include "umicom/base/snapshot_validation.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -97,6 +98,26 @@ uint64_t umi_debug_module_registry_revision(const UmiDebugModuleRegistry *regist
  * safely.
  */
 void umi_debug_module_registry_clear(UmiDebugModuleRegistry *registry);
+
+
+/** Check id and every fixed text array before lookup/copy. id must be nonempty;
+ * other text may be empty. Output is optional and contains field diagnostics,
+ * not input text. No state changes or allocations occur. This validates text
+ * bounds, not domain semantics or UTF-8. Size/version normalisation is unchanged.
+ * The existing registry_upsert operation applies the same check before mutation. */
+UmiStatus umi_debug_module_snapshot_validate(const UmiDebugModuleSnapshot *item,
+    UmiSnapshotValidation *outValidation);
+
+/** Atomically insert/replace up to UMI_DEBUG_MODULE_CAPACITY distinct IDs in memory.
+ * Entries retain normal upsert order and revision increments. Duplicate IDs
+ * within the batch return ALREADY_EXISTS; IDs already stored may be replaced.
+ * Failure publishes no changes. An empty batch succeeds without allocation.
+ * Inputs remain caller-owned and unchanged. outResult is optional and must not
+ * overlap inputs or registry storage. Keep them stable and serialize registry
+ * access on the owning thread. This copies a full registry temporarily and
+ * performs no I/O; it is not a filesystem or cross-thread transaction. */
+UmiStatus umi_debug_module_registry_upsert_many(UmiDebugModuleRegistry *registry,
+    const UmiDebugModuleSnapshot *items, size_t count, UmiSnapshotBatchResult *outResult);
 
 #ifdef __cplusplus
 }

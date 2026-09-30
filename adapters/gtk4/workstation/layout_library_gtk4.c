@@ -48,6 +48,8 @@ struct UmiGtk4WorkspaceLayoutLibrary {
     GtkWidget *duplicate;
     GtkWidget *rename;
     GtkWidget *remove;
+    GtkWidget *move_earlier;
+    GtkWidget *move_later;
     GtkWidget *refresh;
     GtkWidget *status;
     GtkWidget *notice;
@@ -55,6 +57,10 @@ struct UmiGtk4WorkspaceLayoutLibrary {
     GtkWidget *save_library;
     GtkWidget *restore_library;
     GtkWidget *confirm_restore;
+    GtkWidget *preview_library;
+    GtkWidget *preview_text;
+    UmiGtk4WorkspaceLayoutLibraryPreviewHandler preview_handler;
+    void *preview_context;
     UmiGtk4WorkspaceLayoutLibraryReadHandler read_handler;
     UmiGtk4WorkspaceLayoutLibraryApplyHandler apply_handler;
     void *context;
@@ -253,10 +259,26 @@ static void update_controls(UmiGtk4WorkspaceLayoutLibrary *library)
         : g_strdup("Select a layout from the list.");
     gtk_label_set_text(GTK_LABEL(library->selected_label), message);
     g_free(message);
+    /* A filtered list hides neighbours. Require the complete order to be
+     * visible before moving a row, while retaining the existing selection ID. */
+    const size_t selected_index = row != NULL
+        ? (size_t)(row - library->snapshot.rows) : SIZE_MAX;
+    const bool can_reorder = ready && (library->query == NULL || library->query[0] == '\0');
+    gtk_widget_set_sensitive(library->move_earlier, can_reorder && selected_index > 0U);
+    gtk_widget_set_sensitive(library->move_later, can_reorder &&
+        selected_index + 1U < library->snapshot.layout_count);
     gtk_widget_set_sensitive(library->open, ready);
+    /* The original manual-ID gate is retained for engineering review. The
+     * portable suggestion service now supplies an ID for an empty field, so
+     * duplicating a layout no longer requires typing an internal identity. */
+#if 0
     gtk_widget_set_sensitive(library->duplicate, ready &&
         library->snapshot.layout_count < UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS &&
         gtk_editable_get_text(GTK_EDITABLE(library->new_id))[0] != '\0' &&
+        gtk_editable_get_text(GTK_EDITABLE(library->name))[0] != '\0');
+#endif
+    gtk_widget_set_sensitive(library->duplicate, ready &&
+        library->snapshot.layout_count < UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS &&
         gtk_editable_get_text(GTK_EDITABLE(library->name))[0] != '\0');
     gtk_widget_set_sensitive(library->rename, ready &&
         gtk_editable_get_text(GTK_EDITABLE(library->name))[0] != '\0');
@@ -264,6 +286,7 @@ static void update_controls(UmiGtk4WorkspaceLayoutLibrary *library)
         gtk_check_button_get_active(GTK_CHECK_BUTTON(library->confirm)));
     gtk_widget_set_sensitive(library->confirm, ready && library->snapshot.layout_count > 1U);
     gtk_widget_set_sensitive(library->refresh, library->pending_id == 0U && !library->in_callback);
+    gtk_widget_set_sensitive(library->preview_library, storage_ready && library->preview_handler != NULL);
     gtk_widget_set_sensitive(library->save_library, storage_ready &&
         library->storage_state.revision_known && library->storage_state.save_enabled);
     gtk_widget_set_sensitive(library->confirm_restore, storage_ready &&
@@ -370,6 +393,7 @@ static void rebuild_rows(UmiGtk4WorkspaceLayoutLibrary *library)
  * complete count/text validation. A failed read never replaces good rows. */
 static UmiStatus refresh_view(UmiGtk4WorkspaceLayoutLibrary *library)
 {
+    gtk_label_set_text(GTK_LABEL(library->preview_text), "Preview saved to compare with this session. Nothing is restored by previewing.");
     UmiUiWorkspaceLibrarySnapshot *candidate = g_try_new0(UmiUiWorkspaceLibrarySnapshot, 1);
     UmiStatus status;
     bool changed;
@@ -434,6 +458,10 @@ UmiStatus umi_gtk4_ws_layout_library_set_storage_handlers(
     library->storage_read_handler = read_handler;
     library->storage_operation_handler = operation_handler;
     library->storage_context = context;
+    /* A new storage owner must explicitly bind its own preview callback. */
+    library->preview_handler = NULL;
+    library->preview_context = NULL;
+    gtk_label_set_text(GTK_LABEL(library->preview_text), "Preview saved is unavailable until its owner is connected.");
     library->storage_valid = false;
     gtk_check_button_set_active(GTK_CHECK_BUTTON(library->confirm_restore), FALSE);
     status = refresh_storage_state(library);
@@ -574,6 +602,7 @@ static void on_storage_clicked(GtkButton *button, gpointer data)
                 : (!library->storage_state.revision_known || !library->storage_state.save_enabled)) return;
     pending = g_try_new0(PendingLibraryStorageRequest, 1);
     if (pending == NULL) { show_status(library, umi_status_text(UMI_STATUS_OUT_OF_MEMORY), true); return; }
+    gtk_label_set_text(GTK_LABEL(library->preview_text), "Preview cleared after a layout or storage action. Preview saved again to compare.");
     pending->library = library;
     pending->request.action = restore ? UMI_GTK4_WORKSPACE_LAYOUT_LIBRARY_STORAGE_RESTORE
         : UMI_GTK4_WORKSPACE_LAYOUT_LIBRARY_STORAGE_SAVE;
@@ -584,6 +613,111 @@ static void on_storage_clicked(GtkButton *button, gpointer data)
     library->pending_id = g_idle_add_full(G_PRIORITY_DEFAULT_IDLE, storage_from_idle, pending, g_free);
     if (library->pending_id == 0U) { g_free(pending); return; }
     show_status(library, restore ? "Restoring the confirmed named layout library…" : "Saving the named layout library…", false);
+    update_controls(library);
+}
+
+/* The read operation shares the existing deferred lifetime discipline. Its
+ * output is display data only; neither a restore candidate nor Save authority
+ * is stored in this view. Owners decide whether the captured scope is current. */
+typedef struct PendingLibraryPreview {
+    UmiGtk4WorkspaceLayoutLibrary *library;
+    UmiGtk4WorkspaceLayoutLibraryPreviewRequest request;
+} PendingLibraryPreview;
+
+UmiStatus umi_gtk4_ws_layout_library_set_preview_handler(UmiGtk4WorkspaceLayoutLibrary *library,
+    UmiGtk4WorkspaceLayoutLibraryPreviewHandler handler, void *context)
+{
+    if (library == NULL || library->destroy_requested) return UMI_STATUS_INVALID_ARGUMENT;
+    if (library->pending_id != 0U || library->in_callback) return UMI_STATUS_BUSY;
+    library->preview_handler = handler; library->preview_context = context;
+    gtk_label_set_text(GTK_LABEL(library->preview_text), "Preview saved to compare with this session. Nothing is restored by previewing.");
+    update_controls(library);
+    return UMI_STATUS_OK;
+}
+
+static void show_preview(UmiGtk4WorkspaceLayoutLibrary *library,
+    const UmiUiWorkspaceLibraryPreview *preview, const UmiUiWorkspaceLibraryComparison *comparison)
+{
+    GString *text = g_string_new("Saved library preview — no layouts changed.\n");
+    g_string_append_printf(text, "%zu added, %zu removed, %zu existing layouts changed.\n",
+        comparison->added_count, comparison->removed_count, comparison->changed_count);
+    g_string_append(text, preview->report.checkpoint.durable ? "Source: persistent storage.\n" : "Source: memory-only storage.\n");
+    if (preview->report.checkpoint.recovered_last_good)
+        g_string_append(text, "Showing the previous valid saved copy because the primary could not be used.\n");
+    for (size_t i = 0U; i < comparison->row_count; ++i) {
+        const UmiUiWorkspaceLibraryComparisonRow *row = &comparison->rows[i];
+        if (row->after_index == SIZE_MAX) {
+            g_string_append_printf(text, "Remove: %s [%s]\n", row->before.name, row->before.layout_id);
+            continue;
+        }
+        g_string_append_printf(text, "%zu. %s [%s]%s%s\n", row->after_index + 1U,
+            row->after.name, row->after.layout_id, row->after.active ? " — active" : "",
+            (row->changes & UMI_UI_WORKSPACE_LIBRARY_CHANGE_ADDED) != 0U ? " — added" : "");
+        if ((row->changes & UMI_UI_WORKSPACE_LIBRARY_CHANGE_NAME) != 0U)
+            g_string_append_printf(text, "   Name: %s → %s\n", row->before.name, row->after.name);
+        if ((row->changes & UMI_UI_WORKSPACE_LIBRARY_CHANGE_POSITION) != 0U)
+            g_string_append_printf(text, "   Position: %zu → %zu\n", row->before_index + 1U, row->after_index + 1U);
+        g_string_append_printf(text, "   %zu panels; %s\n", row->after.window_count, row->after.locked ? "locked" : "unlocked");
+        if ((row->changes & UMI_UI_WORKSPACE_LIBRARY_CHANGE_WINDOWS) != 0U)
+            g_string_append_printf(text, "   Panel count: %zu → %zu\n", row->before.window_count, row->after.window_count);
+        if ((row->changes & UMI_UI_WORKSPACE_LIBRARY_CHANGE_ACTIVE) != 0U)
+            g_string_append(text, row->after.active ? "   Becomes the active layout.\n" : "   Stops being the active layout.\n");
+        if ((row->changes & UMI_UI_WORKSPACE_LIBRARY_CHANGE_LOCKED) != 0U)
+            g_string_append(text, "   Lock state changes.\n");
+    }
+    g_string_append(text, "This summary does not compare panel positions or document contents. Restore reads storage again; another writer may have changed it since this preview.");
+    gtk_label_set_text(GTK_LABEL(library->preview_text), text->str);
+    g_string_free(text, TRUE);
+}
+
+static gboolean preview_from_idle(gpointer data)
+{
+    PendingLibraryPreview *pending = data;
+    UmiGtk4WorkspaceLayoutLibrary *library = pending->library;
+    UmiUiWorkspaceLibraryPreview *preview = g_try_new0(UmiUiWorkspaceLibraryPreview, 1);
+    UmiStatus status = UMI_STATUS_OUT_OF_MEMORY;
+    library->pending_id = 0U; ++library->operation_depth;
+    if (preview != NULL) {
+        library->in_callback = true;
+        status = library->preview_handler(&pending->request, preview, library->preview_context);
+        library->in_callback = false;
+    }
+    if (!library->destroy_requested) {
+        if (status == UMI_STATUS_OK) {
+            UmiUiWorkspaceLibraryComparison comparison;
+            /* Extension callbacks cannot inject unsafe text or misleading row
+             * flags: recompute display differences from validated copies. */
+            status = umi_ui_workspace_library_compare(&library->snapshot, &preview->saved, &comparison);
+            if (status == UMI_STATUS_OK) show_preview(library, preview, &comparison);
+        }
+        if (status != UMI_STATUS_OK)
+            gtk_label_set_text(GTK_LABEL(library->preview_text), "Preview unavailable. Current layouts are kept; no saved data was changed.");
+        show_status(library, status == UMI_STATUS_OK ? "Preview loaded. Current layouts and saved data are unchanged."
+            : status == UMI_STATUS_NOT_FOUND ? "No saved library is available to preview."
+            : status == UMI_STATUS_INVALID_STATE ? "The workspace or storage connection changed. Refresh, then preview again."
+            : umi_status_text(status), status != UMI_STATUS_OK);
+        update_controls(library);
+    }
+    g_free(preview);
+    (void)finish_operation(library);
+    return G_SOURCE_REMOVE;
+}
+
+static void on_preview_clicked(GtkButton *button, gpointer data)
+{
+    UmiGtk4WorkspaceLayoutLibrary *library = data;
+    if (!gtk_widget_get_sensitive(GTK_WIDGET(button)) || library->pending_id != 0U ||
+        library->in_callback || library->destroy_requested || library->preview_handler == NULL ||
+        !library->valid || library->snapshot.editing || !library->storage_valid || !library->storage_state.supported) return;
+    PendingLibraryPreview *pending = g_try_new0(PendingLibraryPreview, 1);
+    if (pending == NULL) { show_status(library, umi_status_text(UMI_STATUS_OUT_OF_MEMORY), true); return; }
+    pending->library = library;
+    pending->request.expected_customisation_revision = library->snapshot.customisation_revision;
+    pending->request.expected_storage_generation = library->storage_state.storage_generation;
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(library->confirm_restore), FALSE);
+    gtk_label_set_text(GTK_LABEL(library->preview_text), "Reading saved layouts for review…");
+    library->pending_id = g_idle_add_full(G_PRIORITY_DEFAULT_IDLE, preview_from_idle, pending, g_free);
+    if (library->pending_id == 0U) { g_free(pending); return; }
     update_controls(library);
 }
 
@@ -604,6 +738,7 @@ static void on_action_clicked(GtkButton *button, gpointer data)
         return;
     pending = g_try_new0(PendingLibraryRequest, 1);
     if (pending == NULL) { show_status(library, umi_status_text(UMI_STATUS_OUT_OF_MEMORY), true); return; }
+    gtk_label_set_text(GTK_LABEL(library->preview_text), "Preview cleared after a layout or storage action. Preview saved again to compare.");
     pending->library = library;
     pending->action = (UmiUiWorkspaceLibraryAction)GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "umicom-layout-library-action"));
     pending->expected_revision = library->snapshot.customisation_revision;
@@ -617,10 +752,49 @@ static void on_action_clicked(GtkButton *button, gpointer data)
         show_status(library, "The layout ID or name is too long. Shorten it and try again; no change was submitted.", true);
         return;
     }
+    /* Resolve an optional identity from the exact copied rows shown at the
+     * click. Keep both identity and revision frozen until the owner's existing
+     * atomic Duplicate callback accepts them; never refresh and retry a race. */
+    if (pending->action == UMI_UI_WORKSPACE_LIBRARY_DUPLICATE && pending->new_id[0] == '\0') {
+        UmiUiWorkspaceLibraryCopySuggestion suggestion;
+        const UmiStatus status = umi_ui_workspace_library_suggest_copy(
+            &library->snapshot, pending->target, &suggestion);
+        if (status != UMI_STATUS_OK) {
+            g_free(pending);
+            show_status(library, status == UMI_STATUS_CAPACITY_EXCEEDED
+                ? "An automatic copy ID is unavailable. If the library has space, enter a shorter unique full ID in the same application namespace."
+                : umi_status_text(status), true);
+            return;
+        }
+        (void)memcpy(pending->new_id, suggestion.new_layout_id, sizeof(pending->new_id));
+        pending->expected_revision = suggestion.expected_customisation_revision;
+    }
     library->pending_id = g_idle_add_full(G_PRIORITY_DEFAULT_IDLE, apply_from_idle, pending, g_free);
     if (library->pending_id == 0U) { g_free(pending); return; }
     show_status(library, "Applying the requested layout change…", false);
     update_controls(library);
+}
+
+/* Native Enter and double-click activation use the same queued Open command
+ * as the button. Selection alone stays non-mutating. A retained or filtered
+ * row cannot activate another layout, and a queued request keeps its observed
+ * revision even when focus or the owner's model changes before the idle runs. */
+static void on_row_activated(GtkListBox *list, GtkListBoxRow *row, gpointer data)
+{
+    UmiGtk4WorkspaceLayoutLibrary *library = data;
+    char id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    const char *row_id;
+    if (library->destroy_requested || library->syncing || library->in_callback ||
+        library->pending_id != 0U || !library->valid || library->snapshot.editing || row == NULL ||
+        GTK_WIDGET(list) != library->list || gtk_widget_get_parent(GTK_WIDGET(row)) != library->list ||
+        !gtk_widget_get_child_visible(GTK_WIDGET(row))) return;
+    row_id = g_object_get_data(G_OBJECT(row), "umicom-layout-library-id");
+    if (!copy_input(id, sizeof id, row_id)) return;
+    ++library->operation_depth;
+    gtk_list_box_select_row(list, row);
+    if (!library->destroy_requested && strcmp(library->selected_id, id) == 0)
+        on_action_clicked(GTK_BUTTON(library->open), library);
+    (void)finish_operation(library);
 }
 
 /* Build one native action control with stable automation identity. */
@@ -655,6 +829,8 @@ UmiStatus umi_gtk4_ws_layout_library_create(
     GtkWidget *frame;
     GtkWidget *actions;
     GtkWidget *storage_actions;
+    GtkWidget *order_actions;
+    GtkWidget *order_hint;
     GtkWidget *outer_scroll;
     GtkWidget *id_label;
     GtkWidget *name_label;
@@ -676,6 +852,13 @@ UmiStatus umi_gtk4_ws_layout_library_create(
     library->name = gtk_entry_new(); library->confirm = gtk_check_button_new_with_label("I confirm removal of the selected layout");
     library->status = gtk_label_new(""); library->refresh = gtk_button_new_with_label("Refresh");
     library->storage_status = gtk_label_new("");
+    library->preview_library = gtk_button_new_with_label("Preview saved");
+    library->preview_text = gtk_label_new("");
+    gtk_label_set_wrap(GTK_LABEL(library->preview_text), TRUE);
+    gtk_label_set_selectable(GTK_LABEL(library->preview_text), TRUE);
+    gtk_label_set_xalign(GTK_LABEL(library->preview_text), 0.0F);
+    gtk_label_set_max_width_chars(GTK_LABEL(library->preview_text), 64);
+    gtk_widget_set_tooltip_text(library->preview_library, "Read saved names, order and panel counts without replacing this session. Restore reads storage again.");
     library->save_library = gtk_button_new_with_label("Save library");
     library->restore_library = gtk_button_new_with_label("Restore library");
     library->confirm_restore = gtk_check_button_new_with_label("Replace this session's named layout list");
@@ -683,11 +866,29 @@ UmiStatus umi_gtk4_ws_layout_library_create(
     library->duplicate = action_button(library, "Duplicate", "workstation.layout-library.duplicate", UMI_UI_WORKSPACE_LIBRARY_DUPLICATE);
     library->rename = action_button(library, "Rename", "workstation.layout-library.rename", UMI_UI_WORKSPACE_LIBRARY_RENAME);
     library->remove = action_button(library, "Remove", "workstation.layout-library.remove", UMI_UI_WORKSPACE_LIBRARY_REMOVE);
+    library->move_earlier = action_button(library, "Move up", "workstation.layout-library.move-up", UMI_UI_WORKSPACE_LIBRARY_MOVE_EARLIER);
+    library->move_later = action_button(library, "Move down", "workstation.layout-library.move-down", UMI_UI_WORKSPACE_LIBRARY_MOVE_LATER);
+    order_actions = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+    order_hint = gtk_label_new("Clear search to change the full layout order. Save library keeps that order.");
+    gtk_label_set_wrap(GTK_LABEL(order_hint), TRUE);
+    gtk_label_set_max_width_chars(GTK_LABEL(order_hint), 64);
+    gtk_label_set_xalign(GTK_LABEL(order_hint), 0.0F);
+    gtk_widget_add_css_class(order_hint, "dim-label");
+    gtk_widget_set_tooltip_text(library->move_earlier, "Move the selected layout one place earlier without opening it");
+    gtk_widget_set_tooltip_text(library->move_later, "Move the selected layout one place later without opening it");
+    gtk_box_append(GTK_BOX(order_actions), library->move_earlier);
+    gtk_box_append(GTK_BOX(order_actions), library->move_later);
     actions = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
     storage_actions = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
     outer_scroll = gtk_scrolled_window_new();
     scroller = gtk_scrolled_window_new(); frame = gtk_frame_new(NULL);
+    /* Keep the earlier required-ID wording for review. The shared duplicate
+     * action now supports an empty field while retaining explicit full IDs. */
+#if 0
     id_label = gtk_label_new("New layout ID (full ID)"); name_label = gtk_label_new("Layout name");
+#endif
+    id_label = gtk_label_new("New layout ID (optional)"); name_label = gtk_label_new("Layout name");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(library->new_id), "Leave blank for an automatic copy ID");
     gtk_widget_set_margin_start(box, 12); gtk_widget_set_margin_end(box, 12);
     gtk_widget_set_margin_top(box, 12); gtk_widget_set_margin_bottom(box, 12);
     gtk_widget_add_css_class(title, "heading"); gtk_widget_add_css_class(notice, "dim-label");
@@ -707,7 +908,13 @@ UmiStatus umi_gtk4_ws_layout_library_create(
     gtk_label_set_xalign(GTK_LABEL(library->selected_label), 0.0F); gtk_label_set_xalign(GTK_LABEL(library->status), 0.0F);
     gtk_label_set_xalign(GTK_LABEL(id_label), 0.0F); gtk_label_set_xalign(GTK_LABEL(name_label), 0.0F);
     g_object_set(library->search, "placeholder-text", "Search layout names or IDs", NULL);
+    /* Preserve the manual-only help for review; the replacement explains
+     * both the automatic path and the unchanged explicit-ID escape hatch. */
+#if 0
     gtk_widget_set_tooltip_text(library->new_id, "Use a unique full ID in the same application namespace as the selected layout ID above.");
+#endif
+    gtk_widget_set_tooltip_text(library->new_id,
+        "Leave blank to create a unique copy ID automatically. For a manual ID, use a unique full ID in the same application namespace as the selected layout.");
     gtk_list_box_set_selection_mode(GTK_LIST_BOX(library->list), GTK_SELECTION_SINGLE);
     gtk_label_set_wrap(GTK_LABEL(empty), TRUE);
     gtk_widget_set_margin_top(empty, 12); gtk_widget_set_margin_bottom(empty, 12);
@@ -722,6 +929,7 @@ UmiStatus umi_gtk4_ws_layout_library_create(
     gtk_box_append(GTK_BOX(actions), library->open); gtk_box_append(GTK_BOX(actions), library->duplicate);
     gtk_box_append(GTK_BOX(actions), library->rename); gtk_box_append(GTK_BOX(actions), library->remove);
     gtk_box_append(GTK_BOX(actions), library->refresh);
+    gtk_box_append(GTK_BOX(storage_actions), library->preview_library);
     gtk_box_append(GTK_BOX(storage_actions), library->save_library);
     gtk_box_append(GTK_BOX(storage_actions), library->restore_library);
     gtk_box_append(GTK_BOX(box), title); gtk_box_append(GTK_BOX(box), notice);
@@ -730,10 +938,13 @@ UmiStatus umi_gtk4_ws_layout_library_create(
     gtk_box_append(GTK_BOX(box), library->new_id); gtk_box_append(GTK_BOX(box), name_label);
     gtk_box_append(GTK_BOX(box), library->name); gtk_box_append(GTK_BOX(box), library->confirm);
     gtk_box_append(GTK_BOX(box), actions);
+    gtk_box_append(GTK_BOX(box), order_actions);
+    gtk_box_append(GTK_BOX(box), order_hint);
     gtk_box_append(GTK_BOX(box), gtk_separator_new(GTK_ORIENTATION_HORIZONTAL));
     gtk_box_append(GTK_BOX(box), library->storage_status);
     gtk_box_append(GTK_BOX(box), library->confirm_restore);
     gtk_box_append(GTK_BOX(box), storage_actions);
+    gtk_box_append(GTK_BOX(box), library->preview_text);
     gtk_box_append(GTK_BOX(box), library->status);
     /* Both control groups remain reachable on smaller desktops without an
      * expanding popover forcing the native application outside its monitor. */
@@ -758,12 +969,20 @@ UmiStatus umi_gtk4_ws_layout_library_create(
     (void)umi_gtk4_automation_tag_widget(library->restore_library, "workstation.layout-library.restore-library");
     (void)umi_gtk4_automation_tag_widget(library->confirm_restore, "workstation.layout-library.confirm-restore");
     g_signal_connect(library->list, "row-selected", G_CALLBACK(on_row_selected), library);
+    /* Keep existing click-to-select behaviour; opening needs Enter or a double click. */
+    gtk_list_box_set_activate_on_single_click(GTK_LIST_BOX(library->list), FALSE);
+    gtk_widget_set_tooltip_text(library->list, "Select a layout, then press Enter or double-click to open it. Single clicks only select.");
+    g_signal_connect(library->list, "row-activated", G_CALLBACK(on_row_activated), library);
+
     g_signal_connect(library->search, "search-changed", G_CALLBACK(on_search_changed), library);
     g_signal_connect(library->new_id, "changed", G_CALLBACK(on_input_changed), library);
     g_signal_connect(library->name, "changed", G_CALLBACK(on_input_changed), library);
     g_signal_connect(library->confirm, "toggled", G_CALLBACK(on_input_changed), library);
     g_signal_connect(library->refresh, "clicked", G_CALLBACK(on_refresh_clicked), library);
     g_signal_connect(library->confirm_restore, "toggled", G_CALLBACK(on_input_changed), library);
+    (void)umi_gtk4_automation_tag_widget(library->preview_library, "workstation.layout-library.preview-saved");
+    (void)umi_gtk4_automation_tag_widget(library->preview_text, "workstation.layout-library.preview-text");
+    g_signal_connect(library->preview_library, "clicked", G_CALLBACK(on_preview_clicked), library);
     g_signal_connect(library->save_library, "clicked", G_CALLBACK(on_storage_clicked), library);
     g_signal_connect(library->restore_library, "clicked", G_CALLBACK(on_storage_clicked), library);
     g_signal_connect(library->popover, "notify::visible", G_CALLBACK(on_popover_visible), library);

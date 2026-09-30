@@ -104,6 +104,20 @@ UmiStatus UmiBankOperationsReview(const UmiBankOperations *operations,
             review->snapshot.transferAfter = after->transfers[newIndex];
         }
     }
+    /* Approval must show the fixed principal, terms and amount captured by the
+     * maker. Current balance changes never silently reprice an approved request. */
+    if (status == UMI_STATUS_OK && command->action >= UMI_BANK_INTEREST_SUBMIT &&
+        command->action <= UMI_BANK_INTEREST_REVERSE) {
+        int oldIndex = BankFindInterest(before, command->id.value);
+        int newIndex = BankFindInterest(after, command->id.value);
+        if (newIndex < 0) status = UMI_STATUS_INVALID_STATE;
+        else {
+            review->snapshot.hasInterest = true;
+            review->snapshot.interestExistedBefore = oldIndex >= 0;
+            if (oldIndex >= 0) review->snapshot.interestBefore = before->interestRequests[oldIndex];
+            review->snapshot.interestAfter = after->interestRequests[newIndex];
+        }
+    }
     if (status == UMI_STATUS_OK && after->counts.journals > before->counts.journals) {
         if (after->counts.journals != before->counts.journals + 1U) status = UMI_STATUS_INVALID_STATE;
         else {

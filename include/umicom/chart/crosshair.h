@@ -24,6 +24,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "umicom/base/status.h"
+#include "umicom/base/snapshot_validation.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -92,6 +93,26 @@ size_t umi_chart_crosshair_registry_count(const UmiChartCrosshairRegistry *regis
  * client applications.
  */
 uint64_t umi_chart_crosshair_registry_revision(const UmiChartCrosshairRegistry *registry);
+
+
+/** Check id and all fixed text arrays before string lookup or publication.
+ * id must be nonempty; optional text may be empty. Unterminated arrays return
+ * INVALID_ARGUMENT with optional static field diagnostics. No allocation or
+ * mutation occurs. This checks text bounds, not UTF-8 or domain semantics.
+ * Single-record upsert uses the same preflight and rejects revision overflow. */
+UmiStatus umi_chart_crosshair_snapshot_validate(const UmiChartCrosshairSnapshot *item,
+    UmiSnapshotValidation *outValidation);
+
+/** Insert/replace up to UMI_CHART_CROSSHAIR_CAPACITY distinct IDs as one in-memory operation.
+ * Duplicate input IDs are rejected; stored IDs can be replaced. Valid records
+ * retain ordinary upsert order, normalisation and revision increments. Any
+ * failure leaves the live registry unchanged. Empty input is a successful no-op.
+ * A full private registry is allocated temporarily. No files or callbacks are
+ * used. Keep all access on the owner's thread; this is not thread locking.
+ * Inputs are borrowed for this call, unchanged and never retained. outResult
+ * is optional, written on every return, and must not overlap input or registry. */
+UmiStatus umi_chart_crosshair_registry_upsert_many(UmiChartCrosshairRegistry *registry,
+    const UmiChartCrosshairSnapshot *items, size_t count, UmiSnapshotBatchResult *outResult);
 
 #ifdef __cplusplus
 }

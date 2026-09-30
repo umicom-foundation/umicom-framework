@@ -16,6 +16,8 @@
 #ifndef UMICOM_APPLICATION_SUITE_LAYOUT_GTK4_WORKSTATION_H
 #define UMICOM_APPLICATION_SUITE_LAYOUT_GTK4_WORKSTATION_H
 
+#include "umicom/ui/workspace_library.h"
+#include "umicom/ui/workspace_library_checkpoint.h"
 #include <gtk/gtk.h>
 
 #include "umicom/application/suite_layout/runtime.h"
@@ -446,6 +448,27 @@ UmiStatus umi_application_suite_gtk4_workstation_refresh(
 UmiApplicationSuiteGtk4WorkstationSnapshot
 umi_application_suite_gtk4_workstation_snapshot(
     const UmiApplicationSuiteGtk4Workstation *workstation);
+
+
+/** Copy the current ordered layout list on the GTK owning thread. No live
+ * pointers escape; a failed read leaves output unchanged. This performs no I/O. */
+UmiStatus umi_application_suite_gtk4_workstation_library_snapshot(
+    UmiApplicationSuiteGtk4Workstation *workstation, UmiUiWorkspaceLibrarySnapshot *out_snapshot);
+
+/** Apply a revision-checked library action through the same staged native
+ * publication path as Layout Library. Product scope and edit gates remain in
+ * Framework. A move preserves active panels and does not execute trades, save
+ * documents or persist the library. Use explicit Save library for persistence.
+ * Inputs are borrowed for this synchronous owner-thread call only. */
+UmiStatus umi_application_suite_gtk4_workstation_library_apply(
+    UmiApplicationSuiteGtk4Workstation *workstation, const UmiUiWorkspaceLibraryRequest *request);
+
+/** Read the saved library into owned preview data without changing the live
+ * layout, document/trading state, storage or cached Save revision. Call on the
+ * GTK owner thread. Failure leaves output unchanged. Later Restore rereads the
+ * store; this preview is not a reservation. The connected server is borrowed. */
+UmiStatus umi_application_suite_gtk4_workstation_library_preview(
+    UmiApplicationSuiteGtk4Workstation *workstation, UmiUiWorkspaceLibraryPreview *out_preview);
 
 #ifdef __cplusplus
 }

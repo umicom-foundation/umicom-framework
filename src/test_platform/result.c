@@ -18,6 +18,26 @@
  * contract does not expose toolkit objects, C++ types, or private structures.
  */
 #include "umicom/test_platform/result.h"
+#include "../base/snapshot_registry_internal.h"
+
+/* Validate every bounded text member before lookup. Value-only snapshot
+ * ownership stays with this existing Framework registry; domain semantics and
+ * normalisation remain in its established implementation. */
+static const UmiSnapshotTextField snapshot_text_fields[] = {
+    UMI_SNAPSHOT_TEXT_FIELD(UmiTestPlatformResultSnapshot, id, 1),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiTestPlatformResultSnapshot, session_id, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiTestPlatformResultSnapshot, item_id, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiTestPlatformResultSnapshot, message, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiTestPlatformResultSnapshot, failure_details, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiTestPlatformResultSnapshot, attachment_id, 0)
+};
+UmiStatus umi_test_platform_result_snapshot_validate(const UmiTestPlatformResultSnapshot *item,
+    UmiSnapshotValidation *outValidation)
+{
+    return UmiSnapshotValidateTextFields(item, sizeof(*item), snapshot_text_fields,
+        sizeof(snapshot_text_fields) / sizeof(snapshot_text_fields[0]), outValidation);
+}
+
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -82,6 +102,14 @@ void umi_test_platform_result_registry_destroy(UmiTestPlatformResultRegistry *re
  */
 UmiStatus umi_test_platform_result_registry_upsert(UmiTestPlatformResultRegistry *registry, const UmiTestPlatformResultSnapshot *item)
 {
+    /* Central bounded validation rejects malformed snapshots before identity
+     * comparison or mutation. The existing single-record logic is preserved;
+     * valid records keep the same order, metadata and revision behavior. */
+    if (registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus validation = umi_test_platform_result_snapshot_validate(item, NULL);
+    if (validation != UMI_STATUS_OK) return validation;
+    if (registry->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -208,3 +236,10 @@ void umi_test_platform_result_registry_clear(UmiTestPlatformResultRegistry *regi
     if (registry == NULL) return;
     memset(registry->items,0,sizeof(registry->items)); registry->count=0U; registry->revision += 1U;
 }
+
+/* A complete private value registry makes a multi-record import atomic on
+ * the owner's thread. The original single-record API remains the authority
+ * for valid record normalisation; no application-side registry is introduced. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_test_platform_result_registry_upsert_many,
+    UmiTestPlatformResultRegistry, UmiTestPlatformResultSnapshot,
+    umi_test_platform_result_snapshot_validate, umi_test_platform_result_registry_upsert, UMI_TEST_PLATFORM_RESULT_CAPACITY)

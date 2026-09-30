@@ -18,6 +18,23 @@
  * value; callers own external resources and coordinate cross-thread mutation.
  */
 #include "umicom/editor/fold_region.h"
+#include "../base/snapshot_registry_internal.h"
+
+/* Validate every bounded text member before lookup. Value-only snapshot
+ * ownership stays with this existing Framework registry; domain semantics and
+ * normalisation remain in its established implementation. */
+static const UmiSnapshotTextField snapshot_text_fields[] = {
+    UMI_SNAPSHOT_TEXT_FIELD(UmiEditorFoldRegionSnapshot, id, 1),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiEditorFoldRegionSnapshot, document_id, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiEditorFoldRegionSnapshot, kind, 0)
+};
+UmiStatus umi_editor_fold_region_snapshot_validate(const UmiEditorFoldRegionSnapshot *item,
+    UmiSnapshotValidation *outValidation)
+{
+    return UmiSnapshotValidateTextFields(item, sizeof(*item), snapshot_text_fields,
+        sizeof(snapshot_text_fields) / sizeof(snapshot_text_fields[0]), outValidation);
+}
+
 #include <stdlib.h>
 #include <string.h>
 struct UmiEditorFoldRegionRegistry { UmiEditorFoldRegionSnapshot items[UMI_EDITOR_FOLD_REGION_CAPACITY]; size_t count; uint64_t revision; };
@@ -37,7 +54,22 @@ void umi_editor_fold_region_registry_destroy(UmiEditorFoldRegionRegistry*r){free
  * Provide the editor fold region registry upsert operation used by this module and its
  * client applications.
  */
+/* The former unchecked compact upsert is retained for review. The public
+ * replacement below adds Framework text-boundary and revision guards before
+ * running its unchanged insertion/replacement logic. */
+#if 0
 UmiStatus umi_editor_fold_region_registry_upsert(UmiEditorFoldRegionRegistry*r,const UmiEditorFoldRegionSnapshot*item){size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||item==NULL||item->id[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;i=find_index(r,item->id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i==SIZE_MAX){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r->count>=UMI_EDITOR_FOLD_REGION_CAPACITY)return UMI_STATUS_CAPACITY_EXCEEDED;i=r->count++;}r->items[i]=*item;r->items[i].struct_size=(uint32_t)sizeof(UmiEditorFoldRegionSnapshot);r->items[i].api_version=1U;r->items[i].revision=++r->revision;return UMI_STATUS_OK;}
+#endif
+UmiStatus umi_editor_fold_region_registry_upsert(UmiEditorFoldRegionRegistry*r,const UmiEditorFoldRegionSnapshot*item){
+    /* Central bounded validation rejects malformed snapshots before identity
+     * comparison or mutation. The existing single-record logic is preserved;
+     * valid records keep the same order, metadata and revision behavior. */
+    if (r == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus validation = umi_editor_fold_region_snapshot_validate(item, NULL);
+    if (validation != UMI_STATUS_OK) return validation;
+    if (r->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||item==NULL||item->id[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;i=find_index(r,item->id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i==SIZE_MAX){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r->count>=UMI_EDITOR_FOLD_REGION_CAPACITY)return UMI_STATUS_CAPACITY_EXCEEDED;i=r->count++;}r->items[i]=*item;r->items[i].struct_size=(uint32_t)sizeof(UmiEditorFoldRegionSnapshot);r->items[i].api_version=1U;r->items[i].revision=++r->revision;return UMI_STATUS_OK;
+}
 /*
  * Remove editor fold region registry while keeping the remaining records in a valid and
  * discoverable state.
@@ -63,3 +95,10 @@ size_t umi_editor_fold_region_registry_count(const UmiEditorFoldRegionRegistry*r
  * client applications.
  */
 uint64_t umi_editor_fold_region_registry_revision(const UmiEditorFoldRegionRegistry*r){return r!=NULL?r->revision:0U;}
+
+/* A complete private value registry makes a multi-record import atomic on
+ * the owner's thread. The original single-record API remains the authority
+ * for valid record normalisation; no application-side registry is introduced. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_editor_fold_region_registry_upsert_many,
+    UmiEditorFoldRegionRegistry, UmiEditorFoldRegionSnapshot,
+    umi_editor_fold_region_snapshot_validate, umi_editor_fold_region_registry_upsert, UMI_EDITOR_FOLD_REGION_CAPACITY)

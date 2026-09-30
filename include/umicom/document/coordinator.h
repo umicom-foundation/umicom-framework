@@ -59,6 +59,16 @@ typedef struct UmiDocumentWorkingCopySnapshot {
  */
 typedef struct UmiDocumentCoordinator UmiDocumentCoordinator;
 
+/* Coordinator operations run on its owning thread. A provider may call back
+ * into that thread, so saving rechecks the captured document and visible text
+ * after provider reads/writes. A nested save returns BUSY. A changed draft or
+ * store returns INVALID_STATE; closing the target returns NOT_FOUND. The
+ * provider may already have written the captured bytes in these cases: keep
+ * the current draft and review the file before retrying. Callbacks must not
+ * destroy the coordinator, its borrowed store/workbench, or provider instance.
+ * Serialize changes to its store and views on that same owning thread; a store
+ * mutex alone does not make operations spanning both services thread-safe. */
+
 /**
  * Initialise document coordinator from caller-provided values so later operations receive
  * a known state.
@@ -191,6 +201,11 @@ size_t umi_document_coordinator_count(
  * Call on the document owner's thread; no UI selection is changed. */
 UmiStatus UmiDocumentCoordinatorSaveAll(UmiDocumentCoordinator *coordinator,
     size_t *outSaved);
+
+/* Save All captures the initial document IDs. Tabs opened during a provider
+ * callback wait for the next batch. Closing a captured, still-pending document
+ * returns NOT_FOUND without changing the count of earlier successful saves.
+ * Pending drafts are synchronised again when their turn arrives. */
 
 
 /** Save the document identified when an asynchronous action began, regardless

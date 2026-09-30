@@ -472,3 +472,33 @@ done:
     if (out_report != NULL) *out_report = report;
     return status;
 }
+
+/* Read once through the canonical decoder and compare copied summaries. A
+ * product preview must never adopt Save evidence or publish a native layout. */
+UmiStatus umi_ui_workspace_library_checkpoint_preview(UmiDataServer *server,
+    const UmiUiWorkspaceCheckpointScope *scope, const UmiUiWorkspaceCustomisation *model,
+    UmiUiWorkspaceLibraryPreview *out_preview)
+{
+    UmiUiWorkspaceCustomisation *candidate;
+    UmiUiWorkspaceLibraryPreview *preview;
+    UmiUiWorkspaceLibrarySnapshot current;
+    UmiStatus status;
+    if (server == NULL || scope == NULL || model == NULL || out_preview == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (storage_overlaps(model, sizeof(*model), out_preview, sizeof(*out_preview)) ||
+        storage_overlaps(scope, sizeof(*scope), out_preview, sizeof(*out_preview))) return UMI_STATUS_INVALID_ARGUMENT;
+    if (model->edit_active) return UMI_STATUS_BUSY;
+    candidate = malloc(sizeof(*candidate));
+    preview = calloc(1U, sizeof(*preview));
+    if (candidate == NULL || preview == NULL) { free(candidate); free(preview); return UMI_STATUS_OUT_OF_MEMORY; }
+    const UmiUiWorkspaceLibraryPolicy policy = {scope->layout_prefix};
+    status = umi_ui_workspace_library_snapshot(model, &policy, &current);
+    if (status == UMI_STATUS_OK)
+        status = umi_ui_workspace_library_checkpoint_load_candidate(server, scope, model, candidate, &preview->report);
+    if (status == UMI_STATUS_OK)
+        status = umi_ui_workspace_library_snapshot(candidate, &policy, &preview->saved);
+    if (status == UMI_STATUS_OK)
+        status = umi_ui_workspace_library_compare(&current, &preview->saved, &preview->comparison);
+    if (status == UMI_STATUS_OK) *out_preview = *preview;
+    free(preview); free(candidate);
+    return status;
+}

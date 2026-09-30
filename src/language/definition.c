@@ -18,6 +18,26 @@
  * contract does not expose toolkit objects, C++ types, or private structures.
  */
 #include "umicom/language/definition.h"
+#include "../base/snapshot_registry_internal.h"
+
+/* Validate every bounded text member before lookup. Value-only snapshot
+ * ownership stays with this existing Framework registry; domain semantics and
+ * normalisation remain in its established implementation. */
+static const UmiSnapshotTextField snapshot_text_fields[] = {
+    UMI_SNAPSHOT_TEXT_FIELD(UmiLanguageDefinitionSnapshot, id, 1),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiLanguageDefinitionSnapshot, name, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiLanguageDefinitionSnapshot, file_extensions, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiLanguageDefinitionSnapshot, mime_types, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiLanguageDefinitionSnapshot, language_server, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiLanguageDefinitionSnapshot, formatter, 0)
+};
+UmiStatus umi_language_definition_snapshot_validate(const UmiLanguageDefinitionSnapshot *item,
+    UmiSnapshotValidation *outValidation)
+{
+    return UmiSnapshotValidateTextFields(item, sizeof(*item), snapshot_text_fields,
+        sizeof(snapshot_text_fields) / sizeof(snapshot_text_fields[0]), outValidation);
+}
+
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -82,6 +102,14 @@ void umi_language_definition_registry_destroy(UmiLanguageDefinitionRegistry *reg
  */
 UmiStatus umi_language_definition_registry_upsert(UmiLanguageDefinitionRegistry *registry, const UmiLanguageDefinitionSnapshot *item)
 {
+    /* Central bounded validation rejects malformed snapshots before identity
+     * comparison or mutation. The existing single-record logic is preserved;
+     * valid records keep the same order, metadata and revision behavior. */
+    if (registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus validation = umi_language_definition_snapshot_validate(item, NULL);
+    if (validation != UMI_STATUS_OK) return validation;
+    if (registry->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -190,3 +218,10 @@ void umi_language_definition_registry_clear(UmiLanguageDefinitionRegistry *regis
     if (registry == NULL) return;
     memset(registry->items,0,sizeof(registry->items)); registry->count=0U; registry->revision += 1U;
 }
+
+/* A complete private value registry makes a multi-record import atomic on
+ * the owner's thread. The original single-record API remains the authority
+ * for valid record normalisation; no application-side registry is introduced. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_language_definition_registry_upsert_many,
+    UmiLanguageDefinitionRegistry, UmiLanguageDefinitionSnapshot,
+    umi_language_definition_snapshot_validate, umi_language_definition_registry_upsert, UMI_LANGUAGE_DEFINITION_CAPACITY)

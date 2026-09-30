@@ -312,6 +312,34 @@ if(BUILD_TESTING)
         if(COMMAND umicom_register_validation_target)
             umicom_register_validation_target(umicom-gtk4-workspace-content-test)
         endif()
+        # Keyboard and pointer activation share one queued owner command.
+        add_executable(umicom-gtk4-layout-library-activation-test
+            "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/test_layout_library_activation_gtk4.c")
+        target_link_libraries(umicom-gtk4-layout-library-activation-test PRIVATE Umicom::ui_gtk4)
+        umicom_apply_warnings(umicom-gtk4-layout-library-activation-test)
+        umicom_apply_sanitizers(umicom-gtk4-layout-library-activation-test)
+        foreach(case IN ITEMS open pending stale editing hidden retained cancel destroy)
+            add_test(NAME framework.ui_workstation.layout.activation.${case}.gtk4 COMMAND umicom-gtk4-layout-library-activation-test ${case})
+            set_tests_properties(framework.ui_workstation.layout.activation.${case}.gtk4 PROPERTIES TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;layout;gtk4")
+        endforeach()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-gtk4-layout-library-activation-test)
+        endif()
+        # Preview is an explicit read; native lifecycle tests never open files.
+        add_executable(umicom-gtk4-layout-library-preview-test
+            "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/test_layout_library_preview_gtk4.c")
+        target_link_libraries(umicom-gtk4-layout-library-preview-test PRIVATE Umicom::ui_gtk4)
+        umicom_apply_warnings(umicom-gtk4-layout-library-preview-test)
+        umicom_apply_sanitizers(umicom-gtk4-layout-library-preview-test)
+        foreach(_case display stale-model stale-backend malformed missing destroy cancel rebind)
+            add_test(NAME "framework.ui_workstation.layout.preview.${_case}.gtk4"
+                COMMAND umicom-gtk4-layout-library-preview-test "${_case}")
+            set_tests_properties("framework.ui_workstation.layout.preview.${_case}.gtk4" PROPERTIES
+                SKIP_RETURN_CODE 77 TIMEOUT 60 LABELS "framework;ui-workstation;gtk4;preview;regression")
+        endforeach()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-gtk4-layout-library-preview-test)
+        endif()
         # Explicit Suite checkpoints use borrowed fixtures, never user-config
         # storage. SQLite restart coverage is conditional on that backend.
         add_executable(umicom-gtk4-workspace-checkpoint-test

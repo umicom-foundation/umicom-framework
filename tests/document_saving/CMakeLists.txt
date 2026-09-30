@@ -12,6 +12,54 @@ umicom_apply_sanitizers(umicom-document-saving-test)
 if(COMMAND umicom_register_validation_target)
     umicom_register_validation_target(umicom-document-saving-test)
 endif()
+
+# Snapshot acknowledgement and provider reentry share the production store and
+# coordinator. These headless cases remain available without a GTK display.
+add_executable(umicom-document-store-snapshot-test test_store_snapshot.c)
+target_link_libraries(umicom-document-store-snapshot-test PRIVATE Umicom::platform)
+add_executable(umicom-document-save-snapshot-test test_save_snapshot.c)
+target_link_libraries(umicom-document-save-snapshot-test PRIVATE Umicom::document)
+foreach(target umicom-document-store-snapshot-test umicom-document-save-snapshot-test)
+    umicom_apply_warnings(${target})
+    umicom_apply_sanitizers(${target})
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(${target})
+    endif()
+endforeach()
+foreach(case success empty invalid edit restored-text external renamed already-saved occupied closed)
+    add_test(NAME framework.document_saving.store_snapshot.${case}
+        COMMAND umicom-document-store-snapshot-test ${case})
+    set_tests_properties(framework.document_saving.store_snapshot.${case} PROPERTIES
+        TIMEOUT 30 LABELS "framework;document;saving;regression")
+endforeach()
+foreach(case normal untitled empty unicode draft restored-draft store close close-other
+        nested nested-all rename external occupy activate caret read-draft read-store read-close
+        read-close-other read-nested read-nested-all read-error write-error save-session save-all
+        batch-close-other batch-close-pending batch-new-tab)
+    add_test(NAME framework.document_saving.save_snapshot.${case}
+        COMMAND umicom-document-save-snapshot-test ${case})
+    set_tests_properties(framework.document_saving.save_snapshot.${case} PROPERTIES
+        TIMEOUT 30 LABELS "framework;document;saving;regression")
+endforeach()
+get_target_property(_snapshot_platform_type umicom_platform TYPE)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang"
+        AND _snapshot_platform_type STREQUAL "STATIC_LIBRARY")
+    # Linker wrapping proves allocation failure in the static production store;
+    # it cannot intercept allocations inside a separately linked shared library.
+    add_executable(umicom-document-store-snapshot-allocation-test test_store_snapshot.c)
+    target_link_libraries(umicom-document-store-snapshot-allocation-test PRIVATE Umicom::platform)
+    target_compile_definitions(umicom-document-store-snapshot-allocation-test PRIVATE UMI_TEST_ALLOCATION_FAILURE=1)
+    target_link_options(umicom-document-store-snapshot-allocation-test PRIVATE -Wl,--wrap=malloc)
+    umicom_apply_warnings(umicom-document-store-snapshot-allocation-test)
+    umicom_apply_sanitizers(umicom-document-store-snapshot-allocation-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-document-store-snapshot-allocation-test)
+    endif()
+    add_test(NAME framework.document_saving.store_snapshot.allocation
+        COMMAND umicom-document-store-snapshot-allocation-test allocation)
+    set_tests_properties(framework.document_saving.store_snapshot.allocation PROPERTIES
+        TIMEOUT 30 LABELS "framework;document;saving;fault-injection")
+endif()
 # Previous registration list retained for reference; every original case
 # remains in the expanded list, with five cancellation/progress cases added.
 # foreach(case IN ITEMS invalid-api empty clean named untitled mixed cancel-before

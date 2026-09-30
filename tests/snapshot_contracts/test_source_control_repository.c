@@ -1,0 +1,60 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/snapshot_contracts/test_source_control_repository.c
+ * PURPOSE: Exercise source_control repository snapshot boundaries and batch rollback.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/source_control/repository.h"
+#include "umicom/source_control/repository.h"
+#include <stddef.h>
+#include <string.h>
+
+#define CONTRACT_SNAPSHOT UmiSourceControlRepositorySnapshot
+#define CONTRACT_REGISTRY UmiSourceControlRepositoryRegistry
+#define CONTRACT_CAPACITY UMI_SOURCE_CONTROL_REPOSITORY_CAPACITY
+#define CONTRACT_VALIDATE umi_source_control_repository_snapshot_validate
+#define CONTRACT_BATCH umi_source_control_repository_registry_upsert_many
+#define CONTRACT_CREATE umi_source_control_repository_registry_create
+#define CONTRACT_DESTROY umi_source_control_repository_registry_destroy
+#define CONTRACT_UPSERT umi_source_control_repository_registry_upsert
+#define CONTRACT_REMOVE umi_source_control_repository_registry_remove
+#define CONTRACT_FIND umi_source_control_repository_registry_find
+#define CONTRACT_AT umi_source_control_repository_registry_at
+#define CONTRACT_COUNT umi_source_control_repository_registry_count
+#define CONTRACT_REVISION umi_source_control_repository_registry_revision
+
+/* Explicit test expectations refer to public member boundaries, including
+ * every optional text field. Non-text values are compared by value, not padding. */
+static const UmiSnapshotTextField contract_fields[] = {
+    {"id", offsetof(UmiSourceControlRepositorySnapshot, id), sizeof(((UmiSourceControlRepositorySnapshot *)0)->id), 1 },
+    {"root_uri", offsetof(UmiSourceControlRepositorySnapshot, root_uri), sizeof(((UmiSourceControlRepositorySnapshot *)0)->root_uri), 0 },
+    {"provider", offsetof(UmiSourceControlRepositorySnapshot, provider), sizeof(((UmiSourceControlRepositorySnapshot *)0)->provider), 0 },
+    {"branch", offsetof(UmiSourceControlRepositorySnapshot, branch), sizeof(((UmiSourceControlRepositorySnapshot *)0)->branch), 0 },
+    {"head", offsetof(UmiSourceControlRepositorySnapshot, head), sizeof(((UmiSourceControlRepositorySnapshot *)0)->head), 0 }
+};
+static int ContractSnapshotEqual(const UmiSourceControlRepositorySnapshot *left,
+    const UmiSourceControlRepositorySnapshot *right)
+{
+    return left->struct_size == right->struct_size &&
+        left->api_version == right->api_version &&
+        memcmp(left->id, right->id, sizeof(left->id)) == 0 &&
+        memcmp(left->root_uri, right->root_uri, sizeof(left->root_uri)) == 0 &&
+        memcmp(left->provider, right->provider, sizeof(left->provider)) == 0 &&
+        memcmp(left->branch, right->branch, sizeof(left->branch)) == 0 &&
+        memcmp(left->head, right->head, sizeof(left->head)) == 0 &&
+        left->clean == right->clean &&
+        left->detached == right->detached &&
+        left->revision == right->revision;
+}
+/* Nonzero payloads expose accidentally dropped scalar or optional fields. */
+static void ContractPayload(UmiSourceControlRepositorySnapshot *item)
+{
+    item->root_uri[0] = 'v';
+    item->provider[0] = 'v';
+    item->branch[0] = 'v';
+    item->head[0] = 'v';
+    item->clean = (int)8U;
+    item->detached = (int)9U;
+}
+#include "snapshot_contract_cases.h"

@@ -15,6 +15,7 @@
 #include "umicom/ui/gtk4/bank_operations.h"
 #include "umicom/bank_operations/operations.h"
 #include "umicom/bank_operations/review.h"
+#include "umicom/bank_operations/statement_text.h"
 #include "umicom/finance/money_text.h"
 #include <inttypes.h>
 #include <limits.h>
@@ -34,6 +35,11 @@ typedef struct BankUi {
     GtkDropDown *recordState;
     GtkEntry *request, *id, *owner, *source, *destination, *name;
     GtkEntry *minor, *currency, *scale, *date, *statementAccount;
+    GtkEntry *interestRate, *interestDays, *interestBasis;
+    GtkGrid *interestRequests;
+    GtkEntry *statementFirst, *statementLast;
+    GtkTextBuffer *statementBuffer;
+    int statementPage;
     GtkLabel *message, *hint, *summary;
     GtkButton *submit;
     GtkGrid *customers, *accounts, *transfers, *cards, *ledger, *reconciliation, *audit;
@@ -240,6 +246,27 @@ static void Refresh(BankUi *ui)
         (void)Cell(ui->transfers, 2, row, b.accountId.value, false); (void)Cell(ui->transfers, 3, row, b.name, false);
         (void)Cell(ui->transfers, 4, row, "Beneficiary", false); (void)Cell(ui->transfers, 6, row, RecordState(b.state), false);
     }
+    if (ui->interestRequests != NULL) {
+        static const char *const headings[] = {"Interest ID", "Account", "Period", "Fixed principal",
+            "Interest", "Rate bps / days / basis", "Maker", "Checker", "State"};
+        Headers(ui->interestRequests, headings, G_N_ELEMENTS(headings));
+        for (size_t i = 0U; i < counts.interestRequests; ++i) {
+            UmiBankInterestRequest request;
+            char terms[80]; int row = (int)i + 1;
+            if (UmiBankOperationsInterestAt(ui->operations, i, &request) != UMI_STATUS_OK) continue;
+            (void)snprintf(terms, sizeof terms, "%" PRId32 " / %" PRIu32 " / %" PRIu32,
+                request.terms.annualRateBps, request.terms.days, request.terms.dayCountBasis);
+            (void)Cell(ui->interestRequests, 0, row, request.id.value, false);
+            (void)Cell(ui->interestRequests, 1, row, request.accountId.value, false);
+            (void)Cell(ui->interestRequests, 2, row, request.periodId.value, false);
+            MoneyCell(ui->interestRequests, 3, row, request.principal);
+            MoneyCell(ui->interestRequests, 4, row, request.amount);
+            (void)Cell(ui->interestRequests, 5, row, terms, false);
+            (void)Cell(ui->interestRequests, 6, row, request.makerId.value, false);
+            (void)Cell(ui->interestRequests, 7, row, request.checkerId.value, false);
+            (void)Cell(ui->interestRequests, 8, row, TransferState(request.state), false);
+        }
+    }
     for (size_t i = 0U; i < counts.cards; ++i) {
         UmiBankCard c; int row = (int)i + 1;
         if (UmiBankOperationsCardAt(ui->operations, i, &c) != UMI_STATUS_OK) continue;
@@ -312,7 +339,11 @@ static bool ReadCommand(BankUi *ui, UmiBankActor *actor, UmiBankCommand *command
     guint action = gtk_drop_down_get_selected(ui->action), identity = gtk_drop_down_get_selected(ui->identity);
     uint32_t fields; uint64_t minor = 0U, scale = 0U; int year, month, day, consumed = 0;
     const char *date = EntryText(ui->date);
+/* The form accepts appended interest actions while retaining earlier selections. The previous implementation is retained for engineering review. */
+#if 0
     if (action >= (guint)UMI_BANK_RECONCILE || identity >= G_N_ELEMENTS(actors)) return false;
+#endif
+    if (action >= (guint)UMI_BANK_ACTION_LAST || identity >= G_N_ELEMENTS(actors)) return false;
     UmiBankCommandInit(command, (UmiBankAction)(action + 1U));
     fields = UmiBankActionFields(command->action);
     memset(actor, 0, sizeof *actor); (void)umi_financial_id_assign(&actor->id, actors[identity]);
@@ -327,6 +358,14 @@ static bool ReadCommand(BankUi *ui, UmiBankActor *actor, UmiBankCommand *command
         if (!UnsignedText(EntryText(ui->minor), INT64_MAX, &minor) || !UnsignedText(EntryText(ui->scale), 9U, &scale) ||
             umi_accounting_currency_from_code(EntryText(ui->currency), &command->amount.currency) != UMI_STATUS_OK) return false;
         command->amount.minor_units = (int64_t)minor; command->amount.scale = (uint8_t)scale;
+    }
+    if ((fields & UMI_BANK_FIELD_INTEREST) != 0U) {
+        uint64_t rate, days, basis;
+        if (ui->interestRate == NULL || ui->interestDays == NULL || ui->interestBasis == NULL ||
+            !UnsignedText(EntryText(ui->interestRate), 10000U, &rate) ||
+            !UnsignedText(EntryText(ui->interestDays), 3660U, &days) ||
+            !UnsignedText(EntryText(ui->interestBasis), 365U, &basis)) return false;
+        command->interest = (UmiBankInterestTerms){(int32_t)rate, (uint32_t)days, (uint32_t)basis};
     }
     if ((fields & UMI_BANK_FIELD_STATE) != 0U)
         command->state = (UmiBankRecordState)(gtk_drop_down_get_selected(ui->recordState) + 1U);
@@ -454,6 +493,8 @@ static void Reload(GtkButton *button, gpointer data)
     status = UmiBankOperationsReload(ui->operations); Message(ui, status);
     if (status == UMI_STATUS_OK) Refresh(ui);
 }
+/* Statement projection now accepts an explicit revision interval and shares portable money text; the full-history default and ledger grid remain available. The previous implementation is retained for engineering review. */
+#if 0
 static void ShowStatement(GtkButton *button, gpointer data)
 {
     static const char *const headers[] = {"Revision", "Journal", "Reference", "Debit minor", "Credit minor", "Running balance minor"};
@@ -479,6 +520,49 @@ static void ShowStatement(GtkButton *button, gpointer data)
     }
     gtk_notebook_set_current_page(ui->pages, 4); g_free(statement);
 }
+#endif
+static void ShowStatement(GtkButton *button, gpointer data)
+{
+    static const char *const headers[] = {"Revision", "Journal", "Reference", "Debit minor", "Credit minor", "Running balance minor"};
+    BankUi *ui = SignalUi(data); UmiBankStatement *statement; UmiStatus status;
+    (void)button;
+    if (ui == NULL) return;
+    uint64_t first = 1U, last = ui->displayedRevision;
+    if (ui->statementBuffer != NULL) gtk_text_buffer_set_text(ui->statementBuffer, "No statement prepared for these fields.", -1);
+    if ((ui->statementFirst != NULL && EntryText(ui->statementFirst)[0] != '\0' &&
+            !UnsignedText(EntryText(ui->statementFirst), UINT64_MAX, &first)) ||
+        (ui->statementLast != NULL && EntryText(ui->statementLast)[0] != '\0' &&
+            !UnsignedText(EntryText(ui->statementLast), UINT64_MAX, &last))) {
+        Message(ui, UMI_STATUS_INVALID_ARGUMENT); return;
+    }
+    statement = g_try_new0(UmiBankStatement, 1);
+    if (statement == NULL) { Message(ui, UMI_STATUS_OUT_OF_MEMORY); return; }
+    status = UmiBankOperationsStatement(ui->operations, EntryText(ui->statementAccount), first, last, statement);
+    if (status != UMI_STATUS_OK) { Message(ui, status); g_free(statement); return; }
+    if (ui->statementBuffer != NULL) {
+        char *report = g_try_malloc(UMI_BANK_STATEMENT_TEXT_CAPACITY);
+        if (report == NULL) { Message(ui, UMI_STATUS_OUT_OF_MEMORY); g_free(statement); return; }
+        status = UmiBankOperationsDescribeStatement(ui->operations, EntryText(ui->statementAccount),
+            first, last, report, UMI_BANK_STATEMENT_TEXT_CAPACITY, NULL);
+        if (status != UMI_STATUS_OK) { Message(ui, status); g_free(report); g_free(statement); return; }
+        gtk_text_buffer_set_text(ui->statementBuffer, report, -1); g_free(report);
+    }
+    Headers(ui->ledger, headers, G_N_ELEMENTS(headers));
+    for (size_t i = 0U; i < statement->count; ++i) {
+        const UmiBankStatementLine *line = &statement->lines[i]; int row = (int)i + 1;
+        NumberCell(ui->ledger, 0, row, line->revision); (void)Cell(ui->ledger, 1, row, line->journalId.value, false);
+        (void)Cell(ui->ledger, 2, row, line->referenceId.value, false); MinorCell(ui->ledger, 3, row, line->debitMinor);
+        MinorCell(ui->ledger, 4, row, line->creditMinor); MinorCell(ui->ledger, 5, row, line->balanceMinor);
+    }
+    { char message[280];
+      (void)snprintf(message, sizeof message, "Statement %.47s | %.3s scale %u | opening %" PRId64
+          " minor | closing %" PRId64 " minor | revisions %" PRIu64 "-%" PRIu64 ". Reload restores the full journal view.",
+          statement->accountId.value, statement->closing.currency.code, (unsigned)statement->closing.scale,
+          statement->opening.minor_units, statement->closing.minor_units, statement->firstRevision, statement->lastRevision);
+      gtk_label_set_text(ui->message, message);
+    }
+    gtk_notebook_set_current_page(ui->pages, ui->statementBuffer != NULL ? ui->statementPage : 4); g_free(statement);
+}
 static void ActionChanged(GObject *object, GParamSpec *spec, gpointer data)
 {
     BankUi *ui = SignalUi(data); UmiBankAction action; uint32_t fields; const char *hint;
@@ -494,7 +578,21 @@ static void ActionChanged(GObject *object, GParamSpec *spec, gpointer data)
     gtk_widget_set_sensitive(GTK_WIDGET(ui->currency), (fields & UMI_BANK_FIELD_MONEY) != 0U);
     gtk_widget_set_sensitive(GTK_WIDGET(ui->scale), (fields & UMI_BANK_FIELD_MONEY) != 0U);
     gtk_widget_set_sensitive(GTK_WIDGET(ui->recordState), (fields & UMI_BANK_FIELD_STATE) != 0U);
+    if (ui->interestRate != NULL) {
+        bool enabled = (fields & UMI_BANK_FIELD_INTEREST) != 0U;
+        gtk_widget_set_sensitive(GTK_WIDGET(ui->interestRate), enabled);
+        gtk_widget_set_sensitive(GTK_WIDGET(ui->interestDays), enabled);
+        gtk_widget_set_sensitive(GTK_WIDGET(ui->interestBasis), enabled);
+    }
     switch (action) {
+    case UMI_BANK_INTEREST_SUBMIT:
+        hint = "Practice interest: entity = new request ID; owner = period ID (for example 2026-09); source = account. Rate 500 bps means 5%; days 1..3660; basis 360 or 365. Uses the booked balance now, not historical daily balances. Use Test maker."; break;
+    case UMI_BANK_INTEREST_APPROVE: case UMI_BANK_INTEREST_REJECT:
+        hint = "Entity = interest request ID. Review its fixed principal, rate, period and amount. Use Test checker; the maker cannot approve or reject their own request."; break;
+    case UMI_BANK_INTEREST_CANCEL:
+        hint = "Entity = pending or approved interest request. The original Test maker or Test operator may cancel it. No interest was posted."; break;
+    case UMI_BANK_INTEREST_POST: case UMI_BANK_INTEREST_REVERSE:
+        hint = "Entity = interest request ID. Use Test operator. Posting needs separate approval; reversal requires available funds and retains the original journal."; break;
     case UMI_BANK_ACCOUNT_OPEN: hint = "Entity = new account ID; owner = customer ID; name, currency and scale required; amount must be 0. Use Test maker."; break;
     case UMI_BANK_BENEFICIARY_CREATE: hint = "Entity = beneficiary ID; owner = paying customer ID; destination = existing recipient account. Use Test maker."; break;
     case UMI_BANK_TRANSFER_SUBMIT: hint = "Entity = transfer ID; owner = beneficiary ID; source = paying account. Destination is optional and must match beneficiary. Use Test maker."; break;
@@ -553,7 +651,11 @@ static void OpenWorkspace(GtkButton *button, gpointer data)
 {
     static const char *const identities[] = {"Test maker", "Test checker", "Test operator", NULL};
     static const char *const states[] = {"Active", "Blocked", "Closed", NULL};
+/* The action model includes the additive interest lifecycle. The previous implementation is retained for engineering review. */
+#if 0
     const char *actions[UMI_BANK_RECONCILE + 1U];
+#endif
+    const char *actions[UMI_BANK_ACTION_LAST + 1U];
     BankLauncher *launcher = data; BankUi *ui; GtkRoot *root;
     GtkWidget *box, *formScroll, *form, *toolbar, *buttonWidget, *banner;
     char *directory; UmiStatus status;
@@ -582,8 +684,13 @@ static void OpenWorkspace(GtkButton *button, gpointer data)
     form = gtk_grid_new(); gtk_grid_set_column_spacing(GTK_GRID(form), 12); gtk_grid_set_row_spacing(GTK_GRID(form), 6);
     formScroll = gtk_scrolled_window_new(); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(formScroll), form);
     gtk_widget_set_size_request(formScroll, -1, 250); gtk_box_append(GTK_BOX(box), formScroll);
+/* The shared command catalogue supplies all action descriptions and preserves the old order. The previous implementation is retained for engineering review. */
+#if 0
     for (unsigned i = 0U; i < (unsigned)UMI_BANK_RECONCILE; ++i) actions[i] = UmiBankActionName((UmiBankAction)(i + 1U));
     actions[UMI_BANK_RECONCILE] = NULL;
+#endif
+    for (unsigned i = 0U; i < (unsigned)UMI_BANK_ACTION_LAST; ++i) actions[i] = UmiBankActionName((UmiBankAction)(i + 1U));
+    actions[UMI_BANK_ACTION_LAST] = NULL;
     ui->action = GTK_DROP_DOWN(gtk_drop_down_new_from_strings(actions));
     ui->identity = GTK_DROP_DOWN(gtk_drop_down_new_from_strings(identities));
     gtk_grid_attach(GTK_GRID(form), gtk_label_new("Action"), 0, 0, 1, 1);
@@ -603,6 +710,9 @@ static void OpenWorkspace(GtkButton *button, gpointer data)
     ui->recordState = GTK_DROP_DOWN(gtk_drop_down_new_from_strings(states));
     gtk_grid_attach(GTK_GRID(form), gtk_label_new("New lifecycle state"), 0, 6, 1, 1);
     gtk_grid_attach(GTK_GRID(form), GTK_WIDGET(ui->recordState), 1, 6, 1, 1);
+    ui->interestRate = FormEntry(GTK_GRID(form), "Interest rate (basis points)", 0, 7, 5, "500");
+    ui->interestDays = FormEntry(GTK_GRID(form), "Interest days", 2, 7, 4, "30");
+    ui->interestBasis = FormEntry(GTK_GRID(form), "Interest year basis (360 or 365)", 0, 8, 3, "365");
     ui->hint = GTK_LABEL(gtk_label_new(NULL)); gtk_label_set_wrap(ui->hint, TRUE); gtk_box_append(GTK_BOX(box), GTK_WIDGET(ui->hint));
     toolbar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8); gtk_box_append(GTK_BOX(box), toolbar);
     buttonWidget = gtk_button_new_with_label("New request"); g_signal_connect_object(buttonWidget, "clicked", G_CALLBACK(NewRequest), G_OBJECT(ui->window), 0); gtk_box_append(GTK_BOX(toolbar), buttonWidget);
@@ -629,6 +739,30 @@ static void OpenWorkspace(GtkButton *button, gpointer data)
         gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), view);
         gtk_notebook_append_page(ui->pages, scroll, gtk_label_new("Command review"));
     }
+    /* Append to retain the existing notebook indexes used by review/statement. */
+    ui->interestRequests = Page(ui->pages, "Practice interest");
+    {
+        GtkWidget *page = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+        GtkWidget *range = gtk_grid_new();
+        GtkWidget *scroll = gtk_scrolled_window_new(), *view = gtk_text_view_new();
+        GtkWidget *hint = gtk_label_new("Use the statement account field above. Blank revisions mean 1 through the displayed committed revision. Reload to read newer commits, then show the statement again.");
+        gtk_label_set_wrap(GTK_LABEL(hint), TRUE); gtk_box_append(GTK_BOX(page), hint);
+        ui->statementFirst = FormEntry(GTK_GRID(range), "First revision", 0, 0, 20, "1");
+        ui->statementLast = FormEntry(GTK_GRID(range), "Last revision (blank = displayed)", 2, 0, 20, "");
+        gtk_box_append(GTK_BOX(page), range);
+        GtkWidget *show = gtk_button_new_with_label("Show statement range");
+        g_signal_connect_object(show, "clicked", G_CALLBACK(ShowStatement), G_OBJECT(ui->window), 0);
+        gtk_box_append(GTK_BOX(page), show);
+        gtk_text_view_set_editable(GTK_TEXT_VIEW(view), FALSE);
+        gtk_text_view_set_monospace(GTK_TEXT_VIEW(view), TRUE);
+        gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view), GTK_WRAP_WORD_CHAR);
+        ui->statementBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
+        gtk_text_buffer_set_text(ui->statementBuffer, "Choose an account and show a statement. The report is a copied snapshot; it does not update automatically.", -1);
+        gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), view);
+        gtk_widget_set_vexpand(scroll, TRUE); gtk_box_append(GTK_BOX(page), scroll);
+        ui->statementPage = gtk_notebook_append_page(ui->pages, page, gtk_label_new("Statement report"));
+    }
+
     gtk_box_append(GTK_BOX(box), GTK_WIDGET(ui->pages));
     /* Edits invalidate the prediction immediately; Submit rechecks as defence
      * in depth in case a caller changes the form without an edit notification. */
@@ -640,6 +774,9 @@ static void OpenWorkspace(GtkButton *button, gpointer data)
         g_signal_connect_object(ui->identity, "notify::selected", G_CALLBACK(ReviewSelectionChanged), G_OBJECT(ui->window), 0);
         g_signal_connect_object(ui->recordState, "notify::selected", G_CALLBACK(ReviewSelectionChanged), G_OBJECT(ui->window), 0);
     }
+    g_signal_connect_object(ui->interestRate, "changed", G_CALLBACK(ReviewEdited), G_OBJECT(ui->window), 0);
+    g_signal_connect_object(ui->interestDays, "changed", G_CALLBACK(ReviewEdited), G_OBJECT(ui->window), 0);
+    g_signal_connect_object(ui->interestBasis, "changed", G_CALLBACK(ReviewEdited), G_OBJECT(ui->window), 0);
     InvalidateReview(ui);
     directory = g_build_filename(g_get_user_data_dir(), "Umicom", "Bank", NULL);
     ui->path = g_build_filename(directory, "bank-operations-simulation.sqlite", NULL);

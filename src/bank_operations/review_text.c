@@ -97,6 +97,20 @@ UmiStatus UmiBankReviewDescribe(const UmiBankReview *review, char *output, size_
             TransferState(transfer->state), transfer->makerId.value,
             transfer->checkerId.value[0] != '\0' ? transfer->checkerId.value : "not assigned");
     }
+    if (snapshot->hasInterest) {
+        const UmiBankInterestRequest *request = &snapshot->interestAfter;
+        Append(&sink, "\nPractice interest %s; account %s; period %s\n  Fixed principal: ",
+            request->id.value, request->accountId.value, request->periodId.value);
+        Amount(&sink, &request->principal); Append(&sink, "; calculated interest: ");
+        Amount(&sink, &request->amount);
+        Append(&sink, "\n  Annual rate: %" PRId32 " basis points; days: %" PRIu32 "; basis: %" PRIu32
+            "\n  Fractions truncated toward zero once. No historical daily-balance calculation.\n"
+            "  Maker: %s; checker: %s; state: %s -> %s\n",
+            request->terms.annualRateBps, request->terms.days, request->terms.dayCountBasis,
+            request->makerId.value, request->checkerId.value[0] != '\0' ? request->checkerId.value : "not assigned",
+            snapshot->interestExistedBefore ? TransferState(snapshot->interestBefore.state) : "not submitted",
+            TransferState(request->state));
+    }
     Append(&sink, "Affected account balances / debit eligibility: %zu\n", snapshot->accountCount);
     for (size_t i = 0U; i < snapshot->accountCount; ++i) {
         const UmiBankReviewAccount *row = &snapshot->accounts[i];

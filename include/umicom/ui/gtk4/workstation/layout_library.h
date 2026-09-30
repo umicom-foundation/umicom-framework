@@ -18,6 +18,7 @@
 
 #include <gtk/gtk.h>
 #include "umicom/ui/workspace_library.h"
+#include "umicom/ui/workspace_library_checkpoint.h"
 
 G_BEGIN_DECLS
 
@@ -83,6 +84,12 @@ typedef UmiStatus (*UmiGtk4WorkspaceLayoutLibraryStorageReadHandler)(
 typedef UmiStatus (*UmiGtk4WorkspaceLayoutLibraryStorageOperationHandler)(
     const UmiGtk4WorkspaceLayoutLibraryStorageRequest *request, void *context);
 
+/** Native Duplicate accepts an empty New layout ID field. Framework then
+ * suggests a collision-free identity from the displayed complete snapshot,
+ * captures it before idle dispatch, and uses the ordinary revision-checked
+ * apply callback. A nonempty ID remains an explicit manual request. Suggestion
+ * failure submits nothing; a stale apply is never regenerated or retried. */
+
 /** Create and initially read the native view. Callbacks/context are borrowed
  * until destruction. No model, files, application processes or database are
  * created by this component. All operations use the GTK owning thread. */
@@ -115,6 +122,26 @@ UmiStatus umi_gtk4_ws_layout_library_set_storage_handlers(
  * retained old widgets. Destruction inside an owner callback is deferred until
  * that callback returns. A parent-retained popover becomes inert. */
 void umi_gtk4_ws_layout_library_destroy(UmiGtk4WorkspaceLayoutLibrary *library);
+
+/** An explicit read captures owner identity at click time. Preview performs
+ * storage I/O but never adopts Save CAS evidence or authorizes Restore. */
+typedef struct UmiGtk4WorkspaceLayoutLibraryPreviewRequest {
+    uint64_t expected_customisation_revision;
+    uint64_t expected_storage_generation;
+} UmiGtk4WorkspaceLayoutLibraryPreviewRequest;
+typedef UmiStatus (*UmiGtk4WorkspaceLayoutLibraryPreviewHandler)(
+    const UmiGtk4WorkspaceLayoutLibraryPreviewRequest *request,
+    UmiUiWorkspaceLibraryPreview *out_preview, void *context);
+
+/** Bind an optional explicit preview callback; NULL disables it. Context is
+ * borrowed until replacement/destruction, and the callback may destroy this
+ * controller. No read happens while binding. Replacing storage handlers clears
+ * this binding, so install the preview handler afterwards. Pending work is BUSY.
+ * The displayed comparison is cleared on refresh or an action; later Restore
+ * retains its existing confirmed reread semantics rather than applying a preview. */
+UmiStatus umi_gtk4_ws_layout_library_set_preview_handler(
+    UmiGtk4WorkspaceLayoutLibrary *library,
+    UmiGtk4WorkspaceLayoutLibraryPreviewHandler handler, void *context);
 
 G_END_DECLS
 #endif

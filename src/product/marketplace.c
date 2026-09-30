@@ -19,6 +19,27 @@
  * responsibility for higher-level threading and persistence policy.
  */
 #include "umicom/product/marketplace.h"
+#include "../base/snapshot_registry_internal.h"
+
+/* Validate every bounded text member before lookup. Value-only snapshot
+ * ownership stays with this existing Framework registry; domain semantics and
+ * normalisation remain in its established implementation. */
+static const UmiSnapshotTextField snapshot_text_fields[] = {
+    UMI_SNAPSHOT_TEXT_FIELD(UmiProductMarketplaceItemSnapshot, id, 1),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiProductMarketplaceItemSnapshot, provider_id, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiProductMarketplaceItemSnapshot, name, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiProductMarketplaceItemSnapshot, summary, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiProductMarketplaceItemSnapshot, version, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiProductMarketplaceItemSnapshot, category, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiProductMarketplaceItemSnapshot, licence, 0)
+};
+UmiStatus umi_product_marketplace_snapshot_validate(const UmiProductMarketplaceItemSnapshot *item,
+    UmiSnapshotValidation *outValidation)
+{
+    return UmiSnapshotValidateTextFields(item, sizeof(*item), snapshot_text_fields,
+        sizeof(snapshot_text_fields) / sizeof(snapshot_text_fields[0]), outValidation);
+}
+
 
 #include <stdlib.h>
 #include <string.h>
@@ -85,6 +106,14 @@ void umi_product_marketplace_registry_destroy(UmiProductMarketplaceItemRegistry 
  */
 UmiStatus umi_product_marketplace_registry_upsert(UmiProductMarketplaceItemRegistry *registry, const UmiProductMarketplaceItemSnapshot *item)
 {
+    /* Central bounded validation rejects malformed snapshots before identity
+     * comparison or mutation. The existing single-record logic is preserved;
+     * valid records keep the same order, metadata and revision behavior. */
+    if (registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus validation = umi_product_marketplace_snapshot_validate(item, NULL);
+    if (validation != UMI_STATUS_OK) return validation;
+    if (registry->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -185,3 +214,10 @@ uint64_t umi_product_marketplace_registry_revision(const UmiProductMarketplaceIt
 {
     return registry != NULL ? registry->revision : 0U;
 }
+
+/* A complete private value registry makes a multi-record import atomic on
+ * the owner's thread. The original single-record API remains the authority
+ * for valid record normalisation; no application-side registry is introduced. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_product_marketplace_registry_upsert_many,
+    UmiProductMarketplaceItemRegistry, UmiProductMarketplaceItemSnapshot,
+    umi_product_marketplace_snapshot_validate, umi_product_marketplace_registry_upsert, UMI_PRODUCT_MARKETPLACE_CAPACITY)

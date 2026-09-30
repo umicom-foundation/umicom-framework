@@ -90,6 +90,15 @@ UmiStatus umi_language_runtime_publish_formatting_available(UmiLanguageRuntimeSe
  * applications.
  */
 UmiStatus umi_language_runtime_publish_rename(UmiLanguageRuntimeServiceBridge*b,const char*d,const char*symbol,const char*old_name,const char*new_name,const UmiLanguageRuntimeWorkspaceEdit*e);
+/** Publication is synchronous on the owning thread. List responses are staged
+ * before replacing only the requested document's records. Conversion, capacity,
+ * malformed count/text or revision exhaustion leaves the prior list and bridge
+ * revision intact. No response is silently shortened. Empty lists clear only
+ * this document. References also preserve results belonging to other documents.
+ * Semantic data must contain complete five-value groups without position
+ * arithmetic overflow. Language and Editor stores remain separate owners;
+ * editor synchronization can fail independently and should then be retried. */
+
 #ifdef __cplusplus
 }
 #endif

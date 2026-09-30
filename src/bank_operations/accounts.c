@@ -94,6 +94,16 @@ UmiStatus BankApplyCustomerAccount(BankState *state, const UmiBankActor *actor,
                      strcmp(transfer->destinationAccountId.value, command->id.value) == 0)) return UMI_STATUS_BUSY;
             }
         }
+        /* Pending approved economics must remain actionable. Cancel or reject
+         * interest before closing its account; blocking remains available. */
+        if (command->state == UMI_BANK_RECORD_CLOSED) {
+            for (size_t i = 0U; i < state->counts.interestRequests; ++i) {
+                const UmiBankInterestRequest *request = &state->interestRequests[i];
+                if (strcmp(request->accountId.value, command->id.value) == 0 &&
+                    (request->state == UMI_BANK_TRANSFER_PENDING || request->state == UMI_BANK_TRANSFER_APPROVED))
+                    return UMI_STATUS_BUSY;
+            }
+        }
         state->accounts[index].state = command->state;
         return UMI_STATUS_OK;
     case UMI_BANK_BENEFICIARY_CREATE: {

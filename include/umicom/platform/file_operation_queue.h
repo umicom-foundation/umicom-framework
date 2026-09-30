@@ -24,6 +24,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "umicom/base/status.h"
+#include "umicom/base/snapshot_validation.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -105,6 +106,26 @@ size_t umi_platform_file_operation_queue_registry_count(const UmiFileOperationRe
  * module and its client applications.
  */
 uint64_t umi_platform_file_operation_queue_registry_revision(const UmiFileOperationRegistry *registry);
+
+
+/** Check id and every fixed text array before lookup/copy. id must be nonempty;
+ * other text may be empty. Output is optional and contains field diagnostics,
+ * not input text. No state changes or allocations occur. This validates text
+ * bounds, not domain semantics or UTF-8. Size/version normalisation is unchanged.
+ * The existing registry_upsert operation applies the same check before mutation. */
+UmiStatus umi_platform_file_operation_queue_snapshot_validate(const UmiFileOperationSnapshot *item,
+    UmiSnapshotValidation *outValidation);
+
+/** Atomically insert/replace up to UMI_PLATFORM_FILE_OPERATION_QUEUE_CAPACITY distinct IDs in memory.
+ * Entries retain normal upsert order and revision increments. Duplicate IDs
+ * within the batch return ALREADY_EXISTS; IDs already stored may be replaced.
+ * Failure publishes no changes. An empty batch succeeds without allocation.
+ * Inputs remain caller-owned and unchanged. outResult is optional and must not
+ * overlap inputs or registry storage. Keep them stable and serialize registry
+ * access on the owning thread. This copies a full registry temporarily and
+ * performs no I/O; it is not a filesystem or cross-thread transaction. */
+UmiStatus umi_platform_file_operation_queue_registry_upsert_many(UmiFileOperationRegistry *registry,
+    const UmiFileOperationSnapshot *items, size_t count, UmiSnapshotBatchResult *outResult);
 
 #ifdef __cplusplus
 }

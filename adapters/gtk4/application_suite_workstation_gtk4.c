@@ -1083,6 +1083,12 @@ static UmiStatus suite_layout_library_apply(
     *candidate = workstation->customisation;
     status = umi_ui_workspace_library_apply(candidate,
         &(const UmiUiWorkspaceLibraryPolicy){ prefix }, request, NULL);
+    /* Accepted boundary moves and repeated activation are model no-ops.
+     * Preserve the native revision and panel lifetime as well as model state. */
+    if (status == UMI_STATUS_OK && candidate->revision == workstation->customisation.revision) {
+        free(candidate);
+        return UMI_STATUS_OK;
+    }
     if (status == UMI_STATUS_OK)
         status = suite_publish_library_candidate(workstation, candidate, false);
     free(candidate);
@@ -1146,6 +1152,20 @@ static UmiStatus suite_library_storage_read(
         : "Memory-only library checkpoint; it will not survive process exit.";
     (void)g_strlcpy(out_state->message, message, sizeof(out_state->message));
     return UMI_STATUS_OK;
+}
+
+/* Validate the queued read against the current owner/backend before any I/O.
+ * Reading a preview must not clear an earlier Save conflict or update its CAS. */
+static UmiStatus suite_library_preview(
+    const UmiGtk4WorkspaceLayoutLibraryPreviewRequest *request,
+    UmiUiWorkspaceLibraryPreview *out_preview, void *context)
+{
+    UmiApplicationSuiteGtk4Workstation *workstation = context;
+    if (request == NULL || workstation == NULL || out_preview == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (request->expected_customisation_revision != workstation->customisation.revision ||
+        request->expected_storage_generation != workstation->library_storage_generation)
+        return UMI_STATUS_INVALID_STATE;
+    return umi_application_suite_gtk4_workstation_library_preview(workstation, out_preview);
 }
 
 /* Save does not modify the visible owner. Restore validates the entire archive
@@ -3185,6 +3205,9 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
         status = umi_gtk4_ws_layout_library_set_storage_handlers(workstation->layout_library,
             suite_library_storage_read, suite_library_storage_operation, workstation);
         if (status != UMI_STATUS_OK) goto fail;
+        status = umi_gtk4_ws_layout_library_set_preview_handler(workstation->layout_library,
+            suite_library_preview, workstation);
+        if (status != UMI_STATUS_OK) goto fail;
     }
 
     /* Keep layout creation reachable even on a completely empty canvas. */
@@ -3551,4 +3574,41 @@ umi_application_suite_gtk4_workstation_snapshot(
         snapshot.identity.revision + snapshot.appearance.revision +
         snapshot.command_bar.revision;
     return snapshot;
+}
+
+/* Keep native publication with the established Framework workspace owner;
+ * copied observations support product acceptance without exposing its model. */
+UmiStatus umi_application_suite_gtk4_workstation_library_snapshot(
+    UmiApplicationSuiteGtk4Workstation *workstation, UmiUiWorkspaceLibrarySnapshot *out_snapshot)
+{
+    if (workstation == NULL || out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return suite_layout_library_read(out_snapshot, workstation);
+}
+
+/* Reuse the existing transactional UI path, retaining panel bodies and all
+ * application-specific ownership instead of building another layout manager. */
+UmiStatus umi_application_suite_gtk4_workstation_library_apply(
+    UmiApplicationSuiteGtk4Workstation *workstation, const UmiUiWorkspaceLibraryRequest *request)
+{
+    if (workstation == NULL || request == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = suite_layout_library_apply(request, workstation);
+    if (status == UMI_STATUS_OK && workstation->layout_library != NULL)
+        (void)umi_gtk4_ws_layout_library_refresh(workstation->layout_library);
+    return status;
+}
+
+/* Preview stays with the established Framework storage owner and never
+ * publishes a candidate, changes trade state or adopts a competing Save CAS. */
+UmiStatus umi_application_suite_gtk4_workstation_library_preview(
+    UmiApplicationSuiteGtk4Workstation *workstation, UmiUiWorkspaceLibraryPreview *out_preview)
+{
+    if (workstation == NULL || out_preview == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiUiWorkspaceCheckpointScope scope;
+    char prefix[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    if (workstation->checkpoint_server == NULL) return UMI_STATUS_UNAVAILABLE;
+    if (workstation->customisation.edit_active) return UMI_STATUS_BUSY;
+    UmiStatus status = checkpoint_scope(workstation, &scope, prefix, sizeof(prefix));
+    if (status != UMI_STATUS_OK) return status;
+    return umi_ui_workspace_library_checkpoint_preview(workstation->checkpoint_server,
+        &scope, &workstation->customisation, out_preview);
 }

@@ -22,6 +22,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "umicom/base/status.h"
+#include "umicom/base/snapshot_validation.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -89,6 +90,40 @@ size_t umi_editor_completion_registry_count(const UmiEditorCompletionRegistry *r
  * client applications.
  */
 uint64_t umi_editor_completion_registry_revision(const UmiEditorCompletionRegistry *registry);
+
+/** Check id and all fixed text arrays before string lookup or publication.
+ * id must be nonempty; optional text may be empty. Unterminated arrays return
+ * INVALID_ARGUMENT with optional static field diagnostics. No allocation or
+ * mutation occurs. This checks text bounds, not UTF-8 or domain semantics.
+ * Single-record upsert uses the same preflight and rejects revision overflow. */
+UmiStatus umi_editor_completion_snapshot_validate(const UmiEditorCompletionSnapshot *item,
+    UmiSnapshotValidation *outValidation);
+
+/** Insert/replace up to UMI_EDITOR_COMPLETION_CAPACITY distinct IDs as one in-memory operation.
+ * Duplicate input IDs are rejected; stored IDs can be replaced. Valid records
+ * retain ordinary upsert order, normalisation and revision increments. Any
+ * failure leaves the live registry unchanged. Empty input is a successful no-op.
+ * A full private registry is allocated temporarily. No files or callbacks are
+ * used. Keep all access on the owner's thread; this is not thread locking.
+ * Inputs are borrowed for this call, unchanged and never retained. outResult
+ * is optional, written on every return, and must not overlap input or registry. */
+UmiStatus umi_editor_completion_registry_upsert_many(UmiEditorCompletionRegistry *registry,
+    const UmiEditorCompletionSnapshot *items, size_t count, UmiSnapshotBatchResult *outResult);
+
+/** Atomically replace all records belonging to one nonempty document ID.
+ * expected_revision must match the current registry. Other documents retain
+ * their records, order and record revisions; replacements follow them in input
+ * order. Each removal and insertion advances the registry revision once.
+ * Empty input clears only this document, and is a no-op when it has no records.
+ * Every supplied row must match document_id. An ID owned by another document
+ * returns PERMISSION_DENIED; duplicate input IDs return ALREADY_EXISTS. Text,
+ * capacity, stale revision, overflow or allocation failure publishes nothing.
+ * Inputs are borrowed and unchanged. outResult follows upsert_many's lifetime
+ * and alias restrictions. Call only on the owning thread. No I/O is performed. */
+UmiStatus umi_editor_completion_registry_replace_document(UmiEditorCompletionRegistry *registry,
+    const char *document_id, uint64_t expected_revision,
+    const UmiEditorCompletionSnapshot *items, size_t count, UmiSnapshotBatchResult *outResult);
+
 #ifdef __cplusplus
 }
 #endif

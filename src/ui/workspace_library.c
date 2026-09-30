@@ -7,6 +7,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/workspace_library.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -291,8 +292,16 @@ UmiStatus umi_ui_workspace_library_apply(
         return UMI_STATUS_INVALID_ARGUMENT;
     if (customisation->edit_active) return UMI_STATUS_BUSY;
     operation = *request;
+    /* The original four-action range is retained for engineering review.
+     * Explicitly numbered movement actions now extend this same owner; the
+     * previous gate would incorrectly reject those valid requests. */
+#if 0
     if (operation.action < UMI_UI_WORKSPACE_LIBRARY_DUPLICATE ||
         operation.action > UMI_UI_WORKSPACE_LIBRARY_ACTIVATE)
+        return UMI_STATUS_INVALID_ARGUMENT;
+#endif
+    if (operation.action < UMI_UI_WORKSPACE_LIBRARY_DUPLICATE ||
+        operation.action > UMI_UI_WORKSPACE_LIBRARY_MOVE_LATER)
         return UMI_STATUS_INVALID_ARGUMENT;
     status = copy_prefix(policy, prefix, sizeof(prefix));
     if (status == UMI_STATUS_OK) status = validate_model(customisation, prefix);
@@ -331,6 +340,10 @@ UmiStatus umi_ui_workspace_library_apply(
         no_change = strcmp(customisation->layouts[target_index].name, name) == 0;
     if (operation.action == UMI_UI_WORKSPACE_LIBRARY_ACTIVATE)
         no_change = strcmp(customisation->active_layout_id, target) == 0;
+    if (operation.action == UMI_UI_WORKSPACE_LIBRARY_MOVE_EARLIER)
+        no_change = target_index == 0U;
+    if (operation.action == UMI_UI_WORKSPACE_LIBRARY_MOVE_LATER)
+        no_change = target_index + 1U == customisation->layout_count;
     if (no_change) {
         copy_snapshot(customisation, out_snapshot);
         return UMI_STATUS_OK;
@@ -343,6 +356,24 @@ UmiStatus umi_ui_workspace_library_apply(
     if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     *candidate = *customisation;
     switch (operation.action) {
+    case UMI_UI_WORKSPACE_LIBRARY_MOVE_EARLIER:
+    case UMI_UI_WORKSPACE_LIBRARY_MOVE_LATER: {
+        const size_t neighbour = operation.action == UMI_UI_WORKSPACE_LIBRARY_MOVE_EARLIER
+            ? target_index - 1U : target_index + 1U;
+        unsigned char *left = (unsigned char *)&candidate->layouts[target_index];
+        unsigned char *right = (unsigned char *)&candidate->layouts[neighbour];
+        /* Exchange the complete value records on the existing heap candidate.
+         * A byte-sized temporary avoids another large automatic layout object.
+         * Identity, revision, hidden panels and native owners remain unchanged. */
+        for (size_t byte = 0U; byte < sizeof(candidate->layouts[0]); ++byte) {
+            const unsigned char temporary = left[byte];
+            left[byte] = right[byte];
+            right[byte] = temporary;
+        }
+        ++candidate->revision;
+        status = UMI_STATUS_OK;
+        break;
+    }
     case UMI_UI_WORKSPACE_LIBRARY_DUPLICATE:
         /* Clone directly into unused candidate storage, avoiding the older
          * convenience helper's large automatic layout object. */
@@ -382,4 +413,141 @@ UmiStatus umi_ui_workspace_library_apply(
     }
     free(candidate);
     return status;
+}
+
+/* Keep copy identity policy in the portable owner layer so native products do
+ * not grow independent counters or truncate application namespaces. Validate
+ * the complete snapshot before looking up names or generating any proposal. */
+UmiStatus umi_ui_workspace_library_suggest_copy(
+    const UmiUiWorkspaceLibrarySnapshot *snapshot,
+    const char *target_layout_id,
+    UmiUiWorkspaceLibraryCopySuggestion *out_suggestion)
+{
+    UmiUiWorkspaceLibraryCopySuggestion candidate = {0};
+    size_t active_count = 0U;
+    bool source_found = false;
+    UmiStatus status;
+    uintptr_t input_address, output_address;
+    if (snapshot == NULL || out_suggestion == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    input_address = (uintptr_t)(const void *)snapshot;
+    output_address = (uintptr_t)(const void *)out_suggestion;
+    if (input_address <= output_address
+        ? output_address - input_address < sizeof(*snapshot)
+        : input_address - output_address < sizeof(*out_suggestion))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = copy_request_text(candidate.target_layout_id,
+        sizeof(candidate.target_layout_id), target_layout_id, true);
+    if (status != UMI_STATUS_OK) return status;
+    if (!identifier_valid(candidate.target_layout_id)) return UMI_STATUS_INVALID_ARGUMENT;
+    if (snapshot->layout_count > UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS)
+        return UMI_STATUS_INVALID_STATE;
+    for (size_t index = 0U; index < snapshot->layout_count; ++index) {
+        const UmiUiWorkspaceLibraryRow *row = &snapshot->rows[index];
+        if (!fixed_text(row->layout_id, sizeof(row->layout_id), true) ||
+            !identifier_valid(row->layout_id) ||
+            !fixed_text(row->name, sizeof(row->name), true) || !name_valid(row->name) ||
+            row->window_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS)
+            return UMI_STATUS_INVALID_STATE;
+        for (size_t previous = 0U; previous < index; ++previous)
+            if (strcmp(row->layout_id, snapshot->rows[previous].layout_id) == 0)
+                return UMI_STATUS_INVALID_STATE;
+        if (row->active) ++active_count;
+        if (strcmp(row->layout_id, candidate.target_layout_id) == 0) source_found = true;
+    }
+    if (active_count != (snapshot->layout_count != 0U ? 1U : 0U))
+        return UMI_STATUS_INVALID_STATE;
+    if (snapshot->editing) return UMI_STATUS_BUSY;
+    if (!source_found) return UMI_STATUS_NOT_FOUND;
+    if (snapshot->layout_count == UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS ||
+        snapshot->customisation_revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* There are at most layout_count occupied identities. One additional
+     * candidate therefore suffices; bounded decimal suffixes cannot overflow. */
+    for (size_t suffix = 1U; suffix <= snapshot->layout_count + 1U; ++suffix) {
+        bool occupied = false;
+        const int length = snprintf(candidate.new_layout_id, sizeof(candidate.new_layout_id),
+            "%s.copy.%zu", candidate.target_layout_id, suffix);
+        if (length < 0 || (size_t)length >= sizeof(candidate.new_layout_id))
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        for (size_t index = 0U; index < snapshot->layout_count; ++index)
+            if (strcmp(candidate.new_layout_id, snapshot->rows[index].layout_id) == 0) {
+                occupied = true;
+                break;
+            }
+        if (!occupied) {
+            candidate.expected_customisation_revision = snapshot->customisation_revision;
+            *out_suggestion = candidate;
+            return UMI_STATUS_OK;
+        }
+    }
+    return UMI_STATUS_CAPACITY_EXCEEDED;
+}
+
+/* Summary comparison belongs beside library identity rules, so every native
+ * product receives the same bounded, copied review data without a second model. */
+static UmiStatus comparison_snapshot_valid(const UmiUiWorkspaceLibrarySnapshot *snapshot)
+{
+    size_t active = 0U;
+    if (snapshot->layout_count > UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS) return UMI_STATUS_INVALID_STATE;
+    for (size_t i = 0U; i < snapshot->layout_count; ++i) {
+        const UmiUiWorkspaceLibraryRow *row = &snapshot->rows[i];
+        if (!fixed_text(row->layout_id, sizeof(row->layout_id), true) || !identifier_valid(row->layout_id) ||
+            !fixed_text(row->name, sizeof(row->name), true) || !name_valid(row->name) ||
+            row->window_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS) return UMI_STATUS_INVALID_STATE;
+        for (size_t j = 0U; j < i; ++j)
+            if (strcmp(row->layout_id, snapshot->rows[j].layout_id) == 0) return UMI_STATUS_INVALID_STATE;
+        if (row->active) ++active;
+    }
+    if (active != (snapshot->layout_count != 0U ? 1U : 0U)) return UMI_STATUS_INVALID_STATE;
+    return snapshot->editing ? UMI_STATUS_BUSY : UMI_STATUS_OK;
+}
+
+static bool comparison_overlaps(const void *left, size_t left_size, const void *right, size_t right_size)
+{
+    uintptr_t a = (uintptr_t)left, b = (uintptr_t)right;
+    return a <= b ? b - a < left_size : a - b < right_size;
+}
+
+UmiStatus umi_ui_workspace_library_compare(const UmiUiWorkspaceLibrarySnapshot *current,
+    const UmiUiWorkspaceLibrarySnapshot *proposed, UmiUiWorkspaceLibraryComparison *out_comparison)
+{
+    UmiUiWorkspaceLibraryComparison result = {0};
+    UmiStatus status;
+    if (current == NULL || proposed == NULL || out_comparison == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (comparison_overlaps(current, sizeof(*current), out_comparison, sizeof(*out_comparison)) ||
+        comparison_overlaps(proposed, sizeof(*proposed), out_comparison, sizeof(*out_comparison)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = comparison_snapshot_valid(current);
+    if (status != UMI_STATUS_OK) return status;
+    status = comparison_snapshot_valid(proposed);
+    if (status != UMI_STATUS_OK) return status;
+    result.current_revision = current->customisation_revision;
+    result.proposed_revision = proposed->customisation_revision;
+    for (size_t next = 0U; next < proposed->layout_count; ++next) {
+        UmiUiWorkspaceLibraryComparisonRow *row = &result.rows[result.row_count++];
+        row->after = proposed->rows[next]; row->after_index = next; row->before_index = SIZE_MAX;
+        for (size_t old = 0U; old < current->layout_count; ++old) {
+            if (strcmp(current->rows[old].layout_id, row->after.layout_id) != 0) continue;
+            row->before = current->rows[old]; row->before_index = old;
+            if (strcmp(row->before.name, row->after.name) != 0) row->changes |= UMI_UI_WORKSPACE_LIBRARY_CHANGE_NAME;
+            if (old != next) row->changes |= UMI_UI_WORKSPACE_LIBRARY_CHANGE_POSITION;
+            if (row->before.window_count != row->after.window_count) row->changes |= UMI_UI_WORKSPACE_LIBRARY_CHANGE_WINDOWS;
+            if (row->before.locked != row->after.locked) row->changes |= UMI_UI_WORKSPACE_LIBRARY_CHANGE_LOCKED;
+            if (row->before.active != row->after.active) row->changes |= UMI_UI_WORKSPACE_LIBRARY_CHANGE_ACTIVE;
+            break;
+        }
+        if (row->before_index == SIZE_MAX) { row->changes = UMI_UI_WORKSPACE_LIBRARY_CHANGE_ADDED; ++result.added_count; }
+        else if (row->changes != 0U) ++result.changed_count;
+    }
+    for (size_t old = 0U; old < current->layout_count; ++old) {
+        bool found = false;
+        for (size_t next = 0U; next < proposed->layout_count; ++next)
+            if (strcmp(current->rows[old].layout_id, proposed->rows[next].layout_id) == 0) { found = true; break; }
+        if (!found) {
+            UmiUiWorkspaceLibraryComparisonRow *row = &result.rows[result.row_count++];
+            row->before = current->rows[old]; row->before_index = old; row->after_index = SIZE_MAX;
+            row->changes = UMI_UI_WORKSPACE_LIBRARY_CHANGE_REMOVED; ++result.removed_count;
+        }
+    }
+    *out_comparison = result;
+    return UMI_STATUS_OK;
 }

@@ -588,3 +588,18 @@ UmiStatus umi_application_product_gtk4_workstation_snapshot(
     }
     return status;
 }
+
+/* Product composition delegates named-layout ownership and storage evidence
+ * to Framework. Financial commands remain on their separate service owner. */
+UmiStatus umi_application_product_gtk4_workstation_bind_checkpoint_storage(UmiApplicationProductGtk4Workstation *workstation, UmiDataServer *server)
+{
+    return workstation != NULL ? umi_application_suite_gtk4_workstation_bind_checkpoint_storage(workstation->layout, server) : UMI_STATUS_INVALID_ARGUMENT;
+}
+UmiStatus umi_application_product_gtk4_workstation_library_snapshot(UmiApplicationProductGtk4Workstation *workstation, UmiUiWorkspaceLibrarySnapshot *out_snapshot)
+{
+    return workstation != NULL ? umi_application_suite_gtk4_workstation_library_snapshot(workstation->layout, out_snapshot) : UMI_STATUS_INVALID_ARGUMENT;
+}
+UmiStatus umi_application_product_gtk4_workstation_library_preview(UmiApplicationProductGtk4Workstation *workstation, UmiUiWorkspaceLibraryPreview *out_preview)
+{
+    return workstation != NULL ? umi_application_suite_gtk4_workstation_library_preview(workstation->layout, out_preview) : UMI_STATUS_INVALID_ARGUMENT;
+}

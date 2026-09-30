@@ -182,6 +182,30 @@ UmiStatus UmiDocumentStoreReplaceLoaded(UmiDocumentStore *store,
     uint64_t expectedSavedRevision, const char *expectedPath,
     const char *text, size_t length);
 
+/** Copy text and its metadata under the same store lock. The caller owns the
+ * returned zero-terminated buffer and frees it with umi_document_store_free_text.
+ * Pass a non-null outSnapshot and an outText pointing to NULL. Both outputs
+ * remain unchanged on failure. The copy remains valid after edits or close;
+ * outSnapshot->length is its byte length, excluding the terminator. */
+UmiStatus UmiDocumentStoreCopySnapshot(const UmiDocumentStore *store,
+    UmiDocumentId documentId, UmiDocumentSnapshot *outSnapshot, char **outText);
+
+/** Acknowledge a successful provider write of one captured snapshot. Pass an
+ * unmodified snapshot from the same live store and the path actually written.
+ * This does not write bytes. Revision, saved revision, length, previous path
+ * and external-change state must still match, or INVALID_STATE is returned.
+ * A closed ID returns NOT_FOUND; a destination owned by another document returns
+ * ALREADY_EXISTS. Rejection changes no store state, even if the provider has
+ * already written the file. Only success updates the path/name and clears dirty.
+ * Serialize provider writes for each document/destination: this is a metadata
+ * check, not a filesystem transaction or a lock on external writers. */
+UmiStatus UmiDocumentStoreMarkSavedSnapshot(UmiDocumentStore *store,
+    const UmiDocumentSnapshot *expected, const char *path);
+
+/* umi_document_store_mark_saved_as remains available for serialized callers
+ * that already know the current revision was persisted. Providers which can
+ * run callbacks or return after an edit should use the checked pair above. */
+
 #ifdef __cplusplus
 }
 #endif

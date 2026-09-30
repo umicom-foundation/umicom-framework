@@ -48,6 +48,16 @@ bool umi_banking_interest_accrual_valid(const UmiBankingInterestAccrual *value);
  * client applications.
  */
 int64_t umi_banking_interest_accrual_accrued_minor(const UmiBankingInterestAccrual *value);
+/** Checked simple interest, truncated toward zero once after the full rational
+ * calculation. No floating point or overflowing intermediate product is used.
+ * Supports signed rates, nonnegative principal, 0..3660 days and a 360/365 basis.
+ * Returns CAPACITY_EXCEEDED when the final amount cannot fit int64_t; invalid
+ * inputs return INVALID_ARGUMENT. The separate output is unchanged on failure.
+ * Prefer this API to the historical value-only function, which returns zero
+ * on error and therefore cannot distinguish failure from zero interest. */
+UmiStatus umi_banking_interest_accrual_calculate(
+    const UmiBankingInterestAccrual *value, int64_t *out_minor);
+
 #ifdef __cplusplus
 }
 #endif

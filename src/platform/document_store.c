@@ -1078,3 +1078,89 @@ UmiStatus UmiDocumentStoreReplaceLoaded(UmiDocumentStore *store,
     (void)umi_mutex_unlock(store->mutex);
     return status;
 }
+
+/* Snapshot copying belongs in the store because separate metadata/text reads
+ * can observe different edits. No provider callback runs while its mutex is held. */
+UmiStatus UmiDocumentStoreCopySnapshot(const UmiDocumentStore *store,
+    UmiDocumentId documentId, UmiDocumentSnapshot *outSnapshot, char **outText)
+{
+    if (store == NULL || documentId == 0U || outSnapshot == NULL ||
+        outText == NULL || *outText != NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiDocumentStore *mutableStore = (UmiDocumentStore *)store;
+    UmiStatus status = umi_mutex_lock(mutableStore->mutex);
+    if (status != UMI_STATUS_OK) return status;
+    size_t index = umi_document_store_find_index(store, documentId);
+    if (index == SIZE_MAX) {
+        (void)umi_mutex_unlock(mutableStore->mutex);
+        return UMI_STATUS_NOT_FOUND;
+    }
+    const UmiDocumentEntry *entry = &store->entries[index];
+    if (entry->length == SIZE_MAX) {
+        (void)umi_mutex_unlock(mutableStore->mutex);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    char *copy = malloc(entry->length + 1U);
+    if (copy == NULL) {
+        (void)umi_mutex_unlock(mutableStore->mutex);
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    (void)memcpy(copy, entry->text, entry->length + 1U);
+    UmiDocumentSnapshot snapshot;
+    umi_document_snapshot_copy(entry, &snapshot);
+    (void)umi_mutex_unlock(mutableStore->mutex);
+    *outSnapshot = snapshot;
+    *outText = copy;
+    return UMI_STATUS_OK;
+}
+
+/* Keep save acknowledgement in the same authority as edits. A provider's
+ * successful write is evidence about captured bytes, never about newer text. */
+UmiStatus UmiDocumentStoreMarkSavedSnapshot(UmiDocumentStore *store,
+    const UmiDocumentSnapshot *expected, const char *path)
+{
+    if (store == NULL || expected == NULL || path == NULL || path[0] == '\0' ||
+        expected->document_id == 0U ||
+        expected->saved_revision > expected->revision ||
+        memchr(expected->path, '\0', sizeof(expected->path)) == NULL ||
+        (expected->external_change != 0 && expected->external_change != 1))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    char normalised[UMI_PATH_CAPACITY];
+    UmiStatus status = umi_path_normalise(path, normalised, sizeof(normalised));
+    if (status != UMI_STATUS_OK) return status;
+    const char *separator = strrchr(normalised, '/');
+#ifdef _WIN32
+    const char *backslash = strrchr(normalised, '\\');
+    if (backslash != NULL && (separator == NULL || backslash > separator))
+        separator = backslash;
+#endif
+    status = umi_mutex_lock(store->mutex);
+    if (status != UMI_STATUS_OK) return status;
+    size_t index = umi_document_store_find_index(store, expected->document_id);
+    if (index == SIZE_MAX) {
+        (void)umi_mutex_unlock(store->mutex);
+        return UMI_STATUS_NOT_FOUND;
+    }
+    UmiDocumentEntry *entry = &store->entries[index];
+    if (entry->revision != expected->revision ||
+        entry->saved_revision != expected->saved_revision ||
+        entry->length != expected->length ||
+        entry->external_change != expected->external_change ||
+        strcmp(entry->path, expected->path) != 0) {
+        (void)umi_mutex_unlock(store->mutex);
+        return UMI_STATUS_INVALID_STATE;
+    }
+    for (size_t other = 0U; other < store->count; ++other) {
+        if (other != index && store->entries[other].path[0] != '\0' &&
+            umi_path_equal(store->entries[other].path, normalised)) {
+            (void)umi_mutex_unlock(store->mutex);
+            return UMI_STATUS_ALREADY_EXISTS;
+        }
+    }
+    (void)snprintf(entry->path, sizeof(entry->path), "%s", normalised);
+    copy_bounded_text(entry->display_name, sizeof(entry->display_name),
+        separator != NULL ? separator + 1U : normalised);
+    entry->saved_revision = expected->revision;
+    entry->external_change = 0;
+    (void)umi_mutex_unlock(store->mutex);
+    return UMI_STATUS_OK;
+}

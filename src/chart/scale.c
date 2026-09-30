@@ -19,6 +19,23 @@
  * responsibility for higher-level threading and persistence policy.
  */
 #include "umicom/chart/scale.h"
+#include "../base/snapshot_registry_internal.h"
+
+/* Validate every bounded text member before lookup. Value-only snapshot
+ * ownership stays with this existing Framework registry; domain semantics and
+ * normalisation remain in its established implementation. */
+static const UmiSnapshotTextField snapshot_text_fields[] = {
+    UMI_SNAPSHOT_TEXT_FIELD(UmiChartScaleSnapshot, id, 1),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiChartScaleSnapshot, pane_id, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiChartScaleSnapshot, side, 0)
+};
+UmiStatus umi_chart_scale_snapshot_validate(const UmiChartScaleSnapshot *item,
+    UmiSnapshotValidation *outValidation)
+{
+    return UmiSnapshotValidateTextFields(item, sizeof(*item), snapshot_text_fields,
+        sizeof(snapshot_text_fields) / sizeof(snapshot_text_fields[0]), outValidation);
+}
+
 
 #include <stdlib.h>
 #include <string.h>
@@ -85,6 +102,14 @@ void umi_chart_scale_registry_destroy(UmiChartScaleRegistry *registry)
  */
 UmiStatus umi_chart_scale_registry_upsert(UmiChartScaleRegistry *registry, const UmiChartScaleSnapshot *item)
 {
+    /* Central bounded validation rejects malformed snapshots before identity
+     * comparison or mutation. The existing single-record logic is preserved;
+     * valid records keep the same order, metadata and revision behavior. */
+    if (registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus validation = umi_chart_scale_snapshot_validate(item, NULL);
+    if (validation != UMI_STATUS_OK) return validation;
+    if (registry->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -185,3 +210,10 @@ uint64_t umi_chart_scale_registry_revision(const UmiChartScaleRegistry *registry
 {
     return registry != NULL ? registry->revision : 0U;
 }
+
+/* A complete private value registry makes a multi-record import atomic on
+ * the owner's thread. The original single-record API remains the authority
+ * for valid record normalisation; no application-side registry is introduced. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_chart_scale_registry_upsert_many,
+    UmiChartScaleRegistry, UmiChartScaleSnapshot,
+    umi_chart_scale_snapshot_validate, umi_chart_scale_registry_upsert, UMI_CHART_SCALE_CAPACITY)

@@ -107,6 +107,15 @@ UmiStatus BankEncode(const UmiBankAuditEvent *event, char *out, size_t capacity)
     WriteNumber(&writer, command->businessDate.month, 1U);
     WriteNumber(&writer, command->businessDate.day, 1U);
     WriteNumber(&writer, (uint64_t)command->timestampMillis, 8U);
+    /* Only the newly numbered submission action has an extension. Historical
+     * actions keep their byte-for-byte UBO1 representation, preserving cached
+     * history comparisons and idempotency. Older readers reject new actions. */
+    if (command->action == UMI_BANK_INTEREST_SUBMIT) {
+        WriteNumber(&writer, (uint32_t)command->interest.annualRateBps, 4U);
+        WriteNumber(&writer, command->interest.days, 4U);
+        WriteNumber(&writer, command->interest.dayCountBasis, 4U);
+    }
+
     if (writer.failed || writer.size * 2U + 1U > capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     for (size_t i = 0U; i < writer.size; ++i) {
         out[2U * i] = hex[writer.bytes[i] >> 4U];
@@ -147,7 +156,11 @@ UmiStatus BankDecode(const char *text, UmiBankAuditEvent *out)
     action = ReadNumber(&reader, 4U);
     event.actor.capabilities = (uint32_t)ReadNumber(&reader, 4U);
     state = ReadNumber(&reader, 4U);
+/* The codec recognises appended interest actions without renumbering historical records. The previous implementation is retained for engineering review. */
+#if 0
     if (action < UMI_BANK_CUSTOMER_CREATE || action > UMI_BANK_RECONCILE || state > UMI_BANK_RECORD_CLOSED)
+#endif
+    if (action < UMI_BANK_CUSTOMER_CREATE || action > UMI_BANK_ACTION_LAST || state > UMI_BANK_RECORD_CLOSED)
         return UMI_STATUS_PARSE_ERROR;
     command->action = (UmiBankAction)action;
     command->state = (UmiBankRecordState)state;
@@ -165,6 +178,14 @@ UmiStatus BankDecode(const char *text, UmiBankAuditEvent *out)
     command->businessDate.month = (uint8_t)ReadNumber(&reader, 1U);
     command->businessDate.day = (uint8_t)ReadNumber(&reader, 1U);
     timestamp = ReadNumber(&reader, 8U);
+    if (command->action == UMI_BANK_INTEREST_SUBMIT) {
+        uint64_t rate = ReadNumber(&reader, 4U);
+        if (rate > INT32_MAX) return UMI_STATUS_PARSE_ERROR;
+        command->interest.annualRateBps = (int32_t)rate;
+        command->interest.days = (uint32_t)ReadNumber(&reader, 4U);
+        command->interest.dayCountBasis = (uint32_t)ReadNumber(&reader, 4U);
+    }
+
     if (reader.failed || reader.position != reader.size || amount > INT64_MAX ||
         timestamp > INT64_MAX || year > INT32_MAX || event.revision == 0U ||
         event.revision > UMI_BANK_EVENT_CAPACITY) return UMI_STATUS_PARSE_ERROR;

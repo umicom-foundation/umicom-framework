@@ -361,6 +361,173 @@ cleanup:
 
 /* Validate real actions, revision conflicts, input preservation and callback
  * teardown without presenting a popover, window, file dialog or application. */
+/* Exercise actual queued move controls, filtered-list gates and stale clicks. */
+static int test_order_controls(void)
+{
+    LibraryFixture fixture = {0};
+    GtkWidget *root = NULL, *held = NULL;
+    GtkWidget *up, *down, *search;
+    UmiUiWorkspaceLibrarySnapshot before, after;
+    int failed = 0;
+    fixture.model = calloc(1U, sizeof(*fixture.model));
+    CHECK(fixture.model != NULL);
+    fixture.policy.layout_prefix = "test.layout.";
+    umi_ui_workspace_customisation_init(fixture.model);
+    CHECK(umi_ui_workspace_customisation_create_blank_layout(fixture.model, "test.layout.a", "Alpha") == UMI_STATUS_OK);
+    CHECK(umi_ui_workspace_customisation_create_blank_layout(fixture.model, "test.layout.b", "Beta") == UMI_STATUS_OK);
+    CHECK(umi_gtk4_ws_layout_library_create(read_library, apply_library, &fixture, &fixture.library) == UMI_STATUS_OK);
+    root = g_object_ref(umi_gtk4_ws_layout_library_popover(fixture.library));
+    up = find_id(root, "workstation.layout-library.move-up");
+    down = find_id(root, "workstation.layout-library.move-down");
+    search = find_id(root, "workstation.layout-library.search");
+    CHECK(GTK_IS_BUTTON(up) && GTK_IS_BUTTON(down) && GTK_IS_SEARCH_ENTRY(search));
+    CHECK(gtk_widget_get_sensitive(up) && !gtk_widget_get_sensitive(down));
+    CHECK(read_library(&before, &fixture) == UMI_STATUS_OK);
+    g_signal_emit_by_name(up, "clicked");
+    CHECK(fixture.model->revision == before.customisation_revision);
+    CHECK(!gtk_widget_get_sensitive(up) && !gtk_widget_get_sensitive(down));
+    drain_ready();
+    CHECK(read_library(&after, &fixture) == UMI_STATUS_OK);
+    CHECK(strcmp(after.rows[0].layout_id, "test.layout.b") == 0 && after.rows[0].active);
+    CHECK(after.customisation_revision == before.customisation_revision + 1U);
+    CHECK(!gtk_widget_get_sensitive(up) && gtk_widget_get_sensitive(down));
+    gtk_editable_set_text(GTK_EDITABLE(search), "Beta");
+    g_signal_emit_by_name(search, "search-changed");
+    CHECK(!gtk_widget_get_sensitive(up) && !gtk_widget_get_sensitive(down));
+    gtk_editable_set_text(GTK_EDITABLE(search), "");
+    g_signal_emit_by_name(search, "search-changed");
+    CHECK(gtk_widget_get_sensitive(down));
+    g_signal_emit_by_name(down, "clicked");
+    ++fixture.model->revision; /* A different owner edit wins before dispatch. */
+    drain_ready();
+    CHECK(strcmp(fixture.model->layouts[0].layout_id, "test.layout.b") == 0);
+    CHECK(strstr(gtk_label_get_text(GTK_LABEL(find_id(root, "workstation.layout-library.status"))), "changed") != NULL);
+    CHECK(umi_gtk4_ws_layout_library_refresh(fixture.library) == UMI_STATUS_OK);
+    held = g_object_ref(down);
+    g_signal_emit_by_name(down, "clicked");
+    CHECK(read_library(&before, &fixture) == UMI_STATUS_OK);
+    umi_gtk4_ws_layout_library_destroy(fixture.library); fixture.library = NULL;
+    drain_ready();
+    g_signal_emit_by_name(held, "clicked"); drain_ready();
+    CHECK(read_library(&after, &fixture) == UMI_STATUS_OK);
+    CHECK(memcmp(&before, &after, sizeof(before)) == 0);
+cleanup:
+    umi_gtk4_ws_layout_library_destroy(fixture.library);
+    if (held != NULL) g_object_unref(held);
+    if (root != NULL) g_object_unref(root);
+    free(fixture.model);
+    return failed;
+}
+
+/* The real Duplicate button resolves blank IDs before queuing. An owner race
+ * or a closed view must never regenerate a different ID and retry silently. */
+static int test_automatic_copy(void)
+{
+    LibraryFixture fixture = {0};
+    GtkWidget *root = NULL, *held = NULL;
+    GtkWidget *list, *id, *name, *duplicate, *search;
+    size_t calls;
+    int failed = 0;
+    fixture.model = calloc(1U, sizeof(*fixture.model));
+    CHECK(fixture.model != NULL);
+    fixture.policy.layout_prefix = "test.layout.";
+    umi_ui_workspace_customisation_init(fixture.model);
+    CHECK(umi_ui_workspace_customisation_create_blank_layout(fixture.model, "test.layout.source", "Source") == UMI_STATUS_OK);
+    CHECK(umi_gtk4_ws_layout_library_create(read_library, apply_library, &fixture, &fixture.library) == UMI_STATUS_OK);
+    root = g_object_ref(umi_gtk4_ws_layout_library_popover(fixture.library));
+    list = find_id(root, "workstation.layout-library.list");
+    id = find_id(root, "workstation.layout-library.new-id");
+    name = find_id(root, "workstation.layout-library.name");
+    duplicate = find_id(root, "workstation.layout-library.duplicate");
+    search = find_id(root, "workstation.layout-library.search");
+    CHECK(GTK_IS_LIST_BOX(list) && GTK_IS_ENTRY(id) && GTK_IS_ENTRY(name));
+    CHECK(GTK_IS_BUTTON(duplicate) && GTK_IS_SEARCH_ENTRY(search));
+    CHECK(gtk_editable_get_text(GTK_EDITABLE(id))[0] == '\0');
+    gtk_editable_set_text(GTK_EDITABLE(name), "First copy");
+    CHECK(gtk_widget_get_sensitive(duplicate));
+    g_signal_emit_by_name(duplicate, "clicked");
+    gtk_editable_set_text(GTK_EDITABLE(id), "test.layout.too-late");
+    gtk_editable_set_text(GTK_EDITABLE(name), "Too late");
+    drain_ready();
+    CHECK(fixture.applies == 1U && layout_at(&fixture, "test.layout.source.copy.1") != NULL);
+    CHECK(layout_at(&fixture, "test.layout.too-late") == NULL);
+    CHECK(strcmp(fixture.last_name, "First copy") == 0);
+    CHECK(strcmp(fixture.last_new_id, "test.layout.source.copy.1") == 0);
+    CHECK(strcmp(fixture.model->active_layout_id, "test.layout.source.copy.1") == 0);
+    /* Hide the occupied copy: generation must still use the complete list. */
+    gtk_editable_set_text(GTK_EDITABLE(search), "Source");
+    g_signal_emit_by_name(search, "search-changed");
+    gtk_list_box_select_row(GTK_LIST_BOX(list), GTK_LIST_BOX_ROW(find_id(root, "workstation.layout-library.row.test.layout.source")));
+    gtk_editable_set_text(GTK_EDITABLE(id), "");
+    gtk_editable_set_text(GTK_EDITABLE(name), "Second copy");
+    g_signal_emit_by_name(duplicate, "clicked"); drain_ready();
+    CHECK(fixture.applies == 2U && layout_at(&fixture, "test.layout.source.copy.2") != NULL);
+    gtk_editable_set_text(GTK_EDITABLE(search), "");
+    g_signal_emit_by_name(search, "search-changed");
+    gtk_list_box_select_row(GTK_LIST_BOX(list), GTK_LIST_BOX_ROW(find_id(root, "workstation.layout-library.row.test.layout.source")));
+    g_signal_emit_by_name(duplicate, "clicked");
+    CHECK(umi_ui_workspace_customisation_create_blank_layout(fixture.model, "test.layout.source.copy.3", "Other writer") == UMI_STATUS_OK);
+    drain_ready();
+    CHECK(fixture.applies == 3U && fixture.model->layout_count == 4U);
+    CHECK(strcmp(layout_at(&fixture, "test.layout.source.copy.3")->name, "Other writer") == 0);
+    CHECK(!gtk_widget_get_sensitive(duplicate));
+    CHECK(strstr(gtk_label_get_text(GTK_LABEL(find_id(root, "workstation.layout-library.status"))), "Refresh") != NULL);
+    CHECK(umi_gtk4_ws_layout_library_refresh(fixture.library) == UMI_STATUS_OK);
+    g_signal_emit_by_name(duplicate, "clicked"); drain_ready();
+    CHECK(layout_at(&fixture, "test.layout.source.copy.4") != NULL);
+    held = g_object_ref(duplicate);
+    g_signal_emit_by_name(duplicate, "clicked");
+    calls = fixture.applies;
+    umi_gtk4_ws_layout_library_destroy(fixture.library); fixture.library = NULL;
+    drain_ready(); g_signal_emit_by_name(held, "clicked"); drain_ready();
+    CHECK(fixture.applies == calls && fixture.model->layout_count == 5U);
+cleanup:
+    umi_gtk4_ws_layout_library_destroy(fixture.library);
+    if (held != NULL) g_object_unref(held);
+    if (root != NULL) g_object_unref(root);
+    free(fixture.model);
+    return failed;
+}
+
+/* A source ID at the fixed boundary cannot be silently shortened. The user
+ * can still supply a shorter explicit ID without losing the current draft. */
+static int test_copy_id_limits(void)
+{
+    LibraryFixture fixture = {0};
+    GtkWidget *root = NULL, *id, *name, *duplicate;
+    char source[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    int failed = 0;
+    fixture.model = calloc(1U, sizeof(*fixture.model));
+    CHECK(fixture.model != NULL);
+    fixture.policy.layout_prefix = "test.layout.";
+    memset(source, 'a', sizeof(source));
+    memcpy(source, "test.layout.", strlen("test.layout."));
+    source[sizeof(source) - 1U] = '\0';
+    umi_ui_workspace_customisation_init(fixture.model);
+    CHECK(umi_ui_workspace_customisation_create_blank_layout(fixture.model, source, "Long identity") == UMI_STATUS_OK);
+    CHECK(umi_gtk4_ws_layout_library_create(read_library, apply_library, &fixture, &fixture.library) == UMI_STATUS_OK);
+    root = g_object_ref(umi_gtk4_ws_layout_library_popover(fixture.library));
+    id = find_id(root, "workstation.layout-library.new-id");
+    name = find_id(root, "workstation.layout-library.name");
+    duplicate = find_id(root, "workstation.layout-library.duplicate");
+    CHECK(GTK_IS_ENTRY(id) && GTK_IS_ENTRY(name) && GTK_IS_BUTTON(duplicate));
+    gtk_editable_set_text(GTK_EDITABLE(name), "My retained name");
+    g_signal_emit_by_name(duplicate, "clicked"); drain_ready();
+    CHECK(fixture.applies == 0U && fixture.model->layout_count == 1U);
+    CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(name)), "My retained name") == 0);
+    CHECK(strstr(gtk_label_get_text(GTK_LABEL(find_id(root, "workstation.layout-library.status"))), "shorter") != NULL);
+    gtk_editable_set_text(GTK_EDITABLE(id), "test.layout.manual-copy");
+    g_signal_emit_by_name(duplicate, "clicked"); drain_ready();
+    CHECK(fixture.applies == 1U && fixture.model->layout_count == 2U);
+    CHECK(strcmp(fixture.model->active_layout_id, "test.layout.manual-copy") == 0);
+    CHECK(strcmp(layout_at(&fixture, "test.layout.manual-copy")->name, "My retained name") == 0);
+cleanup:
+    umi_gtk4_ws_layout_library_destroy(fixture.library);
+    if (root != NULL) g_object_unref(root);
+    free(fixture.model);
+    return failed;
+}
+
 int main(void)
 {
     LibraryFixture fixture = {0};
@@ -388,6 +555,9 @@ int main(void)
     (void)g_setenv("GTK_A11Y", "test", TRUE);
     if (!gtk_init_check()) return 77;
     CHECK(test_storage_controls() == 0);
+    CHECK(test_order_controls() == 0);
+    CHECK(test_automatic_copy() == 0);
+    CHECK(test_copy_id_limits() == 0);
     fixture.model = calloc(1U, sizeof(*fixture.model));
     CHECK(fixture.model != NULL);
     fixture.policy.layout_prefix = "test.layout.";
@@ -416,7 +586,12 @@ int main(void)
     CHECK(GTK_IS_CHECK_BUTTON(confirm) && GTK_IS_BUTTON(refresh));
     CHECK(GTK_IS_LIST_BOX_ROW(alpha) && GTK_IS_LIST_BOX_ROW(beta));
     CHECK(gtk_list_box_row_is_selected(GTK_LIST_BOX_ROW(beta)));
+    /* The manual-only initial expectation is preserved for review. Empty IDs
+     * now enable Duplicate through Framework's automatic identity proposal. */
+#if 0
     CHECK(!gtk_widget_get_sensitive(remove) && !gtk_widget_get_sensitive(duplicate));
+#endif
+    CHECK(!gtk_widget_get_sensitive(remove) && gtk_widget_get_sensitive(duplicate));
     gtk_editable_set_text(GTK_EDITABLE(search), "ALPHA");
     g_signal_emit_by_name(search, "search-changed");
     CHECK(gtk_widget_get_child_visible(alpha) && !gtk_widget_get_child_visible(beta));

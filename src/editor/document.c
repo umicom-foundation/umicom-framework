@@ -18,6 +18,24 @@
  * value; callers own external resources and coordinate cross-thread mutation.
  */
 #include "umicom/editor/document.h"
+#include "../base/snapshot_registry_internal.h"
+
+/* Validate every bounded text member before lookup. Value-only snapshot
+ * ownership stays with this existing Framework registry; domain semantics and
+ * normalisation remain in its established implementation. */
+static const UmiSnapshotTextField snapshot_text_fields[] = {
+    UMI_SNAPSHOT_TEXT_FIELD(UmiEditorDocumentSnapshot, id, 1),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiEditorDocumentSnapshot, uri, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiEditorDocumentSnapshot, language_id, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiEditorDocumentSnapshot, title, 0)
+};
+UmiStatus umi_editor_document_snapshot_validate(const UmiEditorDocumentSnapshot *item,
+    UmiSnapshotValidation *outValidation)
+{
+    return UmiSnapshotValidateTextFields(item, sizeof(*item), snapshot_text_fields,
+        sizeof(snapshot_text_fields) / sizeof(snapshot_text_fields[0]), outValidation);
+}
+
 #include <stdlib.h>
 #include <string.h>
 struct UmiEditorDocumentRegistry { UmiEditorDocumentSnapshot items[UMI_EDITOR_DOCUMENT_CAPACITY]; size_t count; uint64_t revision; };
@@ -37,6 +55,10 @@ void umi_editor_document_registry_destroy(UmiEditorDocumentRegistry*r){free(r);}
  * Provide the editor document registry upsert operation used by this module and its client
  * applications.
  */
+/* The former unchecked compact upsert is retained for review. The public
+ * replacement below adds Framework text-boundary and revision guards before
+ * running its unchanged insertion/replacement logic. */
+#if 0
 UmiStatus umi_editor_document_registry_upsert(UmiEditorDocumentRegistry*r,const UmiEditorDocumentSnapshot*item){size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||item==NULL||item->id[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;
     /*
      * These are fixed-capacity fields, not trusted C strings. Check each whole
@@ -52,6 +74,31 @@ UmiStatus umi_editor_document_registry_upsert(UmiEditorDocumentRegistry*r,const 
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     i=find_index(r,item->id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i==SIZE_MAX){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r->count>=UMI_EDITOR_DOCUMENT_CAPACITY)return UMI_STATUS_CAPACITY_EXCEEDED;i=r->count++;}r->items[i]=*item;r->items[i].struct_size=(uint32_t)sizeof(UmiEditorDocumentSnapshot);r->items[i].api_version=1U;r->items[i].revision=++r->revision;return UMI_STATUS_OK;}
+#endif
+UmiStatus umi_editor_document_registry_upsert(UmiEditorDocumentRegistry*r,const UmiEditorDocumentSnapshot*item){
+    /* Central bounded validation rejects malformed snapshots before identity
+     * comparison or mutation. The existing single-record logic is preserved;
+     * valid records keep the same order, metadata and revision behavior. */
+    if (r == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus validation = umi_editor_document_snapshot_validate(item, NULL);
+    if (validation != UMI_STATUS_OK) return validation;
+    if (r->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||item==NULL||item->id[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;
+    /*
+     * These are fixed-capacity fields, not trusted C strings. Check each whole
+     * field before find_index can compare the identifier or any registry state
+     * is changed. Empty optional metadata remains valid; unterminated metadata
+     * does not. A rejected replacement leaves the old snapshot and revision
+     * untouched, exactly like a rejected insertion leaves the count unchanged.
+     */
+    if (memchr(item->id, '\0', sizeof(item->id)) == NULL ||
+        memchr(item->uri, '\0', sizeof(item->uri)) == NULL ||
+        memchr(item->language_id, '\0', sizeof(item->language_id)) == NULL ||
+        memchr(item->title, '\0', sizeof(item->title)) == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    i=find_index(r,item->id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i==SIZE_MAX){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r->count>=UMI_EDITOR_DOCUMENT_CAPACITY)return UMI_STATUS_CAPACITY_EXCEEDED;i=r->count++;}r->items[i]=*item;r->items[i].struct_size=(uint32_t)sizeof(UmiEditorDocumentSnapshot);r->items[i].api_version=1U;r->items[i].revision=++r->revision;return UMI_STATUS_OK;
+}
 /*
  * Remove editor document registry while keeping the remaining records in a valid and
  * discoverable state.
@@ -77,3 +124,10 @@ size_t umi_editor_document_registry_count(const UmiEditorDocumentRegistry*r){ret
  * client applications.
  */
 uint64_t umi_editor_document_registry_revision(const UmiEditorDocumentRegistry*r){return r!=NULL?r->revision:0U;}
+
+/* A complete private value registry makes a multi-record import atomic on
+ * the owner's thread. The original single-record API remains the authority
+ * for valid record normalisation; no application-side registry is introduced. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_editor_document_registry_upsert_many,
+    UmiEditorDocumentRegistry, UmiEditorDocumentSnapshot,
+    umi_editor_document_snapshot_validate, umi_editor_document_registry_upsert, UMI_EDITOR_DOCUMENT_CAPACITY)

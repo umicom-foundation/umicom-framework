@@ -46,9 +46,12 @@ static uint32_t RequiredCapability(UmiBankAction action)
     case UMI_BANK_CARD_ISSUE: case UMI_BANK_CARD_SET_STATE:
         return UMI_BANK_CAP_CUSTOMERS;
     case UMI_BANK_TRANSFER_SUBMIT:
+    case UMI_BANK_INTEREST_SUBMIT:
         return UMI_BANK_CAP_PAYMENTS;
+    case UMI_BANK_INTEREST_CANCEL:
     case UMI_BANK_TRANSFER_CANCEL:
         return UMI_BANK_CAP_PAYMENTS | UMI_BANK_CAP_OPERATE;
+    case UMI_BANK_INTEREST_APPROVE: case UMI_BANK_INTEREST_REJECT:
     case UMI_BANK_TRANSFER_APPROVE: case UMI_BANK_TRANSFER_REJECT:
         return UMI_BANK_CAP_APPROVE;
     case UMI_BANK_TEST_CREDIT:
@@ -61,6 +64,8 @@ static uint32_t RequiredCapability(UmiBankAction action)
 uint32_t UmiBankActionFields(UmiBankAction action)
 {
     switch (action) {
+    case UMI_BANK_INTEREST_SUBMIT:
+        return UMI_BANK_FIELD_OWNER | UMI_BANK_FIELD_SOURCE | UMI_BANK_FIELD_INTEREST;
     case UMI_BANK_CUSTOMER_CREATE: return UMI_BANK_FIELD_NAME;
     case UMI_BANK_CUSTOMER_SET_STATE: case UMI_BANK_ACCOUNT_SET_STATE:
     case UMI_BANK_BENEFICIARY_SET_STATE: case UMI_BANK_CARD_SET_STATE:
@@ -85,7 +90,11 @@ uint32_t UmiBankActionFields(UmiBankAction action)
 UmiStatus BankCommandValid(const UmiBankActor *actor, const UmiBankCommand *command)
 {
     if (actor == NULL || command == NULL ||
+/* Validation includes the additive interest commands with their own field contract. The previous implementation is retained for engineering review. */
+#if 0
         command->action < UMI_BANK_CUSTOMER_CREATE || command->action > UMI_BANK_RECONCILE ||
+#endif
+        command->action < UMI_BANK_CUSTOMER_CREATE || command->action > UMI_BANK_ACTION_LAST ||
         !BankIdValid(&actor->id, true) || !BankIdValid(&command->requestId, true) ||
         !BankIdValid(&command->id, true) || !BankIdValid(&command->ownerId, false) ||
         !BankIdValid(&command->sourceAccountId, false) ||
@@ -106,6 +115,14 @@ UmiStatus BankCommandValid(const UmiBankActor *actor, const UmiBankCommand *comm
                 command->amount.scale != 0U || command->amount.currency.code[0] != '\0')))
             return UMI_STATUS_INVALID_ARGUMENT;
     }
+    if (command->action == UMI_BANK_INTEREST_SUBMIT) {
+        if (command->interest.annualRateBps <= 0 || command->interest.annualRateBps > 10000 ||
+            command->interest.days == 0U || command->interest.days > 3660U ||
+            (command->interest.dayCountBasis != 360U && command->interest.dayCountBasis != 365U) ||
+            !BankIdValid(&command->ownerId, true) || !BankIdValid(&command->sourceAccountId, true))
+            return UMI_STATUS_INVALID_ARGUMENT;
+    } else if (command->interest.annualRateBps != 0 || command->interest.days != 0U ||
+               command->interest.dayCountBasis != 0U) return UMI_STATUS_INVALID_ARGUMENT;
     for (const unsigned char *p = (const unsigned char *)command->name; *p != 0U; ++p)
         if (*p < 32U || *p == 127U) return UMI_STATUS_INVALID_ARGUMENT;
     if (command->amount.currency.code[0] != '\0') {
@@ -133,6 +150,16 @@ void UmiBankCommandInit(UmiBankCommand *command, UmiBankAction action)
 
 const char *UmiBankActionName(UmiBankAction action)
 {
+    /* Keep the historical descriptions and numbering while naming new actions. */
+    switch (action) {
+    case UMI_BANK_INTEREST_SUBMIT: return "Submit practice interest";
+    case UMI_BANK_INTEREST_APPROVE: return "Approve practice interest";
+    case UMI_BANK_INTEREST_REJECT: return "Reject practice interest";
+    case UMI_BANK_INTEREST_CANCEL: return "Cancel practice interest";
+    case UMI_BANK_INTEREST_POST: return "Post practice interest";
+    case UMI_BANK_INTEREST_REVERSE: return "Reverse practice interest";
+    default: break;
+    }
     static const char *const names[] = {
         "Unknown", "Create customer", "Change customer state", "Open account",
         "Change account state", "Create beneficiary", "Change beneficiary state",
@@ -162,6 +189,7 @@ BANK_FINDER(BankFindBeneficiary, beneficiaries, beneficiaries, id)
 BANK_FINDER(BankFindTransfer, transfers, transfers, id)
 BANK_FINDER(BankFindCard, cards, cards, id)
 BANK_FINDER(BankFindHold, holds, holds, id)
+BANK_FINDER(BankFindInterest, interestRequests, interestRequests, id)
 #undef BANK_FINDER
 
 bool BankMoneyMatches(UmiMoney amount, const UmiBankAccount *account)

@@ -1029,3 +1029,23 @@ if(BUILD_TESTING)
     add_test(NAME framework.language_runtime.workspace-edit-bridge COMMAND umicom-language-runtime-workspace-edit-bridge)
 endif()
 message(STATUS "Umicom persistent Language Server runtime and IntelliSense integration enabled")
+
+# Publication regressions use real service owners and remain active in Release.
+if(BUILD_TESTING)
+    add_executable(umicom-language-atomic-publication
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/test_atomic_publication.c")
+    target_link_libraries(umicom-language-atomic-publication PRIVATE Umicom::Framework)
+    set_target_properties(umicom-language-atomic-publication PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-language-atomic-publication)
+    umicom_apply_sanitizers(umicom-language-atomic-publication)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-language-atomic-publication)
+    endif()
+    foreach(_case completion reference symbol diagnostic code_action inlay_hint folding_range semantic hover_signature editor_completion editor_diagnostic editor_symbol editor_code_action single_records editor_document)
+        add_test(NAME "framework.language_runtime.atomic.${_case}"
+            COMMAND umicom-language-atomic-publication "${_case}")
+        set_tests_properties("framework.language_runtime.atomic.${_case}" PROPERTIES
+            TIMEOUT 120 LABELS "framework;language-runtime;document-publication;regression")
+    endforeach()
+endif()

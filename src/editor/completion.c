@@ -18,6 +18,28 @@
  * value; callers own external resources and coordinate cross-thread mutation.
  */
 #include "umicom/editor/completion.h"
+#include "../base/snapshot_registry_internal.h"
+
+/* Validate every bounded text member before lookup. Value-only snapshot
+ * ownership stays with this existing Framework registry; domain semantics and
+ * normalisation remain in its established implementation. */
+static const UmiSnapshotTextField snapshot_text_fields[] = {
+    UMI_SNAPSHOT_TEXT_FIELD(UmiEditorCompletionSnapshot, id, 1),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiEditorCompletionSnapshot, document_id, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiEditorCompletionSnapshot, label, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiEditorCompletionSnapshot, detail, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiEditorCompletionSnapshot, insert_text, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiEditorCompletionSnapshot, kind, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiEditorCompletionSnapshot, sort_text, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiEditorCompletionSnapshot, filter_text, 0)
+};
+UmiStatus umi_editor_completion_snapshot_validate(const UmiEditorCompletionSnapshot *item,
+    UmiSnapshotValidation *outValidation)
+{
+    return UmiSnapshotValidateTextFields(item, sizeof(*item), snapshot_text_fields,
+        sizeof(snapshot_text_fields) / sizeof(snapshot_text_fields[0]), outValidation);
+}
+
 #include <stdlib.h>
 #include <string.h>
 struct UmiEditorCompletionRegistry { UmiEditorCompletionSnapshot items[UMI_EDITOR_COMPLETION_CAPACITY]; size_t count; uint64_t revision; };
@@ -37,7 +59,22 @@ void umi_editor_completion_registry_destroy(UmiEditorCompletionRegistry*r){free(
  * Provide the editor completion registry upsert operation used by this module and its
  * client applications.
  */
+/* The former unchecked compact upsert is retained for review. The public
+ * replacement below adds Framework text-boundary and revision guards before
+ * running its unchanged insertion/replacement logic. */
+#if 0
 UmiStatus umi_editor_completion_registry_upsert(UmiEditorCompletionRegistry*r,const UmiEditorCompletionSnapshot*item){size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||item==NULL||item->id[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;i=find_index(r,item->id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i==SIZE_MAX){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r->count>=UMI_EDITOR_COMPLETION_CAPACITY)return UMI_STATUS_CAPACITY_EXCEEDED;i=r->count++;}r->items[i]=*item;r->items[i].struct_size=(uint32_t)sizeof(UmiEditorCompletionSnapshot);r->items[i].api_version=1U;r->items[i].revision=++r->revision;return UMI_STATUS_OK;}
+#endif
+UmiStatus umi_editor_completion_registry_upsert(UmiEditorCompletionRegistry*r,const UmiEditorCompletionSnapshot*item){
+    /* Central bounded validation rejects malformed snapshots before identity
+     * comparison or mutation. The existing single-record logic is preserved;
+     * valid records keep the same order, metadata and revision behavior. */
+    if (r == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus validation = umi_editor_completion_snapshot_validate(item, NULL);
+    if (validation != UMI_STATUS_OK) return validation;
+    if (r->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||item==NULL||item->id[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;i=find_index(r,item->id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i==SIZE_MAX){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r->count>=UMI_EDITOR_COMPLETION_CAPACITY)return UMI_STATUS_CAPACITY_EXCEEDED;i=r->count++;}r->items[i]=*item;r->items[i].struct_size=(uint32_t)sizeof(UmiEditorCompletionSnapshot);r->items[i].api_version=1U;r->items[i].revision=++r->revision;return UMI_STATUS_OK;
+}
 /*
  * Remove editor completion registry while keeping the remaining records in a valid and
  * discoverable state.
@@ -63,3 +100,16 @@ size_t umi_editor_completion_registry_count(const UmiEditorCompletionRegistry*r)
  * client applications.
  */
 uint64_t umi_editor_completion_registry_revision(const UmiEditorCompletionRegistry*r){return r!=NULL?r->revision:0U;}
+
+/* A complete private value registry makes a multi-record import atomic on
+ * the owner's thread. The original single-record API remains the authority
+ * for valid record normalisation; no application-side registry is introduced. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_editor_completion_registry_upsert_many,
+    UmiEditorCompletionRegistry, UmiEditorCompletionSnapshot,
+    umi_editor_completion_snapshot_validate, umi_editor_completion_registry_upsert, UMI_EDITOR_COMPLETION_CAPACITY)
+
+/* Provider refreshes must replace this document as a unit, preserving other
+ * documents and the last good list until all new records are accepted. */
+UMI_DEFINE_SNAPSHOT_DOCUMENT_REPLACE(umi_editor_completion_registry_replace_document,
+    UmiEditorCompletionRegistry, UmiEditorCompletionSnapshot,
+    umi_editor_completion_snapshot_validate, umi_editor_completion_registry_upsert, UMI_EDITOR_COMPLETION_CAPACITY)

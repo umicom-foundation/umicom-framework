@@ -23,6 +23,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "umicom/base/status.h"
+#include "umicom/base/snapshot_validation.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -102,6 +103,26 @@ uint64_t umi_test_platform_run_session_registry_revision(const UmiTestPlatformRu
  * can be reused safely.
  */
 void umi_test_platform_run_session_registry_clear(UmiTestPlatformRunSessionRegistry *registry);
+
+
+/** Check id and all fixed text arrays before string lookup or publication.
+ * id must be nonempty; optional text may be empty. Unterminated arrays return
+ * INVALID_ARGUMENT with optional static field diagnostics. No allocation or
+ * mutation occurs. This checks text bounds, not UTF-8 or domain semantics.
+ * Single-record upsert uses the same preflight and rejects revision overflow. */
+UmiStatus umi_test_platform_run_session_snapshot_validate(const UmiTestPlatformRunSessionSnapshot *item,
+    UmiSnapshotValidation *outValidation);
+
+/** Insert/replace up to UMI_TEST_PLATFORM_RUN_SESSION_CAPACITY distinct IDs as one in-memory operation.
+ * Duplicate input IDs are rejected; stored IDs can be replaced. Valid records
+ * retain ordinary upsert order, normalisation and revision increments. Any
+ * failure leaves the live registry unchanged. Empty input is a successful no-op.
+ * A full private registry is allocated temporarily. No files or callbacks are
+ * used. Keep all access on the owner's thread; this is not thread locking.
+ * Inputs are borrowed for this call, unchanged and never retained. outResult
+ * is optional, written on every return, and must not overlap input or registry. */
+UmiStatus umi_test_platform_run_session_registry_upsert_many(UmiTestPlatformRunSessionRegistry *registry,
+    const UmiTestPlatformRunSessionSnapshot *items, size_t count, UmiSnapshotBatchResult *outResult);
 
 #ifdef __cplusplus
 }

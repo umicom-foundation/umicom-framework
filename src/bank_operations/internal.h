@@ -32,6 +32,7 @@ typedef struct BankState {
     UmiBankJournal journals[UMI_BANK_EVENT_CAPACITY];
     UmiBankReconciliation reconciliations[UMI_BANK_RECORD_CAPACITY];
     UmiBankAuditEvent events[UMI_BANK_EVENT_CAPACITY];
+    UmiBankInterestRequest interestRequests[UMI_BANK_RECORD_CAPACITY];
 } BankState;
 
 struct UmiBankOperations {
@@ -63,6 +64,8 @@ int BankFindBeneficiary(const BankState *state, const char *id);
 int BankFindTransfer(const BankState *state, const char *id);
 int BankFindCard(const BankState *state, const char *id);
 int BankFindHold(const BankState *state, const char *id);
+int BankFindInterest(const BankState *state, const char *id);
+UmiStatus BankApplyInterest(BankState *, const UmiBankActor *, const UmiBankCommand *);
 bool BankIdValid(const UmiFinancialId *id, bool required);
 bool BankMoneyMatches(UmiMoney amount, const UmiBankAccount *account);
 UmiStatus BankAccountActive(const BankState *state, int index);

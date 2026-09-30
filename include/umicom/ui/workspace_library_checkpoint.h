@@ -9,6 +9,7 @@
 #ifndef UMICOM_UI_WORKSPACE_LIBRARY_CHECKPOINT_H
 #define UMICOM_UI_WORKSPACE_LIBRARY_CHECKPOINT_H
 #include "umicom/ui/workspace_checkpoint.h"
+#include "umicom/ui/workspace_library.h"
 /* Version-one archive ceiling, including its terminating NUL. The payload
  * fits the existing 128 x 3600-byte chunk-store envelope without widening it. */
 #define UMI_UI_WORKSPACE_LIBRARY_ARCHIVE_CAPACITY (450U * 1024U + 1U)
@@ -58,6 +59,25 @@ UmiStatus umi_ui_workspace_library_checkpoint_load_candidate(
     const UmiUiWorkspaceCustomisation *validation_model,
     UmiUiWorkspaceCustomisation *out_candidate,
     UmiUiWorkspaceLibraryCheckpointReport *out_report);
+
+/* Own the proposed list and its summary comparison. No candidate model or
+ * borrowed server pointer escapes. The report identifies primary/recovery
+ * source, storage revision and durability observed during this explicit read. */
+typedef struct UmiUiWorkspaceLibraryPreview {
+    UmiUiWorkspaceLibrarySnapshot saved;
+    UmiUiWorkspaceLibraryComparison comparison;
+    UmiUiWorkspaceLibraryCheckpointReport report;
+} UmiUiWorkspaceLibraryPreview;
+
+/* Explicit read-only preview through the existing validated archive loader.
+ * The live model, storage contents and Save's cached CAS evidence are not
+ * changed. Output is unchanged on failure and must not overlap model/scope.
+ * This is a summary, not a reservation: a later Restore re-reads storage and
+ * can observe another writer's newer library. No automatic Restore or repair
+ * occurs. Same owner-thread/transaction restrictions as load_candidate apply. */
+UmiStatus umi_ui_workspace_library_checkpoint_preview(
+    UmiDataServer *server, const UmiUiWorkspaceCheckpointScope *scope,
+    const UmiUiWorkspaceCustomisation *model, UmiUiWorkspaceLibraryPreview *out_preview);
 
 #ifdef __cplusplus
 }

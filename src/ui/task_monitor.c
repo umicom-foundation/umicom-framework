@@ -18,6 +18,24 @@
  * contract does not expose toolkit objects, C++ types, or private structures.
  */
 #include "umicom/ui/task_monitor.h"
+#include "../base/snapshot_registry_internal.h"
+/* Every field is described with its actual C member size; no string scan can
+ * escape a supplied array. Domain values and legacy size/version normalisation
+ * stay with the owning service. Diagnostics never copy a record's contents. */
+static const UmiSnapshotTextField snapshot_text_fields[] = {
+    UMI_SNAPSHOT_TEXT_FIELD(UmiUiTaskMonitorSnapshot, id, 1),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiUiTaskMonitorSnapshot, label, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiUiTaskMonitorSnapshot, group, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiUiTaskMonitorSnapshot, detail, 0)
+};
+
+UmiStatus umi_ui_task_monitor_snapshot_validate(const UmiUiTaskMonitorSnapshot *item,
+    UmiSnapshotValidation *outValidation)
+{
+    return UmiSnapshotValidateTextFields(item, sizeof(*item), snapshot_text_fields,
+        sizeof(snapshot_text_fields) / sizeof(snapshot_text_fields[0]), outValidation);
+}
+
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -82,6 +100,14 @@ void umi_ui_task_monitor_registry_destroy(UmiUiTaskMonitorRegistry *registry) { 
  */
 UmiStatus umi_ui_task_monitor_registry_upsert(UmiUiTaskMonitorRegistry *registry, const UmiUiTaskMonitorSnapshot *item)
 {
+    /* Validate before ID lookup or mutation. The previous copy/terminator
+     * implementation remains below for review and for normalising valid input.
+     * Malformed arrays are now rejected instead of scanned beyond their bounds
+     * or silently truncated. Reusable enforcement belongs in Framework. */
+    UmiStatus validation = umi_ui_task_monitor_snapshot_validate(item, NULL);
+    if (validation != UMI_STATUS_OK) return validation;
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -188,3 +214,11 @@ void umi_ui_task_monitor_registry_clear(UmiUiTaskMonitorRegistry *registry)
     if (registry == NULL) return;
     memset(registry->items,0,sizeof(registry->items)); registry->count=0U; registry->revision += 1U;
 }
+
+/* Stage a complete value-only registry before publishing a batch. Existing
+ * upsert semantics run against the private copy, so any failed row leaves the
+ * caller's count, records and revision unchanged. No application duplicate is
+ * needed, and the original single-record implementation remains available. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_ui_task_monitor_registry_upsert_many,
+    UmiUiTaskMonitorRegistry, UmiUiTaskMonitorSnapshot,
+    umi_ui_task_monitor_snapshot_validate, umi_ui_task_monitor_registry_upsert, UMI_UI_TASK_MONITOR_CAPACITY)

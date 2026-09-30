@@ -88,6 +88,8 @@ typedef enum UmiBankHoldState {
  * account, beneficiary, funding, transfer and hold operations. See
  * docs/BANK_OPERATIONS.html for the field map. All input strings must terminate within their arrays.
  * An amount is integer minor units, never binary floating point. */
+/* Interest commands extend the stable action numbers; all existing numbers remain unchanged. The previous implementation is retained for engineering review. */
+#if 0
 typedef enum UmiBankAction {
     UMI_BANK_CUSTOMER_CREATE = 1,
     UMI_BANK_CUSTOMER_SET_STATE,
@@ -112,6 +114,37 @@ typedef enum UmiBankAction {
     UMI_BANK_CARD_REFUND,
     UMI_BANK_RECONCILE
 } UmiBankAction;
+#endif
+typedef enum UmiBankAction {
+    UMI_BANK_CUSTOMER_CREATE = 1,
+    UMI_BANK_CUSTOMER_SET_STATE,
+    UMI_BANK_ACCOUNT_OPEN,
+    UMI_BANK_ACCOUNT_SET_STATE,
+    UMI_BANK_BENEFICIARY_CREATE,
+    UMI_BANK_BENEFICIARY_SET_STATE,
+    UMI_BANK_TEST_CREDIT,
+    UMI_BANK_TRANSFER_SUBMIT,
+    UMI_BANK_TRANSFER_APPROVE,
+    UMI_BANK_TRANSFER_REJECT,
+    UMI_BANK_TRANSFER_CANCEL,
+    UMI_BANK_TRANSFER_EXECUTE,
+    UMI_BANK_TRANSFER_REVERSE,
+    UMI_BANK_HOLD_PLACE,
+    UMI_BANK_HOLD_RELEASE,
+    UMI_BANK_CARD_ISSUE,
+    UMI_BANK_CARD_SET_STATE,
+    UMI_BANK_CARD_AUTHORISE,
+    UMI_BANK_CARD_CAPTURE,
+    UMI_BANK_CARD_VOID,
+    UMI_BANK_CARD_REFUND,
+    UMI_BANK_RECONCILE,
+    UMI_BANK_INTEREST_SUBMIT,
+    UMI_BANK_INTEREST_APPROVE,
+    UMI_BANK_INTEREST_REJECT,
+    UMI_BANK_INTEREST_CANCEL,
+    UMI_BANK_INTEREST_POST,
+    UMI_BANK_INTEREST_REVERSE
+} UmiBankAction;
 
 /** Form metadata identifies the only payload fields accepted by an action.
  * This keeps GTK and other frontends aligned with the command boundary. */
@@ -123,6 +156,20 @@ typedef enum UmiBankCommandField {
     UMI_BANK_FIELD_MONEY = 16U,
     UMI_BANK_FIELD_STATE = 32U
 } UmiBankCommandField;
+
+/** Fixed-principal practice interest, not historical daily-balance accrual.
+ * The service captures the booked balance at submission. A positive rate up to
+ * 10,000 basis points (100%), 1..3660 days and a 360/365 basis are required.
+ * Fractions of a minor unit are truncated once. A zero result cannot be posted.
+ * ownerId supplies an explicit period ID, unique per account while pending,
+ * approved or posted. Rejected, cancelled or reversed periods can be corrected. */
+typedef struct UmiBankInterestTerms {
+    int32_t annualRateBps;
+    uint32_t days;
+    uint32_t dayCountBasis;
+} UmiBankInterestTerms;
+#define UMI_BANK_FIELD_INTEREST UINT32_C(64)
+#define UMI_BANK_ACTION_LAST UMI_BANK_INTEREST_REVERSE
 
 typedef struct UmiBankCommand {
     UmiBankAction action;
@@ -137,6 +184,7 @@ typedef struct UmiBankCommand {
     int64_t timestampMillis;
     uint64_t expectedRevision;
     UmiBankRecordState state;
+    UmiBankInterestTerms interest; /* Zero for all actions except interest submission. */
 } UmiBankCommand;
 
 typedef struct UmiBankReceipt {
@@ -243,7 +291,26 @@ typedef struct UmiBankCounts {
     size_t events;
     uint64_t revision;
     bool durable;
+    size_t interestRequests;
 } UmiBankCounts;
+
+/** An interest request uses the established pending/approved/rejected/
+ * cancelled/executed/reversed lifecycle, but never reserves customer funds.
+ * EXECUTED means a local interest journal was posted. Records are retained. */
+typedef struct UmiBankInterestRequest {
+    UmiFinancialId id;
+    UmiFinancialId periodId;
+    UmiFinancialId accountId;
+    UmiFinancialId makerId;
+    UmiFinancialId checkerId;
+    UmiBankInterestTerms terms;
+    UmiMoney principal;
+    UmiMoney amount;
+    UmiBankTransferState state;
+    uint64_t submittedRevision;
+    uint64_t postedRevision;
+    uint64_t reversedRevision;
+} UmiBankInterestRequest;
 
 typedef struct UmiBankStatementLine {
     uint64_t revision;
@@ -299,6 +366,10 @@ UmiStatus UmiBankOperationsBalance(const UmiBankOperations *operations,
 UmiStatus UmiBankOperationsStatement(const UmiBankOperations *operations,
     const char *accountId, uint64_t firstRevision, uint64_t lastRevision,
     UmiBankStatement *outStatement);
+/** Copy one retained practice-interest request. Approval and posting are
+ * separate commands; both use the same serial service, review and persistence. */
+UmiStatus UmiBankOperationsInterestAt(const UmiBankOperations *operations,
+    size_t index, UmiBankInterestRequest *outRequest);
 UmiStatus UmiBankOperationsCustomerAt(const UmiBankOperations *operations,
     size_t index, UmiBankCustomer *outCustomer);
 UmiStatus UmiBankOperationsAccountAt(const UmiBankOperations *operations,

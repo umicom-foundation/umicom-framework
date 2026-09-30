@@ -19,6 +19,26 @@
  * responsibility for higher-level threading and persistence policy.
  */
 #include "umicom/designer/property_schema.h"
+#include "../base/snapshot_registry_internal.h"
+
+/* Validate every bounded text member before lookup. Value-only snapshot
+ * ownership stays with this existing Framework registry; domain semantics and
+ * normalisation remain in its established implementation. */
+static const UmiSnapshotTextField snapshot_text_fields[] = {
+    UMI_SNAPSHOT_TEXT_FIELD(UmiDesignerPropertySchemaSnapshot, id, 1),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiDesignerPropertySchemaSnapshot, component_type, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiDesignerPropertySchemaSnapshot, property_name, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiDesignerPropertySchemaSnapshot, value_type, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiDesignerPropertySchemaSnapshot, default_value, 0),
+    UMI_SNAPSHOT_TEXT_FIELD(UmiDesignerPropertySchemaSnapshot, category, 0)
+};
+UmiStatus umi_designer_property_schema_snapshot_validate(const UmiDesignerPropertySchemaSnapshot *item,
+    UmiSnapshotValidation *outValidation)
+{
+    return UmiSnapshotValidateTextFields(item, sizeof(*item), snapshot_text_fields,
+        sizeof(snapshot_text_fields) / sizeof(snapshot_text_fields[0]), outValidation);
+}
+
 
 #include <stdlib.h>
 #include <string.h>
@@ -85,6 +105,14 @@ void umi_designer_property_schema_registry_destroy(UmiDesignerPropertySchemaRegi
  */
 UmiStatus umi_designer_property_schema_registry_upsert(UmiDesignerPropertySchemaRegistry *registry, const UmiDesignerPropertySchemaSnapshot *item)
 {
+    /* Central bounded validation rejects malformed snapshots before identity
+     * comparison or mutation. The existing single-record logic is preserved;
+     * valid records keep the same order, metadata and revision behavior. */
+    if (registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus validation = umi_designer_property_schema_snapshot_validate(item, NULL);
+    if (validation != UMI_STATUS_OK) return validation;
+    if (registry->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -185,3 +213,10 @@ uint64_t umi_designer_property_schema_registry_revision(const UmiDesignerPropert
 {
     return registry != NULL ? registry->revision : 0U;
 }
+
+/* A complete private value registry makes a multi-record import atomic on
+ * the owner's thread. The original single-record API remains the authority
+ * for valid record normalisation; no application-side registry is introduced. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_designer_property_schema_registry_upsert_many,
+    UmiDesignerPropertySchemaRegistry, UmiDesignerPropertySchemaSnapshot,
+    umi_designer_property_schema_snapshot_validate, umi_designer_property_schema_registry_upsert, UMI_DESIGNER_PROPERTY_SCHEMA_CAPACITY)

@@ -130,6 +130,7 @@ endif()
 # -----------------------------------------------------------------------------
 add_library(umicom_base STATIC
     src/base/status.c
+    src/base/snapshot_validation.c
     src/base/result.c
     src/base/memory.c
     src/base/text.c
@@ -5406,3 +5407,57 @@ endif()
 # Install the public project-development lesson beside the existing guides.
 install(FILES docs/DEVELOPMENT_WORKFLOW.html
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/docs)
+
+# Value-record validation and atomic batch imports belong to Framework owners.
+include(cmake/UmicomSnapshotContracts.cmake)
+
+# Ordered library editing reuses the existing UI owner and checkpoint service.
+if(BUILD_TESTING)
+    add_executable(umicom-workspace-library-order-test tests/test_workspace_library_order.c)
+    target_link_libraries(umicom-workspace-library-order-test PRIVATE Umicom::ui_workspace_checkpoint)
+    umicom_apply_warnings(umicom-workspace-library-order-test)
+    umicom_apply_sanitizers(umicom-workspace-library-order-test)
+    foreach(_case move alias boundaries stale editing scope invalid overflow checkpoint)
+        add_test(NAME "framework.workspace_library.order.${_case}"
+            COMMAND umicom-workspace-library-order-test "${_case}")
+        set_tests_properties("framework.workspace_library.order.${_case}" PROPERTIES
+            TIMEOUT 60 LABELS "framework;layout-order;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-workspace-library-order-test)
+    endif()
+endif()
+
+# Copy proposals reuse the public owner and real whole-library storage boundary.
+if(BUILD_TESTING)
+    add_executable(umicom-workspace-library-copy-test tests/test_workspace_library_copy.c)
+    target_link_libraries(umicom-workspace-library-copy-test PRIVATE Umicom::ui_workspace_checkpoint)
+    umicom_apply_warnings(umicom-workspace-library-copy-test)
+    umicom_apply_sanitizers(umicom-workspace-library-copy-test)
+    foreach(_case suggest collisions malformed capacity alias stale ownership checkpoint)
+        add_test(NAME "framework.workspace_library.copy.${_case}"
+            COMMAND umicom-workspace-library-copy-test "${_case}")
+        set_tests_properties("framework.workspace_library.copy.${_case}" PROPERTIES
+            TIMEOUT 60 LABELS "framework;layout-copy;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-workspace-library-copy-test)
+    endif()
+endif()
+
+# Copied previews exercise the actual UI/checkpoint owners without a display.
+if(BUILD_TESTING)
+    add_executable(umicom-workspace-library-preview-test tests/test_workspace_library_preview.c)
+    target_link_libraries(umicom-workspace-library-preview-test PRIVATE Umicom::ui_workspace_checkpoint)
+    umicom_apply_warnings(umicom-workspace-library-preview-test)
+    umicom_apply_sanitizers(umicom-workspace-library-preview-test)
+    foreach(_case compare unchanged empty invalid capacity alias missing preview stale-save recovery editing transaction)
+        add_test(NAME "framework.workspace_library.preview.${_case}"
+            COMMAND umicom-workspace-library-preview-test "${_case}")
+        set_tests_properties("framework.workspace_library.preview.${_case}" PROPERTIES
+            TIMEOUT 120 LABELS "framework;workspace-library;preview;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-workspace-library-preview-test)
+    endif()
+endif()

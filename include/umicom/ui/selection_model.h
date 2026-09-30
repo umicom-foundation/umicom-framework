@@ -24,6 +24,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "umicom/base/status.h"
+#include "umicom/base/snapshot_validation.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -102,6 +103,26 @@ UmiStatus umi_ui_selection_model_registry_clear(UmiUiSelectionModelRegistry *reg
  * its client applications.
  */
 UmiStatus umi_ui_selection_model_registry_select_only(UmiUiSelectionModelRegistry *registry, const char *id);
+
+
+/** Check id and every fixed text array before lookup/copy. id must be nonempty;
+ * other text may be empty. Output is optional and contains field diagnostics,
+ * not input text. No state changes or allocations occur. This validates text
+ * bounds, not domain semantics or UTF-8. Size/version normalisation is unchanged.
+ * The existing registry_upsert operation applies the same check before mutation. */
+UmiStatus umi_ui_selection_model_snapshot_validate(const UmiUiSelectionModelSnapshot *item,
+    UmiSnapshotValidation *outValidation);
+
+/** Atomically insert/replace up to UMI_UI_SELECTION_MODEL_CAPACITY distinct IDs in memory.
+ * Entries retain normal upsert order and revision increments. Duplicate IDs
+ * within the batch return ALREADY_EXISTS; IDs already stored may be replaced.
+ * Failure publishes no changes. An empty batch succeeds without allocation.
+ * Inputs remain caller-owned and unchanged. outResult is optional and must not
+ * overlap inputs or registry storage. Keep them stable and serialize registry
+ * access on the owning thread. This copies a full registry temporarily and
+ * performs no I/O; it is not a filesystem or cross-thread transaction. */
+UmiStatus umi_ui_selection_model_registry_upsert_many(UmiUiSelectionModelRegistry *registry,
+    const UmiUiSelectionModelSnapshot *items, size_t count, UmiSnapshotBatchResult *outResult);
 
 #ifdef __cplusplus
 }

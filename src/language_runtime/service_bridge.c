@@ -17,6 +17,12 @@
 #include "umicom/base/text.h"
 #include <stdio.h>
 #include <string.h>
+/* The earlier clear-then-upsert publishers are retained for engineering
+ * review. A later conversion or capacity failure could erase the last good
+ * list; reference publication also cleared other documents. The replacement
+ * stages checked values and publishes through document-scoped Framework
+ * transactions. Bridge revisions now advance only after accepted publication. */
+#if 0
 /* Provide the ok operation used by this module and its client applications. */
 static UmiStatus ok(UmiLanguageRuntimeServiceBridge *b) {
   return b && b->language ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
@@ -576,4 +582,446 @@ UmiStatus umi_language_runtime_publish_rename(UmiLanguageRuntimeServiceBridge *b
   x.conflict_count = 0;
   x.revision = ++b->revision;
   return umi_language_rename_registry_upsert(umi_language_service_rename(b->language), &x);
+}
+
+#endif
+
+#include "publication_internal.h"
+
+static UmiStatus publication_start(UmiLanguageRuntimeServiceBridge *bridge, const char *document_id)
+{
+    if (bridge == NULL || bridge->language == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (bridge->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    return umi_language_publication_document(document_id,
+        sizeof(((UmiLanguageDiagnosticSnapshot *)0)->document_id));
+}
+
+UmiStatus umi_language_runtime_service_bridge_init(UmiLanguageRuntimeServiceBridge *b, UmiLanguageService *l)
+{
+    if (b == NULL || l == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    b->language = l; b->revision = 1U;
+    return UMI_STATUS_OK;
+}
+
+/* Convert the complete response before replacing this document's list. */
+UmiStatus umi_language_runtime_publish_completion(UmiLanguageRuntimeServiceBridge *b, const char *d,
+    uint32_t line, uint32_t col, const UmiLanguageRuntimeCompletionResult *r)
+{
+    UmiStatus status = publication_start(b, d);
+    UmiLanguageCompletionSnapshot *items = NULL;
+    if (status != UMI_STATUS_OK) return status;
+    if (r == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (r->count > sizeof(r->items) / sizeof(r->items[0])) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiLanguageCompletionRegistry *registry = umi_language_service_completion(b->language);
+    const uint64_t expected = umi_language_completion_registry_revision(registry);
+    if (r->count != 0U) {
+        items = calloc(r->count, sizeof(*items));
+        if (items == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    for (size_t i = 0U; i < r->count; ++i) {
+        UmiLanguageCompletionSnapshot *x = &items[i];
+        x->struct_size = (uint32_t)sizeof(*x); x->api_version = 1U;
+        status = umi_text_format(x->id, sizeof(x->id), "%s.completion.%zu", d, i);
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->document_id, sizeof(x->document_id), d, sizeof(x->document_id));
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->label, sizeof(x->label), r->items[i].label, sizeof(r->items[i].label));
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->detail, sizeof(x->detail), r->items[i].detail, sizeof(r->items[i].detail));
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->insert_text, sizeof(x->insert_text), r->items[i].insert_text, sizeof(r->items[i].insert_text));
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->sort_text, sizeof(x->sort_text), r->items[i].sort_text, sizeof(r->items[i].sort_text));
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_text_format(x->kind, sizeof(x->kind), "%d", r->items[i].kind);
+        if (status != UMI_STATUS_OK) goto done;
+        x->line = line;
+        x->column = col;
+    }
+    status = umi_language_completion_registry_replace_document(registry, d, expected, items, r->count, NULL);
+    if (status == UMI_STATUS_OK) ++b->revision;
+done:
+    free(items);
+    return status;
+}
+
+/* Convert the complete response before replacing this document's list. */
+UmiStatus umi_language_runtime_publish_locations(UmiLanguageRuntimeServiceBridge *b, const char *d,
+    const char *sid, int def, const UmiLanguageRuntimeLocationList *r)
+{
+    UmiStatus status = publication_start(b, d);
+    UmiLanguageReferenceSnapshot *items = NULL;
+    if (status != UMI_STATUS_OK) return status;
+    if (r == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (sid == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (r->count > sizeof(r->items) / sizeof(r->items[0])) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiLanguageReferenceRegistry *registry = umi_language_service_reference(b->language);
+    const uint64_t expected = umi_language_reference_registry_revision(registry);
+    if (r->count != 0U) {
+        items = calloc(r->count, sizeof(*items));
+        if (items == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    for (size_t i = 0U; i < r->count; ++i) {
+        UmiLanguageReferenceSnapshot *x = &items[i];
+        x->struct_size = (uint32_t)sizeof(*x); x->api_version = 1U;
+        status = umi_text_format(x->id, sizeof(x->id), "%s.reference.%zu", d, i);
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->document_id, sizeof(x->document_id), d, sizeof(x->document_id));
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->symbol_id, sizeof(x->symbol_id), sid, sizeof(x->symbol_id));
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->uri, sizeof(x->uri), r->items[i].uri, sizeof(r->items[i].uri));
+        if (status != UMI_STATUS_OK) goto done;
+        x->line = r->items[i].range.start.line;
+        x->column = r->items[i].range.start.character;
+        x->definition = def;
+    }
+    status = umi_language_reference_registry_replace_document(registry, d, expected, items, r->count, NULL);
+    if (status == UMI_STATUS_OK) ++b->revision;
+done:
+    free(items);
+    return status;
+}
+
+/* Convert the complete response before replacing this document's list. */
+UmiStatus umi_language_runtime_publish_symbols(UmiLanguageRuntimeServiceBridge *b, const char *d,
+    const UmiLanguageRuntimeSymbolList *r)
+{
+    UmiStatus status = publication_start(b, d);
+    UmiLanguageSymbolSnapshot *items = NULL;
+    if (status != UMI_STATUS_OK) return status;
+    if (r == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (r->count > sizeof(r->items) / sizeof(r->items[0])) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiLanguageSymbolRegistry *registry = umi_language_service_symbol(b->language);
+    const uint64_t expected = umi_language_symbol_registry_revision(registry);
+    if (r->count != 0U) {
+        items = calloc(r->count, sizeof(*items));
+        if (items == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    for (size_t i = 0U; i < r->count; ++i) {
+        UmiLanguageSymbolSnapshot *x = &items[i];
+        x->struct_size = (uint32_t)sizeof(*x); x->api_version = 1U;
+        status = umi_text_format(x->id, sizeof(x->id), "%s.symbol.%zu", d, i);
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->document_id, sizeof(x->document_id), d, sizeof(x->document_id));
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->name, sizeof(x->name), r->items[i].name, sizeof(r->items[i].name));
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->container, sizeof(x->container), r->items[i].container, sizeof(r->items[i].container));
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_text_format(x->kind, sizeof(x->kind), "%d", r->items[i].kind);
+        if (status != UMI_STATUS_OK) goto done;
+        x->line = r->items[i].range.start.line;
+        x->column = r->items[i].range.start.character;
+        x->end_line = r->items[i].range.end.line;
+        x->end_column = r->items[i].range.end.character;
+    }
+    status = umi_language_symbol_registry_replace_document(registry, d, expected, items, r->count, NULL);
+    if (status == UMI_STATUS_OK) ++b->revision;
+done:
+    free(items);
+    return status;
+}
+
+/* Convert the complete response before replacing this document's list. */
+UmiStatus umi_language_runtime_publish_diagnostics(UmiLanguageRuntimeServiceBridge *b, const char *d,
+    const UmiLanguageRuntimeDiagnosticList *r)
+{
+    UmiStatus status = publication_start(b, d);
+    UmiLanguageDiagnosticSnapshot *items = NULL;
+    if (status != UMI_STATUS_OK) return status;
+    if (r == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (r->count > sizeof(r->items) / sizeof(r->items[0])) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiLanguageDiagnosticRegistry *registry = umi_language_service_diagnostic(b->language);
+    const uint64_t expected = umi_language_diagnostic_registry_revision(registry);
+    if (r->count != 0U) {
+        items = calloc(r->count, sizeof(*items));
+        if (items == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    for (size_t i = 0U; i < r->count; ++i) {
+        UmiLanguageDiagnosticSnapshot *x = &items[i];
+        x->struct_size = (uint32_t)sizeof(*x); x->api_version = 1U;
+        status = umi_text_format(x->id, sizeof(x->id), "%s.diagnostic.%zu", d, i);
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->document_id, sizeof(x->document_id), d, sizeof(x->document_id));
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->message, sizeof(x->message), r->items[i].message, sizeof(r->items[i].message));
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->source, sizeof(x->source), r->items[i].source, sizeof(r->items[i].source));
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->code, sizeof(x->code), r->items[i].code, sizeof(r->items[i].code));
+        if (status != UMI_STATUS_OK) goto done;
+        x->severity = r->items[i].severity;
+        x->line = r->items[i].range.start.line;
+        x->column = r->items[i].range.start.character;
+        x->end_line = r->items[i].range.end.line;
+        x->end_column = r->items[i].range.end.character;
+    }
+    status = umi_language_diagnostic_registry_replace_document(registry, d, expected, items, r->count, NULL);
+    if (status == UMI_STATUS_OK) ++b->revision;
+done:
+    free(items);
+    return status;
+}
+
+/* Convert the complete response before replacing this document's list. */
+UmiStatus umi_language_runtime_publish_code_actions(UmiLanguageRuntimeServiceBridge *b, const char *d,
+    const UmiLanguageRuntimeCodeActionList *r)
+{
+    UmiStatus status = publication_start(b, d);
+    UmiLanguageCodeActionSnapshot *items = NULL;
+    if (status != UMI_STATUS_OK) return status;
+    if (r == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (r->count > sizeof(r->items) / sizeof(r->items[0])) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiLanguageCodeActionRegistry *registry = umi_language_service_code_action(b->language);
+    const uint64_t expected = umi_language_code_action_registry_revision(registry);
+    if (r->count != 0U) {
+        items = calloc(r->count, sizeof(*items));
+        if (items == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    for (size_t i = 0U; i < r->count; ++i) {
+        UmiLanguageCodeActionSnapshot *x = &items[i];
+        x->struct_size = (uint32_t)sizeof(*x); x->api_version = 1U;
+        status = umi_text_format(x->id, sizeof(x->id), "%s.code-action.%zu", d, i);
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->document_id, sizeof(x->document_id), d, sizeof(x->document_id));
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->title, sizeof(x->title), r->items[i].title, sizeof(r->items[i].title));
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->kind, sizeof(x->kind), r->items[i].kind, sizeof(r->items[i].kind));
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->command_id, sizeof(x->command_id), r->items[i].command, sizeof(r->items[i].command));
+        if (status != UMI_STATUS_OK) goto done;
+        x->preferred = r->items[i].preferred;
+    }
+    status = umi_language_code_action_registry_replace_document(registry, d, expected, items, r->count, NULL);
+    if (status == UMI_STATUS_OK) ++b->revision;
+done:
+    free(items);
+    return status;
+}
+
+/* Convert the complete response before replacing this document's list. */
+UmiStatus umi_language_runtime_publish_inlay_hints(UmiLanguageRuntimeServiceBridge *b, const char *d,
+    const UmiLanguageRuntimeInlayHintList *r)
+{
+    UmiStatus status = publication_start(b, d);
+    UmiLanguageInlayHintSnapshot *items = NULL;
+    if (status != UMI_STATUS_OK) return status;
+    if (r == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (r->count > sizeof(r->items) / sizeof(r->items[0])) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiLanguageInlayHintRegistry *registry = umi_language_service_inlay_hint(b->language);
+    const uint64_t expected = umi_language_inlay_hint_registry_revision(registry);
+    if (r->count != 0U) {
+        items = calloc(r->count, sizeof(*items));
+        if (items == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    for (size_t i = 0U; i < r->count; ++i) {
+        UmiLanguageInlayHintSnapshot *x = &items[i];
+        x->struct_size = (uint32_t)sizeof(*x); x->api_version = 1U;
+        status = umi_text_format(x->id, sizeof(x->id), "%s.inlay.%zu", d, i);
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->document_id, sizeof(x->document_id), d, sizeof(x->document_id));
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->label, sizeof(x->label), r->items[i].label, sizeof(r->items[i].label));
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_text_format(x->kind, sizeof(x->kind), "%d", r->items[i].kind);
+        if (status != UMI_STATUS_OK) goto done;
+        x->line = r->items[i].position.line;
+        x->column = r->items[i].position.character;
+        x->visible = 1;
+    }
+    status = umi_language_inlay_hint_registry_replace_document(registry, d, expected, items, r->count, NULL);
+    if (status == UMI_STATUS_OK) ++b->revision;
+done:
+    free(items);
+    return status;
+}
+
+/* Convert the complete response before replacing this document's list. */
+UmiStatus umi_language_runtime_publish_folding_ranges(UmiLanguageRuntimeServiceBridge *b, const char *d,
+    const UmiLanguageRuntimeFoldingRangeList *r)
+{
+    UmiStatus status = publication_start(b, d);
+    UmiLanguageFoldingRangeSnapshot *items = NULL;
+    if (status != UMI_STATUS_OK) return status;
+    if (r == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (r->count > sizeof(r->items) / sizeof(r->items[0])) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiLanguageFoldingRangeRegistry *registry = umi_language_service_folding_range(b->language);
+    const uint64_t expected = umi_language_folding_range_registry_revision(registry);
+    if (r->count != 0U) {
+        items = calloc(r->count, sizeof(*items));
+        if (items == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    for (size_t i = 0U; i < r->count; ++i) {
+        UmiLanguageFoldingRangeSnapshot *x = &items[i];
+        x->struct_size = (uint32_t)sizeof(*x); x->api_version = 1U;
+        status = umi_text_format(x->id, sizeof(x->id), "%s.fold.%zu", d, i);
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->document_id, sizeof(x->document_id), d, sizeof(x->document_id));
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->kind, sizeof(x->kind), r->items[i].kind, sizeof(r->items[i].kind));
+        if (status != UMI_STATUS_OK) goto done;
+        x->start_line = r->items[i].start_line;
+        x->end_line = r->items[i].end_line;
+        x->collapsed = 0;
+    }
+    status = umi_language_folding_range_registry_replace_document(registry, d, expected, items, r->count, NULL);
+    if (status == UMI_STATUS_OK) ++b->revision;
+done:
+    free(items);
+    return status;
+}
+
+UmiStatus umi_language_runtime_publish_hover(UmiLanguageRuntimeServiceBridge *b, const char *d,
+    uint32_t line, uint32_t col, const UmiLanguageRuntimeHoverResult *r)
+{
+    UmiLanguageHoverSnapshot item = {0};
+    UmiStatus status = publication_start(b, d);
+    if (status != UMI_STATUS_OK) return status;
+    if (r == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiLanguageHoverRegistry *registry = umi_language_service_hover(b->language);
+    const uint64_t expected = umi_language_hover_registry_revision(registry);
+    const size_t count = r->contents[0] != '\0' ? 1U : 0U;
+    if (count != 0U) {
+        item.struct_size = (uint32_t)sizeof(item); item.api_version = 1U;
+        status = umi_text_format(item.id, sizeof(item.id), "%s.hover", d);
+        if (status != UMI_STATUS_OK) return status;
+        status = umi_language_publication_copy(item.document_id, sizeof(item.document_id), d, sizeof(item.document_id));
+        if (status != UMI_STATUS_OK) return status;
+        status = umi_language_publication_copy(item.contents, sizeof(item.contents), r->contents, sizeof(r->contents));
+        if (status != UMI_STATUS_OK) return status;
+        item.line = line;
+        item.column = col;
+        if (r->has_range) {
+            item.start_line = r->range.start.line; item.start_column = r->range.start.character;
+            item.end_line = r->range.end.line; item.end_column = r->range.end.character;
+        }
+    }
+    status = umi_language_hover_registry_replace_document(registry, d, expected, &item, count, NULL);
+    /* Preserve the former empty-result bridge revision behavior. The registry
+     * still records any successful document-only removal. */
+    if (status == UMI_STATUS_OK && count != 0U) ++b->revision;
+    return status;
+}
+
+UmiStatus umi_language_runtime_publish_signature(UmiLanguageRuntimeServiceBridge *b, const char *d,
+    uint32_t line, uint32_t col, const UmiLanguageRuntimeSignatureResult *r)
+{
+    UmiLanguageSignatureSnapshot item = {0};
+    UmiStatus status = publication_start(b, d);
+    if (status != UMI_STATUS_OK) return status;
+    if (r == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiLanguageSignatureRegistry *registry = umi_language_service_signature(b->language);
+    const uint64_t expected = umi_language_signature_registry_revision(registry);
+    const size_t count = r->available != 0 ? 1U : 0U;
+    if (count != 0U) {
+        item.struct_size = (uint32_t)sizeof(item); item.api_version = 1U;
+        status = umi_text_format(item.id, sizeof(item.id), "%s.signature", d);
+        if (status != UMI_STATUS_OK) return status;
+        status = umi_language_publication_copy(item.document_id, sizeof(item.document_id), d, sizeof(item.document_id));
+        if (status != UMI_STATUS_OK) return status;
+        status = umi_language_publication_copy(item.label, sizeof(item.label), r->label, sizeof(r->label));
+        if (status != UMI_STATUS_OK) return status;
+        status = umi_language_publication_copy(item.documentation, sizeof(item.documentation), r->documentation, sizeof(r->documentation));
+        if (status != UMI_STATUS_OK) return status;
+        item.line = line;
+        item.column = col;
+        item.active_parameter = r->active_parameter;
+    }
+    status = umi_language_signature_registry_replace_document(registry, d, expected, &item, count, NULL);
+    /* Preserve the former empty-result bridge revision behavior. The registry
+     * still records any successful document-only removal. */
+    if (status == UMI_STATUS_OK && count != 0U) ++b->revision;
+    return status;
+}
+
+/* Incomplete groups and arithmetic overflow cannot become plausible tokens. */
+UmiStatus umi_language_runtime_publish_semantic_tokens(UmiLanguageRuntimeServiceBridge *b,
+    const char *d, const UmiLanguageRuntimeSemanticTokens *r)
+{
+    UmiStatus status = publication_start(b, d);
+    UmiLanguageSemanticTokenSnapshot *items = NULL;
+    uint32_t line = 0U, column = 0U;
+    if (status != UMI_STATUS_OK) return status;
+    if (r == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (r->count > sizeof(r->data) / sizeof(r->data[0])) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (r->count % 5U != 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    const size_t count = r->count / 5U;
+    UmiLanguageSemanticTokenRegistry *registry = umi_language_service_semantic_token(b->language);
+    const uint64_t expected = umi_language_semantic_token_registry_revision(registry);
+    if (count != 0U) {
+        items = calloc(count, sizeof(*items));
+        if (items == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    for (size_t row = 0U; row < count; ++row) {
+        const size_t i = row * 5U;
+        const uint32_t delta = r->data[i], start = r->data[i + 1U];
+        UmiLanguageSemanticTokenSnapshot *x = &items[row];
+        if (line > UINT32_MAX - delta || (delta == 0U && column > UINT32_MAX - start)) {
+            status = UMI_STATUS_CAPACITY_EXCEEDED; goto done;
+        }
+        line += delta; column = delta != 0U ? start : column + start;
+        if (r->data[i + 2U] > UINT32_MAX - column) { status = UMI_STATUS_CAPACITY_EXCEEDED; goto done; }
+        x->struct_size = (uint32_t)sizeof(*x); x->api_version = 1U;
+        status = umi_text_format(x->id, sizeof(x->id), "%s.semantic.%zu", d, row);
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_language_publication_copy(x->document_id, sizeof(x->document_id), d, sizeof(x->document_id));
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_text_format(x->token_type, sizeof(x->token_type), "type-%u", r->data[i + 3U]);
+        if (status != UMI_STATUS_OK) goto done;
+        status = umi_text_format(x->modifiers, sizeof(x->modifiers), "0x%08x", r->data[i + 4U]);
+        if (status != UMI_STATUS_OK) goto done;
+        x->line = line; x->column = column; x->length = r->data[i + 2U];
+    }
+    status = umi_language_semantic_token_registry_replace_document(registry, d, expected, items, count, NULL);
+    if (status == UMI_STATUS_OK) ++b->revision;
+done:
+    free(items); return status;
+}
+
+UmiStatus umi_language_runtime_publish_formatting_available(UmiLanguageRuntimeServiceBridge *b,
+    const char *d, const char *p, uint32_t tab, int spaces)
+{
+    UmiLanguageFormattingSnapshot item = {0};
+    UmiStatus status = publication_start(b, d);
+    if (status != UMI_STATUS_OK) return status;
+    if (p == NULL || tab == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    item.struct_size = (uint32_t)sizeof(item); item.api_version = 1U;
+    status = umi_text_format(item.id, sizeof(item.id), "%s.formatting", d);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_language_publication_copy(item.document_id, sizeof(item.document_id), d, sizeof(item.document_id));
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_language_publication_copy(item.provider_id, sizeof(item.provider_id), p, sizeof(item.provider_id));
+    if (status != UMI_STATUS_OK) return status;
+    memcpy(item.mode, "document", sizeof("document"));
+    item.tab_size = tab; item.insert_spaces = spaces != 0; item.available = 1;
+    status = umi_language_formatting_registry_upsert(umi_language_service_formatting(b->language), &item);
+    if (status == UMI_STATUS_OK) ++b->revision;
+    return status;
+}
+
+UmiStatus umi_language_runtime_publish_rename(UmiLanguageRuntimeServiceBridge *b, const char *d,
+    const char *sid, const char *old, const char *newn, const UmiLanguageRuntimeWorkspaceEdit *e)
+{
+    UmiLanguageRenameSnapshot item = {0};
+    UmiStatus status = publication_start(b, d);
+    if (status != UMI_STATUS_OK) return status;
+    if (sid == NULL || old == NULL || newn == NULL || e == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (e->count > sizeof(e->items) / sizeof(e->items[0])) return UMI_STATUS_CAPACITY_EXCEEDED;
+    item.struct_size = (uint32_t)sizeof(item); item.api_version = 1U;
+    status = umi_text_format(item.id, sizeof(item.id), "%s.rename", d);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_language_publication_copy(item.document_id, sizeof(item.document_id), d, sizeof(item.document_id));
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_language_publication_copy(item.symbol_id, sizeof(item.symbol_id), sid, sizeof(item.symbol_id));
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_language_publication_copy(item.old_name, sizeof(item.old_name), old, sizeof(item.old_name));
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_language_publication_copy(item.new_name, sizeof(item.new_name), newn, sizeof(item.new_name));
+    if (status != UMI_STATUS_OK) return status;
+    item.state = e->count != 0U ? 1 : 0; item.conflict_count = 0;
+    status = umi_language_rename_registry_upsert(umi_language_service_rename(b->language), &item);
+    if (status == UMI_STATUS_OK) ++b->revision;
+    return status;
 }

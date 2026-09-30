@@ -50,6 +50,10 @@ typedef struct UmiBankReviewSnapshot {
     UmiBankJournal journal;
     bool hasReconciliation;
     UmiBankReconciliation reconciliation;
+    bool hasInterest;
+    bool interestExistedBefore;
+    UmiBankInterestRequest interestBefore;
+    UmiBankInterestRequest interestAfter;
 } UmiBankReviewSnapshot;
 /** No Data Server write or reload. The exact existing domain transition runs
  * against a disposable copy of the cached state. Failure sets *outReview=NULL. */

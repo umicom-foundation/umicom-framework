@@ -689,3 +689,38 @@ UmiTradingUiController *umi_gtk4_trading_suite_workstation_controller(
 {
     return workstation != NULL ? &workstation->controller : NULL;
 }
+
+/* Keep native publication with the established Framework workspace owner;
+ * copied observations support product acceptance without exposing its model. */
+UmiStatus umi_gtk4_trading_suite_workstation_library_snapshot(
+    UmiGtk4TradingSuiteWorkstation *workstation, UmiUiWorkspaceLibrarySnapshot *out_snapshot)
+{
+    if (workstation == NULL || out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_application_suite_gtk4_workstation_library_snapshot(workstation->suite, out_snapshot);
+}
+
+/* Reuse the existing transactional UI path, retaining panel bodies and all
+ * application-specific ownership instead of building another layout manager. */
+UmiStatus umi_gtk4_trading_suite_workstation_library_apply(
+    UmiGtk4TradingSuiteWorkstation *workstation, const UmiUiWorkspaceLibraryRequest *request)
+{
+    if (workstation == NULL || request == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = umi_application_suite_gtk4_workstation_library_apply(workstation->suite, request);
+    return status;
+}
+
+/* Backend selection stays with the existing Framework storage owner. */
+UmiStatus umi_gtk4_trading_suite_workstation_bind_checkpoint_storage(
+    UmiGtk4TradingSuiteWorkstation *workstation, UmiDataServer *server)
+{
+    return workstation != NULL ? umi_application_suite_gtk4_workstation_bind_checkpoint_storage(workstation->suite, server) : UMI_STATUS_INVALID_ARGUMENT;
+}
+
+/* Preview stays with the established Framework storage owner and never
+ * publishes a candidate, changes trade state or adopts a competing Save CAS. */
+UmiStatus umi_gtk4_trading_suite_workstation_library_preview(
+    UmiGtk4TradingSuiteWorkstation *workstation, UmiUiWorkspaceLibraryPreview *out_preview)
+{
+    if (workstation == NULL || out_preview == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_application_suite_gtk4_workstation_library_preview(workstation->suite, out_preview);
+}

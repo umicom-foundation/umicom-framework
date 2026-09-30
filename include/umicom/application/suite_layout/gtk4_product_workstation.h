@@ -114,6 +114,16 @@ UmiStatus umi_application_product_gtk4_workstation_snapshot(
     const UmiApplicationProductGtk4Workstation *workstation,
     UmiApplicationProductGtk4WorkstationSnapshot *out_snapshot);
 
+/** Explicitly bind a borrowed server for layout checkpoints only. It must
+ * outlive the workstation or be unbound with NULL first. No banking ledger
+ * is attached or modified; cached storage evidence is reset by Framework. */
+UmiStatus umi_application_product_gtk4_workstation_bind_checkpoint_storage(UmiApplicationProductGtk4Workstation *workstation, UmiDataServer *server);
+/** Copy named layouts on the GTK owner thread; no I/O or product command. */
+UmiStatus umi_application_product_gtk4_workstation_library_snapshot(UmiApplicationProductGtk4Workstation *workstation, UmiUiWorkspaceLibrarySnapshot *out_snapshot);
+/** Read a saved layout comparison without restoring, posting or saving data.
+ * Later Restore rereads storage. Failure leaves output unchanged. */
+UmiStatus umi_application_product_gtk4_workstation_library_preview(UmiApplicationProductGtk4Workstation *workstation, UmiUiWorkspaceLibraryPreview *out_preview);
+
 #ifdef __cplusplus
 }
 #endif

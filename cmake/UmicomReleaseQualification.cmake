@@ -60,6 +60,11 @@ function(umicom_release_contracts_prepare)
         _umicom_release_declare_pair(umicom_runtime "include/umicom/runtime/${_name}.h" "src/runtime/${_name}.c")
     endforeach()
     _umicom_release_declare_pair(umicom_source_contracts include/umicom/source_contracts/source_contracts.h src/source_contracts/metadata.c)
+    # Full SDK builds declare additional snapshot contracts only when each
+    # canonical owner actually compiles its implementation source.
+    if(COMMAND umicom_snapshot_contracts_declare_headers)
+        umicom_snapshot_contracts_declare_headers()
+    endif()
     if(NOT UMICOM_RELEASE_HEADER_CHECKS)
         return()
     endif()

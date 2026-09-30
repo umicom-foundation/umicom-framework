@@ -1,0 +1,60 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/snapshot_contracts/test_chart_extension.c
+ * PURPOSE: Check chart extension input bounds and atomic imports.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/chart/extension.h"
+#include "umicom/chart/extension.h"
+#include <stddef.h>
+#include <string.h>
+
+#define CONTRACT_SNAPSHOT UmiChartExtensionSnapshot
+#define CONTRACT_REGISTRY UmiChartExtensionRegistry
+#define CONTRACT_CAPACITY UMI_CHART_EXTENSION_CAPACITY
+#define CONTRACT_VALIDATE umi_chart_extension_snapshot_validate
+#define CONTRACT_BATCH umi_chart_extension_registry_upsert_many
+#define CONTRACT_CREATE umi_chart_extension_registry_create
+#define CONTRACT_DESTROY umi_chart_extension_registry_destroy
+#define CONTRACT_UPSERT umi_chart_extension_registry_upsert
+#define CONTRACT_REMOVE umi_chart_extension_registry_remove
+#define CONTRACT_FIND umi_chart_extension_registry_find
+#define CONTRACT_AT umi_chart_extension_registry_at
+#define CONTRACT_COUNT umi_chart_extension_registry_count
+#define CONTRACT_REVISION umi_chart_extension_registry_revision
+
+/* Test each actual public field boundary, including optional provider text. */
+static const UmiSnapshotTextField contract_fields[] = {
+    {"id", offsetof(UmiChartExtensionSnapshot, id), sizeof(((UmiChartExtensionSnapshot *)0)->id), 1 },
+    {"name", offsetof(UmiChartExtensionSnapshot, name), sizeof(((UmiChartExtensionSnapshot *)0)->name), 0 },
+    {"kind", offsetof(UmiChartExtensionSnapshot, kind), sizeof(((UmiChartExtensionSnapshot *)0)->kind), 0 },
+    {"provider_id", offsetof(UmiChartExtensionSnapshot, provider_id), sizeof(((UmiChartExtensionSnapshot *)0)->provider_id), 0 },
+    {"entry_point", offsetof(UmiChartExtensionSnapshot, entry_point), sizeof(((UmiChartExtensionSnapshot *)0)->entry_point), 0 }
+};
+static int ContractSnapshotEqual(const UmiChartExtensionSnapshot *left, const UmiChartExtensionSnapshot *right)
+{
+    return left->struct_size == right->struct_size &&
+        left->api_version == right->api_version &&
+        memcmp(left->id, right->id, sizeof(left->id)) == 0 &&
+        memcmp(left->name, right->name, sizeof(left->name)) == 0 &&
+        memcmp(left->kind, right->kind, sizeof(left->kind)) == 0 &&
+        memcmp(left->provider_id, right->provider_id, sizeof(left->provider_id)) == 0 &&
+        memcmp(left->entry_point, right->entry_point, sizeof(left->entry_point)) == 0 &&
+        left->enabled == right->enabled &&
+        left->trusted == right->trusted &&
+        left->order == right->order &&
+        left->revision == right->revision;
+}
+/* Nonzero payloads expose lost optional text and numeric fields. */
+static void ContractPayload(UmiChartExtensionSnapshot *item)
+{
+    item->name[0] = 'v';
+    item->kind[0] = 'v';
+    item->provider_id[0] = 'v';
+    item->entry_point[0] = 'v';
+    item->enabled = (int)8U;
+    item->trusted = (int)9U;
+    item->order = (int32_t)10U;
+}
+#include "snapshot_contract_cases.h"

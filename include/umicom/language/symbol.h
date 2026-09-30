@@ -23,6 +23,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "umicom/base/status.h"
+#include "umicom/base/snapshot_validation.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -99,6 +100,40 @@ uint64_t umi_language_symbol_registry_revision(const UmiLanguageSymbolRegistry *
  * reused safely.
  */
 void umi_language_symbol_registry_clear(UmiLanguageSymbolRegistry *registry);
+
+
+/** Check id and all fixed text arrays before string lookup or publication.
+ * id must be nonempty; optional text may be empty. Unterminated arrays return
+ * INVALID_ARGUMENT with optional static field diagnostics. No allocation or
+ * mutation occurs. This checks text bounds, not UTF-8 or domain semantics.
+ * Single-record upsert uses the same preflight and rejects revision overflow. */
+UmiStatus umi_language_symbol_snapshot_validate(const UmiLanguageSymbolSnapshot *item,
+    UmiSnapshotValidation *outValidation);
+
+/** Insert/replace up to UMI_LANGUAGE_SYMBOL_CAPACITY distinct IDs as one in-memory operation.
+ * Duplicate input IDs are rejected; stored IDs can be replaced. Valid records
+ * retain ordinary upsert order, normalisation and revision increments. Any
+ * failure leaves the live registry unchanged. Empty input is a successful no-op.
+ * A full private registry is allocated temporarily. No files or callbacks are
+ * used. Keep all access on the owner's thread; this is not thread locking.
+ * Inputs are borrowed for this call, unchanged and never retained. outResult
+ * is optional, written on every return, and must not overlap input or registry. */
+UmiStatus umi_language_symbol_registry_upsert_many(UmiLanguageSymbolRegistry *registry,
+    const UmiLanguageSymbolSnapshot *items, size_t count, UmiSnapshotBatchResult *outResult);
+
+/** Atomically replace all records belonging to one nonempty document ID.
+ * expected_revision must match the current registry. Other documents retain
+ * their records, order and record revisions; replacements follow them in input
+ * order. Each removal and insertion advances the registry revision once.
+ * Empty input clears only this document, and is a no-op when it has no records.
+ * Every supplied row must match document_id. An ID owned by another document
+ * returns PERMISSION_DENIED; duplicate input IDs return ALREADY_EXISTS. Text,
+ * capacity, stale revision, overflow or allocation failure publishes nothing.
+ * Inputs are borrowed and unchanged. outResult follows upsert_many's lifetime
+ * and alias restrictions. Call only on the owning thread. No I/O is performed. */
+UmiStatus umi_language_symbol_registry_replace_document(UmiLanguageSymbolRegistry *registry,
+    const char *document_id, uint64_t expected_revision,
+    const UmiLanguageSymbolSnapshot *items, size_t count, UmiSnapshotBatchResult *outResult);
 
 #ifdef __cplusplus
 }

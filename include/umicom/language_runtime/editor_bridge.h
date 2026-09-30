@@ -17,6 +17,10 @@
 #define UMICOM_LANGUAGE_RUNTIME_EDITOR_BRIDGE_H
 #include "umicom/editor/session.h"
 #include "umicom/language/service.h"
+/* Synchronization publishes one complete document list or preserves the prior
+ * Editor list and bridge revision. Other documents keep their rows. Text that
+ * cannot fit is rejected instead of truncated. Language remains authoritative:
+ * a failed Editor sync can be retried independently on the owner thread. */
 #ifdef __cplusplus
 extern "C" {
 #endif
