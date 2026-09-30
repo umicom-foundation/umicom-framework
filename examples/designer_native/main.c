@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/designer_native/main.c
+ * PURPOSE:
+ *   A source plan owns its text, not its original document.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A source plan owns its text, not its original document. */
 #include "umicom/designer/native_project.h"

@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/release_inspector/pe.c
+ * PURPOSE:
+ *   Bounded PE inspection without casting untrusted bytes into structs. The portable byte
+ *   reader can inspect Windows files without executing them. Format reference: Microsoft
+ *   PE/COFF specification (see developer guide).
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: src/release_inspector/pe.c
  * Purpose: Bounded PE inspection without casting untrusted bytes into structs.

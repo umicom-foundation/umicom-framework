@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/os_image/bundle.c
+ * PURPOSE:
+ *   Assemble and verify the fixed diskless profile. A bundle is immutable input; separate
+ *   boot-result directories record executions without mutating it.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Assemble and verify the fixed diskless profile. A bundle is immutable input;
  * separate boot-result directories record executions without mutating it. */

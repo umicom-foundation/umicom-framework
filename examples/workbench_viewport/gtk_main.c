@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/workbench_viewport/gtk_main.c
+ * PURPOSE:
+ *   Thin host: all widgets and layout services belong to Framework.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Thin host: all widgets and layout services belong to Framework. */
 #ifdef _WIN32

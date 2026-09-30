@@ -1,6 +1,17 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/win32/vm_manager.c
+ * PURPOSE:
+ *   Saved profiles and reviewed QMP sessions in a native Windows window. Architecture: The
+ *   worker calls Framework services; the UI only projects their results. Installer
+ *   bootstrap, legacy QEMU launcher and GTK hosts stay intact.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/win32/vm_manager.c
  * Purpose: Saved profiles and reviewed QMP sessions in a native Windows window.
  * Architecture: The worker calls Framework services; the UI only projects their
  * results. Installer bootstrap, legacy QEMU launcher and GTK hosts stay intact.

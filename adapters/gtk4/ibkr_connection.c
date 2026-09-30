@@ -1,7 +1,17 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/ibkr_connection.c
+ * PURPOSE:
+ *   Paper/Live connection controls. This window never offers order execution.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Paper/Live connection controls. This window never offers order execution.
  *---------------------------------------------------------------------------*/
+#include "window_removal_private.h"
 #include "umicom/broker_connectivity/connection_gtk4.h"
 #include "umicom/broker_connectivity/connection.h"
 #include <inttypes.h>
@@ -240,13 +250,18 @@ GtkWindow *UmiIbkrGtkCreate(GtkWindow *parent)
     GtkWindow *window = GTK_WINDOW(gtk_window_new());
     ConnectionUi *ui = g_new0(ConnectionUi, 1);
     g_object_set_data_full(G_OBJECT(window), UI_KEY, ui, FreeOwner);
+/* Close the connection at native window removal, including retained windows. The previous implementation remains for engineering review. */
+#if 0
     g_signal_connect(window, "destroy", G_CALLBACK(Destroyed), NULL);
+#endif
+    UmiGtk4ObserveWindowRemoval(window, G_OBJECT(window), Destroyed, NULL);
     gtk_window_set_title(window, "Umicom Broker Connections — Read-only");
     gtk_window_set_default_size(window, 940, 740);
     gtk_window_set_icon_name(window, "org.umicom.trader");
     if (parent != NULL) {
         gtk_window_set_transient_for(window, parent);
         gtk_window_set_destroy_with_parent(window, TRUE);
+        UmiGtk4ObserveWindowRemoval(parent, G_OBJECT(window), UmiGtk4CloseRemovedParentChild, window);
         GtkApplication *application = gtk_window_get_application(parent);
         if (application != NULL) gtk_window_set_application(window, application);
     }
@@ -348,7 +363,11 @@ GtkWidget *UmiIbkrGtkWrap(GtkWidget *child, GtkWindow *parent)
     GtkWidget *button = gtk_button_new_with_label("Open Paper / Live broker connections");
     ParentLink *link = g_new0(ParentLink, 1);
     g_weak_ref_init(&link->parent, parent);
+/* A retained parent must lose launcher authority when removed from the native window list. The previous implementation remains for engineering review. */
+#if 0
     link->destroyed = g_signal_connect(parent, "destroy", G_CALLBACK(ParentDestroyed), link);
+#endif
+    UmiGtk4ObserveWindowRemoval(parent, G_OBJECT(button), ParentDestroyed, link);
     g_object_set_data_full(G_OBJECT(button), "umicom-broker-parent", link, FreeLink);
     g_signal_connect(button, "clicked", G_CALLBACK(OpenClicked), link);
     gtk_widget_set_halign(button, GTK_ALIGN_START);

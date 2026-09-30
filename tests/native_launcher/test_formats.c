@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/native_launcher/test_formats.c
+ * PURPOSE:
+ *   Synthetic ELF headers are parser fixtures, never guest-boot evidence.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework tests | Sammy Hegab, Umicom Foundation | MIT
  * Synthetic ELF headers are parser fixtures, never guest-boot evidence. */
 #include "test_support.h"

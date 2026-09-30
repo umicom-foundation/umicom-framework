@@ -1,4 +1,13 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tools/release_inventory/policy_cli.c
+ * PURPOSE:
+ *   Explicit file/console commands for Framework's test policy service.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: tools/release_inventory/policy_cli.c
  * Purpose: Explicit file/console commands for Framework's test policy service.

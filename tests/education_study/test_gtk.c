@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/education_study/test_gtk.c
+ * PURPOSE:
+ *   This executable reports NOT RUN when no display is available.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Foundation | Sammy Hegab | MIT | Actual GTK lifecycle checks.
  * This executable reports NOT RUN when no display is available. */
 #include "umicom/ui/gtk4/education_workspace.h"
@@ -22,7 +31,15 @@ int main(int argc,char **argv)
     CHECK(umi_data_server_create_memory(&server)==UMI_STATUS_OK);
     panel=UmiEducationGtkCreate();CHECK(panel!=NULL);
     CHECK(UmiEducationGtkBind(panel,server,"learner","GTK learner")==UMI_STATUS_OK);
+/* Open the study section before searching for its mounted controls; keep all behavioural checks. The previous implementation remains for engineering review. */
+#if 0
     GtkWidget *root=UmiEducationGtkWidget(panel),*capture=Find(root,"education.study.capture"),
+#endif
+    GtkWidget *root=UmiEducationGtkWidget(panel);
+    GtkWidget *section=Find(root,"education.study");
+    CHECK(GTK_IS_EXPANDER(section));
+    gtk_expander_set_expanded(GTK_EXPANDER(section),TRUE);
+    GtkWidget *capture=Find(root,"education.study.capture"),
         *next=Find(root,"education.study.next"),*search=Find(root,"education.study.search"),
         *output=Find(root,"education.study.output"),*selector=Find(root,"education.lesson");
     CHECK(capture!=NULL&&next!=NULL&&search!=NULL&&output!=NULL&&selector!=NULL);
@@ -36,7 +53,13 @@ int main(int argc,char **argv)
         Click(capture);CHECK(gtk_widget_get_sensitive(next));
         gtk_editable_set_text(GTK_EDITABLE(search),"notes");CHECK(!gtk_widget_get_sensitive(next));
     } else if(strcmp(argv[1],"retained_control")==0) {
+/* Retain a control from a collapsed pane to check disconnection of unmounted logical children. The previous implementation remains for engineering review. */
+#if 0
         retained=g_object_ref(capture);UmiEducationGtkDestroy(panel);panel=NULL;Click(retained);
+#endif
+        retained=g_object_ref(capture);
+        gtk_expander_set_expanded(GTK_EXPANDER(section),FALSE);
+        UmiEducationGtkDestroy(panel);panel=NULL;Click(retained);
         CHECK(umi_data_server_count(server)==0U);
     } else if(strcmp(argv[1],"unsaved_note")==0) {
         gtk_drop_down_set_selected(GTK_DROP_DOWN(selector),3U);Click(capture);

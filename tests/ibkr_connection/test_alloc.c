@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ibkr_connection/test_alloc.c
+ * PURPOSE:
+ *   Check allocation failure handling in the ibkr connection service.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #include "fixture.h"
 #include <stdint.h>

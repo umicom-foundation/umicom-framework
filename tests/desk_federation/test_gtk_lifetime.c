@@ -25,6 +25,14 @@ static GtkWidget *FindButton(GtkWidget *root, const char *label)
     }
     return NULL;
 }
+/* Open nested sections before looking for mounted controls, including the
+ * activity section inside the saved-workspaces section. No storage is opened. */
+static void ExpandSections(GtkWidget *root)
+{
+    if (GTK_IS_EXPANDER(root)) gtk_expander_set_expanded(GTK_EXPANDER(root), TRUE);
+    for (GtkWidget *child = gtk_widget_get_first_child(root); child != NULL;
+         child = gtk_widget_get_next_sibling(child)) ExpandSections(child);
+}
 int main(void)
 {
     UmiDeskRuntime *runtime = NULL;
@@ -37,6 +45,10 @@ int main(void)
     REQUIRE(FixtureRuntime(&calls, &runtime) == UMI_STATUS_OK);
     root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0); g_object_ref_sink(root);
     REQUIRE(UmiDeskFederationGtkAttach(root, runtime) == UMI_STATUS_OK);
+    /* A collapsed expander does not mount its controls in the GTK child tree. */
+    GtkWidget *section = gtk_widget_get_first_child(root);
+    REQUIRE(GTK_IS_EXPANDER(section));
+    ExpandSections(section);
     REQUIRE(UmiDeskFederationGtkAttach(root, runtime) == UMI_STATUS_ALREADY_EXISTS);
     REQUIRE(UmiDeskFederationGtkPoll(root) == UMI_STATUS_OK);
     REQUIRE(UmiDeskFederationGtkOpenStorage(root, "relative.sqlite") == UMI_STATUS_INVALID_ARGUMENT);

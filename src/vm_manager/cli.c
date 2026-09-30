@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/vm_manager/cli.c
+ * PURPOSE:
+ *   Human-facing native adapter. Commands delegate to the shared services. The interactive
+ *   console accepts only named operations, never raw QMP or a shell.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Human-facing native adapter. Commands delegate to the shared services. The
  * interactive console accepts only named operations, never raw QMP or a shell.

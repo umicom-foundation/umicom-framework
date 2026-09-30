@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/queue_shutdown/test_unavailable.c
+ * PURPOSE:
+ *   Compile the real implementation with its nonblocking adapter disabled.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Compile the real implementation with its nonblocking adapter disabled. */
 #include "umicom/platform/task_queue.h"

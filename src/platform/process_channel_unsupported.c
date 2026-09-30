@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/platform/process_channel_unsupported.c
+ * PURPOSE:
+ *   Report unavailable process-channel operations without substituting a simulated process.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #include "process_channel_internal.h"
 uint64_t PcMilliseconds(void){

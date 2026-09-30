@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/desktop_workspace/repository.c
+ * PURPOSE:
+ *   Checkpoints are complete snapshots, chunked through the canonical Data Server. The head
+ *   and retiring checkpoint change in the same transaction. No UI, SQLite call or filesystem
+ *   deletion belongs in this implementation.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Checkpoints are complete snapshots, chunked through the canonical Data
  * Server. The head and retiring checkpoint change in the same transaction.

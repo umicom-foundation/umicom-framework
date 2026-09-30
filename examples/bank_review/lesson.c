@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/bank_review/lesson.c
+ * PURPOSE:
+ *   Complete lesson: inspect the reservation, approval and local posting separately. All
+ *   setup actors are trusted fictional test identities, not authenticated users.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Complete lesson: inspect the reservation, approval and local posting separately.
  * All setup actors are trusted fictional test identities, not authenticated users.

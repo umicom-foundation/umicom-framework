@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/education_workspace/output_fixture.c
+ * PURPOSE:
+ *   This fixture exports only to paths explicitly supplied by its test caller.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Education independent-output fixture
  * Author: Sammy Hegab, Umicom Foundation. Licence: MIT.
  * This fixture exports only to paths explicitly supplied by its test caller. */

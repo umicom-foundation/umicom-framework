@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/os_image/text.c
+ * PURPOSE:
+ *   Bounded native image text and integer operations.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Bounded native image text and integer operations. */
 #include "internal.h"

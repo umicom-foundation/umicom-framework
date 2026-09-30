@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/release_inspector/test_paths.c
+ * PURPOSE:
+ *   Check release paths and refusal of unsupported path forms.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework tests | Sammy Hegab, Umicom Foundation | MIT */
 #include "test_support.h"
 int TestPathsCase(const char *name)

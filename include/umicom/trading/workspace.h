@@ -29,6 +29,7 @@
 #include <stdint.h>
 
 #include "umicom/chart/workspace.h"
+#include "umicom/chart/navigation.h"
 #include "umicom/trading/alert.h"
 #include "umicom/trading/execution_store.h"
 #include "umicom/trading/oms.h"
@@ -168,6 +169,62 @@ typedef struct UmiTradingWorkspaceSnapshot {
  * Represent the trading workspace data shared with callers of this public contract.
  */
 typedef struct UmiTradingWorkspace UmiTradingWorkspace;
+
+/* Order browsing remains independent of the market/watchlist filter. Text is
+ * an ASCII-case-insensitive substring of order ID, instrument ID, symbol or
+ * venue. Empty text means all identities. Apply the status and text together. */
+typedef struct UmiTradingOrderQuery {
+    UmiTradingWorkspaceOrderFilter status;
+    char text[UMI_TRADING_WORKSPACE_FILTER_CAPACITY];
+} UmiTradingOrderQuery;
+
+/* A caller-owned copy of one order and its retained fills, in arrival order.
+ * No pointers into the trading book escape. A review does not reserve state
+ * or change selection. Empty fills are not evidence of an external broker
+ * reconciliation. Access on the workspace's owning thread. */
+typedef struct UmiTradingOrderReview {
+    UmiOrder order;
+    UmiExecutionReport executions[UMI_TRADING_MAX_ORDERS];
+    size_t execution_count;
+    uint64_t workspace_revision;
+    int can_cancel;
+} UmiTradingOrderReview;
+
+/* Failures leave workspace/output unchanged. Queries require terminated text
+ * and a valid status. Setting the identical query is a successful no-op. */
+UmiStatus UmiTradingWorkspaceSetOrderQuery(UmiTradingWorkspace *workspace,
+    const UmiTradingOrderQuery *query);
+UmiStatus UmiTradingWorkspaceGetOrderQuery(const UmiTradingWorkspace *workspace,
+    UmiTradingOrderQuery *out_query);
+/* Copy an unfiltered book row for instrument-scoped chart overlays. */
+UmiStatus UmiTradingWorkspaceOrderAt(const UmiTradingWorkspace *workspace,
+    size_t index, UmiOrder *out_order);
+UmiStatus UmiTradingWorkspaceReviewOrder(const UmiTradingWorkspace *workspace,
+    const char *client_order_id, UmiTradingOrderReview *out_review);
+/* Cancel only when the visible selected ID and order version still match the
+ * displayed review. A changed fill/status/selection rejects the command; it
+ * never redirects cancellation to a different currently selected order. */
+UmiStatus UmiTradingWorkspaceCancelReviewedOrder(UmiTradingWorkspace *workspace,
+    const char *client_order_id, uint64_t expected_order_version);
+
+
+/* Chart navigation is stored per instrument, and drawings use the existing
+ * shared chart registry. Both survive native panel replacement during this
+ * workspace session. Callers must pass the instrument shown in their chart;
+ * stale views cannot alter the newly selected market or its ticket. */
+UmiStatus UmiTradingWorkspaceGetChartNavigation(const UmiTradingWorkspace *workspace,
+    const char *instrument_id, UmiChartNavigation *out_navigation);
+UmiStatus UmiTradingWorkspaceSetChartNavigation(UmiTradingWorkspace *workspace,
+    const char *instrument_id, const UmiChartNavigation *navigation);
+UmiStatus UmiTradingWorkspaceAddChartDrawing(UmiTradingWorkspace *workspace,
+    const char *instrument_id, const char *tool, UmiChartPoint first, UmiChartPoint second);
+UmiStatus UmiTradingWorkspaceRemoveChartDrawing(UmiTradingWorkspace *workspace,
+    const char *instrument_id, const char *drawing_id, uint64_t expected_revision);
+/* Prepare a limit ticket only: no order submission, broker I/O or arming.
+ * Quantity, account and time-in-force stay with the existing ticket. Price is
+ * the chart's exact numeric value; instrument tick rules require a provider. */
+UmiStatus UmiTradingWorkspacePrepareChartLimit(UmiTradingWorkspace *workspace,
+    const char *instrument_id, UmiSide side, double price);
 
 /**
  * Provide the trading workspace config default operation used by this module and its

@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/finance_close_review/test_gtk.c
+ * PURPOSE:
+ *   Actual GTK panel: select the existing Accounting periods report, confirm no write, then
+ *   retain widgets after controller and service destruction.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Actual GTK panel: select the existing Accounting periods report, confirm
  * no write, then retain widgets after controller and service destruction. */

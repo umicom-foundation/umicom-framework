@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/os_image/main.c
+ * PURPOSE:
+ *   Thin native tool host. UTF-8 conversion belongs only at the Windows boundary.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Thin native tool host. UTF-8 conversion belongs only at the Windows boundary. */
 #ifndef _WIN32

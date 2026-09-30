@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/education_workspace/report_brand.inc
+ * PURPOSE:
+ *   Framework-owned learning output; applications do not duplicate this service.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Framework-owned learning output; applications do not duplicate this service. */
 /* Derived from supplied Umicom assets; data, not a second branding policy. */

@@ -11,6 +11,7 @@
 #ifndef UMICOM_UI_GTK4_WORKSTATION_WORKSPACE_STORAGE_H
 #define UMICOM_UI_GTK4_WORKSTATION_WORKSPACE_STORAGE_H
 
+#include <stddef.h>
 #include "umicom/data/data_server.h"
 
 #ifdef __cplusplus
@@ -27,6 +28,12 @@ extern "C" {
  */
 UmiStatus umi_gtk4_workspace_storage_open(
     const char *canonical_application_id, UmiDataServer **out_server);
+
+/** Produce a canonical profile-specific application ID without opening files.
+ * The caller's output remains unchanged on invalid input or insufficient space.
+ * Layouts are separated by directory within the same OS user account. */
+UmiStatus UmiGtk4WorkspaceProfileStorageId(const char *application_id, const char *profile,
+                                         char *out, size_t capacity);
 
 #ifdef __cplusplus
 }

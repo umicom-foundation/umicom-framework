@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/queue_shutdown/notes_index.c
+ * PURPOSE:
+ *   A Notes Master Controller owns the text snapshots and the queue. It stops admission,
+ *   optionally cancels work, then polls native completion before releasing either owner. No
+ *   files, windows or external services are opened.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: examples/queue_shutdown/notes_index.c
  * A Notes Master Controller owns the text snapshots and the queue. It stops

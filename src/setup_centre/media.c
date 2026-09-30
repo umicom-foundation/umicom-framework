@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/setup_centre/media.c
+ * PURPOSE:
+ *   Prepare exact boot inputs and invoke an explicit GRUB provider. Do not turn an arbitrary
+ *   file copy into a claim of bootable media or write a raw drive.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: src/setup_centre/media.c
  * Prepare exact boot inputs and invoke an explicit GRUB provider. Do not turn

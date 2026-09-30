@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/designer_native/test_native.c
+ * PURPOSE:
+ *   Regression assertions stay active in Release builds.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Regression assertions stay active in Release builds. */
 #ifndef _WIN32

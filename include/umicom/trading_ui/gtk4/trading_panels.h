@@ -43,6 +43,12 @@ GtkWidget *umi_gtk4_trading_panel_create(
     const UmiUiWorkspaceWindow *window,
     UmiGtk4TradingPanelContext *context);
 
+/* Refresh one provider body without rebuilding its layout, titlebar or
+ * sibling chart. Market ticks retain focused edits; explicit actions refresh
+ * the authoritative ticket/selection even when focus has not moved. Chart
+ * gestures stay alive while the shared renderer receives new market data. */
+UmiStatus UmiGtk4TradingPanelRefresh(GtkWidget *panel, int explicit_action);
+
 #ifdef __cplusplus
 }
 #endif

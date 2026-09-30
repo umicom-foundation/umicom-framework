@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/vm_manager/test_real_qmp.c
+ * PURPOSE:
+ *   Optional actual-QEMU protocol check. No kernel or guest OS is booted.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Optional actual-QEMU protocol check. No kernel or guest OS is booted. */
 #include "umicom/vm_manager/qmp_channel.h"

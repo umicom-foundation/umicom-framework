@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/desktop_workspace/test_workspace.c
+ * PURPOSE:
+ *   Native tests use the canonical Data Server. SQL appears only in explicit failure-
+ *   injection fixtures; application code never bypasses the repository.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Native tests use the canonical Data Server. SQL appears only in explicit
  * failure-injection fixtures; application code never bypasses the repository.

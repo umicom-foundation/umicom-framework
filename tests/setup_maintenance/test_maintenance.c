@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/setup_maintenance/test_maintenance.c
+ * PURPOSE:
+ *   Real filesystem tests of the production maintenance API. Fixture payloads are inert
+ *   text, not functioning Windows applications. No fixture is executed. Each invocation owns
+ *   a new directory; retained files help inspect a failure.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Real filesystem tests of the production maintenance API. Fixture payloads are
  * inert text, not functioning Windows applications. No fixture is executed.

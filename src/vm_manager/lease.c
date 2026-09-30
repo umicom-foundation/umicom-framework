@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/vm_manager/lease.c
+ * PURPOSE:
+ *   All managed disk users hold the SAME stable lock file. It is never deleted: unlinking a
+ *   lock would permit two processes to lock different inodes.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * All managed disk users hold the SAME stable lock file. It is never deleted:
  * unlinking a lock would permit two processes to lock different inodes. */

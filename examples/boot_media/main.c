@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/boot_media/main.c
+ * PURPOSE:
+ *   Expose boot-media inspection and reviewed file-copy commands through the native console.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 
 #include "umicom/boot_media/media.h"

@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/setup_centre/text.c
+ * PURPOSE:
+ *   Native bootstrap encoders and portable path validation. Paths in a release are data, not
+ *   commands. Reject ambiguous Windows names even on Linux.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: src/setup_centre/text.c
  * Native bootstrap encoders and portable path validation. Paths in a release

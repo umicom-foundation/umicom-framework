@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/desktop_workspace/test_gtk4.c
+ * PURPOSE:
+ *   Actual GTK construction/lifetime checks. No display or SQLite means NOT RUN. These tests
+ *   do not boot an OS or exercise the entire Desk product.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Actual GTK construction/lifetime checks. No display or SQLite means NOT RUN.
  * These tests do not boot an OS or exercise the entire Desk product. */
@@ -24,6 +34,14 @@ static int Wait(GtkWindow *window)
     }
     return 1;
 }
+/* gtk_window_close ignores unrealised windows. Emit the same public close
+ * request in this unpresented fixture, honouring the adapter's async guard. */
+static void RequestClose(GtkWindow *window)
+{
+    gboolean handled = FALSE;
+    g_signal_emit_by_name(window, "close-request", &handled);
+    if (!handled) gtk_window_destroy(window);
+}
 int main(int argc, char **argv)
 {
     if (argc != 2) return 2;
@@ -39,9 +57,17 @@ int main(int argc, char **argv)
     if (!open || !save || gtk_widget_get_sensitive(save)) return 1;
     if (strcmp(argv[1], "construct")) {
         g_signal_emit_by_name(open, "clicked");
+/* Deliver the close request to the unrealised fixture without opening a native window. The previous implementation remains for engineering review. */
+#if 0
         if (!strcmp(argv[1], "close-during-open")) gtk_window_close(window);
+#endif
+        if (!strcmp(argv[1], "close-during-open")) RequestClose(window);
         if (!Wait(window)) return 1;
+/* Deliver the close request to the unrealised fixture without opening a native window. The previous implementation remains for engineering review. */
+#if 0
         if (!strcmp(argv[1], "open-close")) { gtk_window_close(window); if (!Wait(window)) return 1; }
+#endif
+        if (!strcmp(argv[1], "open-close")) { RequestClose(window); if (!Wait(window)) return 1; }
         UmiDesktopWorkspace *w = NULL; UmiStatus status = UmiDesktopWorkspaceOpenDirectory(path, &w);
         if (status == UMI_STATUS_UNAVAILABLE) { gtk_window_destroy(window);g_object_unref(window);g_free(path);g_free(parent);return 77; }
         if (status != UMI_STATUS_OK || UmiDesktopWorkspacePreviousSessionUnfinished(w)) return 1;

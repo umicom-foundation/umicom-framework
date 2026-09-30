@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/os_image/profile.c
+ * PURPOSE:
+ *   Strict native source manifests. Build metadata is data, not executable CMake or shell
+ *   text. Every published snapshot is hashed before and after a build.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Strict native source manifests. Build metadata is data, not executable CMake
  * or shell text. Every published snapshot is hashed before and after a build. */

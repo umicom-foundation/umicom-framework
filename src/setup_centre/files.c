@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/setup_centre/files.c
+ * PURPOSE:
+ *   The VM, image and delivery consumers must share the existing bootstrap file rules. These
+ *   public entry points deliberately delegate; no new I/O policy.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * The VM, image and delivery consumers must share the existing bootstrap file
  * rules. These public entry points deliberately delegate; no new I/O policy. */

@@ -31,6 +31,10 @@ add_test(NAME framework.setup_centre.cli_self_test COMMAND umicom-setup --self-t
 # process target is present; do not substitute a fake platform for this check.
 if(TARGET Umicom::setup_process)
     add_executable(umicom-setup-process-child process_child.c)
+    # The child uses wmain on Windows to observe the Unicode argv contract.
+    if(MINGW)
+        target_link_options(umicom-setup-process-child PRIVATE -municode)
+    endif()
     add_executable(umicom-setup-process-test test_process.c)
     target_link_libraries(umicom-setup-process-test PRIVATE Umicom::setup_process)
     foreach(_target IN ITEMS umicom-setup-process-child umicom-setup-process-test)

@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/desktop_workspace/codec.c
+ * PURPOSE:
+ *   Canonical little-endian records with explicit lengths. This is data, not executable
+ *   configuration: no path, command, URI or environment is restored.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Canonical little-endian records with explicit lengths. This is data, not
  * executable configuration: no path, command, URI or environment is restored.

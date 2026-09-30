@@ -1,6 +1,15 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: examples/desktop_system/session_main.c
+ * PURPOSE:
+ *   Expose explicit desktop session operations through the native console.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/desktop_system/session_main.c
  *
  * Author: Sammy Hegab, Umicom Foundation
  * Licence: MIT

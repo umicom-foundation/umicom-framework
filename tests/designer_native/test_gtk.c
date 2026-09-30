@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/designer_native/test_gtk.c
+ * PURPOSE:
+ *   Real GTK tests. A missing display is NOT RUN (77), never a pass.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Real GTK tests. A missing display is NOT RUN (77), never a pass. */
 #include "umicom/designer/native_gtk4.h"

@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/boot_media/device_unsupported.c
+ * PURPOSE:
+ *   Report unavailable native device operations on unsupported host platforms.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 
 #include "internal.h"

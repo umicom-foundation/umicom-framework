@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/finance_close_review/lesson.c
+ * PURPOSE:
+ *   A matched trade is not a settled trade; balanced books still need controls. Uses public
+ *   service contracts only, with integer minor units and whole lots.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A matched trade is not a settled trade; balanced books still need controls.
  * Uses public service contracts only, with integer minor units and whole lots.

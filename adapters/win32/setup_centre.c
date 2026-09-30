@@ -1,6 +1,19 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/win32/setup_centre.c
+ * PURPOSE:
+ *   A native C23 Setup Centre for Windows application selection, reviewed installation, QEMU
+ *   launch and boot-media source preparation. Architecture: This bootstrap uses Win32 rather
+ *   than depending on the GTK runtime that it is about to install. Every operation delegates
+ *   to Framework services. A worker owns blocking I/O; only this GUI thread touches
+ *   controls. Existing GTK applications, NSIS setup and alternative tools are unaffected.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/win32/setup_centre.c
  * Purpose: A native C23 Setup Centre for Windows application selection,
  * reviewed installation, QEMU launch and boot-media source preparation.
  * Architecture: This bootstrap uses Win32 rather than depending on the GTK

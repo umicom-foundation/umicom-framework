@@ -65,4 +65,5 @@ static void ContractPayload(UmiTestPlatformAttachmentSnapshot *item)
     item->checksum[0] = 'v';
     item->size_bytes = (uint64_t)12U;
 }
+#define CONTRACT_API_VERSION UMI_TEST_PLATFORM_ATTACHMENT_API_VERSION
 #include "snapshot_contract_cases.h"

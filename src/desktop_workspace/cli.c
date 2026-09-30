@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/desktop_workspace/cli.c
+ * PURPOSE:
+ *   Native command-line adapter. Opening is a local workspace session, not a read-only
+ *   database inspector. Commands never execute stored content.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Native command-line adapter. Opening is a local workspace session, not a
  * read-only database inspector. Commands never execute stored content.

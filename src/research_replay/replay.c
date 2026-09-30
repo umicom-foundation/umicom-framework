@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/research_replay/replay.c
+ * PURPOSE:
+ *   One replay owner, immutable copied input, explicitly delayed fills. Reuses the canonical
+ *   quote and completed-trade aggregation contracts.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: src/research_replay/replay.c
  * Purpose: One replay owner, immutable copied input, explicitly delayed fills.

@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/education_workspace/export_project.c
+ * PURPOSE:
+ *   Framework-owned learning output; applications do not duplicate this service.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Framework-owned learning output; applications do not duplicate this service. */
 #include "umicom/education_workspace/projects.h"

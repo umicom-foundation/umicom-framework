@@ -43,7 +43,14 @@ static const WireCase CASES[] = {
 int main(int argc, char **argv)
 {
     if (argc != 2) return 2;
+/* Explain unavailable native transport without reporting a skipped check as a pass. The previous implementation remains for engineering review. */
+#if 0
     if (!UmiAiWorkspaceLocalProviderAvailable()) return 77;
+#endif
+    if (!UmiAiWorkspaceLocalProviderAvailable()) {
+        fputs("SKIP: local AI HTTP was not built. Enable UMICOM_AI_WORKSPACE_LOCAL_HTTP=ON with libcurl and json-c installed. No provider request was made.\n", stderr);
+        return 77;
+    }
     UmiAiRequest *request = calloc(1U, sizeof(*request)); CHECK(request != NULL);
     strcpy(request->request_id, "wire.test"); strcpy(request->model_id, "test-model"); request->message_count = 1U;
     request->max_output_tokens = 64U; request->messages[0].role = UMI_AI_ROLE_USER;

@@ -1,4 +1,13 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/ibkr_connection/network.c
+ * PURPOSE:
+ *   Loopback-only, nonblocking socket adapter. No DNS, credentials, shell or SDK.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Loopback-only, nonblocking socket adapter. No DNS, credentials, shell or SDK.
  *---------------------------------------------------------------------------*/

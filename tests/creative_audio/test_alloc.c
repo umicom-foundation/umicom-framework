@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/creative_audio/test_alloc.c
+ * PURPOSE:
+ *   Check allocation failure handling in the creative audio service.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #include "umicom/creative_workspace/audio.h"
 #include <stdio.h>

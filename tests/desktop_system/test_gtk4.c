@@ -1,6 +1,15 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/desktop_system/test_gtk4.c
+ * PURPOSE:
+ *   Exercise desktop system GTK construction, refresh and close lifetimes.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/desktop_system/test_gtk4.c
  *
  * Author: Sammy Hegab, Umicom Foundation
  * Licence: MIT

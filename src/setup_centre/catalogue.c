@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/setup_centre/catalogue.c
+ * PURPOSE:
+ *   A bounded tab-delimited catalogue. Release paths cannot contain control characters;
+ *   therefore fields need no interpreter-dependent escaping.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: src/setup_centre/catalogue.c
  * A bounded tab-delimited catalogue. Release paths cannot contain control

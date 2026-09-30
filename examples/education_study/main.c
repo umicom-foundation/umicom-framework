@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/education_study/main.c
+ * PURPOSE:
+ *   Native study tools. No command writes learner progress or launches a guide.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Native study tools. No command writes learner progress or launches a guide. */
 #include "lesson.h"

@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_evidence/test_native_http.c
+ * PURPOSE:
+ *   Native loopback peer for the actual local-provider and saved-job path. No model is
+ *   loaded. No credential, external address or real tool is used. The previous Python
+ *   fixture remains available as an alternative test.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Native loopback peer for the actual local-provider and saved-job path.
  * No model is loaded. No credential, external address or real tool is used.
@@ -128,7 +139,14 @@ static void *PeerThread(void *context){Peer *peer=context;peer->result=Serve(pee
 int main(int argc,char **argv)
 {
     if(argc!=2)return 2;
+/* Explain unavailable native transport without reporting a skipped check as a pass. The previous implementation remains for engineering review. */
+#if 0
     if(!UmiAiWorkspaceLocalProviderAvailable())return 77;
+#endif
+    if (!UmiAiWorkspaceLocalProviderAvailable()) {
+        fputs("SKIP: local AI HTTP was not built. Enable UMICOM_AI_WORKSPACE_LOCAL_HTTP=ON with libcurl and json-c installed. No provider request was made.\n", stderr);
+        return 77;
+    }
     Fixture f;CHECK(OpenFixture(&f,NULL)==0);
     UmiAiWorkspaceCancellation *cancel=NULL;OK(UmiAiWorkspaceCancellationCreate(&cancel));
 #ifdef _WIN32

@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/bank_review/installed_client/main.c
+ * PURPOSE:
+ *   Public installed headers only. Fictional data, actual memory banking service.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Public installed headers only. Fictional data, actual memory banking service. */
 #include <umicom/bank_operations/review.h>

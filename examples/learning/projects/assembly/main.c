@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/learning/projects/assembly/main.c
+ * PURPOSE:
+ *   This inspectable lesson is not a replacement for production Framework services.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework teaching project: assembly / main.c
  * Author: Sammy Hegab, Umicom Foundation. Licence: MIT.
  * This inspectable lesson is not a replacement for production Framework services. */

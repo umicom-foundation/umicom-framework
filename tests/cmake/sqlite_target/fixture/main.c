@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/cmake/sqlite_target/fixture/main.c
+ * PURPOSE:
+ *   Check that an independent CMake consumer can link the canonical SQLite target.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #ifdef UMI_REAL_SQLITE
 #include <sqlite3.h>

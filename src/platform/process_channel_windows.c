@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/platform/process_channel_windows.c
+ * PURPOSE:
+ *   Windows live child channel. Only three standard handles cross CreateProcess; an owned
+ *   kill-on-close job and suspended launch prevent an unowned child. stdin uses overlapped
+ *   I/O, so a non-reading child cannot block the GUI forever.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Windows live child channel. Only three standard handles cross CreateProcess;
  * an owned kill-on-close job and suspended launch prevent an unowned child.

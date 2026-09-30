@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/boot_media/test_media.c
+ * PURPOSE:
+ *   Synthetic boot structures are data, NOT bootable guests. All write tests use fresh
+ *   regular files. No physical drive, mounted filesystem or optical device is opened by
+ *   these tests. This test executable never enables device writes.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework tests | Sammy Hegab, Umicom Foundation | MIT
  * Synthetic boot structures are data, NOT bootable guests. All write tests use
  * fresh regular files. No physical drive, mounted filesystem or optical device

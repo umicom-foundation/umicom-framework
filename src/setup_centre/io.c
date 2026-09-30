@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/setup_centre/io.c
+ * PURPOSE:
+ *   Bounded regular-file I/O with exclusive creation. Never opens a raw disk, named pipe,
+ *   symlink, reparse point or interpreter. Existing directory ancestors are inspected;
+ *   Windows handles deny deletion while in use.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: src/setup_centre/io.c
  * Purpose: Bounded regular-file I/O with exclusive creation. Never opens a raw

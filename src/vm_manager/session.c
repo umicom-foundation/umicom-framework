@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/vm_manager/session.c
+ * PURPOSE:
+ *   QEMU adapter and supervised session. There is no public TCP monitor, arbitrary QMP
+ *   command box, HMP string injection, automatic reconnect or unknown retry. A command
+ *   result must match its ID; observed guest state comes from QMP.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * QEMU adapter and supervised session. There is no public TCP monitor, arbitrary
  * QMP command box, HMP string injection, automatic reconnect or unknown retry.

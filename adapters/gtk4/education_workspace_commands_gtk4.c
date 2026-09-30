@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/education_workspace_commands_gtk4.c
+ * PURPOSE:
+ *   Reusable presentation belongs in Framework; application modules stay thin.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Education native adapter
  * Author: Sammy Hegab, Umicom Foundation. Licence: MIT.
  * Reusable presentation belongs in Framework; application modules stay thin. */

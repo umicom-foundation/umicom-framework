@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/creative_audio/test_panel_gtk4.c
+ * PURPOSE:
+ *   GTK-only, in-memory lifecycle tests. No file read, write or playback.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * GTK-only, in-memory lifecycle tests. No file read, write or playback. */
 #include "umicom/ui/gtk4/creative_audio.h"

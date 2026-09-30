@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/designer_native/generated_roundtrip.c
+ * PURPOSE:
+ *   Used twice: build the source fixture, then inspect the compiled constructor.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Used twice: build the source fixture, then inspect the compiled constructor. */
 #include "umicom/designer/native_project.h"

@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/os_image/boot.c
+ * PURPOSE:
+ *   Ordered guest observations, not substring-based success detection. Offline transcript
+ *   assessment and actual process execution are separate entry points.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Ordered guest observations, not substring-based success detection. Offline
  * transcript assessment and actual process execution are separate entry points.

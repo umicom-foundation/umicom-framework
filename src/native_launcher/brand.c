@@ -1,3 +1,14 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/native_launcher/brand.c
+ * PURPOSE:
+ *   Embedded copy of the supplied Umicom PNG icon: no working-directory lookup. Source
+ *   SHA-256: 8f2ff52aa435dae3ee357a3df8c6428b30905fd8881684b72f5988bd2878c6a5 Retain this
+ *   attribution when synchronising the canonical branding asset.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Embedded copy of the supplied Umicom PNG icon: no working-directory lookup.
  * Source SHA-256: 8f2ff52aa435dae3ee357a3df8c6428b30905fd8881684b72f5988bd2878c6a5

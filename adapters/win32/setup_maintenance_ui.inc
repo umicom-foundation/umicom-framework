@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/win32/setup_maintenance_ui.inc
+ * PURPOSE:
+ *   Maintenance uses Setup Centre's existing worker, cancellation and UI lifetime. The
+ *   displayed installed list is bound to its receipt hash. A reordered list cannot
+ *   reinterpret a removal selection after another installation changes it.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: adapters/win32/setup_maintenance_ui.inc
  * Maintenance uses Setup Centre's existing worker, cancellation and UI lifetime.

@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/finance_close_review/test_alloc.c
+ * PURPOSE:
+ *   Check allocation failure handling in the finance close review service.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #include "umicom/finance_operations/close_review.h"
 #include <stdio.h>

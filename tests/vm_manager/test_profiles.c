@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/vm_manager/test_profiles.c
+ * PURPOSE:
+ *   Real canonical Data Server, not a substitute map. Paths are never opened.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Real canonical Data Server, not a substitute map. Paths are never opened. */
 #include "umicom/vm_manager/manager.h"

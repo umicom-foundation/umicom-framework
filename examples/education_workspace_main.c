@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/education_workspace_main.c
+ * PURPOSE:
+ *   Provide console commands for the shared learner workspace.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Education workspace console
  * Author: Sammy Hegab, Umicom Foundation. Licence: MIT. */
 #include "umicom/education_workspace/workspace.h"

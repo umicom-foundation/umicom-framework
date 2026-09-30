@@ -1,3 +1,14 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/vm_manager/qmp.c
+ * PURPOSE:
+ *   QMP envelopes are interpreted structurally. An event never acknowledges a command, an
+ *   error never becomes a successful state transition, and console bytes never become JSON
+ *   syntax.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * QMP envelopes are interpreted structurally. An event never acknowledges a
  * command, an error never becomes a successful state transition, and console

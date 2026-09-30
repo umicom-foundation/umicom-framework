@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/boot_media/device_linux.c
+ * PURPOSE:
+ *   Linux removable-USB adapter. Kernel sysfs is the inventory authority. Whole disks only;
+ *   mounted partitions, swap, holders and unknown observations block acquisition. There is
+ *   no umount, sudo, shell, device-node creation or retry.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Linux removable-USB adapter. Kernel sysfs is the inventory authority. Whole
  * disks only; mounted partitions, swap, holders and unknown observations block

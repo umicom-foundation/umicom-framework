@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/release_inspector/main.c
+ * PURPOSE:
+ *   Native entry point. Windows arguments are converted from UTF-16 exactly once.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Native entry point. Windows arguments are converted from UTF-16 exactly once. */
 #include "umicom/release_inspector/inspection.h"

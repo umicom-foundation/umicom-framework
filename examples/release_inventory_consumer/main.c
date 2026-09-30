@@ -1,3 +1,14 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/release_inventory_consumer/main.c
+ * PURPOSE:
+ *   This consumer deliberately uses only the installed public inventory header. It proves
+ *   linking and object lifetime for this focused package, not Core SDK completeness, GUI
+ *   behaviour or release readiness.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * This consumer deliberately uses only the installed public inventory header.
  * It proves linking and object lifetime for this focused package, not Core SDK

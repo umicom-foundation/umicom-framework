@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/setup_centre/virtual_machine.c
+ * PURPOSE:
+ *   Explicit, provider-neutral execution boundary with a QEMU plan adapter. Input inspection
+ *   never launches a program. A guest gets no host storage or network device from this
+ *   profile; that is not a guarantee against VM bugs.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: src/setup_centre/virtual_machine.c
  * Explicit, provider-neutral execution boundary with a QEMU plan adapter.

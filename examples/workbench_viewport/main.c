@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/workbench_viewport/main.c
+ * PURPOSE:
+ *   Demonstrate the reusable workbench viewport contract.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #include "practice_layout.h"
 #include <inttypes.h>

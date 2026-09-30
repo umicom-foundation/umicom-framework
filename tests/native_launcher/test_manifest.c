@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/native_launcher/test_manifest.c
+ * PURPOSE:
+ *   Closed-schema validation and an independently written Exec decoder.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework tests | Sammy Hegab, Umicom Foundation | MIT
  * Closed-schema validation and an independently written Exec decoder. */
 #include "test_support.h"

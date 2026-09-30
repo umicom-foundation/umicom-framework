@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/setup_maintenance/test_linked_release.c
+ * PURPOSE:
+ *   Native pack -> static PE inspection -> install -> update -> inspection -> undo. Images
+ *   are linker-produced FORMAT fixtures and are NEVER executed here.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Native pack -> static PE inspection -> install -> update -> inspection -> undo.
  * Images are linker-produced FORMAT fixtures and are NEVER executed here.

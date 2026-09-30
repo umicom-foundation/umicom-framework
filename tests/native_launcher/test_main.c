@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/native_launcher/test_main.c
+ * PURPOSE:
+ *   CTest and this runner read the same case catalogue; names cannot drift.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework tests | Sammy Hegab, Umicom Foundation | MIT
  * CTest and this runner read the same case catalogue; names cannot drift. */
 #include "test_support.h"

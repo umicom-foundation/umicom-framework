@@ -1,4 +1,13 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tools/release_inventory/main.c
+ * PURPOSE:
+ *   Thin file/console boundary for the distribution inventory service.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: tools/release_inventory/main.c
  * Purpose: Thin file/console boundary for the distribution inventory service.

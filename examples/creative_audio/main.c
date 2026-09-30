@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/creative_audio/main.c
+ * PURPOSE:
+ *   Explicit file paths and frame boundaries. No automatic playback or overwrite.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Explicit file paths and frame boundaries. No automatic playback or overwrite. */
 #include "lesson.h"

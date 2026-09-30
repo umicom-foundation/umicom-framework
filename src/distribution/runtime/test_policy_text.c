@@ -1,4 +1,13 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/distribution/runtime/test_policy_text.c
+ * PURPOSE:
+ *   Read and emit immutable, context-bound test policy documents.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: src/distribution/runtime/test_policy_text.c
  * Purpose: Read and emit immutable, context-bound test policy documents.

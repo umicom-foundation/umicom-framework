@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/market_tape/test_alloc.c
+ * PURPOSE:
+ *   Check allocation failure handling in the market tape service.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Foundation | Sammy Hegab | MIT. Linux linker fault injection only. */
 #include "umicom/trading/market_tape.h"
 #include <stdio.h>

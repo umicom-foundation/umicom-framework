@@ -13,6 +13,8 @@
 #include <gio/gio.h>
 #include <glib/gstdio.h>
 #include <string.h>
+#include <stdio.h>
+#include "umicom/security/local_profile.h"
 
 /* Application IDs are one safe path component; toolkit validation excludes
  * path separators, empty segments and traversal. No memory fallback is allowed. */
@@ -41,4 +43,18 @@ UmiStatus umi_gtk4_workspace_storage_open(
     g_free(path);
     g_free(directory);
     return status;
+}
+
+/* The same canonical name selects the same directory across application
+ * restarts; separators and traversal are rejected before joining any path. */
+UmiStatus UmiGtk4WorkspaceProfileStorageId(const char *application_id, const char *profile,
+                                         char *out, size_t capacity)
+{
+    char canonical[UMI_LOCAL_PROFILE_NAME_CAPACITY], candidate[256];
+    if (application_id == NULL || out == NULL || capacity == 0U ||
+        !g_application_id_is_valid(application_id) || UmiLocalProfileName(profile,canonical) != UMI_STATUS_OK)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    int n = snprintf(candidate,sizeof(candidate),"%s.profile.user_%s",application_id,canonical);
+    if (n < 0 || (size_t)n >= sizeof(candidate) || (size_t)n >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+    memcpy(out,candidate,(size_t)n+1U); return UMI_STATUS_OK;
 }

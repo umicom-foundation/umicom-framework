@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/boot_media/cli.c
+ * PURPOSE:
+ *   Native CLI adapter; no shell commands or automatic privileged relaunch.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Native CLI adapter; no shell commands or automatic privileged relaunch. */
 

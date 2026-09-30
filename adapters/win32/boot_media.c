@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/win32/boot_media.c
+ * PURPOSE:
+ *   A native presentation adapter. All validation, plan identity and byte transfer live in
+ *   the shared media service. Closing waits for owned work to stop.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: adapters/win32/boot_media.c
  * A native presentation adapter. All validation, plan identity and byte transfer

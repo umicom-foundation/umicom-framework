@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/platform/process_channel_linux.c
+ * PURPOSE:
+ *   Linux interactive child transport. A private socketpair supplies stdin so MSG_NOSIGNAL
+ *   avoids changing the application's global SIGPIPE policy. stdout and stderr have distinct
+ *   pipes. No interpreter is involved.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Linux interactive child transport. A private socketpair supplies stdin so
  * MSG_NOSIGNAL avoids changing the application's global SIGPIPE policy.

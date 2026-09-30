@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/desktop_workspace/model.c
+ * PURPOSE:
+ *   Model edits operate on drafts, never on the authoritative saved snapshot. UTF-8 is
+ *   checked here so the same rules apply to GTK and native clients.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Model edits operate on drafts, never on the authoritative saved snapshot.
  * UTF-8 is checked here so the same rules apply to GTK and native clients.

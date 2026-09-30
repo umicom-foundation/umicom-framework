@@ -1,4 +1,13 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/market_tape/gtk_main.c
+ * PURPOSE:
+ *   Present the shared practice workspace without creating an application-local model.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: examples/market_tape/gtk_main.c
  * Present the shared practice workspace without creating an application-local model.

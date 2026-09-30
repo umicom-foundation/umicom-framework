@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/os_image/build.c
+ * PURPOSE:
+ *   Explicit Buildroot orchestration. Source recipes are selected by the OS; this module
+ *   owns native process execution, state boundaries and evidence.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Explicit Buildroot orchestration. Source recipes are selected by the OS;
  * this module owns native process execution, state boundaries and evidence. */

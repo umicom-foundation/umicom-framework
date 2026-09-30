@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/native_launcher/test_sha.c
+ * PURPOSE:
+ *   Standard SHA-256 vectors and incremental lifecycle/size-boundary tests.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework tests | Sammy Hegab, Umicom Foundation | MIT
  * Standard SHA-256 vectors and incremental lifecycle/size-boundary tests. */
 #include "test_support.h"

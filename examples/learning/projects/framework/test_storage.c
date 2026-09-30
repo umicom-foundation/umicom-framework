@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/learning/projects/framework/test_storage.c
+ * PURPOSE:
+ *   This inspectable lesson is not a replacement for production Framework services.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework teaching project: framework / test_storage.c
  * Author: Sammy Hegab, Umicom Foundation. Licence: MIT.
  * This inspectable lesson is not a replacement for production Framework services. */

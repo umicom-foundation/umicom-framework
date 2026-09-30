@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/setup_centre/process_adapter.c
+ * PURPOSE:
+ *   Canonical process ownership stays in platform/process.c. QEMU and GRUB are external
+ *   native tools; all arguments remain separate from the executable.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Canonical process ownership stays in platform/process.c. QEMU and GRUB are
  * external native tools; all arguments remain separate from the executable. */

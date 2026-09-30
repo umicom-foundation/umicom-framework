@@ -1,4 +1,13 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/finance_operations/close_review.c
+ * PURPOSE:
+ *   Shared close predicate and owned explanations. No storage or network I/O.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Shared close predicate and owned explanations. No storage or network I/O.
  *---------------------------------------------------------------------------*/

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "window_removal_private.h"
 #include "umicom/ui/gtk4/market_tape.h"
 #include "umicom/trading/market_tape_practice.h"
 #include <inttypes.h>
@@ -281,12 +282,17 @@ GtkWindow *UmiMarketTapeGtkCreate(GtkWindow *parent)
     if (UmiMarketTapePracticeCreate(&view->practice) != UMI_STATUS_OK) { free(view); return NULL; }
     GtkWindow *window = GTK_WINDOW(gtk_window_new());
     g_object_set_data_full(G_OBJECT(window), "umicom-market-tape-owner", view, ReleaseView);
+/* End practice ownership when the window closes, independently of retained object references. The previous implementation remains for engineering review. */
+#if 0
     g_signal_connect(window, "destroy", G_CALLBACK(CloseView), NULL);
+#endif
+    UmiGtk4ObserveWindowRemoval(window, G_OBJECT(window), CloseView, NULL);
     gtk_window_set_title(window, "Umicom — Linked market tape (practice)");
     gtk_window_set_default_size(window, 1040, 800);
     if (parent != NULL) {
         gtk_window_set_transient_for(window, parent);
         gtk_window_set_destroy_with_parent(window, TRUE);
+        UmiGtk4ObserveWindowRemoval(parent, G_OBJECT(window), UmiGtk4CloseRemovedParentChild, window);
         GtkApplication *app = gtk_window_get_application(parent);
         if (app != NULL) gtk_window_set_application(window, app);
     }
@@ -361,7 +367,11 @@ GtkWidget *UmiMarketTapeGtkWrap(GtkWidget *content, GtkWindow *parent)
     GtkWidget *button = gtk_button_new_with_label("Open linked market tape");
     gtk_widget_set_tooltip_text(button, "An independent fictional market-data workspace. Existing trading controls stay unchanged.");
     g_signal_connect_object(button, "clicked", G_CALLBACK(OpenPractice), parent, 0);
+/* Disable retained entry controls as soon as their native parent is removed. The previous implementation remains for engineering review. */
+#if 0
     g_signal_connect_object(parent, "destroy", G_CALLBACK(DisableEntry), button, 0);
+#endif
+    UmiGtk4ObserveWindowRemoval(parent, G_OBJECT(button), DisableEntry, button);
     gtk_box_append(GTK_BOX(box), button);
     gtk_widget_set_vexpand(content, TRUE);
     gtk_box_append(GTK_BOX(box), content);

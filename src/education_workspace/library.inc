@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/education_workspace/library.inc
+ * PURPOSE:
+ *   One catalogue feeds native lookup and the offline HTML index. It contains documentation
+ *   references, not executable commands or learning credits.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Shared guide catalogue
  * Sammy Hegab, Umicom Foundation | MIT
  * One catalogue feeds native lookup and the offline HTML index. It contains

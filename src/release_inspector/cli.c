@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/release_inspector/cli.c
+ * PURPOSE:
+ *   Native release diagnostics, with exclusive JSON report publication. An output report
+ *   describes this observation; it is not a release signature, installer receipt or evidence
+ *   that Windows actually started the application.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: src/release_inspector/cli.c
  * Purpose: Native release diagnostics, with exclusive JSON report publication.

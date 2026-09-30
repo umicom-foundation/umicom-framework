@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/boot_media/image.c
+ * PURPOSE:
+ *   Checked structural observations of raw disk and ISO images. A valid table is not proof
+ *   that its boot loader executes or that its publisher is trusted.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: src/boot_media/image.c
  * Checked structural observations of raw disk and ISO images. A valid table is

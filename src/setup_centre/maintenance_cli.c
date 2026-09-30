@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/setup_centre/maintenance_cli.c
+ * PURPOSE:
+ *   The CLI is a projection of the public maintenance API, not a second engine.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * The CLI is a projection of the public maintenance API, not a second engine. */
 #include "maintenance_internal.h"

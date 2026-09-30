@@ -89,11 +89,21 @@ if(WIN32 AND TARGET umicom-release-notes AND TARGET Umicom::setup_process)
     umicom_apply_warnings(umicom-release-windows-install-test)
     umicom_apply_sanitizers(umicom-release-windows-install-test)
     add_dependencies(umicom-release-windows-install-test umicom-release-notes umicom-release-notes-model)
+    get_filename_component(_umi_release_notes_resource
+        "${CMAKE_CURRENT_LIST_DIR}/../../examples/release_notes/example-note.txt" ABSOLUTE)
     foreach(_case IN ITEMS installed_startup missing_dll missing_resource)
+        # Resolve source-relative dot segments before handing the resource to
+        # Setup Centre's strict absolute-path contract. Keep path validation intact.
+        if(FALSE)
         add_test(NAME framework.release_inspector.windows.${_case}
             COMMAND umicom-release-windows-install-test "${_case}"
                 "$<TARGET_FILE:umicom-release-notes>" "$<TARGET_FILE:umicom-release-notes-model>"
                 "${CMAKE_CURRENT_LIST_DIR}/../../examples/release_notes/example-note.txt")
+        endif()
+        add_test(NAME framework.release_inspector.windows.${_case}
+            COMMAND umicom-release-windows-install-test "${_case}"
+                "$<TARGET_FILE:umicom-release-notes>" "$<TARGET_FILE:umicom-release-notes-model>"
+                "${_umi_release_notes_resource}")
         set_tests_properties(framework.release_inspector.windows.${_case} PROPERTIES
             TIMEOUT 90 LABELS "framework;release;windows;real-native-startup")
     endforeach()

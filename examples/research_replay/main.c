@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/research_replay/main.c
+ * PURPOSE:
+ *   Expose research replay commands without submitting live orders.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #include "strategy.h"
 #include "umicom/strategy_research/research_csv.h"

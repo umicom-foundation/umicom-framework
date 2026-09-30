@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/queue_shutdown/client/main.c
+ * PURPOSE:
+ *   Public-header client. No source-tree includes or private queue structure.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Foundation | Sammy Hegab | MIT
  * Public-header client. No source-tree includes or private queue structure. */
 #include "umicom/platform/task_queue.h"

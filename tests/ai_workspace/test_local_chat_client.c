@@ -32,7 +32,14 @@ static void *CancelLater(void *token)
 int main(int argc, char **argv)
 {
     if (argc < 4) return 2;
+/* Explain unavailable native transport without reporting a skipped check as a pass. The previous implementation remains for engineering review. */
+#if 0
     if (!UmiAiWorkspaceLocalProviderAvailable()) return 77;
+#endif
+    if (!UmiAiWorkspaceLocalProviderAvailable()) {
+        fputs("SKIP: local AI HTTP was not built. Enable UMICOM_AI_WORKSPACE_LOCAL_HTTP=ON with libcurl and json-c installed. No provider request was made.\n", stderr);
+        return 77;
+    }
     unsigned long port = strtoul(argv[1], NULL, 10); int expected = atoi(argv[2]); unsigned long timeout = strtoul(argv[3], NULL, 10);
     if (port < 1024UL || port > 65535UL || timeout < 100UL || timeout > 60000UL) return 2;
     UmiDataServer *data = NULL; UmiAiRuntime runtime; UmiAiProvider provider = {0};

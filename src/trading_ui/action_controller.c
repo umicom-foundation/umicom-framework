@@ -779,3 +779,39 @@ UmiStatus UmiTradingUiControllerResetDraft(UmiTradingUiController *controller)
             ? "Ticket reset. No order was submitted or cancelled; preview risk again."
             : NULL, 1);
 }
+
+
+/* The domain owns order identity/version checks; the controller only publishes
+ * the completed outcome through the established presentation notification. */
+UmiStatus UmiTradingUiControllerSetOrderQuery(UmiTradingUiController *controller,
+    const UmiTradingOrderQuery *query)
+{
+    if (controller == NULL || controller->workspace == NULL || query == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = UmiTradingWorkspaceSetOrderQuery(controller->workspace, query);
+    return finish_action(controller, status, NULL, NULL, 1);
+}
+
+UmiStatus UmiTradingUiControllerCancelReviewedOrder(UmiTradingUiController *controller,
+    const char *client_order_id, uint64_t expected_order_version)
+{
+    if (controller == NULL || controller->workspace == NULL || client_order_id == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = UmiTradingWorkspaceCancelReviewedOrder(controller->workspace,
+        client_order_id, expected_order_version);
+    const char *message = status == UMI_STATUS_INVALID_STATE
+        ? "Order or selection changed. Review the displayed order again." : NULL;
+    return finish_action(controller, status, NULL, message, 1);
+}
+
+
+UmiStatus UmiTradingUiControllerPrepareChartLimit(UmiTradingUiController *controller,
+    const char *instrument_id, UmiSide side, double price)
+{
+    if (controller == NULL || controller->workspace == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = UmiTradingWorkspacePrepareChartLimit(controller->workspace, instrument_id, side, price);
+    if (status == UMI_STATUS_OK) memset(&controller->state.last_risk, 0, sizeof controller->state.last_risk);
+    return finish_action(controller, status, NULL, status == UMI_STATUS_OK
+        ? "Chart price copied to the limit ticket. Review quantity, price and risk before submitting."
+        : "Chart ticket unchanged. Check the selected instrument and price.", 1);
+}

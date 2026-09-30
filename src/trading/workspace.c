@@ -62,6 +62,7 @@ struct UmiTradingWorkspace {
     UmiWatchlist watchlist;
     UmiTradingMarketSnapshot markets[UMI_TRADING_MAX_WATCHLIST];
     UmiTradingBarHistory bar_histories[UMI_TRADING_MAX_WATCHLIST];
+    UmiChartNavigation chart_navigation[UMI_TRADING_MAX_WATCHLIST];
     size_t market_count;
     UmiOms oms;
     UmiExecutionStore executions;
@@ -74,6 +75,7 @@ struct UmiTradingWorkspace {
     UmiRiskPricePolicy pricePolicy;
     UmiPretradeRiskEvidence riskEvidence;
     char instrument_filter[UMI_TRADING_WORKSPACE_FILTER_CAPACITY];
+    char order_search[UMI_TRADING_WORKSPACE_FILTER_CAPACITY];
     UmiTradingWorkspaceOrderFilter order_filter;
     UmiTradingChartStudy chart_study;
     size_t chart_study_period;
@@ -224,6 +226,15 @@ static int market_visible(const UmiTradingWorkspace *workspace,
 static int order_visible(const UmiTradingWorkspace *workspace,
                          const UmiOrder *order)
 {
+    /* Identity and status belong to one canonical projection. Filtering never
+     * modifies executions, positions, the ticket or linked market context. */
+    if (!contains_case_insensitive(order->request.client_order_id.value, workspace->order_search) &&
+        !contains_case_insensitive(order->request.instrument.instrument_id.value, workspace->order_search) &&
+        !contains_case_insensitive(order->request.instrument.symbol, workspace->order_search) &&
+        !contains_case_insensitive(order->request.instrument.venue, workspace->order_search)) {
+        return 0;
+    }
+
     /* Select the behaviour associated with the requested command or state value. */
     switch (workspace->order_filter) {
         case UMI_TRADING_WORKSPACE_ORDERS_OPEN:
@@ -860,10 +871,19 @@ UmiStatus umi_trading_workspace_set_order_filter(
      */
     if (workspace == NULL || !valid_order_filter(order_filter))
         return UMI_STATUS_INVALID_ARGUMENT;
+/* The status-only assignment is superseded by the shared atomic order query below, preserving the current text filter. The superseded implementation is retained for engineering review. */
+#if 0
     workspace->order_filter = order_filter;
     workspace->revision += 1U;
     reconcile_selections(workspace);
     return UMI_STATUS_OK;
+#endif
+    /* Reuse atomic query validation so old status-only callers retain the
+     * current search text and gain the same no-op/overflow handling. */
+    UmiTradingOrderQuery query;
+    query.status = order_filter;
+    memcpy(query.text, workspace->order_search, sizeof(query.text));
+    return UmiTradingWorkspaceSetOrderQuery(workspace, &query);
 }
 
 /* Persist a bounded study choice in toolkit-neutral workspace state. */
@@ -1963,5 +1983,204 @@ UmiStatus UmiTradingWorkspaceResetDraft(UmiTradingWorkspace *workspace)
         "Ticket reset. Preview risk before submitting.");
     workspace->has_draft_risk = 0;
     workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+
+/* Keep matching, selection reconciliation and version checks in the domain
+ * owner; products and native adapters never maintain a second order book. */
+UmiStatus UmiTradingWorkspaceSetOrderQuery(UmiTradingWorkspace *workspace,
+    const UmiTradingOrderQuery *query)
+{
+    if (workspace == NULL || query == NULL || !valid_order_filter(query->status) ||
+        memchr(query->text, '\0', sizeof(query->text)) == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (workspace->order_filter == query->status &&
+        strcmp(workspace->order_search, query->text) == 0) return UMI_STATUS_OK;
+    if (workspace->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    workspace->order_filter = query->status;
+    copy_text(workspace->order_search, sizeof(workspace->order_search), query->text);
+    ++workspace->revision;
+    reconcile_selections(workspace);
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiTradingWorkspaceGetOrderQuery(const UmiTradingWorkspace *workspace,
+    UmiTradingOrderQuery *out_query)
+{
+    if (workspace == NULL || out_query == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiTradingOrderQuery value = {0};
+    value.status = workspace->order_filter;
+    memcpy(value.text, workspace->order_search, sizeof(value.text));
+    *out_query = value;
+    return UMI_STATUS_OK;
+}
+
+static int OrderReviewIdValid(const char *id)
+{
+    if (id == NULL) return 0;
+    for (size_t i = 0U; i < UMI_FINANCE_ID_CAPACITY; ++i) {
+        if (id[i] == '\0') return i != 0U;
+    }
+    return 0;
+}
+
+UmiStatus UmiTradingWorkspaceReviewOrder(const UmiTradingWorkspace *workspace,
+    const char *client_order_id, UmiTradingOrderReview *out_review)
+{
+    if (workspace == NULL || out_review == NULL || !OrderReviewIdValid(client_order_id))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index = order_index(workspace, client_order_id);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    UmiTradingOrderReview value = {0};
+    value.order = workspace->oms.orders.orders[index];
+    value.workspace_revision = workspace->revision;
+    value.can_cancel = order_visible(workspace, &value.order) &&
+        strcmp(client_order_id, workspace->selected_order_id) == 0 &&
+        umi_order_transition_allowed(value.order.status, UMI_ORDER_CANCELLED);
+    for (size_t i = 0U; i < workspace->executions.count; ++i) {
+        const UmiExecutionReport *fill = &workspace->executions.reports[i];
+        if (strcmp(fill->client_order_id.value, client_order_id) == 0)
+            value.executions[value.execution_count++] = *fill;
+    }
+    *out_review = value;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiTradingWorkspaceCancelReviewedOrder(UmiTradingWorkspace *workspace,
+    const char *client_order_id, uint64_t expected_order_version)
+{
+    if (workspace == NULL || !OrderReviewIdValid(client_order_id)) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index = order_index(workspace, client_order_id);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    const UmiOrder *order = &workspace->oms.orders.orders[index];
+    if (strcmp(client_order_id, workspace->selected_order_id) != 0 ||
+        order->version != expected_order_version || !order_visible(workspace, order))
+        return UMI_STATUS_INVALID_STATE;
+    if (order->version == UINT64_MAX || workspace->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    return umi_trading_workspace_cancel_selected_order(workspace);
+}
+
+
+/* Chart edits belong to the canonical workspace rather than a transient GTK
+ * widget. Capture symbol identity before any gesture crosses a redraw. */
+static UmiStatus ChartSelectedIndex(const UmiTradingWorkspace *workspace,
+    const char *instrument_id, size_t *out_index)
+{
+    if (workspace == NULL || instrument_id == NULL || instrument_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (strcmp(workspace->selected_instrument_id, instrument_id) != 0)
+        return UMI_STATUS_INVALID_STATE;
+    size_t index = market_index(workspace, instrument_id);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    *out_index = index;
+    return UMI_STATUS_OK;
+}
+UmiStatus UmiTradingWorkspaceGetChartNavigation(const UmiTradingWorkspace *workspace,
+    const char *instrument_id, UmiChartNavigation *out_navigation)
+{
+    if (out_navigation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index;
+    UmiStatus status = ChartSelectedIndex(workspace, instrument_id, &index);
+    if (status == UMI_STATUS_OK) *out_navigation = workspace->chart_navigation[index];
+    return status;
+}
+UmiStatus UmiTradingWorkspaceSetChartNavigation(UmiTradingWorkspace *workspace,
+    const char *instrument_id, const UmiChartNavigation *navigation)
+{
+    if (navigation == NULL || navigation->visible_bars > UMI_CHART_MAX_POINTS ||
+        (navigation->pinned != 0 && navigation->pinned != 1)) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index;
+    UmiStatus status = ChartSelectedIndex(workspace, instrument_id, &index);
+    if (status != UMI_STATUS_OK) return status;
+    UmiChartNavigation *current = &workspace->chart_navigation[index];
+    if (current->visible_bars == navigation->visible_bars && current->anchor_ms == navigation->anchor_ms &&
+        current->pinned == navigation->pinned) return UMI_STATUS_OK;
+    if (workspace->revision == UINT64_MAX) return UMI_STATUS_INVALID_STATE;
+    *current = *navigation;
+    workspace->revision++;
+    return UMI_STATUS_OK;
+}
+UmiStatus UmiTradingWorkspaceAddChartDrawing(UmiTradingWorkspace *workspace,
+    const char *instrument_id, const char *tool, UmiChartPoint first, UmiChartPoint second)
+{
+    if (tool == NULL || (strcmp(tool, "support") != 0 && strcmp(tool, "resistance") != 0 &&
+        strcmp(tool, "trend") != 0) || first.time_ms < 0 || second.time_ms < 0 ||
+        !isfinite(first.value) || !isfinite(second.value) ||
+        (strcmp(tool, "trend") == 0 && first.time_ms == second.time_ms))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index;
+    UmiStatus status = ChartSelectedIndex(workspace, instrument_id, &index);
+    if (status != UMI_STATUS_OK) return status;
+    (void)index;
+    UmiChartDrawingRegistry *registry = umi_chart_workspace_drawings(workspace->charts);
+    uint64_t revision = umi_chart_drawing_registry_revision(registry);
+    if (workspace->revision == UINT64_MAX || revision == UINT64_MAX) return UMI_STATUS_INVALID_STATE;
+    UmiChartDrawingSnapshot drawing = {0}, existing;
+    (void)snprintf(drawing.id, sizeof drawing.id, "trading-drawing-%llu", (unsigned long long)(revision + 1U));
+    if (umi_chart_drawing_registry_find(registry, drawing.id, &existing) == UMI_STATUS_OK)
+        return UMI_STATUS_ALREADY_EXISTS;
+    copy_text(drawing.pane_id, sizeof drawing.pane_id, instrument_id);
+    copy_text(drawing.tool, sizeof drawing.tool, tool);
+    drawing.time1 = first.time_ms;
+    drawing.time2 = second.time_ms;
+    drawing.value1 = first.value;
+    drawing.value2 = strcmp(tool, "trend") == 0 ? second.value : first.value;
+    status = umi_chart_drawing_registry_upsert(registry, &drawing);
+    if (status == UMI_STATUS_OK) workspace->revision++;
+    return status;
+}
+UmiStatus UmiTradingWorkspaceRemoveChartDrawing(UmiTradingWorkspace *workspace,
+    const char *instrument_id, const char *drawing_id, uint64_t expected_revision)
+{
+    if (drawing_id == NULL || drawing_id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index;
+    UmiStatus status = ChartSelectedIndex(workspace, instrument_id, &index);
+    if (status != UMI_STATUS_OK) return status;
+    (void)index;
+    UmiChartDrawingRegistry *registry = umi_chart_workspace_drawings(workspace->charts);
+    UmiChartDrawingSnapshot drawing;
+    status = umi_chart_drawing_registry_find(registry, drawing_id, &drawing);
+    if (status != UMI_STATUS_OK) return status;
+    if (drawing.locked || drawing.revision != expected_revision ||
+        strcmp(drawing.pane_id, instrument_id) != 0 || workspace->revision == UINT64_MAX ||
+        umi_chart_drawing_registry_revision(registry) == UINT64_MAX)
+        return UMI_STATUS_INVALID_STATE;
+    status = umi_chart_drawing_registry_remove(registry, drawing_id);
+    if (status == UMI_STATUS_OK) workspace->revision++;
+    return status;
+}
+UmiStatus UmiTradingWorkspacePrepareChartLimit(UmiTradingWorkspace *workspace,
+    const char *instrument_id, UmiSide side, double price)
+{
+    if ((side != UMI_SIDE_BUY && side != UMI_SIDE_SELL) || !isfinite(price) || price <= 0.0)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index;
+    UmiStatus status = ChartSelectedIndex(workspace, instrument_id, &index);
+    if (status != UMI_STATUS_OK) return status;
+    (void)index;
+    if (workspace->revision == UINT64_MAX) return UMI_STATUS_INVALID_STATE;
+    UmiOrderRequest draft = workspace->draft_order;
+    if (strcmp(draft.instrument.instrument_id.value, instrument_id) != 0)
+        return UMI_STATUS_INVALID_STATE;
+    draft.type = UMI_ORDER_LIMIT;
+    draft.side = side;
+    draft.limit_price = price;
+    draft.stop_price = 0.0;
+    workspace->draft_order = draft;
+    workspace->has_draft_risk = 0;
+    memset(&workspace->riskEvidence, 0, sizeof workspace->riskEvidence);
+    workspace->revision++;
+    return UMI_STATUS_OK;
+}
+
+
+UmiStatus UmiTradingWorkspaceOrderAt(const UmiTradingWorkspace *workspace,
+    size_t index, UmiOrder *out_order)
+{
+    if (workspace == NULL || out_order == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (index >= workspace->oms.orders.count) return UMI_STATUS_NOT_FOUND;
+    *out_order = workspace->oms.orders.orders[index];
     return UMI_STATUS_OK;
 }

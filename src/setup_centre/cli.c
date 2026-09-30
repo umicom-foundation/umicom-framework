@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/setup_centre/cli.c
+ * PURPOSE:
+ *   Native CLI over the same reviewed contracts as the graphical setup tool.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Native CLI over the same reviewed contracts as the graphical setup tool. */
 

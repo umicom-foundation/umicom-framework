@@ -1,3 +1,14 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/native_launcher/text.c
+ * PURPOSE:
+ *   Checked text encoders keep launcher arguments out of a shell. The desktop format has two
+ *   escape layers: key-value decoding, then Exec token decoding. See the freedesktop Desktop
+ *   Entry Specification, section The Exec key.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Checked text encoders keep launcher arguments out of a shell. The desktop
  * format has two escape layers: key-value decoding, then Exec token decoding.

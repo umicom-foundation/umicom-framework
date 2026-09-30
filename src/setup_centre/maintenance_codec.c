@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/setup_centre/maintenance_codec.c
+ * PURPOSE:
+ *   A closed journal format: no commands, interpolation or arbitrary source paths. Its hash
+ *   detects damage; it does not authenticate a publisher or the user.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: src/setup_centre/maintenance_codec.c
  * A closed journal format: no commands, interpolation or arbitrary source paths.

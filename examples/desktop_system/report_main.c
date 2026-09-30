@@ -1,6 +1,15 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: examples/desktop_system/report_main.c
+ * PURPOSE:
+ *   Print the desktop system report through the shared observation service.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/desktop_system/report_main.c
  *
  * Author: Sammy Hegab, Umicom Foundation
  * Licence: MIT

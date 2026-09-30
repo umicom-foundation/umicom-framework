@@ -1,4 +1,13 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/release_baseline/client/main.c
+ * PURPOSE:
+ *   Consume only the installed public evidence and distribution contracts.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: examples/release_baseline/client/main.c
  * Purpose: Consume only the installed public evidence and distribution contracts.

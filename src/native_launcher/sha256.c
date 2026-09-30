@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/native_launcher/sha256.c
+ * PURPOSE:
+ *   Portable streaming SHA-256 without a process or interpreter. Unsigned 32-bit wraparound
+ *   is intentional in the compression function. Delivery hashes detect changed bytes; they
+ *   do not identify a trusted signer.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: src/native_launcher/sha256.c
  * Purpose: Portable streaming SHA-256 without a process or interpreter.

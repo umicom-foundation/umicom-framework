@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/os_image/test_files.c
+ * PURPOSE:
+ *   Linux filesystem and controlled tool-transport cases. Test directories are private and
+ *   contain no user data. The child is explicitly inert, not QEMU.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Linux filesystem and controlled tool-transport cases. Test directories are
  * private and contain no user data. The child is explicitly inert, not QEMU. */

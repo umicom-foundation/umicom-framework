@@ -1,4 +1,13 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/designer_native/cli.c
+ * PURPOSE:
+ *   Native source preparation. Nothing in this command builds or runs a project.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: examples/designer_native/cli.c
  * Native source preparation. Nothing in this command builds or runs a project.

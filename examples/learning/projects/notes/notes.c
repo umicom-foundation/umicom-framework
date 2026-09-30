@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/learning/projects/notes/notes.c
+ * PURPOSE:
+ *   This inspectable lesson is not a replacement for production Framework services.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework teaching project: notes / notes.c
  * Author: Sammy Hegab, Umicom Foundation. Licence: MIT.
  * This inspectable lesson is not a replacement for production Framework services. */

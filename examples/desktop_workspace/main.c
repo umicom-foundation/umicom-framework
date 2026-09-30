@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/desktop_workspace/main.c
+ * PURPOSE:
+ *   Native Windows entry preserves Unicode arguments across the public UTF-8 ABI. The
+ *   command implementation remains the same on Windows and Linux.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Native Windows entry preserves Unicode arguments across the public UTF-8 ABI.
  * The command implementation remains the same on Windows and Linux. */

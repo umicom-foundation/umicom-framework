@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/release_baseline/test_evidence.c
+ * PURPOSE:
+ *   Exercise the public release evidence contract. All receipts below are fictional.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Exercise the public release evidence contract. All receipts below are fictional. */
 #include "umicom/distribution/runtime/evidence.h"

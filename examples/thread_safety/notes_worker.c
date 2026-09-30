@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/thread_safety/notes_worker.c
+ * PURPOSE:
+ *   Count words in a Notes draft on a worker, then join before releasing its data. This is
+ *   the complete memory-only lesson; it performs no application edits.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Count words in a Notes draft on a worker, then join before releasing its data.
  * This is the complete memory-only lesson; it performs no application edits.

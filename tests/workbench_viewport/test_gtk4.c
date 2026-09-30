@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/workbench_viewport/test_gtk4.c
+ * PURPOSE:
+ *   Run against the real GTK library and an actual display. Exit 77 is a skip, never a
+ *   graphical pass. No database, file write or business service is used.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Run against the real GTK library and an actual display. Exit 77 is a skip,
  * never a graphical pass. No database, file write or business service is used.

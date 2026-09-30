@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/os_image/io_linux.c
+ * PURPOSE:
+ *   Descriptor-relative Linux I/O. The builder creates archives describing devices; it never
+ *   opens or creates host device nodes, mounts or removes data.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Descriptor-relative Linux I/O. The builder creates archives describing
  * devices; it never opens or creates host device nodes, mounts or removes data. */

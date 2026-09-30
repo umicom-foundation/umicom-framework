@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/ibkr_connection/client/main.c
+ * PURPOSE:
+ *   Exercise the installed broker connection API as an independent SDK consumer.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Foundation | Sammy Hegab | MIT */
 #include "umicom/broker_connectivity/connection.h"
 #include <stdio.h>

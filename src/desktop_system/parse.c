@@ -1,6 +1,15 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/desktop_system/parse.c
+ * PURPOSE:
+ *   Parse bounded native system observations into the desktop system model.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/desktop_system/parse.c
  *
  * Author: Sammy Hegab, Umicom Foundation
  * Licence: MIT

@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/native_launcher/cases_linux.inc
+ * PURPOSE:
+ *   List the Linux native-launcher regression cases shared by the runner and CTest.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 CASE("stage.plan",TestStagePlan)
 CASE("stage.roundtrip",TestStageRoundtrip)

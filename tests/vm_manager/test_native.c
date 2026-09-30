@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/vm_manager/test_native.c
+ * PURPOSE:
+ *   Actual process/filesystem/Data Server integration with explicitly inert native peers.
+ *   Synthetic kernel/disk bytes are never guest-boot evidence.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Actual process/filesystem/Data Server integration with explicitly inert
  * native peers. Synthetic kernel/disk bytes are never guest-boot evidence.

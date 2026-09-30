@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/os_image/cli.c
+ * PURPOSE:
+ *   Native command-line presentation. Domain work remains in the library.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Native command-line presentation. Domain work remains in the library. */
 #include "internal.h"

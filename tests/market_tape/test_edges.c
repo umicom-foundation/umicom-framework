@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/market_tape/test_edges.c
+ * PURPOSE:
+ *   Public-contract boundary tests; all checks execute in Release builds too.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Foundation | Sammy Hegab | MIT
  * Public-contract boundary tests; all checks execute in Release builds too. */
 #include "umicom/trading/market_tape_practice.h"

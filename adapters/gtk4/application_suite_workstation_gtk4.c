@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/application/suite_layout/gtk4_workstation.h"
 #include "umicom/ui/gtk4/drop_down.h"
+#include "umicom/security/local_profile.h"
 #include "umicom/ui/gtk4/automation.h"
 
 #include <stdio.h>
@@ -1300,6 +1301,8 @@ UmiStatus umi_application_suite_gtk4_workstation_bind_checkpoint_storage(
 }
 
 /* Native launchers opt into durable storage; constructors remain I/O-free. */
+/* Profile-specific storage now uses the same validated checkpoint lifecycle with a separate user-local directory. This centralises persistence instead of adding a Trader database. The previous implementation remains for engineering review. */
+#if 0
 UmiStatus umi_application_suite_gtk4_workstation_enable_checkpoint_storage(
     UmiApplicationSuiteGtk4Workstation *workstation, int restore_saved)
 {
@@ -1334,6 +1337,62 @@ UmiStatus umi_application_suite_gtk4_workstation_enable_checkpoint_storage(
                 ? "Saved layout restored from disk."
                 : "Disk layout storage ready. Save keeps the active layout for next launch.");
     return status;
+}
+
+#endif
+static UmiStatus SuiteEnableStorage(
+    UmiApplicationSuiteGtk4Workstation *workstation, int restore_saved, const char *storage_id)
+{
+    UmiDataServer *server = NULL;
+    UmiStatus status;
+    if (workstation == NULL || workstation->runtime.experience == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (workstation->customisation.edit_active) return UMI_STATUS_BUSY;
+    status = umi_gtk4_workspace_storage_open(
+        storage_id, &server);
+    if (status == UMI_STATUS_OK)
+        status = umi_application_suite_gtk4_workstation_bind_checkpoint_storage(workstation, server);
+    if (status == UMI_STATUS_OK) {
+        workstation->owned_checkpoint_server = server;
+        if (restore_saved && workstation->saved_layout_text != NULL)
+            status = umi_application_suite_gtk4_workstation_restore_checkpoint(workstation);
+    } else {
+        umi_data_server_destroy(server);
+        /* Do not pretend the legacy memory checkpoint fulfilled this explicit
+         * durable request. Preserve any previously bound valid backend. */
+        if (workstation->checkpoint_server == NULL)
+            workstation->checkpoint_storage_requested = 1;
+    }
+    workstation->checkpoint_storage_status = status;
+    refresh_edit_controls(workstation);
+    checkpoint_feedback(workstation, status,
+        workstation->checkpoint_report.recovered_last_good
+            ? restore_saved
+                ? "Recovered last-known-good saved layout; review before saving."
+                : "Last-known-good checkpoint available; choose Restore to review it."
+            : restore_saved && workstation->saved_layout_text != NULL
+                ? "Saved layout restored from disk."
+                : "Disk layout storage ready. Save keeps the active layout for next launch.");
+    return status;
+}
+
+UmiStatus umi_application_suite_gtk4_workstation_enable_checkpoint_storage(
+    UmiApplicationSuiteGtk4Workstation *workstation, int restore_saved)
+{
+    if (workstation == NULL || workstation->runtime.experience == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return SuiteEnableStorage(workstation,restore_saved,workstation->runtime.experience->application_id);
+}
+/* Profiles share the layout codec and Data Server ownership while using
+ * distinct directories. Changing a profile never reuses another user's Save
+ * revision or imports an existing global layout behind their back. */
+UmiStatus UmiApplicationSuiteEnableProfileStorage(UmiApplicationSuiteGtk4Workstation *workstation,
+                                                 const char *profile, int restore_saved)
+{
+    char storage_id[256];
+    if (workstation == NULL || workstation->runtime.experience == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = UmiGtk4WorkspaceProfileStorageId(workstation->runtime.experience->application_id,
+        profile,storage_id,sizeof(storage_id));
+    return status == UMI_STATUS_OK ? SuiteEnableStorage(workstation,restore_saved,storage_id) : status;
 }
 
 /* Save only committed layouts and retain the previous checkpoint on failure. */

@@ -1,4 +1,13 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tools/release_baseline/main.c
+ * PURPOSE:
+ *   Read an explicit release contract and report missing or inconsistent evidence.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: tools/release_baseline/main.c
  * Purpose: Read an explicit release contract and report missing or inconsistent evidence.

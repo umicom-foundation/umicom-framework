@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/vm_manager/inventory.c
+ * PURPOSE:
+ *   Compare every sealed runtime entry, not only listed hashes. An unexpected DLL must not
+ *   enter the private loader directory unnoticed. No path is executed.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Compare every sealed runtime entry, not only listed hashes. An unexpected DLL
  * must not enter the private loader directory unnoticed. No path is executed.

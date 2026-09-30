@@ -1,4 +1,13 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/distribution/runtime/test_policy.c
+ * PURPOSE:
+ *   Apply explicit per-test decisions without hiding population drift.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: src/distribution/runtime/test_policy.c
  * Purpose: Apply explicit per-test decisions without hiding population drift.

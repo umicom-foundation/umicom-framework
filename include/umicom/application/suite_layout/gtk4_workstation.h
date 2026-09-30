@@ -275,6 +275,14 @@ UmiStatus umi_application_suite_gtk4_workstation_bind_checkpoint_storage(
  */
 UmiStatus umi_application_suite_gtk4_workstation_enable_checkpoint_storage(
     UmiApplicationSuiteGtk4Workstation *workstation, int restore_saved);
+/** Open this local profile's independent SQLite layout store. The profile name
+ * is canonicalised and validated as a single safe identifier. Existing global
+ * checkpoints remain untouched. Authentication belongs to the native host;
+ * this API provides storage separation, not a security boundary against other
+ * processes running as the same operating-system user. */
+UmiStatus UmiApplicationSuiteEnableProfileStorage(UmiApplicationSuiteGtk4Workstation *workstation,
+                                                 const char *profile, int restore_saved);
+
 
 /**
  * Saves the committed active layout to bound storage, or memory when unbound.

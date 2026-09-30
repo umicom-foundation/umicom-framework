@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/vm_manager/runtime.c
+ * PURPOSE:
+ *   Explicit offline QEMU runtime inventory. A publisher supplies the selected binaries,
+ *   firmware, licence and corresponding-source notice. Hash agreement does not assert legal
+ *   sufficiency, provenance or Windows compatibility.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Explicit offline QEMU runtime inventory. A publisher supplies the selected
  * binaries, firmware, licence and corresponding-source notice. Hash agreement

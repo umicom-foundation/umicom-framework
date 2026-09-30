@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/vm_manager/test_packaging.c
+ * PURPOSE:
+ *   Original native packer + inspector, with synthetic PE DATA. No Windows executable,
+ *   application or QEMU binary is executed by these tests.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Original native packer + inspector, with synthetic PE DATA. No Windows
  * executable, application or QEMU binary is executed by these tests. */

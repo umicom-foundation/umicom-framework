@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/setup_centre/main.c
+ * PURPOSE:
+ *   A thin executable entry point; all behaviour belongs to shared services.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A thin executable entry point; all behaviour belongs to shared services. */
 

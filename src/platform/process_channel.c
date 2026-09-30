@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/platform/process_channel.c
+ * PURPOSE:
+ *   Shared validation and diagnostic-tail ownership for interactive processes.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Shared validation and diagnostic-tail ownership for interactive processes. */
 #include "process_channel_internal.h"

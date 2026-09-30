@@ -19,6 +19,7 @@
  */
 #ifndef UMICOM_CHART_INTERACTION_H
 #define UMICOM_CHART_INTERACTION_H
+#include "umicom/chart/navigation.h"
 #include "umicom/chart/pane.h"
 #include "umicom/chart/scale.h"
 #include "umicom/chart/crosshair.h"

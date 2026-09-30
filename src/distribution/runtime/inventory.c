@@ -1,6 +1,15 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/distribution/runtime/inventory.c
+ * PURPOSE:
+ *   Compare complete test identities through the canonical distribution owner.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/distribution/runtime/inventory.c
  * Purpose: Compare complete test identities through the canonical distribution owner.
  * Author: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
  *---------------------------------------------------------------------------*/

@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/os_image/io_unsupported.c
+ * PURPOSE:
+ *   Explicit unsupported-host adapter; pure buffer validation remains available.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Explicit unsupported-host adapter; pure buffer validation remains available. */
 #include "internal.h"

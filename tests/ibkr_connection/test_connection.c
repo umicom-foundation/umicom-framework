@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ibkr_connection/test_connection.c
+ * PURPOSE:
+ *   Check broker connection state, protocol validation and bounded observations.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #include "fixture.h"
 #include <math.h>

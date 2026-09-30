@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/setup_centre/maintenance_plan.c
+ * PURPOSE:
+ *   A plan is a read-only comparison. A missing installed file is different from an
+ *   unreadable file; unowned files are never mistaken for obsolete payload.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: src/setup_centre/maintenance_plan.c
  * A plan is a read-only comparison. A missing installed file is different from

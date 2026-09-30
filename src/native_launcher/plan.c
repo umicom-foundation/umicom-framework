@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/native_launcher/plan.c
+ * PURPOSE:
+ *   Opaque plan ownership and length-delimited review fingerprints. No pointer into caller
+ *   storage survives PlanCreate. No old script is invoked here.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Opaque plan ownership and length-delimited review fingerprints. No pointer
  * into caller storage survives PlanCreate. No old script is invoked here. */

@@ -1,6 +1,15 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/desktop_system_gtk4.c
+ * PURPOSE:
+ *   Present system observations and session controls through the shared desktop services.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/desktop_system_gtk4.c
  *
  * Author: Sammy Hegab, Umicom Foundation
  * Licence: MIT

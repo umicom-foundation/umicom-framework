@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/bank_review/test_gtk_review.c
+ * PURPOSE:
+ *   Compile the actual adapter once into a white-box unit host. Never click the persistent
+ *   launcher: the test supplies the canonical memory service instead.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Compile the actual adapter once into a white-box unit host. Never click the
  * persistent launcher: the test supplies the canonical memory service instead.
@@ -14,7 +24,11 @@ static BankUi *Create(GtkWidget **outWindow)
     OK(UmiBankOperationsOpenMemory(&f.bank));Setup(&f);ui->operations=f.bank;
     *outWindow=gtk_window_new();g_object_ref_sink(*outWindow);ui->window=GTK_WINDOW(*outWindow);
     g_object_set_data_full(G_OBJECT(*outWindow),"umicom-bank-operations",ui,UiFree);
+/* Exercise the production close observer while retaining the unpresented window. The previous implementation remains for engineering review. */
+#if 0
     g_signal_connect(*outWindow,"destroy",G_CALLBACK(UiClosed),ui);
+#endif
+    UmiGtk4ObserveWindowRemoval(GTK_WINDOW(*outWindow), G_OBJECT(*outWindow), UiClosed, ui);
     GtkWidget *box=gtk_box_new(GTK_ORIENTATION_VERTICAL,0);gtk_window_set_child(ui->window,box);
     ui->action=GTK_DROP_DOWN(gtk_drop_down_new_from_strings(actions));
     ui->identity=GTK_DROP_DOWN(gtk_drop_down_new_from_strings(actors));

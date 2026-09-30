@@ -1,3 +1,14 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_safety/test_data_safety.c
+ * PURPOSE:
+ *   Regression laboratory: compile the actual Data Server implementation here so SQLite
+ *   failure injection can access its private connection. No substitute Data Server is used.
+ *   Production callers must use public contracts instead.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Regression laboratory: compile the actual Data Server implementation here
  * so SQLite failure injection can access its private connection. No substitute

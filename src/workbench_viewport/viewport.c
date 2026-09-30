@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/workbench_viewport/viewport.c
+ * PURPOSE:
+ *   All geometry is derived from the canonical layout. Toolkit adapters consume this plan
+ *   instead of reimplementing visibility, split and minimum-size rules.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * All geometry is derived from the canonical layout. Toolkit adapters consume
  * this plan instead of reimplementing visibility, split and minimum-size rules.

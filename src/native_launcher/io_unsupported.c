@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/native_launcher/io_unsupported.c
+ * PURPOSE:
+ *   Honest host boundary: Linux launcher staging is not Windows installation. Portable
+ *   codecs and SHA-256 remain available on every supported C host.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Honest host boundary: Linux launcher staging is not Windows installation.
  * Portable codecs and SHA-256 remain available on every supported C host. */

@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/os_image/test_buffers.c
+ * PURPOSE:
+ *   Public buffer contracts and negative cases. No subprocess or filesystem I/O.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Public buffer contracts and negative cases. No subprocess or filesystem I/O. */
 #include "fixtures.h"

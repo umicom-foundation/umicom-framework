@@ -86,6 +86,18 @@ typedef struct UmiTradingUiController {
  * client applications.
  */
 UmiTradingUiControllerConfig umi_trading_ui_controller_config_default(void);
+
+/* Atomic browsing changes and explicit reviewed cancellation. These notify
+ * the existing UI observer on success or domain rejection, without publishing
+ * intermediate selection changes or bypassing the workspace guards. */
+/* Preparing a chart ticket publishes one completed domain change. */
+UmiStatus UmiTradingUiControllerPrepareChartLimit(UmiTradingUiController *controller,
+    const char *instrument_id, UmiSide side, double price);
+UmiStatus UmiTradingUiControllerSetOrderQuery(UmiTradingUiController *controller,
+    const UmiTradingOrderQuery *query);
+UmiStatus UmiTradingUiControllerCancelReviewedOrder(UmiTradingUiController *controller,
+    const char *client_order_id, uint64_t expected_order_version);
+
 /**
  * Initialise trading ui controller from caller-provided values so later operations receive
  * a known state.

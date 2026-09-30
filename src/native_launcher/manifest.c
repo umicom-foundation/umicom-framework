@@ -1,4 +1,17 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/native_launcher/manifest.c
+ * PURPOSE:
+ *   Closed-schema desktop-stage manifest encoding and decoding. This bootstrap reader
+ *   accepts only the established staging schema, not general JSON-RPC, configuration or
+ *   language-service documents. Fixed-depth field readers avoid pulling a developer runtime
+ *   into the delivery tool. Unknown/duplicate keys, invalid Unicode, NULs and numeric
+ *   overflow fail.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: src/native_launcher/manifest.c
  * Purpose: Closed-schema desktop-stage manifest encoding and decoding.

@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/native_launcher/formats.c
+ * PURPOSE:
+ *   Bounded ELF-header and PNG-envelope validation. Neither executes a program nor
+ *   decompresses pixel data. Passing is not full loader/image certification.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Bounded ELF-header and PNG-envelope validation. Neither executes a program
  * nor decompresses pixel data. Passing is not full loader/image certification. */

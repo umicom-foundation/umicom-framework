@@ -1,4 +1,13 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/release_policy/test_policy.c
+ * PURPOSE:
+ *   Test explicit policy decisions, immutable editing and refusal paths.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: tests/release_policy/test_policy.c
  * Purpose: Test explicit policy decisions, immutable editing and refusal paths.

@@ -23,6 +23,7 @@
 #include "umicom/chart/indicator.h"
 #include "umicom/chart/plot.h"
 #include "umicom/trading_ui/trading_ui.h"
+#include "umicom/trading_ui/gtk4/interactive_chart.h"
 #include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/drop_down.h"
 #include "umicom/ui/gtk4/workstation/chart_surface.h"
@@ -44,6 +45,10 @@ typedef struct UmiGtk4TradingPanelState {
     GtkWidget *alert_remove_button;
     GtkWidget *order_filter_dropdown;
     GtkWidget *order_dropdown;
+    GtkWidget *order_search_entry;
+    GtkWidget *order_message;
+    char reviewed_order_id[UMI_FINANCE_ID_CAPACITY];
+    uint64_t reviewed_order_version;
     GtkWidget *side_dropdown;
     GtkWidget *type_dropdown;
     GtkWidget *tif_dropdown;
@@ -105,6 +110,8 @@ static GtkWidget *new_dropdown(const char *const *labels,
     return dropdown;
 }
 
+/* Chart scene construction now belongs to trading_ui/chart_scene.c so navigation, drawings and price projection are shared across frontends. The superseded implementation is retained for engineering review. */
+#if 0
 /* Build a toolkit-neutral scene from the selected instrument's retained bar
  * history. The GTK adapter chooses controls, while all plotting and indicator
  * calculations remain reusable Framework services. */
@@ -226,6 +233,9 @@ static UmiStatus build_selected_chart_scene(
     return UMI_STATUS_OK;
 }
 
+
+#endif
+
 /* Provide the set feedback operation used by this module and its client applications. */
 static void set_feedback(UmiGtk4TradingPanelState *state,
                          const char *fallback)
@@ -254,6 +264,8 @@ static void set_feedback(UmiGtk4TradingPanelState *state,
     }
 }
 
+/* The chart-only controls are replaced by the shared interactive chart with instrument-scoped navigation, drawing tools and ticket preparation. Its signals and cloned render evidence have explicit widget lifetimes. The superseded implementation is retained for engineering review. */
+#if 0
 /* Rebuild the chart scene after either study control changes. The chart widget
  * clones the scene, so temporary render commands are released immediately. */
 static void refresh_chart_panel(UmiGtk4TradingPanelState *state)
@@ -452,6 +464,14 @@ static GtkWidget *create_chart_panel(UmiGtk4TradingPanelContext *context)
     refresh_chart_panel(state);
     return root;
 }
+
+
+#endif
+static GtkWidget *create_chart_panel(UmiGtk4TradingPanelContext *context)
+{
+    return UmiGtk4TradingInteractiveChartCreate(context);
+}
+
 
 /*
  * Provide the on refresh clicked operation used by this module and its client
@@ -1306,6 +1326,8 @@ static GtkWidget *create_order_entry_panel(UmiGtk4TradingPanelContext *context)
     return root;
 }
 
+/* The original status-only blotter is replaced by canonical identity search, copied fill details and version-checked cancellation. Native signals now share the panel lifetime. The superseded implementation is retained for engineering review. */
+#if 0
 /*
  * Find on order filter while leaving the underlying catalogue or model owned by this
  * module.
@@ -1458,6 +1480,210 @@ static GtkWidget *create_orders_panel(UmiGtk4TradingPanelContext *context)
     gtk_widget_set_sensitive(cancel, snapshot.can_cancel_order);
     g_signal_connect(cancel, "clicked", G_CALLBACK(on_cancel_order_clicked), state);
     gtk_box_append(GTK_BOX(root), cancel);
+    state->building = 0;
+    return root;
+}
+
+
+#endif
+/* Signals are tied to the panel object so retained child widgets cannot use
+ * freed panel state. A command can schedule a rebuild; do not inspect state
+ * after calling the controller. */
+static UmiGtk4TradingPanelState *OrderPanelState(gpointer root)
+{
+    return g_object_get_data(G_OBJECT(root), "umicom-trading-panel-state");
+}
+
+static void ApplyOrderQuery(gpointer root)
+{
+    UmiGtk4TradingPanelState *state = OrderPanelState(root);
+    if (state == NULL || state->building || state->context == NULL) return;
+    UmiTradingOrderQuery query = {0};
+    query.status = (UmiTradingWorkspaceOrderFilter)gtk_drop_down_get_selected(
+        GTK_DROP_DOWN(state->order_filter_dropdown));
+    const char *text = gtk_editable_get_text(GTK_EDITABLE(state->order_search_entry));
+    size_t length = strlen(text);
+    if (length >= sizeof(query.text)) {
+        gtk_label_set_text(GTK_LABEL(state->order_message), "Search is too long (maximum 95 bytes).");
+        return;
+    }
+    memcpy(query.text, text, length + 1U);
+    UmiTradingUiController *controller = state->context->controller;
+    GtkRoot *window = gtk_widget_get_root(GTK_WIDGET(root));
+    /* Applying ends the entry edit so the queued host refresh may replace
+     * this panel. Incoming quotes have continued updating the domain book. */
+    if (window != NULL) gtk_root_set_focus(window, NULL);
+    (void)UmiTradingUiControllerSetOrderQuery(controller, &query);
+}
+
+static void OnOrderQueryApply(GtkButton *button, gpointer root)
+{
+    (void)button;
+    ApplyOrderQuery(root);
+}
+static void OnOrderQueryActivate(GtkSearchEntry *entry, gpointer root)
+{
+    (void)entry;
+    ApplyOrderQuery(root);
+}
+static void OnOrderStatusChanged(GObject *object, GParamSpec *pspec, gpointer root)
+{
+    (void)object;
+    (void)pspec;
+    ApplyOrderQuery(root);
+}
+static void OnReviewedOrderSelected(GObject *object, GParamSpec *pspec, gpointer root)
+{
+    (void)pspec;
+    UmiGtk4TradingPanelState *state = OrderPanelState(root);
+    if (state == NULL || state->building || state->context == NULL) return;
+    guint selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(object));
+    if ((size_t)selected >= state->order_count) return;
+    char id[UMI_FINANCE_ID_CAPACITY];
+    memcpy(id, state->order_ids[selected], sizeof(id));
+    (void)umi_trading_ui_controller_select_order(state->context->controller, id);
+}
+static void OnReviewedOrderCancel(GtkButton *button, gpointer root)
+{
+    (void)button;
+    UmiGtk4TradingPanelState *state = OrderPanelState(root);
+    if (state == NULL || state->building || state->context == NULL ||
+        state->reviewed_order_id[0] == '\0') return;
+    char id[UMI_FINANCE_ID_CAPACITY];
+    memcpy(id, state->reviewed_order_id, sizeof(id));
+    (void)UmiTradingUiControllerCancelReviewedOrder(state->context->controller,
+        id, state->reviewed_order_version);
+}
+
+/* Read-only details come from a copied Framework review. Status, remaining
+ * quantity and fills are tied to the displayed order, never a market selection. */
+static GtkWidget *OrderReviewText(const UmiTradingOrderReview *review)
+{
+    GtkWidget *view = gtk_text_view_new();
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(view), FALSE);
+    gtk_text_view_set_monospace(GTK_TEXT_VIEW(view), TRUE);
+    (void)umi_gtk4_automation_tag_widget(view, "trading.orders.review");
+    GString *text = g_string_sized_new(2048U);
+    if (review == NULL) {
+        g_string_append(text, "No selected order matches the current filters.");
+    } else {
+        const UmiOrder *order = &review->order;
+        g_string_append_printf(text,
+            "Order: %s\nAccount: %s\nInstrument: %s (%s / %s)\n"
+            "Environment: %s\nSide: %s\nStatus: %s\n"
+            "Quantity: %.8g | filled: %.8g | remaining: %.8g\n"
+            "Limit: %.8g | stop: %.8g | average fill: %.8g\n"
+            "Order version: %" PRIu64 "\nRetained executions: %zu\n",
+            order->request.client_order_id.value, order->request.account_id.value,
+            order->request.instrument.instrument_id.value, order->request.instrument.symbol,
+            order->request.instrument.venue, umi_trading_environment_text(order->request.environment),
+            umi_trading_side_text(order->request.side), umi_trading_order_status_text(order->status),
+            order->request.quantity, order->filled_quantity,
+            order->request.quantity - order->filled_quantity, order->request.limit_price,
+            order->request.stop_price, order->average_fill_price, order->version, review->execution_count);
+        for (size_t i = 0U; i < review->execution_count; ++i) {
+            const UmiExecutionReport *fill = &review->executions[i];
+            g_string_append_printf(text, "%s | %.8g @ %.8g | time %" PRId64 "\n",
+                fill->execution_id.value, fill->fill_quantity, fill->fill_price, fill->event_time_ms);
+        }
+        if (review->execution_count == 0U) g_string_append(text, "No executions retained for this order.\n");
+    }
+    char *display = g_utf8_make_valid(text->str, (gssize)text->len);
+    gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(view)), display, -1);
+    g_free(display);
+    g_string_free(text, TRUE);
+    return view;
+}
+
+static GtkWidget *create_orders_panel(UmiGtk4TradingPanelContext *context)
+{
+    static const char *const labels[] = {"All", "Open", "Filled", "Cancelled", "Rejected"};
+    UmiTradingWorkspaceSnapshot snapshot;
+    UmiTradingOrderQuery query;
+    if (context == NULL || context->workspace == NULL ||
+        umi_trading_workspace_snapshot(context->workspace, &snapshot) != UMI_STATUS_OK ||
+        UmiTradingWorkspaceGetOrderQuery(context->workspace, &query) != UMI_STATUS_OK) return NULL;
+    UmiGtk4TradingPanelState *state = calloc(1U, sizeof(*state));
+    if (state == NULL) return NULL;
+    state->context = context;
+    state->building = 1;
+    GtkWidget *root = new_section("Orders / Trade Blotter");
+    g_object_set_data_full(G_OBJECT(root), "umicom-trading-panel-state", state, free);
+    GtkWidget *filters = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+    state->order_filter_dropdown = new_dropdown(labels, 5U, (size_t)query.status);
+    state->order_search_entry = gtk_search_entry_new();
+    gtk_editable_set_text(GTK_EDITABLE(state->order_search_entry), query.text);
+    gtk_widget_set_hexpand(state->order_search_entry, TRUE);
+    gtk_widget_set_tooltip_text(state->order_search_entry, "Order ID, instrument ID, symbol or venue. Enter applies the search.");
+    g_object_set_data(G_OBJECT(state->order_search_entry), "umicom-trading-hold-refresh", GINT_TO_POINTER(1));
+    (void)umi_gtk4_automation_tag_widget(state->order_search_entry, "trading.orders.search");
+    (void)umi_gtk4_automation_tag_widget(state->order_filter_dropdown, "trading.orders.status");
+    GtkWidget *apply = gtk_button_new_with_label("Apply search");
+    (void)umi_gtk4_automation_tag_widget(apply, "trading.orders.apply");
+    gtk_box_append(GTK_BOX(filters), state->order_filter_dropdown);
+    gtk_box_append(GTK_BOX(filters), state->order_search_entry);
+    gtk_box_append(GTK_BOX(filters), apply);
+    gtk_widget_set_sensitive(filters, context->controller != NULL);
+    gtk_box_append(GTK_BOX(root), filters);
+    UmiTradingUiControllerSnapshot controller =
+        umi_trading_ui_controller_snapshot(context->controller);
+    state->order_message = new_text_label(controller.last_message, 0);
+    (void)umi_gtk4_automation_tag_widget(state->order_message, "trading.orders.message");
+    gtk_box_append(GTK_BOX(root), state->order_message);
+
+    GtkStringList *orders = gtk_string_list_new(NULL);
+    guint selected_index = GTK_INVALID_LIST_POSITION;
+    for (size_t i = 0U; i < snapshot.visible_order_count && i < UMI_TRADING_MAX_ORDERS; ++i) {
+        UmiOrder order;
+        if (umi_trading_workspace_visible_order_at(context->workspace, i, &order) != UMI_STATUS_OK) continue;
+        char label[UMI_GTK4_TRADING_TEXT_CAPACITY];
+        (void)snprintf(label, sizeof(label), "%s | %s %s %.8g | %s | filled %.8g",
+            order.request.client_order_id.value, umi_trading_side_text(order.request.side),
+            order.request.instrument.symbol, order.request.quantity,
+            umi_trading_order_status_text(order.status), order.filled_quantity);
+        gtk_string_list_append(orders, label);
+        memcpy(state->order_ids[state->order_count], order.request.client_order_id.value, UMI_FINANCE_ID_CAPACITY);
+        if (strcmp(order.request.client_order_id.value, snapshot.selected_order_id) == 0)
+            selected_index = (guint)state->order_count;
+        ++state->order_count;
+    }
+    state->order_dropdown = umi_ui_gtk4_drop_down_new_take_string_list(orders);
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(state->order_dropdown), selected_index);
+    gtk_widget_set_sensitive(state->order_dropdown, context->controller != NULL);
+    gtk_widget_set_hexpand(state->order_dropdown, TRUE);
+    (void)umi_gtk4_automation_tag_widget(state->order_dropdown, "trading.orders.selection");
+    gtk_box_append(GTK_BOX(root), state->order_dropdown);
+    char summary[128];
+    (void)snprintf(summary, sizeof(summary), "%zu matching / %zu retained orders", state->order_count, snapshot.order_count);
+    gtk_box_append(GTK_BOX(root), new_text_label(summary, 0));
+
+    UmiTradingOrderReview *review = calloc(1U, sizeof(*review));
+    int has_review = review != NULL && selected_index != GTK_INVALID_LIST_POSITION &&
+        UmiTradingWorkspaceReviewOrder(context->workspace, snapshot.selected_order_id, review) == UMI_STATUS_OK;
+    GtkWidget *details = OrderReviewText(has_review ? review : NULL);
+    if (!has_review && selected_index != GTK_INVALID_LIST_POSITION) {
+        gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(details)),
+            "Order review is temporarily unavailable. Refresh before taking action.", -1);
+    }
+    GtkWidget *scroll = gtk_scrolled_window_new();
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), details);
+    gtk_widget_set_vexpand(scroll, TRUE);
+    gtk_widget_set_size_request(scroll, -1, 150);
+    gtk_box_append(GTK_BOX(root), scroll);
+    GtkWidget *cancel = gtk_button_new_with_label("Cancel Selected Order");
+    if (has_review) {
+        memcpy(state->reviewed_order_id, review->order.request.client_order_id.value, UMI_FINANCE_ID_CAPACITY);
+        state->reviewed_order_version = review->order.version;
+    }
+    gtk_widget_set_sensitive(cancel, context->controller != NULL && has_review && review->can_cancel);
+    free(review);
+    (void)umi_gtk4_automation_tag_widget(cancel, "trading.orders.cancel");
+    gtk_box_append(GTK_BOX(root), cancel);
+    g_signal_connect_object(apply, "clicked", G_CALLBACK(OnOrderQueryApply), G_OBJECT(root), 0);
+    g_signal_connect_object(state->order_search_entry, "activate", G_CALLBACK(OnOrderQueryActivate), G_OBJECT(root), 0);
+    g_signal_connect_object(state->order_filter_dropdown, "notify::selected", G_CALLBACK(OnOrderStatusChanged), G_OBJECT(root), 0);
+    g_signal_connect_object(state->order_dropdown, "notify::selected", G_CALLBACK(OnReviewedOrderSelected), G_OBJECT(root), 0);
+    g_signal_connect_object(cancel, "clicked", G_CALLBACK(OnReviewedOrderCancel), G_OBJECT(root), 0);
     state->building = 0;
     return root;
 }
@@ -1779,6 +2005,8 @@ static GtkWidget *create_generic_panel(const UmiUiWorkspaceWindow *window,
  * Initialise gtk4 trading panel from caller-provided values so later operations receive a
  * known state.
  */
+/* Direct provider creation is now wrapped by a stable native mount. Data refresh replaces only the necessary panel body, preserving chart gestures, layout ownership and focused edits. The superseded implementation is retained for engineering review. */
+#if 0
 GtkWidget *umi_gtk4_trading_panel_create(
     const UmiUiWorkspaceWindow *window,
     UmiGtk4TradingPanelContext *context)
@@ -1813,4 +2041,93 @@ GtkWidget *umi_gtk4_trading_panel_create(
     if (strcmp(window->tool_id, "time-and-sales") == 0)
         return create_time_and_sales_panel(context);
     return create_generic_panel(window, context);
+}
+
+#endif
+static GtkWidget *CreateTradingPanelBody(
+    const UmiUiWorkspaceWindow *window,
+    UmiGtk4TradingPanelContext *context)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (window == NULL || context == NULL || context->workspace == NULL ||
+        context->controller == NULL) return NULL;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(window->tool_id, "account") == 0)
+        return create_dashboard_panel(context);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(window->tool_id, "watchlist") == 0)
+        return create_watchlist_panel(context);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(window->tool_id, "order-entry") == 0)
+        return create_order_entry_panel(context);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(window->tool_id, "blotter") == 0)
+        return create_orders_panel(context);
+    /* Alerts need native creation and acknowledgement controls, not only rows. */
+    if (strcmp(window->tool_id, "alerts") == 0)
+        return create_alerts_panel(context);
+    /* Charts receive retained candles and study controls through the native
+     * reusable adapter instead of the single-record property renderer. */
+    if (strcmp(window->tool_id, "chart") == 0)
+        return create_chart_panel(context);
+    /* Time and Sales needs filter, pause, and table controls rather than the
+     * generic property panel used by read-only capability surfaces. */
+    if (strcmp(window->tool_id, "time-and-sales") == 0)
+        return create_time_and_sales_panel(context);
+    return create_generic_panel(window, context);
+}
+
+/* The suite owns placement. A stable provider mount lets market evidence
+ * refresh independently, so a quote cannot cancel a chart gesture or an
+ * unrelated layout edit. This is presentation ownership, not another book. */
+typedef struct TradingPanelMount {
+    UmiUiWorkspaceWindow window;
+    UmiGtk4TradingPanelContext *context;
+    GtkWidget *body;
+} TradingPanelMount;
+
+GtkWidget *umi_gtk4_trading_panel_create(const UmiUiWorkspaceWindow *window,
+    UmiGtk4TradingPanelContext *context)
+{
+    if (window == NULL || context == NULL) return NULL;
+    GtkWidget *body = CreateTradingPanelBody(window, context);
+    if (body == NULL) return NULL;
+    TradingPanelMount *state = g_new0(TradingPanelMount, 1);
+    state->window = *window; state->context = context; state->body = body;
+    GtkWidget *mount = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_widget_set_hexpand(body, TRUE); gtk_widget_set_vexpand(body, TRUE);
+    gtk_box_append(GTK_BOX(mount), body);
+    g_object_set_data_full(G_OBJECT(mount), "umicom-trading-panel-mount", state, g_free);
+    return mount;
+}
+
+UmiStatus UmiGtk4TradingPanelRefresh(GtkWidget *panel, int explicit_action)
+{
+    if (panel == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    TradingPanelMount *state = g_object_get_data(G_OBJECT(panel), "umicom-trading-panel-mount");
+    if (state == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (strcmp(state->window.tool_id, "chart") == 0) {
+        UmiGtk4TradingInteractiveChartRefresh(state->body);
+        return UMI_STATUS_OK;
+    }
+    GtkRoot *root = gtk_widget_get_root(panel);
+    GtkWidget *focus = root != NULL ? gtk_root_get_focus(root) : NULL;
+    if (!explicit_action && focus != NULL && (focus == state->body || gtk_widget_is_ancestor(focus, state->body))) {
+        for (GtkWidget *item = focus; item != NULL && item != panel; item = gtk_widget_get_parent(item)) {
+            /* Typed prices/searches and copied order details must not vanish
+             * on a quote. Applied searches explicitly release focus first. */
+            if (GTK_IS_EDITABLE(item) || GTK_IS_TEXT_VIEW(item) ||
+                GTK_IS_DROP_DOWN(item)) return UMI_STATUS_BUSY;
+        }
+    }
+    GtkWidget *replacement = CreateTradingPanelBody(&state->window, state->context);
+    if (replacement == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    gtk_widget_set_hexpand(replacement, TRUE); gtk_widget_set_vexpand(replacement, TRUE);
+    gtk_box_remove(GTK_BOX(panel), state->body);
+    state->body = replacement;
+    gtk_box_append(GTK_BOX(panel), replacement);
+    return UMI_STATUS_OK;
 }

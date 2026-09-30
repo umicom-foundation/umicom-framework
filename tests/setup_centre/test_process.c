@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/setup_centre/test_process.c
+ * PURPOSE:
+ *   Exercise the actual canonical process runner through the Setup adapter. The child is an
+ *   inert C executable, not QEMU, GRUB or a guest boot.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
   * Umicom Framework tests | Sammy Hegab, Umicom Foundation | MIT
   * Exercise the actual canonical process runner through the Setup adapter.
   * The child is an inert C executable, not QEMU, GRUB or a guest boot.
@@ -20,13 +30,24 @@ int main(int argc, char **argv)
     int exitCode = -1;
     UmiStatus status;
     if (strcmp(test, "arguments") == 0) {
+/* Cover non-ANSI text, empty arguments and a trailing backslash through the real process boundary. The previous implementation remains for engineering review. */
+#if 0
         const char *args[] = {"with spaces", "$(not-a-command)", "quote\"here", "caf\xc3\xa9"};
+#endif
+        const char *args[] = {"with spaces", "$(not-a-command)", "quote\"here", "caf\xc3\xa9", "\xe6\x9d\xb1\xe4\xba\xac", "", "trailing\\"};
+/* Pass the complete regression vector without a stale hard-coded count. The previous implementation remains for engineering review. */
+#if 0
         status = UmiSetupExecuteProcess(child, args, 4U, NULL, &context, &exitCode);
+#endif
+        status = UmiSetupExecuteProcess(child, args, sizeof(args)/sizeof(args[0]), NULL, &context, &exitCode);
         CHECK(status == UMI_STATUS_OK && exitCode == 0 && result->launched);
         CHECK(strstr(result->output, "[with spaces]") != NULL);
         CHECK(strstr(result->output, "[$(not-a-command)]") != NULL);
         CHECK(strstr(result->output, "[quote\"here]") != NULL);
         CHECK(strstr(result->output, "[caf\xc3\xa9]") != NULL);
+        CHECK(strstr(result->output, "[\xe6\x9d\xb1\xe4\xba\xac]") != NULL);
+        CHECK(strstr(result->output, "[]") != NULL);
+        CHECK(strstr(result->output, "[trailing\\]") != NULL);
     } else if (strcmp(test, "timeout") == 0) {
         const char *args[] = {"sleep"};
         context.timeoutMs = 100U;

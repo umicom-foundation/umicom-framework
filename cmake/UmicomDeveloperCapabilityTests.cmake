@@ -42,6 +42,7 @@ function(umicom_add_developer_capability_tests)
     umicom_add_framework_test(umicom-developer-capabilities-24 framework.developer.capabilities.24 tests/developer_capabilities/test_developer_capabilities_24.c)
 
     # Professional Test Explorer, rerun, coverage, benchmark and history layer.
+    umicom_add_framework_test(umicom-selected-test-evidence-tests framework.test.selected_evidence tests/test_selected_test_evidence.c)
     umicom_add_framework_test(umicom-test-provider-registry-tests framework.test.provider_registry tests/test_test_provider_registry.c)
     umicom_add_framework_test(umicom-test-explorer-model-tests framework.test.explorer_model tests/test_test_explorer_model.c)
     umicom_add_framework_test(umicom-test-rerun-policy-tests framework.test.rerun_policy tests/test_test_rerun_policy.c)

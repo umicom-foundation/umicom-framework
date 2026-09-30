@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/release_inspector/test_main.c
+ * PURPOSE:
+ *   Dispatch release-inspector regression cases by their registered names.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework tests | Sammy Hegab, Umicom Foundation | MIT */
 #include "test_support.h"
 int main(int argc,char **argv)

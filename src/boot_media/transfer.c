@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/boot_media/transfer.c
+ * PURPOSE:
+ *   Review -> recheck -> acquire -> write -> flush -> read back. The plan is single-use, and
+ *   verified is set only at the final boundary. Physical writes have no rollback;
+ *   cancellation after the first write is explicitly partial.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: src/boot_media/transfer.c
  * Review -> recheck -> acquire -> write -> flush -> read back. The plan is

@@ -1,3 +1,14 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/boot_media/io.c
+ * PURPOSE:
+ *   Seekable, pinned native handles. No shell, interpreter or device inference. POSIX parent
+ *   walks reject links; Windows also rejects reparse components, but callers must keep
+ *   parent directories private against concurrent rename.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Seekable, pinned native handles. No shell, interpreter or device inference.
  * POSIX parent walks reject links; Windows also rejects reparse components,

@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/ibkr_connection/session.c
+ * PURPOSE:
+ *   Read-only IBKR session: an explicit Paper/Live selection is intent, not proof of the
+ *   environment running in TWS. No order-submission API exists here.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Read-only IBKR session: an explicit Paper/Live selection is intent, not proof
  * of the environment running in TWS. No order-submission API exists here.

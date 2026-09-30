@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/setup_centre/windows_main.c
+ * PURPOSE:
+ *   Bootstrap executable: one call into the shared native presentation adapter.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Bootstrap executable: one call into the shared native presentation adapter. */
 

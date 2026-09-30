@@ -25,6 +25,7 @@
 #include "umicom/test_platform/run_profile.h"
 #include "umicom/test_platform/run_session.h"
 #include "umicom/test_platform/result.h"
+#include "umicom/test_platform/evidence.h"
 #include "umicom/test_platform/output.h"
 #include "umicom/test_platform/coverage.h"
 #include "umicom/test_platform/discovery.h"

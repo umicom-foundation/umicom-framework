@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/thread_safety/test_lifetime.c
+ * PURPOSE:
+ *   Exercise thread ownership through public contracts; checks stay active in Release. Each
+ *   CTest case starts a fresh process. No files, application or network is used.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Exercise thread ownership through public contracts; checks stay active in Release.
  * Each CTest case starts a fresh process. No files, application or network is used.

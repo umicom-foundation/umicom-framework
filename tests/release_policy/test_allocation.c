@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/release_policy/test_allocation.c
+ * PURPOSE:
+ *   Fail parser and serializer allocations without publishing partial objects.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Fail parser and serializer allocations without publishing partial objects. */
 #include "umicom/distribution/runtime/test_policy.h"

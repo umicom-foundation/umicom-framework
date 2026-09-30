@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/workbench_viewport/practice_layout.c
+ * PURPOSE:
+ *   One example builds a window, a sidebar, two tabs and a lower status panel. The values
+ *   describe presentation only: no banking or filesystem operations.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * One example builds a window, a sidebar, two tabs and a lower status panel.
  * The values describe presentation only: no banking or filesystem operations.

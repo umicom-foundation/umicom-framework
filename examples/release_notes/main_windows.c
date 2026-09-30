@@ -1,4 +1,16 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/release_notes/main_windows.c
+ * PURPOSE:
+ *   A Windows release laboratory: real DLL, executable-relative starter text, native
+ *   controls, UTF-8 save-as-new and an explicit no-window startup check. It does not replace
+ *   any existing Notes/editor implementation. Production document editing belongs to the
+ *   existing Framework document services.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: examples/release_notes/main_windows.c
  * A Windows release laboratory: real DLL, executable-relative starter text,

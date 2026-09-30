@@ -1,4 +1,13 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/ibkr_connection/gtk_main.c
+ * PURPOSE:
+ *   Paper/Live connection controls. This window never offers order execution.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Paper/Live connection controls. This window never offers order execution.
  *---------------------------------------------------------------------------*/

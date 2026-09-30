@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/research_replay/strategy.c
+ * PURPOSE:
+ *   Demonstrate a strategy consuming recorded market observations.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #include "strategy.h"
 #include "umicom/trading/quote.h"

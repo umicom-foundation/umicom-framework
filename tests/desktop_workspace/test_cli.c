@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/desktop_workspace/test_cli.c
+ * PURPOSE:
+ *   Exercise the real CLI adapter in-process. All file operations are restricted to the
+ *   private scratch directory provided by the test runner.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Exercise the real CLI adapter in-process. All file operations are restricted
  * to the private scratch directory provided by the test runner. */

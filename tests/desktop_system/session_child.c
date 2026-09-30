@@ -1,6 +1,15 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/desktop_system/session_child.c
+ * PURPOSE:
+ *   Provide an inert child process for desktop session lifecycle checks.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/desktop_system/session_child.c
  *
  * Author: Sammy Hegab, Umicom Foundation
  * Licence: MIT

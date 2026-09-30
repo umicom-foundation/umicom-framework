@@ -1,3 +1,14 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/vm_manager/disk.c
+ * PURPOSE:
+ *   The only disk format attached here is a standalone qcow2 in a managed directory. No host
+ *   device, backing chain, encryption or external data file. Cold checkpoints create
+ *   independent copies; they never overwrite a disk.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * The only disk format attached here is a standalone qcow2 in a managed
  * directory. No host device, backing chain, encryption or external data file.

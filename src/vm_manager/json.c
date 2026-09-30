@@ -1,3 +1,14 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/vm_manager/json.c
+ * PURPOSE:
+ *   Protocol-only JSON parser. The input is bounded before indexing; each token records its
+ *   subtree end, so member traversal never searches neighbouring objects. No substring can
+ *   masquerade as a top-level QMP acknowledgement.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Protocol-only JSON parser. The input is bounded before indexing; each token
  * records its subtree end, so member traversal never searches neighbouring

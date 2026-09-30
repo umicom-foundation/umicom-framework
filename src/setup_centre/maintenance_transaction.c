@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/setup_centre/maintenance_transaction.c
+ * PURPOSE:
+ *   A receipt describes one complete owned state. During a change a pending marker makes
+ *   ordinary readers refuse that state. Originals are moved into an immutable journal before
+ *   replacement; user extras are never enumerated.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: src/setup_centre/maintenance_transaction.c
  * A receipt describes one complete owned state. During a change a pending

@@ -1,6 +1,15 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/desktop_system/windows.c
+ * PURPOSE:
+ *   Collect desktop system observations from Windows platform interfaces.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/desktop_system/windows.c
  *
  * Author: Sammy Hegab, Umicom Foundation
  * Licence: MIT

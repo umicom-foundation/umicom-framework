@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/creative_audio/test_audio.c
+ * PURPOSE:
+ *   Native clip, boundary, independent sample and ordinary-file regression tests.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Native clip, boundary, independent sample and ordinary-file regression tests. */
 #ifndef _WIN32

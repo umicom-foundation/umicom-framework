@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/boot_media/test_windows_sdk.c
+ * PURPOSE:
+ *   Compile/link the real SDK declarations that caused the supplied failures. No network
+ *   query, folder picker, file or device write is executed.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Compile/link the real SDK declarations that caused the supplied failures.
  * No network query, folder picker, file or device write is executed. */

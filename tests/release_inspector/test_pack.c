@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/release_inspector/test_pack.c
+ * PURPOSE:
+ *   Exercise the production C packer, selective install and inspector together. Inputs are
+ *   actual Clang/LLD PE files, NOT executable Windows acceptance here.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Foundation | Sammy Hegab | MIT
  * Exercise the production C packer, selective install and inspector together.
  * Inputs are actual Clang/LLD PE files, NOT executable Windows acceptance here. */

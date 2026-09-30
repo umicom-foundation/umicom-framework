@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/desktop_system_brand.inc
+ * PURPOSE:
+ *   Embed the canonical Umicom branding so desktop windows do not depend on the working
+ *   directory.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom branding from the supplied canonical guide assets. Embedded for CWD-independent display. */
 static const unsigned char UMICOM_SYSTEM_LOGO[] = {
     0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,

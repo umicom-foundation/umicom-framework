@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/research_replay/csv.c
+ * PURPOSE:
+ *   Read and write bounded research replay records in CSV format.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #include "umicom/strategy_research/research_csv.h"
 #include <errno.h>

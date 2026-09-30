@@ -16,7 +16,11 @@ static BankUi *Create(GtkWidget **window)
     BankUi *ui=g_new0(BankUi,1); ui->operations=f.bank;
     *window=gtk_window_new(); g_object_ref_sink(*window); ui->window=GTK_WINDOW(*window);
     g_object_set_data_full(G_OBJECT(*window),"umicom-bank-operations",ui,UiFree);
+/* Exercise the production close observer while retaining the unpresented window. The previous implementation remains for engineering review. */
+#if 0
     g_signal_connect(*window,"destroy",G_CALLBACK(UiClosed),ui);
+#endif
+    UmiGtk4ObserveWindowRemoval(GTK_WINDOW(*window), G_OBJECT(*window), UiClosed, ui);
     GtkWidget *box=gtk_box_new(GTK_ORIENTATION_VERTICAL,0); gtk_window_set_child(ui->window,box);
     const char *actions[UMI_BANK_ACTION_LAST+1U];
     for(unsigned i=0;i<(unsigned)UMI_BANK_ACTION_LAST;++i) actions[i]=UmiBankActionName((UmiBankAction)(i+1U));

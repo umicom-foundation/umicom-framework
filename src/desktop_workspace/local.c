@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/desktop_workspace/local.c
+ * PURPOSE:
+ *   Lifetime guard for one desktop workspace. The lock file is never unlinked: removing a
+ *   locked filename would let a second process lock a different inode. SQLite access remains
+ *   exclusively inside the canonical Data Server.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Lifetime guard for one desktop workspace. The lock file is never unlinked:
  * removing a locked filename would let a second process lock a different inode.

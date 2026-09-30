@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/vm_manager/test_codec.c
+ * PURPOSE:
+ *   Protocol data only. No transcript is represented as a QEMU execution.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Protocol data only. No transcript is represented as a QEMU execution. */
 #include "umicom/vm_manager/qmp.h"

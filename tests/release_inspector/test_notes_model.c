@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/release_inspector/test_notes_model.c
+ * PURPOSE:
+ *   This portable model test is not the Windows installed-startup test.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Foundation | Sammy Hegab | MIT
  * This portable model test is not the Windows installed-startup test. */
 #include "../../examples/release_notes/model.h"

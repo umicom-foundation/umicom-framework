@@ -1,6 +1,15 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/desktop_system/unsupported.c
+ * PURPOSE:
+ *   Expose unavailable desktop observations on unsupported host platforms.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/desktop_system/unsupported.c
  *
  * Author: Sammy Hegab, Umicom Foundation
  * Licence: MIT

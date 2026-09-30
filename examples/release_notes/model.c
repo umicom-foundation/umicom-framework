@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/release_notes/model.c
+ * PURPOSE:
+ *   A small DLL deliberately used by the Windows installed-startup exercise. It is a
+ *   teaching model, not a replacement for the Framework document model.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Foundation | Sammy Hegab | MIT
  * A small DLL deliberately used by the Windows installed-startup exercise.
  * It is a teaching model, not a replacement for the Framework document model. */

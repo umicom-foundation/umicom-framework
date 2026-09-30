@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/native_launcher/main.c
+ * PURPOSE:
+ *   Keep the executable entry point thin; Framework owns every delivery action.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Keep the executable entry point thin; Framework owns every delivery action. */
 #include "umicom/native_launcher/stage.h"

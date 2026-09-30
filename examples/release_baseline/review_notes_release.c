@@ -1,4 +1,13 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/release_baseline/review_notes_release.c
+ * PURPOSE:
+ *   Show why a Linux test receipt cannot complete a Windows Notes release.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: examples/release_baseline/review_notes_release.c
  * Purpose: Show why a Linux test receipt cannot complete a Windows Notes release.

@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/queue_shutdown/test_faults.c
+ * PURPOSE:
+ *   Linker wrappers inject failures at the public/native boundary. The real queue, thread
+ *   record and operating-system threads are used throughout.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Linker wrappers inject failures at the public/native boundary. The real queue,
  * thread record and operating-system threads are used throughout. */

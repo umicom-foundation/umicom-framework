@@ -1,6 +1,15 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/desktop_system/session_linux.c
+ * PURPOSE:
+ *   Implement desktop session operations using Linux platform facilities.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/desktop_system/session_linux.c
  *
  * Author: Sammy Hegab, Umicom Foundation
  * Licence: MIT

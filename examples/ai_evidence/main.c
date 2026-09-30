@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/ai_evidence/main.c
+ * PURPOSE:
+ *   Native entry point. Network use requires an explicit local-model command.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Native entry point. Network use requires an explicit local-model command. */
 #include "lesson.h"

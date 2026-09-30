@@ -65,4 +65,5 @@ static void ContractPayload(UmiTestPlatformRunProfileSnapshot *item)
     item->repeat_count = (uint32_t)13U;
     item->timeout_ms = (uint32_t)14U;
 }
+#define CONTRACT_API_VERSION UMI_TEST_PLATFORM_RUN_PROFILE_API_VERSION
 #include "snapshot_contract_cases.h"

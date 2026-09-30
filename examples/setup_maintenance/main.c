@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/setup_maintenance/main.c
+ * PURPOSE:
+ *   Thin native entry point; maintenance belongs to the shared installer core.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Thin native entry point; maintenance belongs to the shared installer core. */
 #include "umicom/setup_centre/maintenance.h"

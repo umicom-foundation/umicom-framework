@@ -251,6 +251,9 @@ UmiStatus umi_gtk4_trading_suite_workstation_bind_checkpoint_storage(
 UmiStatus umi_gtk4_trading_suite_workstation_library_preview(
     UmiGtk4TradingSuiteWorkstation *workstation, UmiUiWorkspaceLibraryPreview *out_preview);
 
+/* Use Framework-owned profile-specific layout persistence after local sign-in. */
+UmiStatus UmiGtk4TradingSuiteEnableProfileStorage(UmiGtk4TradingSuiteWorkstation *workstation, const char *profile, int restore_saved);
+
 #ifdef __cplusplus
 }
 #endif

@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/desktop_workspace_gtk4.c
+ * PURPOSE:
+ *   A draft editor over the shared desktop-workspace service. The window never reaches into
+ *   SQLite and it never owns settings for the rest of the desktop. Storage work completes on
+ *   its sole task before explicit close is finalised.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A draft editor over the shared desktop-workspace service. The window never
  * reaches into SQLite and it never owns settings for the rest of the desktop.

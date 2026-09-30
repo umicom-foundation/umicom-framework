@@ -1,4 +1,16 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/boot_media/practice_image.c
+ * PURPOSE:
+ *   Build a NON-BOOTABLE 2 MiB practice image to teach inspection and file copying. The
+ *   partition table is synthetic; there is no filesystem or operating system. The few x86
+ *   bytes halt rather than loading a guest. Never use this on a USB. No argument: memory
+ *   only. --output NEW_FILE: exclusive ordinary-file output.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Build a NON-BOOTABLE 2 MiB practice image to teach inspection and file copying.
  * The partition table is synthetic; there is no filesystem or operating system.

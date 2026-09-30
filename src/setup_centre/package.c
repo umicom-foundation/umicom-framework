@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/setup_centre/package.c
+ * PURPOSE:
+ *   Reuse existing runtime ownership reports, not broad build-directory scans. The five
+ *   generated CMake assignments are treated as a closed data format: no include(),
+ *   expansion, command, variable reference or CMake execution.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: src/setup_centre/package.c
  * Reuse existing runtime ownership reports, not broad build-directory scans.

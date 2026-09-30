@@ -58,4 +58,11 @@ static void ContractPayload(UmiUiListModelSnapshot *item)
     item->checked = (int)9U;
     item->order = (int32_t)10U;
 }
+/* Visible/enabled are normalised to truth values; checked/order are payload. */
+static void ContractNormalise(UmiUiListModelSnapshot *item)
+{
+    item->visible = item->visible != 0;
+    item->enabled = item->enabled != 0;
+}
+#define CONTRACT_NORMALISE(item) ContractNormalise(item)
 #include "snapshot_contract_cases.h"

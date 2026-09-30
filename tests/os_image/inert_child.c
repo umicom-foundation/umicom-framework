@@ -1,3 +1,14 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/os_image/inert_child.c
+ * PURPOSE:
+ *   INERT TEST EXECUTABLE. It is neither make/Buildroot nor QEMU. It emits small synthetic
+ *   files/transcripts to exercise the production process adapter and stage-state checks. It
+ *   is never installed or distributed as a guest runtime.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * INERT TEST EXECUTABLE. It is neither make/Buildroot nor QEMU. It emits small
  * synthetic files/transcripts to exercise the production process adapter and

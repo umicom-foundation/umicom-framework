@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/research_replay/test_replay.c
+ * PURPOSE:
+ *   Check research replay state and recorded market-data handling.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #include "umicom/strategy_research/research_replay.h"
 #include "umicom/strategy_research/research_csv.h"

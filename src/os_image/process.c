@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/os_image/process.c
+ * PURPOSE:
+ *   Use the canonical process/cancellation runner, with bounded raw capture. Git, make and
+ *   QEMU paths are explicit trust decisions. This is not a sandbox.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Use the canonical process/cancellation runner, with bounded raw capture.
  * Git, make and QEMU paths are explicit trust decisions. This is not a sandbox. */

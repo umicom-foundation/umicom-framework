@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/setup_centre/maintenance_io.inc
+ * PURPOSE:
+ *   The maintenance primitives share the existing checked path walker and file handles in
+ *   io.c. This avoids a second installer filesystem implementation. Moves are no-replace
+ *   operations on one filesystem. No recursive eraser exists.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: src/setup_centre/maintenance_io.inc
  * The maintenance primitives share the existing checked path walker and file

@@ -379,6 +379,9 @@ umicom_apply_sanitizers(umicom_platform)
 add_library(umicom_security STATIC
     src/security/policy.c
     src/security/secrets.c
+    # Local authentication is shared; applications never implement password storage.
+    src/security/local_profile.c
+    src/security/local_profile_platform.c
     src/security/identity.c
     src/security/permission.c
     src/security/role.c
@@ -406,6 +409,9 @@ add_library(umicom_security STATIC
 )
 add_library(Umicom::security ALIAS umicom_security)
 set_target_properties(umicom_security PROPERTIES EXPORT_NAME security)
+if(WIN32)
+    target_link_libraries(umicom_security PRIVATE bcrypt advapi32)
+endif()
 target_link_libraries(umicom_security PUBLIC
     Umicom::base
     Umicom::platform
@@ -1797,6 +1803,7 @@ add_library(umicom_chart STATIC
     src/chart/render_scene.c
     src/chart/renderer.c
     src/chart/plot.c
+    src/chart/navigation.c
     src/chart/series.c
     src/chart/viewport.c
     src/chart/model.c
@@ -3044,6 +3051,7 @@ umicom_apply_sanitizers(umicom_trading)
 # Trader, TMS and every supported frontend adapter.
 add_library(umicom_trading_ui STATIC
     src/trading_ui/trading_views.c
+    src/trading_ui/chart_scene.c
 )
 add_library(Umicom::trading_ui ALIAS umicom_trading_ui)
 set_target_properties(umicom_trading_ui PROPERTIES EXPORT_NAME trading_ui)

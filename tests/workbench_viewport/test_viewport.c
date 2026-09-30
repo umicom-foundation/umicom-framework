@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/workbench_viewport/test_viewport.c
+ * PURPOSE:
+ *   Check toolkit-neutral workbench viewport ownership and state transitions.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #include "../../examples/workbench_viewport/practice_layout.h"
 #include <float.h>

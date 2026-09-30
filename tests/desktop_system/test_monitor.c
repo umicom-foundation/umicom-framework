@@ -1,6 +1,15 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/desktop_system/test_monitor.c
+ * PURPOSE:
+ *   Check the shared desktop system monitor contract.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/desktop_system/test_monitor.c
  *
  * Author: Sammy Hegab, Umicom Foundation
  * Licence: MIT

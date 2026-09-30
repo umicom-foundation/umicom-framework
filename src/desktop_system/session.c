@@ -1,6 +1,15 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/desktop_system/session.c
+ * PURPOSE:
+ *   Coordinate explicit desktop session requests through the platform boundary.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/desktop_system/session.c
  *
  * Author: Sammy Hegab, Umicom Foundation
  * Licence: MIT

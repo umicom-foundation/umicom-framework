@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/vm_manager/inert_qmp.c
+ * PURPOSE:
+ *   INERT TEST CHILD. It speaks a tiny fixed QMP-shaped dialogue and can write a synthetic
+ *   qcow2 header. It is not QEMU, a guest or a usable disk-image tool.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * INERT TEST CHILD. It speaks a tiny fixed QMP-shaped dialogue and can write a
  * synthetic qcow2 header. It is not QEMU, a guest or a usable disk-image tool.

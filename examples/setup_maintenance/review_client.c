@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/setup_maintenance/review_client.c
+ * PURPOSE:
+ *   Read-only example: explain a candidate update without applying it. The caller owns the
+ *   strings and output stream; Framework owns the plan.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: examples/setup_maintenance/review_client.c
  * Read-only example: explain a candidate update without applying it.

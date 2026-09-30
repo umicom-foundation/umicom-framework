@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/native_launcher/entry.c
+ * PURPOSE:
+ *   One canonical desktop-entry writer is used for both creation and verification.
+ *   Verification therefore checks meaning as well as an untrusted stored digest.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * One canonical desktop-entry writer is used for both creation and verification.
  * Verification therefore checks meaning as well as an untrusted stored digest. */

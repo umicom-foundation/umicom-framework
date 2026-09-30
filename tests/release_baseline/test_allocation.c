@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/release_baseline/test_allocation.c
+ * PURPOSE:
+ *   Check allocation failure handling in the release baseline service.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #include "umicom/distribution/runtime/evidence.h"
 #include <stdlib.h>

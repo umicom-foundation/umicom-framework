@@ -1,6 +1,15 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/desktop_system/session_unsupported.c
+ * PURPOSE:
+ *   Report unavailable session operations on unsupported host platforms.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/desktop_system/session_unsupported.c
  *
  * Author: Sammy Hegab, Umicom Foundation
  * Licence: MIT

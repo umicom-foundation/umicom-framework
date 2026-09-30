@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/release_inspector/test_files.c
+ * PURPOSE:
+ *   Synthetic PE/package fixtures exercise inspection, not Windows loading. Tests create
+ *   only uniquely named temporary directories, retained on failure.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework tests | Sammy Hegab, Umicom Foundation | MIT
  * Synthetic PE/package fixtures exercise inspection, not Windows loading.
  * Tests create only uniquely named temporary directories, retained on failure.

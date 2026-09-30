@@ -26,9 +26,11 @@ struct UmiGtk4TradingSuiteWorkstation {
     UmiTradingSimulationMarket simulation;
     UmiGtk4TradingPanelContext panel_context;
     UmiApplicationSuiteGtk4Workstation *suite;
+    GPtrArray *panel_observers;
     guint pending_refresh;
     guint simulation_timer;
     int simulation_seeded;
+    int refresh_from_command;
 };
 
 /* Translate safety-critical environment state into a short readable badge.
@@ -73,6 +75,8 @@ static void refresh_environment_badge(
 }
 
 /* Provide the rebuild idle operation used by this module and its client applications. */
+/* Data notifications no longer reselect a layout. Stable provider mounts update chart scenes and surrounding panels independently, avoiding interrupted gestures and delayed order monitoring. The superseded implementation is retained for engineering review. */
+#if 0
 static gboolean rebuild_idle(gpointer data)
 {
     UmiGtk4TradingSuiteWorkstation *workstation = data;
@@ -84,6 +88,19 @@ static gboolean rebuild_idle(gpointer data)
     if (workstation == NULL || workstation->suite == NULL)
         return G_SOURCE_REMOVE;
     workstation->pending_refresh = 0U;
+    int command_refresh = workstation->refresh_from_command;
+    workstation->refresh_from_command = 0;
+    /* Keep a typed order search intact while the market continues ingesting
+     * quotes. Enter/Apply releases focus and schedules the canonical redraw;
+     * otherwise the next normal refresh after focus leaves updates the panel. */
+    GtkWidget *host = umi_application_suite_gtk4_workstation_widget(workstation->suite);
+    if (!command_refresh && TradingChartHasInteraction(host)) return G_SOURCE_REMOVE;
+    GtkRoot *root = host != NULL ? gtk_widget_get_root(host) : NULL;
+    GtkWidget *focus = root != NULL ? gtk_root_get_focus(root) : NULL;
+    GtkWidget *entry = focus != NULL ? gtk_widget_get_ancestor(focus, GTK_TYPE_SEARCH_ENTRY) : NULL;
+    if (!command_refresh && entry != NULL && g_object_get_data(G_OBJECT(entry), "umicom-trading-hold-refresh") != NULL)
+        return G_SOURCE_REMOVE;
+
     snapshot = umi_application_suite_gtk4_workstation_snapshot(workstation->suite);
     /* Use the stable identifier comparison to choose the matching record or policy. */
     if (snapshot.active_layout_id[0] != '\0')
@@ -91,6 +108,36 @@ static gboolean rebuild_idle(gpointer data)
             workstation->suite, snapshot.active_layout_id);
     return G_SOURCE_REMOVE;
 }
+
+
+#endif
+static void TradingPanelObserverDestroy(gpointer data)
+{
+    GWeakRef *observer = data;
+    g_weak_ref_clear(observer); g_free(observer);
+}
+static gboolean rebuild_idle(gpointer data)
+{
+    UmiGtk4TradingSuiteWorkstation *workstation = data;
+    if (workstation == NULL || workstation->suite == NULL) return G_SOURCE_REMOVE;
+    workstation->pending_refresh = 0U;
+    int explicit_action = workstation->refresh_from_command;
+    workstation->refresh_from_command = 0;
+    if (workstation->panel_observers == NULL) return G_SOURCE_REMOVE;
+    guint index = 0;
+    while (index < workstation->panel_observers->len) {
+        GWeakRef *observer = g_ptr_array_index(workstation->panel_observers, index);
+        GtkWidget *panel = g_weak_ref_get(observer);
+        if (panel == NULL) { g_ptr_array_remove_index_fast(workstation->panel_observers, index); continue; }
+        /* Weak observations cover detached windows too. They do not keep a
+         * closed panel or its product context alive. Focused drafts may defer
+         * their own refresh; other panes continue showing current evidence. */
+        (void)UmiGtk4TradingPanelRefresh(panel, explicit_action);
+        g_object_unref(panel); ++index;
+    }
+    return G_SOURCE_REMOVE;
+}
+
 
 /* Provide the schedule rebuild operation used by this module and its client applications. */
 static void schedule_rebuild(UmiGtk4TradingSuiteWorkstation *workstation)
@@ -111,6 +158,9 @@ static void on_controller_changed(uint64_t revision, void *user_data)
 {
     UmiGtk4TradingSuiteWorkstation *workstation = user_data;
     (void)revision;
+    /* Explicit actions must update tickets, orders and rejections immediately,
+     * even if a market-only redraw was postponed during chart interaction. */
+    workstation->refresh_from_command = 1;
     refresh_environment_badge(workstation);
     schedule_rebuild(workstation);
 }
@@ -146,6 +196,8 @@ static gboolean simulation_tick(gpointer data)
  * Provide the trading panel factory operation used by this module and its client
  * applications.
  */
+/* The suite observes provider mounts weakly so market refresh reaches docked and detached panels without owning an extra widget lifetime. The superseded implementation is retained for engineering review. */
+#if 0
 static GtkWidget *trading_panel_factory(const UmiUiWorkspaceWindow *window,
                                         void *user_data)
 {
@@ -157,6 +209,30 @@ static GtkWidget *trading_panel_factory(const UmiUiWorkspaceWindow *window,
     if (workstation == NULL) return NULL;
     return umi_gtk4_trading_panel_create(window, &workstation->panel_context);
 }
+
+#endif
+static GtkWidget *trading_panel_factory(const UmiUiWorkspaceWindow *window, void *user_data)
+{
+    UmiGtk4TradingSuiteWorkstation *workstation = user_data;
+    if (workstation == NULL) return NULL;
+    GtkWidget *panel = umi_gtk4_trading_panel_create(window, &workstation->panel_context);
+    if (panel != NULL) {
+        if (workstation->panel_observers == NULL)
+            workstation->panel_observers = g_ptr_array_new_with_free_func(TradingPanelObserverDestroy);
+        /* Prune expired observers even when layouts change faster than ticks. */
+        for (guint i = 0; i < workstation->panel_observers->len;) {
+            GWeakRef *previous = g_ptr_array_index(workstation->panel_observers, i);
+            gpointer existing = g_weak_ref_get(previous);
+            if (existing == NULL) g_ptr_array_remove_index_fast(workstation->panel_observers, i);
+            else { g_object_unref(existing); ++i; }
+        }
+        GWeakRef *observer = g_new0(GWeakRef, 1);
+        g_weak_ref_init(observer, G_OBJECT(panel));
+        g_ptr_array_add(workstation->panel_observers, observer);
+    }
+    return panel;
+}
+
 
 /*
  * Provide the gtk4 trading suite workstation config default operation used by this module
@@ -331,6 +407,7 @@ void umi_gtk4_trading_suite_workstation_destroy(
         &workstation->controller, NULL, NULL);
     umi_application_suite_gtk4_workstation_destroy(workstation->suite);
     workstation->suite = NULL;
+    g_clear_pointer(&workstation->panel_observers, g_ptr_array_unref);
     free(workstation);
 }
 
@@ -723,4 +800,11 @@ UmiStatus umi_gtk4_trading_suite_workstation_library_preview(
 {
     if (workstation == NULL || out_preview == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_application_suite_gtk4_workstation_library_preview(workstation->suite, out_preview);
+}
+
+/* Keep profile persistence with the established Framework layout owner. */
+UmiStatus UmiGtk4TradingSuiteEnableProfileStorage(UmiGtk4TradingSuiteWorkstation *workstation, const char *profile, int restore_saved)
+{
+    return workstation != NULL ? UmiApplicationSuiteEnableProfileStorage(workstation->suite,profile,restore_saved)
+        : UMI_STATUS_INVALID_ARGUMENT;
 }

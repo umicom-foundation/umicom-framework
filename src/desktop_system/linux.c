@@ -1,6 +1,15 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/desktop_system/linux.c
+ * PURPOSE:
+ *   Collect desktop system observations from Linux platform interfaces.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/desktop_system/linux.c
  *
  * Author: Sammy Hegab, Umicom Foundation
  * Licence: MIT

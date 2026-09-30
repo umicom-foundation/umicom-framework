@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/os_image/bundle_info.c
+ * PURPOSE:
+ *   Consumers receive validated paths and identity, never private bundle fields. The earlier
+ *   verify/boot entry points and their implementations are unchanged.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Consumers receive validated paths and identity, never private bundle fields.
  * The earlier verify/boot entry points and their implementations are unchanged. */

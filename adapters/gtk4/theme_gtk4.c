@@ -470,7 +470,11 @@ static const char WORKBENCH_CSS_PRODUCT[] =
  * These classes improve discoverability without changing the layout model. */
 static const char WORKBENCH_CSS_RESPONSIVE[] =
     ".umicom-workspace-empty-state {"
+/* Use supported GTK CSS sizing; width limits belong to widget layout, not the web-only max-width property. The previous implementation remains for engineering review. */
+#if 0
     "  min-width: 260px; max-width: 620px; padding: 22px 26px;"
+#endif
+    "  min-width: 260px; padding: 22px 26px;"
     "  border: 1px dashed @umi_border_strong; border-radius: 8px;"
     "  background: @umi_surface; color: @umi_foreground;"
     "}"

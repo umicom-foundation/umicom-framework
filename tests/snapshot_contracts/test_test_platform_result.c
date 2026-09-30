@@ -64,4 +64,5 @@ static void ContractPayload(UmiTestPlatformResultSnapshot *item)
     item->flaky = (int)12U;
     item->sequence = (uint64_t)13U;
 }
+#define CONTRACT_API_VERSION UMI_TEST_PLATFORM_RESULT_API_VERSION
 #include "snapshot_contract_cases.h"

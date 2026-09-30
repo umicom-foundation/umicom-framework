@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/ai_evidence/installed_client/main.c
+ * PURPOSE:
+ *   Public headers only. Inspection does not require a model or a workspace.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Foundation | Sammy Hegab | MIT
  * Public headers only. Inspection does not require a model or a workspace. */
 #include "umicom/ai_workspace/evidence.h"

@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/os_image/archive_lesson.c
+ * PURPOSE:
+ *   Lesson: an archive is a description of files, not a request to install them. This
+ *   complete example stays in memory and uses only public Framework APIs.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Lesson: an archive is a description of files, not a request to install them.
  * This complete example stays in memory and uses only public Framework APIs.

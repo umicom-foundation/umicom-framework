@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/data_safety/notes_transaction.c
+ * PURPOSE:
+ *   Complete beginner example. Memory only; no files or device operations.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Complete beginner example. Memory only; no files or device operations. */
 #include "umicom/data/data_server.h"

@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/thread_safety/client/main.c
+ * PURPOSE:
+ *   Exercise the installed thread-safety API from an independent SDK consumer.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #include <umicom/platform/threading.h>
 #include <stdio.h>

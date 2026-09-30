@@ -1,3 +1,14 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/native_launcher/digest_windows.c
+ * PURPOSE:
+ *   UTF-8 to UTF-16 native Windows file hashing. No shell, PowerShell, Python, executable
+ *   loading or subprocess. Sharing excludes writers during the read. This verifies bytes,
+ *   not directory trust, executable provenance or signatures.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * UTF-8 to UTF-16 native Windows file hashing. No shell, PowerShell, Python,
  * executable loading or subprocess. Sharing excludes writers during the read.

@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/market_tape/test_tape.c
+ * PURPOSE:
+ *   Tests use public contracts and explicit checks, including Release builds.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Foundation | Sammy Hegab | MIT
  * Tests use public contracts and explicit checks, including Release builds. */
 #include "umicom/trading/market_tape.h"

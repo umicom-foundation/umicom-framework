@@ -1,6 +1,15 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/desktop_system/report.c
+ * PURPOSE:
+ *   Format desktop system observations for human-readable reports.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/desktop_system/report.c
  *
  * Author: Sammy Hegab, Umicom Foundation
  * Licence: MIT

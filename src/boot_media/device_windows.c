@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/boot_media/device_windows.c
+ * PURPOSE:
+ *   Native Windows removable-USB observation and gated acquisition. System-volume extents
+ *   are excluded; every target volume must be single-disk and lockable. Failed
+ *   identity/extent/lock checks occur before the first disk write.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Native Windows removable-USB observation and gated acquisition. System-volume
  * extents are excluded; every target volume must be single-disk and lockable.

@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/release_inventory/test_inventory.c
+ * PURPOSE:
+ *   Public-header consumer and behavioural regression cases.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Public-header consumer and behavioural regression cases. */
 #include "umicom/distribution/runtime/inventory.h"

@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/designer_native/test_faults.c
+ * PURPOSE:
+ *   Linker fault injection is confined to this Linux test executable.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Linker fault injection is confined to this Linux test executable. */
 #define _POSIX_C_SOURCE 200809L

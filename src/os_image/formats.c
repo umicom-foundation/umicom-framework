@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/os_image/formats.c
+ * PURPOSE:
+ *   Inspect image structure without loading or executing it. Header agreement does not
+ *   establish kernel correctness, publisher identity or guest boot.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Inspect image structure without loading or executing it. Header agreement
  * does not establish kernel correctness, publisher identity or guest boot. */

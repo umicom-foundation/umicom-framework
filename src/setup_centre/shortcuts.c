@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/setup_centre/shortcuts.c
+ * PURPOSE:
+ *   Create reviewed application shortcuts through the host platform adapter.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #include "internal.h"
 #ifndef _WIN32

@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/native_launcher/cli.c
+ * PURPOSE:
+ *   Native command dispatch. Printing a plan does not run it. All filesystem behaviour
+ *   remains in the shared stage API, not in application wrappers.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Native command dispatch. Printing a plan does not run it. All filesystem
  * behaviour remains in the shared stage API, not in application wrappers. */

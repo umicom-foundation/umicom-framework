@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/ibkr_connection/lesson.c
+ * PURPOSE:
+ *   Demonstrate Paper and Live connection profile validation without submitting orders.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #include "umicom/broker_connectivity/connection.h"
 #include <stdio.h>

@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ibkr_connection/test_loopback.c
+ * PURPOSE:
+ *   A labelled local protocol peer, not a TWS process and not a broker account. Every
+ *   outgoing frame is checked against the read-only request sequence.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A labelled local protocol peer, not a TWS process and not a broker account.
  * Every outgoing frame is checked against the read-only request sequence. */

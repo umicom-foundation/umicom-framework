@@ -33,3 +33,9 @@ umicom_add_trading_execution_checks(fill test_fill_atomicity.c
     store-bounds position-arithmetic order-arithmetic workspace-replay workspace-invalid workspace-overflow)
 umicom_add_trading_execution_checks(view test_evidence_views.c approved denial empty)
 umicom_add_trading_execution_checks(clock test_simulation_clock.c delay backwards overflow)
+
+umicom_add_trading_execution_checks(review test_order_review.c
+    query selection stale-fill hidden identity output)
+
+umicom_add_trading_execution_checks(chart test_chart_workspace.c
+    navigation anchors coordinates drawings ticket isolation scene)

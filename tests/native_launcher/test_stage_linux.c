@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/native_launcher/test_stage_linux.c
+ * PURPOSE:
+ *   Actual Linux filesystem operations on private disposable test directories. The copied
+ *   native child is an inert fixture; staging must NEVER execute it. Failed test directories
+ *   remain for inspection. No user input tree is erased.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework tests | Sammy Hegab, Umicom Foundation | MIT
  * Actual Linux filesystem operations on private disposable test directories.
  * The copied native child is an inert fixture; staging must NEVER execute it.

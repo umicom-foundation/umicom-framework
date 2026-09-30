@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/os_image/io_windows.c
+ * PURPOSE:
+ *   Windows data-only image operations. Linux kernel builds remain Linux-host work; these
+ *   adapters inspect regular files and create new bundles only.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Windows data-only image operations. Linux kernel builds remain Linux-host
  * work; these adapters inspect regular files and create new bundles only. */

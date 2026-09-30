@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/native_launcher/cases_common.inc
+ * PURPOSE:
+ *   List the portable native-launcher regression cases shared by the runner and CTest.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 CASE("sha.empty",TestShaEmpty)
 CASE("sha.abc",TestShaAbc)

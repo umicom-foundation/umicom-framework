@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/setup_centre/test_vm.c
+ * PURPOSE:
+ *   Synthetic image-header fixtures. Callback tests are not QEMU/GRUB execution.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework tests | Sammy Hegab, Umicom Foundation | MIT
  * Synthetic image-header fixtures. Callback tests are not QEMU/GRUB execution. */
 

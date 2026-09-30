@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/creative_audio/client/main.c
+ * PURPOSE:
+ *   Independent SDK client; input contains two signed PCM16 frames.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Foundation | Sammy Hegab | MIT
  * Independent SDK client; input contains two signed PCM16 frames. */
 #include "umicom/creative_workspace/audio.h"

@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/finance_close_review/installed_client/main.c
+ * PURPOSE:
+ *   This client consumes installed public headers only. No private model access.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Foundation | Sammy Hegab | MIT
  * This client consumes installed public headers only. No private model access. */
 #include "umicom/finance_operations/close_review.h"

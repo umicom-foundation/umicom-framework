@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/release_inspector/pe_fixture.c
+ * PURPOSE:
+ *   Synthetic PE metadata, not a functioning Windows executable or DLL.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework tests | Sammy Hegab, Umicom Foundation | MIT
  * Synthetic PE metadata, not a functioning Windows executable or DLL. */
 #include "test_support.h"

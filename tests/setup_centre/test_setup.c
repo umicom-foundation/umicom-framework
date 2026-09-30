@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/setup_centre/test_setup.c
+ * PURPOSE:
+ *   Fixture executables, gzip and kernel headers are synthetic data unless a test explicitly
+ *   names a real host executable. No test claims a guest boot.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework tests | Sammy Hegab, Umicom Foundation | MIT
  * Fixture executables, gzip and kernel headers are synthetic data unless a
  * test explicitly names a real host executable. No test claims a guest boot. */

@@ -12,6 +12,7 @@
  * LICENCE:
  *   MIT
  *---------------------------------------------------------------------------*/
+#include "window_removal_private.h"
 #include "umicom/ui/gtk4/bank_operations.h"
 #include "umicom/bank_operations/operations.h"
 #include "umicom/bank_operations/review.h"
@@ -670,8 +671,14 @@ static void OpenWorkspace(GtkButton *button, gpointer data)
     gtk_window_set_transient_for(ui->window, GTK_WINDOW(root));
     gtk_window_set_destroy_with_parent(ui->window, TRUE);
     g_object_set_data_full(G_OBJECT(ui->window), "umicom-bank-operations", ui, UiFree);
+/* Release review and database ownership at native closure and clear the launcher before finalisation. The previous implementation remains for engineering review. */
+#if 0
     g_signal_connect(ui->window, "destroy", G_CALLBACK(UiClosed), ui);
     g_signal_connect(ui->window, "destroy", G_CALLBACK(ChildDestroyed), launcher);
+#endif
+    UmiGtk4ObserveWindowRemoval(ui->window, G_OBJECT(ui->window), UiClosed, ui);
+    UmiGtk4ObserveWindowRemoval(ui->window, G_OBJECT(button), ChildDestroyed, launcher);
+    UmiGtk4ObserveWindowRemoval(GTK_WINDOW(root), G_OBJECT(ui->window), UmiGtk4CloseRemovedParentChild, ui->window);
     box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
     gtk_widget_set_margin_start(box, 12); gtk_widget_set_margin_end(box, 12);
     gtk_widget_set_margin_top(box, 12); gtk_widget_set_margin_bottom(box, 12);

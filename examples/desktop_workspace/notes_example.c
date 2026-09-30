@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/desktop_workspace/notes_example.c
+ * PURPOSE:
+ *   A complete memory-only example: edit a note, save two checkpoints, then restore the
+ *   earlier note by creating a new checkpoint. No window is opened.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A complete memory-only example: edit a note, save two checkpoints, then
  * restore the earlier note by creating a new checkpoint. No window is opened.

@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/setup_centre/install.c
+ * PURPOSE:
+ *   The completion receipt is a boundary, not a progress counter. No receipt is issued until
+ *   all selected payload bytes agree. Failed new trees are retained.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: src/setup_centre/install.c
  * The completion receipt is a boundary, not a progress counter. No receipt is

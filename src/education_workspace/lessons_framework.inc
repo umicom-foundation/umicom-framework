@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/education_workspace/lessons_framework.inc
+ * PURPOSE:
+ *   Canonical lesson content. Generated views borrow these immutable records.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | framework practicum | Sammy Hegab, Umicom Foundation | MIT
  * Canonical lesson content. Generated views borrow these immutable records. */
     {

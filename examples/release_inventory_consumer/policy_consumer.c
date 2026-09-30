@@ -1,4 +1,13 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/release_inventory_consumer/policy_consumer.c
+ * PURPOSE:
+ *   Use the installed policy service without source-tree dependencies.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: examples/release_inventory_consumer/policy_consumer.c
  * Purpose: Use the installed policy service without source-tree dependencies.

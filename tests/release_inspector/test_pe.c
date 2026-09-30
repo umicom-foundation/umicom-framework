@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/release_inspector/test_pe.c
+ * PURPOSE:
+ *   Check bounded parsing of synthetic Windows executable metadata.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework tests | Sammy Hegab, Umicom Foundation | MIT */
 #include "test_support.h"
 int TestPeCase(const char *name)

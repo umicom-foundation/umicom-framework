@@ -1,6 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/workbench_gallery_gtk4.c
+ * PURPOSE:
+ *   Example consumer: all text and account rows are disposable practice data. No database,
+ *   payment provider, file operation or background job is started.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/workbench_gallery_gtk4.c
  * Author: Sammy Hegab, Umicom Foundation | Licence: MIT
  * Example consumer: all text and account rows are disposable practice data.
  * No database, payment provider, file operation or background job is started.

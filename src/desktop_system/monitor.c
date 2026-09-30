@@ -1,6 +1,15 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/desktop_system/monitor.c
+ * PURPOSE:
+ *   Maintain bounded desktop system observations and monitoring state.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/desktop_system/monitor.c
  *
  * Author: Sammy Hegab, Umicom Foundation
  * Licence: MIT

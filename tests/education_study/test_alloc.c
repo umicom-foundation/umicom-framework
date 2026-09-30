@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/education_study/test_alloc.c
+ * PURPOSE:
+ *   Check allocation failure handling in the education study service.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Foundation | Sammy Hegab | MIT | Linux linker-wrap allocation fixture. */
 #include "umicom/education_workspace/study.h"
 #include <stddef.h>

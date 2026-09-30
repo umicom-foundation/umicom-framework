@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/release_inspector/linked_pe/consumer.c
+ * PURPOSE:
+ *   PE format-only consumer. No CRT/Windows SDK is linked. Never execute this fixture: even
+ *   its delay helper is deliberately not a functioning loader.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Foundation | Sammy Hegab | MIT
  * PE format-only consumer. No CRT/Windows SDK is linked. Never execute this
  * fixture: even its delay helper is deliberately not a functioning loader. */

@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/education_study/client/main.c
+ * PURPOSE:
+ *   No private headers, global source path or replacement service.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Foundation | Sammy Hegab | MIT
  * No private headers, global source path or replacement service. */
 #include "umicom/education_workspace/study.h"

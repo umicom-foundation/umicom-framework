@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/finance_close_review/test_close.c
+ * PURPOSE:
+ *   Reuse the retained financial fixture and its complete helper implementation. The
+ *   separately registered original suite remains unchanged and executable.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Reuse the retained financial fixture and its complete helper implementation.
  * The separately registered original suite remains unchanged and executable. */

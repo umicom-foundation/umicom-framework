@@ -1,3 +1,13 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ibkr_connection/test_native_adapter.c
+ * PURPOSE:
+ *   Exercise nonblocking native I/O on a private ephemeral loopback listener. Never use a
+ *   configured provider port, account or broker protocol.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Exercise nonblocking native I/O on a private ephemeral loopback listener.
  * Never use a configured provider port, account or broker protocol. */

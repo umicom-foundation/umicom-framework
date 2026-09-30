@@ -1,3 +1,14 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/os_image/prepare.c
+ * PURPOSE:
+ *   Snapshot selected native sources without recursively copying repositories. Each file is
+ *   read once and those same bytes are hashed and written. The input manifest is the final
+ *   completion boundary, not a speculative build result.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Snapshot selected native sources without recursively copying repositories.
  * Each file is read once and those same bytes are hashed and written. The input

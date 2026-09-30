@@ -1,4 +1,17 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/release_inspector/test_windows_install.c
+ * PURPOSE:
+ *   Actual Windows acceptance, not a PE fixture. Build and run only on Windows. The test
+ *   installs the Notes laboratory into a new Unicode/spaced temporary path, strips
+ *   development paths for its child, and runs from an unrelated CWD. It creates no shortcuts
+ *   and never starts any financial application. Test directories are retained for inspection
+ *   and never reused or reset.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Actual Windows acceptance, not a PE fixture. Build and run only on Windows.
  * The test installs the Notes laboratory into a new Unicode/spaced temporary

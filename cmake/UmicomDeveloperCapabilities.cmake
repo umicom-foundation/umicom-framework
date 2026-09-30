@@ -159,6 +159,7 @@ endif()
 target_sources(umicom_test_platform PRIVATE
     src/test_platform/provider_registry.c
     src/test_platform/explorer_model.c
+    src/test_platform/evidence.c
     src/test_platform/rerun_policy.c
     src/test_platform/coverage_analysis.c
     src/test_platform/benchmark_analysis.c

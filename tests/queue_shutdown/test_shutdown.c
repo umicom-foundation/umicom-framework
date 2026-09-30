@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/queue_shutdown/test_shutdown.c
+ * PURPOSE:
+ *   Native lifecycle tests. Gates establish ordering; sleeps only yield the CPU. Tests own
+ *   every callback payload until the corresponding native join.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: tests/queue_shutdown/test_shutdown.c
  * Native lifecycle tests. Gates establish ordering; sleeps only yield the CPU.

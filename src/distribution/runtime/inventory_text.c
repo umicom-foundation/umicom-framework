@@ -1,6 +1,15 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/distribution/runtime/inventory_text.c
+ * PURPOSE:
+ *   Parse complete bounded build inventories without partial publication.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/distribution/runtime/inventory_text.c
  * Purpose: Parse complete bounded build inventories without partial publication.
  * Author: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
  *---------------------------------------------------------------------------*/

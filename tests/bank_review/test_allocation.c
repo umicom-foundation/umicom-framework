@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/bank_review/test_allocation.c
+ * PURPOSE:
+ *   Fail each allocation in the actual review path. No live state may change.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Fail each allocation in the actual review path. No live state may change.
  */

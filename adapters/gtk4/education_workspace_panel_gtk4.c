@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/education_workspace_panel_gtk4.c
+ * PURPOSE:
+ *   Reusable presentation belongs in Framework; application modules stay thin.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Education native adapter
  * Author: Sammy Hegab, Umicom Foundation. Licence: MIT.
  * Reusable presentation belongs in Framework; application modules stay thin. */
@@ -142,6 +151,12 @@ GtkWidget *UmiEducationGtkWidget(UmiEducationGtkPanel *p){return p!=NULL?p->root
 static void Disconnect(GtkWidget *widget,UmiEducationGtkPanel *p)
 {
     g_signal_handlers_disconnect_by_data(widget,p);
+    /* Traverse logical expander ownership as well as mounted children. A
+     * collapsed study pane may contain externally retained callback widgets. */
+    if(GTK_IS_EXPANDER(widget)) {
+        GtkWidget *body=gtk_expander_get_child(GTK_EXPANDER(widget));
+        if(body!=NULL&&gtk_widget_get_parent(body)==NULL)Disconnect(body,p);
+    }
     for(GtkWidget *child=gtk_widget_get_first_child(widget);child!=NULL;child=gtk_widget_get_next_sibling(child))Disconnect(child,p);
 }
 void UmiEducationGtkDestroy(UmiEducationGtkPanel *p)

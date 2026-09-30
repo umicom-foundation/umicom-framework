@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/thread_safety/test_faults.c
+ * PURPOSE:
+ *   Linker-wrapped Linux failure tests. No production fault switches are added.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Linker-wrapped Linux failure tests. No production fault switches are added. */
 #define _POSIX_C_SOURCE 200809L

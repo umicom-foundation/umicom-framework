@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/vm_manager/windows_main.c
+ * PURPOSE:
+ *   The VM product is separate from the dependency-light installer bootstrap.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * The VM product is separate from the dependency-light installer bootstrap. */
 #define WIN32_LEAN_AND_MEAN

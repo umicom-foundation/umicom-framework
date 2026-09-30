@@ -1,4 +1,16 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/os_image/archive.c
+ * PURPOSE:
+ *   Linux newc archives and deterministic gzip stored blocks, implemented in C. Ownership:
+ *   this module describes device nodes as archive records. It never creates a device on the
+ *   host. The decoder is deliberately narrower than a general gzip extractor and never
+ *   executes or extracts untrusted content.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Linux newc archives and deterministic gzip stored blocks, implemented in C.
  * Ownership: this module describes device nodes as archive records. It never

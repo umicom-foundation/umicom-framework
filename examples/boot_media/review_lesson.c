@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/boot_media/review_lesson.c
+ * PURPOSE:
+ *   A media review needs both image facts and device facts. This lesson evaluates fictional
+ *   observations only; the actual service must re-observe the device.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A media review needs both image facts and device facts. This lesson evaluates
  * fictional observations only; the actual service must re-observe the device.

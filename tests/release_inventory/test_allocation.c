@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/release_inventory/test_allocation.c
+ * PURPOSE:
+ *   Refuse each parser allocation without publishing a partial inventory.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Refuse each parser allocation without publishing a partial inventory. */
 #include "umicom/distribution/runtime/inventory.h"

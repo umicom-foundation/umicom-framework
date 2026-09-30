@@ -1,4 +1,17 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/native_launcher/io_linux.c
+ * PURPOSE:
+ *   Descriptor-relative, bounded native launcher staging on Linux. Open every path component
+ *   without following symlinks. Read only regular files, stream binary digests, compare
+ *   metadata before/after each read, and publish the completion manifest last. This is not a
+ *   sandbox against another process with the same user identity, nor a signature or a
+ *   persistent lock.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: src/native_launcher/io_linux.c
  * Purpose: Descriptor-relative, bounded native launcher staging on Linux.

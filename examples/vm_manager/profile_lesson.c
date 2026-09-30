@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/vm_manager/profile_lesson.c
+ * PURPOSE:
+ *   A saved configuration is not a running machine. This complete lesson stores a profile in
+ *   the real memory Data Server and detects an outdated edit.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A saved configuration is not a running machine. This complete lesson stores
  * a profile in the real memory Data Server and detects an outdated edit.

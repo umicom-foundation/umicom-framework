@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/ibkr_connection/protocol.c
+ * PURPOSE:
+ *   Bounded legacy TWS field decoding for a read-only observation connection. Protocol field
+ *   layouts are isolated here; no vendor code is redistributed.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Bounded legacy TWS field decoding for a read-only observation connection.
  * Protocol field layouts are isolated here; no vendor code is redistributed.

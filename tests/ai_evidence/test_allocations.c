@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_evidence/test_allocations.c
+ * PURPOSE:
+ *   A linker-only fault injector; it is never compiled into the product.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A linker-only fault injector; it is never compiled into the product. */
 #include "fixture.h"

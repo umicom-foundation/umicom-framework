@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/education_workspace/test_workspace.c
+ * PURPOSE:
+ *   Assertions remain active in Release; tests use the actual Data Server.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Education Workspace regression tests
  * Author: Sammy Hegab, Umicom Foundation. Licence: MIT.
  * Assertions remain active in Release; tests use the actual Data Server. */

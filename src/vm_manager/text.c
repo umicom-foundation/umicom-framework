@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/vm_manager/text.c
+ * PURPOSE:
+ *   Provide bounded text helpers for virtual-machine profiles and protocol messages.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #include "internal.h"
 #include <stdarg.h>

@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/setup_centre/test_install.c
+ * PURPOSE:
+ *   Exercise reviewed installation using isolated fixture files.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework tests | Sammy Hegab, Umicom Foundation | MIT */
 #ifndef _WIN32
 #define _POSIX_C_SOURCE 200809L

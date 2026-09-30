@@ -1,4 +1,15 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/release_inspector/inspection.c
+ * PURPOSE:
+ *   Read-only package inspection. The Setup Centre catalogue and checked I/O are reused, not
+ *   reimplemented by an application or an interpreter. System DLL classification records a
+ *   deferred host requirement; it is never a loader test.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: src/release_inspector/inspection.c
  * Read-only package inspection. The Setup Centre catalogue and checked I/O are

@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/vm_manager/main.c
+ * PURPOSE:
+ *   Expose saved virtual-machine profiles and reviewed operations through the console.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #include "umicom/vm_manager/manager.h"
 #ifdef _WIN32

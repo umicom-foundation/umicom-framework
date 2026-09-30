@@ -1,4 +1,13 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/desktop_system/test_adversarial.c
+ * PURPOSE:
+ *   Exercise bounded parser inputs without running commands or writing storage.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | tests/desktop_system/test_adversarial.c
  * Exercise bounded parser inputs without running commands or writing storage.
  * Author: Sammy Hegab, Umicom Foundation | Licence: MIT

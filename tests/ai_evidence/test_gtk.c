@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_evidence/test_gtk.c
+ * PURPOSE:
+ *   Optional real GTK widget integration, never a simulated widget library.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Optional real GTK widget integration, never a simulated widget library. */
 #include "fixture.h"

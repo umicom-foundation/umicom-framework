@@ -1,4 +1,14 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/vm_manager/profile.c
+ * PURPOSE:
+ *   Profiles are authoritative Data Server records. No module calls SQLite or writes a
+ *   parallel profile file. Stored intentions never resurrect processes.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Profiles are authoritative Data Server records. No module calls SQLite or
  * writes a parallel profile file. Stored intentions never resurrect processes.

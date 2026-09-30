@@ -1,6 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/workbench_viewport_gtk4.c
+ * PURPOSE:
+ *   GTK owns widgets; the shared C projection owns geometry and tree validation. Preview
+ *   edits never rebuild leaf content or reach around its controller.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/workbench_viewport_gtk4.c
  * Author: Sammy Hegab, Umicom Foundation | Licence: MIT
  * GTK owns widgets; the shared C projection owns geometry and tree validation.
  * Preview edits never rebuild leaf content or reach around its controller.

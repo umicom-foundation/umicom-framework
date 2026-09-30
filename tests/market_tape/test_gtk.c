@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/market_tape/test_gtk.c
+ * PURPOSE:
+ *   Real GTK object lifecycle checks. Exit 77 means no usable display, not pass.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Foundation | Sammy Hegab | MIT
  * Real GTK object lifecycle checks. Exit 77 means no usable display, not pass. */
 #include "umicom/ui/gtk4/market_tape.h"
