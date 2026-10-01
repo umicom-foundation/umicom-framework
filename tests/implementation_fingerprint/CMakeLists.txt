@@ -48,3 +48,9 @@ add_test(NAME framework.build.implementation-fingerprint.private-includes
         -P "${CMAKE_CURRENT_SOURCE_DIR}/check_private_includes.cmake")
 set_tests_properties(framework.build.implementation-fingerprint.private-includes PROPERTIES
     TIMEOUT 30 LABELS "framework;build;incremental;regression")
+
+# Content assertions alone do not catch an invalid optional path probe. Make
+# the existing include regression fail if CMake emits any warning, while
+# preserving its normal exit-status and dependency-identity checks.
+set_tests_properties(framework.build.implementation-fingerprint.private-includes PROPERTIES
+    FAIL_REGULAR_EXPRESSION "CMake Warning")

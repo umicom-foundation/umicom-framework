@@ -101,7 +101,25 @@ function(umicom_collect_private_implementation_inputs out_inputs source_root sou
         file(STRINGS "${input}" includes REGEX "^[ \t]*#[ \t]*include[ \t]*\"")
         foreach(line IN LISTS includes)
             if(line MATCHES "^[ \t]*#[ \t]*include[ \t]*\"([^\"]+)\"")
+                # REAL_PATH resolves existing files; an include name is only
+                # a possible local path. Public headers are found through the
+                # compiler's include directories, and optional private headers
+                # may belong to inactive branches. Probe beside the including
+                # file first, without asking CMake to resolve an absent path.
+                # Keep the previous unconditional lookup disabled for review
+                # of the warning fix; existing local dependencies still follow
+                # the same canonical-path and source-root checks below.
+                if(FALSE)
                 file(REAL_PATH "${CMAKE_MATCH_1}" candidate BASE_DIRECTORY "${directory}")
+                endif()
+                set(include_path "${CMAKE_MATCH_1}")
+                if(NOT IS_ABSOLUTE "${include_path}")
+                    set(include_path "${directory}/${include_path}")
+                endif()
+                if(NOT EXISTS "${include_path}" OR IS_DIRECTORY "${include_path}")
+                    continue()
+                endif()
+                file(REAL_PATH "${include_path}" candidate)
                 file(RELATIVE_PATH relative "${root}" "${candidate}")
                 if(EXISTS "${candidate}" AND NOT IS_DIRECTORY "${candidate}"
                     AND NOT IS_ABSOLUTE "${relative}" AND NOT relative MATCHES "^\\.\\.(/|$)"

@@ -18,6 +18,17 @@ file(WRITE "${work}/private/body.inc" "#include \"value.h\"\n")
 file(WRITE "${work}/private/value.h" "#include \"body.inc\"\n#define VALUE 41\n")
 file(WRITE "${work}/include/umicom/public.h" "/* Public contracts use their own fingerprint. */\n")
 file(WRITE "${work}/independent.c" "int independent(void) { return 7; }\n")
+# A public include name is resolved by the compiler's include directories,
+# not beside owner.c. Optional includes in inactive branches may also be
+# absent. Neither should be passed to REAL_PATH or produce an author warning.
+# The directory probe and repeated absolute include keep exclusion and
+# deduplication covered while the original nested private cycle stays active.
+file(MAKE_DIRECTORY "${work}/directory_only")
+file(APPEND "${work}/owner.c"
+    "#include \"umicom/public.h\"\n"
+    "#if defined(UMI_OPTIONAL_PROVIDER)\n#include \"optional_provider.h\"\n#endif\n"
+    "#include \"directory_only\"\n"
+    "#include \"${work}/private/value.h\"\n")
 umicom_collect_private_implementation_inputs(inputs "${work}" owner.c)
 list(LENGTH inputs count)
 if(NOT count EQUAL 3)
