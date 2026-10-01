@@ -23,6 +23,22 @@ int main(int argc, char **argv)
     UmiChartNavigation navigation = {12U, INT64_MIN, 1, 0U}; UmiChartDocument *document = NULL;
     CHECK(UmiChartDocumentCapture(registry, "NQ", &navigation, &document) == UMI_STATUS_OK);
     uint64_t revision = umi_chart_drawing_registry_revision(registry);
+    /* A pane capture uses the whole registry's observation token, while its
+     * owned records contain only that pane and keep their source ordering. */
+    UmiChartDocumentSummary captured;
+    CHECK(UmiChartDocumentGetSummary(document, &captured) == UMI_STATUS_OK);
+    CHECK(captured.source_revision == revision && captured.drawing_count == 1U);
+    CHECK(strcmp(captured.pane_id, "NQ") == 0);
+    CHECK(UmiChartDocumentDrawingAt(document, 0U, &output) == UMI_STATUS_OK);
+    CHECK(strcmp(output.id, "one") == 0);
+    UmiChartDocument *foreign_document = NULL;
+    CHECK(UmiChartDocumentCapture(registry, "ES", &navigation, &foreign_document) == UMI_STATUS_OK);
+    CHECK(UmiChartDocumentGetSummary(foreign_document, &captured) == UMI_STATUS_OK);
+    CHECK(captured.source_revision == revision && captured.drawing_count == 1U);
+    CHECK(UmiChartDocumentDrawingAt(foreign_document, 0U, &output) == UMI_STATUS_OK);
+    SameDrawing(&foreign, &output);
+    UmiChartDocumentDestroy(foreign_document);
+
     if (strcmp(argv[1], "ownership") == 0) {
         first.value2 = 999; CHECK(umi_chart_drawing_registry_upsert(registry, &first) == UMI_STATUS_OK);
         CHECK(Value(document) == 110.125);

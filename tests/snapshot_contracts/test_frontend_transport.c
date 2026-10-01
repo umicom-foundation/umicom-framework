@@ -58,4 +58,8 @@ static void ContractPayload(UmiFrontendTransportSnapshot *item)
     item->connected = (int)9U;
     item->fallback_allowed = (int)10U;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_frontend_transport_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_frontend_transport_registry_replace_if_current
 #include "snapshot_contract_cases.h"

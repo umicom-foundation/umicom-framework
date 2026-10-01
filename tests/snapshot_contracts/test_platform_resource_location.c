@@ -62,4 +62,8 @@ static void ContractPayload(UmiResourceLocationSnapshot *item)
     item->writable = (int)10U;
     item->available = (int)11U;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_platform_resource_location_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_platform_resource_location_registry_replace_if_current
 #include "snapshot_contract_cases.h"

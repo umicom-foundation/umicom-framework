@@ -19,3 +19,10 @@ target_link_libraries(umicom-document-replace-lesson PRIVATE Umicom::language)
 if(BUILD_TESTING)
     add_test(NAME document-replace-lesson COMMAND umicom-document-replace-lesson)
 endif()
+
+# This consumer uses public headers and an installed owner library only.
+add_executable(umicom-reviewed-bookmarks-lesson reviewed_bookmarks.c)
+target_link_libraries(umicom-reviewed-bookmarks-lesson PRIVATE Umicom::platform)
+if(BUILD_TESTING)
+    add_test(NAME reviewed-bookmarks-lesson COMMAND umicom-reviewed-bookmarks-lesson)
+endif()

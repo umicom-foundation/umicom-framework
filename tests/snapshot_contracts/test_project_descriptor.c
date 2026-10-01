@@ -61,4 +61,8 @@ static void ContractPayload(UmiProjectDescriptorSnapshot *item)
     item->description[0] = 'v';
     item->enabled = (int)10U;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_project_descriptor_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_project_descriptor_registry_replace_if_current
 #include "snapshot_contract_cases.h"

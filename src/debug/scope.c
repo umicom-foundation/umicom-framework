@@ -137,6 +137,11 @@ UmiStatus umi_debug_scope_registry_upsert(UmiDebugScopeRegistry *registry, const
  */
 UmiStatus umi_debug_scope_registry_remove(UmiDebugScopeRegistry *registry, const char *id)
 {
+    /* A wrapped revision could make an old edit appear current again. Refuse
+     * mutation before touching records when no fresh revision is available. */
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -219,4 +224,12 @@ void umi_debug_scope_registry_clear(UmiDebugScopeRegistry *registry)
  * needed, and the original single-record implementation remains available. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_debug_scope_registry_upsert_many,
     UmiDebugScopeRegistry, UmiDebugScopeSnapshot,
+    umi_debug_scope_snapshot_validate, umi_debug_scope_registry_upsert, UMI_DEBUG_SCOPE_CAPACITY)
+
+/* A captured collection can be reviewed or prepared elsewhere, then published
+ * on its owner only if no intervening edit changed this registry. Shared
+ * Framework staging preserves the existing field validation and normalisation.
+ * Extend the snapshot validator when adding fields; keep this owner value-only. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_debug_scope_registry_capture,
+    umi_debug_scope_registry_replace_if_current, UmiDebugScopeRegistry, UmiDebugScopeSnapshot,
     umi_debug_scope_snapshot_validate, umi_debug_scope_registry_upsert, UMI_DEBUG_SCOPE_CAPACITY)

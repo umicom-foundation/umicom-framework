@@ -62,6 +62,10 @@ UmiStatus UmiChartDocumentCreate(const char *paneId, const UmiChartNavigation *n
     if (status != UMI_STATUS_OK) { free(document); return status; }
     *outDocument = document; return UMI_STATUS_OK;
 }
+/* Registry capture now supplies the drawings and observation token together.
+ * The previous per-record enumeration is retained for engineering review; the
+ * shared capture below keeps document ownership and pane filtering unchanged. */
+#if 0
 UmiStatus UmiChartDocumentCapture(const UmiChartDrawingRegistry *registry,
     const char *paneId, const UmiChartNavigation *navigation, UmiChartDocument **outDocument)
 {
@@ -86,6 +90,40 @@ UmiStatus UmiChartDocumentCapture(const UmiChartDrawingRegistry *registry,
     if (status != UMI_STATUS_OK) { free(document); return status; }
     *outDocument = document; return UMI_STATUS_OK;
 }
+#endif
+UmiStatus UmiChartDocumentCapture(const UmiChartDrawingRegistry *registry,
+    const char *paneId, const UmiChartNavigation *navigation, UmiChartDocument **outDocument)
+{
+    if (outDocument == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outDocument = NULL;
+    if (registry == NULL || !ValidPane(paneId) || !ValidNavigation(navigation))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiChartDocument *document = calloc(1U, sizeof(*document));
+    if (document == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+
+    /* Obtain records and their observation token through the registry owner.
+     * The document owns this copy, so filtering it cannot change live drawings
+     * or a neighbouring chart. Additional capture consumers can use the same
+     * public operation without reaching into the registry's private storage. */
+    UmiSnapshotCapture capture;
+    UmiStatus status = umi_chart_drawing_registry_capture(registry,
+        document->drawings, UMI_CHART_DRAWING_CAPACITY, &capture);
+    if (status != UMI_STATUS_OK) { free(document); return status; }
+    memcpy(document->summary.pane_id, paneId, strlen(paneId) + 1U);
+    document->summary.navigation = *navigation;
+    document->summary.source_revision = capture.revision;
+    for (size_t index = 0U; index < capture.count; ++index) {
+        if (strcmp(document->drawings[index].pane_id, paneId) == 0) {
+            size_t retained = document->summary.drawing_count++;
+            document->drawings[retained] = document->drawings[index];
+        }
+    }
+    status = UmiChartDocumentValidateOwned(document);
+    if (status != UMI_STATUS_OK) { free(document); return status; }
+    *outDocument = document;
+    return UMI_STATUS_OK;
+}
+
 void UmiChartDocumentDestroy(UmiChartDocument *document) { free(document); }
 UmiStatus UmiChartDocumentGetSummary(const UmiChartDocument *document, UmiChartDocumentSummary *outSummary)
 {

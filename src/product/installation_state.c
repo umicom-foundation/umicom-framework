@@ -140,6 +140,11 @@ UmiStatus umi_product_installation_state_registry_upsert(UmiProductInstallationR
  */
 UmiStatus umi_product_installation_state_registry_remove(UmiProductInstallationRegistry *registry, const char *id)
 {
+    /* A wrapped revision could make an old edit appear current again. Refuse
+     * mutation before touching records when no fresh revision is available. */
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -206,6 +211,11 @@ UmiStatus umi_product_installation_state_registry_set_state(
     int verified,
     int rollback_available)
 {
+    /* A wrapped revision could make an old edit appear current again. Refuse
+     * mutation before touching records when no fresh revision is available. */
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -245,4 +255,12 @@ uint64_t umi_product_installation_state_registry_revision(const UmiProductInstal
  * for valid record normalisation; no application-side registry is introduced. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_product_installation_state_registry_upsert_many,
     UmiProductInstallationRegistry, UmiProductInstallationSnapshot,
+    umi_product_installation_state_snapshot_validate, umi_product_installation_state_registry_upsert, UMI_PRODUCT_INSTALLATION_STATE_CAPACITY)
+
+/* A captured collection can be reviewed or prepared elsewhere, then published
+ * on its owner only if no intervening edit changed this registry. Shared
+ * Framework staging preserves the existing field validation and normalisation.
+ * Extend the snapshot validator when adding fields; keep this owner value-only. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_product_installation_state_registry_capture,
+    umi_product_installation_state_registry_replace_if_current, UmiProductInstallationRegistry, UmiProductInstallationSnapshot,
     umi_product_installation_state_snapshot_validate, umi_product_installation_state_registry_upsert, UMI_PRODUCT_INSTALLATION_STATE_CAPACITY)

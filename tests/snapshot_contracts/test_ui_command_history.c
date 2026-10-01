@@ -54,4 +54,8 @@ static void ContractPayload(UmiUiCommandHistorySnapshot *item)
     item->executed_at = (uint64_t)7U;
     item->outcome = (int)8U;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_ui_command_history_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_ui_command_history_registry_replace_if_current
 #include "snapshot_contract_cases.h"

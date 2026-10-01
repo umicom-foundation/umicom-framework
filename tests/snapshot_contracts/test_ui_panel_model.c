@@ -61,4 +61,8 @@ static void ContractPayload(UmiUiPanelSnapshot *item)
     item->order = (int32_t)10U;
     item->preferred_size = (int32_t)11U;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_ui_panel_model_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_ui_panel_model_registry_replace_if_current
 #include "snapshot_contract_cases.h"

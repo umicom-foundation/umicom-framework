@@ -75,6 +75,15 @@ typedef struct UmiSnapshotBatchResult {
     UmiSnapshotValidation validation;
 } UmiSnapshotBatchResult;
 
+/** A capture describes one complete registry observation. Allocate room for
+ * count records and retain revision when preparing an edit away from the owner
+ * thread. Before publishing that edit, compare against this same registry's
+ * revision; a number from another registry is not an authority to replace it. */
+typedef struct UmiSnapshotCapture {
+    size_t count;
+    uint64_t revision;
+} UmiSnapshotCapture;
+
 #ifdef __cplusplus
 }
 #endif

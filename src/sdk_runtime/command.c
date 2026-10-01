@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/sdk_runtime/command.h"
+#include "umicom/base/text.h"
 #include <string.h>
 /*
  * Initialise sdk runtime command from caller-provided values so later operations receive a
@@ -62,38 +63,99 @@ UmiStatus umi_sdk_runtime_command_validate(const UmiSdkRuntimeCommand *value)
  * Provide the sdk runtime command set path operation used by this module and its client
  * applications.
  */
+/* The shared text edit publishes a field and revision together. The former copy could clear the field on refusal; it is retained for engineering review. */
+#if 0
 UmiStatus umi_sdk_runtime_command_set_path(UmiSdkRuntimeCommand *value, const char *path)
 {
     UmiStatus status; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_sdk_runtime_copy_text(value->path, sizeof(value->path), path); /* Preserve the original failure result so the caller can respond to the correct cause. */ if (status == UMI_STATUS_OK) value->revision += 1U; return status;
 }
+#endif
+UmiStatus umi_sdk_runtime_command_set_path(UmiSdkRuntimeCommand *value, const char *path)
+{
+    /* Publish path and its revision together. Reusing the
+     * Framework edit helper keeps an oversized or invalid value from clearing
+     * the previous field while leaving its observation token unchanged. */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_update(value->path, sizeof(value->path),
+                           path, &value->revision);
+}
 /*
  * Provide the sdk runtime command set detail operation used by this module and its client
  * applications.
  */
+/* The shared text edit publishes a field and revision together. The former copy could clear the field on refusal; it is retained for engineering review. */
+#if 0
 UmiStatus umi_sdk_runtime_command_set_detail(UmiSdkRuntimeCommand *value, const char *detail)
 {
     UmiStatus status; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_sdk_runtime_copy_text(value->detail, sizeof(value->detail), detail); /* Preserve the original failure result so the caller can respond to the correct cause. */ if (status == UMI_STATUS_OK) value->revision += 1U; return status;
 }
+#endif
+UmiStatus umi_sdk_runtime_command_set_detail(UmiSdkRuntimeCommand *value, const char *detail)
+{
+    /* Publish detail and its revision together. Reusing the
+     * Framework edit helper keeps an oversized or invalid value from clearing
+     * the previous field while leaving its observation token unchanged. */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_update(value->detail, sizeof(value->detail),
+                           detail, &value->revision);
+}
 /*
  * Provide the sdk runtime command set kind operation used by this module and its client
  * applications.
  */
+/* Revision exhaustion is checked before changing the field. The former unchecked mutation is retained for engineering review. */
+#if 0
 UmiStatus umi_sdk_runtime_command_set_kind(UmiSdkRuntimeCommand *value, uint64_t number)
 { /* Protect caller-owned memory by checking that required state is available before it is used. */ if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT; value->kind = number; value->revision += 1U; return UMI_STATUS_OK; }
+#endif
+UmiStatus umi_sdk_runtime_command_set_kind(UmiSdkRuntimeCommand *value, uint64_t number)
+{
+    /* Keep observation tokens monotonic: changing a field after the last
+     * usable revision would make an older observation appear current again. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+ /* Protect caller-owned memory by checking that required state is available before it is used. */ if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT; value->kind = number; value->revision += 1U; return UMI_STATUS_OK; }
 /*
  * Provide the sdk runtime command set sequence operation used by this module and its
  * client applications.
  */
+/* Revision exhaustion is checked before changing the field. The former unchecked mutation is retained for engineering review. */
+#if 0
 UmiStatus umi_sdk_runtime_command_set_sequence(UmiSdkRuntimeCommand *value, uint64_t number)
 { /* Protect caller-owned memory by checking that required state is available before it is used. */ if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT; value->sequence = number; value->revision += 1U; return UMI_STATUS_OK; }
+#endif
+UmiStatus umi_sdk_runtime_command_set_sequence(UmiSdkRuntimeCommand *value, uint64_t number)
+{
+    /* Keep observation tokens monotonic: changing a field after the last
+     * usable revision would make an older observation appear current again. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+ /* Protect caller-owned memory by checking that required state is available before it is used. */ if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT; value->sequence = number; value->revision += 1U; return UMI_STATUS_OK; }
 /*
  * Provide the sdk runtime command set state operation used by this module and its client
  * applications.
  */
+/* Revision exhaustion is checked before changing the field. The former unchecked mutation is retained for engineering review. */
+#if 0
 UmiStatus umi_sdk_runtime_command_set_state(UmiSdkRuntimeCommand *value, UmiSdkRuntimeState state)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (value == NULL || state > UMI_SDK_RUNTIME_STATE_MISSING) return UMI_STATUS_INVALID_ARGUMENT;
+    value->state = state; value->revision += 1U; return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_sdk_runtime_command_set_state(UmiSdkRuntimeCommand *value, UmiSdkRuntimeState state)
+{
+    /* Keep observation tokens monotonic: changing a field after the last
+     * usable revision would make an older observation appear current again. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.

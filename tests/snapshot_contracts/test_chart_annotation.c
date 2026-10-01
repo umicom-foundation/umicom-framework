@@ -60,4 +60,8 @@ static void ContractPayload(UmiChartAnnotationSnapshot *item)
     item->locked = (int)11U;
     item->visible = (int)12U;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_chart_annotation_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_chart_annotation_registry_replace_if_current
 #include "snapshot_contract_cases.h"

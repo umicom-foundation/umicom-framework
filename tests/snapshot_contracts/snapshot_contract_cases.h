@@ -287,8 +287,17 @@ static int Allocation(CONTRACT_REGISTRY *registry)
 #include "snapshot_scope_cases.h"
 #endif
 
+#include "snapshot_transfer_cases.h"
+
 static int Run(CONTRACT_REGISTRY *registry, const char *name)
 {
+    if (strcmp(name, "capture") == 0) return TransferCapture(registry);
+    if (strcmp(name, "replace") == 0) return TransferReplace(registry);
+    if (strcmp(name, "replace-reject") == 0) return TransferReject(registry);
+    if (strcmp(name, "replace-empty") == 0) return TransferEmpty(registry);
+#ifdef UMI_TEST_SNAPSHOT_ALLOCATION
+    if (strcmp(name, "replace-allocation") == 0) return TransferAllocation(registry);
+#endif
 #ifdef CONTRACT_REPLACE_DOCUMENT
 #ifdef UMI_TEST_SNAPSHOT_ALLOCATION
     if (strcmp(name, "scope-allocation") == 0) return ScopeAllocation(registry);

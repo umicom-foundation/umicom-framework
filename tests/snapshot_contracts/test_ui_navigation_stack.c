@@ -55,4 +55,8 @@ static void ContractPayload(UmiUiNavigationEntrySnapshot *item)
     item->visited_at = (uint64_t)8U;
     item->current = (int)9U;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_ui_navigation_stack_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_ui_navigation_stack_registry_replace_if_current
 #include "snapshot_contract_cases.h"

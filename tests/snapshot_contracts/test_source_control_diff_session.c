@@ -57,4 +57,8 @@ static void ContractPayload(UmiSourceControlDiffSessionSnapshot *item)
     item->hunk_count = (size_t)8U;
     item->binary = (int)9U;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_source_control_diff_session_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_source_control_diff_session_registry_replace_if_current
 #include "snapshot_contract_cases.h"

@@ -118,6 +118,31 @@ UmiStatus umi_debug_source_snapshot_validate(const UmiDebugSourceSnapshot *item,
 UmiStatus umi_debug_source_registry_upsert_many(UmiDebugSourceRegistry *registry,
     const UmiDebugSourceSnapshot *items, size_t count, UmiSnapshotBatchResult *outResult);
 
+
+/** Copy this registry's ordered records into caller-owned storage. Pass NULL
+ * and zero capacity to query the required count. On a short destination, no
+ * records are written and out_capture still reports the required count and
+ * current revision. Other argument errors clear that metadata when supplied.
+ * out_capture is required. Outputs must not overlap each other or the registry.
+ * Serialize access on the owning thread; the result remains an independent
+ * value copy when the registry later changes. No allocation or I/O occurs. */
+UmiStatus umi_debug_source_registry_capture(const UmiDebugSourceRegistry *registry,
+    UmiDebugSourceSnapshot *out_items, size_t capacity, UmiSnapshotCapture *out_capture);
+
+/** Replace the complete collection only while expected_revision still matches
+ * this registry. Use a revision from capture, not a different registry. A stale
+ * proposal returns INVALID_STATE without changing records. IDs must be unique;
+ * an empty proposal clears the collection, except an already-empty collection
+ * needs no change. Successful publication advances the revision once and gives
+ * every stored row that revision. Revision exhaustion returns CAPACITY_EXCEEDED.
+ * Existing upsert normalisation remains in effect. Any validation/allocation
+ * failure retains the complete previous collection. Inputs and optional result
+ * must not overlap each other or registry storage; serialize owner access.
+ * This is an in-memory publication, not a thread lock or a durable disk save. */
+UmiStatus umi_debug_source_registry_replace_if_current(UmiDebugSourceRegistry *registry,
+    uint64_t expected_revision, const UmiDebugSourceSnapshot *items, size_t count,
+    UmiSnapshotBatchResult *out_result);
+
 #ifdef __cplusplus
 }
 #endif

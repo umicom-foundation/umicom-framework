@@ -138,3 +138,26 @@ UmiStatus umi_text_format(char *destination, size_t capacity,
   return (size_t)written < capacity ? UMI_STATUS_OK
                                     : UMI_STATUS_CAPACITY_EXCEEDED;
 }
+
+/* Record editing needs a stronger failure rule than display-text copying:
+ * a rejected value must not erase an earlier value without a new revision.
+ * Check every fallible condition before writing either part of the record.
+ * Future callers can reuse this for any fixed text member with owner-thread
+ * access; persistence and cross-thread scheduling remain with their services. */
+UmiStatus umi_text_update(char *destination, size_t capacity,
+                          const char *source, uint64_t *revision)
+{
+  if (destination == NULL || capacity == 0U || source == NULL || revision == NULL)
+    return UMI_STATUS_INVALID_ARGUMENT;
+  if (*revision == UINT64_MAX)
+    return UMI_STATUS_CAPACITY_EXCEEDED;
+  size_t length = bounded_length(source, capacity);
+  if (length == capacity)
+    return UMI_STATUS_CAPACITY_EXCEEDED;
+
+  /* memmove also permits editing from the field's own text. Copying the
+   * terminator preserves the established bytes beyond the new string. */
+  (void)memmove(destination, source, length + 1U);
+  *revision += 1U;
+  return UMI_STATUS_OK;
+}

@@ -59,4 +59,8 @@ static void ContractPayload(UmiEditorCodeActionSnapshot *item)
     item->preferred = (int)9U;
     item->enabled = (int)10U;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_editor_code_action_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_editor_code_action_registry_replace_if_current
 #include "snapshot_contract_cases.h"

@@ -61,4 +61,8 @@ static void ContractPayload(UmiUiProblemSnapshot *item)
     item->severity = (int)10U;
     item->resolved = (int)11U;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_ui_problem_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_ui_problem_registry_replace_if_current
 #include "snapshot_contract_cases.h"

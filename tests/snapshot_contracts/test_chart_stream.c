@@ -54,4 +54,8 @@ static void ContractPayload(UmiChartStreamSnapshot *item)
     item->connected = (int)9U;
     item->paused = (int)10U;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_chart_stream_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_chart_stream_registry_replace_if_current
 #include "snapshot_contract_cases.h"

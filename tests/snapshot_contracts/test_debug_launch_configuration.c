@@ -61,4 +61,8 @@ static void ContractPayload(UmiDebugLaunchConfigurationSnapshot *item)
     item->environment[0] = 'v';
     item->stop_on_entry = (int)10U;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_debug_launch_configuration_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_debug_launch_configuration_registry_replace_if_current
 #include "snapshot_contract_cases.h"

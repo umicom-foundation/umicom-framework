@@ -150,6 +150,11 @@ UmiStatus umi_platform_resource_location_registry_upsert(UmiResourceLocationRegi
  */
 UmiStatus umi_platform_resource_location_registry_remove(UmiResourceLocationRegistry *registry, const char *id)
 {
+    /* A wrapped revision could make an old edit appear current again. Refuse
+     * mutation before touching records when no fresh revision is available. */
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -578,4 +583,12 @@ UmiStatus UmiApplicationPathsPrepare(const UmiApplicationPaths *paths)
  * needed, and the original single-record implementation remains available. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_platform_resource_location_registry_upsert_many,
     UmiResourceLocationRegistry, UmiResourceLocationSnapshot,
+    umi_platform_resource_location_snapshot_validate, umi_platform_resource_location_registry_upsert, UMI_PLATFORM_RESOURCE_LOCATION_CAPACITY)
+
+/* A captured collection can be reviewed or prepared elsewhere, then published
+ * on its owner only if no intervening edit changed this registry. Shared
+ * Framework staging preserves the existing field validation and normalisation.
+ * Extend the snapshot validator when adding fields; keep this owner value-only. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_platform_resource_location_registry_capture,
+    umi_platform_resource_location_registry_replace_if_current, UmiResourceLocationRegistry, UmiResourceLocationSnapshot,
     umi_platform_resource_location_snapshot_validate, umi_platform_resource_location_registry_upsert, UMI_PLATFORM_RESOURCE_LOCATION_CAPACITY)

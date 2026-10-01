@@ -58,4 +58,8 @@ static void ContractPayload(UmiUiTaskMonitorSnapshot *item)
     item->state = (int)9U;
     item->background = (int)10U;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_ui_task_monitor_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_ui_task_monitor_registry_replace_if_current
 #include "snapshot_contract_cases.h"

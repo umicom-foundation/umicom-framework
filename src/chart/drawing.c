@@ -139,6 +139,11 @@ UmiStatus umi_chart_drawing_registry_upsert(UmiChartDrawingRegistry *registry, c
  */
 UmiStatus umi_chart_drawing_registry_remove(UmiChartDrawingRegistry *registry, const char *id)
 {
+    /* A wrapped revision could make an old edit appear current again. Refuse
+     * mutation before touching records when no fresh revision is available. */
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -267,3 +272,11 @@ UmiStatus UmiChartDrawingRegistryReplacePane(UmiChartDrawingRegistry *registry,
 /* History needs one atomic registry publication. Keeping its implementation
  * with this owner avoids exposing writable registry internals to applications. */
 #include "drawing_history.inc"
+
+/* A captured collection can be reviewed or prepared elsewhere, then published
+ * on its owner only if no intervening edit changed this registry. Shared
+ * Framework staging preserves the existing field validation and normalisation.
+ * Extend the snapshot validator when adding fields; keep this owner value-only. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_chart_drawing_registry_capture,
+    umi_chart_drawing_registry_replace_if_current, UmiChartDrawingRegistry, UmiChartDrawingSnapshot,
+    umi_chart_drawing_snapshot_validate, umi_chart_drawing_registry_upsert, UMI_CHART_DRAWING_CAPACITY)

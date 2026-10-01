@@ -60,4 +60,8 @@ static void ContractPayload(UmiFrontendSessionSnapshot *item)
     item->connected = (int)10U;
     item->suspended = (int)11U;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_frontend_web_session_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_frontend_web_session_registry_replace_if_current
 #include "snapshot_contract_cases.h"

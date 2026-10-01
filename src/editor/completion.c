@@ -79,7 +79,17 @@ size_t i;/* Protect caller-owned memory by checking that required state is avail
  * Remove editor completion registry while keeping the remaining records in a valid and
  * discoverable state.
  */
+/* The guarded mutation preserves monotonic observation tokens. The former
+ * unchecked counter increment is retained here for engineering review. */
+#if 0
 UmiStatus umi_editor_completion_registry_remove(UmiEditorCompletionRegistry*r,const char*id){size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||id==NULL)return UMI_STATUS_INVALID_ARGUMENT;i=find_index(r,id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i==SIZE_MAX)return UMI_STATUS_NOT_FOUND;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i+1U<r->count)memmove(&r->items[i],&r->items[i+1U],(r->count-i-1U)*sizeof(r->items[0]));r->count--;r->revision++;return UMI_STATUS_OK;}
+#endif
+UmiStatus umi_editor_completion_registry_remove(UmiEditorCompletionRegistry*r,const char*id){
+    /* Refuse before removing or editing records when the registry cannot
+     * issue a fresh observation token. A wrapped token could accept stale work. */
+    if (r != NULL && r->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||id==NULL)return UMI_STATUS_INVALID_ARGUMENT;i=find_index(r,id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i==SIZE_MAX)return UMI_STATUS_NOT_FOUND;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i+1U<r->count)memmove(&r->items[i],&r->items[i+1U],(r->count-i-1U)*sizeof(r->items[0]));r->count--;r->revision++;return UMI_STATUS_OK;}
 /*
  * Find editor completion registry while leaving the underlying catalogue or model owned by
  * this module.
@@ -112,4 +122,12 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_editor_completion_registry_upsert_many,
  * documents and the last good list until all new records are accepted. */
 UMI_DEFINE_SNAPSHOT_DOCUMENT_REPLACE(umi_editor_completion_registry_replace_document,
     UmiEditorCompletionRegistry, UmiEditorCompletionSnapshot,
+    umi_editor_completion_snapshot_validate, umi_editor_completion_registry_upsert, UMI_EDITOR_COMPLETION_CAPACITY)
+
+/* A captured collection can be reviewed or prepared elsewhere, then published
+ * on its owner only if no intervening edit changed this registry. Shared
+ * Framework staging preserves the existing field validation and normalisation.
+ * Extend the snapshot validator when adding fields; keep this owner value-only. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_editor_completion_registry_capture,
+    umi_editor_completion_registry_replace_if_current, UmiEditorCompletionRegistry, UmiEditorCompletionSnapshot,
     umi_editor_completion_snapshot_validate, umi_editor_completion_registry_upsert, UMI_EDITOR_COMPLETION_CAPACITY)

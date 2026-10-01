@@ -141,6 +141,11 @@ UmiStatus umi_ui_problem_registry_upsert(UmiUiProblemRegistry *registry, const U
  */
 UmiStatus umi_ui_problem_registry_remove(UmiUiProblemRegistry *registry, const char *id)
 {
+    /* A wrapped revision could make an old edit appear current again. Refuse
+     * mutation before touching records when no fresh revision is available. */
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -223,4 +228,12 @@ void umi_ui_problem_registry_clear(UmiUiProblemRegistry *registry)
  * needed, and the original single-record implementation remains available. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_ui_problem_registry_upsert_many,
     UmiUiProblemRegistry, UmiUiProblemSnapshot,
+    umi_ui_problem_snapshot_validate, umi_ui_problem_registry_upsert, UMI_UI_PROBLEM_CAPACITY)
+
+/* A captured collection can be reviewed or prepared elsewhere, then published
+ * on its owner only if no intervening edit changed this registry. Shared
+ * Framework staging preserves the existing field validation and normalisation.
+ * Extend the snapshot validator when adding fields; keep this owner value-only. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_ui_problem_registry_capture,
+    umi_ui_problem_registry_replace_if_current, UmiUiProblemRegistry, UmiUiProblemSnapshot,
     umi_ui_problem_snapshot_validate, umi_ui_problem_registry_upsert, UMI_UI_PROBLEM_CAPACITY)

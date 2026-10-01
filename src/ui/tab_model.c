@@ -140,6 +140,11 @@ UmiStatus umi_ui_tab_model_registry_upsert(UmiUiTabRegistry *registry, const Umi
  */
 UmiStatus umi_ui_tab_model_registry_remove(UmiUiTabRegistry *registry, const char *id)
 {
+    /* A wrapped revision could make an old edit appear current again. Refuse
+     * mutation before touching records when no fresh revision is available. */
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -202,6 +207,11 @@ UmiStatus umi_ui_tab_model_registry_at(const UmiUiTabRegistry *registry, size_t 
 UmiStatus umi_ui_tab_model_registry_activate(UmiUiTabRegistry *registry,
                                                const char *id)
 {
+    /* A wrapped revision could make an old edit appear current again. Refuse
+     * mutation before touching records when no fresh revision is available. */
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t target;
     size_t index;
     /*
@@ -232,6 +242,11 @@ UmiStatus umi_ui_tab_model_registry_set_dirty(UmiUiTabRegistry *registry,
                                               const char *id,
                                               int dirty)
 {
+    /* A wrapped revision could make an old edit appear current again. Refuse
+     * mutation before touching records when no fresh revision is available. */
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -270,4 +285,12 @@ uint64_t umi_ui_tab_model_registry_revision(const UmiUiTabRegistry *registry)
  * needed, and the original single-record implementation remains available. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_ui_tab_model_registry_upsert_many,
     UmiUiTabRegistry, UmiUiTabSnapshot,
+    umi_ui_tab_model_snapshot_validate, umi_ui_tab_model_registry_upsert, UMI_UI_TAB_MODEL_CAPACITY)
+
+/* A captured collection can be reviewed or prepared elsewhere, then published
+ * on its owner only if no intervening edit changed this registry. Shared
+ * Framework staging preserves the existing field validation and normalisation.
+ * Extend the snapshot validator when adding fields; keep this owner value-only. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_ui_tab_model_registry_capture,
+    umi_ui_tab_model_registry_replace_if_current, UmiUiTabRegistry, UmiUiTabSnapshot,
     umi_ui_tab_model_snapshot_validate, umi_ui_tab_model_registry_upsert, UMI_UI_TAB_MODEL_CAPACITY)
