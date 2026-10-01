@@ -1,6 +1,14 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/setup_centre/setup.h
+ * PURPOSE: Describe and coordinate reviewed setup plans through explicit provider operations.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/setup_centre/setup.h
  * Purpose: Reviewed, native installation of an explicit offline suite payload.
  * Architecture: Framework owns manifests, selection, integrity and file writes.
  * GUI adapters project this contract. No installer executes a package script.

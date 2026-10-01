@@ -160,7 +160,13 @@ static int BatchSuccess(CONTRACT_REGISTRY *registry)
 {
     CONTRACT_SNAPSHOT items[2] = {Record("alpha"), Record("beta")};
     /* Replace a real payload value, not only its revision metadata. */
+    /* Contracts with only an ID text field must change a scalar payload:
+     * changing the key would test insertion rather than replacement. */
+#ifdef CONTRACT_CHANGE_PAYLOAD
+    CONTRACT_CHANGE_PAYLOAD(&items[0]);
+#else
     *((char *)&items[0] + contract_fields[FIELD_COUNT - 1U].offset) = 'Q';
+#endif
     CONTRACT_SNAPSHOT untouched[2] = {items[0], items[1]}, output;
     CONTRACT_SNAPSHOT existing = Record("alpha"), middle = Record("middle");
     CHECK(CONTRACT_UPSERT(registry, &existing) == UMI_STATUS_OK);

@@ -1,6 +1,14 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/desktop_system/monitor.h
+ * PURPOSE: Capture bounded memory, CPU, process, network, storage and boot observations.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/desktop_system/monitor.h
  *
  * Author: Sammy Hegab, Umicom Foundation
  * Licence: MIT

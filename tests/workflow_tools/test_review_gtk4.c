@@ -26,6 +26,11 @@ static int Run(const char *name) {
     int cash=strcmp(name,"cash")==0;
     CHECK(UmiGtk4FinanceReviewCreate(cash?UMI_GTK4_FINANCE_REVIEW_CASH:UMI_GTK4_FINANCE_REVIEW_ACCOUNT,&root)==UMI_STATUS_OK);
     g_object_ref_sink(root);
+    /* A collapsed expander does not parent its body into GTK's child tree.
+     * Open the real panel before finding and exercising its native controls. */
+    CHECK(GTK_IS_EXPANDER(root));
+    CHECK(!gtk_expander_get_expanded(GTK_EXPANDER(root)));
+    gtk_expander_set_expanded(GTK_EXPANDER(root), TRUE);
     GtkWidget *amount0=Find(root,"finance.review.amount.0"), *amount1=Find(root,"finance.review.amount.1"),
       *amount2=Find(root,"finance.review.amount.2"), *calculate=Find(root,"finance.review.calculate"),
       *result=Find(root,"finance.review.result");

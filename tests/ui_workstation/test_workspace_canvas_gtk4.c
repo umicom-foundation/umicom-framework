@@ -56,6 +56,18 @@ typedef struct CanvasFixture {
     UmiStatus callback_status;
 } CanvasFixture;
 
+/* A repeated notification must not rebuild an unchanged canvas. Abort this
+ * isolated test promptly rather than allowing a feedback loop to run all night. */
+static void count_layout_notifications(GObject *object, GParamSpec *property, gpointer data)
+{
+    unsigned *count = data;
+    (void)object; (void)property;
+    if (++*count > 16U) {
+        fprintf(stderr, "Layout selection notification did not settle.\n");
+        abort();
+    }
+}
+
 /* Count final disposal, not removal from a parent. A retained widget may stay
  * alive after a rebuild, but must eventually release its provider content. */
 static void on_content_released(gpointer user_data, GObject *object)
@@ -370,7 +382,23 @@ static int verify_suite_canvas(const char *application_id, const char *panel_id)
         default_layout->layout_id) == UMI_STATUS_OK);
     choice = find_layout_choice(GTK_DROP_DOWN(dropdown), "Acceptance canvas");
     REQUIRE(choice != GTK_INVALID_LIST_POSITION);
+    unsigned notifications = 0U;
+    GListModel *choices_before = g_object_ref(gtk_drop_down_get_model(GTK_DROP_DOWN(dropdown)));
+    gulong notification_handler = g_signal_connect(dropdown, "notify::selected",
+        G_CALLBACK(count_layout_notifications), &notifications);
+    const uint64_t revision_before = umi_application_suite_gtk4_workstation_snapshot(workstation).revision;
     gtk_drop_down_set_selected(GTK_DROP_DOWN(dropdown), choice);
+    /* Even an explicit repeat notify must not recreate panels or advance the
+     * workstation revision. Choice model identity also stays stable. */
+    const uint64_t revision_after = umi_application_suite_gtk4_workstation_snapshot(workstation).revision;
+    for (unsigned repeat = 0U; repeat < 4U; ++repeat)
+        g_object_notify(G_OBJECT(dropdown), "selected");
+    int stable = revision_after == revision_before + 1U &&
+        umi_application_suite_gtk4_workstation_snapshot(workstation).revision == revision_after &&
+        gtk_drop_down_get_model(GTK_DROP_DOWN(dropdown)) == choices_before && notifications == 5U;
+    g_signal_handler_disconnect(dropdown, notification_handler);
+    g_object_unref(choices_before);
+    REQUIRE(stable);
     snapshot = umi_application_suite_gtk4_workstation_snapshot(workstation);
     REQUIRE(strcmp(snapshot.active_layout_id, custom_id) == 0 && snapshot.canvas_panel_count == 1U);
     REQUIRE(umi_application_suite_gtk4_workstation_begin_layout_edit(workstation) == UMI_STATUS_OK);

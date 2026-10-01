@@ -1,6 +1,14 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/setup_centre/maintenance.h
+ * PURPOSE: Review and recover offline changes to receipt-owned application files.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/setup_centre/maintenance.h
  * Purpose: Review, apply and recover offline application-file maintenance.
  * Author: Sammy Hegab, Umicom Foundation | Licence: MIT
  *

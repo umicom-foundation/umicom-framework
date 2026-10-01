@@ -49,4 +49,10 @@ static void ContractPayload(UmiUiSelectionModelSnapshot *item)
     item->anchor = (int)6U;
     item->order = (int32_t)7U;
 }
+/* Keep the registry identity stable while proving scalar replacement. */
+static void ContractChangeSelectionPayload(UmiUiSelectionModelSnapshot *item)
+{
+    item->selected = 9;
+}
+#define CONTRACT_CHANGE_PAYLOAD ContractChangeSelectionPayload
 #include "snapshot_contract_cases.h"

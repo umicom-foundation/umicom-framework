@@ -1,6 +1,14 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/desktop_system/session.h
+ * PURPOSE: Validate and enter an existing local graphical session from a dedicated launcher.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/desktop_system/session.h
  *
  * Author: Sammy Hegab, Umicom Foundation
  * Licence: MIT

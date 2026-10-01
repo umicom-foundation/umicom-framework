@@ -1,3 +1,11 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/vm_manager/win32.h
+ * PURPOSE: Present shared virtual-machine management through the Windows adapter.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #ifndef UMICOM_VM_MANAGER_WIN32_H
 #define UMICOM_VM_MANAGER_WIN32_H

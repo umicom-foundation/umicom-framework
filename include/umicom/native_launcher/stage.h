@@ -1,4 +1,12 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/native_launcher/stage.h
+ * PURPOSE: Validate and stage native Linux launcher deliveries without executing inputs.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: include/umicom/native_launcher/stage.h
  * Purpose: Native, reviewable Linux launcher delivery with no interpreter.

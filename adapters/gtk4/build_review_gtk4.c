@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/build/review_gtk4.h"
+#include "umicom/ui/gtk4/drop_down.h"
 #include "desktop_system_brand.inc"
 #include <inttypes.h>
 #include <string.h>
@@ -158,7 +159,11 @@ GtkWindow *UmiGtk4BuildReviewPresent(GtkWindow *parent, const UmiBuildHistory *h
         gtk_string_list_append(operations, title);
     }
     /* GtkDropDown takes ownership of this model; do not unref it again. */
+/* The shared dropdown helper makes the transferred string-list ownership explicit for all native panels. The previous implementation remains for engineering review. */
+#if 0
     state->operations = GTK_DROP_DOWN(gtk_drop_down_new(G_LIST_MODEL(operations), NULL));
+#endif
+    state->operations = GTK_DROP_DOWN(umi_ui_gtk4_drop_down_new_take_string_list(operations));
     gtk_widget_set_name(GTK_WIDGET(state->operations), "umicom-build-review-operation");
     gtk_box_append(GTK_BOX(body), Label("Recorded operation"));
     gtk_box_append(GTK_BOX(body), GTK_WIDGET(state->operations));

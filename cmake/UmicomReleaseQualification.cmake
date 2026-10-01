@@ -83,7 +83,20 @@ function(umicom_release_contracts_prepare)
         foreach(_header IN LISTS _headers)
             file(RELATIVE_PATH _relative "${_include}" "${_header}")
             string(SHA256 _key "${_owner}\n${_relative}")
+# Full digests in both target and source names exceeded Windows dependency-file path limits.
+# The previous composition remains for engineering review.
+if(FALSE)
             set(_target "umicom-header-${_key}")
+endif()
+            # Short filesystem names keep MinGW dependency files within the
+            # Windows path budget. The complete digest remains the identity.
+            string(SUBSTRING "${_key}" 0 20 _short_key)
+            get_property(_existing GLOBAL PROPERTY "UMICOM_HEADER_TARGET_${_short_key}")
+            if(_existing AND NOT _existing STREQUAL _key)
+                message(FATAL_ERROR "Public header target digest prefix collision")
+            endif()
+            set_property(GLOBAL PROPERTY "UMICOM_HEADER_TARGET_${_short_key}" "${_key}")
+            set(_target "umi-h-${_short_key}")
             umicom_add_public_header_compile_check("${_target}" "${_owner}" "${_include}" "${_header}")
             add_dependencies(umicom-public-header-checks "${_target}")
             file(APPEND "${_output}/manifest.tsv" "${_relative}\t${_owner}\t${_target}\n")

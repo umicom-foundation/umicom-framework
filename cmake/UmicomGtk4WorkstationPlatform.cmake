@@ -267,6 +267,8 @@ if(BUILD_TESTING)
             COMMAND umicom-gtk4-workspace-canvas-test)
         set_tests_properties(framework.ui_workstation.workspace.canvas.gtk4 PROPERTIES
             SKIP_RETURN_CODE 77 LABELS "framework;ui-workstation;gtk4;canvas;acceptance")
+        # A native signal loop must fail within a bounded qualification window.
+        set_tests_properties(framework.ui_workstation.workspace.canvas.gtk4 PROPERTIES TIMEOUT 120)
         if(COMMAND umicom_register_validation_target)
             umicom_register_validation_target(umicom-gtk4-workspace-canvas-test)
         endif()

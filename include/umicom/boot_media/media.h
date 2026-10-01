@@ -1,4 +1,12 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/boot_media/media.h
+ * PURPOSE: Review media transfers and keep device writes separate from file-based practice.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: include/umicom/boot_media/media.h
  * Reviewed media transfer. Inspection never executes boot code. Device writes

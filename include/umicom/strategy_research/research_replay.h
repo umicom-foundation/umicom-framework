@@ -1,4 +1,12 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/strategy_research/research_replay.h
+ * PURPOSE: Coordinate deterministic research replay through shared trading services.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: include/umicom/strategy_research/research_replay.h
  * Purpose: Stepwise single-instrument research with next-observation fills.

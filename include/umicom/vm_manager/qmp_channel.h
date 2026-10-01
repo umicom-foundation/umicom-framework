@@ -1,3 +1,11 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/vm_manager/qmp_channel.h
+ * PURPOSE: Connect QEMU monitor messages to the owned process channel.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Provider adapter boundary for an already owned process channel. Production
  * UI uses UmiVmStart, which also checks the reviewed runtime/image. This entry

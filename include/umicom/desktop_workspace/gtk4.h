@@ -1,3 +1,11 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/desktop_workspace/gtk4.h
+ * PURPOSE: Present desktop workspace drafts and explicit storage actions through GTK.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #ifndef UMICOM_DESKTOP_WORKSPACE_GTK4_H
 #define UMICOM_DESKTOP_WORKSPACE_GTK4_H

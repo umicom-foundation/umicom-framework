@@ -1,4 +1,12 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/native_launcher/sha256.h
+ * PURPOSE: Calculate incremental SHA-256 digests for native delivery integrity checks.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: include/umicom/native_launcher/sha256.h
  * Purpose: Incremental SHA-256 for native delivery integrity checks.

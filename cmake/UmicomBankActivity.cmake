@@ -1,4 +1,5 @@
 # Account activity is a projection of the existing banking ledger.
+include_guard(GLOBAL)
 target_sources(umicom_bank_operations PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/bank_operations/activity_query.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/bank_operations/activity.c"

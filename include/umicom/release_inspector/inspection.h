@@ -1,6 +1,14 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/release_inspector/inspection.h
+ * PURPOSE: Inspect explicit Windows releases and installations without loading binaries.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/release_inspector/inspection.h
  * Purpose: Read-only inspection of an explicit Windows release or installation.
  * Architecture: Framework owns PE parsing and package-relative dependency
  * checks. No inspected executable or DLL is loaded; no PATH search is performed.

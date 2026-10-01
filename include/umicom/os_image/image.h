@@ -1,6 +1,14 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/os_image/image.h
+ * PURPOSE: Assemble native images from frozen plans and record observed boot results.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/os_image/image.h
  * Purpose: Native image assembly, frozen input plans and observed boot results.
  * Architecture: Host-side reusable work lives in Framework. Guest PID 1,
  * kernel choices and recovery policy remain in the independent OS repository.

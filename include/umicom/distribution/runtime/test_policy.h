@@ -1,6 +1,14 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/distribution/runtime/test_policy.h
+ * PURPOSE: Preserve explicit release-test decisions for one captured build.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/distribution/runtime/test_policy.h
  * Purpose: Preserve explicit release-test decisions for one captured build.
  * Author: Sammy Hegab | Organisation: Umicom Foundation | Licence: MIT
  *---------------------------------------------------------------------------*/

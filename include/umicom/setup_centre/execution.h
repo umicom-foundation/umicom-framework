@@ -1,3 +1,11 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/setup_centre/execution.h
+ * PURPOSE: Bind setup operations to the canonical argument-based process runner.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Bind the setup provider port to the existing canonical process runner. */
 

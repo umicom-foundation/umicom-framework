@@ -16,9 +16,24 @@ function(umicom_add_public_header_compile_check target owner include_root header
         message(FATAL_ERROR "Public header cannot be represented as an include: ${_header}")
     endif()
     string(SHA256 _key "${target}\n${_relative}")
+# Compact build-only filenames replace the long paths; header ownership and compile isolation are unchanged.
+# The previous composition remains for engineering review.
+if(FALSE)
     set(_output "${CMAKE_CURRENT_BINARY_DIR}/release-inventory/header-consumers")
     file(MAKE_DIRECTORY "${_output}")
     set(_source "${_output}/${_key}.c")
+endif()
+    # Keep build paths compact without changing the independent consumer or
+    # suppressing any compiler diagnostics. Detect a truncated-hash collision.
+    string(SUBSTRING "${_key}" 0 20 _short_key)
+    get_property(_existing GLOBAL PROPERTY "UMICOM_HEADER_SOURCE_${_short_key}")
+    if(_existing AND NOT _existing STREQUAL _key)
+        message(FATAL_ERROR "Public header source digest prefix collision")
+    endif()
+    set_property(GLOBAL PROPERTY "UMICOM_HEADER_SOURCE_${_short_key}" "${_key}")
+    set(_output "${CMAKE_CURRENT_BINARY_DIR}/_umi_hdr")
+    file(MAKE_DIRECTORY "${_output}")
+    set(_source "${_output}/${_short_key}.c")
     # No preparatory system include or owner's private include path is added.
     # Repeated inclusion checks guards; separate TUs prevent include-order luck.
     file(WRITE "${_source}" "/* Generated public C23 consumer; build output only. */\n#include <${_relative}>\n#include <${_relative}>\nint umicom_header_probe_${_key};\n")

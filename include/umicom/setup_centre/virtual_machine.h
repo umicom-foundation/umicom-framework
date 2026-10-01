@@ -1,4 +1,12 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/setup_centre/virtual_machine.h
+ * PURPOSE: Connect setup plans to virtual-machine preparation and launch operations.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File: include/umicom/setup_centre/virtual_machine.h
  * Purpose: Explicit QEMU invocation and media-source preparation in native C.

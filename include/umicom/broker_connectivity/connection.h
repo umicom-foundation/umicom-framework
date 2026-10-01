@@ -1,4 +1,12 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/broker_connectivity/connection.h
+ * PURPOSE: Own read-only IBKR connection state without an order-submission interface.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Read-only IBKR session: an explicit Paper/Live selection is intent, not proof
  * of the environment running in TWS. No order-submission API exists here.

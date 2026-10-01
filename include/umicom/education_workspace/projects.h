@@ -1,3 +1,11 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/education_workspace/projects.h
+ * PURPOSE: Share learning-project output generation between educational applications.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Framework-owned learning output; applications do not duplicate this service. */
 #ifndef UMICOM_EDUCATION_WORKSPACE_PROJECTS_H

@@ -1,4 +1,12 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/finance_operations/close_review.h
+ * PURPOSE: Explain period-close controls from owned, read-only ledger snapshots.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Explain the existing period-close controls using an owned, read-only snapshot.
  * Amounts reuse canonical trial balances; no second ledger or close policy.

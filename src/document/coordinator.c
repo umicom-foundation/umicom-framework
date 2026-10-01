@@ -274,6 +274,10 @@ static UmiStatus refresh_view(UmiDocumentCoordinator *coordinator, size_t index)
     if (!existingView) {
         view.active = 1;
         view.pinned = 1;
+        /* The coordinator owns ordinary document lifetimes. New views expose
+         * close controls; the close plan still protects pinned/dirty documents.
+         * Existing views retain their caller-selected closability policy. */
+        view.closable = 1;
     }
     if (view.cursor_offset > length) view.cursor_offset = length;
     if (view.selection_length > length - view.cursor_offset)

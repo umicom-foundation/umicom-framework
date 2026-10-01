@@ -1,3 +1,11 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/workbench_layout/viewport_gtk4.h
+ * PURPOSE: Adapt shared workbench viewport behavior to GTK controls.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #ifndef UMICOM_WORKBENCH_LAYOUT_VIEWPORT_GTK4_H
 #define UMICOM_WORKBENCH_LAYOUT_VIEWPORT_GTK4_H

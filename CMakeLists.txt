@@ -5521,7 +5521,12 @@ include(cmake/UmicomBreakpointProperties.cmake)
 
 include(cmake/UmicomDrawingAppearance.cmake)
 
+# Bank extensions are now loaded by UmicomBankOperations.cmake after their optional owner and review helpers exist.
+# The previous composition remains for engineering review.
+if(FALSE)
 include(cmake/UmicomBankActivity.cmake)
+endif()
+
 
 # Shared watch editing and explicit paused-frame evaluation.
 include(cmake/UmicomWatchProperties.cmake)
@@ -5530,7 +5535,12 @@ include(cmake/UmicomWatchProperties.cmake)
 include(cmake/UmicomChartTimeframes.cmake)
 
 # Explain available funds through captured canonical reservations and guarded release reviews.
+# Bank extensions are now loaded by UmicomBankOperations.cmake after their optional owner and review helpers exist.
+# The previous composition remains for engineering review.
+if(FALSE)
 include(cmake/UmicomBankReservations.cmake)
+endif()
+
 
 include(cmake/UmicomVariableInspection.cmake)
 include(cmake/UmicomScopeInspection.cmake)
@@ -5539,4 +5549,8 @@ include(cmake/UmicomScopeInspection.cmake)
 include(cmake/UmicomDrawingHistory.cmake)
 
 # Captured accepted-command and posting evidence remains read-only.
+# Bank extensions are now loaded by UmicomBankOperations.cmake after their optional owner and review helpers exist.
+# The previous composition remains for engineering review.
+if(FALSE)
 include(cmake/UmicomBankAudit.cmake)
+endif()

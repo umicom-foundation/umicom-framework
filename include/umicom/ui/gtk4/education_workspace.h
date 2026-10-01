@@ -1,3 +1,11 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/gtk4/education_workspace.h
+ * PURPOSE: Present educational workspace controls through GTK.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Education native adapter
  * Author: Sammy Hegab, Umicom Foundation. Licence: MIT.
  * Reusable presentation belongs in Framework; application modules stay thin. */

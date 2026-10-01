@@ -1,3 +1,11 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/gtk4/creative_audio.h
+ * PURPOSE: Present shared creative audio controls through GTK.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A memory-only clip panel with explicit read and new-file export operations. */
 #ifndef UMICOM_UI_GTK4_CREATIVE_AUDIO_H

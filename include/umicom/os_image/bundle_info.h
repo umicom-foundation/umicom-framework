@@ -1,3 +1,11 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/os_image/bundle_info.h
+ * PURPOSE: Expose image bundle information to runtime consumers through the image owner.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Public projection for runtime consumers. Image parsing remains in os_image. */
 #ifndef UMICOM_OS_IMAGE_BUNDLE_INFO_H

@@ -78,6 +78,8 @@ int main(int argc,char **argv)
     REQUIRE(umi_document_coordinator_open(documents,path,viewId,sizeof(viewId))==UMI_STATUS_OK);
     UmiUiDocumentViewSnapshot view;
     REQUIRE(umi_ui_document_view_model_find(umi_ui_workbench_documents(workbench),viewId,&view)==UMI_STATUS_OK);
+    /* Ordinary coordinator views offer close; pinned policy is checked later. */
+    REQUIRE(view.closable);
     int clean=strcmp(name,"clean")==0 || strncmp(name,"tab-",4)==0;
     if(!clean) {view.dirty=1;REQUIRE(UmiUiDocumentViewModelUpsertText(umi_ui_workbench_documents(workbench),&view,"saved Notes\n",12U)==UMI_STATUS_OK);}
     if(strcmp(name,"tab-clean")==0) {view.pinned=0;REQUIRE(umi_ui_document_view_model_upsert(umi_ui_workbench_documents(workbench),&view)==UMI_STATUS_OK);}

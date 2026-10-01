@@ -1,3 +1,11 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/setup_centre/files.h
+ * PURPOSE: Expose shared checked file operations to setup and delivery tools.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Public facade for the bootstrap's canonical checked file operations. Shared
  * tools reuse these rather than copy platform-specific path and hash logic. */

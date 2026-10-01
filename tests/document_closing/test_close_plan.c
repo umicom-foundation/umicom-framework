@@ -68,6 +68,11 @@ static int Add(Fixture *f, size_t slot, int named)
     UmiDocumentWorkingCopySnapshot snapshot;
     CHECK(umi_document_coordinator_active_snapshot(f->documents, &snapshot) == UMI_STATUS_OK);
     f->id[slot] = snapshot.document_id;
+    /* New and opened documents share the same close-control policy. */
+    UmiUiDocumentViewSnapshot view;
+    CHECK(umi_ui_document_view_model_find(umi_ui_workbench_documents(f->workbench),
+        f->view[slot], &view) == UMI_STATUS_OK);
+    CHECK(view.closable);
     return 0;
 }
 static int Edit(Fixture *f, size_t slot, const char *text)

@@ -1,3 +1,11 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/vm_manager/qmp.h
+ * PURPOSE: Represent bounded QEMU monitor protocol requests and responses.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Bounded QMP messages, not a general command interpreter. QMP field order is
  * irrelevant; duplicates, malformed JSON and oversized frames are rejected. */

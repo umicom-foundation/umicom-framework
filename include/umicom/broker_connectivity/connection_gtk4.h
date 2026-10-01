@@ -1,4 +1,12 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/broker_connectivity/connection_gtk4.h
+ * PURPOSE: Present explicit Paper and Live connection controls without order execution.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Paper/Live connection controls. This window never offers order execution.
  *---------------------------------------------------------------------------*/

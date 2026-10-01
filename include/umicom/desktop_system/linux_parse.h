@@ -1,6 +1,14 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/desktop_system/linux_parse.h
+ * PURPOSE: Parse bounded Linux system observations without performing input or output.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/desktop_system/linux_parse.h
  *
  * Author: Sammy Hegab, Umicom Foundation
  * Licence: MIT

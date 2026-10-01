@@ -1,6 +1,14 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/desktop_system/gtk4.h
+ * PURPOSE: Present asynchronous, read-only system snapshots in a GTK System Centre.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/desktop_system/gtk4.h
  *
  * Author: Sammy Hegab, Umicom Foundation
  * Licence: MIT

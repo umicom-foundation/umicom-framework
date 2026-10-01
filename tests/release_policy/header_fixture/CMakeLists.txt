@@ -13,3 +13,18 @@ add_library(fixture-header-owner INTERFACE)
 target_include_directories(fixture-header-owner INTERFACE "${_include}")
 umicom_add_public_header_compile_check(fixture-header-valid fixture-header-owner "${_include}" valid.h)
 umicom_add_public_header_compile_check(fixture-header-invalid fixture-header-owner "${_include}" invalid.h)
+
+# Compile checks must retain compact, distinct build-only filenames on Windows.
+# This fixture still compiles both the valid header and expected-invalid header.
+get_target_property(_valid_sources fixture-header-valid SOURCES)
+get_target_property(_invalid_sources fixture-header-invalid SOURCES)
+foreach(_source IN LISTS _valid_sources _invalid_sources)
+    cmake_path(GET _source FILENAME _filename)
+    string(LENGTH "${_filename}" _length)
+    if(NOT _length EQUAL 22 OR NOT _filename MATCHES "^[a-f0-9]+[.]c$")
+        message(FATAL_ERROR "Public header consumer filename exceeds its compact contract")
+    endif()
+endforeach()
+if(_valid_sources STREQUAL _invalid_sources)
+    message(FATAL_ERROR "Independent public headers share a generated translation unit")
+endif()

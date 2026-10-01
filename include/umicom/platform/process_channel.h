@@ -1,4 +1,12 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/platform/process_channel.h
+ * PURPOSE: Own a live child process and its pipes while protocol clients own framing.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A live, argument-based child channel. Framework owns the child and its pipes;
  * protocol clients own framing. The synchronous process runner is unchanged.

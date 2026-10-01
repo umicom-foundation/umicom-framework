@@ -429,6 +429,8 @@ static UmiStatus rebuild_active_layout(
  * Canonical presets and user-created canvases can then be selected together. */
 static void refresh_layout_choices(UmiApplicationSuiteGtk4Workstation *workstation)
 {
+/* Rebuilding an unchanged selector inside notify::selected can restart the same notification indefinitely. Stable model publication replaces that feedback path. The previous implementation remains for engineering review. */
+#if 0
     GtkStringList *choices;
     size_t index;
     guint selected = GTK_INVALID_LIST_POSITION;
@@ -451,6 +453,37 @@ static void refresh_layout_choices(UmiApplicationSuiteGtk4Workstation *workstati
     gtk_drop_down_set_selected(GTK_DROP_DOWN(workstation->layout_dropdown), selected);
     workstation->changing_selection = 0;
     g_object_unref(choices);
+#endif
+    if (workstation == NULL || workstation->layout_dropdown == NULL) return;
+    GtkDropDown *dropdown = GTK_DROP_DOWN(workstation->layout_dropdown);
+    GListModel *model = gtk_drop_down_get_model(dropdown);
+    guint selected = GTK_INVALID_LIST_POSITION;
+    const size_t count = workstation->customisation.layout_count;
+    int same = GTK_IS_STRING_LIST(model) && g_list_model_get_n_items(model) == count;
+    for (size_t index = 0U; index < count; ++index) {
+        const UmiUiWorkspaceLayout *layout = &workstation->customisation.layouts[index];
+        if (strcmp(layout->layout_id, workstation->customisation.active_layout_id) == 0)
+            selected = (guint)index;
+        if (same && g_strcmp0(gtk_string_list_get_string(GTK_STRING_LIST(model), (guint)index), layout->name) != 0)
+            same = 0;
+    }
+    /* A notify handler can be restarted after its callback returns. A boolean
+     * guard alone cannot prevent that deferred feedback. Keep the model when
+     * its choices are unchanged, and publish model/selection as one update. */
+    const int wasChanging = workstation->changing_selection;
+    workstation->changing_selection = 1;
+    g_object_freeze_notify(G_OBJECT(dropdown));
+    if (!same) {
+        GtkStringList *choices = gtk_string_list_new(NULL);
+        for (size_t index = 0U; index < count; ++index)
+            gtk_string_list_append(choices, workstation->customisation.layouts[index].name);
+        gtk_drop_down_set_model(dropdown, G_LIST_MODEL(choices));
+        g_object_unref(choices);
+    }
+    if (gtk_drop_down_get_selected(dropdown) != selected)
+        gtk_drop_down_set_selected(dropdown, selected);
+    g_object_thaw_notify(G_OBJECT(dropdown));
+    workstation->changing_selection = wasChanging;
 }
 
 /* A completed gesture changes the current edit, not its rollback baseline.
@@ -2445,7 +2478,15 @@ static void on_layout_selected(GObject *object,
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
+/* A notification confirming the already active layout is an observation, not another activation request. The previous implementation remains for engineering review. */
+#if 0
     if ((size_t)selected < workstation->customisation.layout_count)
+        (void)umi_application_suite_gtk4_workstation_select_layout(
+            workstation, workstation->customisation.layouts[selected].layout_id);
+#endif
+    if ((size_t)selected < workstation->customisation.layout_count &&
+        strcmp(workstation->customisation.layouts[selected].layout_id,
+            workstation->customisation.active_layout_id) != 0)
         (void)umi_application_suite_gtk4_workstation_select_layout(
             workstation, workstation->customisation.layouts[selected].layout_id);
 }

@@ -1,4 +1,12 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/workbench_layout/viewport.h
+ * PURPOSE: Describe and transform bounded workbench viewport geometry.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Resolve an existing semantic layout into bounded logical-pixel rectangles.
  * This is a view projection, not a second document, persistence or docking model.

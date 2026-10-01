@@ -1,6 +1,14 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/desktop_workspace/workspace.h
+ * PURPOSE: Own persistent desktop notes, preferences and transactional checkpoints.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/desktop_workspace/workspace.h
  * Purpose: Persistent desktop notes, presentation preferences and checkpoints.
  * Architecture: Framework owns state, validation and Data Server transactions.
  * A desktop shell only presents drafts and requests explicit commits.

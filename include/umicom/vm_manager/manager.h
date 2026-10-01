@@ -1,4 +1,12 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/vm_manager/manager.h
+ * PURPOSE: Own virtual-machine lifecycle requests and observed management state.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * VM profiles and supervised QEMU sessions. GUI and CLI hosts use this C ABI;
  * neither owns a second state machine, QMP parser, database or shell launcher.

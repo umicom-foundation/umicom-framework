@@ -1,3 +1,11 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/strategy_research/research_csv.h
+ * PURPOSE: Export strategy research observations using the shared CSV contract.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Strict six-column quote interchange for a single, caller-supplied instrument.
  * C numeric locale is required; the parser never changes process locale. */

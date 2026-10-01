@@ -157,3 +157,24 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomBankWorkQueue.cmake")
 
 # Investigation changes dispositions while retaining original comparisons.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomBankReconciliation.cmake")
+
+# These extensions belong to the optional bank target, which is created above.
+# Loading them here supports both application and standalone lesson consumers
+# without requiring banking targets in every Framework configuration.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomBankActivity.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomBankReservations.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomBankAudit.cmake")
+
+# Configure the real module in isolation to catch owner/helper ordering errors.
+# This does not claim that imported dependency stand-ins pass compilation.
+if(BUILD_TESTING)
+    foreach(_testing IN ITEMS ON OFF)
+        add_test(NAME framework.bank_operations.composition.${_testing}
+            COMMAND "${CMAKE_COMMAND}" "-DROOT=${CMAKE_CURRENT_LIST_DIR}/.."
+                "-DDEST=${CMAKE_CURRENT_BINARY_DIR}/bank-composition-${_testing}"
+                "-DCOMPILER=${CMAKE_C_COMPILER}" "-DGENERATOR=${CMAKE_GENERATOR}"
+                "-DTESTING=${_testing}" -P "${CMAKE_CURRENT_LIST_DIR}/../tests/bank_composition/check.cmake")
+        set_tests_properties(framework.bank_operations.composition.${_testing} PROPERTIES
+            TIMEOUT 90 LABELS "framework;bank;cmake;composition")
+    endforeach()
+endif()
