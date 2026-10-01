@@ -32,6 +32,12 @@ UmiStatus BankApply(BankState *state, const UmiBankActor *actor,
         if (strcmp(state->events[i].command.requestId.value, command->requestId.value) == 0)
             return UMI_STATUS_ALREADY_EXISTS;
     switch (command->action) {
+    case UMI_BANK_RECONCILIATION_RESOLVE: case UMI_BANK_RECONCILIATION_REOPEN:
+        status = BankApplyReconciliationReview(state, actor, command); break;
+    case UMI_BANK_CHARGE_SUBMIT: case UMI_BANK_CHARGE_APPROVE:
+    case UMI_BANK_CHARGE_REJECT: case UMI_BANK_CHARGE_CANCEL:
+    case UMI_BANK_CHARGE_POST: case UMI_BANK_CHARGE_REVERSE:
+        status = BankApplyCharge(state, actor, command); break;
     case UMI_BANK_INTEREST_SUBMIT: case UMI_BANK_INTEREST_APPROVE:
     case UMI_BANK_INTEREST_REJECT: case UMI_BANK_INTEREST_CANCEL:
     case UMI_BANK_INTEREST_POST: case UMI_BANK_INTEREST_REVERSE:
@@ -280,4 +286,5 @@ BANK_COPY_QUERY(UmiBankOperationsJournalAt, UmiBankJournal, journals, journals)
 BANK_COPY_QUERY(UmiBankOperationsAuditAt, UmiBankAuditEvent, events, events)
 BANK_COPY_QUERY(UmiBankOperationsReconciliationAt, UmiBankReconciliation, reconciliations, reconciliations)
 BANK_COPY_QUERY(UmiBankOperationsInterestAt, UmiBankInterestRequest, interestRequests, interestRequests)
+BANK_COPY_QUERY(UmiBankOperationsChargeAt, UmiBankChargeRequest, chargeRequests, chargeRequests)
 #undef BANK_COPY_QUERY

@@ -40,3 +40,11 @@ if(BUILD_TESTING)
         endforeach()
     endif()
 endif()
+
+if(BUILD_TESTING AND TARGET umicom-bank-interest-native-test)
+    foreach(case IN ITEMS csv csv-invalid csv-retained)
+        add_test(NAME framework.bank_interest.native.${case} COMMAND umicom-bank-interest-native-test ${case})
+        set_tests_properties(framework.bank_interest.native.${case} PROPERTIES
+            TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;bank;csv;gtk4;regression")
+    endforeach()
+endif()

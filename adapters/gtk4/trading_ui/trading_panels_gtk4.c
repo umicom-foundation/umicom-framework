@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading_ui/gtk4/trading_panels.h"
+#include "umicom/trading_ui/gtk4/session_report.h"
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -1543,6 +1544,28 @@ static void OnReviewedOrderSelected(GObject *object, GParamSpec *pspec, gpointer
     memcpy(id, state->order_ids[selected], sizeof(id));
     (void)umi_trading_ui_controller_select_order(state->context->controller, id);
 }
+/* Export uses the applied Framework query and changes no ticket or order.
+ * A retained control from a detached panel cannot read its former owner. */
+#include "umicom/trading/order_csv.h"
+static void OnCopyOrdersCsv(GtkButton *button, gpointer root)
+{
+    if (gtk_widget_get_root(GTK_WIDGET(root)) == NULL) return;
+    UmiGtk4TradingPanelState *state = OrderPanelState(root);
+    if (state == NULL || state->building || state->context == NULL) return;
+    UmiCsvDocument *document = NULL;
+    UmiStatus status = UmiTradingWorkspaceExportOrdersCsv(state->context->workspace, &document);
+    if (status == UMI_STATUS_OK) {
+        gdk_clipboard_set_text(gtk_widget_get_clipboard(GTK_WIDGET(button)), UmiCsvDocumentData(document));
+        gtk_label_set_text(GTK_LABEL(state->order_message),
+            "Copied applied order search as CSV, including retained counts. Unapplied search edits are excluded.");
+    } else {
+        char message[160];
+        (void)snprintf(message, sizeof(message), "Order CSV was not copied: %s. Previous clipboard is unchanged.", umi_status_text(status));
+        gtk_label_set_text(GTK_LABEL(state->order_message), message);
+    }
+    UmiCsvDocumentDestroy(document);
+}
+
 static void OnReviewedOrderCancel(GtkButton *button, gpointer root)
 {
     (void)button;
@@ -1629,6 +1652,11 @@ static GtkWidget *create_orders_panel(UmiGtk4TradingPanelContext *context)
         umi_trading_ui_controller_snapshot(context->controller);
     state->order_message = new_text_label(controller.last_message, 0);
     (void)umi_gtk4_automation_tag_widget(state->order_message, "trading.orders.message");
+    GtkWidget *copyCsv = gtk_button_new_with_label("Copy applied orders CSV");
+    gtk_widget_set_tooltip_text(copyCsv, "Copies the applied query, all matching retained orders and the capture revision. No order is sent.");
+    (void)umi_gtk4_automation_tag_widget(copyCsv, "trading.orders.copy-csv");
+    g_signal_connect_object(copyCsv, "clicked", G_CALLBACK(OnCopyOrdersCsv), G_OBJECT(root), 0);
+    gtk_box_append(GTK_BOX(root), copyCsv);
     gtk_box_append(GTK_BOX(root), state->order_message);
 
     GtkStringList *orders = gtk_string_list_new(NULL);
@@ -2087,7 +2115,26 @@ typedef struct TradingPanelMount {
     UmiUiWorkspaceWindow window;
     UmiGtk4TradingPanelContext *context;
     GtkWidget *body;
+    GWeakRef chart_observer;
+    GWeakRef session_observer;
 } TradingPanelMount;
+
+/* A chart body may be retained separately from its provider mount. Weak
+ * observation lets finalization detach it even after GTK releases children. */
+static void TradingPanelMountDestroy(gpointer data)
+{
+    TradingPanelMount *state = data;
+    GtkWidget *chart = g_weak_ref_get(&state->chart_observer);
+    if (chart != NULL) { UmiGtk4TradingInteractiveChartDetach(chart); g_object_unref(chart); }
+/* Both report and chart widgets can outlive their provider mount, so each borrowed model owner is detached before context destruction. The previous implementation remains for engineering review. */
+#if 0
+    g_weak_ref_clear(&state->chart_observer); g_free(state);
+#endif
+    GtkWidget *session = g_weak_ref_get(&state->session_observer);
+    if (session != NULL) { UmiGtk4TradingSessionReportDetach(session); g_object_unref(session); }
+    g_weak_ref_clear(&state->session_observer);
+    g_weak_ref_clear(&state->chart_observer); g_free(state);
+}
 
 GtkWidget *umi_gtk4_trading_panel_create(const UmiUiWorkspaceWindow *window,
     UmiGtk4TradingPanelContext *context)
@@ -2097,10 +2144,28 @@ GtkWidget *umi_gtk4_trading_panel_create(const UmiUiWorkspaceWindow *window,
     if (body == NULL) return NULL;
     TradingPanelMount *state = g_new0(TradingPanelMount, 1);
     state->window = *window; state->context = context; state->body = body;
+    g_weak_ref_init(&state->chart_observer, strcmp(window->tool_id, "chart") == 0 ? G_OBJECT(body) : NULL);
+    g_weak_ref_init(&state->session_observer, NULL);
     GtkWidget *mount = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_widget_set_hexpand(body, TRUE); gtk_widget_set_vexpand(body, TRUE);
     gtk_box_append(GTK_BOX(mount), body);
+    /* Add the owned review beside the existing generic evidence panel. Its
+     * snapshot and typed filter survive replacement of that older body. */
+    if (strcmp(window->tool_id, "executions") == 0 || strcmp(window->tool_id, "trade-performance") == 0) {
+        GtkWidget *session = UmiGtk4TradingSessionReportCreate(context->workspace);
+        if (session != NULL) {
+            g_weak_ref_set(&state->session_observer, G_OBJECT(session));
+            GtkWidget *expander = gtk_expander_new("Session review and CSV");
+            gtk_expander_set_child(GTK_EXPANDER(expander), session);
+            gtk_box_append(GTK_BOX(mount), expander);
+        }
+    }
+
+/* The mount now detaches a separately retained chart before releasing its model context. Weak observation avoids touching already finalized children. The previous implementation remains for engineering review. */
+#if 0
     g_object_set_data_full(G_OBJECT(mount), "umicom-trading-panel-mount", state, g_free);
+#endif
+    g_object_set_data_full(G_OBJECT(mount), "umicom-trading-panel-mount", state, TradingPanelMountDestroy);
     return mount;
 }
 
@@ -2109,6 +2174,8 @@ UmiStatus UmiGtk4TradingPanelRefresh(GtkWidget *panel, int explicit_action)
     if (panel == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     TradingPanelMount *state = g_object_get_data(G_OBJECT(panel), "umicom-trading-panel-mount");
     if (state == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    GtkWidget *session = g_weak_ref_get(&state->session_observer);
+    if (session != NULL) { UmiGtk4TradingSessionReportMarkStale(session); g_object_unref(session); }
     if (strcmp(state->window.tool_id, "chart") == 0) {
         UmiGtk4TradingInteractiveChartRefresh(state->body);
         return UMI_STATUS_OK;
@@ -2128,6 +2195,32 @@ UmiStatus UmiGtk4TradingPanelRefresh(GtkWidget *panel, int explicit_action)
     gtk_widget_set_hexpand(replacement, TRUE); gtk_widget_set_vexpand(replacement, TRUE);
     gtk_box_remove(GTK_BOX(panel), state->body);
     state->body = replacement;
+/* Keep the refreshed legacy evidence body before the independently retained session review, preserving both surfaces and typed review filters. The previous implementation remains for engineering review. */
+#if 0
     gtk_box_append(GTK_BOX(panel), replacement);
+#endif
+    gtk_box_prepend(GTK_BOX(panel), replacement);
     return UMI_STATUS_OK;
+}
+
+void UmiGtk4TradingPanelBindChartPersistence(GtkWidget *panel, UmiTradingChartPersistence *service)
+{
+    if (panel == NULL) return;
+    TradingPanelMount *state = g_object_get_data(G_OBJECT(panel), "umicom-trading-panel-mount");
+    if (state != NULL && strcmp(state->window.tool_id, "chart") == 0)
+        UmiGtk4TradingInteractiveChartBindPersistence(state->body, service);
+}
+void UmiGtk4TradingPanelDetachChart(GtkWidget *panel)
+{
+    if (panel == NULL) return;
+    TradingPanelMount *state = g_object_get_data(G_OBJECT(panel), "umicom-trading-panel-mount");
+    if (state != NULL && strcmp(state->window.tool_id, "chart") == 0)
+        UmiGtk4TradingInteractiveChartDetach(state->body);
+    /* Existing suite shutdown calls this compatibility entry point for every
+     * panel. Report controls must detach while the borrowed workspace lives. */
+    if (state != NULL) {
+        GtkWidget *session = g_weak_ref_get(&state->session_observer);
+        if (session != NULL) { UmiGtk4TradingSessionReportDetach(session); g_object_unref(session); }
+    }
+
 }

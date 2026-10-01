@@ -1,0 +1,42 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# Investigation composes canonical reviewed commands and the existing event log.
+include_guard(GLOBAL)
+target_sources(umicom_bank_operations PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/bank_operations/reconciliation.c")
+if(BUILD_TESTING)
+    foreach(group workflow review storage contract)
+        add_executable(umicom-bank-reconciliation-${group}-test
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/bank_reconciliation/test_${group}.c")
+        target_link_libraries(umicom-bank-reconciliation-${group}-test PRIVATE Umicom::bank_operations)
+        umicom_bank_review_target(umicom-bank-reconciliation-${group}-test)
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-bank-reconciliation-${group}-test)
+        endif()
+    endforeach()
+    foreach(case resolve idempotency reopen authority fields missing wrong-account unrelated-posting closed
+        unmatched-evidence superseded-evidence older-evidence posted net-zero-postings stale invalid-state blocked hold)
+        add_test(NAME framework.bank_reconciliation.workflow.${case} COMMAND umicom-bank-reconciliation-workflow-test ${case})
+        set_tests_properties(framework.bank_reconciliation.workflow.${case} PROPERTIES TIMEOUT 45 LABELS "bank;reconciliation;regression")
+    endforeach()
+    foreach(case describe ownership edit stale history equivalent)
+        add_test(NAME framework.bank_reconciliation.review.${case} COMMAND umicom-bank-reconciliation-review-test ${case})
+        set_tests_properties(framework.bank_reconciliation.review.${case} PROPERTIES TIMEOUT 30 LABELS "bank;reconciliation;review;regression")
+    endforeach()
+    foreach(case restart reopen-restart write-abort write-rollback stale-writer impossible-replay)
+        add_test(NAME framework.bank_reconciliation.storage.${case} COMMAND umicom-bank-reconciliation-storage-test ${case}
+            "${CMAKE_CURRENT_BINARY_DIR}/bank-reconciliation-${case}.sqlite")
+        set_tests_properties(framework.bank_reconciliation.storage.${case} PROPERTIES TIMEOUT 45 SKIP_RETURN_CODE 77 LABELS "bank;reconciliation;sqlite;regression")
+    endforeach()
+    foreach(case codec fields query labels)
+        add_test(NAME framework.bank_reconciliation.contract.${case} COMMAND umicom-bank-reconciliation-contract-test ${case})
+        set_tests_properties(framework.bank_reconciliation.contract.${case} PROPERTIES TIMEOUT 30 LABELS "bank;reconciliation;regression")
+    endforeach()
+    if(TARGET umicom-bank-interest-native-test)
+        foreach(case resolve reopen invalid edit stale close)
+            add_test(NAME framework.bank_reconciliation.native.${case} COMMAND umicom-bank-interest-native-test reconciliation-${case})
+            set_tests_properties(framework.bank_reconciliation.native.${case} PROPERTIES TIMEOUT 45 SKIP_RETURN_CODE 77 LABELS "bank;reconciliation;gtk4;regression")
+        endforeach()
+    endif()
+endif()
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/reconciliation-investigation.md"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)

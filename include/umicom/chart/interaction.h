@@ -26,6 +26,9 @@
 #include "umicom/chart/marker.h"
 #include "umicom/chart/annotation.h"
 #include "umicom/chart/drawing.h"
+/* Tool semantics and protected edits remain reusable by every chart frontend. */
+#include "umicom/chart/drawing_tools.h"
+#include "umicom/chart/drawing_edit.h"
 #include "umicom/chart/stream.h"
 #include "umicom/chart/extension.h"
 #include "umicom/chart/workspace.h"

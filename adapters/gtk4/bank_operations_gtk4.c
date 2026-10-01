@@ -14,8 +14,14 @@
  *---------------------------------------------------------------------------*/
 #include "window_removal_private.h"
 #include "umicom/ui/gtk4/bank_operations.h"
+#include "umicom/ui/gtk4/payment_quote.h"
 #include "umicom/bank_operations/operations.h"
 #include "umicom/bank_operations/review.h"
+#include "umicom/bank_operations/reconciliation.h"
+#include "umicom/bank_operations/work_queue.h"
+#include "umicom/bank_operations/activity.h"
+#include "umicom/bank_operations/reservations.h"
+#include "umicom/bank_operations/audit_report.h"
 #include "umicom/bank_operations/statement_text.h"
 #include "umicom/finance/money_text.h"
 #include <inttypes.h>
@@ -27,6 +33,30 @@
  * financial state, validation, approvals, journals and persistence. This adapter
  * owns widgets, input conversion and copied projections, never a second ledger. */
 typedef struct BankUi {
+    /* Immutable report ownership is independent of the mutable command form. */
+    UmiBankAuditReport *auditReport;
+    GtkEntry *auditActor,*auditEntity,*auditRequest,*auditFirst,*auditLast,*auditFrom,*auditTo;
+    GtkDropDown *auditFamily,*auditAction,*auditRows;
+    GtkTextBuffer *auditSummary,*auditDetail;
+    GtkLabel *auditHint;
+    GtkWidget *auditCopy,*auditJournalCopy;
+    bool auditPublishing;
+    UmiBankReservations *reservations;
+    GtkEntry *reservationAccount;
+    GtkDropDown *reservationRows;
+    GtkTextBuffer *reservationText;
+    GtkWidget *reservationCopy, *reservationReview;
+    UmiBankActivity *activity;
+    GtkEntry *activityAccount, *activityFrom, *activityTo, *activityReference;
+    GtkDropDown *activityDirection;
+    GtkTextBuffer *activityText;
+    GtkWidget *activityCopy;
+    UmiBankWorkQueue *workQueue;
+    GtkDropDown *queueRows, *queueKinds, *queueStates, *queueDecision;
+    GtkEntry *queueAccount;
+    GtkLabel *queueSummary;
+    GtkTextBuffer *queueDetails;
+    GtkWidget *queueReviewButton, *queueCopyButton;
     UmiBankOperations *operations;
     UmiBankReview *review; /* Owned; no database or widget lifetime is borrowed. */
     GtkTextBuffer *reviewBuffer; /* Borrowed from the review page. */
@@ -38,6 +68,7 @@ typedef struct BankUi {
     GtkEntry *minor, *currency, *scale, *date, *statementAccount;
     GtkEntry *interestRate, *interestDays, *interestBasis;
     GtkGrid *interestRequests;
+    GtkGrid *chargeRequests;
     GtkEntry *statementFirst, *statementLast;
     GtkTextBuffer *statementBuffer;
     int statementPage;
@@ -45,6 +76,7 @@ typedef struct BankUi {
     GtkButton *submit;
     GtkGrid *customers, *accounts, *transfers, *cards, *ledger, *reconciliation, *audit;
     GtkNotebook *pages;
+    GtkWidget *feeCalculator; /* Owned reference keeps close-time detachment safe even after notebook disposal. */
     int64_t timestampMillis;
     uint64_t displayedRevision;
     char *path;
@@ -64,7 +96,11 @@ static const char *StatusText(UmiStatus status)
     case UMI_STATUS_INVALID_ARGUMENT: return "Invalid fields, amount, currency, scale or date. Nothing was committed.";
     case UMI_STATUS_INVALID_STATE: return "Invalid lifecycle state or insufficient available funds. Nothing was committed.";
     case UMI_STATUS_ALREADY_EXISTS: return "The entity exists or the request ID was reused with different data.";
+/* The shared status explanation now includes interest and charge request lookup failures. The previous implementation remains for engineering review. */
+#if 0
     case UMI_STATUS_NOT_FOUND: return "A referenced customer, account, beneficiary, transfer, card or hold was not found.";
+#endif
+    case UMI_STATUS_NOT_FOUND: return "A referenced customer, account, beneficiary, transfer, card, hold, interest request or charge was not found.";
     case UMI_STATUS_CAPACITY_EXCEEDED: return "A record limit or integer amount limit was reached. Nothing was committed.";
     case UMI_STATUS_PARSE_ERROR: return "Stored data failed validation. Close this workspace and investigate the database.";
     case UMI_STATUS_UNAVAILABLE: return "SQLite storage is unavailable in this Framework build. No memory fallback was used.";
@@ -78,6 +114,12 @@ static void Message(BankUi *ui, UmiStatus status)
 static void UiFree(gpointer data)
 {
     BankUi *ui = data;
+    UmiBankWorkQueueDestroy(ui->workQueue); ui->workQueue = NULL;
+    UmiBankReservationsDestroy(ui->reservations); ui->reservations = NULL;
+    UmiBankAuditDestroy(ui->auditReport); ui->auditReport = NULL;
+    UmiBankActivityDestroy(ui->activity); ui->activity = NULL;
+    UmiGtk4PaymentQuoteDetach(ui->feeCalculator);
+    g_clear_object(&ui->feeCalculator);
     UmiBankReviewDestroy(ui->review); ui->review = NULL;
     UmiBankOperationsDestroy(ui->operations);
     g_free(ui->path);
@@ -95,6 +137,11 @@ static void UiClosed(GtkWidget *widget, gpointer data)
     BankUi *ui = data;
     (void)widget;
     ui->closed = true;
+    UmiBankWorkQueueDestroy(ui->workQueue); ui->workQueue = NULL;
+    UmiBankReservationsDestroy(ui->reservations); ui->reservations = NULL;
+    UmiBankAuditDestroy(ui->auditReport); ui->auditReport = NULL;
+    UmiBankActivityDestroy(ui->activity); ui->activity = NULL;
+    UmiGtk4PaymentQuoteDetach(ui->feeCalculator);
     UmiBankReviewDestroy(ui->review); ui->review = NULL;
     UmiBankOperationsDestroy(ui->operations);
     ui->operations = NULL;
@@ -186,6 +233,7 @@ static const char *HoldState(UmiBankHoldState state)
 
 /* Refresh uses copied Framework records. Grid formatting has no persistence
  * side effects and does not authorise any business operation. */
+static void QueueRefresh(BankUi *ui);
 static void Refresh(BankUi *ui)
 {
     static const char *const customerHeaders[] = {"Customer ID", "Name", "State"};
@@ -193,7 +241,11 @@ static void Refresh(BankUi *ui)
     static const char *const transferHeaders[] = {"Transfer ID", "From", "To", "Amount", "Maker", "Checker", "State"};
     static const char *const cardHeaders[] = {"Card / hold ID", "Account", "Card", "Limit / reserved amount", "State"};
     static const char *const journalHeaders[] = {"Revision", "Journal", "Reference", "Currency", "Scale", "Account", "Debit minor", "Credit minor", "Reversal"};
+/* Reconciliation now displays original facts separately from investigation state, so resolving a break cannot appear to rewrite the original comparison. The previous implementation remains for engineering review. */
+#if 0
     static const char *const reconHeaders[] = {"Revision", "Reconciliation", "Account", "External", "Booked", "Result"};
+#endif
+    static const char *const reconHeaders[] = {"Revision", "Reconciliation", "Account", "External", "Booked", "Original result", "Investigation", "Evidence ID", "Reviewer", "Review revision", "Reason"};
     static const char *const auditHeaders[] = {"Revision", "Request", "Actor", "Action", "Entity", "Business date"};
     UmiBankCounts counts;
     UmiStatus status = UmiBankOperationsCounts(ui->operations, &counts);
@@ -268,6 +320,27 @@ static void Refresh(BankUi *ui)
             (void)Cell(ui->interestRequests, 8, row, TransferState(request.state), false);
         }
     }
+    /* This page reads the same committed charge requests used by reviews and
+     * statements. The view never computes or posts a second fee amount. */
+    if (ui->chargeRequests != NULL) {
+        static const char *const headings[] = {"Charge ID", "Account", "Reference", "Reason",
+            "Fixed amount", "Maker", "Checker", "State", "Posted revision", "Reversed revision"};
+        Headers(ui->chargeRequests, headings, G_N_ELEMENTS(headings));
+        for (size_t i = 0U; i < counts.chargeRequests; ++i) {
+            UmiBankChargeRequest request; int row = (int)i + 1;
+            if (UmiBankOperationsChargeAt(ui->operations, i, &request) != UMI_STATUS_OK) continue;
+            (void)Cell(ui->chargeRequests, 0, row, request.id.value, false);
+            (void)Cell(ui->chargeRequests, 1, row, request.accountId.value, false);
+            (void)Cell(ui->chargeRequests, 2, row, request.referenceId.value, false);
+            (void)Cell(ui->chargeRequests, 3, row, request.reason, false);
+            MoneyCell(ui->chargeRequests, 4, row, request.amount);
+            (void)Cell(ui->chargeRequests, 5, row, request.makerId.value, false);
+            (void)Cell(ui->chargeRequests, 6, row, request.checkerId.value, false);
+            (void)Cell(ui->chargeRequests, 7, row, TransferState(request.state), false);
+            NumberCell(ui->chargeRequests, 8, row, request.postedRevision);
+            NumberCell(ui->chargeRequests, 9, row, request.reversedRevision);
+        }
+    }
     for (size_t i = 0U; i < counts.cards; ++i) {
         UmiBankCard c; int row = (int)i + 1;
         if (UmiBankOperationsCardAt(ui->operations, i, &c) != UMI_STATUS_OK) continue;
@@ -300,7 +373,16 @@ static void Refresh(BankUi *ui)
         if (UmiBankOperationsReconciliationAt(ui->operations, i, &r) != UMI_STATUS_OK) continue;
         NumberCell(ui->reconciliation, 0, row, r.revision); (void)Cell(ui->reconciliation, 1, row, r.id.value, false);
         (void)Cell(ui->reconciliation, 2, row, r.accountId.value, false); MoneyCell(ui->reconciliation, 3, row, r.externalBalance);
+/* The original comparison column describes an immutable fact; the adjacent investigation column now supplies the current open or resolved state. The previous implementation remains for engineering review. */
+#if 0
         MoneyCell(ui->reconciliation, 4, row, r.bookedBalance); (void)Cell(ui->reconciliation, 5, row, r.matched ? "Matched" : "Break - investigate", false);
+#endif
+        MoneyCell(ui->reconciliation, 4, row, r.bookedBalance); (void)Cell(ui->reconciliation, 5, row, r.matched ? "Matched" : "Unmatched", false);
+        (void)Cell(ui->reconciliation, 6, row, UmiBankReconciliationStateName(&r), false);
+        (void)Cell(ui->reconciliation, 7, row, r.evidenceId.value, false);
+        (void)Cell(ui->reconciliation, 8, row, r.reviewedBy.value, false);
+        NumberCell(ui->reconciliation, 9, row, r.reviewedRevision);
+        (void)Cell(ui->reconciliation, 10, row, r.reviewReason, false);
     }
     for (size_t i = 0U; i < counts.events; ++i) {
         UmiBankAuditEvent e; char date[24]; int row = (int)i + 1;
@@ -312,6 +394,7 @@ static void Refresh(BankUi *ui)
             (unsigned)e.command.businessDate.month, (unsigned)e.command.businessDate.day);
         (void)Cell(ui->audit, 5, row, date, false);
     }
+    QueueRefresh(ui);
 }
 
 static bool UnsignedText(const char *text, uint64_t maximum, uint64_t *out)
@@ -400,6 +483,8 @@ static void ReviewSelectionChanged(GObject *object, GParamSpec *spec, gpointer d
     BankUi *ui = SignalUi(data); (void)object; (void)spec;
     if (ui != NULL) InvalidateReview(ui);
 }
+/* Review presentation is shared with the queue while form validation, candidate prediction and explicit submission retain their existing ownership. The previous implementation remains for engineering review. */
+#if 0
 static void ReviewCommand(GtkButton *button, gpointer data)
 {
     BankUi *ui = SignalUi(data);
@@ -423,6 +508,35 @@ static void ReviewCommand(GtkButton *button, gpointer data)
         gtk_label_set_text(ui->message, "Review prepared. Nothing committed; no new reservation or payment. Inspect the Command review page.");
     } else { InvalidateReview(ui); Message(ui, status); }
     g_free(text);
+}
+#endif
+/* The form and work queue render the same owned Framework review. Neither
+ * path obtains an alternate submit or ledger implementation. */
+static void DisplayReview(BankUi *ui)
+{
+    char *text; UmiStatus status;
+    text = g_try_malloc(UMI_BANK_REVIEW_TEXT_CAPACITY);
+    if (text == NULL) { InvalidateReview(ui); Message(ui, UMI_STATUS_OUT_OF_MEMORY); return; }
+    status = UmiBankReviewDescribe(ui->review, text, UMI_BANK_REVIEW_TEXT_CAPACITY, NULL);
+    if (status == UMI_STATUS_OK) {
+        char *valid = g_utf8_make_valid(text, -1);
+        gtk_text_buffer_set_text(ui->reviewBuffer, valid, -1);
+        g_free(valid);
+        gtk_widget_set_sensitive(GTK_WIDGET(ui->submit), TRUE);
+        gtk_notebook_set_current_page(ui->pages, 7);
+        gtk_label_set_text(ui->message, "Review prepared. Nothing committed; no new reservation or payment. Inspect the Command review page.");
+    } else { InvalidateReview(ui); Message(ui, status); }
+    g_free(text);
+}
+static void ReviewCommand(GtkButton *button, gpointer data)
+{
+    BankUi *ui = SignalUi(data); UmiBankActor actor; UmiBankCommand command;
+    (void)button;
+    if (ui == NULL) return;
+    InvalidateReview(ui);
+    if (!ReadCommand(ui, &actor, &command)) { Message(ui, UMI_STATUS_INVALID_ARGUMENT); return; }
+    UmiStatus status = UmiBankOperationsReview(ui->operations, &actor, &command, &ui->review);
+    if (status == UMI_STATUS_OK) DisplayReview(ui); else Message(ui, status);
 }
 
 static void NewRequest(GtkButton *button, gpointer data)
@@ -564,6 +678,31 @@ static void ShowStatement(GtkButton *button, gpointer data)
     }
     gtk_notebook_set_current_page(ui->pages, ui->statementBuffer != NULL ? ui->statementPage : 4); g_free(statement);
 }
+/* CSV is another presentation of the canonical statement owner. Current
+ * account/range fields are captured once; no posting or reload is performed. */
+#include "umicom/bank_operations/statement_csv.h"
+static void CopyStatementCsv(GtkButton *button, gpointer data)
+{
+    BankUi *ui = SignalUi(data);
+    if (ui == NULL || gtk_widget_get_root(GTK_WIDGET(button)) != GTK_ROOT(ui->window)) return;
+    uint64_t first = 1U, last = ui->displayedRevision;
+    if ((EntryText(ui->statementFirst)[0] != '\0' &&
+            !UnsignedText(EntryText(ui->statementFirst), UINT64_MAX, &first)) ||
+        (EntryText(ui->statementLast)[0] != '\0' &&
+            !UnsignedText(EntryText(ui->statementLast), UINT64_MAX, &last))) {
+        Message(ui, UMI_STATUS_INVALID_ARGUMENT); return;
+    }
+    UmiCsvDocument *document = NULL;
+    UmiStatus status = UmiBankOperationsExportStatementCsv(ui->operations,
+        EntryText(ui->statementAccount), first, last, &document);
+    if (status == UMI_STATUS_OK) {
+        gdk_clipboard_set_text(gtk_widget_get_clipboard(GTK_WIDGET(button)), UmiCsvDocumentData(document));
+        gtk_label_set_text(ui->message,
+            "Copied current account/range as local-practice CSV. Amounts are exact minor units; currency and scale are included.");
+    } else Message(ui, status);
+    UmiCsvDocumentDestroy(document);
+}
+
 static void ActionChanged(GObject *object, GParamSpec *spec, gpointer data)
 {
     BankUi *ui = SignalUi(data); UmiBankAction action; uint32_t fields; const char *hint;
@@ -586,6 +725,16 @@ static void ActionChanged(GObject *object, GParamSpec *spec, gpointer data)
         gtk_widget_set_sensitive(GTK_WIDGET(ui->interestBasis), enabled);
     }
     switch (action) {
+    case UMI_BANK_CHARGE_SUBMIT:
+        hint = "Practice charge: entity = new charge ID; owner = charge reference; source = charged account; name = reason. Enter a positive fixed amount in exact minor units, currency and scale. Use Test maker. No funds are reserved."; break;
+    case UMI_BANK_CHARGE_APPROVE: case UMI_BANK_CHARGE_REJECT:
+        hint = "Entity = charge ID. Review the captured account, reference, reason and exact amount. Use Test checker; the submitting maker cannot approve or reject the same request."; break;
+    case UMI_BANK_CHARGE_CANCEL:
+        hint = "Entity = pending or approved charge ID. The original Test maker or Test operator may cancel it before posting."; break;
+    case UMI_BANK_CHARGE_POST:
+        hint = "Entity = approved charge ID. Use Test operator. Posting debits available funds and respects existing holds. Approval alone does not reserve money."; break;
+    case UMI_BANK_CHARGE_REVERSE:
+        hint = "Entity = posted charge ID. Use Test operator. Full reversal credits the same active account once, retaining both journals. A blocked or closed account cannot be credited by this action."; break;
     case UMI_BANK_INTEREST_SUBMIT:
         hint = "Practice interest: entity = new request ID; owner = period ID (for example 2026-09); source = account. Rate 500 bps means 5%; days 1..3660; basis 360 or 365. Uses the booked balance now, not historical daily balances. Use Test maker."; break;
     case UMI_BANK_INTEREST_APPROVE: case UMI_BANK_INTEREST_REJECT:
@@ -608,6 +757,10 @@ static void ActionChanged(GObject *object, GParamSpec *spec, gpointer data)
     case UMI_BANK_CARD_VOID: case UMI_BANK_CARD_REFUND:
         hint = "Entity = authorisation ID. Void releases an active reservation; refund reverses the full captured amount. Use Test operator."; break;
     case UMI_BANK_RECONCILE: hint = "Entity = new reconciliation ID; source = account; amount = externally observed booked balance. A mismatch records a break, not a ledger adjustment. Use Test operator."; break;
+    case UMI_BANK_RECONCILIATION_RESOLVE:
+        hint = "Entity = open break ID; owner = later matching reconciliation ID for the same account; name = investigation reason. Use Test operator. Evidence must be the latest account comparison, with no later account postings. Review then Submit; balances are unchanged."; break;
+    case UMI_BANK_RECONCILIATION_REOPEN:
+        hint = "Entity = resolved break ID; name = reason for reopening. Use Test operator. The old comparison and evidence remain in history; resolving again needs a fresh matching reconciliation after this reopen."; break;
     default: hint = "Supply the entity ID and enabled fields only. Customers/accounts/beneficiaries/card settings use Test maker; manual hold operations use Test operator."; break;
     }
     gtk_label_set_text(ui->hint, hint);
@@ -634,6 +787,11 @@ static GtkGrid *Page(GtkNotebook *pages, const char *title)
     gtk_notebook_append_page(pages, scroll, gtk_label_new(title));
     return GTK_GRID(grid);
 }
+#include "bank_work_queue.inc"
+#include "bank_activity.inc"
+#include "bank_reservations.inc"
+#include "bank_audit.inc"
+
 static void ChildDestroyed(GtkWidget *widget, gpointer data)
 {
     BankLauncher *launcher = data;
@@ -748,6 +906,7 @@ static void OpenWorkspace(GtkButton *button, gpointer data)
     }
     /* Append to retain the existing notebook indexes used by review/statement. */
     ui->interestRequests = Page(ui->pages, "Practice interest");
+    ui->chargeRequests = Page(ui->pages, "Practice charges");
     {
         GtkWidget *page = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
         GtkWidget *range = gtk_grid_new();
@@ -760,6 +919,11 @@ static void OpenWorkspace(GtkButton *button, gpointer data)
         GtkWidget *show = gtk_button_new_with_label("Show statement range");
         g_signal_connect_object(show, "clicked", G_CALLBACK(ShowStatement), G_OBJECT(ui->window), 0);
         gtk_box_append(GTK_BOX(page), show);
+        GtkWidget *copyCsv = gtk_button_new_with_label("Copy current statement range CSV");
+        gtk_widget_set_name(copyCsv, "bank.statement.copy-csv");
+        gtk_widget_set_tooltip_text(copyCsv, "Exports current account and revision fields; it does not copy an older displayed report.");
+        g_signal_connect_object(copyCsv, "clicked", G_CALLBACK(CopyStatementCsv), G_OBJECT(ui->window), 0);
+        gtk_box_append(GTK_BOX(page), copyCsv);
         gtk_text_view_set_editable(GTK_TEXT_VIEW(view), FALSE);
         gtk_text_view_set_monospace(GTK_TEXT_VIEW(view), TRUE);
         gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(view), GTK_WRAP_WORD_CHAR);
@@ -770,6 +934,16 @@ static void OpenWorkspace(GtkButton *button, gpointer data)
         ui->statementPage = gtk_notebook_append_page(ui->pages, page, gtk_label_new("Statement report"));
     }
 
+    /* A scenario calculator shares Framework pricing but has no ledger handle.
+     * Append it to preserve every existing page index and command workflow. */
+    ui->feeCalculator = g_object_ref_sink(UmiGtk4PaymentQuoteCreate());
+    gtk_notebook_append_page(ui->pages, ui->feeCalculator, gtk_label_new("Payment fee quote"));
+    /* Append the queue without changing existing notebook page indexes. */
+    QueueCreate(ui);
+    /* Append activity so earlier statement and review page indexes remain valid. */
+    ActivityCreate(ui);
+    ReservationsCreate(ui);
+    AuditCreate(ui);
     gtk_box_append(GTK_BOX(box), GTK_WIDGET(ui->pages));
     /* Edits invalidate the prediction immediately; Submit rechecks as defence
      * in depth in case a caller changes the form without an edit notification. */

@@ -1,0 +1,45 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# Watch properties and strict native evaluation share the canonical model.
+include_guard(GLOBAL)
+target_sources(umicom_debug PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../src/debug/watch_edit.c")
+target_sources(umicom_developer PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/json_text.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug_runtime/watch_reply.c")
+if(BUILD_TESTING)
+    function(umicom_watch_cases group)
+        set(target "umicom-watch-properties-${group}-test")
+        add_executable(${target} "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../tests/watch_edit/test_${group}.c")
+        target_link_libraries(${target} PRIVATE Umicom::Framework)
+        umicom_apply_warnings(${target})
+        umicom_apply_sanitizers(${target})
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(${target})
+        endif()
+        foreach(case IN LISTS ARGN)
+            add_test(NAME framework.watch_properties.${group}.${case} COMMAND ${target} ${case})
+            set_tests_properties(framework.watch_properties.${group}.${case} PROPERTIES
+                TIMEOUT 30 LABELS "framework;debugger;watch;regression")
+        endforeach()
+    endfunction()
+    umicom_watch_cases(edit apply disable reenable noop remove ownership bounds invalid unrelated changed reuse owner session configuration)
+    umicom_watch_cases(reply valid empty unicode missing wrong-result wrong-type wrong-body duplicate duplicate-type duplicate-body nul surrogate long-result long-type boundary)
+    umicom_watch_cases(json_text ascii raw-utf8 pair escaped-slash nul low high overlong continuation range capacity bad-pair raw-control invalid-token empty)
+    if(TARGET umicom-dap-protocol-fixture)
+        add_executable(umicom-watch-properties-platform-test "${CMAKE_CURRENT_LIST_DIR}/../tests/watch_edit/test_platform.c")
+        target_link_libraries(umicom-watch-properties-platform-test PRIVATE Umicom::Framework)
+        umicom_apply_warnings(umicom-watch-properties-platform-test)
+        umicom_apply_sanitizers(umicom-watch-properties-platform-test)
+        add_dependencies(umicom-watch-properties-platform-test umicom-dap-protocol-fixture)
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-watch-properties-platform-test)
+        endif()
+        foreach(case idle wrong-owner uninspected disabled stale success empty unicode rejected malformed long event command)
+            add_test(NAME framework.watch_properties.platform.${case} COMMAND umicom-watch-properties-platform-test
+                "$<TARGET_FILE:umicom-dap-protocol-fixture>" ${case})
+            set_tests_properties(framework.watch_properties.platform.${case} PROPERTIES
+                TIMEOUT 30 LABELS "framework;debugger;watch;protocol-fixture;regression")
+        endforeach()
+    endif()
+endif()
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/watch-properties.md"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)

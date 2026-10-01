@@ -30,6 +30,7 @@
 #include "umicom/document/language_detection.h"
 #include "umicom/document/file_filter.h"
 #include "umicom/document/coordinator.h"
+#include "umicom/document/replacement.h"
 #include "umicom/document/commands.h"
 
 #endif /* UMICOM_DOCUMENT_DOCUMENT_H */

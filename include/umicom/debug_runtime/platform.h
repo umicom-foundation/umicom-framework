@@ -68,6 +68,11 @@ UmiStatus umi_debug_runtime_platform_create(
  * an explicit executable is a filesystem path, never a shell command.
  * program and working_directory must be absolute existing file/directory paths.
  * arguments uses the existing Framework argument parser (not shell expansion).
+ * Native launch inputs are also retained in the "native.launch" configuration
+ * for source navigation. Program, working directory and arguments must each fit
+ * their 1024-byte snapshot arrays including the terminator; longer inputs return
+ * CAPACITY_EXCEEDED before starting an adapter, rather than retaining a truncated
+ * source base or different launch arguments.
  * The adapter stops at entry/main; ASLR remains enabled. Breakpoints already in
  * service() are configured before configurationDone. The caller must authorise
  * executing this project and selected adapter before calling. All operations

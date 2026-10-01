@@ -25,6 +25,7 @@
 
 #include "umicom/application/suite_layout/gtk4_workstation.h"
 #include "umicom/trading_ui/action_controller.h"
+#include "umicom/trading/chart_persistence.h"
 #include "umicom/trading_ui/simulation_market.h"
 
 #ifdef __cplusplus
@@ -253,6 +254,15 @@ UmiStatus umi_gtk4_trading_suite_workstation_library_preview(
 
 /* Use Framework-owned profile-specific layout persistence after local sign-in. */
 UmiStatus UmiGtk4TradingSuiteEnableProfileStorage(UmiGtk4TradingSuiteWorkstation *workstation, const char *profile, int restore_saved);
+
+/* Chart saves share the established profile database through a separate
+ * owned connection. They remain explicit and never restore with layout loads.
+ * Borrowed binding below performs no I/O and does not change layout storage.
+ * The caller retains server ownership until unbound or workstation destroyed. */
+UmiStatus UmiGtk4TradingSuiteBindChartStorage(UmiGtk4TradingSuiteWorkstation *workstation,
+    UmiDataServer *server, const char *scope);
+/* Borrow the toolkit-neutral coordinator for thin host adapters and tests. */
+UmiTradingChartPersistence *UmiGtk4TradingSuiteChartPersistence(UmiGtk4TradingSuiteWorkstation *workstation);
 
 #ifdef __cplusplus
 }

@@ -32,6 +32,9 @@ static int Event(const char *event, const char *body) {
         (unsigned long long)sequence++,event,body);
     return n>0 && (size_t)n<sizeof(json) && Write(json);
 }
+#include "../watch_edit/peer.inc"
+#include "../variable_inspection/peer.inc"
+#include "../scope_inspection/peer.inc"
 int main(int argc, char **argv) {
 #ifdef _WIN32
     (void)_setmode(_fileno(stdin),_O_BINARY); (void)_setmode(_fileno(stdout),_O_BINARY);
@@ -51,7 +54,16 @@ int main(int argc, char **argv) {
         fprintf(stderr,"fixture got %s seq %llu\n",cmd,(unsigned long long)request.sequence);
         if(strcmp(cmd,"initialize")==0) {
             if(strcmp(mode,"initialized-first")==0 && !Event("initialized","{}")) return 5;
+/* Property synchronization tests explicitly negotiate optional capabilities; older fixture modes keep their original advertised set. The previous implementation remains for engineering review. */
+#if 0
             if(!Response(request.sequence,cmd,1,"{\"supportsConfigurationDoneRequest\":true,\"supportsTerminateRequest\":true}")) return 5;
+#endif
+            if (strncmp(mode, "properties-", 11) == 0 && strcmp(mode, "properties-unsupported") != 0) {
+                if (!Response(request.sequence, cmd, 1,
+                    "{\"supportsConfigurationDoneRequest\":true,\"supportsTerminateRequest\":true,\"supportsConditionalBreakpoints\":true,\"supportsLogPoints\":true}")) return 5;
+            } else {
+                if(!Response(request.sequence,cmd,1,"{\"supportsConfigurationDoneRequest\":true,\"supportsTerminateRequest\":true}")) return 5;
+            }
         } else if(strcmp(cmd,"launch")==0) {
             launch=request.sequence;
             if(strcmp(mode,"reject-launch")==0) { if(!Response(launch,cmd,0,"{}")) return 5; }
@@ -62,6 +74,20 @@ int main(int argc, char **argv) {
             }
         } else if(strcmp(cmd,"setBreakpoints")==0) {
             ++breakpointRequests;
+            if (strncmp(mode, "properties-", 11) == 0) {
+                if (strcmp(mode, "properties-unsupported") == 0) return 12; /* Client must reject before sending. */
+                if (strstr(json, "\"condition\":\"count > 3\"") == NULL ||
+                    strstr(json, "\"logMessage\":\"count={count}\"") == NULL) return 13;
+                if (strcmp(mode, "properties-rejected") == 0) {
+                    if (!Response(request.sequence, cmd, 0, "{}")) return 5;
+                } else if (strcmp(mode, "properties-short") == 0) {
+                    if (!Response(request.sequence, cmd, 1, "{\"breakpoints\":[]}")) return 5;
+                } else if (strcmp(mode, "properties-malformed") == 0) {
+                    if (!Response(request.sequence, cmd, 1, "{\"breakpoints\":[{\"verified\":true,\"line\":-3}]}")) return 5;
+                } else if (!Response(request.sequence, cmd, 1,
+                    "{\"breakpoints\":[{\"verified\":true,\"line\":15}]}")) return 5;
+                continue;
+            }
             /* Initial requests must occur before configurationDone. */
             if(!Response(request.sequence,cmd,1,strstr(json,"\"line\"")!=NULL
                 ? "{\"breakpoints\":[{\"id\":1,\"verified\":true,\"line\":13}]}"
@@ -80,12 +106,32 @@ int main(int argc, char **argv) {
             if(!Response(request.sequence,cmd,1,"{\"stackFrames\":[{\"id\":0,\"name\":\"main\",\"line\":13,\"column\":1,\"source\":{\"path\":\"notes.c\"}}],\"totalFrames\":1}")) return 5;
         } else if(strcmp(cmd,"scopes")==0) {
             if(strstr(json,"\"frameId\":0")==NULL) return 8;
+            /* Explicit scope modes keep expensive references unloaded at startup. */
+            if (strncmp(mode, "scope-inspection-", 17) == 0) {
+                if (!ScopePeerScopes(&request, mode)) return 16;
+                continue;
+            }
             if(!Response(request.sequence,cmd,1,"{\"scopes\":[{\"name\":\"Locals\",\"variablesReference\":1,\"expensive\":false}]}")) return 5;
         } else if(strcmp(cmd,"variables")==0) {
+            if (strncmp(mode, "scope-inspection-", 17) == 0) {
+                if (!ScopePeerVariables(&request, mode, json)) return 17;
+                continue;
+            }
+            /* Owned child inspection modes are independent of legacy fixture replies. */
+            if (strncmp(mode, "variable-inspection-", 20) == 0) {
+                if (!VariablePeerReply(&request, mode, json)) return 15;
+                continue;
+            }
             if(!Response(request.sequence,cmd,1,stepped
                 ? "{\"variables\":[{\"name\":\"savedNotes\",\"value\":\"5\",\"type\":\"int\",\"variablesReference\":0}]}"
                 : "{\"variables\":[{\"name\":\"savedNotes\",\"value\":\"2\",\"type\":\"int\",\"variablesReference\":0}]}")) return 5;
         } else if(strcmp(cmd,"evaluate")==0) {
+            /* New watch modes validate explicit row requests; all existing modes
+             * retain their prior protocol behaviour below. */
+            if (strncmp(mode, "watch-edit-", 11) == 0) {
+                if (!WatchPeerReply(&request, mode, json)) return 14;
+                continue;
+            }
             if(strstr(json,"\"frameId\":0")==NULL) return 9;
             if(!Response(request.sequence,cmd,1,stepped?"{\"result\":\"5\",\"type\":\"int\",\"variablesReference\":0}":"{\"result\":\"2\",\"type\":\"int\",\"variablesReference\":0}")) return 5;
         } else if(strcmp(cmd,"next")==0 || strcmp(cmd,"stepIn")==0 || strcmp(cmd,"stepOut")==0 || strcmp(cmd,"pause")==0) {

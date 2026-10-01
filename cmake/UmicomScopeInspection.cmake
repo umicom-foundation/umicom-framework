@@ -1,0 +1,36 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# Scope captures share the guarded variable request and owned child pages.
+include_guard(GLOBAL)
+target_sources(umicom_developer PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../src/debug_runtime/scope_inspection.c")
+if(BUILD_TESTING)
+    add_executable(umicom-scope-inspection-capture-test "${CMAKE_CURRENT_LIST_DIR}/../tests/scope_inspection/test_capture.c")
+    target_link_libraries(umicom-scope-inspection-capture-test PRIVATE Umicom::Framework)
+    umicom_apply_warnings(umicom-scope-inspection-capture-test)
+    umicom_apply_sanitizers(umicom-scope-inspection-capture-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-scope-inspection-capture-test)
+    endif()
+    foreach(case unselected owned bounds cheap name zero large foreign-frame owner cycle child-stale running selection reuse scope-change root-change)
+        add_test(NAME framework.scope_inspection.capture.${case} COMMAND umicom-scope-inspection-capture-test ${case})
+        set_tests_properties(framework.scope_inspection.capture.${case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;debugger;scopes;regression")
+    endforeach()
+    if(TARGET umicom-dap-protocol-fixture)
+        add_executable(umicom-scope-inspection-platform-test "${CMAKE_CURRENT_LIST_DIR}/../tests/scope_inspection/test_platform.c")
+        target_link_libraries(umicom-scope-inspection-platform-test PRIVATE Umicom::Framework)
+        umicom_apply_warnings(umicom-scope-inspection-platform-test)
+        umicom_apply_sanitizers(umicom-scope-inspection-platform-test)
+        add_dependencies(umicom-scope-inspection-platform-test umicom-dap-protocol-fixture)
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-scope-inspection-platform-test)
+        endif()
+        foreach(case success only-expensive nested repeat empty cycle stale event timeout malformed rejected)
+            add_test(NAME framework.scope_inspection.platform.${case} COMMAND umicom-scope-inspection-platform-test
+                "$<TARGET_FILE:umicom-dap-protocol-fixture>" ${case})
+            set_tests_properties(framework.scope_inspection.platform.${case} PROPERTIES
+                TIMEOUT 30 LABELS "framework;debugger;scopes;protocol-fixture;regression")
+        endforeach()
+    endif()
+endif()
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/scope-inspection.md"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)

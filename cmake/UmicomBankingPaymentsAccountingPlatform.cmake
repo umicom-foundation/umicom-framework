@@ -21,6 +21,9 @@ if(NOT TARGET umicom_finance)
 endif()
 # Banking, payments and accounting remain reusable Framework finance capabilities.
 target_sources(umicom_finance PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/money_rate.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/payment_quote.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/payments/payment_quote_report.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/types.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/customer.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/finance/banking/customer_registry.c"

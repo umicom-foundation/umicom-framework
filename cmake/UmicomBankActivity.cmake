@@ -1,0 +1,43 @@
+# Account activity is a projection of the existing banking ledger.
+target_sources(umicom_bank_operations PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/bank_operations/activity_query.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/bank_operations/activity.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/bank_operations/activity_text.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/bank_operations/activity_csv.c")
+if(BUILD_TESTING)
+    function(umicom_bank_activity_cases group)
+        set(target "umicom-bank-activity-${group}-test")
+        add_executable(${target} "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../tests/bank_activity/test_${group}.c")
+        target_link_libraries(${target} PRIVATE Umicom::bank_operations)
+        umicom_bank_review_target(${target})
+        foreach(case IN LISTS ARGN)
+            add_test(NAME "framework.bank_activity.${group}.${case}" COMMAND ${target} "${case}")
+            set_tests_properties("framework.bank_activity.${group}.${case}" PROPERTIES TIMEOUT 30 LABELS "bank;activity;regression")
+        endforeach()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(${target})
+        endif()
+    endfunction()
+    umicom_bank_activity_cases(query date leap syntax range open-bound reference account direction)
+    umicom_bank_activity_cases(capture all date-range backdated debits credits reference journal case-sensitive empty unknown overflow ownership bounds empty-account closed-account)
+    umicom_bank_activity_cases(reports text capacity csv empty immutable)
+    add_executable(umicom-bank-activity-storage-test "${CMAKE_CURRENT_LIST_DIR}/../tests/bank_activity/test_storage.c")
+    target_link_libraries(umicom-bank-activity-storage-test PRIVATE Umicom::bank_operations)
+    umicom_bank_review_target(umicom-bank-activity-storage-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-bank-activity-storage-test)
+    endif()
+    foreach(case reopen cached-reload)
+        add_test(NAME "framework.bank_activity.storage.${case}" COMMAND umicom-bank-activity-storage-test "${case}"
+            "${CMAKE_CURRENT_BINARY_DIR}/bank-activity-${case}.sqlite")
+        set_tests_properties("framework.bank_activity.storage.${case}" PROPERTIES TIMEOUT 45 SKIP_RETURN_CODE 77 LABELS "bank;activity;sqlite;regression")
+    endforeach()
+    if(TARGET umicom-bank-interest-native-test)
+        foreach(case capture account invalid-date reversed-dates filter direction copy cached close)
+            add_test(NAME "framework.bank_activity.native.${case}" COMMAND umicom-bank-interest-native-test "activity-${case}")
+            set_tests_properties("framework.bank_activity.native.${case}" PROPERTIES TIMEOUT 60 SKIP_RETURN_CODE 77 LABELS "bank;activity;gtk4;regression")
+        endforeach()
+    endif()
+endif()
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/BANK_ACCOUNT_ACTIVITY.md"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs)

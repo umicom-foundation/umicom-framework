@@ -31,6 +31,8 @@ extern "C" {
 #endif
 
 #define UMI_CHART_DRAWING_CAPACITY 4096U
+/* Visibility belongs to the canonical drawing, independently of geometry locks. */
+#define UMI_CHART_DRAWING_VISIBILITY_HIDDEN UINT64_C(1)
 
 /**
  * Represent the chart drawing snapshot data shared with callers of this public contract.
@@ -49,6 +51,9 @@ typedef struct UmiChartDrawingSnapshot {
     int selected;
     int locked;
     uint64_t revision;
+    /* Appended shared presentation state: zero keeps legacy drawings visible.
+     * Rebuild consumers when updating this value-owned public structure. */
+    uint64_t visibility_flags;
 } UmiChartDrawingSnapshot;
 
 /**
@@ -116,6 +121,18 @@ UmiStatus umi_chart_drawing_snapshot_validate(const UmiChartDrawingSnapshot *ite
  * is optional, written on every return, and must not overlap input or registry. */
 UmiStatus umi_chart_drawing_registry_upsert_many(UmiChartDrawingRegistry *registry,
     const UmiChartDrawingSnapshot *items, size_t count, UmiSnapshotBatchResult *outResult);
+
+/* Replace one pane as a single revision-checked publication. Every input
+ * must satisfy UmiChartDrawingValidateGeometry and match paneId. Duplicates
+ * and ID collisions with another pane are rejected. Unrelated drawings retain
+ * their order, metadata and revisions; replacements follow in input order.
+ * All replacements receive one fresh registry revision. An empty input removes
+ * the pane's drawings, including locked ones: the caller owns explicit user
+ * confirmation before invoking a destructive restore. Every failure leaves
+ * the registry unchanged. Inputs are borrowed only for this owning-thread call. */
+UmiStatus UmiChartDrawingRegistryReplacePane(UmiChartDrawingRegistry *registry,
+    const char *paneId, const UmiChartDrawingSnapshot *items, size_t count,
+    uint64_t expectedRevision);
 
 #ifdef __cplusplus
 }

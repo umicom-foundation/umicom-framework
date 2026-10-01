@@ -22,6 +22,7 @@ add_library(umicom_bank_operations STATIC
     "${_umicom_bank_operations_root}/src/bank_operations/codec.c"
     "${_umicom_bank_operations_root}/src/bank_operations/repository.c"
     "${_umicom_bank_operations_root}/src/bank_operations/ledger.c"
+    "${_umicom_bank_operations_root}/src/bank_operations/charges.c"
     "${_umicom_bank_operations_root}/src/bank_operations/accounts.c"
     "${_umicom_bank_operations_root}/src/bank_operations/transfers.c"
     "${_umicom_bank_operations_root}/src/bank_operations/cards.c")
@@ -118,3 +119,41 @@ target_sources(umicom_bank_operations PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../src/
 
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/practice-interest.md"
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)
+
+# Statement exports share the base CSV owner and the canonical bank ledger.
+target_sources(umicom_bank_operations PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../src/bank_operations/statement_csv.c")
+
+if(BUILD_TESTING)
+    add_executable(umicom-report-export-statement-test "${CMAKE_CURRENT_LIST_DIR}/../tests/report_export/test_statement_csv.c")
+    target_link_libraries(umicom-report-export-statement-test PRIVATE Umicom::bank_operations)
+    umicom_apply_warnings(umicom-report-export-statement-test)
+    umicom_apply_sanitizers(umicom-report-export-statement-test)
+    foreach(case IN ITEMS range empty reversal invalid ownership)
+        add_test(NAME "framework.report_export.statement.${case}" COMMAND umicom-report-export-statement-test ${case})
+        set_tests_properties("framework.report_export.statement.${case}" PROPERTIES TIMEOUT 30 LABELS "framework;bank;csv;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-report-export-statement-test)
+    endif()
+endif()
+
+# Reviewed account charges share the already configured bank and native targets.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomBankCharges.cmake")
+
+
+if(BUILD_TESTING AND TARGET Umicom::bank_operations_gtk4)
+    add_executable(umicom-payment-quote-native-test "${CMAKE_CURRENT_LIST_DIR}/../tests/payment_quotes/test_native.c")
+    # The test includes the real banking adapter once, and links the shared calculator.
+    target_link_libraries(umicom-payment-quote-native-test PRIVATE Umicom::bank_operations Umicom::ui_gtk4)
+    umicom_bank_review_target(umicom-payment-quote-native-test)
+    foreach(case IN ITEMS calculate edit rounding invalid overflow detach owner-close retained-button)
+        add_test(NAME framework.payment_quotes.native.${case} COMMAND umicom-payment-quote-native-test ${case})
+        set_tests_properties(framework.payment_quotes.native.${case} PROPERTIES TIMEOUT 45 SKIP_RETURN_CODE 77 LABELS "finance;payments;quote;gtk4;regression")
+    endforeach()
+endif()
+
+# Retained open requests share reviewed execution and exact report ownership.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomBankWorkQueue.cmake")
+
+# Investigation changes dispositions while retaining original comparisons.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomBankReconciliation.cmake")

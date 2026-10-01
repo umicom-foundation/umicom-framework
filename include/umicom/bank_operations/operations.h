@@ -115,6 +115,8 @@ typedef enum UmiBankAction {
     UMI_BANK_RECONCILE
 } UmiBankAction;
 #endif
+/* Account charges append stable action numbers and reuse the canonical command envelope; historical action values and event bytes are unchanged. The previous implementation remains for engineering review. */
+#if 0
 typedef enum UmiBankAction {
     UMI_BANK_CUSTOMER_CREATE = 1,
     UMI_BANK_CUSTOMER_SET_STATE,
@@ -145,6 +147,84 @@ typedef enum UmiBankAction {
     UMI_BANK_INTEREST_POST,
     UMI_BANK_INTEREST_REVERSE
 } UmiBankAction;
+#endif
+/* Reconciliation review appends stable action numbers without changing existing event values; the original action catalogue is retained for review. The previous implementation remains for engineering review. */
+#if 0
+typedef enum UmiBankAction {
+    UMI_BANK_CUSTOMER_CREATE = 1,
+    UMI_BANK_CUSTOMER_SET_STATE,
+    UMI_BANK_ACCOUNT_OPEN,
+    UMI_BANK_ACCOUNT_SET_STATE,
+    UMI_BANK_BENEFICIARY_CREATE,
+    UMI_BANK_BENEFICIARY_SET_STATE,
+    UMI_BANK_TEST_CREDIT,
+    UMI_BANK_TRANSFER_SUBMIT,
+    UMI_BANK_TRANSFER_APPROVE,
+    UMI_BANK_TRANSFER_REJECT,
+    UMI_BANK_TRANSFER_CANCEL,
+    UMI_BANK_TRANSFER_EXECUTE,
+    UMI_BANK_TRANSFER_REVERSE,
+    UMI_BANK_HOLD_PLACE,
+    UMI_BANK_HOLD_RELEASE,
+    UMI_BANK_CARD_ISSUE,
+    UMI_BANK_CARD_SET_STATE,
+    UMI_BANK_CARD_AUTHORISE,
+    UMI_BANK_CARD_CAPTURE,
+    UMI_BANK_CARD_VOID,
+    UMI_BANK_CARD_REFUND,
+    UMI_BANK_RECONCILE,
+    UMI_BANK_INTEREST_SUBMIT,
+    UMI_BANK_INTEREST_APPROVE,
+    UMI_BANK_INTEREST_REJECT,
+    UMI_BANK_INTEREST_CANCEL,
+    UMI_BANK_INTEREST_POST,
+    UMI_BANK_INTEREST_REVERSE,
+    UMI_BANK_CHARGE_SUBMIT = 29,
+    UMI_BANK_CHARGE_APPROVE,
+    UMI_BANK_CHARGE_REJECT,
+    UMI_BANK_CHARGE_CANCEL,
+    UMI_BANK_CHARGE_POST,
+    UMI_BANK_CHARGE_REVERSE
+} UmiBankAction;
+#endif
+typedef enum UmiBankAction {
+    UMI_BANK_CUSTOMER_CREATE = 1,
+    UMI_BANK_CUSTOMER_SET_STATE,
+    UMI_BANK_ACCOUNT_OPEN,
+    UMI_BANK_ACCOUNT_SET_STATE,
+    UMI_BANK_BENEFICIARY_CREATE,
+    UMI_BANK_BENEFICIARY_SET_STATE,
+    UMI_BANK_TEST_CREDIT,
+    UMI_BANK_TRANSFER_SUBMIT,
+    UMI_BANK_TRANSFER_APPROVE,
+    UMI_BANK_TRANSFER_REJECT,
+    UMI_BANK_TRANSFER_CANCEL,
+    UMI_BANK_TRANSFER_EXECUTE,
+    UMI_BANK_TRANSFER_REVERSE,
+    UMI_BANK_HOLD_PLACE,
+    UMI_BANK_HOLD_RELEASE,
+    UMI_BANK_CARD_ISSUE,
+    UMI_BANK_CARD_SET_STATE,
+    UMI_BANK_CARD_AUTHORISE,
+    UMI_BANK_CARD_CAPTURE,
+    UMI_BANK_CARD_VOID,
+    UMI_BANK_CARD_REFUND,
+    UMI_BANK_RECONCILE,
+    UMI_BANK_INTEREST_SUBMIT,
+    UMI_BANK_INTEREST_APPROVE,
+    UMI_BANK_INTEREST_REJECT,
+    UMI_BANK_INTEREST_CANCEL,
+    UMI_BANK_INTEREST_POST,
+    UMI_BANK_INTEREST_REVERSE,
+    UMI_BANK_CHARGE_SUBMIT = 29,
+    UMI_BANK_CHARGE_APPROVE,
+    UMI_BANK_CHARGE_REJECT,
+    UMI_BANK_CHARGE_CANCEL,
+    UMI_BANK_CHARGE_POST,
+    UMI_BANK_CHARGE_REVERSE,
+    UMI_BANK_RECONCILIATION_RESOLVE = 35,
+    UMI_BANK_RECONCILIATION_REOPEN
+} UmiBankAction;
 
 /** Form metadata identifies the only payload fields accepted by an action.
  * This keeps GTK and other frontends aligned with the command boundary. */
@@ -169,7 +249,15 @@ typedef struct UmiBankInterestTerms {
     uint32_t dayCountBasis;
 } UmiBankInterestTerms;
 #define UMI_BANK_FIELD_INTEREST UINT32_C(64)
+/* The action boundary now includes the reviewed charge lifecycle, allowing the same validator, codec and native action model to recognise it. The previous implementation remains for engineering review. */
+#if 0
 #define UMI_BANK_ACTION_LAST UMI_BANK_INTEREST_REVERSE
+#endif
+/* The shared action boundary includes resolution and reopening so validation, replay and native forms recognise the same complete contract. The previous implementation remains for engineering review. */
+#if 0
+#define UMI_BANK_ACTION_LAST UMI_BANK_CHARGE_REVERSE
+#endif
+#define UMI_BANK_ACTION_LAST UMI_BANK_RECONCILIATION_REOPEN
 
 typedef struct UmiBankCommand {
     UmiBankAction action;
@@ -270,6 +358,15 @@ typedef struct UmiBankAuditEvent {
     UmiBankCommand command;
 } UmiBankAuditEvent;
 
+/** Original comparison facts never change. A separate disposition records
+ * investigation of an unmatched comparison. Matching records remain UNREVIEWED
+ * because they are evidence, not breaks requiring resolution. */
+typedef enum UmiBankReconciliationDisposition {
+    UMI_BANK_RECONCILIATION_UNREVIEWED = 0,
+    UMI_BANK_RECONCILIATION_RESOLVED = 1,
+    UMI_BANK_RECONCILIATION_REOPENED = 2
+} UmiBankReconciliationDisposition;
+
 typedef struct UmiBankReconciliation {
     UmiFinancialId id;
     UmiFinancialId accountId;
@@ -277,6 +374,14 @@ typedef struct UmiBankReconciliation {
     UmiMoney bookedBalance;
     uint64_t revision;
     bool matched;
+    /* Appended review state: rebuild all consumers with this snapshot layout.
+     * Reopening retains the last evidence ID; reason/actor/revision describe
+     * the latest action. The event log retains every earlier disposition. */
+    UmiBankReconciliationDisposition disposition;
+    UmiFinancialId evidenceId;
+    UmiFinancialId reviewedBy;
+    char reviewReason[UMI_FINANCE_NAME_CAPACITY];
+    uint64_t reviewedRevision;
 } UmiBankReconciliation;
 
 typedef struct UmiBankCounts {
@@ -292,6 +397,7 @@ typedef struct UmiBankCounts {
     uint64_t revision;
     bool durable;
     size_t interestRequests;
+    size_t chargeRequests;
 } UmiBankCounts;
 
 /** An interest request uses the established pending/approved/rejected/
@@ -311,6 +417,27 @@ typedef struct UmiBankInterestRequest {
     uint64_t postedRevision;
     uint64_t reversedRevision;
 } UmiBankInterestRequest;
+
+/** A fixed, explicit local-practice account charge. Submission captures the
+ * complete amount, reference and reason; approval never recalculates them.
+ * No funds are reserved. Posting rechecks the account/customer and available
+ * funds. A compensating journal reverses the full amount once. PENDING,
+ * APPROVED and EXECUTED requests make (account, reference) unique; rejected,
+ * cancelled or reversed requests permit a corrected request with a new ID.
+ * This is not scheduled billing, percentage pricing, tax or an external fee. */
+typedef struct UmiBankChargeRequest {
+    UmiFinancialId id;
+    UmiFinancialId referenceId;
+    UmiFinancialId accountId;
+    UmiFinancialId makerId;
+    UmiFinancialId checkerId;
+    char reason[UMI_FINANCE_NAME_CAPACITY];
+    UmiMoney amount;
+    UmiBankTransferState state;
+    uint64_t submittedRevision;
+    uint64_t postedRevision;
+    uint64_t reversedRevision;
+} UmiBankChargeRequest;
 
 typedef struct UmiBankStatementLine {
     uint64_t revision;
@@ -370,6 +497,13 @@ UmiStatus UmiBankOperationsStatement(const UmiBankOperations *operations,
  * separate commands; both use the same serial service, review and persistence. */
 UmiStatus UmiBankOperationsInterestAt(const UmiBankOperations *operations,
     size_t index, UmiBankInterestRequest *outRequest);
+/** Copy one retained charge request. Submit uses ownerId as the charge
+ * reference, sourceAccountId as the charged account, name as its reason, and
+ * a positive amount in that account's exact currency/scale. Later actions use
+ * the request's entity ID with no payload fields. Makers need PAYMENTS,
+ * separate checkers APPROVE, and posting/reversal needs OPERATE. */
+UmiStatus UmiBankOperationsChargeAt(const UmiBankOperations *operations,
+    size_t index, UmiBankChargeRequest *outRequest);
 UmiStatus UmiBankOperationsCustomerAt(const UmiBankOperations *operations,
     size_t index, UmiBankCustomer *outCustomer);
 UmiStatus UmiBankOperationsAccountAt(const UmiBankOperations *operations,

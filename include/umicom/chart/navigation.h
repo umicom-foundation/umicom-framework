@@ -9,6 +9,7 @@
 #ifndef UMICOM_CHART_NAVIGATION_H
 #define UMICOM_CHART_NAVIGATION_H
 #include "umicom/chart/plot.h"
+#include "umicom/chart/timeframe.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -19,6 +20,9 @@ typedef struct UmiChartNavigation {
     size_t visible_bars;
     int64_t anchor_ms;
     int pinned;
+    /* Appended presentation setting: zero keeps the provider's source candles.
+     * Rebuild consumers; older prebuilt struct layouts are not ABI-compatible. */
+    uint32_t interval_ms;
 } UmiChartNavigation;
 typedef struct UmiChartWindow { size_t first; size_t count; } UmiChartWindow;
 UmiStatus UmiChartNavigationResolve(const UmiChartNavigation *navigation,

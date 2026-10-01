@@ -16,6 +16,8 @@ struct UmiBankReview {
     UmiBankAuditEvent *history;
 };
 
+/* Canonical event comparison now belongs to one internal Framework helper shared by command reviews and retained work queues. The previous implementation remains for engineering review. */
+#if 0
 static UmiStatus SameEvent(const UmiBankAuditEvent *a, const UmiBankAuditEvent *b, bool *same)
 {
     char left[BANK_RECORD_TEXT_CAPACITY], right[BANK_RECORD_TEXT_CAPACITY];
@@ -24,6 +26,11 @@ static UmiStatus SameEvent(const UmiBankAuditEvent *a, const UmiBankAuditEvent *
     if (status == UMI_STATUS_OK) status = BankEncode(b, right, sizeof right);
     if (status == UMI_STATUS_OK) *same = strcmp(left, right) == 0;
     return status;
+}
+#endif
+static UmiStatus SameEvent(const UmiBankAuditEvent *a,const UmiBankAuditEvent *b,bool *same)
+{
+    return BankEventSame(a,b,same);
 }
 
 static bool SameBalance(const UmiBankBalance *a, const UmiBankBalance *b)
@@ -90,6 +97,21 @@ UmiStatus UmiBankOperationsReview(const UmiBankOperations *operations,
         else memcpy(review->history, before->events, before->counts.events * sizeof *review->history);
     }
     if (status == UMI_STATUS_OK) status = ProjectAccounts(before, after, &review->snapshot);
+    /* A release/void command carries only an ID. Copy resolved hold economics
+     * into the common review so every frontend can explain the same transition. */
+    if (status == UMI_STATUS_OK && (command->action == UMI_BANK_HOLD_PLACE ||
+        command->action == UMI_BANK_HOLD_RELEASE || (command->action >= UMI_BANK_CARD_AUTHORISE &&
+        command->action <= UMI_BANK_CARD_REFUND))) {
+        int oldIndex = BankFindHold(before, command->id.value);
+        int newIndex = BankFindHold(after, command->id.value);
+        if (newIndex < 0) status = UMI_STATUS_INVALID_STATE;
+        else {
+            review->snapshot.hasHold = true;
+            review->snapshot.holdExistedBefore = oldIndex >= 0;
+            if (oldIndex >= 0) review->snapshot.holdBefore = before->holds[oldIndex];
+            review->snapshot.holdAfter = after->holds[newIndex];
+        }
+    }
     /* Approval reviews need the resolved economics even without a new journal.
      * A beneficiary reference alone is not a complete description of a payment. */
     if (status == UMI_STATUS_OK && command->action >= UMI_BANK_TRANSFER_SUBMIT &&
@@ -118,6 +140,20 @@ UmiStatus UmiBankOperationsReview(const UmiBankOperations *operations,
             review->snapshot.interestAfter = after->interestRequests[newIndex];
         }
     }
+    /* Later charge actions have an empty payload. Resolve the immutable
+     * submitted amount, account and reason so approval is always informed. */
+    if (status == UMI_STATUS_OK && command->action >= UMI_BANK_CHARGE_SUBMIT &&
+        command->action <= UMI_BANK_CHARGE_REVERSE) {
+        int oldIndex = BankFindCharge(before, command->id.value);
+        int newIndex = BankFindCharge(after, command->id.value);
+        if (newIndex < 0) status = UMI_STATUS_INVALID_STATE;
+        else {
+            review->snapshot.hasCharge = true;
+            review->snapshot.chargeExistedBefore = oldIndex >= 0;
+            if (oldIndex >= 0) review->snapshot.chargeBefore = before->chargeRequests[oldIndex];
+            review->snapshot.chargeAfter = after->chargeRequests[newIndex];
+        }
+    }
     if (status == UMI_STATUS_OK && after->counts.journals > before->counts.journals) {
         if (after->counts.journals != before->counts.journals + 1U) status = UMI_STATUS_INVALID_STATE;
         else {
@@ -128,6 +164,27 @@ UmiStatus UmiBankOperationsReview(const UmiBankOperations *operations,
     if (status == UMI_STATUS_OK && after->counts.reconciliations > before->counts.reconciliations) {
         review->snapshot.hasReconciliation = true;
         review->snapshot.reconciliation = after->reconciliations[before->counts.reconciliations];
+    }
+    /* Resolve/reopen retains the record count, so count growth alone cannot
+     * describe this transition. Evidence is copied into the owned review. */
+    if (status == UMI_STATUS_OK && (command->action == UMI_BANK_RECONCILIATION_RESOLVE ||
+        command->action == UMI_BANK_RECONCILIATION_REOPEN)) {
+        int oldIndex = BankFindReconciliation(before, command->id.value);
+        int newIndex = BankFindReconciliation(after, command->id.value);
+        if (oldIndex < 0 || newIndex < 0) status = UMI_STATUS_INVALID_STATE;
+        else {
+            review->snapshot.hasReconciliation = true;
+            review->snapshot.reconciliationExistedBefore = true;
+            review->snapshot.reconciliationBefore = before->reconciliations[oldIndex];
+            review->snapshot.reconciliation = after->reconciliations[newIndex];
+            const char *evidenceId = command->action == UMI_BANK_RECONCILIATION_RESOLVE ?
+                command->ownerId.value : after->reconciliations[newIndex].evidenceId.value;
+            int evidenceIndex = BankFindReconciliation(after, evidenceId);
+            if (evidenceIndex >= 0) {
+                review->snapshot.hasReconciliationEvidence = true;
+                review->snapshot.reconciliationEvidence = after->reconciliations[evidenceIndex];
+            }
+        }
     }
     free(candidate);
     if (status != UMI_STATUS_OK) { UmiBankReviewDestroy(review); return status; }
@@ -178,6 +235,8 @@ UmiStatus UmiBankOperationsExecuteReviewed(UmiBankOperations *operations,
     status = UmiBankReviewMatches(review, actor, &review->snapshot.command, &same);
     if (status != UMI_STATUS_OK) return status;
     if (!same) return UMI_STATUS_PERMISSION_DENIED;
+/* Reviewed execution and queue selection share complete history comparison, including equivalent-revision histories from different stores. The previous implementation remains for engineering review. */
+#if 0
     if (operations->state->counts.revision != review->snapshot.before.revision ||
         operations->state->counts.events != review->snapshot.before.events)
         return UMI_STATUS_BUSY;
@@ -186,6 +245,10 @@ UmiStatus UmiBankOperationsExecuteReviewed(UmiBankOperations *operations,
         if (status != UMI_STATUS_OK) return status;
         if (!same) return UMI_STATUS_BUSY;
     }
+#endif
+    status = BankHistoryMatches(operations->state, review->snapshot.before.revision,
+        review->history, review->snapshot.before.events);
+    if (status != UMI_STATUS_OK) return status;
     /* Re-run the canonical transition and atomically validate stored history.
      * A review supplies no alternative commit or balance implementation. */
     return UmiBankOperationsExecute(operations, actor, &review->snapshot.command, outReceipt);

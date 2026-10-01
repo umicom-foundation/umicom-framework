@@ -42,6 +42,7 @@ static BankUi *Create(GtkWidget **window)
     GtkWidget *widgets[]={GTK_WIDGET(ui->action),GTK_WIDGET(ui->identity),GTK_WIDGET(ui->recordState),GTK_WIDGET(ui->submit),GTK_WIDGET(ui->message),GTK_WIDGET(ui->summary),GTK_WIDGET(ui->hint),GTK_WIDGET(ui->pages)};
     for(size_t i=0;i<G_N_ELEMENTS(widgets);++i) gtk_box_append(GTK_BOX(box),widgets[i]);
     g_signal_connect_object(ui->identity,"notify::selected",G_CALLBACK(ReviewSelectionChanged),G_OBJECT(ui->window),0);
+    ui->chargeRequests=Page(ui->pages,"Charges");
     Refresh(ui); return ui;
 }
 static void Action(BankUi *ui,UmiBankAction action,guint actor)
@@ -59,9 +60,59 @@ static void Apply(BankUi *ui)
 { ReviewCommand(NULL,ui->window); CHECK(ui->review!=NULL); Submit(NULL,ui->window); CHECK(ui->review==NULL); }
 static bool Contains(GtkTextBuffer *buffer,const char *needle)
 { GtkTextIter start,end; gtk_text_buffer_get_bounds(buffer,&start,&end); char *text=gtk_text_buffer_get_text(buffer,&start,&end,FALSE); bool found=strstr(text,needle)!=NULL; g_free(text); return found; }
+/* Exercise the real CSV handler with the same in-memory GTK fixture. */
+static char *ReportClipboard(GdkClipboard *clipboard)
+{
+    GValue value = G_VALUE_INIT; g_value_init(&value, G_TYPE_STRING);
+    GdkContentProvider *provider = gdk_clipboard_get_content(clipboard);
+    CHECK(provider != NULL && gdk_content_provider_get_value(provider, &value, NULL));
+    char *text = g_value_dup_string(&value); g_value_unset(&value); CHECK(text != NULL); return text;
+}
+static int VerifyStatementCsv(const char *kind)
+{
+    GtkWidget *window; BankUi *ui = Create(&window);
+    GtkWidget *copy = gtk_button_new_with_label("Copy CSV test");
+    gtk_box_append(GTK_BOX(gtk_window_get_child(GTK_WINDOW(window))), copy); g_object_ref(copy);
+    g_signal_connect_object(copy, "clicked", G_CALLBACK(CopyStatementCsv), G_OBJECT(window), 0);
+    gtk_editable_set_text(GTK_EDITABLE(ui->statementAccount), "account");
+    gtk_editable_set_text(GTK_EDITABLE(ui->statementFirst), "1");
+    gtk_editable_set_text(GTK_EDITABLE(ui->statementLast), "3");
+    GdkClipboard *clipboard = g_object_ref(gtk_widget_get_clipboard(copy));
+    gdk_clipboard_set_text(clipboard, "unchanged");
+    if (strcmp(kind, "csv-invalid") == 0) gtk_editable_set_text(GTK_EDITABLE(ui->statementFirst), "9");
+    g_signal_emit_by_name(copy, "clicked");
+    char *text = ReportClipboard(clipboard);
+    if (strcmp(kind, "csv-invalid") == 0) CHECK(strcmp(text, "unchanged") == 0);
+    else CHECK(strstr(text, "LOCAL PRACTICE") != NULL && strstr(text, "\"100000\"") != NULL);
+    g_free(text);
+    UmiBankCounts counts; OK(UmiBankOperationsCounts(ui->operations, &counts)); CHECK(counts.revision == 3);
+    gtk_window_destroy(GTK_WINDOW(window));
+    if (strcmp(kind, "csv-retained") == 0) {
+        CHECK(ui->closed && ui->operations == NULL);
+        gdk_clipboard_set_text(clipboard, "closed-window-sentinel");
+        g_signal_emit_by_name(copy, "clicked"); text = ReportClipboard(clipboard);
+        CHECK(strcmp(text, "closed-window-sentinel") == 0); g_free(text);
+    }
+    g_object_unref(window); g_object_unref(copy); g_object_unref(clipboard); return 0;
+}
+
+#include "../bank_charges/native_cases.inc"
+#include "../bank_queue/native_cases.inc"
+#include "../bank_reconciliation/native_cases.inc"
+#include "../bank_activity/native_cases.inc"
+#include "../bank_reservations/native_cases.inc"
+#include "../bank_audit/native_cases.inc"
+
 int main(int argc,char **argv)
 {
     CHECK(argc==2); if(!gtk_init_check())return 77;
+    if (strncmp(argv[1], "audit-", 6) == 0) return VerifyNativeAudit(argv[1]);
+    if (strncmp(argv[1], "reservations-", 13) == 0) return VerifyNativeReservations(argv[1]);
+    if (strncmp(argv[1], "activity-", 9) == 0) return VerifyNativeActivity(argv[1]);
+    if (strncmp(argv[1], "reconciliation-", 15) == 0) return VerifyNativeReconciliation(argv[1]);
+    if (strncmp(argv[1], "queue-", 6) == 0) return VerifyNativeQueue(argv[1]);
+    if (strncmp(argv[1], "csv", 3) == 0) return VerifyStatementCsv(argv[1]);
+    if (strncmp(argv[1], "charge-", 7) == 0) return VerifyNativeCharge(argv[1]);
     GtkWidget *window; BankUi *ui=Create(&window); Fixture f={0}; f.bank=ui->operations;
     Action(ui,UMI_BANK_INTEREST_SUBMIT,0);
     if(strcmp(argv[1],"form")==0){

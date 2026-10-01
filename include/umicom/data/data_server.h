@@ -106,6 +106,9 @@ const char *umi_data_server_backend_name(const UmiDataServer *server);
 /**
  * Provide the data server begin operation used by this module and its client applications.
  */
+/* SQLite BUSY and LOCKED results report UMI_STATUS_BUSY through the shared
+ * operation error mapping. They do not imply damaged records. A failed begin
+ * does not acquire transaction ownership; the caller may retry later. */
 UmiStatus umi_data_server_begin(UmiDataServer *server);
 /**
  * Provide the data server commit operation used by this module and its client
