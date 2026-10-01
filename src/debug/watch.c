@@ -240,8 +240,17 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_debug_watch_registry_capture,
 
 /* Share reviewed insertion/removal publication with other value registries.
  * Domain-specific field rules stay in this owner's existing operations. */
+/* Use the registry value type so publication can coexist with the opaque
+ * UmiDebugWatchEdit workspace handle. Staging, validation and rollback
+ * still use the same shared implementation. The former instantiation remains
+ * disabled for review of the type correction; no edit behaviour is removed. */
+#if 0
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_debug_watch_registry_edit_if_current,
     UmiDebugWatchRegistry, UmiDebugWatchSnapshot, UmiDebugWatchEdit,
+    umi_debug_watch_snapshot_validate, umi_debug_watch_registry_upsert, umi_debug_watch_registry_remove, UMI_DEBUG_WATCH_CAPACITY)
+#endif
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_debug_watch_registry_edit_if_current,
+    UmiDebugWatchRegistry, UmiDebugWatchSnapshot, UmiDebugWatchRegistryEdit,
     umi_debug_watch_snapshot_validate, umi_debug_watch_registry_upsert, umi_debug_watch_registry_remove, UMI_DEBUG_WATCH_CAPACITY)
 
 /* Read accepted watch records in bounded pages. The shared

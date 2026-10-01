@@ -67,6 +67,58 @@ ctest --test-dir build -R "^safe-values-lesson$" --output-on-failure</code></pre
 <code>UmicomFramework</code>, check the installation prefix. A missing symbol usually means the linked library
 and public headers were installed from different source states: rebuild and reinstall the same Framework
 checkout together. A failed status check prints a failing test or nonzero process exit; do not treat it as success.</p>
+<h2>Recover from missing functions during linking</h2>
+<p>An <code>undefined reference</code> means a caller was compiled, but the selected library does not
+provide a function that caller needs. If the complete matching source contains that function, an older
+object or archive may still be in the build folder. A recently written archive can still contain older objects.</p>
+<ol><li>Finish comparing and copying all matching headers, sources and CMake files before starting a build.
+Do not copy another source update into the checkout while a build is running.</li>
+<li>Run the configure command for your existing build preset again. Framework calculates a content identity
+for the value-owner implementations and their shared private helpers. Changed contents change those libraries'
+compile commands even when a copied file retains an earlier timestamp.</li>
+<li>Build that preset and stop if it fails. On GNU and Clang toolchains, the normal build also checks the real
+archives for the required constructor and page functions. Reports are written under the build folder's
+<code>link-reports</code> directory and name the library and missing function.</li>
+<li>Run CTest only after the build succeeds. A failed build can leave old executables alongside missing new
+ones, so testing that mixed folder does not qualify the current source.</li></ol>
+<p>After a timestamp-preserving copy, an explicit configure remains necessary. The content check runs during
+configuration; it is not a background file watcher. If an archive still lacks a function after that rebuild,
+compare the source file and owning target named in the report before changing the implementation. Do not
+add a dummy function or skip the affected tests to make linking succeed.</p>
+<h2>Rebuild changed sources and save the build output</h2>
+<p>Keep using the same configured build folder. Ninja recompiles changed source files and the files that
+depend on changed headers, then relinks affected libraries and programs. A shared public header, compiler
+option or toolchain change can require a wider rebuild. Do not delete the build folder for an ordinary edit.</p>
+<p>Framework gives each participating source file its own implementation content identity. A private header
+or included implementation fragment changes the identities of sources that include it. This preserves
+incremental rebuilding after timestamp-preserving copies when you run configure again. The first build after
+enabling these identities recompiles participating sources once because their compiler commands change.</p>
+<ol><li>Finish copying the complete source, including <code>.inc</code> fragments, then configure your usual preset.</li>
+<li>From the Applications repository, run the build and keep its output visible while saving a full log:</li></ol>
+<pre><code>&amp; "C:\msys64\ucrt64\bin\cmake.exe" --build --preset windows-ucrt64-all-debug --parallel 2 -- -k 0 2&gt;&amp;1 |
+    Tee-Object -FilePath ".\build\windows-ucrt64-all-debug\build.log"</code></pre>
+<p><code>2&gt;&amp;1</code> sends diagnostic output into the same stream as progress.
+<code>Tee-Object</code> displays that stream and writes it to the log. Ninja may buffer an individual compiler
+command until it finishes. The file includes warnings, errors and their surrounding context; each invocation
+replaces the previous log. Copy a log you need to retain before starting another build.</p>
+<p>For the OS repository, use its <code>gtk4-debug</code> preset and
+<code>.\build\gtk4-debug\build.log</code>. Check <code>$LASTEXITCODE</code> after the pipeline;
+zero means the native build command succeeded. Run tests only after a successful build.</p>
+<p>If configuration reports a missing testing source, restore the matching file named in the message.
+Framework's root <code>Testing</code> output directory is ignored, while product directories such as
+<code>src/testing</code> remain visible to Git. Do not remove the include or disable the parser to bypass
+an incomplete source delivery.</p>
+<h2>Choose the debugger edit type for its owner</h2>
+<p><code>UmiDebugBreakpointRegistryEdit</code> and <code>UmiDebugWatchRegistryEdit</code> are plain values
+containing an edit kind and a snapshot. Supply them to the corresponding
+<code>_registry_edit_if_current</code> function when publishing a reviewed registry change.</p>
+<p><code>UmiDebugBreakpointEdit</code> and <code>UmiDebugWatchEdit</code> are opaque workspace handles.
+Obtain a handle through its <code>EditCapture</code> function and release it through <code>EditDestroy</code>.
+A handle retains the selected row and workspace generations so a stale property dialog cannot overwrite
+newer state. A registry publication invalidates an older handle; capture a fresh handle before editing again.</p>
+<p>Code that used the colliding registry value names must use the explicit <code>RegistryEdit</code> names.
+The workspace functions and registry publication function names remain unchanged. Keep these types separate
+when extending debugger features: they have different ownership and validation responsibilities.</p>
 <h2>Extend a record or registry</h2>
 <p>Keep reusable ownership rules in Framework. When adding a field, extend its validator and its member-level
 regression comparison. Add fixed text members to bounded validation. Do not apply the value-copy helpers to

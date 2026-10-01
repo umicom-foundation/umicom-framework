@@ -22,6 +22,9 @@ if(BUILD_TESTING)
         endforeach()
     endfunction()
     umicom_watch_cases(edit apply disable reenable noop remove ownership bounds invalid unrelated changed reuse owner session configuration)
+    # Compile both public edit types together and confirm that a registry
+    # publication invalidates a retained workspace proposal without altering it.
+    umicom_watch_cases(registry upsert remove)
     umicom_watch_cases(reply valid empty unicode missing wrong-result wrong-type wrong-body duplicate duplicate-type duplicate-body nul surrogate long-result long-type boundary)
     umicom_watch_cases(json_text ascii raw-utf8 pair escaped-slash nul low high overlong continuation range capacity bad-pair raw-control invalid-token empty)
     if(TARGET umicom-dap-protocol-fixture)

@@ -1,0 +1,18 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/link_contracts/umicom_editor_values.symbols
+# PURPOSE: Require the public value functions from their owning archive.
+# AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+# LICENCE: MIT
+#-----------------------------------------------------------------------------
+umi_editor_code_action_registry_read_page
+umi_editor_completion_registry_read_page
+umi_editor_configuration_registry_read_page
+umi_editor_cursor_registry_read_page
+umi_editor_diagnostic_registry_read_page
+umi_editor_diff_hunk_registry_read_page
+umi_editor_document_registry_read_page
+umi_editor_fold_region_registry_read_page
+umi_editor_marker_registry_read_page
+umi_editor_selection_range_registry_read_page
+umi_editor_symbol_registry_read_page

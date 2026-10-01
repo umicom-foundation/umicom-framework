@@ -149,6 +149,14 @@ UmiStatus umi_debug_breakpoint_registry_replace_if_current(UmiDebugBreakpointReg
     UmiSnapshotBatchResult *out_result);
 
 
+/* The registry proposal previously reused UmiDebugBreakpointEdit, which already
+ * names an opaque workspace edit handle. Both APIs are included by debugger
+ * clients, so C cannot give that name two different layouts. Keep the former
+ * declaration disabled for review. UmiDebugBreakpointRegistryEdit below names
+ * the caller-owned value; the workspace handle and its functions stay intact.
+ * New registry fields belong in the value record and its validator, not in
+ * the retained handle that also owns workspace generation evidence. */
+#if 0
 /** One reviewed change. For REMOVE, initialise item.id; its other fields are
  * ignored. For UPSERT, supply a complete record under the usual domain rules.
  * The edit remains caller-owned and is never changed by publication. */
@@ -171,6 +179,32 @@ typedef struct UmiDebugBreakpointEdit {
  * staging allocates one registry and performs no I/O or external callbacks. */
 UmiStatus umi_debug_breakpoint_registry_edit_if_current(UmiDebugBreakpointRegistry *registry,
     uint64_t expected_revision, const UmiDebugBreakpointEdit *edits, size_t count,
+    UmiSnapshotBatchResult *out_result);
+
+#endif
+
+/** One reviewed change. For REMOVE, initialise item.id; its other fields are
+ * ignored. For UPSERT, supply a complete record under the usual domain rules.
+ * The edit remains caller-owned and is never changed by publication. */
+typedef struct UmiDebugBreakpointRegistryEdit {
+    UmiSnapshotEditKind kind;
+    UmiDebugBreakpointSnapshot item;
+} UmiDebugBreakpointRegistryEdit;
+
+/** Apply this ordered list only if expected_revision still matches this owner.
+ * A stale review returns INVALID_STATE, including for an empty list. Each ID
+ * may appear once; duplicates return ALREADY_EXISTS. A missing removal returns
+ * NOT_FOUND. Upserts retain normal field normalisation and capacity checks;
+ * when full, remove an existing row before adding its replacement.
+ * At most twice UMI_DEBUG_BREAKPOINT_CAPACITY edits are accepted. Success publishes
+ * all changes together, advances once, and stamps every remaining row with
+ * that revision. An empty current list is a no-op. Every refusal preserves
+ * the previous collection. out_result is optional and identifies a rejected
+ * edit where possible; validation describes text and duplicate-ID errors.
+ * Inputs/result must not overlap each other or the owner. Serialize access;
+ * staging allocates one registry and performs no I/O or external callbacks. */
+UmiStatus umi_debug_breakpoint_registry_edit_if_current(UmiDebugBreakpointRegistry *registry,
+    uint64_t expected_revision, const UmiDebugBreakpointRegistryEdit *edits, size_t count,
     UmiSnapshotBatchResult *out_result);
 
 /** Read up to capacity records starting at offset, at expected_revision.

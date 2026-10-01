@@ -1145,6 +1145,7 @@ add_library(umicom_testing STATIC
     src/testing/report.c
     src/testing/ctest_adapter.c
 )
+include(cmake/UmicomTestingSourceInputs.cmake)
 add_library(Umicom::testing ALIAS umicom_testing)
 set_target_properties(umicom_testing PROPERTIES EXPORT_NAME testing)
 target_link_libraries(umicom_testing PUBLIC
@@ -5554,3 +5555,8 @@ include(cmake/UmicomDrawingHistory.cmake)
 if(FALSE)
 include(cmake/UmicomBankAudit.cmake)
 endif()
+
+# Compute implementation identities after all source-contributing modules.
+# Copied source contents then invalidate old owner objects even when their
+# modification times predate those objects. Public-header checks remain active.
+include(cmake/UmicomValueOwnerBuildChecks.cmake)

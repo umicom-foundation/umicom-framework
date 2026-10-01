@@ -1,0 +1,13 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/link_contracts/umicom_designer_values.symbols
+# PURPOSE: Require the public value functions from their owning archive.
+# AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+# LICENCE: MIT
+#-----------------------------------------------------------------------------
+umi_designer_action_binding_registry_read_page
+umi_designer_alignment_registry_read_page
+umi_designer_clipboard_registry_read_page
+umi_designer_property_schema_registry_read_page
+umi_designer_signal_binding_registry_read_page
+umi_designer_template_palette_registry_read_page

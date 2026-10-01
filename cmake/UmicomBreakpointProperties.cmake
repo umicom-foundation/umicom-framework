@@ -20,6 +20,9 @@ if(BUILD_TESTING)
         endforeach()
     endfunction()
     umicom_breakpoint_cases(edit apply clear disable noop remove ownership bounds invalid unrelated changed reuse owner session configuration)
+    # Compile both public edit types together and confirm that a registry
+    # publication invalidates a retained workspace proposal without altering it.
+    umicom_breakpoint_cases(registry upsert remove)
     umicom_breakpoint_cases(reply mapping short extra late-invalid stale changed-request duplicate disabled-request)
     umicom_breakpoint_cases(protocol capabilities disabled request invalid-request missing-verified wrong-verified wrong-array negative-line overflow-line wrong-row excess-count)
     target_sources(umicom-breakpoint-properties-protocol-test PRIVATE

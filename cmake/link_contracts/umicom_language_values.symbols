@@ -1,0 +1,33 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/link_contracts/umicom_language_values.symbols
+# PURPOSE: Require the public value functions from their owning archive.
+# AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+# LICENCE: MIT
+#-----------------------------------------------------------------------------
+umi_language_code_action_registry_read_page
+umi_language_completion_registry_read_page
+umi_language_definition_registry_read_page
+umi_language_diagnostic_registry_read_page
+umi_language_document_registry_read_page
+umi_language_folding_range_registry_read_page
+umi_language_formatting_registry_read_page
+umi_language_hover_registry_read_page
+umi_language_inlay_hint_registry_read_page
+umi_language_intelligence_code_lens_init_checked
+umi_language_intelligence_colour_presentation_init_checked
+umi_language_intelligence_document_link_init_checked
+umi_language_intelligence_file_watch_registration_init_checked
+umi_language_intelligence_inline_value_init_checked
+umi_language_intelligence_moniker_init_checked
+umi_language_intelligence_notebook_document_init_checked
+umi_language_intelligence_provider_descriptor_init_checked
+umi_language_intelligence_request_scheduler_init_checked
+umi_language_intelligence_workspace_configuration_init_checked
+umi_language_intelligence_workspace_folder_init_checked
+umi_language_provider_registry_read_page
+umi_language_reference_registry_read_page
+umi_language_rename_registry_read_page
+umi_language_semantic_token_registry_read_page
+umi_language_signature_registry_read_page
+umi_language_symbol_registry_read_page

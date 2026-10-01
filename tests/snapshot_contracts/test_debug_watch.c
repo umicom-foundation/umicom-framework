@@ -62,7 +62,12 @@ static void ContractPayload(UmiDebugWatchSnapshot *item)
 #define CONTRACT_CAPTURE umi_debug_watch_registry_capture
 #define CONTRACT_REPLACE_CURRENT umi_debug_watch_registry_replace_if_current
 /* Exercise mixed edits through this domain's public types and owner. */
+/* The previous binding selected the workspace handle's name. Retain it for
+ * review while the active binding exercises the distinct registry value. */
+#if 0
 #define CONTRACT_EDIT UmiDebugWatchEdit
+#endif
+#define CONTRACT_EDIT UmiDebugWatchRegistryEdit
 #define CONTRACT_EDIT_CURRENT umi_debug_watch_registry_edit_if_current
 /* Page checks use this domain's real owner and complete payload comparator. */
 #define CONTRACT_READ_PAGE umi_debug_watch_registry_read_page

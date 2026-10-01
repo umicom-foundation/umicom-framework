@@ -240,8 +240,17 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_debug_breakpoint_registry_capture,
 
 /* Share reviewed insertion/removal publication with other value registries.
  * Domain-specific field rules stay in this owner's existing operations. */
+/* Use the registry value type so publication can coexist with the opaque
+ * UmiDebugBreakpointEdit workspace handle. Staging, validation and rollback
+ * still use the same shared implementation. The former instantiation remains
+ * disabled for review of the type correction; no edit behaviour is removed. */
+#if 0
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_debug_breakpoint_registry_edit_if_current,
     UmiDebugBreakpointRegistry, UmiDebugBreakpointSnapshot, UmiDebugBreakpointEdit,
+    umi_debug_breakpoint_snapshot_validate, umi_debug_breakpoint_registry_upsert, umi_debug_breakpoint_registry_remove, UMI_DEBUG_BREAKPOINT_CAPACITY)
+#endif
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_debug_breakpoint_registry_edit_if_current,
+    UmiDebugBreakpointRegistry, UmiDebugBreakpointSnapshot, UmiDebugBreakpointRegistryEdit,
     umi_debug_breakpoint_snapshot_validate, umi_debug_breakpoint_registry_upsert, umi_debug_breakpoint_registry_remove, UMI_DEBUG_BREAKPOINT_CAPACITY)
 
 /* Read accepted breakpoint records in bounded pages. The shared

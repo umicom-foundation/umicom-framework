@@ -1,0 +1,15 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/link_contracts/umicom_chart_values.symbols
+# PURPOSE: Require the public value functions from their owning archive.
+# AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+# LICENCE: MIT
+#-----------------------------------------------------------------------------
+umi_chart_annotation_registry_read_page
+umi_chart_crosshair_registry_read_page
+umi_chart_drawing_registry_read_page
+umi_chart_extension_registry_read_page
+umi_chart_marker_registry_read_page
+umi_chart_pane_registry_read_page
+umi_chart_scale_registry_read_page
+umi_chart_stream_registry_read_page

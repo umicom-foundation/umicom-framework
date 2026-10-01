@@ -1,0 +1,20 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/link_contracts/umicom_debug_values.symbols
+# PURPOSE: Require the public value functions from their owning archive.
+# AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+# LICENCE: MIT
+#-----------------------------------------------------------------------------
+umi_debug_breakpoint_registry_read_page
+umi_debug_console_entry_registry_read_page
+umi_debug_event_registry_read_page
+umi_debug_exception_registry_read_page
+umi_debug_launch_configuration_registry_read_page
+umi_debug_module_registry_read_page
+umi_debug_scope_registry_read_page
+umi_debug_session_registry_read_page
+umi_debug_source_registry_read_page
+umi_debug_stack_frame_registry_read_page
+umi_debug_thread_registry_read_page
+umi_debug_variable_registry_read_page
+umi_debug_watch_registry_read_page

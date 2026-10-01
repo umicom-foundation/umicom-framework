@@ -66,7 +66,12 @@ static void ContractPayload(UmiDebugBreakpointSnapshot *item)
 #define CONTRACT_CAPTURE umi_debug_breakpoint_registry_capture
 #define CONTRACT_REPLACE_CURRENT umi_debug_breakpoint_registry_replace_if_current
 /* Exercise mixed edits through this domain's public types and owner. */
+/* The previous binding selected the workspace handle's name. Retain it for
+ * review while the active binding exercises the distinct registry value. */
+#if 0
 #define CONTRACT_EDIT UmiDebugBreakpointEdit
+#endif
+#define CONTRACT_EDIT UmiDebugBreakpointRegistryEdit
 #define CONTRACT_EDIT_CURRENT umi_debug_breakpoint_registry_edit_if_current
 /* Page checks use this domain's real owner and complete payload comparator. */
 #define CONTRACT_READ_PAGE umi_debug_breakpoint_registry_read_page

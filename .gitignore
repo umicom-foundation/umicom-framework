@@ -1,4 +1,4 @@
-﻿# =============================================================================
+# =============================================================================
 # Umicom Framework — local and generated content
 #
 # This file prevents generated output, workstation state and sensitive local
@@ -21,7 +21,13 @@
 /**/CMakeFiles/
 /**/CMakeCache.txt
 /**/CTestTestfile.cmake
-/**/Testing/
+# The recursive rule also matched source directories named testing on
+# case-insensitive hosts. The root-only rule below protects in-source CTest
+# output; the build and out rules above already protect configured build trees.
+# The former rule is retained for review so this source-publication failure
+# remains understandable when maintaining the ignore rules.
+# /**/Testing/
+/Testing/
 /**/.ninja_deps
 /**/.ninja_log
 /**/build.ninja
