@@ -140,6 +140,11 @@ UmiStatus umi_frontend_signal_registry_upsert(UmiFrontendSignalRegistry *registr
  */
 UmiStatus umi_frontend_signal_registry_remove(UmiFrontendSignalRegistry *registry, const char *id)
 {
+    /* A wrapped revision could make an old edit appear current again. Refuse
+     * mutation before touching records when no fresh revision is available. */
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -219,4 +224,12 @@ uint64_t umi_frontend_signal_registry_revision(const UmiFrontendSignalRegistry *
  * needed, and the original single-record implementation remains available. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_frontend_signal_registry_upsert_many,
     UmiFrontendSignalRegistry, UmiFrontendSignalSnapshot,
+    umi_frontend_signal_snapshot_validate, umi_frontend_signal_registry_upsert, UMI_FRONTEND_SIGNAL_CAPACITY)
+
+/* A captured collection can be reviewed or prepared elsewhere, then published
+ * on its owner only if no intervening edit changed this registry. Shared
+ * Framework staging preserves the existing field validation and normalisation.
+ * Extend the snapshot validator when adding fields; keep this owner value-only. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_frontend_signal_registry_capture,
+    umi_frontend_signal_registry_replace_if_current, UmiFrontendSignalRegistry, UmiFrontendSignalSnapshot,
     umi_frontend_signal_snapshot_validate, umi_frontend_signal_registry_upsert, UMI_FRONTEND_SIGNAL_CAPACITY)

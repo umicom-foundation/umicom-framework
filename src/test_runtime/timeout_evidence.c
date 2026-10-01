@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/test_runtime/timeout_evidence.h"
+#include "umicom/base/text.h"
 #include <string.h>
 
 /*
@@ -62,6 +63,8 @@ UmiStatus umi_test_runtime_timeout_evidence_validate(const UmiTestRuntimeTimeout
  * Provide the test runtime timeout evidence set name operation used by this module and its
  * client applications.
  */
+/* The shared text edit publishes a field and revision together. The former copy could clear the field on refusal; it is retained for engineering review. */
+#if 0
 UmiStatus umi_test_runtime_timeout_evidence_set_name(UmiTestRuntimeTimeoutEvidence *value, const char *name)
 {
     UmiStatus status;
@@ -75,11 +78,23 @@ UmiStatus umi_test_runtime_timeout_evidence_set_name(UmiTestRuntimeTimeoutEviden
     if (status == UMI_STATUS_OK) value->revision += 1U;
     return status;
 }
+#endif
+UmiStatus umi_test_runtime_timeout_evidence_set_name(UmiTestRuntimeTimeoutEvidence *value, const char *name)
+{
+    /* Publish name and its revision together. Reusing the
+     * Framework edit helper keeps an oversized or invalid value from clearing
+     * the previous field while leaving its observation token unchanged. */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_update(value->name, sizeof(value->name),
+                           name, &value->revision);
+}
 
 /*
  * Provide the test runtime timeout evidence set detail operation used by this module and
  * its client applications.
  */
+/* The shared text edit publishes a field and revision together. The former copy could clear the field on refusal; it is retained for engineering review. */
+#if 0
 UmiStatus umi_test_runtime_timeout_evidence_set_detail(UmiTestRuntimeTimeoutEvidence *value, const char *detail)
 {
     UmiStatus status;
@@ -93,13 +108,42 @@ UmiStatus umi_test_runtime_timeout_evidence_set_detail(UmiTestRuntimeTimeoutEvid
     if (status == UMI_STATUS_OK) value->revision += 1U;
     return status;
 }
+#endif
+UmiStatus umi_test_runtime_timeout_evidence_set_detail(UmiTestRuntimeTimeoutEvidence *value, const char *detail)
+{
+    /* Publish detail and its revision together. Reusing the
+     * Framework edit helper keeps an oversized or invalid value from clearing
+     * the previous field while leaving its observation token unchanged. */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_update(value->detail, sizeof(value->detail),
+                           detail, &value->revision);
+}
 
 /*
  * Provide the test runtime timeout evidence set elapsed ms operation used by this module
  * and its client applications.
  */
+/* Revision exhaustion is checked before changing the field. The former unchecked mutation is retained for engineering review. */
+#if 0
 UmiStatus umi_test_runtime_timeout_evidence_set_elapsed_ms(UmiTestRuntimeTimeoutEvidence *value, uint64_t number)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    value->elapsed_ms = number;
+    value->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_test_runtime_timeout_evidence_set_elapsed_ms(UmiTestRuntimeTimeoutEvidence *value, uint64_t number)
+{
+    /* Keep observation tokens monotonic: changing a field after the last
+     * usable revision would make an older observation appear current again. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -114,8 +158,27 @@ UmiStatus umi_test_runtime_timeout_evidence_set_elapsed_ms(UmiTestRuntimeTimeout
  * Provide the test runtime timeout evidence set budget ms operation used by this module
  * and its client applications.
  */
+/* Revision exhaustion is checked before changing the field. The former unchecked mutation is retained for engineering review. */
+#if 0
 UmiStatus umi_test_runtime_timeout_evidence_set_budget_ms(UmiTestRuntimeTimeoutEvidence *value, uint64_t number)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    value->budget_ms = number;
+    value->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_test_runtime_timeout_evidence_set_budget_ms(UmiTestRuntimeTimeoutEvidence *value, uint64_t number)
+{
+    /* Keep observation tokens monotonic: changing a field after the last
+     * usable revision would make an older observation appear current again. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -130,8 +193,27 @@ UmiStatus umi_test_runtime_timeout_evidence_set_budget_ms(UmiTestRuntimeTimeoutE
  * Provide the test runtime timeout evidence touch operation used by this module and its
  * client applications.
  */
+/* Revision exhaustion is checked before changing the field. The former unchecked mutation is retained for engineering review. */
+#if 0
 UmiStatus umi_test_runtime_timeout_evidence_touch(UmiTestRuntimeTimeoutEvidence *value, uint64_t updated_at_ms)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    value->updated_at_ms = updated_at_ms;
+    value->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_test_runtime_timeout_evidence_touch(UmiTestRuntimeTimeoutEvidence *value, uint64_t updated_at_ms)
+{
+    /* Keep observation tokens monotonic: changing a field after the last
+     * usable revision would make an older observation appear current again. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.

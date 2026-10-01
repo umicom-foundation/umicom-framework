@@ -141,6 +141,11 @@ UmiStatus umi_source_control_history_entry_registry_upsert(UmiSourceControlHisto
  */
 UmiStatus umi_source_control_history_entry_registry_remove(UmiSourceControlHistoryEntryRegistry *registry, const char *id)
 {
+    /* A wrapped revision could make an old edit appear current again. Refuse
+     * mutation before touching records when no fresh revision is available. */
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -223,4 +228,12 @@ void umi_source_control_history_entry_registry_clear(UmiSourceControlHistoryEntr
  * needed, and the original single-record implementation remains available. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_source_control_history_entry_registry_upsert_many,
     UmiSourceControlHistoryEntryRegistry, UmiSourceControlHistoryEntrySnapshot,
+    umi_source_control_history_entry_snapshot_validate, umi_source_control_history_entry_registry_upsert, UMI_SOURCE_CONTROL_HISTORY_ENTRY_CAPACITY)
+
+/* A captured collection can be reviewed or prepared elsewhere, then published
+ * on its owner only if no intervening edit changed this registry. Shared
+ * Framework staging preserves the existing field validation and normalisation.
+ * Extend the snapshot validator when adding fields; keep this owner value-only. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_source_control_history_entry_registry_capture,
+    umi_source_control_history_entry_registry_replace_if_current, UmiSourceControlHistoryEntryRegistry, UmiSourceControlHistoryEntrySnapshot,
     umi_source_control_history_entry_snapshot_validate, umi_source_control_history_entry_registry_upsert, UMI_SOURCE_CONTROL_HISTORY_ENTRY_CAPACITY)

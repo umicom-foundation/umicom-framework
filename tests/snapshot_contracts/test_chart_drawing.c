@@ -64,4 +64,8 @@ static void ContractPayload(UmiChartDrawingSnapshot *item)
     item->locked = (int)12U;
     item->visibility_flags = UMI_CHART_DRAWING_VISIBILITY_HIDDEN;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_chart_drawing_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_chart_drawing_registry_replace_if_current
 #include "snapshot_contract_cases.h"

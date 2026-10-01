@@ -139,6 +139,11 @@ UmiStatus umi_product_update_policy_registry_upsert(UmiProductUpdatePolicyRegist
  */
 UmiStatus umi_product_update_policy_registry_remove(UmiProductUpdatePolicyRegistry *registry, const char *id)
 {
+    /* A wrapped revision could make an old edit appear current again. Refuse
+     * mutation before touching records when no fresh revision is available. */
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -217,4 +222,12 @@ uint64_t umi_product_update_policy_registry_revision(const UmiProductUpdatePolic
  * for valid record normalisation; no application-side registry is introduced. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_product_update_policy_registry_upsert_many,
     UmiProductUpdatePolicyRegistry, UmiProductUpdatePolicySnapshot,
+    umi_product_update_policy_snapshot_validate, umi_product_update_policy_registry_upsert, UMI_PRODUCT_UPDATE_POLICY_CAPACITY)
+
+/* A captured collection can be reviewed or prepared elsewhere, then published
+ * on its owner only if no intervening edit changed this registry. Shared
+ * Framework staging preserves the existing field validation and normalisation.
+ * Extend the snapshot validator when adding fields; keep this owner value-only. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_product_update_policy_registry_capture,
+    umi_product_update_policy_registry_replace_if_current, UmiProductUpdatePolicyRegistry, UmiProductUpdatePolicySnapshot,
     umi_product_update_policy_snapshot_validate, umi_product_update_policy_registry_upsert, UMI_PRODUCT_UPDATE_POLICY_CAPACITY)

@@ -56,4 +56,8 @@ static void ContractPayload(UmiProductUpdatePolicySnapshot *item)
     item->allow_prerelease = (int)9U;
     item->require_signature = (int)10U;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_product_update_policy_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_product_update_policy_registry_replace_if_current
 #include "snapshot_contract_cases.h"

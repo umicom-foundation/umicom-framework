@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/test_runtime/launch_plan.h"
+#include "umicom/base/text.h"
 #include <string.h>
 
 /*
@@ -62,6 +63,8 @@ UmiStatus umi_test_runtime_launch_plan_validate(const UmiTestRuntimeLaunchPlan *
  * Provide the test runtime launch plan set name operation used by this module and its
  * client applications.
  */
+/* The shared text edit publishes a field and revision together. The former copy could clear the field on refusal; it is retained for engineering review. */
+#if 0
 UmiStatus umi_test_runtime_launch_plan_set_name(UmiTestRuntimeLaunchPlan *value, const char *name)
 {
     UmiStatus status;
@@ -75,11 +78,23 @@ UmiStatus umi_test_runtime_launch_plan_set_name(UmiTestRuntimeLaunchPlan *value,
     if (status == UMI_STATUS_OK) value->revision += 1U;
     return status;
 }
+#endif
+UmiStatus umi_test_runtime_launch_plan_set_name(UmiTestRuntimeLaunchPlan *value, const char *name)
+{
+    /* Publish name and its revision together. Reusing the
+     * Framework edit helper keeps an oversized or invalid value from clearing
+     * the previous field while leaving its observation token unchanged. */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_update(value->name, sizeof(value->name),
+                           name, &value->revision);
+}
 
 /*
  * Provide the test runtime launch plan set detail operation used by this module and its
  * client applications.
  */
+/* The shared text edit publishes a field and revision together. The former copy could clear the field on refusal; it is retained for engineering review. */
+#if 0
 UmiStatus umi_test_runtime_launch_plan_set_detail(UmiTestRuntimeLaunchPlan *value, const char *detail)
 {
     UmiStatus status;
@@ -93,13 +108,42 @@ UmiStatus umi_test_runtime_launch_plan_set_detail(UmiTestRuntimeLaunchPlan *valu
     if (status == UMI_STATUS_OK) value->revision += 1U;
     return status;
 }
+#endif
+UmiStatus umi_test_runtime_launch_plan_set_detail(UmiTestRuntimeLaunchPlan *value, const char *detail)
+{
+    /* Publish detail and its revision together. Reusing the
+     * Framework edit helper keeps an oversized or invalid value from clearing
+     * the previous field while leaving its observation token unchanged. */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_update(value->detail, sizeof(value->detail),
+                           detail, &value->revision);
+}
 
 /*
  * Return the number of records represented by test runtime launch plan set argument
  * without changing their state.
  */
+/* Revision exhaustion is checked before changing the field. The former unchecked mutation is retained for engineering review. */
+#if 0
 UmiStatus umi_test_runtime_launch_plan_set_argument_count(UmiTestRuntimeLaunchPlan *value, uint64_t number)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    value->argument_count = number;
+    value->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_test_runtime_launch_plan_set_argument_count(UmiTestRuntimeLaunchPlan *value, uint64_t number)
+{
+    /* Keep observation tokens monotonic: changing a field after the last
+     * usable revision would make an older observation appear current again. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -114,8 +158,27 @@ UmiStatus umi_test_runtime_launch_plan_set_argument_count(UmiTestRuntimeLaunchPl
  * Return the number of records represented by test runtime launch plan set environment
  * without changing their state.
  */
+/* Revision exhaustion is checked before changing the field. The former unchecked mutation is retained for engineering review. */
+#if 0
 UmiStatus umi_test_runtime_launch_plan_set_environment_count(UmiTestRuntimeLaunchPlan *value, uint64_t number)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    value->environment_count = number;
+    value->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_test_runtime_launch_plan_set_environment_count(UmiTestRuntimeLaunchPlan *value, uint64_t number)
+{
+    /* Keep observation tokens monotonic: changing a field after the last
+     * usable revision would make an older observation appear current again. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -130,8 +193,27 @@ UmiStatus umi_test_runtime_launch_plan_set_environment_count(UmiTestRuntimeLaunc
  * Provide the test runtime launch plan touch operation used by this module and its client
  * applications.
  */
+/* Revision exhaustion is checked before changing the field. The former unchecked mutation is retained for engineering review. */
+#if 0
 UmiStatus umi_test_runtime_launch_plan_touch(UmiTestRuntimeLaunchPlan *value, uint64_t updated_at_ms)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    value->updated_at_ms = updated_at_ms;
+    value->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_test_runtime_launch_plan_touch(UmiTestRuntimeLaunchPlan *value, uint64_t updated_at_ms)
+{
+    /* Keep observation tokens monotonic: changing a field after the last
+     * usable revision would make an older observation appear current again. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.

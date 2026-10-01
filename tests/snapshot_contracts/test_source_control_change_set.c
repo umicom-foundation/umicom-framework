@@ -54,4 +54,8 @@ static void ContractPayload(UmiSourceControlChangeSetSnapshot *item)
     item->change_count = (size_t)7U;
     item->active = (int)8U;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_source_control_change_set_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_source_control_change_set_registry_replace_if_current
 #include "snapshot_contract_cases.h"

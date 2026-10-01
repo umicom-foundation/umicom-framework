@@ -1,0 +1,94 @@
+<!doctype html>
+<!--
+Umicom Framework
+File: docs/REVIEWED_STATE_UPDATES.html
+PURPOSE: Explain how to review captured records and publish edits without losing newer work.
+AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+LICENCE: MIT
+-->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Review and publish state safely — Umicom Framework</title>
+<style>body{max-width:900px;margin:40px auto;padding:0 24px;font:17px/1.65 system-ui,sans-serif;color:#20313b;background:#fff}h1,h2{line-height:1.25}h2{margin-top:36px}code{background:#edf2f3;padding:2px 5px;border-radius:4px}pre{padding:18px;background:#edf2f3;overflow:auto}pre code{padding:0}li{margin:9px 0}a{color:#075c88}</style></head><body>
+<h1>Review and publish state safely</h1>
+<p>A background refresh can finish after a user has made another edit. If the refresh
+blindly replaces the displayed collection, the newer work disappears. Framework's
+value registries provide a capture and a checked replacement so an owner can detect
+that conflict before publishing anything.</p>
+<h2>Understand the three pieces</h2>
+<ul><li><strong>The registry</strong> owns the current ordered collection.</li>
+<li><strong>A capture</strong> is your own copy of its records, accompanied by a count
+and a revision. The revision is an observation token for that particular registry.</li>
+<li><strong>A proposal</strong> is the complete collection you want to publish after
+reviewing that capture. Publication succeeds only if the registry is still at the
+captured revision.</li></ul>
+<p>The APIs ending in <code>_registry_capture</code> and
+<code>_registry_replace_if_current</code> apply to the value registries whose public
+headers declare them. They do not automatically make other stores thread-safe.</p>
+<h2>Capture, review and publish</h2>
+<ol><li>On the thread that owns the registry, call its capture operation with
+<code>NULL</code> records and zero capacity to discover the required count.</li>
+<li>Allocate your record array and call capture again. Use the revision returned
+by this second call: the collection may have changed since the size query.
+If capacity is insufficient, the array is untouched and the returned count tells
+you how much space is required. Bound retries if another producer is busy.</li>
+<li>Prepare the proposed records in your own storage. Every record needs a unique,
+terminated ID. Existing field and domain checks still apply. Keep the registry's
+identity together with its revision when handing work to another component.</li>
+<li>Return to the owning thread and call checked replacement using the captured
+revision. On success the whole collection is replaced in the proposed order.</li>
+<li>If the result is <code>UMI_STATUS_INVALID_STATE</code>, stop and obtain a fresh
+capture. Show the conflict or review it again. An automatic retry using a newer
+revision would bypass the very protection this API provides.</li></ol>
+<pre><code>UmiSnapshotCapture capture;
+UmiBookmarkSnapshot proposal[1];
+UmiStatus status = umi_platform_bookmarks_registry_capture(
+    bookmarks, proposal, 1U, &amp;capture);
+if (status == UMI_STATUS_OK) {
+    /* Review and change the owned proposal before publishing it. */
+    status = umi_platform_bookmarks_registry_replace_if_current(
+        bookmarks, capture.revision, proposal, capture.count, NULL);
+}
+/* Handle a refusal explicitly; the registry still contains its previous data. */</code></pre>
+<p>This small example has room for one bookmark. A real collection should follow
+the size-query steps above. See the complete <a href="../examples/snapshot_contracts/reviewed_bookmarks.c">reviewed bookmarks example</a>
+for a competing edit, a refused stale proposal and a deliberate second review.
+Its companion CMake project consumes a separately installed Framework SDK.</p>
+<h2>Know what replacement means</h2>
+<p>Replacement removes records that are not in the proposal. It is different from
+the existing multi-record upsert, which retains records you did not mention.
+An empty proposal clears a populated collection. Replacing an already-empty
+collection with another empty one makes no change.</p>
+<p>A successful replacement advances the registry once and gives all published
+rows that same revision. Old metadata supplied in the proposal is normalised by
+the existing owner. Duplicate IDs, invalid fields, insufficient capacity and
+allocation failure leave the complete previous collection intact. The optional
+result identifies a rejected row when the failure concerns one record.</p>
+<p>Revision exhaustion is a refusal, not a reason to reset the counter and continue
+with outstanding captures. Resolve that owner's lifetime explicitly. A revision
+from another object or an earlier destroyed registry cannot authorise an edit.</p>
+<h2>Keep text edits consistent</h2>
+<p>For fixed text fields that belong to a revisioned record, use
+<code>umi_text_update</code>. It checks the new text and remaining revision space
+before changing either the field or the revision. An oversized or invalid edit
+therefore preserves the earlier field. Text from the field itself, including a
+suffix, is supported. The revision must occupy separate storage.</p>
+<p>Existing presentation-copy helpers keep their documented behaviour, including
+helpers that clear a destination when text does not fit. Choose the record-edit
+helper when failure must leave an existing record unchanged.</p>
+<h2>Extend an owner carefully</h2>
+<ul><li>Keep shared behaviour in Framework. Application code should prepare user
+intent and display a refusal instead of duplicating registry internals.</li>
+<li>When adding a text member, extend its validator and field-aware regression
+checks. A copied pointer is not an owned value: records containing handles,
+callbacks or owned pointers need an appropriate ownership design.</li>
+<li>Capture and replacement require serialized owner access. A revision check is
+not a mutex and cannot repair a data race. Workers may prepare independent arrays;
+the owner remains responsible for reading and publishing the live collection.</li>
+<li>Keep input records, output arrays and result metadata in separate storage as
+documented by the public functions. Do not alias them with private registry memory.</li>
+<li>These operations publish memory only. Durable saving, schema migration and
+restart recovery still belong to the persistence service.</li></ul>
+<p>Chart documents use a complete registry capture and then retain only the chosen
+pane's drawings. This keeps neighbouring charts unchanged while preserving the
+observation needed for later review.</p>
+</body></html>

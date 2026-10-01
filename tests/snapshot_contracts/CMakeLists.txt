@@ -34,6 +34,14 @@ foreach(_contract IN LISTS _contracts)
                 LABELS "framework;snapshot-contracts;document-publication;${_group};regression")
         endforeach()
     endif()
+    # Use each real owner so shared publication does not hide a domain's field
+    # normalisation, record order, independent output or rejection behaviour.
+    foreach(_case capture replace replace-reject replace-empty)
+        set(_test "framework.snapshot_contracts.${_group}.${_name}.${_case}")
+        add_test(NAME "${_test}" COMMAND "${_target}" "${_case}")
+        set_tests_properties("${_test}" PROPERTIES TIMEOUT 120
+            LABELS "framework;snapshot-contracts;publication;${_group};regression")
+    endforeach()
     foreach(_case lifecycle fields boundaries invalid batch batch-invalid batch-duplicate batch-capacity batch-empty)
         set(_test "framework.snapshot_contracts.${_group}.${_name}.${_case}")
         add_test(NAME "${_test}" COMMAND "${_target}" "${_case}")
@@ -118,4 +126,64 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang
     if(COMMAND umicom_register_validation_target)
         umicom_register_validation_target(umicom-document-allocation-test)
     endif()
+endif()
+
+# Reuse the existing Linux allocation interception target rather than adding
+# a production allocator switch solely for tests.
+if(TARGET umicom-snapshot-allocation-test)
+    add_test(NAME framework.snapshot_contracts.replace-allocation
+        COMMAND umicom-snapshot-allocation-test replace-allocation)
+    set_tests_properties(framework.snapshot_contracts.replace-allocation PROPERTIES
+        TIMEOUT 30 LABELS "framework;snapshot-contracts;publication;fault-injection")
+endif()
+
+# Compile the same source in the tree and against the separately installed SDK
+# so the example cannot accidentally rely on private include paths.
+add_executable(umicom-reviewed-bookmarks-example
+    ../../examples/snapshot_contracts/reviewed_bookmarks.c)
+target_link_libraries(umicom-reviewed-bookmarks-example PRIVATE Umicom::platform)
+umicom_apply_warnings(umicom-reviewed-bookmarks-example)
+umicom_apply_sanitizers(umicom-reviewed-bookmarks-example)
+add_dependencies(umicom-snapshot-contract-checks umicom-reviewed-bookmarks-example)
+add_test(NAME framework.snapshot_contracts.reviewed-example
+    COMMAND umicom-reviewed-bookmarks-example)
+set_tests_properties(framework.snapshot_contracts.reviewed-example PROPERTIES
+    TIMEOUT 30 LABELS "framework;snapshot-contracts;publication;example")
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-reviewed-bookmarks-example)
+endif()
+
+# Private counter access belongs in this fixture, never in the installed SDK.
+add_executable(umicom-publication-edges-test test_publication_edges.c)
+target_link_libraries(umicom-publication-edges-test PRIVATE Umicom::base)
+set_target_properties(umicom-publication-edges-test PROPERTIES
+    C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO UNITY_BUILD OFF)
+umicom_apply_warnings(umicom-publication-edges-test)
+umicom_apply_sanitizers(umicom-publication-edges-test)
+add_dependencies(umicom-snapshot-contract-checks umicom-publication-edges-test)
+foreach(_case text registry)
+    add_test(NAME "framework.snapshot_contracts.publication.${_case}"
+        COMMAND umicom-publication-edges-test "${_case}")
+    set_tests_properties("framework.snapshot_contracts.publication.${_case}" PROPERTIES
+        TIMEOUT 30 LABELS "framework;snapshot-contracts;publication;regression")
+endforeach()
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-publication-edges-test)
+endif()
+
+# The compact editor owner has a different increment form from other owners;
+# exercise that real path at exhaustion as well as the shared publication path.
+add_executable(umicom-editor-publication-test test_editor_publication.c)
+target_link_libraries(umicom-editor-publication-test PRIVATE Umicom::base)
+set_target_properties(umicom-editor-publication-test PROPERTIES
+    C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO UNITY_BUILD OFF)
+umicom_apply_warnings(umicom-editor-publication-test)
+umicom_apply_sanitizers(umicom-editor-publication-test)
+add_dependencies(umicom-snapshot-contract-checks umicom-editor-publication-test)
+add_test(NAME framework.snapshot_contracts.publication.editor
+    COMMAND umicom-editor-publication-test)
+set_tests_properties(framework.snapshot_contracts.publication.editor PROPERTIES
+    TIMEOUT 30 LABELS "framework;snapshot-contracts;publication;editor;regression")
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-editor-publication-test)
 endif()

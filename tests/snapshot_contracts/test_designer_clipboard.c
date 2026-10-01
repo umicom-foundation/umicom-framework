@@ -50,4 +50,8 @@ static void ContractPayload(UmiDesignerClipboardItemSnapshot *item)
     item->serialized[0] = 'v';
     item->copied_at = (uint64_t)7U;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_designer_clipboard_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_designer_clipboard_registry_replace_if_current
 #include "snapshot_contract_cases.h"

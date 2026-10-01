@@ -139,6 +139,11 @@ UmiStatus umi_project_reference_registry_upsert(UmiProjectReferenceRegistry *reg
  */
 UmiStatus umi_project_reference_registry_remove(UmiProjectReferenceRegistry *registry, const char *id)
 {
+    /* A wrapped revision could make an old edit appear current again. Refuse
+     * mutation before touching records when no fresh revision is available. */
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -221,4 +226,12 @@ void umi_project_reference_registry_clear(UmiProjectReferenceRegistry *registry)
  * needed, and the original single-record implementation remains available. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_project_reference_registry_upsert_many,
     UmiProjectReferenceRegistry, UmiProjectReferenceSnapshot,
+    umi_project_reference_snapshot_validate, umi_project_reference_registry_upsert, UMI_PROJECT_REFERENCE_CAPACITY)
+
+/* A captured collection can be reviewed or prepared elsewhere, then published
+ * on its owner only if no intervening edit changed this registry. Shared
+ * Framework staging preserves the existing field validation and normalisation.
+ * Extend the snapshot validator when adding fields; keep this owner value-only. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_project_reference_registry_capture,
+    umi_project_reference_registry_replace_if_current, UmiProjectReferenceRegistry, UmiProjectReferenceSnapshot,
     umi_project_reference_snapshot_validate, umi_project_reference_registry_upsert, UMI_PROJECT_REFERENCE_CAPACITY)

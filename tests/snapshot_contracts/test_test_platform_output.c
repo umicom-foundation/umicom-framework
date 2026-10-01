@@ -53,4 +53,8 @@ static void ContractPayload(UmiTestPlatformOutputSnapshot *item)
     item->text[0] = 'v';
     item->timestamp = (uint64_t)8U;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_test_platform_output_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_test_platform_output_registry_replace_if_current
 #include "snapshot_contract_cases.h"

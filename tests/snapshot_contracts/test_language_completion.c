@@ -62,4 +62,8 @@ static void ContractPayload(UmiLanguageCompletionSnapshot *item)
     item->line = (uint32_t)10U;
     item->column = (uint32_t)11U;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_language_completion_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_language_completion_registry_replace_if_current
 #include "snapshot_contract_cases.h"

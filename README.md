@@ -171,3 +171,7 @@ Learn [checked payment fee quotes](docs/PAYMENT_FEE_QUOTES.md), including exact 
 For debugger groups that should be loaded only on request, follow the
 [scope inspection lesson](docs/learning/scope-inspection.md). It explains owned
 captures, expensive scopes and recovery when the stopped context changes.
+
+[Review and publish state safely](docs/REVIEWED_STATE_UPDATES.html) explains
+independent captures, stale-edit refusal, complete collection replacement and
+text edits that preserve the previous value when an update cannot be accepted.

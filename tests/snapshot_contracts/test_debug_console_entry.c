@@ -54,4 +54,8 @@ static void ContractPayload(UmiDebugConsoleEntrySnapshot *item)
     item->timestamp = (uint64_t)7U;
     item->severity = (int)8U;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_debug_console_entry_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_debug_console_entry_registry_replace_if_current
 #include "snapshot_contract_cases.h"

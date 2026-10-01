@@ -152,4 +152,84 @@ UmiStatus Function(Registry *registry, const char *document_id, uint64_t expecte
     if (outResult != NULL) *outResult = result; \
     return UMI_STATUS_OK; \
 }
+
+/* Capture and replacement share the same value-only ownership requirements as
+ * the existing registry operations. Keep calls on the owning thread: the
+ * revision check detects intervening edits, but does not provide a mutex.
+ * A contributor adding owned pointers must supply a real deep-copy operation
+ * instead of instantiating this helper for that new record type. */
+#define UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(Capture, Replace, Registry, Snapshot, Validate, Upsert, Capacity) \
+UmiStatus Capture(const Registry *registry, Snapshot *out_items, size_t capacity, \
+    UmiSnapshotCapture *out_capture) \
+{ \
+    if (out_capture == NULL) return UMI_STATUS_INVALID_ARGUMENT; \
+    *out_capture = (UmiSnapshotCapture){0U, 0U}; \
+    if (registry == NULL || (out_items == NULL && capacity != 0U)) \
+        return UMI_STATUS_INVALID_ARGUMENT; \
+    if (registry->count > (size_t)(Capacity)) return UMI_STATUS_INVALID_STATE; \
+    *out_capture = (UmiSnapshotCapture){registry->count, registry->revision}; \
+    /* A size query lets callers allocate outside this operation. A short \
+     * destination receives the required size, but no partial record list. */ \
+    if (out_items == NULL) return UMI_STATUS_OK; \
+    if (capacity < registry->count) return UMI_STATUS_CAPACITY_EXCEEDED; \
+    for (size_t index = 0U; index < registry->count; ++index) \
+        out_items[index] = registry->items[index]; \
+    return UMI_STATUS_OK; \
+} \
+UmiStatus Replace(Registry *registry, uint64_t expected_revision, \
+    const Snapshot *items, size_t count, UmiSnapshotBatchResult *out_result) \
+{ \
+    UmiSnapshotBatchResult result = {0U, SIZE_MAX, {UMI_SNAPSHOT_VALID, NULL, SIZE_MAX, 0U}}; \
+    if (out_result != NULL) *out_result = result; \
+    if (registry == NULL || (items == NULL && count != 0U)) \
+        return UMI_STATUS_INVALID_ARGUMENT; \
+    if (registry->count > (size_t)(Capacity)) return UMI_STATUS_INVALID_STATE; \
+    /* Reject an older observation before reading its proposed records. This \
+     * prevents a delayed refresh from replacing a more recent user edit. */ \
+    if (registry->revision != expected_revision) return UMI_STATUS_INVALID_STATE; \
+    if (count > (size_t)(Capacity)) return UMI_STATUS_CAPACITY_EXCEEDED; \
+    if (count == 0U && registry->count == 0U) return UMI_STATUS_OK; \
+    if (registry->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED; \
+    for (size_t index = 0U; index < count; ++index) { \
+        UmiStatus status = Validate(&items[index], &result.validation); \
+        if (status != UMI_STATUS_OK) { \
+            result.rejected_index = index; \
+            if (out_result != NULL) *out_result = result; \
+            return status; \
+        } \
+        for (size_t previous = 0U; previous < index; ++previous) { \
+            if (strcmp(items[previous].id, items[index].id) == 0) { \
+                result.rejected_index = index; \
+                result.validation = (UmiSnapshotValidation){UMI_SNAPSHOT_DUPLICATE_ID, "id", 0U, sizeof(items[index].id)}; \
+                if (out_result != NULL) *out_result = result; \
+                return UMI_STATUS_ALREADY_EXISTS; \
+            } \
+        } \
+    } \
+    /* Build a fresh value collection privately. Existing upsert remains the \
+     * authority for domain normalisation; no application copy is introduced. \
+     * Only the final assignment below publishes the prepared collection. */ \
+    Registry *staged = malloc(sizeof(*staged)); \
+    if (staged == NULL) return UMI_STATUS_OUT_OF_MEMORY; \
+    memset(staged, 0, sizeof(*staged)); \
+    for (size_t index = 0U; index < count; ++index) { \
+        UmiStatus status = Upsert(staged, &items[index]); \
+        if (status != UMI_STATUS_OK) { \
+            result.rejected_index = index; \
+            free(staged); \
+            if (out_result != NULL) *out_result = result; \
+            return status; \
+        } \
+    } \
+    /* Every row belongs to this one publication, including unchanged input \
+     * rows. A single fresh revision invalidates all earlier edit proposals. */ \
+    staged->revision = registry->revision + 1U; \
+    for (size_t index = 0U; index < staged->count; ++index) \
+        staged->items[index].revision = staged->revision; \
+    *registry = *staged; \
+    free(staged); \
+    result.applied = count; \
+    if (out_result != NULL) *out_result = result; \
+    return UMI_STATUS_OK; \
+}
 #endif

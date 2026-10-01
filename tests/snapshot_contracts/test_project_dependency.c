@@ -60,4 +60,8 @@ static void ContractPayload(UmiProjectDependencySnapshot *item)
     item->optional = (int)9U;
     item->resolved = (int)10U;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_project_dependency_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_project_dependency_registry_replace_if_current
 #include "snapshot_contract_cases.h"

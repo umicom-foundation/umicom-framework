@@ -143,6 +143,11 @@ UmiStatus umi_language_code_action_registry_upsert(UmiLanguageCodeActionRegistry
  */
 UmiStatus umi_language_code_action_registry_remove(UmiLanguageCodeActionRegistry *registry, const char *id)
 {
+    /* A wrapped revision could make an old edit appear current again. Refuse
+     * mutation before touching records when no fresh revision is available. */
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -230,4 +235,12 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_language_code_action_registry_upsert_many
  * documents and the last good list until all new records are accepted. */
 UMI_DEFINE_SNAPSHOT_DOCUMENT_REPLACE(umi_language_code_action_registry_replace_document,
     UmiLanguageCodeActionRegistry, UmiLanguageCodeActionSnapshot,
+    umi_language_code_action_snapshot_validate, umi_language_code_action_registry_upsert, UMI_LANGUAGE_CODE_ACTION_CAPACITY)
+
+/* A captured collection can be reviewed or prepared elsewhere, then published
+ * on its owner only if no intervening edit changed this registry. Shared
+ * Framework staging preserves the existing field validation and normalisation.
+ * Extend the snapshot validator when adding fields; keep this owner value-only. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_language_code_action_registry_capture,
+    umi_language_code_action_registry_replace_if_current, UmiLanguageCodeActionRegistry, UmiLanguageCodeActionSnapshot,
     umi_language_code_action_snapshot_validate, umi_language_code_action_registry_upsert, UMI_LANGUAGE_CODE_ACTION_CAPACITY)

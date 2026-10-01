@@ -140,6 +140,11 @@ UmiStatus umi_designer_signal_binding_registry_upsert(UmiDesignerSignalBindingRe
  */
 UmiStatus umi_designer_signal_binding_registry_remove(UmiDesignerSignalBindingRegistry *registry, const char *id)
 {
+    /* A wrapped revision could make an old edit appear current again. Refuse
+     * mutation before touching records when no fresh revision is available. */
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -218,4 +223,12 @@ uint64_t umi_designer_signal_binding_registry_revision(const UmiDesignerSignalBi
  * for valid record normalisation; no application-side registry is introduced. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_designer_signal_binding_registry_upsert_many,
     UmiDesignerSignalBindingRegistry, UmiDesignerSignalBindingSnapshot,
+    umi_designer_signal_binding_snapshot_validate, umi_designer_signal_binding_registry_upsert, UMI_DESIGNER_SIGNAL_BINDING_CAPACITY)
+
+/* A captured collection can be reviewed or prepared elsewhere, then published
+ * on its owner only if no intervening edit changed this registry. Shared
+ * Framework staging preserves the existing field validation and normalisation.
+ * Extend the snapshot validator when adding fields; keep this owner value-only. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_designer_signal_binding_registry_capture,
+    umi_designer_signal_binding_registry_replace_if_current, UmiDesignerSignalBindingRegistry, UmiDesignerSignalBindingSnapshot,
     umi_designer_signal_binding_snapshot_validate, umi_designer_signal_binding_registry_upsert, UMI_DESIGNER_SIGNAL_BINDING_CAPACITY)

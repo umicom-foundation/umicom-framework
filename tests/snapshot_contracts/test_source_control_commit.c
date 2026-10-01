@@ -60,4 +60,8 @@ static void ContractPayload(UmiSourceControlCommitSnapshot *item)
     item->timestamp = (uint64_t)9U;
     item->head = (int)10U;
 }
+/* Exercise public capture and publication through this domain's real owner,
+ * including its field normalisation and failure-without-mutation contract. */
+#define CONTRACT_CAPTURE umi_source_control_commit_registry_capture
+#define CONTRACT_REPLACE_CURRENT umi_source_control_commit_registry_replace_if_current
 #include "snapshot_contract_cases.h"
