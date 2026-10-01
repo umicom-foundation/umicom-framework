@@ -952,6 +952,8 @@ UmiStatus umi_debug_runtime_platform_pump_event(
  * Provide the debug runtime platform sync breakpoints operation used by this module and
  * its client applications.
  */
+/* Complete source-set synchronization now uses heap-owned bounded buffers, negotiated capability checks and one atomic reply publication. A failed or incomplete reply must not leave partially verified rows. The previous implementation remains for engineering review. */
+#if 0
 UmiStatus umi_debug_runtime_platform_sync_breakpoints(
     UmiDebugRuntimePlatform *platform,
     const char *source_uri,
@@ -1053,6 +1055,9 @@ UmiStatus umi_debug_runtime_platform_sync_breakpoints(
     platform->revision += 1U;
     return UMI_STATUS_OK;
 }
+
+#endif
+#include "source_breakpoints.inc"
 
 /*
  * Provide the debug runtime platform refresh threads operation used by this module and its
@@ -1230,6 +1235,8 @@ UmiStatus umi_debug_runtime_platform_refresh_scopes(
  * Provide the debug runtime platform refresh variables operation used by this module and
  * its client applications.
  */
+/* The maximum variable list exceeds a typical Windows GUI thread stack. Heap-owned temporary response and list storage preserve the existing root decoder and publication behavior while avoiding that stack allocation. The previous implementation remains for engineering review. */
+#if 0
 UmiStatus umi_debug_runtime_platform_refresh_variables(
     UmiDebugRuntimePlatform *platform,
     const char *scope_id,
@@ -1278,6 +1285,29 @@ UmiStatus umi_debug_runtime_platform_refresh_variables(
         &result);
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) platform->revision += 1U;
+    return status;
+}
+#endif
+UmiStatus umi_debug_runtime_platform_refresh_variables(
+    UmiDebugRuntimePlatform *platform, const char *scope_id,
+    uint64_t variables_reference, uint32_t timeout_ms)
+{
+    if (platform == NULL || platform->adapter == NULL || scope_id == NULL ||
+        scope_id[0] == '\0' || variables_reference == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Root loading keeps its existing decoder/publication contract. Only the
+     * large temporary collection changes ownership, so a small GUI thread
+     * stack is not consumed by the maximum supported variable capacity. */
+    UmiDebugRuntimeEnvelope *response = malloc(sizeof *response);
+    UmiDebugRuntimeVariableList *result = malloc(sizeof *result);
+    if (response == NULL || result == NULL) { free(response); free(result); return UMI_STATUS_OUT_OF_MEMORY; }
+    uint64_t sequence = 0U;
+    UmiStatus status = umi_debug_runtime_request_variables(platform->adapter, variables_reference, &sequence);
+    if (status == UMI_STATUS_OK) status = umi_debug_runtime_adapter_wait_response(
+        platform->adapter, sequence, timeout_ms, response);
+    if (status == UMI_STATUS_OK) status = umi_debug_runtime_decode_variables(response->json, result);
+    if (status == UMI_STATUS_OK) status = umi_debug_runtime_publish_variables(&platform->bridge, scope_id, result);
+    free(response); free(result);
     if (status == UMI_STATUS_OK) platform->revision += 1U;
     return status;
 }
@@ -2704,10 +2734,24 @@ UmiStatus UmiDebugRuntimePlatformLaunchNative(UmiDebugRuntimePlatform *platform,
         ? "],\"stopAtBeginningOfMainSubprogram\":true}"
         : "],\"stopOnEntry\":true,\"disableASLR\":false,\"console\":\"internalConsole\"}");
     if (writer.status != UMI_STATUS_OK) return writer.status;
+    /* Publish the reviewed launch inputs with the session. Source navigation
+     * can now resolve relative frame paths without borrowing the IDE's CWD. */
+    UmiDebugLaunchConfigurationSnapshot configuration={0};
+    const char *argumentText=arguments!=NULL?arguments:"";
+    if(strlen(program)>=sizeof(configuration.program)||
+        strlen(working_directory)>=sizeof(configuration.working_directory)||
+        strlen(argumentText)>=sizeof(configuration.arguments))return UMI_STATUS_CAPACITY_EXCEEDED;
+    strcpy(configuration.id,"native.launch");strcpy(configuration.name,"Native debugger launch");
+    strcpy(configuration.adapter,kind);strcpy(configuration.program,program);
+    strcpy(configuration.working_directory,working_directory);strcpy(configuration.arguments,argumentText);
+    configuration.stop_on_entry=1;
     if (platform->native_generation == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     status = umi_debug_adapter_profile_registry_upsert(
         umi_debug_service_adapter_profiles(platform->service), &profile);
     if (status != UMI_STATUS_OK) return status;
+    status=umi_debug_launch_configuration_registry_upsert(
+        umi_debug_service_launch_configuration(platform->service),&configuration);
+    if(status!=UMI_STATUS_OK)return status;
     char session[128];
     (void)snprintf(session, sizeof(session), "native.%llu",
         (unsigned long long)++platform->native_generation);
@@ -2760,3 +2804,11 @@ UmiStatus UmiDebugRuntimePlatformInspectStopped(UmiDebugRuntimePlatform *platfor
 // These comments explain superseded statements; do not enable both execution paths.
 // Previous source near line 898:
 //             strcmp(item.uri, source_uri) != 0) {
+
+/* The guarded watch path is additive: existing low-level protocol clients keep
+ * their legacy evaluate API, while native retained controls use owned intent. */
+#include "watch_evaluation.inc"
+
+
+/* Explicit child captures avoid replacing roots or reusing stale adapter IDs. */
+#include "variable_request.inc"

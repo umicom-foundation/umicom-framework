@@ -15,6 +15,7 @@
 #include "umicom/debug_runtime/requests/set_breakpoints.h"
 
 #include <string.h>
+#include "umicom/debug_runtime/breakpoint_sync.h"
 #include "umicom/language_runtime/json_writer.h"
 
 /*
@@ -44,6 +45,9 @@ UmiStatus umi_debug_runtime_request_set_breakpoints(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    if (out_sequence != NULL) *out_sequence = 0U;
+    UmiStatus checked = UmiDebugRuntimeBreakpointSetValidate(NULL, breakpoints, breakpoint_count);
+    if (checked != UMI_STATUS_OK) return checked;
     umi_language_runtime_json_writer_init(&writer, arguments, sizeof(arguments));
     (void)umi_language_runtime_json_writer_raw(
         &writer, "{\"source\":{\"path\":");

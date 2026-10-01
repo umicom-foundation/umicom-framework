@@ -50,7 +50,11 @@ int main(int argc, char **argv)
         CHECK(UmiChartNavigationZoom(&navigation, candles, 41, 32) == UMI_STATUS_OK && navigation.visible_bars == 4);
         CHECK(UmiChartNavigationZoom(&navigation, candles, 41, -32) == UMI_STATUS_OK && navigation.visible_bars == 41);
     } else if (strcmp(argv[1], "anchors") == 0) {
+/* The appended timeframe defaults to source bars. This explicit zero retains the fixture semantics when all consumers are rebuilt. The previous implementation remains for engineering review. */
+#if 0
         navigation = (UmiChartNavigation){5, 60000, 1};
+#endif
+        navigation = (UmiChartNavigation){5, 60000, 1, 0U};
         CHECK(UmiChartNavigationResolve(&navigation, candles + 10, 30, &window) == UMI_STATUS_OK && window.first == 0 && window.count == 5);
         UmiChartNavigation saved = navigation;
         CHECK(UmiChartNavigationZoom(&navigation, candles, 41, 33) == UMI_STATUS_INVALID_ARGUMENT && navigation.visible_bars == saved.visible_bars);

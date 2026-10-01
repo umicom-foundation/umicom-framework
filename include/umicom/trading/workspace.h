@@ -38,6 +38,8 @@
 #include "umicom/trading/trade_tape.h"
 #include "umicom/trading/watchlist.h"
 
+#include "umicom/chart/drawing_appearance.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -220,6 +222,17 @@ UmiStatus UmiTradingWorkspaceAddChartDrawing(UmiTradingWorkspace *workspace,
     const char *instrument_id, const char *tool, UmiChartPoint first, UmiChartPoint second);
 UmiStatus UmiTradingWorkspaceRemoveChartDrawing(UmiTradingWorkspace *workspace,
     const char *instrument_id, const char *drawing_id, uint64_t expected_revision);
+/* Guarded drawing edits require the displayed instrument and record revision.
+ * Locked drawings reject geometry changes and the existing remove operation.
+ * Duplicate preserves the original and makes an unlocked, unselected copy.
+ * outId must have capacity for the generated identity; it changes only on OK.
+ * These actions neither save storage nor alter orders, draft tickets or prices. */
+UmiStatus UmiTradingWorkspaceSetChartDrawingLocked(UmiTradingWorkspace *workspace,
+    const char *instrumentId,const char *drawingId,uint64_t expectedRevision,int locked);
+UmiStatus UmiTradingWorkspaceMoveChartDrawing(UmiTradingWorkspace *workspace,
+    const char *instrumentId,const char *drawingId,uint64_t expectedRevision,UmiChartPoint first,UmiChartPoint second);
+UmiStatus UmiTradingWorkspaceDuplicateChartDrawing(UmiTradingWorkspace *workspace,
+    const char *instrumentId,const char *drawingId,uint64_t expectedRevision,char *outId,size_t capacity);
 /* Prepare a limit ticket only: no order submission, broker I/O or arming.
  * Quantity, account and time-in-force stay with the existing ticket. Price is
  * the chart's exact numeric value; instrument tick rules require a provider. */
@@ -609,6 +622,25 @@ UmiStatus UmiTradingWorkspaceRiskEvidence(const UmiTradingWorkspace *workspace,
  * Owner-thread only. A NULL workspace is INVALID_ARGUMENT.
  * See examples/workflow_tools/main.c and tests/workflow_tools/test_trading.c. */
 UmiStatus UmiTradingWorkspaceResetDraft(UmiTradingWorkspace *workspace);
+
+/** Hide/show only in the instrument still selected when its chart was shown.
+ * These operations preserve order drafts, risk evidence, positions and live
+ * arming. Locks protect geometry, not visibility. Save chart persists changes.
+ * Single edits use the displayed row version; pane edits use the displayed
+ * registry revision. No-op changes preserve the workspace revision. */
+UmiStatus UmiTradingWorkspaceSetChartDrawingHidden(UmiTradingWorkspace *workspace,
+    const char *instrumentId, const char *drawingId, uint64_t expectedRevision, int hidden);
+UmiStatus UmiTradingWorkspaceSetChartDrawingsHidden(UmiTradingWorkspace *workspace,
+    const char *instrumentId, uint64_t expectedRegistryRevision, int hidden, size_t *outChanged);
+
+/** Apply an explicit appearance choice only to the still-selected instrument
+ * and displayed row revision. NULL restores tool defaults. Retains geometry,
+ * lock, visibility, orders, risk evidence and live arming; no-op retains revision.
+ * Save chart is still the explicit persistence step. Owner-thread only. */
+UmiStatus UmiTradingWorkspaceSetChartDrawingAppearance(UmiTradingWorkspace *workspace,
+    const char *instrumentId, const char *drawingId, uint64_t expectedRevision,
+    const UmiChartDrawingAppearance *appearance);
+
 #ifdef __cplusplus
 }
 #endif

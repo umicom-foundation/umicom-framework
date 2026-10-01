@@ -46,6 +46,13 @@ bool umi_payments_payment_charge_valid(const UmiPaymentsPaymentCharge *value);
  * client applications.
  */
 int64_t umi_payments_payment_charge_total_minor(const UmiPaymentsPaymentCharge *value);
+/** Validate both IDs and nonnegative components, then check fee + tax before
+ * addition. Overflow returns CAPACITY_EXCEEDED; other invalid values return
+ * INVALID_ARGUMENT. Failure leaves outTotal unchanged. The legacy scalar
+ * wrapper returns zero on failure and cannot distinguish that from no charge.
+ * Initialisation likewise publishes only a complete, representable charge. */
+UmiStatus umi_payments_payment_charge_total_checked(const UmiPaymentsPaymentCharge *value,
+    int64_t *outTotal);
 #ifdef __cplusplus
 }
 #endif

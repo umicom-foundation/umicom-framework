@@ -33,6 +33,7 @@ typedef struct BankState {
     UmiBankReconciliation reconciliations[UMI_BANK_RECORD_CAPACITY];
     UmiBankAuditEvent events[UMI_BANK_EVENT_CAPACITY];
     UmiBankInterestRequest interestRequests[UMI_BANK_RECORD_CAPACITY];
+    UmiBankChargeRequest chargeRequests[UMI_BANK_RECORD_CAPACITY];
 } BankState;
 
 struct UmiBankOperations {
@@ -41,6 +42,10 @@ struct UmiBankOperations {
     bool poisoned;        /* A failed rollback requires close/reopen. */
 };
 
+/** Shared review/queue comparison uses canonical event values, never pointers
+ * or padding. A different revision or history returns BUSY. */
+UmiStatus BankEventSame(const UmiBankAuditEvent *,const UmiBankAuditEvent *,bool *);
+UmiStatus BankHistoryMatches(const BankState *,uint64_t,const UmiBankAuditEvent *,size_t);
 /** Codec owns a portable representation, never structure padding or pointers. */
 UmiStatus BankEncode(const UmiBankAuditEvent *event, char *out, size_t capacity);
 UmiStatus BankDecode(const char *text, UmiBankAuditEvent *out);
@@ -65,6 +70,10 @@ int BankFindTransfer(const BankState *state, const char *id);
 int BankFindCard(const BankState *state, const char *id);
 int BankFindHold(const BankState *state, const char *id);
 int BankFindInterest(const BankState *state, const char *id);
+int BankFindCharge(const BankState *state, const char *id);
+int BankFindReconciliation(const BankState *state, const char *id);
+UmiStatus BankApplyReconciliationReview(BankState *, const UmiBankActor *, const UmiBankCommand *);
+UmiStatus BankApplyCharge(BankState *, const UmiBankActor *, const UmiBankCommand *);
 UmiStatus BankApplyInterest(BankState *, const UmiBankActor *, const UmiBankCommand *);
 bool BankIdValid(const UmiFinancialId *id, bool required);
 bool BankMoneyMatches(UmiMoney amount, const UmiBankAccount *account);

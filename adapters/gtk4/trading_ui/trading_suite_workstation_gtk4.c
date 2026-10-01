@@ -19,12 +19,15 @@
 #include <string.h>
 
 #include "umicom/trading_ui/gtk4/trading_panels.h"
+#include "umicom/ui/gtk4/workstation/workspace_storage.h"
 
 struct UmiGtk4TradingSuiteWorkstation {
     UmiGtk4TradingSuiteWorkstationConfig config;
     UmiTradingUiController controller;
     UmiTradingSimulationMarket simulation;
     UmiGtk4TradingPanelContext panel_context;
+    UmiTradingChartPersistence *chart_persistence;
+    UmiDataServer *owned_chart_server;
     UmiApplicationSuiteGtk4Workstation *suite;
     GPtrArray *panel_observers;
     guint pending_refresh;
@@ -32,6 +35,9 @@ struct UmiGtk4TradingSuiteWorkstation {
     int simulation_seeded;
     int refresh_from_command;
 };
+
+static UmiStatus TradingSuiteEnableStorage(UmiGtk4TradingSuiteWorkstation *workstation,
+    const char *profile, int restore_saved);
 
 /* Translate safety-critical environment state into a short readable badge.
  * The text is informative only; order permission still comes from policy. */
@@ -217,6 +223,7 @@ static GtkWidget *trading_panel_factory(const UmiUiWorkspaceWindow *window, void
     if (workstation == NULL) return NULL;
     GtkWidget *panel = umi_gtk4_trading_panel_create(window, &workstation->panel_context);
     if (panel != NULL) {
+        UmiGtk4TradingPanelBindChartPersistence(panel, workstation->chart_persistence);
         if (workstation->panel_observers == NULL)
             workstation->panel_observers = g_ptr_array_new_with_free_func(TradingPanelObserverDestroy);
         /* Prune expired observers even when layouts change faster than ticks. */
@@ -320,6 +327,10 @@ UmiStatus umi_gtk4_trading_suite_workstation_create(
         }
     }
 
+    /* Reusable chart persistence is owned by the suite, not transient panels.
+     * Creation is memory-only; the native launcher explicitly opens storage. */
+    status = UmiTradingChartPersistenceCreate(workstation->config.workspace, &workstation->chart_persistence);
+    if (status != UMI_STATUS_OK) goto fail;
     workstation->panel_context.workspace = workstation->config.workspace;
     workstation->panel_context.controller = &workstation->controller;
     workstation->panel_context.allow_live_environment =
@@ -373,10 +384,14 @@ UmiStatus umi_gtk4_trading_suite_workstation_bind_window(
 UmiStatus umi_gtk4_trading_suite_workstation_enable_checkpoint_storage(
     UmiGtk4TradingSuiteWorkstation *workstation, int restore_saved)
 {
+/* The suite now enables explicit chart checkpoints alongside layout persistence in the same user-local profile. The shared helper keeps both bindings aligned. The previous implementation remains for engineering review. */
+#if 0
     return workstation != NULL
         ? umi_application_suite_gtk4_workstation_enable_checkpoint_storage(
             workstation->suite, restore_saved)
         : UMI_STATUS_INVALID_ARGUMENT;
+#endif
+    return TradingSuiteEnableStorage(workstation, NULL, restore_saved);
 }
 
 
@@ -405,9 +420,20 @@ void umi_gtk4_trading_suite_workstation_destroy(
     }
     umi_trading_ui_controller_set_changed_handler(
         &workstation->controller, NULL, NULL);
+    /* Stop chart callbacks while their borrowed context and storage are alive,
+     * including charts whose widgets were externally retained. */
+    if (workstation->panel_observers != NULL) {
+        for (guint i = 0U; i < workstation->panel_observers->len; ++i) {
+            GWeakRef *observer = g_ptr_array_index(workstation->panel_observers, i);
+            GtkWidget *panel = g_weak_ref_get(observer);
+            if (panel != NULL) { UmiGtk4TradingPanelDetachChart(panel); g_object_unref(panel); }
+        }
+    }
     umi_application_suite_gtk4_workstation_destroy(workstation->suite);
     workstation->suite = NULL;
     g_clear_pointer(&workstation->panel_observers, g_ptr_array_unref);
+    UmiTradingChartPersistenceDestroy(workstation->chart_persistence);
+    umi_data_server_destroy(workstation->owned_chart_server);
     free(workstation);
 }
 
@@ -805,6 +831,61 @@ UmiStatus umi_gtk4_trading_suite_workstation_library_preview(
 /* Keep profile persistence with the established Framework layout owner. */
 UmiStatus UmiGtk4TradingSuiteEnableProfileStorage(UmiGtk4TradingSuiteWorkstation *workstation, const char *profile, int restore_saved)
 {
+/* Chart and layout storage now use the same explicit profile identity. Chart restore remains a separate reviewed action. The previous implementation remains for engineering review. */
+#if 0
     return workstation != NULL ? UmiApplicationSuiteEnableProfileStorage(workstation->suite,profile,restore_saved)
         : UMI_STATUS_INVALID_ARGUMENT;
+#endif
+    if (profile == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return TradingSuiteEnableStorage(workstation, profile, restore_saved);
+}
+
+UmiTradingChartPersistence *UmiGtk4TradingSuiteChartPersistence(UmiGtk4TradingSuiteWorkstation *workstation)
+{ return workstation != NULL ? workstation->chart_persistence : NULL; }
+
+UmiStatus UmiGtk4TradingSuiteBindChartStorage(UmiGtk4TradingSuiteWorkstation *workstation,
+    UmiDataServer *server, const char *scope)
+{
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = UmiTradingChartPersistenceBind(workstation->chart_persistence, server, scope);
+    if (status != UMI_STATUS_OK) return status;
+    if (workstation->owned_chart_server != server) {
+        umi_data_server_destroy(workstation->owned_chart_server); workstation->owned_chart_server = NULL;
+    }
+    if (workstation->panel_observers != NULL) {
+        for (guint i = 0U; i < workstation->panel_observers->len; ++i) {
+            GWeakRef *observer = g_ptr_array_index(workstation->panel_observers, i);
+            GtkWidget *panel = g_weak_ref_get(observer);
+            if (panel != NULL) { UmiGtk4TradingPanelBindChartPersistence(panel, workstation->chart_persistence); g_object_unref(panel); }
+        }
+    }
+    return UMI_STATUS_OK;
+}
+
+static UmiStatus TradingSuiteEnableStorage(UmiGtk4TradingSuiteWorkstation *workstation,
+    const char *profile, int restore_saved)
+{
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    char storage_id[256]; const char *identity = workstation->config.application_id;
+    UmiStatus status = UMI_STATUS_OK;
+    if (profile != NULL) {
+        status = UmiGtk4WorkspaceProfileStorageId(identity, profile, storage_id, sizeof(storage_id));
+        if (status != UMI_STATUS_OK) return status;
+        identity = storage_id;
+    }
+    UmiDataServer *server = NULL;
+    status = umi_gtk4_workspace_storage_open(identity, &server);
+    if (status != UMI_STATUS_OK) return status;
+    status = profile != NULL ? UmiApplicationSuiteEnableProfileStorage(workstation->suite, profile, restore_saved)
+        : umi_application_suite_gtk4_workstation_enable_checkpoint_storage(workstation->suite, restore_saved);
+    if (status == UMI_STATUS_OK)
+        status = UmiGtk4TradingSuiteBindChartStorage(workstation, server, workstation->config.application_id);
+    if (status == UMI_STATUS_OK) workstation->owned_chart_server = server;
+    else {
+        umi_data_server_destroy(server);
+        /* A layout restore can fail after changing its backend. Disable chart
+         * persistence rather than leave a writable chart in the old profile. */
+        (void)UmiGtk4TradingSuiteBindChartStorage(workstation, NULL, NULL);
+    }
+    return status;
 }

@@ -218,3 +218,52 @@ uint64_t umi_chart_drawing_registry_revision(const UmiChartDrawingRegistry *regi
 UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_chart_drawing_registry_upsert_many,
     UmiChartDrawingRegistry, UmiChartDrawingSnapshot,
     umi_chart_drawing_snapshot_validate, umi_chart_drawing_registry_upsert, UMI_CHART_DRAWING_CAPACITY)
+
+/* Persistence publishes a fully validated candidate into the established
+ * registry. The registry object and unrelated pane records keep their owners;
+ * a failed restore cannot leave half of a pane removed or imported. */
+#include "umicom/chart/drawing_validation.h"
+UmiStatus UmiChartDrawingRegistryReplacePane(UmiChartDrawingRegistry *registry,
+    const char *paneId, const UmiChartDrawingSnapshot *items, size_t count,
+    uint64_t expectedRevision)
+{
+    if (registry == NULL || paneId == NULL || paneId[0] == '\0' ||
+        (items == NULL && count != 0U)) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t paneLength = 0U;
+    while (paneLength < sizeof(((UmiChartDrawingSnapshot *)0)->pane_id) && paneId[paneLength] != '\0') ++paneLength;
+    if (paneLength == sizeof(((UmiChartDrawingSnapshot *)0)->pane_id)) return UMI_STATUS_INVALID_ARGUMENT;
+    if (registry->count > UMI_CHART_DRAWING_CAPACITY) return UMI_STATUS_INVALID_STATE;
+    if (count > UMI_CHART_DRAWING_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (registry->revision != expectedRevision) return UMI_STATUS_INVALID_STATE;
+    if (registry->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    size_t retained = 0U;
+    for (size_t i = 0U; i < registry->count; ++i)
+        if (strcmp(registry->items[i].pane_id, paneId) != 0) ++retained;
+    if (count > UMI_CHART_DRAWING_CAPACITY - retained) return UMI_STATUS_CAPACITY_EXCEEDED;
+    for (size_t i = 0U; i < count; ++i) {
+        UmiStatus status = UmiChartDrawingValidateGeometry(&items[i]);
+        if (status != UMI_STATUS_OK) return status;
+        if (strcmp(items[i].pane_id, paneId) != 0) return UMI_STATUS_INVALID_ARGUMENT;
+        for (size_t j = 0U; j < i; ++j)
+            if (strcmp(items[i].id, items[j].id) == 0) return UMI_STATUS_ALREADY_EXISTS;
+        size_t existing = find_index(registry, items[i].id);
+        if (existing != SIZE_MAX && strcmp(registry->items[existing].pane_id, paneId) != 0)
+            return UMI_STATUS_ALREADY_EXISTS;
+    }
+    UmiChartDrawingRegistry *candidate = calloc(1U, sizeof(*candidate));
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    candidate->revision = registry->revision + 1U;
+    for (size_t i = 0U; i < registry->count; ++i)
+        if (strcmp(registry->items[i].pane_id, paneId) != 0) candidate->items[candidate->count++] = registry->items[i];
+    for (size_t i = 0U; i < count; ++i) {
+        UmiChartDrawingSnapshot *record = &candidate->items[candidate->count++];
+        *record = items[i]; record->struct_size = (uint32_t)sizeof(*record);
+        record->api_version = 1U; record->revision = candidate->revision;
+    }
+    *registry = *candidate; free(candidate); return UMI_STATUS_OK;
+}
+
+
+/* History needs one atomic registry publication. Keeping its implementation
+ * with this owner avoids exposing writable registry internals to applications. */
+#include "drawing_history.inc"

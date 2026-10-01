@@ -21,8 +21,11 @@
  * broker readiness and an explicit arming call performed by a trading product.
  */
 #include "umicom/trading/workspace.h"
+#include "umicom/trading/chart_history.h"
+#include "umicom/chart/drawing_visibility.h"
 
 #include <ctype.h>
+#include <stdatomic.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -70,6 +73,7 @@ struct UmiTradingWorkspace {
     UmiTradingAlertBook alerts;
     UmiTradingTradeTape *trade_tape;
     UmiChartWorkspace *charts;
+    UmiChartDrawingHistory *drawing_history;
     UmiOrderRequest draft_order;
     UmiRiskDecision draft_risk;
     UmiRiskPricePolicy pricePolicy;
@@ -83,12 +87,27 @@ struct UmiTradingWorkspace {
     char selected_order_id[UMI_FINANCE_ID_CAPACITY];
     uint64_t next_order_sequence;
     uint64_t revision;
+    uint64_t session_report_owner_id;
     int market_data_ready;
     int broker_ready;
     int risk_ready;
     int live_armed;
     int has_draft_risk;
 };
+
+/* Reports may outlive a workspace allocation. A process-local identity avoids
+ * mistaking a new owner at the same address/revision for the captured book.
+ * This is lifecycle identity, not authentication or persistent provenance. */
+static atomic_uint_fast64_t next_session_report_owner = 1;
+static UmiStatus AllocateSessionReportOwner(uint64_t *out)
+{
+    uint_fast64_t next = atomic_load_explicit(&next_session_report_owner, memory_order_relaxed);
+    for (;;) {
+        if (next >= UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+        if (atomic_compare_exchange_weak_explicit(&next_session_report_owner, &next, next + 1U,
+            memory_order_relaxed, memory_order_relaxed)) { *out = (uint64_t)next; return UMI_STATUS_OK; }
+    }
+}
 
 /* Provide the copy text operation used by this module and its client applications. */
 static void copy_text(char *destination, size_t capacity, const char *source)
@@ -434,6 +453,8 @@ UmiStatus umi_trading_workspace_create(
      * used.
      */
     if (workspace == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = AllocateSessionReportOwner(&workspace->session_report_owner_id);
+    if (status != UMI_STATUS_OK) { free(workspace); return status; }
     workspace->account_id = effective.account_id;
     workspace->environment = effective.environment;
     workspace->order_filter = UMI_TRADING_WORKSPACE_ORDERS_ALL;
@@ -481,6 +502,7 @@ void umi_trading_workspace_destroy(UmiTradingWorkspace *workspace)
     if (workspace == NULL) return;
     umi_trading_trade_tape_destroy(workspace->trade_tape);
     workspace->trade_tape = NULL;
+    UmiChartDrawingHistoryDestroy(workspace->drawing_history);
     umi_chart_workspace_destroy(workspace->charts);
     workspace->charts = NULL;
     free(workspace);
@@ -2091,17 +2113,25 @@ UmiStatus UmiTradingWorkspaceSetChartNavigation(UmiTradingWorkspace *workspace,
 {
     if (navigation == NULL || navigation->visible_bars > UMI_CHART_MAX_POINTS ||
         (navigation->pinned != 0 && navigation->pinned != 1)) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!UmiChartTimeframeValid(navigation->interval_ms)) return UMI_STATUS_INVALID_ARGUMENT;
     size_t index;
     UmiStatus status = ChartSelectedIndex(workspace, instrument_id, &index);
     if (status != UMI_STATUS_OK) return status;
     UmiChartNavigation *current = &workspace->chart_navigation[index];
+/* The timeframe is part of the view identity; changing it must advance the canonical workspace revision. The previous implementation remains for engineering review. */
+#if 0
     if (current->visible_bars == navigation->visible_bars && current->anchor_ms == navigation->anchor_ms &&
         current->pinned == navigation->pinned) return UMI_STATUS_OK;
+#endif
+    if (current->visible_bars == navigation->visible_bars && current->anchor_ms == navigation->anchor_ms &&
+        current->pinned == navigation->pinned && current->interval_ms == navigation->interval_ms) return UMI_STATUS_OK;
     if (workspace->revision == UINT64_MAX) return UMI_STATUS_INVALID_STATE;
     *current = *navigation;
     workspace->revision++;
     return UMI_STATUS_OK;
 }
+/* Drawing construction now uses the shared tool contract for ranges, liquidity annotations and directional rays. The reusable identity search also serves guarded duplicate actions, while preserving restored identities and the existing drawing API. The previous implementation remains for engineering review. */
+#if 0
 UmiStatus UmiTradingWorkspaceAddChartDrawing(UmiTradingWorkspace *workspace,
     const char *instrument_id, const char *tool, UmiChartPoint first, UmiChartPoint second)
 {
@@ -2118,9 +2148,24 @@ UmiStatus UmiTradingWorkspaceAddChartDrawing(UmiTradingWorkspace *workspace,
     uint64_t revision = umi_chart_drawing_registry_revision(registry);
     if (workspace->revision == UINT64_MAX || revision == UINT64_MAX) return UMI_STATUS_INVALID_STATE;
     UmiChartDrawingSnapshot drawing = {0}, existing;
+/* Restored drawing identities may exceed the local revision counter. A bounded identity search now permits subsequent drawings without changing restored IDs. The previous implementation remains for engineering review. */
+#if 0
     (void)snprintf(drawing.id, sizeof drawing.id, "trading-drawing-%llu", (unsigned long long)(revision + 1U));
     if (umi_chart_drawing_registry_find(registry, drawing.id, &existing) == UMI_STATUS_OK)
         return UMI_STATUS_ALREADY_EXISTS;
+#endif
+    /* Restored drawings retain their IDs. A bounded search avoids a collision
+     * when a saved ID is ahead of this session's local registry revision. */
+    uint64_t candidate = revision + 1U;
+    for (size_t attempt = 0U; ; ++attempt) {
+        (void)snprintf(drawing.id, sizeof drawing.id, "trading-drawing-%llu", (unsigned long long)candidate);
+        status = umi_chart_drawing_registry_find(registry, drawing.id, &existing);
+        if (status == UMI_STATUS_NOT_FOUND) break;
+        if (status != UMI_STATUS_OK) return status;
+        if (candidate == UINT64_MAX || attempt >= UMI_CHART_DRAWING_CAPACITY)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        ++candidate;
+    }
     copy_text(drawing.pane_id, sizeof drawing.pane_id, instrument_id);
     copy_text(drawing.tool, sizeof drawing.tool, tool);
     drawing.time1 = first.time_ms;
@@ -2131,6 +2176,135 @@ UmiStatus UmiTradingWorkspaceAddChartDrawing(UmiTradingWorkspace *workspace,
     if (status == UMI_STATUS_OK) workspace->revision++;
     return status;
 }
+#endif
+#include "umicom/chart/drawing_edit.h"
+/* Chart identities are shared by new gestures and explicit copies. Restored
+ * identities are never overwritten, even when ahead of the local revision. */
+static UmiStatus NextChartDrawingId(UmiChartDrawingRegistry *registry,char out[128])
+{
+    uint64_t revision=umi_chart_drawing_registry_revision(registry);
+    if(revision==UINT64_MAX)return UMI_STATUS_INVALID_STATE;
+    UmiChartDrawingSnapshot existing;uint64_t candidate=revision+1U;
+    for(size_t attempt=0;;++attempt){
+        (void)snprintf(out,128,"trading-drawing-%llu",(unsigned long long)candidate);
+        UmiStatus status=umi_chart_drawing_registry_find(registry,out,&existing);
+        if(status==UMI_STATUS_NOT_FOUND)return UMI_STATUS_OK;
+        if(status!=UMI_STATUS_OK)return status;
+        if(candidate==UINT64_MAX||attempt>=UMI_CHART_DRAWING_CAPACITY)return UMI_STATUS_CAPACITY_EXCEEDED;
+        ++candidate;
+    }
+}
+#include "chart_drawing_history.inc"
+/* Canonical drawing edits now publish their reversible evidence with the registry, preserving atomic ownership in Framework. The previous implementation remains for engineering review. */
+#if 0
+UmiStatus UmiTradingWorkspaceAddChartDrawing(UmiTradingWorkspace *workspace,
+    const char *instrument_id,const char *tool,UmiChartPoint first,UmiChartPoint second)
+{
+    UmiChartDrawingKind kind;UmiStatus status=UmiChartDrawingKindParse(tool,&kind);
+    if(status!=UMI_STATUS_OK)return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve argument validation before workspace access. */
+    UmiChartDrawingSnapshot drawing;
+    status=UmiChartDrawingInitialize("candidate","candidate",kind,first,second,&drawing);
+    if(status!=UMI_STATUS_OK)return status;
+    size_t index;status=ChartSelectedIndex(workspace,instrument_id,&index);
+    if(status!=UMI_STATUS_OK)return status;
+    (void)index;
+    if(workspace->revision==UINT64_MAX)return UMI_STATUS_INVALID_STATE;
+    UmiChartDrawingRegistry *registry=umi_chart_workspace_drawings(workspace->charts);char id[128];
+    status=NextChartDrawingId(registry,id);
+    if(status==UMI_STATUS_OK)status=UmiChartDrawingInitialize(id,instrument_id,kind,first,second,&drawing);
+    if(status==UMI_STATUS_OK)status=umi_chart_drawing_registry_upsert(registry,&drawing);
+    if(status==UMI_STATUS_OK)workspace->revision++;
+    return status;
+}
+#endif
+UmiStatus UmiTradingWorkspaceAddChartDrawing(UmiTradingWorkspace *workspace,
+    const char *instrument_id,const char *tool,UmiChartPoint first,UmiChartPoint second)
+{
+    UmiChartDrawingKind kind; UmiChartDrawingSnapshot drawing;
+    UmiStatus status = UmiChartDrawingKindParse(tool, &kind);
+    if (status != UMI_STATUS_OK) return UMI_STATUS_INVALID_ARGUMENT;
+    status = UmiChartDrawingInitialize("candidate", "candidate", kind, first, second, &drawing);
+    if (status != UMI_STATUS_OK) return status;
+    ChartHistoryRequest request = {.action=CH_ADD, .pane=instrument_id, .kind=kind, .first=first, .second=second};
+    return ChartHistoryApply(workspace, &request, "Create drawing");
+}
+/* Canonical drawing edits now publish their reversible evidence with the registry, preserving atomic ownership in Framework. The previous implementation remains for engineering review. */
+#if 0
+UmiStatus UmiTradingWorkspaceSetChartDrawingLocked(UmiTradingWorkspace *workspace,
+    const char *instrumentId,const char *drawingId,uint64_t expectedRevision,int locked)
+{
+    size_t index;UmiStatus status=ChartSelectedIndex(workspace,instrumentId,&index);
+    if(status!=UMI_STATUS_OK)return status;
+    (void)index;
+    if(workspace->revision==UINT64_MAX)return UMI_STATUS_INVALID_STATE;
+    UmiChartDrawingRegistry *registry=umi_chart_workspace_drawings(workspace->charts);
+    uint64_t before=umi_chart_drawing_registry_revision(registry);
+    status=UmiChartDrawingSetLocked(registry,instrumentId,drawingId,expectedRevision,locked);
+    if(status==UMI_STATUS_OK&&before!=umi_chart_drawing_registry_revision(registry))workspace->revision++;
+    return status;
+}
+#endif
+UmiStatus UmiTradingWorkspaceSetChartDrawingLocked(UmiTradingWorkspace *workspace,
+    const char *instrumentId,const char *drawingId,uint64_t expectedRevision,int locked)
+{
+    ChartHistoryRequest request = {.action=CH_LOCK, .flag=locked, .pane=instrumentId, .id=drawingId, .expected=expectedRevision};
+    return ChartHistoryApply(workspace, &request, "Change lock");
+}
+/* Canonical drawing edits now publish their reversible evidence with the registry, preserving atomic ownership in Framework. The previous implementation remains for engineering review. */
+#if 0
+UmiStatus UmiTradingWorkspaceMoveChartDrawing(UmiTradingWorkspace *workspace,
+    const char *instrumentId,const char *drawingId,uint64_t expectedRevision,UmiChartPoint first,UmiChartPoint second)
+{
+    size_t index;UmiStatus status=ChartSelectedIndex(workspace,instrumentId,&index);
+    if(status!=UMI_STATUS_OK)return status;
+    (void)index;
+    if(workspace->revision==UINT64_MAX)return UMI_STATUS_INVALID_STATE;
+    UmiChartDrawingRegistry *registry=umi_chart_workspace_drawings(workspace->charts);
+    uint64_t before=umi_chart_drawing_registry_revision(registry);
+    status=UmiChartDrawingSetGeometry(registry,instrumentId,drawingId,expectedRevision,first,second);
+    if(status==UMI_STATUS_OK&&before!=umi_chart_drawing_registry_revision(registry))workspace->revision++;
+    return status;
+}
+#endif
+UmiStatus UmiTradingWorkspaceMoveChartDrawing(UmiTradingWorkspace *workspace,
+    const char *instrumentId,const char *drawingId,uint64_t expectedRevision,UmiChartPoint first,UmiChartPoint second)
+{
+    ChartHistoryRequest request = {.action=CH_MOVE, .first=first, .second=second, .pane=instrumentId, .id=drawingId, .expected=expectedRevision};
+    return ChartHistoryApply(workspace, &request, "Move drawing");
+}
+/* Canonical drawing edits now publish their reversible evidence with the registry, preserving atomic ownership in Framework. The previous implementation remains for engineering review. */
+#if 0
+UmiStatus UmiTradingWorkspaceDuplicateChartDrawing(UmiTradingWorkspace *workspace,
+    const char *instrumentId,const char *drawingId,uint64_t expectedRevision,char *outId,size_t capacity)
+{
+    if(outId==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index;UmiStatus status=ChartSelectedIndex(workspace,instrumentId,&index);
+    if(status!=UMI_STATUS_OK)return status;
+    (void)index;
+    if(workspace->revision==UINT64_MAX)return UMI_STATUS_INVALID_STATE;
+    UmiChartDrawingRegistry *registry=umi_chart_workspace_drawings(workspace->charts);char id[128];
+    status=NextChartDrawingId(registry,id);
+    if(status!=UMI_STATUS_OK)return status;
+    if(strlen(id)+1U>capacity)return UMI_STATUS_CAPACITY_EXCEEDED;
+    status=UmiChartDrawingDuplicate(registry,instrumentId,drawingId,expectedRevision,id);
+    if(status==UMI_STATUS_OK){workspace->revision++;strcpy(outId,id);}
+    return status;
+}
+#endif
+UmiStatus UmiTradingWorkspaceDuplicateChartDrawing(UmiTradingWorkspace *workspace,
+    const char *instrumentId,const char *drawingId,uint64_t expectedRevision,char *outId,size_t capacity)
+{
+    if (outId == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    ChartHistoryRequest request = {.action=CH_DUPLICATE, .pane=instrumentId, .id=drawingId,
+        .expected=expectedRevision, .output_capacity=capacity};
+    UmiStatus status = ChartHistoryApply(workspace, &request, "Duplicate drawing");
+    if (status == UMI_STATUS_OK) strcpy(outId, request.new_id);
+    return status;
+}
+
+/* Canonical drawing edits now publish their reversible evidence with the registry, preserving atomic ownership in Framework. The previous implementation remains for engineering review. */
+#if 0
 UmiStatus UmiTradingWorkspaceRemoveChartDrawing(UmiTradingWorkspace *workspace,
     const char *instrument_id, const char *drawing_id, uint64_t expected_revision)
 {
@@ -2150,6 +2324,14 @@ UmiStatus UmiTradingWorkspaceRemoveChartDrawing(UmiTradingWorkspace *workspace,
     status = umi_chart_drawing_registry_remove(registry, drawing_id);
     if (status == UMI_STATUS_OK) workspace->revision++;
     return status;
+}
+#endif
+UmiStatus UmiTradingWorkspaceRemoveChartDrawing(UmiTradingWorkspace *workspace,
+    const char *instrument_id, const char *drawing_id, uint64_t expected_revision)
+{
+    if (drawing_id == NULL || drawing_id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    ChartHistoryRequest request = {.action=CH_REMOVE, .pane=instrument_id, .id=drawing_id, .expected=expected_revision};
+    return ChartHistoryApply(workspace, &request, "Remove drawing");
 }
 UmiStatus UmiTradingWorkspacePrepareChartLimit(UmiTradingWorkspace *workspace,
     const char *instrument_id, UmiSide side, double price)
@@ -2183,4 +2365,233 @@ UmiStatus UmiTradingWorkspaceOrderAt(const UmiTradingWorkspace *workspace,
     if (index >= workspace->oms.orders.count) return UMI_STATUS_NOT_FOUND;
     *out_order = workspace->oms.orders.orders[index];
     return UMI_STATUS_OK;
+}
+
+/* Reporting must not call the general snapshot's selection reconciliation.
+ * The existing order-visible predicate remains the single filtering rule;
+ * this const capture copies matching records in the same newest-first order. */
+#include "order_report_private.h"
+UmiStatus UmiTradingCopyOrderReport(const UmiTradingWorkspace *workspace,
+    UmiTradingOrderReport *outReport)
+{
+    if (workspace == NULL || outReport == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (workspace->oms.orders.count > UMI_TRADING_MAX_ORDERS) return UMI_STATUS_INVALID_STATE;
+    memset(outReport, 0, sizeof(*outReport));
+    outReport->query.status = workspace->order_filter;
+    memcpy(outReport->query.text, workspace->order_search, sizeof(outReport->query.text));
+    outReport->revision = workspace->revision;
+    outReport->retained = workspace->oms.orders.count;
+    for (size_t i = workspace->oms.orders.count; i > 0U; --i) {
+        const UmiOrder *order = &workspace->oms.orders.orders[i - 1U];
+        if (order_visible(workspace, order)) outReport->orders[outReport->matching++] = *order;
+    }
+    return UMI_STATUS_OK;
+}
+
+/* Persistence captures the canonical chart model, independently of the GTK
+ * lifetime and without the general workspace snapshot's selection repair. */
+#include "umicom/trading/chart_document.h"
+UmiStatus UmiTradingWorkspaceCaptureChart(const UmiTradingWorkspace *workspace,
+    const char *instrumentId, UmiChartDocument **outDocument)
+{
+    if (outDocument != NULL) *outDocument = NULL;
+    if (workspace == NULL || outDocument == NULL || instrumentId == NULL || instrumentId[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index = market_index(workspace, instrumentId);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    return UmiChartDocumentCapture(umi_chart_workspace_drawings(workspace->charts),
+        instrumentId, &workspace->chart_navigation[index], outDocument);
+}
+/* The same tool semantics now govern gestures and restored charts. Supported boxes and rays retain their geometry and locks through the existing versioned checkpoint format; unknown tools still refuse restoration. The previous implementation remains for engineering review. */
+#if 0
+UmiStatus UmiTradingChartDocumentValidate(const UmiChartDocument *document)
+{
+    UmiChartDocumentSummary summary;
+    UmiStatus status = UmiChartDocumentGetSummary(document, &summary);
+    if (status != UMI_STATUS_OK) return status;
+    for (size_t i = 0U; i < summary.drawing_count; ++i) {
+        UmiChartDrawingSnapshot drawing;
+        status = UmiChartDocumentDrawingAt(document, i, &drawing);
+        if (status != UMI_STATUS_OK) return status;
+        int trend = strcmp(drawing.tool, "trend") == 0;
+        if (!trend && strcmp(drawing.tool, "support") != 0 && strcmp(drawing.tool, "resistance") != 0)
+            return UMI_STATUS_UNAVAILABLE;
+        if (drawing.time1 < 0 || drawing.time2 < 0 ||
+            (trend && drawing.time1 == drawing.time2) || (!trend && drawing.value1 != drawing.value2))
+            return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus UmiTradingChartDocumentValidate(const UmiChartDocument *document)
+{
+    UmiChartDocumentSummary summary;UmiStatus status=UmiChartDocumentGetSummary(document,&summary);
+    if(status!=UMI_STATUS_OK)return status;
+    for(size_t i=0;i<summary.drawing_count;++i){
+        UmiChartDrawingSnapshot drawing;status=UmiChartDocumentDrawingAt(document,i,&drawing);
+        if(status==UMI_STATUS_OK)status=UmiChartDrawingToolValidate(&drawing);
+        if(status!=UMI_STATUS_OK)return status;
+    }
+    return UMI_STATUS_OK;
+}
+UmiStatus UmiTradingWorkspaceRestoreChart(UmiTradingWorkspace *workspace,
+    const UmiChartDocument *document, uint64_t expectedDrawingRevision,
+    const UmiChartNavigation *expectedNavigation)
+{
+    if (workspace == NULL || expectedNavigation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = UmiTradingChartDocumentValidate(document);
+    if (status != UMI_STATUS_OK) return status;
+    UmiChartDocumentSummary summary;
+    status = UmiChartDocumentGetSummary(document, &summary);
+    if (status != UMI_STATUS_OK) return status;
+    size_t index = market_index(workspace, summary.pane_id);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    const UmiChartNavigation *current = &workspace->chart_navigation[index];
+/* A saved-chart preview must reject restore after its timeframe changes, as it already rejects changed zoom and anchoring. The previous implementation remains for engineering review. */
+#if 0
+    if (current->visible_bars != expectedNavigation->visible_bars ||
+        current->anchor_ms != expectedNavigation->anchor_ms || current->pinned != expectedNavigation->pinned)
+        return UMI_STATUS_INVALID_STATE;
+#endif
+    if (current->visible_bars != expectedNavigation->visible_bars ||
+        current->anchor_ms != expectedNavigation->anchor_ms || current->pinned != expectedNavigation->pinned ||
+        current->interval_ms != expectedNavigation->interval_ms)
+        return UMI_STATUS_INVALID_STATE;
+    if (workspace->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Restore changes the complete view as well as drawings. Preflight the
+     * history barrier before publication; Reset cannot fail on this owner thread
+     * after this check, and failed document restores retain prior history. */
+    if (workspace->drawing_history != NULL) {
+        UmiChartDrawingHistorySnapshot history;
+        status = UmiChartDrawingHistoryRead(workspace->drawing_history, &history);
+        if (status != UMI_STATUS_OK) return status;
+        if (history.revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    status = UmiChartDocumentApplyDrawings(document, umi_chart_workspace_drawings(workspace->charts), expectedDrawingRevision);
+    if (status != UMI_STATUS_OK) return status;
+    /* All validation and allocation completed before the single registry commit.
+     * Publishing the copied view cannot fail, so drawings and view move together. */
+    workspace->chart_navigation[index] = summary.navigation;
+    if (workspace->drawing_history != NULL) (void)UmiChartDrawingHistoryReset(workspace->drawing_history);
+    ++workspace->revision;
+    return UMI_STATUS_OK;
+}
+
+
+/* Session reports capture one owner revision without touching UI selection,
+ * applying order filters or acquiring any broker-routing capability. */
+#include "session_report_private.h"
+UmiStatus UmiTradingCopySessionSource(const UmiTradingWorkspace *workspace,
+    UmiTradingSessionSource *outSource)
+{
+    if (workspace == NULL || outSource == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (workspace->oms.orders.count > UMI_TRADING_MAX_ORDERS ||
+        workspace->executions.count > UMI_TRADING_MAX_ORDERS ||
+        workspace->positions.count > UMI_TRADING_MAX_POSITIONS) return UMI_STATUS_INVALID_STATE;
+    memset(outSource, 0, sizeof(*outSource));
+    outSource->account = workspace->account_id;
+    outSource->ownerIdentity = workspace->session_report_owner_id;
+    outSource->environment = workspace->environment; outSource->revision = workspace->revision;
+    outSource->orderCount = workspace->oms.orders.count;
+    outSource->executionCount = workspace->executions.count;
+    outSource->positionCount = workspace->positions.count;
+    memcpy(outSource->orders, workspace->oms.orders.orders, outSource->orderCount * sizeof(UmiOrder));
+    memcpy(outSource->executions, workspace->executions.reports, outSource->executionCount * sizeof(UmiExecutionReport));
+    memcpy(outSource->positions, workspace->positions.positions, outSource->positionCount * sizeof(UmiPosition));
+    return UMI_STATUS_OK;
+}
+UmiStatus UmiTradingSessionSourceCurrent(const UmiTradingWorkspace *workspace,
+    const UmiTradingSessionSource *source, bool *outCurrent)
+{
+    if (outCurrent != NULL) *outCurrent = false;
+    if (workspace == NULL || source == NULL || outCurrent == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outCurrent = workspace->session_report_owner_id == source->ownerIdentity &&
+        workspace->revision == source->revision && workspace->environment == source->environment &&
+        strcmp(workspace->account_id.value, source->account.value) == 0;
+    return UMI_STATUS_OK;
+}
+
+
+#include "umicom/chart/drawing_visibility.h"
+/* Drawing presentation uses the existing selected-instrument guard and chart
+ * owner. No trading command or risk-preview invalidation is dispatched here. */
+/* Canonical drawing edits now publish their reversible evidence with the registry, preserving atomic ownership in Framework. The previous implementation remains for engineering review. */
+#if 0
+UmiStatus UmiTradingWorkspaceSetChartDrawingHidden(UmiTradingWorkspace *workspace,
+    const char *instrumentId, const char *drawingId, uint64_t expectedRevision, int hidden)
+{
+    size_t index;
+    UmiStatus status = ChartSelectedIndex(workspace, instrumentId, &index);
+    if (status != UMI_STATUS_OK) return status;
+    (void)index;
+    if (workspace->revision == UINT64_MAX) return UMI_STATUS_INVALID_STATE;
+    UmiChartDrawingRegistry *registry = umi_chart_workspace_drawings(workspace->charts);
+    uint64_t before = umi_chart_drawing_registry_revision(registry);
+    status = UmiChartDrawingSetHidden(registry, instrumentId, drawingId, expectedRevision, hidden);
+    if (status == UMI_STATUS_OK && before != umi_chart_drawing_registry_revision(registry)) ++workspace->revision;
+    return status;
+}
+#endif
+UmiStatus UmiTradingWorkspaceSetChartDrawingHidden(UmiTradingWorkspace *workspace,
+    const char *instrumentId, const char *drawingId, uint64_t expectedRevision, int hidden)
+{
+    ChartHistoryRequest request = {.action=CH_HIDE, .flag=hidden, .pane=instrumentId, .id=drawingId, .expected=expectedRevision};
+    return ChartHistoryApply(workspace, &request, "Change visibility");
+}
+
+/* One explicit pane action publishes the batch through the shared registry. */
+/* Canonical drawing edits now publish their reversible evidence with the registry, preserving atomic ownership in Framework. The previous implementation remains for engineering review. */
+#if 0
+UmiStatus UmiTradingWorkspaceSetChartDrawingsHidden(UmiTradingWorkspace *workspace,
+    const char *instrumentId, uint64_t expectedRegistryRevision, int hidden, size_t *outChanged)
+{
+    size_t index;
+    UmiStatus status = ChartSelectedIndex(workspace, instrumentId, &index);
+    if (status != UMI_STATUS_OK) return status;
+    (void)index;
+    if (workspace->revision == UINT64_MAX) return UMI_STATUS_INVALID_STATE;
+    UmiChartDrawingRegistry *registry = umi_chart_workspace_drawings(workspace->charts);
+    uint64_t before = umi_chart_drawing_registry_revision(registry);
+    status = UmiChartDrawingSetPaneHidden(registry, instrumentId, expectedRegistryRevision, hidden, outChanged);
+    if (status == UMI_STATUS_OK && before != umi_chart_drawing_registry_revision(registry)) ++workspace->revision;
+    return status;
+}
+#endif
+UmiStatus UmiTradingWorkspaceSetChartDrawingsHidden(UmiTradingWorkspace *workspace,
+    const char *instrumentId, uint64_t expectedRegistryRevision, int hidden, size_t *outChanged)
+{
+    ChartHistoryRequest request = {.action=CH_HIDE_PANE, .pane=instrumentId, .expected=expectedRegistryRevision, .flag=hidden};
+    UmiStatus status = ChartHistoryApply(workspace, &request, hidden ? "Hide all drawings" : "Show all drawings");
+    if (status == UMI_STATUS_OK && outChanged != NULL) *outChanged = request.changed;
+    return status;
+}
+
+
+/* Reuse the canonical drawing owner rather than placing presentation state in
+ * Trader. Selected-instrument and revision guards prevent a delayed editor
+ * from targeting a different instrument or overwriting a more recent edit. */
+/* Canonical drawing edits now publish their reversible evidence with the registry, preserving atomic ownership in Framework. The previous implementation remains for engineering review. */
+#if 0
+UmiStatus UmiTradingWorkspaceSetChartDrawingAppearance(UmiTradingWorkspace *workspace,
+    const char *instrumentId, const char *drawingId, uint64_t expectedRevision,
+    const UmiChartDrawingAppearance *appearance)
+{
+    size_t index;
+    UmiStatus status = ChartSelectedIndex(workspace, instrumentId, &index);
+    if (status != UMI_STATUS_OK) return status;
+    (void)index;
+    if (workspace->revision == UINT64_MAX) return UMI_STATUS_INVALID_STATE;
+    UmiChartDrawingRegistry *registry = umi_chart_workspace_drawings(workspace->charts);
+    uint64_t before = umi_chart_drawing_registry_revision(registry);
+    status = UmiChartDrawingSetAppearance(registry, instrumentId, drawingId, expectedRevision, appearance);
+    if (status == UMI_STATUS_OK && before != umi_chart_drawing_registry_revision(registry)) ++workspace->revision;
+    return status;
+}
+#endif
+UmiStatus UmiTradingWorkspaceSetChartDrawingAppearance(UmiTradingWorkspace *workspace,
+    const char *instrumentId, const char *drawingId, uint64_t expectedRevision,
+    const UmiChartDrawingAppearance *appearance)
+{
+    ChartHistoryRequest request = {.action=CH_APPEARANCE, .appearance=appearance, .pane=instrumentId, .id=drawingId, .expected=expectedRevision};
+    return ChartHistoryApply(workspace, &request, "Change appearance");
 }

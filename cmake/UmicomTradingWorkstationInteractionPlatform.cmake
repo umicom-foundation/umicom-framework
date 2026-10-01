@@ -50,11 +50,13 @@ function(umicom_trading_workstation_attach)
         if(NOT _umicom_trading_gtk4_attached)
             target_sources(umicom_ui_gtk4 PRIVATE
                 "${UMICOM_TRADING_WORKSTATION_ROOT}/adapters/gtk4/trading_ui/trading_panels_gtk4.c"
+                "${UMICOM_TRADING_WORKSTATION_ROOT}/adapters/gtk4/trading_ui/session_report_gtk4.c"
                 "${UMICOM_TRADING_WORKSTATION_ROOT}/adapters/gtk4/trading_ui/interactive_chart_gtk4.c"
                 "${UMICOM_TRADING_WORKSTATION_ROOT}/adapters/gtk4/security/local_profile_gate_gtk4.c"
                 "${UMICOM_TRADING_WORKSTATION_ROOT}/adapters/gtk4/trading_ui/trading_suite_workstation_gtk4.c"
             )
             target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::trading_ui)
+            target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::trading_chart_persistence)
             target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::security)
             set_property(
                 TARGET umicom_ui_gtk4

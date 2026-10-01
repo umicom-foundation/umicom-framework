@@ -15,6 +15,8 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/debug/workspace.h"
+#include "selection_private.h"
+#include <stdatomic.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,9 +29,24 @@ struct UmiDebugWorkspace {
     char selected_frame_id[UMI_DEBUG_WORKSPACE_ID_CAPACITY];
     char selected_scope_id[UMI_DEBUG_WORKSPACE_ID_CAPACITY];
     uint64_t next_watch_id;
+    uint64_t selection_owner;
     uint64_t revision;
     int follows_active_thread;
 };
+
+/* Retained rows must distinguish a new workspace even if allocation addresses,
+ * row IDs and revisions are reused. This identity is process-local only. */
+static atomic_uint_fast64_t next_selection_owner=1;
+static UmiStatus AllocateSelectionOwner(uint64_t *out)
+{
+    uint_fast64_t next=atomic_load_explicit(&next_selection_owner,memory_order_relaxed);
+    for(;;){
+        if(next>=UINT64_MAX)return UMI_STATUS_CAPACITY_EXCEEDED;
+        if(atomic_compare_exchange_weak_explicit(&next_selection_owner,&next,next+1U,memory_order_relaxed,memory_order_relaxed)){
+            *out=(uint64_t)next;return UMI_STATUS_OK;
+        }
+    }
+}
 
 /* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(char *destination, size_t capacity,
@@ -227,6 +244,8 @@ UmiStatus umi_debug_workspace_create(UmiDebugService *service,
     workspace->service = service;
     workspace->controller = controller;
     workspace->next_watch_id = 1U;
+    UmiStatus identityStatus=AllocateSelectionOwner(&workspace->selection_owner);
+    if(identityStatus!=UMI_STATUS_OK){free(workspace);return identityStatus;}
     workspace->revision = 1U;
     workspace->follows_active_thread = 1;
     *out_workspace = workspace;
@@ -243,6 +262,8 @@ void umi_debug_workspace_destroy(UmiDebugWorkspace *workspace)
  * Provide the debug workspace refresh operation used by this module and its client
  * applications.
  */
+/* Refresh now verifies retained thread/frame/scope relationships before selecting defaults, preventing stale DAP identities from leaving inspection stuck. The previous implementation remains for engineering review. */
+#if 0
 UmiStatus umi_debug_workspace_refresh(UmiDebugWorkspace *workspace)
 {
     UmiStatus status;
@@ -265,7 +286,38 @@ UmiStatus umi_debug_workspace_refresh(UmiDebugWorkspace *workspace)
     }
     return status;
 }
-
+#endif
+UmiStatus umi_debug_workspace_refresh(UmiDebugWorkspace *workspace)
+{
+    if(workspace==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    /* Repair the dependent selection chain in a candidate. A new DAP stop can
+     * replace every frame ID; a nonempty old ID is not proof that it exists. */
+    UmiDebugWorkspace candidate=*workspace;
+    UmiDebugThreadSnapshot thread;UmiDebugStackFrameSnapshot frame;UmiDebugScopeSnapshot scope;
+    if(candidate.selected_thread_id[0]!='\0'&&umi_debug_thread_registry_find(
+        umi_debug_service_thread(candidate.service),candidate.selected_thread_id,&thread)!=UMI_STATUS_OK){
+        candidate.selected_thread_id[0]='\0';clear_selection_after_thread(&candidate);
+    }
+    UmiStatus status=choose_default_thread(&candidate);
+    if(status!=UMI_STATUS_OK)return status;
+    if(candidate.selected_frame_id[0]!='\0'&&(umi_debug_stack_frame_registry_find(
+        umi_debug_service_stack_frame(candidate.service),candidate.selected_frame_id,&frame)!=UMI_STATUS_OK||!frame_is_visible(&candidate,&frame))){
+        candidate.selected_frame_id[0]='\0';clear_selection_after_frame(&candidate);
+    }
+    if(candidate.selected_thread_id[0]=='\0')clear_selection_after_thread(&candidate);
+    else {status=choose_default_frame(&candidate);if(status!=UMI_STATUS_OK)return status;}
+    if(candidate.selected_scope_id[0]!='\0'&&(umi_debug_scope_registry_find(
+        umi_debug_service_scope(candidate.service),candidate.selected_scope_id,&scope)!=UMI_STATUS_OK||!scope_is_visible(&candidate,&scope)))
+        candidate.selected_scope_id[0]='\0';
+    if(candidate.selected_frame_id[0]=='\0')clear_selection_after_frame(&candidate);
+    else {status=choose_default_scope(&candidate);if(status!=UMI_STATUS_OK)return status;}
+    if(strcmp(candidate.selected_thread_id,workspace->selected_thread_id)!=0||
+        strcmp(candidate.selected_frame_id,workspace->selected_frame_id)!=0||strcmp(candidate.selected_scope_id,workspace->selected_scope_id)!=0){
+        if(candidate.revision==UINT64_MAX)return UMI_STATUS_CAPACITY_EXCEEDED;
+        ++candidate.revision;
+    }
+    *workspace=candidate;return UMI_STATUS_OK;
+}
 /* Return the number of records represented by visible frame without changing their state. */
 static size_t visible_frame_count(UmiDebugWorkspace *workspace)
 {
@@ -899,4 +951,102 @@ UmiStatus umi_debug_workspace_console_entry_at(
     }
     return umi_debug_console_entry_registry_at(
         umi_debug_service_console_entry(workspace->service), index, out_entry);
+}
+
+
+UmiStatus UmiDebugWorkspaceViewStamp(UmiDebugWorkspace *workspace,UmiDebugViewStamp *out)
+{
+    if(workspace==NULL||out==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status=umi_debug_workspace_refresh(workspace);if(status!=UMI_STATUS_OK)return status;
+    UmiDebugControllerSnapshot controller;
+    status=umi_debug_controller_snapshot(workspace->controller,&controller);if(status!=UMI_STATUS_OK)return status;
+    UmiDebugViewStamp stamp={0};
+    stamp.owner=workspace->selection_owner;stamp.selection=workspace->revision;stamp.controller=controller.revision;
+    stamp.configurations=umi_debug_launch_configuration_registry_revision(umi_debug_service_launch_configuration(workspace->service));
+    stamp.sessions=umi_debug_session_registry_revision(umi_debug_service_session(workspace->service));
+    stamp.threads=umi_debug_thread_registry_revision(umi_debug_service_thread(workspace->service));
+    stamp.frames=umi_debug_stack_frame_registry_revision(umi_debug_service_stack_frame(workspace->service));
+    stamp.scopes=umi_debug_scope_registry_revision(umi_debug_service_scope(workspace->service));
+    stamp.variables=umi_debug_variable_registry_revision(umi_debug_service_variable(workspace->service));
+    stamp.watches=umi_debug_watch_registry_revision(umi_debug_service_watch(workspace->service));
+    stamp.breakpoints=umi_debug_breakpoint_registry_revision(umi_debug_service_breakpoint(workspace->service));
+    (void)copy_text(stamp.selectedThread,sizeof(stamp.selectedThread),workspace->selected_thread_id);
+    (void)copy_text(stamp.selectedFrame,sizeof(stamp.selectedFrame),workspace->selected_frame_id);
+    (void)copy_text(stamp.selectedScope,sizeof(stamp.selectedScope),workspace->selected_scope_id);
+    *out=stamp;return UMI_STATUS_OK;
+}
+UmiStatus UmiDebugWorkspaceCopySelection(UmiDebugWorkspace *workspace,UmiDebugSelectionKind kind,size_t index,UmiDebugSelection *out)
+{
+    if(workspace==NULL||out==NULL||(kind!=UMI_DEBUG_SELECT_THREAD&&kind!=UMI_DEBUG_SELECT_FRAME))return UMI_STATUS_INVALID_ARGUMENT;
+    UmiDebugSelection candidate={0};candidate.snapshot.kind=kind;
+    UmiStatus status=UmiDebugWorkspaceViewStamp(workspace,&candidate.stamp);if(status!=UMI_STATUS_OK)return status;
+    if(kind==UMI_DEBUG_SELECT_THREAD)status=umi_debug_workspace_thread_at(workspace,index,&candidate.snapshot.thread);
+    else{
+        status=umi_debug_workspace_frame_at(workspace,index,&candidate.snapshot.frame);
+        if(status==UMI_STATUS_OK)status=umi_debug_thread_registry_find(umi_debug_service_thread(workspace->service),
+            candidate.snapshot.frame.thread_id,&candidate.snapshot.thread);
+        if(status==UMI_STATUS_OK&&!candidate.snapshot.thread.stopped)status=UMI_STATUS_INVALID_STATE;
+    }
+    if(status!=UMI_STATUS_OK)return status;
+    UmiDebugSessionSnapshot session;UmiDebugLaunchConfigurationSnapshot config;
+    if(umi_debug_session_registry_find(umi_debug_service_session(workspace->service),candidate.snapshot.thread.session_id,&session)==UMI_STATUS_OK&&
+        umi_debug_launch_configuration_registry_find(umi_debug_service_launch_configuration(workspace->service),session.configuration_id,&config)==UMI_STATUS_OK)
+        (void)copy_text(candidate.snapshot.sourceBase,sizeof(candidate.snapshot.sourceBase),config.working_directory);
+    *out=candidate;return UMI_STATUS_OK;
+}
+
+
+/* Source property editing stays with Framework's canonical registry. A native
+ * application supplies explicit intent; no toolkit gets a second breakpoint
+ * store. The retained capture performs the wider owner/generation validation. */
+#include "breakpoint_edit_private.h"
+UmiStatus UmiDebugWorkspaceCommitBreakpoint(UmiDebugWorkspace *workspace,
+    const UmiDebugBreakpointSnapshot *before, const UmiDebugBreakpointSnapshot *replacement)
+{
+    if (workspace == NULL || before == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiDebugBreakpointRegistry *registry = umi_debug_service_breakpoint(workspace->service);
+    if (workspace->revision == UINT64_MAX || umi_debug_breakpoint_registry_revision(registry) == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiDebugBreakpointSnapshot current;
+    UmiStatus status = umi_debug_breakpoint_registry_find(registry, before->id, &current);
+    if (status != UMI_STATUS_OK) return status;
+    if (current.revision != before->revision) return UMI_STATUS_BUSY;
+    status = replacement != NULL ? umi_debug_breakpoint_registry_upsert(registry, replacement) :
+        umi_debug_breakpoint_registry_remove(registry, before->id);
+    if (status == UMI_STATUS_OK) workspace->revision++;
+    return status;
+}
+
+
+/* Native watch controls and protocol evaluation share this canonical owner.
+ * A toolkit cannot update a second store or resurrect a removed capture. */
+#include "watch_edit_private.h"
+UmiDebugService *UmiDebugWorkspaceWatchService(UmiDebugWorkspace *workspace)
+{
+    return workspace != NULL ? workspace->service : NULL;
+}
+UmiStatus UmiDebugWorkspaceCommitWatch(UmiDebugWorkspace *workspace,
+    const UmiDebugWatchSnapshot *before, const UmiDebugWatchSnapshot *replacement)
+{
+    if (workspace == NULL || before == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiDebugWatchRegistry *registry = umi_debug_service_watch(workspace->service);
+    if (workspace->revision == UINT64_MAX || umi_debug_watch_registry_revision(registry) == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiDebugWatchSnapshot current;
+    UmiStatus status = umi_debug_watch_registry_find(registry, before->id, &current);
+    if (status != UMI_STATUS_OK) return status;
+    if (current.revision != before->revision) return UMI_STATUS_BUSY;
+    status = replacement != NULL ? umi_debug_watch_registry_upsert(registry, replacement) :
+        umi_debug_watch_registry_remove(registry, before->id);
+    if (status == UMI_STATUS_OK) workspace->revision++;
+    return status;
+}
+
+
+/* Variable capture shares the same canonical owner as root rendering. The
+ * runtime keeps child response pages separate to avoid colliding root IDs. */
+#include "../debug_runtime/variable_inspection_private.h"
+UmiDebugService *UmiDebugWorkspaceVariableService(UmiDebugWorkspace *workspace)
+{
+    return workspace != NULL ? workspace->service : NULL;
 }

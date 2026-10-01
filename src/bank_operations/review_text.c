@@ -7,6 +7,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/bank_operations/review.h"
+#include "umicom/bank_operations/reconciliation.h"
 #include "umicom/finance/money_text.h"
 #include <inttypes.h>
 #include <stdarg.h>
@@ -54,6 +55,16 @@ static const char *TransferState(UmiBankTransferState state)
     default: return "invalid";
     }
 }
+static const char *ReviewHoldState(UmiBankHoldState state)
+{
+    switch (state) {
+    case UMI_BANK_HOLD_ACTIVE: return "active reservation";
+    case UMI_BANK_HOLD_RELEASED: return "released";
+    case UMI_BANK_HOLD_CAPTURED: return "captured locally";
+    case UMI_BANK_HOLD_REFUNDED: return "refunded locally";
+    default: return "invalid";
+    }
+}
 UmiStatus UmiBankReviewDescribe(const UmiBankReview *review, char *output, size_t capacity, size_t *outRequired)
 {
     UmiBankReviewSnapshot *snapshot;
@@ -86,6 +97,18 @@ UmiStatus UmiBankReviewDescribe(const UmiBankReview *review, char *output, size_
     Append(&sink, "Events: %zu -> %zu; journals: %zu -> %zu; holds: %zu -> %zu; transfers: %zu -> %zu\n",
         snapshot->before.events, snapshot->after.events, snapshot->before.journals, snapshot->after.journals,
         snapshot->before.holds, snapshot->after.holds, snapshot->before.transfers, snapshot->after.transfers);
+    if (snapshot->hasHold) {
+        const UmiBankHold *hold = &snapshot->holdAfter;
+        Append(&sink, "\nResolved %s %s; account %s; card %s\n  Original reservation: ",
+            hold->cardId.value[0] ? "card authorisation" : "manual hold", hold->id.value,
+            hold->accountId.value, hold->cardId.value[0] ? hold->cardId.value : "(none)");
+        Amount(&sink, &hold->amount);
+        UmiMoney captured = hold->amount; captured.minor_units = hold->capturedMinor;
+        Append(&sink, "\n  Captured amount: "); Amount(&sink, &captured);
+        Append(&sink, "\n  State: %s -> %s\n  Local release/void changes availability, not the booked balance.\n",
+            snapshot->holdExistedBefore ? ReviewHoldState(snapshot->holdBefore.state) : "not created",
+            ReviewHoldState(hold->state));
+    }
     if (snapshot->hasTransfer) {
         const UmiBankTransfer *transfer = &snapshot->transferAfter;
         Append(&sink, "\nResolved transfer %s: ", transfer->id.value);
@@ -111,6 +134,18 @@ UmiStatus UmiBankReviewDescribe(const UmiBankReview *review, char *output, size_
             snapshot->interestExistedBefore ? TransferState(snapshot->interestBefore.state) : "not submitted",
             TransferState(request->state));
     }
+    if (snapshot->hasCharge) {
+        const UmiBankChargeRequest *request = &snapshot->chargeAfter;
+        Append(&sink, "\nPractice charge %s; account %s; reference %s\n  Reason: %s\n  Fixed charge: ",
+            request->id.value, request->accountId.value, request->referenceId.value, request->reason);
+        Amount(&sink, &request->amount);
+        Append(&sink, "\n  No funds are reserved. Posting rechecks available funds and active account/customer state.\n"
+            "  Maker: %s; checker: %s; state: %s -> %s\n"
+            "  Full reversal retains the original journal. No scheduled billing, tax calculation or external fee collection.\n",
+            request->makerId.value, request->checkerId.value[0] != '\0' ? request->checkerId.value : "not assigned",
+            snapshot->chargeExistedBefore ? TransferState(snapshot->chargeBefore.state) : "not submitted",
+            TransferState(request->state));
+    }
     Append(&sink, "Affected account balances / debit eligibility: %zu\n", snapshot->accountCount);
     for (size_t i = 0U; i < snapshot->accountCount; ++i) {
         const UmiBankReviewAccount *row = &snapshot->accounts[i];
@@ -132,6 +167,28 @@ UmiStatus UmiBankReviewDescribe(const UmiBankReview *review, char *output, size_
     if (snapshot->hasReconciliation)
         Append(&sink, "Reconciliation: %s. A mismatch records a break; it does not adjust the balance.\n",
             snapshot->reconciliation.matched ? "matched" : "different balances");
+    if (snapshot->hasReconciliation) {
+        const UmiBankReconciliation *record = &snapshot->reconciliation;
+        Append(&sink, "\nComparison %s; account %s; original revision %" PRIu64 "\n  Original external: ",
+            record->id.value, record->accountId.value, record->revision);
+        Amount(&sink, &record->externalBalance); Append(&sink, "; original booked: "); Amount(&sink, &record->bookedBalance);
+        Append(&sink, "\n  Investigation: %s -> %s\n",
+            snapshot->reconciliationExistedBefore ? UmiBankReconciliationStateName(&snapshot->reconciliationBefore) : "not recorded",
+            UmiBankReconciliationStateName(record));
+        if (snapshot->reconciliationExistedBefore)
+            Append(&sink, "  Requested reason: %s\n  Latest recorded reviewer: %s; review revision %" PRIu64 "\n",
+                snapshot->command.name, record->reviewedBy.value, record->reviewedRevision);
+        if (snapshot->hasReconciliationEvidence) {
+            const UmiBankReconciliation *evidence = &snapshot->reconciliationEvidence;
+            Append(&sink, "  Linked comparison %s; account %s; revision %" PRIu64 "; external ",
+                evidence->id.value, evidence->accountId.value, evidence->revision);
+            Amount(&sink, &evidence->externalBalance); Append(&sink, "; booked "); Amount(&sink, &evidence->bookedBalance);
+            Append(&sink, "\n");
+        }
+        if (snapshot->command.action == UMI_BANK_RECONCILIATION_REOPEN)
+            Append(&sink, "  Reopening retains the previous evidence link for history; a new resolution needs fresh matching evidence.\n");
+        Append(&sink, "  Original comparison facts stay unchanged. No balance adjustment or journal is proposed by investigation.\n");
+    }
     Append(&sink, "\nThis is a prediction from cached state, not a receipt or a real payment.\n"
         "Changed fields, identity or saved state require another review.\n");
     free(snapshot);

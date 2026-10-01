@@ -17,6 +17,7 @@
 #include "umicom/document/coordinator.h"
 #include "umicom/document/close.h"
 #include "umicom/document/edit.h"
+#include "umicom/document/replacement.h"
 #include "umicom/document/text_encoding.h"
 
 #include <stdio.h>
@@ -2335,3 +2336,7 @@ UmiStatus UmiDocumentCoordinatorApplyClose(UmiDocumentCoordinator *coordinator,
     return UmiDocumentCoordinatorClose(coordinator, plan->snapshot.document_id,
         decision == UMI_DOCUMENT_CLOSE_DISCARD);
 }
+
+/* Replacement reviews share this coordinator's edit capture and transaction,
+ * keeping history and document ownership in the existing Framework service. */
+#include "replacement_review.inc"

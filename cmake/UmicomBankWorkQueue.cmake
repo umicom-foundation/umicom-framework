@@ -1,0 +1,42 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# Request selection composes the canonical banking review and report owners.
+include_guard(GLOBAL)
+target_sources(umicom_bank_operations PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/bank_operations/history_compare.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/bank_operations/work_queue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/bank_operations/work_queue_csv.c")
+if(BUILD_TESTING)
+    foreach(group capture review csv storage)
+        add_executable(umicom-bank-queue-${group}-test "${CMAKE_CURRENT_LIST_DIR}/../tests/bank_queue/test_${group}.c")
+        target_link_libraries(umicom-bank-queue-${group}-test PRIVATE Umicom::bank_operations)
+        umicom_bank_review_target(umicom-bank-queue-${group}-test)
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-bank-queue-${group}-test)
+        endif()
+    endforeach()
+    foreach(case ordered kinds states destination invalid ownership closed capacity bounds)
+        add_test(NAME framework.bank_queue.capture.${case} COMMAND umicom-bank-queue-capture-test ${case})
+        set_tests_properties(framework.bank_queue.capture.${case} PROPERTIES TIMEOUT 30 LABELS "bank;queue;regression")
+    endforeach()
+    foreach(case approve execute post same-maker capabilities wrong-kind wrong-id stale history equivalent revision)
+        add_test(NAME framework.bank_queue.review.${case} COMMAND umicom-bank-queue-review-test ${case})
+        set_tests_properties(framework.bank_queue.review.${case} PROPERTIES TIMEOUT 30 LABELS "bank;queue;review;regression")
+    endforeach()
+    foreach(case values filtered empty ownership)
+        add_test(NAME framework.bank_queue.csv.${case} COMMAND umicom-bank-queue-csv-test ${case})
+        set_tests_properties(framework.bank_queue.csv.${case} PROPERTIES TIMEOUT 30 LABELS "bank;queue;csv;regression")
+    endforeach()
+    foreach(case reopen stale-writer)
+        add_test(NAME framework.bank_queue.storage.${case} COMMAND umicom-bank-queue-storage-test ${case}
+            "${CMAKE_CURRENT_BINARY_DIR}/bank-queue-${case}.sqlite")
+        set_tests_properties(framework.bank_queue.storage.${case} PROPERTIES TIMEOUT 45 SKIP_RETURN_CODE 77 LABELS "bank;queue;sqlite;regression")
+    endforeach()
+    if(TARGET umicom-bank-interest-native-test)
+        foreach(case capture review filter stale close copy posted)
+            add_test(NAME framework.bank_queue.native.${case} COMMAND umicom-bank-interest-native-test queue-${case})
+            set_tests_properties(framework.bank_queue.native.${case} PROPERTIES TIMEOUT 45 SKIP_RETURN_CODE 77 LABELS "bank;queue;gtk4;regression")
+        endforeach()
+    endif()
+endif()
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/BANK_WORK_QUEUES.md"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs)

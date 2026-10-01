@@ -19,11 +19,17 @@ typedef struct UmiTradingChartSceneInfo {
     UmiChartWindow window;
     size_t retained_bars;
     char instrument_id[UMI_FINANCE_ID_CAPACITY];
+    /* Appended evidence: retained_bars/window now count displayed candles.
+     * Source count describes underlying provider records, never synthetic bars. */
+    size_t source_bars;
+    uint32_t interval_ms;
 } UmiTradingChartSceneInfo;
 /* The caller owns the returned scene. Prices/volumes/drawings/orders come only
  * from this workspace. Scene construction never changes the ticket or orders.
  * No history returns NOT_FOUND and a null scene. Coordinate size is fixed;
  * adapters scale input and rendering to the same logical dimensions. */
+/* With no history, out_info contains the selected instrument ID and zero view
+ * geometry. This lets object lists remain usable while price gestures wait. */
 UmiStatus UmiTradingChartBuildScene(UmiTradingWorkspace *workspace,
     UmiTradingChartSceneInfo *out_info, UmiChartRenderScene **out_scene);
 #ifdef __cplusplus

@@ -321,3 +321,54 @@ UmiDiagnosticParser umi_compiler_diagnostic_parser(void)
     UmiDiagnosticParser parser = { "umicom.compiler", 100, umi_compiler_diagnostic_parse, NULL };
     return parser;
 }
+
+/* Test locations share the compiler's colour handling and numeric grammar.
+ * Keeping the extension beside those helpers prevents IDE-specific parsing
+ * from drifting across build diagnostics and selected-test evidence. */
+#include "umicom/diagnostics/failure_parser.h"
+static int FailureLocalPath(const char *path)
+{
+    int shaped = 0;
+    for (size_t i = 0U; path[i] != '\0'; ++i) {
+        unsigned char c = (unsigned char)path[i];
+        if (c < 32U || c == 127U || c == '"' || c == '<' || c == '>') return 0;
+        if (c == ':' && !(i == 1U && isalpha((unsigned char)path[0]) &&
+            (path[2] == '/' || path[2] == '\\'))) return 0;
+        if (c == '/' || c == '\\' || c == '.') shaped = 1;
+    }
+    return shaped;
+}
+UmiStatus UmiTestFailureParseText(const char *text, UmiCompilerDiagnosticFields *outFields)
+{
+    if (text == NULL || outFields == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    char clean[8192];
+    UmiStatus status = CleanLine(text, clean, sizeof(clean));
+    if (status != UMI_STATUS_OK) return status;
+    const char *first = clean;
+    while (*first == ' ' || *first == '\t') ++first;
+    const char *number = first;
+    while (*number >= '0' && *number <= '9') ++number;
+    if (number != first && number[0] == ':' && (number[1] == ' ' || number[1] == '\t')) {
+        first = number + 1;
+        while (*first == ' ' || *first == '\t') ++first;
+    }
+    UmiCompilerDiagnosticFields candidate = {0};
+    status = UmiCompilerDiagnosticParseText(first, &candidate);
+    if (status == UMI_STATUS_OK) {
+        if (!FailureLocalPath(candidate.path)) return UMI_STATUS_NOT_FOUND;
+        *outFields = candidate; return UMI_STATUS_OK;
+    }
+    if (status != UMI_STATUS_NOT_FOUND) return status;
+    const char *end = first + strlen(first);
+    for (const char *separator = first; separator < end; ++separator) {
+        if (*separator != ':' || (separator[1] != ' ' && separator[1] != '\t' && separator[1] != '\0')) continue;
+        memset(&candidate, 0, sizeof(candidate));
+        status = ParseLocation(first, separator, &candidate);
+        if (status == UMI_STATUS_CAPACITY_EXCEEDED) return status;
+        if (status != UMI_STATUS_OK || !FailureLocalPath(candidate.path)) continue;
+        if (!CopyField(candidate.message, sizeof(candidate.message), separator + 1, end)) return UMI_STATUS_CAPACITY_EXCEEDED;
+        candidate.severity = UMI_DIAGNOSTIC_ERROR;
+        *outFields = candidate; return UMI_STATUS_OK;
+    }
+    return UMI_STATUS_NOT_FOUND;
+}

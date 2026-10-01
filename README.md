@@ -141,3 +141,33 @@ explains how applications use the shared document and editor services. Its
 complete Notes search example builds against the installed Framework SDK.
 [Writing useful documentation](docs/WRITING_DOCUMENTATION.md) gives contributors
 practical guidance for public, beginner-friendly lessons and reference pages.
+
+## Copy reports for review
+
+Learn how to create bounded, owned tables and use the domain exporters in [Building an owned CSV report](docs/CSV_REPORTS.md).
+
+- [Capture, persist and review chart documents](docs/CHART_CHECKPOINTS.md).
+
+## Follow test failures into source
+
+[Capture and open test source evidence](docs/TEST_SOURCE_LOCATIONS.md) explains source locations, retained runs and safe navigation.
+
+## Review local practice charges
+
+[Build a reviewed practice charge workflow](docs/learning/practice-charges.md) explains fixed amounts, separate approval, protected funds and retained reversals.
+
+## Review retained trading sessions
+
+[Capture and check a local trading session](docs/TRADING_SESSION_REVIEW.md) explains immutable evidence, canonical fill replay and separate currency totals.
+
+## Calculate explicit payment fees
+
+Learn [checked payment fee quotes](docs/PAYMENT_FEE_QUOTES.md), including exact rounding, caps, copied assumptions and native review.
+
+- [Chart drawing undo and redo](docs/CHART_DRAWING_HISTORY.md)
+
+- [Investigate accepted banking commands](docs/BANK_AUDIT_INVESTIGATION.md) links captured command history to its exact posting journals.
+
+For debugger groups that should be loaded only on request, follow the
+[scope inspection lesson](docs/learning/scope-inspection.md). It explains owned
+captures, expensive scopes and recovery when the stopped context changes.

@@ -18,6 +18,7 @@ UmiStatus UmiChartNavigationResolve(const UmiChartNavigation *navigation,
         navigation->visible_bars > UMI_CHART_MAX_POINTS ||
         (navigation->pinned != 0 && navigation->pinned != 1))
         return UMI_STATUS_INVALID_ARGUMENT;
+    if (!UmiChartTimeframeValid(navigation->interval_ms)) return UMI_STATUS_INVALID_ARGUMENT;
     for (size_t i = 0; i < count; ++i) {
         if (umi_chart_candle_validate(&candles[i]) != UMI_STATUS_OK ||
             (i != 0U && candles[i].time_ms <= candles[i - 1U].time_ms))

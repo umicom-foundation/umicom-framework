@@ -130,6 +130,7 @@ endif()
 # -----------------------------------------------------------------------------
 add_library(umicom_base STATIC
     src/base/status.c
+    src/base/csv_document.c
     src/base/snapshot_validation.c
     src/base/result.c
     src/base/memory.c
@@ -794,6 +795,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
         adapters/gtk4/pane_gtk4.c
         adapters/gtk4/editor_gtk4.c
         adapters/gtk4/text_comparison_gtk4.c
+        adapters/gtk4/window_lifecycle.c
         adapters/gtk4/editor_theme_gtk4.c
         adapters/gtk4/action_dispatch_gtk4.c
         adapters/gtk4/menu_gtk4.c
@@ -1816,6 +1818,8 @@ add_library(umicom_chart STATIC
     src/chart/marker.c
     src/chart/annotation.c
     src/chart/drawing.c
+    src/chart/drawing_validation.c
+    src/chart/document.c
     src/chart/stream.c
     src/chart/extension.c
     src/chart/workspace.c
@@ -2742,6 +2746,7 @@ add_library(umicom_debug STATIC
     src/debug/view_state.c
     src/debug/watch_expression.c
     src/debug/workspace.c
+    src/debug/selection.c
     src/debug/service.c
     src/debug/configuration_resolver.c
     src/debug/compound_configuration.c
@@ -2827,6 +2832,7 @@ add_library(umicom_test_platform STATIC
     src/test_platform/build_readiness/command.c
     src/test_platform/ctest.c
     src/test_platform/structured_report.c
+    src/test_platform/source_links.c
     src/test_platform/execution.c
     src/test_platform/service.c
     src/test_platform/workspace.c
@@ -2835,6 +2841,7 @@ add_library(Umicom::test_platform ALIAS umicom_test_platform)
 set_target_properties(umicom_test_platform PROPERTIES EXPORT_NAME test_platform)
 target_link_libraries(umicom_test_platform PUBLIC
     Umicom::base
+    Umicom::diagnostics
     Umicom::platform
     Umicom::testing
 )
@@ -2849,11 +2856,13 @@ umicom_apply_sanitizers(umicom_test_platform)
 # application.  The factories expose ordinary toolkit-neutral view models.
 add_library(umicom_test_ui STATIC
     src/test_ui/test_views.c
+    src/test_ui/source_navigation.c
 )
 add_library(Umicom::test_ui ALIAS umicom_test_ui)
 set_target_properties(umicom_test_ui PROPERTIES EXPORT_NAME test_ui)
 target_link_libraries(umicom_test_ui PUBLIC
     Umicom::test_platform
+    Umicom::diagnostic_ui
     Umicom::ui
 )
 target_include_directories(umicom_test_ui PUBLIC
@@ -3031,6 +3040,10 @@ add_library(umicom_trading STATIC
     src/trading/volatility_proxy.c
     src/trading/watchlist.c
     src/trading/workspace.c
+    src/trading/order_csv.c
+    src/trading/session_report.c
+    src/trading/session_text.c
+    src/trading/session_csv.c
 )
 add_library(Umicom::trading ALIAS umicom_trading)
 set_target_properties(umicom_trading PROPERTIES EXPORT_NAME trading)
@@ -5108,6 +5121,7 @@ include(cmake/UmicomOperationalStateQualification.cmake)
 include(cmake/UmicomTradingExecutionQualification.cmake)
 include(cmake/UmicomDocumentSaveQualification.cmake)
 include(cmake/UmicomEditorWorkflowTests.cmake)
+include(cmake/UmicomDocumentReplacement.cmake)
 
 message(STATUS "Umicom Framework version: ${PROJECT_VERSION}")
 message(STATUS "C standard: C${CMAKE_C_STANDARD}")
@@ -5469,3 +5483,60 @@ if(BUILD_TESTING)
         umicom_register_validation_target(umicom-workspace-library-preview-test)
     endif()
 endif()
+
+# Product reports reuse the base-owned CSV document and domain snapshots.
+include(cmake/UmicomReportExport.cmake)
+
+# Keep the beginner report workflow with the installed documentation.
+install(FILES docs/CSV_REPORTS.md
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs)
+
+# Chart geometry persistence uses explicit transactional storage, independent of layout saves.
+include(cmake/UmicomChartCheckpoint.cmake)
+
+# Install the educational chart persistence workflow with the product.
+install(FILES docs/CHART_CHECKPOINTS.md
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs)
+
+# Retained test evidence opens through shared document lifetime and navigation rules.
+include(cmake/UmicomTestSourceNavigation.cmake)
+
+# Keep the beginner test navigation lesson available in an installed product.
+install(FILES docs/TEST_SOURCE_LOCATIONS.md
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs)
+
+# Session evidence shares the existing trading and native adapter owners.
+include(cmake/UmicomTradingSessionReport.cmake)
+
+# Shared checked fee calculations and immutable scenario review.
+include(cmake/UmicomPaymentQuotes.cmake)
+
+include(cmake/UmicomDebugSelection.cmake)
+
+include(cmake/UmicomChartDrawingTools.cmake)
+include(cmake/UmicomChartVisibility.cmake)
+
+# Captured source properties and negotiated adapter confirmation.
+include(cmake/UmicomBreakpointProperties.cmake)
+
+include(cmake/UmicomDrawingAppearance.cmake)
+
+include(cmake/UmicomBankActivity.cmake)
+
+# Shared watch editing and explicit paused-frame evaluation.
+include(cmake/UmicomWatchProperties.cmake)
+
+# Chart timeframe projection and saved-view compatibility.
+include(cmake/UmicomChartTimeframes.cmake)
+
+# Explain available funds through captured canonical reservations and guarded release reviews.
+include(cmake/UmicomBankReservations.cmake)
+
+include(cmake/UmicomVariableInspection.cmake)
+include(cmake/UmicomScopeInspection.cmake)
+
+# Reversible drawing evidence stays with the canonical chart and workspace owners.
+include(cmake/UmicomDrawingHistory.cmake)
+
+# Captured accepted-command and posting evidence remains read-only.
+include(cmake/UmicomBankAudit.cmake)

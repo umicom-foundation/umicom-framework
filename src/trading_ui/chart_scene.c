@@ -8,6 +8,8 @@
 
 #include "umicom/trading_ui/chart_scene.h"
 #include "umicom/chart/indicator.h"
+#include "umicom/chart/drawing_tools.h"
+#include "umicom/trading/chart_timeframe.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -65,8 +67,22 @@ UmiStatus UmiTradingChartBuildScene(UmiTradingWorkspace *workspace,
     UmiStatus status = umi_trading_workspace_snapshot(workspace, &snapshot);
     if (status != UMI_STATUS_OK) return status;
     size_t count = umi_trading_workspace_selected_bar_count(workspace);
+/* An empty price history still belongs to the selected instrument. Publish that identity so object lists and guarded edits do not lose their pane; the scene remains null. The previous implementation remains for engineering review. */
+#if 0
     if (count == 0U) return UMI_STATUS_NOT_FOUND;
+#endif
+    if (count == 0U) {
+        UmiTradingChartSceneInfo empty = {0};
+        (void)snprintf(empty.instrument_id, sizeof empty.instrument_id, "%s", snapshot.selected_instrument_id);
+        UmiChartNavigation navigation;
+        if (UmiTradingWorkspaceGetChartNavigation(workspace, snapshot.selected_instrument_id, &navigation) == UMI_STATUS_OK)
+            empty.interval_ms = navigation.interval_ms;
+        *out_info = empty;
+        return UMI_STATUS_NOT_FOUND;
+    }
     if (count > UMI_TRADING_WORKSPACE_BAR_HISTORY_CAPACITY) return UMI_STATUS_INVALID_STATE;
+/* Candles, volume and studies now share the selected timeframe projection; provider bars remain canonical and unchanged. The previous implementation remains for engineering review. */
+#if 0
     UmiChartCandle candles[UMI_TRADING_WORKSPACE_BAR_HISTORY_CAPACITY];
     for (size_t i = 0; i < count; ++i) {
         UmiBar bar;
@@ -74,9 +90,17 @@ UmiStatus UmiTradingChartBuildScene(UmiTradingWorkspace *workspace,
         if (status != UMI_STATUS_OK) return status;
         candles[i] = (UmiChartCandle){bar.start_time_ms, bar.open, bar.high, bar.low, bar.close, bar.volume};
     }
+#endif
+    UmiChartCandle candles[UMI_TRADING_WORKSPACE_BAR_HISTORY_CAPACITY];
+    UmiChartTimeframeSummary aggregation;
+    status = UmiTradingWorkspaceBuildChartCandles(workspace, snapshot.selected_instrument_id,
+        candles, UMI_TRADING_WORKSPACE_BAR_HISTORY_CAPACITY, &aggregation);
+    if (status != UMI_STATUS_OK) return status;
+    count = aggregation.candle_count;
     UmiChartNavigation navigation;
     UmiTradingChartSceneInfo info = {0};
     info.retained_bars = count;
+    info.source_bars = aggregation.source_count; info.interval_ms = aggregation.interval_ms;
     (void)snprintf(info.instrument_id, sizeof info.instrument_id, "%s", snapshot.selected_instrument_id);
     status = UmiTradingWorkspaceGetChartNavigation(workspace, info.instrument_id, &navigation);
     if (status == UMI_STATUS_OK) status = UmiChartNavigationResolve(&navigation, candles, count, &info.window);
@@ -107,10 +131,16 @@ UmiStatus UmiTradingChartBuildScene(UmiTradingWorkspace *workspace,
         CHART_TRY(umi_chart_render_scene_add_text(scene,
             (UmiChartRenderPoint){902, info.price.area.y + (double)i / 4 * info.price.area.height + 4}, label, text));
         size_t at = info.window.first + (info.window.count - 1U) * i / 4U;
+/* Date-aware UTC labels distinguish daily candles and historical dates without depending on the process timezone. The previous implementation remains for engineering review. */
+#if 0
         int64_t seconds = candles[at].time_ms / 1000;
         (void)snprintf(label, sizeof label, "%02d:%02d", (int)((seconds / 3600) % 24), (int)((seconds / 60) % 60));
         CHART_TRY(umi_chart_render_scene_add_text(scene,
             (UmiChartRenderPoint){18 + (double)i / 4 * 856, 545}, label, text));
+#endif
+        CHART_TRY(UmiChartTimeframeFormatUtc(candles[at].time_ms, info.interval_ms >= 86400000U, label, sizeof label));
+        CHART_TRY(umi_chart_render_scene_add_text(scene,
+            (UmiChartRenderPoint){18 + (double)i / 4 * 760, 545}, label, text));
     }
     CHART_TRY(umi_chart_render_scene_add_text(scene, (UmiChartRenderPoint){902, 545}, "UTC", text));
     double maximum_volume = 0;
@@ -144,6 +174,8 @@ UmiStatus UmiTradingChartBuildScene(UmiTradingWorkspace *workspace,
         UmiChartDrawingSnapshot drawing;
         CHART_TRY(umi_chart_drawing_registry_at(drawings, i, &drawing));
         if (strcmp(drawing.pane_id, info.instrument_id) != 0) continue;
+/* Shared drawing projection now clips directional rays and range/zone boxes as well as the original line tools. Unknown tool records remain retained and undisplayed, as before. The previous implementation remains for engineering review. */
+#if 0
         if (strcmp(drawing.tool, "trend") == 0) {
             CHART_TRY(ChartSegment(scene, &info.price, (UmiChartPoint){drawing.time1, drawing.value1},
                 (UmiChartPoint){drawing.time2, drawing.value2}, amber, 2.0));
@@ -152,6 +184,10 @@ UmiStatus UmiTradingChartBuildScene(UmiTradingWorkspace *workspace,
             CHART_TRY(ChartLevel(scene, &info.price, drawing.value1, label,
                 strcmp(drawing.tool, "support") == 0 ? style.positive_color : style.negative_color));
         }
+#endif
+        UmiChartDrawingKind kind;
+        if(UmiChartDrawingKindParse(drawing.tool,&kind)==UMI_STATUS_UNAVAILABLE)continue;
+        CHART_TRY(UmiChartDrawingRender(scene,&drawing,&info.price,&style));
     }
     for (size_t i = 0; i < snapshot.order_count; ++i) {
         UmiOrder order;

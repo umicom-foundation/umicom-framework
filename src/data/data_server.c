@@ -139,9 +139,23 @@ static void DataTransactionClear(UmiDataServer *server)
     server->rollback_failed = 0;
 }
 #ifdef UMICOM_HAS_SQLITE
+/* The shared SQLite error mapping now distinguishes retryable connection contention with BUSY. Other database failure statuses keep their established meaning. The previous implementation remains for engineering review. */
+#if 0
 static UmiStatus DataSqlError(UmiDataServer *server, int code)
 {
     DataMessage(server, sqlite3_errmsg(server->sqlite));
+    if ((code & 0xff) == SQLITE_TOOBIG) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if ((code & 0xff) == SQLITE_NOMEM) return UMI_STATUS_OUT_OF_MEMORY;
+    return UMI_STATUS_IO_ERROR;
+}
+#endif
+/* Retryable database contention is part of shared storage policy. Chart,
+ * layout and application clients must not mistake another connection's lock
+ * for damaged data or silently fall back to an older saved revision. */
+static UmiStatus DataSqlError(UmiDataServer *server, int code)
+{
+    DataMessage(server, sqlite3_errmsg(server->sqlite));
+    if ((code & 0xff) == SQLITE_BUSY || (code & 0xff) == SQLITE_LOCKED) return UMI_STATUS_BUSY;
     if ((code & 0xff) == SQLITE_TOOBIG) return UMI_STATUS_CAPACITY_EXCEEDED;
     if ((code & 0xff) == SQLITE_NOMEM) return UMI_STATUS_OUT_OF_MEMORY;
     return UMI_STATUS_IO_ERROR;

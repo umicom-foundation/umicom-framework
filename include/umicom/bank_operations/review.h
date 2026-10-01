@@ -54,6 +54,22 @@ typedef struct UmiBankReviewSnapshot {
     bool interestExistedBefore;
     UmiBankInterestRequest interestBefore;
     UmiBankInterestRequest interestAfter;
+    bool hasCharge;
+    bool chargeExistedBefore;
+    UmiBankChargeRequest chargeBefore;
+    UmiBankChargeRequest chargeAfter;
+    /* A resolution edits disposition, not the original comparison. Copy both
+     * states and the selected evidence so the review is self-contained. */
+    bool reconciliationExistedBefore;
+    UmiBankReconciliation reconciliationBefore;
+    bool hasReconciliationEvidence;
+    UmiBankReconciliation reconciliationEvidence;
+    /* Appended resolved hold evidence. Rebuild all consumers together. The
+     * authorised amount differs from capturedMinor after a partial final capture. */
+    bool hasHold;
+    bool holdExistedBefore;
+    UmiBankHold holdBefore;
+    UmiBankHold holdAfter;
 } UmiBankReviewSnapshot;
 /** No Data Server write or reload. The exact existing domain transition runs
  * against a disposable copy of the cached state. Failure sets *outReview=NULL. */

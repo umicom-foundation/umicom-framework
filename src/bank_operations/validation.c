@@ -45,12 +45,15 @@ static uint32_t RequiredCapability(UmiBankAction action)
     case UMI_BANK_BENEFICIARY_CREATE: case UMI_BANK_BENEFICIARY_SET_STATE:
     case UMI_BANK_CARD_ISSUE: case UMI_BANK_CARD_SET_STATE:
         return UMI_BANK_CAP_CUSTOMERS;
+    case UMI_BANK_CHARGE_SUBMIT:
     case UMI_BANK_TRANSFER_SUBMIT:
     case UMI_BANK_INTEREST_SUBMIT:
         return UMI_BANK_CAP_PAYMENTS;
+    case UMI_BANK_CHARGE_CANCEL:
     case UMI_BANK_INTEREST_CANCEL:
     case UMI_BANK_TRANSFER_CANCEL:
         return UMI_BANK_CAP_PAYMENTS | UMI_BANK_CAP_OPERATE;
+    case UMI_BANK_CHARGE_APPROVE: case UMI_BANK_CHARGE_REJECT:
     case UMI_BANK_INTEREST_APPROVE: case UMI_BANK_INTEREST_REJECT:
     case UMI_BANK_TRANSFER_APPROVE: case UMI_BANK_TRANSFER_REJECT:
         return UMI_BANK_CAP_APPROVE;
@@ -64,6 +67,10 @@ static uint32_t RequiredCapability(UmiBankAction action)
 uint32_t UmiBankActionFields(UmiBankAction action)
 {
     switch (action) {
+    case UMI_BANK_RECONCILIATION_RESOLVE: return UMI_BANK_FIELD_OWNER | UMI_BANK_FIELD_NAME;
+    case UMI_BANK_RECONCILIATION_REOPEN: return UMI_BANK_FIELD_NAME;
+    case UMI_BANK_CHARGE_SUBMIT:
+        return UMI_BANK_FIELD_OWNER | UMI_BANK_FIELD_SOURCE | UMI_BANK_FIELD_NAME | UMI_BANK_FIELD_MONEY;
     case UMI_BANK_INTEREST_SUBMIT:
         return UMI_BANK_FIELD_OWNER | UMI_BANK_FIELD_SOURCE | UMI_BANK_FIELD_INTEREST;
     case UMI_BANK_CUSTOMER_CREATE: return UMI_BANK_FIELD_NAME;
@@ -123,6 +130,18 @@ UmiStatus BankCommandValid(const UmiBankActor *actor, const UmiBankCommand *comm
             return UMI_STATUS_INVALID_ARGUMENT;
     } else if (command->interest.annualRateBps != 0 || command->interest.days != 0U ||
                command->interest.dayCountBasis != 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    if (command->action == UMI_BANK_CHARGE_SUBMIT &&
+        (!BankIdValid(&command->ownerId, true) || !BankIdValid(&command->sourceAccountId, true) ||
+         command->name[0] == '\0' || command->amount.minor_units <= 0)) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Investigation reasons belong in the same canonical event envelope.
+     * Whitespace-only notes cannot stand in for an operator explanation. */
+    if (command->action == UMI_BANK_RECONCILIATION_RESOLVE || command->action == UMI_BANK_RECONCILIATION_REOPEN) {
+        bool hasReason = false;
+        for (const unsigned char *p = (const unsigned char *)command->name; *p != 0U; ++p)
+            if (*p > 32U && *p != 127U) hasReason = true;
+        if (!hasReason || (command->action == UMI_BANK_RECONCILIATION_RESOLVE &&
+            !BankIdValid(&command->ownerId, true))) return UMI_STATUS_INVALID_ARGUMENT;
+    }
     for (const unsigned char *p = (const unsigned char *)command->name; *p != 0U; ++p)
         if (*p < 32U || *p == 127U) return UMI_STATUS_INVALID_ARGUMENT;
     if (command->amount.currency.code[0] != '\0') {
@@ -152,6 +171,14 @@ const char *UmiBankActionName(UmiBankAction action)
 {
     /* Keep the historical descriptions and numbering while naming new actions. */
     switch (action) {
+    case UMI_BANK_RECONCILIATION_RESOLVE: return "Resolve reconciliation break";
+    case UMI_BANK_RECONCILIATION_REOPEN: return "Reopen reconciliation break";
+    case UMI_BANK_CHARGE_SUBMIT: return "Submit practice charge";
+    case UMI_BANK_CHARGE_APPROVE: return "Approve practice charge";
+    case UMI_BANK_CHARGE_REJECT: return "Reject practice charge";
+    case UMI_BANK_CHARGE_CANCEL: return "Cancel practice charge";
+    case UMI_BANK_CHARGE_POST: return "Post practice charge";
+    case UMI_BANK_CHARGE_REVERSE: return "Reverse practice charge";
     case UMI_BANK_INTEREST_SUBMIT: return "Submit practice interest";
     case UMI_BANK_INTEREST_APPROVE: return "Approve practice interest";
     case UMI_BANK_INTEREST_REJECT: return "Reject practice interest";
@@ -190,6 +217,8 @@ BANK_FINDER(BankFindTransfer, transfers, transfers, id)
 BANK_FINDER(BankFindCard, cards, cards, id)
 BANK_FINDER(BankFindHold, holds, holds, id)
 BANK_FINDER(BankFindInterest, interestRequests, interestRequests, id)
+BANK_FINDER(BankFindCharge, chargeRequests, chargeRequests, id)
+BANK_FINDER(BankFindReconciliation, reconciliations, reconciliations, id)
 #undef BANK_FINDER
 
 bool BankMoneyMatches(UmiMoney amount, const UmiBankAccount *account)

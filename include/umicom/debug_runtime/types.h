@@ -205,6 +205,8 @@ typedef struct UmiDebugRuntimeCapabilities {
     int supports_loaded_sources_request;
     int supports_terminate_threads_request;
     int supports_goto_targets_request;
+    /* Appended negotiated support: expressions and log messages stay adapter-owned. */
+    int supports_log_points;
 } UmiDebugRuntimeCapabilities;
 
 /**

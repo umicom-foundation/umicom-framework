@@ -104,6 +104,16 @@ UmiStatus BankApplyCustomerAccount(BankState *state, const UmiBankActor *actor,
                     return UMI_STATUS_BUSY;
             }
         }
+        /* Resolve pending charge requests before closing their account. A
+         * zero balance does not cancel a separately approved operation. */
+        if (command->state == UMI_BANK_RECORD_CLOSED) {
+            for (size_t i = 0U; i < state->counts.chargeRequests; ++i) {
+                const UmiBankChargeRequest *request = &state->chargeRequests[i];
+                if (strcmp(request->accountId.value, command->id.value) == 0 &&
+                    (request->state == UMI_BANK_TRANSFER_PENDING || request->state == UMI_BANK_TRANSFER_APPROVED))
+                    return UMI_STATUS_BUSY;
+            }
+        }
         state->accounts[index].state = command->state;
         return UMI_STATUS_OK;
     case UMI_BANK_BENEFICIARY_CREATE: {

@@ -9,3 +9,7 @@ UmiGtk4AdapterDocumentSaveAll
 UmiGtk4AdapterDocumentSaveAllBusy
 UmiGtk4AdapterCancelDocumentSaveAll
 UmiGtk4AdapterDocumentSaveAllProgress
+
+# Shared lifecycle checks for owned review dialogs.
+UmiGtk4WindowIsOpen
+UmiGtk4WatchWindowClosed

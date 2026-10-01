@@ -56,6 +56,9 @@ enum UmiDebugCapability {
 /**
  * Represent the debug capability set data shared with callers of this public contract.
  */
+/* Appended capability bit; all historical enum values retain their meaning. */
+#define UMI_DEBUG_CAP_LOG_POINTS (UINT64_C(1) << 20)
+
 typedef struct UmiDebugCapabilitySet {
     uint64_t supported;
     uint64_t advertised;

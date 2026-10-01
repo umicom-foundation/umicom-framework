@@ -48,6 +48,7 @@ uint64_t umi_debug_runtime_capability_bits(
     MAP(supports_write_memory_request, UMI_DEBUG_CAP_WRITE_MEMORY);
     MAP(supports_set_expression, UMI_DEBUG_CAP_SET_EXPRESSION);
     MAP(supports_restart_frame, UMI_DEBUG_CAP_RESTART_FRAME);
+    MAP(supports_log_points, UMI_DEBUG_CAP_LOG_POINTS);
 #undef MAP
 
     /*

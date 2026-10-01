@@ -33,6 +33,9 @@ static const UmiSnapshotTextField contract_fields[] = {
 };
 static int ContractSnapshotEqual(const UmiChartDrawingSnapshot *left, const UmiChartDrawingSnapshot *right)
 {
+    /* Compare the appended visibility separately; retain the original field
+     * comparisons so the extended value contract exercises every old member. */
+    if (left->visibility_flags != right->visibility_flags) return 0;
     return left->struct_size == right->struct_size &&
         left->api_version == right->api_version &&
         memcmp(left->id, right->id, sizeof(left->id)) == 0 &&
@@ -59,5 +62,6 @@ static void ContractPayload(UmiChartDrawingSnapshot *item)
     item->style[0] = 'v';
     item->selected = (int)11U;
     item->locked = (int)12U;
+    item->visibility_flags = UMI_CHART_DRAWING_VISIBILITY_HIDDEN;
 }
 #include "snapshot_contract_cases.h"
