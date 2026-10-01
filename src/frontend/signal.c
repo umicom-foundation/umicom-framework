@@ -239,3 +239,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_frontend_signal_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_frontend_signal_registry_edit_if_current,
     UmiFrontendSignalRegistry, UmiFrontendSignalSnapshot, UmiFrontendSignalEdit,
     umi_frontend_signal_snapshot_validate, umi_frontend_signal_registry_upsert, umi_frontend_signal_registry_remove, UMI_FRONTEND_SIGNAL_CAPACITY)
+
+/* Read accepted signal records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_frontend_signal_registry_read_page,
+    UmiFrontendSignalRegistry, UmiFrontendSignalSnapshot, UMI_FRONTEND_SIGNAL_CAPACITY)

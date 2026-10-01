@@ -36,4 +36,33 @@ UmiStatus Function(Record *value, uint64_t expected_revision, const Record *prop
     *value = staged; \
     return UMI_STATUS_OK; \
 }
+
+/* A string argument may be shorter than its destination. Stop at its first
+ * terminator, and never inspect more bytes than that destination can accept. */
+static inline int UmiRecordTextFits(const char *text, size_t capacity)
+{
+    if (text == NULL) return 0;
+    for (size_t index = 0U; index < capacity; ++index)
+        if (text[index] == '\0') return 1;
+    return 0;
+}
+
+/* Construction has no live revision to compare. Build and validate a private
+ * default record before replacing the destination. This also allows id to
+ * refer to the old destination's own id: no byte there changes during reading.
+ * Use only for inline value records; resource-owning objects need a destructor
+ * and a dedicated constructor. Existing void initializers remain available. */
+#define UMI_DEFINE_CHECKED_RECORD_INIT(Function, Record, Init, Validate) \
+UmiStatus Function(Record *value, const char *id) \
+{ \
+    if (value == NULL || id == NULL || id[0] == '\0') \
+        return UMI_STATUS_INVALID_ARGUMENT; \
+    Record staged; \
+    if (!UmiRecordTextFits(id, sizeof(staged.id))) return UMI_STATUS_CAPACITY_EXCEEDED; \
+    Init(&staged, id); \
+    UmiStatus status = Validate(&staged); \
+    if (status != UMI_STATUS_OK) return status; \
+    *value = staged; \
+    return UMI_STATUS_OK; \
+}
 #endif

@@ -72,6 +72,10 @@ typedef struct UmiApplicationSuiteGtk4WorkstationSnapshot {
     int editing_layout;
     int has_saved_layout;
     uint64_t saved_layout_at_ns;
+    /* Composite change observation: includes the host, appearance, identity
+     * and command bar counters. One layout activation can advance several
+     * components; use the library snapshot's customisation_revision when
+     * checking an individual layout-model transaction. */
     uint64_t revision;
     /* Discover the shared command centre. Rebuild consumers when this public
      * structure changes; an appended field still changes its binary size. */

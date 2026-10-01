@@ -246,3 +246,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_language_inlay_hint_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_language_inlay_hint_registry_edit_if_current,
     UmiLanguageInlayHintRegistry, UmiLanguageInlayHintSnapshot, UmiLanguageInlayHintEdit,
     umi_language_inlay_hint_snapshot_validate, umi_language_inlay_hint_registry_upsert, umi_language_inlay_hint_registry_remove, UMI_LANGUAGE_INLAY_HINT_CAPACITY)
+
+/* Read accepted inlay hint records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_language_inlay_hint_registry_read_page,
+    UmiLanguageInlayHintRegistry, UmiLanguageInlayHintSnapshot, UMI_LANGUAGE_INLAY_HINT_CAPACITY)

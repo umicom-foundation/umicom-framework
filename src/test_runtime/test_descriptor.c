@@ -229,6 +229,9 @@ UmiStatus umi_test_runtime_test_descriptor_touch(UmiTestRuntimeTestDescriptor *v
  * Provide the test runtime test descriptor same identity operation used by this module and
  * its client applications.
  */
+/* Bounded identity comparison replaces an unchecked string scan. The
+ * previous comparison remains here for review of compatibility behavior. */
+#if 0
 bool umi_test_runtime_test_descriptor_same_identity(const UmiTestRuntimeTestDescriptor *left, const UmiTestRuntimeTestDescriptor *right)
 {
     /*
@@ -238,9 +241,25 @@ bool umi_test_runtime_test_descriptor_same_identity(const UmiTestRuntimeTestDesc
     if (left == NULL || right == NULL) return false;
     return strcmp(left->id, right->id) == 0;
 }
+#endif
+bool umi_test_runtime_test_descriptor_same_identity(const UmiTestRuntimeTestDescriptor *left, const UmiTestRuntimeTestDescriptor *right)
+{
+    /* Treat missing terminators as invalid identities instead of reading into
+     * adjacent fields. Other record state does not change identity equality. */
+    return left != NULL && right != NULL &&
+        UmiRecordTextFits(left->id, sizeof(left->id)) &&
+        UmiRecordTextFits(right->id, sizeof(right->id)) &&
+        strcmp(left->id, right->id) == 0;
+}
 
 /* Prepare related fields on a caller-owned copy, then publish them together.
  * Reusing the Framework guard keeps a delayed review from overwriting newer
  * state and leaves this model's validation rules with its existing validator. */
 UMI_DEFINE_REVIEWED_RECORD_EDIT(umi_test_runtime_test_descriptor_replace_if_current,
     UmiTestRuntimeTestDescriptor, umi_test_runtime_test_descriptor_validate)
+
+/* A caller can reject an invalid test descriptor identity without
+ * erasing a previously accepted record. Defaults and domain validation stay
+ * with this owner; Framework supplies the common staged publication boundary. */
+UMI_DEFINE_CHECKED_RECORD_INIT(umi_test_runtime_test_descriptor_init_checked,
+    UmiTestRuntimeTestDescriptor, umi_test_runtime_test_descriptor_init, umi_test_runtime_test_descriptor_validate)

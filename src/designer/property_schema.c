@@ -239,3 +239,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_designer_property_schema_registry_capt
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_designer_property_schema_registry_edit_if_current,
     UmiDesignerPropertySchemaRegistry, UmiDesignerPropertySchemaSnapshot, UmiDesignerPropertySchemaEdit,
     umi_designer_property_schema_snapshot_validate, umi_designer_property_schema_registry_upsert, umi_designer_property_schema_registry_remove, UMI_DESIGNER_PROPERTY_SCHEMA_CAPACITY)
+
+/* Read accepted property schema records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_designer_property_schema_registry_read_page,
+    UmiDesignerPropertySchemaRegistry, UmiDesignerPropertySchemaSnapshot, UMI_DESIGNER_PROPERTY_SCHEMA_CAPACITY)

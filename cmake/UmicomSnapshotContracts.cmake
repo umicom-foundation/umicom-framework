@@ -184,3 +184,8 @@ install(DIRECTORY "${_snapshot_root}/examples/snapshot_contracts/"
 install(FILES "${_snapshot_root}/docs/REVIEWED_STATE_UPDATES.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs"
     COMPONENT Framework)
+
+# Install the value-ownership tutorial beside the public consumer sources.
+install(FILES "${_snapshot_root}/docs/SAFE_VALUE_RECORDS.html"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs"
+    COMPONENT Framework)

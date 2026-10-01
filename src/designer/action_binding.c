@@ -238,3 +238,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_designer_action_binding_registry_captu
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_designer_action_binding_registry_edit_if_current,
     UmiDesignerActionBindingRegistry, UmiDesignerActionBindingSnapshot, UmiDesignerActionBindingEdit,
     umi_designer_action_binding_snapshot_validate, umi_designer_action_binding_registry_upsert, umi_designer_action_binding_registry_remove, UMI_DESIGNER_ACTION_BINDING_CAPACITY)
+
+/* Read accepted action binding records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_designer_action_binding_registry_read_page,
+    UmiDesignerActionBindingRegistry, UmiDesignerActionBindingSnapshot, UMI_DESIGNER_ACTION_BINDING_CAPACITY)

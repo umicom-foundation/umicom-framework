@@ -243,3 +243,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_source_control_remote_registry_capture
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_source_control_remote_registry_edit_if_current,
     UmiSourceControlRemoteRegistry, UmiSourceControlRemoteSnapshot, UmiSourceControlRemoteEdit,
     umi_source_control_remote_snapshot_validate, umi_source_control_remote_registry_upsert, umi_source_control_remote_registry_remove, UMI_SOURCE_CONTROL_REMOTE_CAPACITY)
+
+/* Read accepted remote records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_source_control_remote_registry_read_page,
+    UmiSourceControlRemoteRegistry, UmiSourceControlRemoteSnapshot, UMI_SOURCE_CONTROL_REMOTE_CAPACITY)

@@ -126,3 +126,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_editor_fold_region_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_editor_fold_region_registry_edit_if_current,
     UmiEditorFoldRegionRegistry, UmiEditorFoldRegionSnapshot, UmiEditorFoldRegionEdit,
     umi_editor_fold_region_snapshot_validate, umi_editor_fold_region_registry_upsert, umi_editor_fold_region_registry_remove, UMI_EDITOR_FOLD_REGION_CAPACITY)
+
+/* Read accepted fold region records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_editor_fold_region_registry_read_page,
+    UmiEditorFoldRegionRegistry, UmiEditorFoldRegionSnapshot, UMI_EDITOR_FOLD_REGION_CAPACITY)

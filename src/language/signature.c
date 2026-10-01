@@ -246,3 +246,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_language_signature_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_language_signature_registry_edit_if_current,
     UmiLanguageSignatureRegistry, UmiLanguageSignatureSnapshot, UmiLanguageSignatureEdit,
     umi_language_signature_snapshot_validate, umi_language_signature_registry_upsert, umi_language_signature_registry_remove, UMI_LANGUAGE_SIGNATURE_CAPACITY)
+
+/* Read accepted signature records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_language_signature_registry_read_page,
+    UmiLanguageSignatureRegistry, UmiLanguageSignatureSnapshot, UMI_LANGUAGE_SIGNATURE_CAPACITY)

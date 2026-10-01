@@ -241,3 +241,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_debug_thread_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_debug_thread_registry_edit_if_current,
     UmiDebugThreadRegistry, UmiDebugThreadSnapshot, UmiDebugThreadEdit,
     umi_debug_thread_snapshot_validate, umi_debug_thread_registry_upsert, umi_debug_thread_registry_remove, UMI_DEBUG_THREAD_CAPACITY)
+
+/* Read accepted thread records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_debug_thread_registry_read_page,
+    UmiDebugThreadRegistry, UmiDebugThreadSnapshot, UMI_DEBUG_THREAD_CAPACITY)

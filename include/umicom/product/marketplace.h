@@ -171,6 +171,21 @@ UmiStatus umi_product_marketplace_registry_edit_if_current(UmiProductMarketplace
     uint64_t expected_revision, const UmiProductMarketplaceItemEdit *edits, size_t count,
     UmiSnapshotBatchResult *out_result);
 
+/** Read up to capacity records starting at offset, at expected_revision.
+ * Obtain the first revision with umi_product_marketplace_registry_revision and retain it for
+ * every page. INVALID_STATE means the registry changed: discard the partial
+ * collection and start a new observation. Offsets past the count are invalid;
+ * an offset equal to the count returns an empty final page. A zero capacity
+ * permits null items and returns metadata only; it does not advance the cursor.
+ * All refusals leave items and out_page unchanged. Success copies accepted
+ * values in registry order without changing the owner. items must have room
+ * for capacity records; out_page is required. Output storage must not overlap
+ * the registry, each other, or concurrently used storage. This performs no
+ * allocation or I/O. Serialize all calls and mutations on the registry owner. */
+UmiStatus umi_product_marketplace_registry_read_page(const UmiProductMarketplaceItemRegistry *registry,
+    uint64_t expected_revision, size_t offset, UmiProductMarketplaceItemSnapshot *items,
+    size_t capacity, UmiSnapshotPage *out_page);
+
 #ifdef __cplusplus
 }
 #endif

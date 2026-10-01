@@ -10,6 +10,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/layout_clone.h"
+#include "umicom/base/text.h"
+#include "../../base/record_update_internal.h"
 
 #include <string.h>
 
@@ -42,6 +44,13 @@ void umi_desktop_layout_clone_init(UmiDesktopLayoutCloneSnapshot *value, const c
  */
 UmiStatus umi_desktop_layout_clone_validate(const UmiDesktopLayoutCloneSnapshot *value)
 {
+    /* Validate each fixed field before any domain helper treats it as a C
+     * string. Add new inline text members here when extending this record. */
+    if (value == NULL || memchr(value->id, '\0', sizeof(value->id)) == NULL ||
+        memchr(value->subject_id, '\0', sizeof(value->subject_id)) == NULL ||
+        memchr(value->detail, '\0', sizeof(value->detail)) == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -62,6 +71,8 @@ UmiStatus umi_desktop_layout_clone_validate(const UmiDesktopLayoutCloneSnapshot 
  * Provide the desktop layout clone set subject operation used by this module and its
  * client applications.
  */
+/* The shared text publication helper replaces a separate copy and revision increment. It avoids partial edits, overlapping-copy hazards and revision reuse; the previous implementation remains for review. */
+#if 0
 UmiStatus umi_desktop_layout_clone_set_subject(UmiDesktopLayoutCloneSnapshot *value, const char *subject_id)
 {
     UmiStatus status;
@@ -75,11 +86,26 @@ UmiStatus umi_desktop_layout_clone_set_subject(UmiDesktopLayoutCloneSnapshot *va
     if (status == UMI_STATUS_OK) value->revision += 1U;
     return status;
 }
+#endif
+UmiStatus umi_desktop_layout_clone_set_subject(UmiDesktopLayoutCloneSnapshot *value, const char *subject_id)
+{
+    /* A text edit and its revision are one publication. Framework's shared
+     * helper checks capacity before writing and supports text from this field
+     * itself. Refused edits leave the complete previous record unchanged. */
+    if (value == NULL || subject_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Subject identities keep their existing nonempty, bounded contract. */
+    if (subject_id[0] == '\0' || !UmiRecordTextFits(subject_id, sizeof(value->subject_id)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_update(value->subject_id, sizeof(value->subject_id),
+                           subject_id, &value->revision);
+}
 
 /*
  * Provide the desktop layout clone set detail operation used by this module and its client
  * applications.
  */
+/* The shared text publication helper replaces a separate copy and revision increment. It avoids partial edits, overlapping-copy hazards and revision reuse; the previous implementation remains for review. */
+#if 0
 UmiStatus umi_desktop_layout_clone_set_detail(UmiDesktopLayoutCloneSnapshot *value, const char *detail)
 {
     UmiStatus status;
@@ -93,13 +119,42 @@ UmiStatus umi_desktop_layout_clone_set_detail(UmiDesktopLayoutCloneSnapshot *val
     if (status == UMI_STATUS_OK) value->revision += 1U;
     return status;
 }
+#endif
+UmiStatus umi_desktop_layout_clone_set_detail(UmiDesktopLayoutCloneSnapshot *value, const char *detail)
+{
+    /* A text edit and its revision are one publication. Framework's shared
+     * helper checks capacity before writing and supports text from this field
+     * itself. Refused edits leave the complete previous record unchanged. */
+    if (value == NULL || detail == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_update(value->detail, sizeof(value->detail),
+                           detail, &value->revision);
+}
 
 /*
  * Provide the desktop layout clone set state operation used by this module and its client
  * applications.
  */
+/* Check revision capacity before mutation so refused edits preserve the field and token. The former unchecked implementation remains for engineering review. */
+#if 0
 UmiStatus umi_desktop_layout_clone_set_state(UmiDesktopLayoutCloneSnapshot *value, uint32_t state)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    value->state = state;
+    value->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_desktop_layout_clone_set_state(UmiDesktopLayoutCloneSnapshot *value, uint32_t state)
+{
+    /* Do not change a field when its observation token cannot advance.
+     * Reusing an old revision could make a stale review appear current. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -114,8 +169,27 @@ UmiStatus umi_desktop_layout_clone_set_state(UmiDesktopLayoutCloneSnapshot *valu
  * Provide the desktop layout clone set priority operation used by this module and its
  * client applications.
  */
+/* Check revision capacity before mutation so refused edits preserve the field and token. The former unchecked implementation remains for engineering review. */
+#if 0
 UmiStatus umi_desktop_layout_clone_set_priority(UmiDesktopLayoutCloneSnapshot *value, uint32_t priority)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    value->priority = priority;
+    value->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_desktop_layout_clone_set_priority(UmiDesktopLayoutCloneSnapshot *value, uint32_t priority)
+{
+    /* Do not change a field when its observation token cannot advance.
+     * Reusing an old revision could make a stale review appear current. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -130,8 +204,27 @@ UmiStatus umi_desktop_layout_clone_set_priority(UmiDesktopLayoutCloneSnapshot *v
  * Provide the desktop layout clone set enabled operation used by this module and its
  * client applications.
  */
+/* Check revision capacity before mutation so refused edits preserve the field and token. The former unchecked implementation remains for engineering review. */
+#if 0
 UmiStatus umi_desktop_layout_clone_set_enabled(UmiDesktopLayoutCloneSnapshot *value, bool enabled)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    value->enabled = enabled;
+    value->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_desktop_layout_clone_set_enabled(UmiDesktopLayoutCloneSnapshot *value, bool enabled)
+{
+    /* Do not change a field when its observation token cannot advance.
+     * Reusing an old revision could make a stale review appear current. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -146,7 +239,26 @@ UmiStatus umi_desktop_layout_clone_set_enabled(UmiDesktopLayoutCloneSnapshot *va
  * Provide the desktop layout clone same identity operation used by this module and its
  * client applications.
  */
+/* Bounded identity comparison replaces an unchecked string scan. The
+ * previous comparison remains here for review of compatibility behavior. */
+#if 0
 bool umi_desktop_layout_clone_same_identity(const UmiDesktopLayoutCloneSnapshot *left, const UmiDesktopLayoutCloneSnapshot *right)
 {
     return left != NULL && right != NULL && strcmp(left->id, right->id) == 0;
 }
+#endif
+bool umi_desktop_layout_clone_same_identity(const UmiDesktopLayoutCloneSnapshot *left, const UmiDesktopLayoutCloneSnapshot *right)
+{
+    /* Treat missing terminators as invalid identities instead of reading into
+     * adjacent fields. Other record state does not change identity equality. */
+    return left != NULL && right != NULL &&
+        UmiRecordTextFits(left->id, sizeof(left->id)) &&
+        UmiRecordTextFits(right->id, sizeof(right->id)) &&
+        strcmp(left->id, right->id) == 0;
+}
+
+/* A caller can reject an invalid layout clone identity without
+ * erasing a previously accepted record. Defaults and domain validation stay
+ * with this owner; Framework supplies the common staged publication boundary. */
+UMI_DEFINE_CHECKED_RECORD_INIT(umi_desktop_layout_clone_init_checked,
+    UmiDesktopLayoutCloneSnapshot, umi_desktop_layout_clone_init, umi_desktop_layout_clone_validate)

@@ -243,3 +243,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_ui_view_state_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_ui_view_state_registry_edit_if_current,
     UmiUiViewStateRegistry, UmiUiViewStateSnapshot, UmiUiViewStateEdit,
     umi_ui_view_state_snapshot_validate, umi_ui_view_state_registry_upsert, umi_ui_view_state_registry_remove, UMI_UI_VIEW_STATE_CAPACITY)
+
+/* Read accepted view state records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_ui_view_state_registry_read_page,
+    UmiUiViewStateRegistry, UmiUiViewStateSnapshot, UMI_UI_VIEW_STATE_CAPACITY)

@@ -92,6 +92,20 @@ typedef enum UmiSnapshotEditKind {
     UMI_SNAPSHOT_EDIT_REMOVE = 2
 } UmiSnapshotEditKind;
 
+/** One bounded page from a registry observed at an exact revision. offset
+ * is the requested starting row; copied records occupy the caller's output
+ * array. next_offset is offset + copied, and has_more is true when further rows
+ * remain. A zero-capacity read returns metadata without advancing the offset.
+ * This is an in-memory observation, not a persistence format or a lock. */
+typedef struct UmiSnapshotPage {
+    uint64_t revision;
+    size_t total_count;
+    size_t offset;
+    size_t copied;
+    size_t next_offset;
+    int has_more;
+} UmiSnapshotPage;
+
 #ifdef __cplusplus
 }
 #endif

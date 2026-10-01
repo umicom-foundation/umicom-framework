@@ -246,3 +246,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_language_semantic_token_registry_captu
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_language_semantic_token_registry_edit_if_current,
     UmiLanguageSemanticTokenRegistry, UmiLanguageSemanticTokenSnapshot, UmiLanguageSemanticTokenEdit,
     umi_language_semantic_token_snapshot_validate, umi_language_semantic_token_registry_upsert, umi_language_semantic_token_registry_remove, UMI_LANGUAGE_SEMANTIC_TOKEN_CAPACITY)
+
+/* Read accepted semantic token records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_language_semantic_token_registry_read_page,
+    UmiLanguageSemanticTokenRegistry, UmiLanguageSemanticTokenSnapshot, UMI_LANGUAGE_SEMANTIC_TOKEN_CAPACITY)

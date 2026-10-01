@@ -66,4 +66,6 @@ static void ContractPayload(UmiEditorCodeActionSnapshot *item)
 /* Exercise mixed edits through this domain's public types and owner. */
 #define CONTRACT_EDIT UmiEditorCodeActionEdit
 #define CONTRACT_EDIT_CURRENT umi_editor_code_action_registry_edit_if_current
+/* Page checks use this domain's real owner and complete payload comparator. */
+#define CONTRACT_READ_PAGE umi_editor_code_action_registry_read_page
 #include "snapshot_contract_cases.h"

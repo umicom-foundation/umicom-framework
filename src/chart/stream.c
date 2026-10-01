@@ -301,3 +301,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_chart_stream_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_chart_stream_registry_edit_if_current,
     UmiChartStreamRegistry, UmiChartStreamSnapshot, UmiChartStreamEdit,
     umi_chart_stream_snapshot_validate, umi_chart_stream_registry_upsert, umi_chart_stream_registry_remove, UMI_CHART_STREAM_CAPACITY)
+
+/* Read accepted stream records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_chart_stream_registry_read_page,
+    UmiChartStreamRegistry, UmiChartStreamSnapshot, UMI_CHART_STREAM_CAPACITY)

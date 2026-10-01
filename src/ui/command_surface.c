@@ -241,3 +241,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_ui_command_surface_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_ui_command_surface_registry_edit_if_current,
     UmiUiCommandSurfaceRegistry, UmiUiCommandSurfaceSnapshot, UmiUiCommandSurfaceEdit,
     umi_ui_command_surface_snapshot_validate, umi_ui_command_surface_registry_upsert, umi_ui_command_surface_registry_remove, UMI_UI_COMMAND_SURFACE_CAPACITY)
+
+/* Read accepted command surface records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_ui_command_surface_registry_read_page,
+    UmiUiCommandSurfaceRegistry, UmiUiCommandSurfaceSnapshot, UMI_UI_COMMAND_SURFACE_CAPACITY)

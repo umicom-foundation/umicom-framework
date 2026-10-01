@@ -126,3 +126,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_editor_diff_hunk_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_editor_diff_hunk_registry_edit_if_current,
     UmiEditorDiffHunkRegistry, UmiEditorDiffHunkSnapshot, UmiEditorDiffHunkEdit,
     umi_editor_diff_hunk_snapshot_validate, umi_editor_diff_hunk_registry_upsert, umi_editor_diff_hunk_registry_remove, UMI_EDITOR_DIFF_HUNK_CAPACITY)
+
+/* Read accepted diff hunk records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_editor_diff_hunk_registry_read_page,
+    UmiEditorDiffHunkRegistry, UmiEditorDiffHunkSnapshot, UMI_EDITOR_DIFF_HUNK_CAPACITY)

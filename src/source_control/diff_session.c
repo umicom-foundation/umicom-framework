@@ -243,3 +243,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_source_control_diff_session_registry_c
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_source_control_diff_session_registry_edit_if_current,
     UmiSourceControlDiffSessionRegistry, UmiSourceControlDiffSessionSnapshot, UmiSourceControlDiffSessionEdit,
     umi_source_control_diff_session_snapshot_validate, umi_source_control_diff_session_registry_upsert, umi_source_control_diff_session_registry_remove, UMI_SOURCE_CONTROL_DIFF_SESSION_CAPACITY)
+
+/* Read accepted diff session records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_source_control_diff_session_registry_read_page,
+    UmiSourceControlDiffSessionRegistry, UmiSourceControlDiffSessionSnapshot, UMI_SOURCE_CONTROL_DIFF_SESSION_CAPACITY)

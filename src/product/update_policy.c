@@ -237,3 +237,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_product_update_policy_registry_capture
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_product_update_policy_registry_edit_if_current,
     UmiProductUpdatePolicyRegistry, UmiProductUpdatePolicySnapshot, UmiProductUpdatePolicyEdit,
     umi_product_update_policy_snapshot_validate, umi_product_update_policy_registry_upsert, umi_product_update_policy_registry_remove, UMI_PRODUCT_UPDATE_POLICY_CAPACITY)
+
+/* Read accepted update policy records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_product_update_policy_registry_read_page,
+    UmiProductUpdatePolicyRegistry, UmiProductUpdatePolicySnapshot, UMI_PRODUCT_UPDATE_POLICY_CAPACITY)

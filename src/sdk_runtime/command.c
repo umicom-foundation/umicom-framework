@@ -168,11 +168,30 @@ UmiStatus umi_sdk_runtime_command_set_state(UmiSdkRuntimeCommand *value, UmiSdkR
  * Provide the sdk runtime command same identity operation used by this module and its
  * client applications.
  */
+/* Bounded identity comparison replaces an unchecked string scan. The
+ * previous comparison remains here for review of compatibility behavior. */
+#if 0
 bool umi_sdk_runtime_command_same_identity(const UmiSdkRuntimeCommand *left, const UmiSdkRuntimeCommand *right)
 { return left != NULL && right != NULL && strcmp(left->id, right->id) == 0; }
+#endif
+bool umi_sdk_runtime_command_same_identity(const UmiSdkRuntimeCommand *left, const UmiSdkRuntimeCommand *right)
+{
+    /* Treat missing terminators as invalid identities instead of reading into
+     * adjacent fields. Other record state does not change identity equality. */
+    return left != NULL && right != NULL &&
+        UmiRecordTextFits(left->id, sizeof(left->id)) &&
+        UmiRecordTextFits(right->id, sizeof(right->id)) &&
+        strcmp(left->id, right->id) == 0;
+}
 
 /* Prepare related fields on a caller-owned copy, then publish them together.
  * Reusing the Framework guard keeps a delayed review from overwriting newer
  * state and leaves this model's validation rules with its existing validator. */
 UMI_DEFINE_REVIEWED_RECORD_EDIT(umi_sdk_runtime_command_replace_if_current,
     UmiSdkRuntimeCommand, umi_sdk_runtime_command_validate)
+
+/* A caller can reject an invalid command identity without
+ * erasing a previously accepted record. Defaults and domain validation stay
+ * with this owner; Framework supplies the common staged publication boundary. */
+UMI_DEFINE_CHECKED_RECORD_INIT(umi_sdk_runtime_command_init_checked,
+    UmiSdkRuntimeCommand, umi_sdk_runtime_command_init, umi_sdk_runtime_command_validate)

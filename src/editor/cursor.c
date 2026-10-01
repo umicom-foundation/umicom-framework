@@ -125,3 +125,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_editor_cursor_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_editor_cursor_registry_edit_if_current,
     UmiEditorCursorRegistry, UmiEditorCursorSnapshot, UmiEditorCursorEdit,
     umi_editor_cursor_snapshot_validate, umi_editor_cursor_registry_upsert, umi_editor_cursor_registry_remove, UMI_EDITOR_CURSOR_CAPACITY)
+
+/* Read accepted cursor records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_editor_cursor_registry_read_page,
+    UmiEditorCursorRegistry, UmiEditorCursorSnapshot, UMI_EDITOR_CURSOR_CAPACITY)

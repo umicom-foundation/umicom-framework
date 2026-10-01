@@ -60,4 +60,6 @@ static void ContractPayload(UmiDebugScopeSnapshot *item)
 /* Exercise mixed edits through this domain's public types and owner. */
 #define CONTRACT_EDIT UmiDebugScopeEdit
 #define CONTRACT_EDIT_CURRENT umi_debug_scope_registry_edit_if_current
+/* Page checks use this domain's real owner and complete payload comparator. */
+#define CONTRACT_READ_PAGE umi_debug_scope_registry_read_page
 #include "snapshot_contract_cases.h"

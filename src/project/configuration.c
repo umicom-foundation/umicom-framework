@@ -245,3 +245,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_project_configuration_registry_capture
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_project_configuration_registry_edit_if_current,
     UmiProjectConfigurationRegistry, UmiProjectConfigurationSnapshot, UmiProjectConfigurationEdit,
     umi_project_configuration_snapshot_validate, umi_project_configuration_registry_upsert, umi_project_configuration_registry_remove, UMI_PROJECT_CONFIGURATION_CAPACITY)
+
+/* Read accepted configuration records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_project_configuration_registry_read_page,
+    UmiProjectConfigurationRegistry, UmiProjectConfigurationSnapshot, UMI_PROJECT_CONFIGURATION_CAPACITY)

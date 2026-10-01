@@ -239,3 +239,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_ui_progress_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_ui_progress_registry_edit_if_current,
     UmiUiProgressRegistry, UmiUiProgressSnapshot, UmiUiProgressEdit,
     umi_ui_progress_snapshot_validate, umi_ui_progress_registry_upsert, umi_ui_progress_registry_remove, UMI_UI_PROGRESS_CAPACITY)
+
+/* Read accepted progress records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_ui_progress_registry_read_page,
+    UmiUiProgressRegistry, UmiUiProgressSnapshot, UMI_UI_PROGRESS_CAPACITY)

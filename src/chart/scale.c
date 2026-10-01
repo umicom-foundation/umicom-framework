@@ -236,3 +236,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_chart_scale_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_chart_scale_registry_edit_if_current,
     UmiChartScaleRegistry, UmiChartScaleSnapshot, UmiChartScaleEdit,
     umi_chart_scale_snapshot_validate, umi_chart_scale_registry_upsert, umi_chart_scale_registry_remove, UMI_CHART_SCALE_CAPACITY)
+
+/* Read accepted scale records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_chart_scale_registry_read_page,
+    UmiChartScaleRegistry, UmiChartScaleSnapshot, UMI_CHART_SCALE_CAPACITY)

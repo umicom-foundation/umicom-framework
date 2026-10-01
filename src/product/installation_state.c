@@ -270,3 +270,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_product_installation_state_registry_ca
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_product_installation_state_registry_edit_if_current,
     UmiProductInstallationRegistry, UmiProductInstallationSnapshot, UmiProductInstallationEdit,
     umi_product_installation_state_snapshot_validate, umi_product_installation_state_registry_upsert, umi_product_installation_state_registry_remove, UMI_PRODUCT_INSTALLATION_STATE_CAPACITY)
+
+/* Read accepted installation state records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_product_installation_state_registry_read_page,
+    UmiProductInstallationRegistry, UmiProductInstallationSnapshot, UMI_PRODUCT_INSTALLATION_STATE_CAPACITY)

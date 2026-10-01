@@ -237,3 +237,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_designer_clipboard_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_designer_clipboard_registry_edit_if_current,
     UmiDesignerClipboardItemRegistry, UmiDesignerClipboardItemSnapshot, UmiDesignerClipboardItemEdit,
     umi_designer_clipboard_snapshot_validate, umi_designer_clipboard_registry_upsert, umi_designer_clipboard_registry_remove, UMI_DESIGNER_CLIPBOARD_CAPACITY)
+
+/* Read accepted clipboard records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_designer_clipboard_registry_read_page,
+    UmiDesignerClipboardItemRegistry, UmiDesignerClipboardItemSnapshot, UMI_DESIGNER_CLIPBOARD_CAPACITY)

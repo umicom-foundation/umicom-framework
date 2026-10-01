@@ -239,3 +239,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_debug_scope_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_debug_scope_registry_edit_if_current,
     UmiDebugScopeRegistry, UmiDebugScopeSnapshot, UmiDebugScopeEdit,
     umi_debug_scope_snapshot_validate, umi_debug_scope_registry_upsert, umi_debug_scope_registry_remove, UMI_DEBUG_SCOPE_CAPACITY)
+
+/* Read accepted scope records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_debug_scope_registry_read_page,
+    UmiDebugScopeRegistry, UmiDebugScopeSnapshot, UMI_DEBUG_SCOPE_CAPACITY)

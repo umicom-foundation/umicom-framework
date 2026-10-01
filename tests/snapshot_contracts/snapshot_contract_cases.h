@@ -290,6 +290,8 @@ static int Allocation(CONTRACT_REGISTRY *registry)
 #include "snapshot_transfer_cases.h"
 #include "snapshot_edit_cases.h"
 
+#include "snapshot_page_cases.h"
+
 static int Run(CONTRACT_REGISTRY *registry, const char *name)
 {
     if (strcmp(name, "edit-mixed") == 0) return EditMixed(registry);
@@ -299,6 +301,9 @@ static int Run(CONTRACT_REGISTRY *registry, const char *name)
 #ifdef UMI_TEST_SNAPSHOT_ALLOCATION
     if (strcmp(name, "edit-allocation") == 0) return EditAllocation(registry);
 #endif
+    if (strcmp(name, "page-read") == 0) return PageRead(registry);
+    if (strcmp(name, "page-refused") == 0) return PageRefused(registry);
+    if (strcmp(name, "page-metadata") == 0) return PageMetadata(registry);
     if (strcmp(name, "capture") == 0) return TransferCapture(registry);
     if (strcmp(name, "replace") == 0) return TransferReplace(registry);
     if (strcmp(name, "replace-reject") == 0) return TransferReject(registry);

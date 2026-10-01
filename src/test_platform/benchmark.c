@@ -240,3 +240,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_test_platform_benchmark_registry_captu
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_test_platform_benchmark_registry_edit_if_current,
     UmiTestPlatformBenchmarkRegistry, UmiTestPlatformBenchmarkSnapshot, UmiTestPlatformBenchmarkEdit,
     umi_test_platform_benchmark_snapshot_validate, umi_test_platform_benchmark_registry_upsert, umi_test_platform_benchmark_registry_remove, UMI_TEST_PLATFORM_BENCHMARK_CAPACITY)
+
+/* Read accepted benchmark records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_test_platform_benchmark_registry_read_page,
+    UmiTestPlatformBenchmarkRegistry, UmiTestPlatformBenchmarkSnapshot, UMI_TEST_PLATFORM_BENCHMARK_CAPACITY)

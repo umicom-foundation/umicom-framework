@@ -235,3 +235,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_chart_pane_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_chart_pane_registry_edit_if_current,
     UmiChartPaneRegistry, UmiChartPaneSnapshot, UmiChartPaneEdit,
     umi_chart_pane_snapshot_validate, umi_chart_pane_registry_upsert, umi_chart_pane_registry_remove, UMI_CHART_PANE_CAPACITY)
+
+/* Read accepted pane records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_chart_pane_registry_read_page,
+    UmiChartPaneRegistry, UmiChartPaneSnapshot, UMI_CHART_PANE_CAPACITY)

@@ -17,6 +17,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop_workspace/gtk4.h"
 #include "umicom/desktop_workspace/workspace.h"
+#include "umicom/ui/gtk4/drop_down.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -373,7 +374,17 @@ GtkWindow *UmiDesktopWorkspaceGtkCreate(GtkApplication *application, const char 
     ui->font = gtk_spin_button_new_with_range(10,28,1);gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->font),12);gtk_widget_set_tooltip_text(ui->font,"Workspace font size in points");gtk_box_append(GTK_BOX(settings), ui->font);
     ui->visible = gtk_check_button_new_with_label("Show note list");gtk_check_button_set_active(GTK_CHECK_BUTTON(ui->visible),TRUE);gtk_box_append(GTK_BOX(settings), ui->visible);
     ui->sidebar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);gtk_box_append(GTK_BOX(ui->editor),ui->sidebar);
+    /* The workspace retains its titles for later updates. Transfer a separate
+     * reference through Framework's dropdown helper so the widget and workspace
+     * each release only their own reference. The direct construction below is
+     * retained for review of the previous ownership path. */
+#if 0
     ui->titles = gtk_string_list_new(NULL);ui->notes = gtk_drop_down_new(G_LIST_MODEL(g_object_ref(ui->titles)),NULL);gtk_widget_set_hexpand(ui->notes,TRUE);gtk_box_append(GTK_BOX(ui->sidebar),ui->notes);
+#endif
+    ui->titles = gtk_string_list_new(NULL);
+    ui->notes = umi_ui_gtk4_drop_down_new_take_string_list(g_object_ref(ui->titles));
+    gtk_widget_set_hexpand(ui->notes, TRUE);
+    gtk_box_append(GTK_BOX(ui->sidebar), ui->notes);
     ui->add=Button(ui->sidebar,"umicom.workspace.add","New note",G_CALLBACK(AddNote),ui);
     ui->remove=Button(ui->sidebar,"umicom.workspace.remove","Remove from draft",G_CALLBACK(RemoveNote),ui);
     ui->title=gtk_entry_new();gtk_widget_set_name(ui->title,"umicom.workspace.title");gtk_entry_set_placeholder_text(GTK_ENTRY(ui->title),"Note title");gtk_box_append(GTK_BOX(ui->editor),ui->title);

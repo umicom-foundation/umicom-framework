@@ -250,3 +250,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_test_platform_attachment_registry_capt
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_test_platform_attachment_registry_edit_if_current,
     UmiTestPlatformAttachmentRegistry, UmiTestPlatformAttachmentSnapshot, UmiTestPlatformAttachmentEdit,
     umi_test_platform_attachment_snapshot_validate, umi_test_platform_attachment_registry_upsert, umi_test_platform_attachment_registry_remove, UMI_TEST_PLATFORM_ATTACHMENT_CAPACITY)
+
+/* Read accepted attachment records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_test_platform_attachment_registry_read_page,
+    UmiTestPlatformAttachmentRegistry, UmiTestPlatformAttachmentSnapshot, UMI_TEST_PLATFORM_ATTACHMENT_CAPACITY)

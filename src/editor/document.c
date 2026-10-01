@@ -155,3 +155,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_editor_document_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_editor_document_registry_edit_if_current,
     UmiEditorDocumentRegistry, UmiEditorDocumentSnapshot, UmiEditorDocumentEdit,
     umi_editor_document_snapshot_validate, umi_editor_document_registry_upsert, umi_editor_document_registry_remove, UMI_EDITOR_DOCUMENT_CAPACITY)
+
+/* Read accepted document records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_editor_document_registry_read_page,
+    UmiEditorDocumentRegistry, UmiEditorDocumentSnapshot, UMI_EDITOR_DOCUMENT_CAPACITY)

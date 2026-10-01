@@ -38,6 +38,8 @@ typedef struct UmiGtk4EditorAction {
     int insert_offset;
     int bound_offset;
     bool rejected;
+    /* Distinguish a history allocation failure from an oversized paste. */
+    UmiStatus history_status;
 } UmiGtk4EditorAction;
 
 /* Removed documents invalidate their old closures before any identity reuse. */
@@ -355,6 +357,16 @@ static void on_editor_begin_user_action(GtkTextBuffer *buffer, gpointer user_dat
     gtk_text_buffer_get_iter_at_mark(buffer, &end, gtk_text_buffer_get_selection_bound(buffer));
     action->insert_offset = gtk_text_iter_get_offset(&start);
     action->bound_offset = gtk_text_iter_get_offset(&end);
+    /* External producers can update the visible draft before the coordinator
+     * has observed it. Commit that starting draft before native typing changes
+     * the view model; otherwise one Undo also discards the external update.
+     * The outer GTK action still becomes one history entry at its end. New
+     * editor integrations should use this shared boundary, not a second stack. */
+    action->history_status = UMI_STATUS_OK;
+    if (UmiGtk4EditorHasDocument(binding->adapter, binding->view_id)) {
+        action->history_status = UmiGtk4EditorSynchronise(binding->adapter, binding->view_id);
+        action->rejected = action->history_status != UMI_STATUS_OK;
+    }
     g_object_set_data_full(G_OBJECT(buffer), "umicom-editor-action", action, editor_action_free);
 }
 
@@ -409,7 +421,18 @@ static void on_editor_end_user_action(GtkTextBuffer *buffer, gpointer user_data)
             cached->selection_length = current.selection_length;
         }
         binding->adapter->applying_document_state = was_applying;
+        /* A rejected action restores its starting text and selection. Keep
+         * the reason accurate so allocation failures are not reported as a
+         * document size limit. The capacity-only report remains for review. */
+#if 0
         report_editor_capacity(binding->adapter);
+#endif
+        if (action->history_status == UMI_STATUS_OK) {
+            report_editor_capacity(binding->adapter);
+        } else if (binding->adapter->status_label != NULL) {
+            gtk_label_set_text(GTK_LABEL(binding->adapter->status_label),
+                "Edit not applied: the starting draft could not be recorded in history.");
+        }
     }
     editor_action_free(action);
 }
@@ -429,6 +452,13 @@ static void on_editor_insert_text(GtkTextBuffer *buffer, GtkTextIter *location,
     if (binding == NULL || binding->adapter == NULL ||
         binding->adapter->applying_document_state) return;
     if (text == NULL) return;
+    /* Do not accept more text after this grouped edit has already failed.
+     * End-user-action restores any selection deleted before the failure. */
+    UmiGtk4EditorAction *pending = g_object_get_data(G_OBJECT(buffer), "umicom-editor-action");
+    if (pending != NULL && pending->rejected) {
+        g_signal_stop_emission_by_name(buffer, "insert-text");
+        return;
+    }
     inserted_length = length < 0 ? strlen(text) : (size_t)length;
     gtk_text_buffer_get_bounds(buffer, &start, &end);
     current = gtk_text_buffer_get_text(buffer, &start, &end, TRUE);

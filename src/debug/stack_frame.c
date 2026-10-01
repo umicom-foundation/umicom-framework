@@ -241,3 +241,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_debug_stack_frame_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_debug_stack_frame_registry_edit_if_current,
     UmiDebugStackFrameRegistry, UmiDebugStackFrameSnapshot, UmiDebugStackFrameEdit,
     umi_debug_stack_frame_snapshot_validate, umi_debug_stack_frame_registry_upsert, umi_debug_stack_frame_registry_remove, UMI_DEBUG_STACK_FRAME_CAPACITY)
+
+/* Read accepted stack frame records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_debug_stack_frame_registry_read_page,
+    UmiDebugStackFrameRegistry, UmiDebugStackFrameSnapshot, UMI_DEBUG_STACK_FRAME_CAPACITY)

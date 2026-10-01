@@ -243,3 +243,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_source_control_operation_registry_capt
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_source_control_operation_registry_edit_if_current,
     UmiSourceControlOperationRegistry, UmiSourceControlOperationSnapshot, UmiSourceControlOperationEdit,
     umi_source_control_operation_snapshot_validate, umi_source_control_operation_registry_upsert, umi_source_control_operation_registry_remove, UMI_SOURCE_CONTROL_OPERATION_CAPACITY)
+
+/* Read accepted operation records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_source_control_operation_registry_read_page,
+    UmiSourceControlOperationRegistry, UmiSourceControlOperationSnapshot, UMI_SOURCE_CONTROL_OPERATION_CAPACITY)

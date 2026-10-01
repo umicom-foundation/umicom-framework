@@ -43,17 +43,32 @@ int main(int argc, char **argv)
     GtkWidget *root = umi_gtk4_trading_suite_workstation_widget(suite);
     gtk_window_set_child(GTK_WINDOW(window), root);
     GtkWidget *chart = Find(root, "trading.chart.panel"); CHECK(chart != NULL);
+    GtkWidget *section = Find(chart, "trading.chart.saved-review");
+    CHECK(GTK_IS_EXPANDER(section) && !gtk_expander_get_expanded(GTK_EXPANDER(section)));
     GtkWidget *restore = Find(chart, "trading.chart.restore"); CHECK(restore != NULL && !gtk_widget_get_sensitive(restore));
     Click(chart, "trading.chart.save");
     UmiChartDocument *saved = NULL; UmiChartCheckpointReport report;
     CHECK(UmiChartCheckpointLoad(server, "test", id, &saved, &report) == UMI_STATUS_OK && report.storage_revision == 1U);
     UmiChartDocumentDestroy(saved); saved = NULL;
     Click(chart, "trading.chart.zoom-in"); Click(chart, "trading.chart.preview");
+    /* Preview opens the existing review surface, making its text reachable.
+     * It must not require a second, undocumented click to reveal evidence. */
+    CHECK(gtk_expander_get_expanded(GTK_EXPANDER(section)));
     CHECK(gtk_widget_get_sensitive(restore));
     GtkWidget *details = Find(chart, "trading.chart.saved-details"); CHECK(GTK_IS_TEXT_VIEW(details));
     GtkTextIter start, end; GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(details));
     gtk_text_buffer_get_bounds(buffer, &start, &end); char *text = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
     CHECK(strstr(text, id) != NULL && strstr(text, "memory only") != NULL); g_free(text);
+    /* Reopening a collapsed review keeps the same controls and copied text
+     * owner. A repeated preview still requires an explicit Restore command. */
+    gtk_expander_set_expanded(GTK_EXPANDER(section), FALSE);
+    Click(chart, "trading.chart.preview");
+    CHECK(gtk_expander_get_expanded(GTK_EXPANDER(section)));
+    CHECK(Find(chart, "trading.chart.saved-details") == details);
+    UmiChartNavigation before_restore;
+    CHECK(UmiTradingWorkspaceGetChartNavigation(fixture.workspace, id, &before_restore) == UMI_STATUS_OK);
+    CHECK(before_restore.visible_bars != 0U);
+
     if (strcmp(argv[1], "restore") == 0) {
         Click(chart, "trading.chart.restore"); UmiChartNavigation navigation;
         CHECK(UmiTradingWorkspaceGetChartNavigation(fixture.workspace, id, &navigation) == UMI_STATUS_OK && navigation.visible_bars == 0U);

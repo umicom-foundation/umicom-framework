@@ -242,3 +242,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_language_provider_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_language_provider_registry_edit_if_current,
     UmiLanguageProviderRegistry, UmiLanguageProviderSnapshot, UmiLanguageProviderEdit,
     umi_language_provider_snapshot_validate, umi_language_provider_registry_upsert, umi_language_provider_registry_remove, UMI_LANGUAGE_PROVIDER_CAPACITY)
+
+/* Read accepted provider records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_language_provider_registry_read_page,
+    UmiLanguageProviderRegistry, UmiLanguageProviderSnapshot, UMI_LANGUAGE_PROVIDER_CAPACITY)

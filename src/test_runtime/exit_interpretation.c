@@ -14,6 +14,8 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/test_runtime/exit_interpretation.h"
+#include "umicom/base/text.h"
+#include "../base/record_update_internal.h"
 #include <string.h>
 /*
  * Initialise test runtime exit interpretation from caller-provided values so later
@@ -57,6 +59,8 @@ UmiStatus umi_test_runtime_exit_interpretation_validate(const UmiTestRuntimeExit
  * Provide the test runtime exit interpretation set category operation used by this module
  * and its client applications.
  */
+/* The shared text publication helper replaces a separate copy and revision increment. It avoids partial edits, overlapping-copy hazards and revision reuse; the previous implementation remains for review. */
+#if 0
 UmiStatus umi_test_runtime_exit_interpretation_set_category(UmiTestRuntimeExitInterpretation *value,const char *category)
 {
     UmiStatus s;
@@ -70,10 +74,22 @@ UmiStatus umi_test_runtime_exit_interpretation_set_category(UmiTestRuntimeExitIn
     if(s==UMI_STATUS_OK)value->revision+=1U;
     return s;
     }
+#endif
+UmiStatus umi_test_runtime_exit_interpretation_set_category(UmiTestRuntimeExitInterpretation *value,const char *category)
+{
+    /* A text edit and its revision are one publication. Framework's shared
+     * helper checks capacity before writing and supports text from this field
+     * itself. Refused edits leave the complete previous record unchanged. */
+    if (value == NULL || category == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_update(value->category, sizeof(value->category),
+                           category, &value->revision);
+}
 /*
  * Provide the test runtime exit interpretation set detail operation used by this module
  * and its client applications.
  */
+/* The shared text publication helper replaces a separate copy and revision increment. It avoids partial edits, overlapping-copy hazards and revision reuse; the previous implementation remains for review. */
+#if 0
 UmiStatus umi_test_runtime_exit_interpretation_set_detail(UmiTestRuntimeExitInterpretation *value,const char *detail)
 {
     UmiStatus s;
@@ -87,12 +103,41 @@ UmiStatus umi_test_runtime_exit_interpretation_set_detail(UmiTestRuntimeExitInte
     if(s==UMI_STATUS_OK)value->revision+=1U;
     return s;
     }
+#endif
+UmiStatus umi_test_runtime_exit_interpretation_set_detail(UmiTestRuntimeExitInterpretation *value,const char *detail)
+{
+    /* A text edit and its revision are one publication. Framework's shared
+     * helper checks capacity before writing and supports text from this field
+     * itself. Refused edits leave the complete previous record unchanged. */
+    if (value == NULL || detail == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_update(value->detail, sizeof(value->detail),
+                           detail, &value->revision);
+}
 /*
  * Provide the test runtime exit interpretation set exit code operation used by this module
  * and its client applications.
  */
+/* Check revision capacity before mutation so refused edits preserve the field and token. The former unchecked implementation remains for engineering review. */
+#if 0
 UmiStatus umi_test_runtime_exit_interpretation_set_exit_code(UmiTestRuntimeExitInterpretation *value,uint64_t number)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if(value==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    value->exit_code=number;
+    value->revision+=1U;
+    return UMI_STATUS_OK;
+    }
+#endif
+UmiStatus umi_test_runtime_exit_interpretation_set_exit_code(UmiTestRuntimeExitInterpretation *value,uint64_t number)
+{
+    /* Do not change a field when its observation token cannot advance.
+     * Reusing an old revision could make a stale review appear current. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -106,8 +151,27 @@ UmiStatus umi_test_runtime_exit_interpretation_set_exit_code(UmiTestRuntimeExitI
  * Provide the test runtime exit interpretation set native status operation used by this
  * module and its client applications.
  */
+/* Check revision capacity before mutation so refused edits preserve the field and token. The former unchecked implementation remains for engineering review. */
+#if 0
 UmiStatus umi_test_runtime_exit_interpretation_set_native_status(UmiTestRuntimeExitInterpretation *value,uint64_t number)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if(value==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    value->native_status=number;
+    value->revision+=1U;
+    return UMI_STATUS_OK;
+    }
+#endif
+UmiStatus umi_test_runtime_exit_interpretation_set_native_status(UmiTestRuntimeExitInterpretation *value,uint64_t number)
+{
+    /* Do not change a field when its observation token cannot advance.
+     * Reusing an old revision could make a stale review appear current. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -121,8 +185,27 @@ UmiStatus umi_test_runtime_exit_interpretation_set_native_status(UmiTestRuntimeE
  * Provide the test runtime exit interpretation set active operation used by this module
  * and its client applications.
  */
+/* Check revision capacity before mutation so refused edits preserve the field and token. The former unchecked implementation remains for engineering review. */
+#if 0
 UmiStatus umi_test_runtime_exit_interpretation_set_active(UmiTestRuntimeExitInterpretation *value,bool active)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if(value==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    value->active=active;
+    value->revision+=1U;
+    return UMI_STATUS_OK;
+    }
+#endif
+UmiStatus umi_test_runtime_exit_interpretation_set_active(UmiTestRuntimeExitInterpretation *value,bool active)
+{
+    /* Do not change a field when its observation token cannot advance.
+     * Reusing an old revision could make a stale review appear current. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -136,7 +219,26 @@ UmiStatus umi_test_runtime_exit_interpretation_set_active(UmiTestRuntimeExitInte
  * Provide the test runtime exit interpretation same identity operation used by this module
  * and its client applications.
  */
+/* Bounded identity comparison replaces an unchecked string scan. The
+ * previous comparison remains here for review of compatibility behavior. */
+#if 0
 bool umi_test_runtime_exit_interpretation_same_identity(const UmiTestRuntimeExitInterpretation *left,const UmiTestRuntimeExitInterpretation *right)
 {
     return left!=NULL&&right!=NULL&&strcmp(left->id,right->id)==0;
     }
+#endif
+bool umi_test_runtime_exit_interpretation_same_identity(const UmiTestRuntimeExitInterpretation *left, const UmiTestRuntimeExitInterpretation *right)
+{
+    /* Treat missing terminators as invalid identities instead of reading into
+     * adjacent fields. Other record state does not change identity equality. */
+    return left != NULL && right != NULL &&
+        UmiRecordTextFits(left->id, sizeof(left->id)) &&
+        UmiRecordTextFits(right->id, sizeof(right->id)) &&
+        strcmp(left->id, right->id) == 0;
+}
+
+/* A caller can reject an invalid exit interpretation identity without
+ * erasing a previously accepted record. Defaults and domain validation stay
+ * with this owner; Framework supplies the common staged publication boundary. */
+UMI_DEFINE_CHECKED_RECORD_INIT(umi_test_runtime_exit_interpretation_init_checked,
+    UmiTestRuntimeExitInterpretation, umi_test_runtime_exit_interpretation_init, umi_test_runtime_exit_interpretation_validate)

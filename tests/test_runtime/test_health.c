@@ -147,8 +147,63 @@ static int CheckReviewedRecord(void)
     return 0;
 }
 
+/* Compare the documented default fields, not struct padding. */
+static int RecordDefaultsEqual(const UmiTestRuntimeHealth *left, const UmiTestRuntimeHealth *right)
+{
+    return left->structure_size == right->structure_size &&
+        memcmp(left->id, right->id, sizeof(left->id)) == 0 &&
+        memcmp(left->name, right->name, sizeof(left->name)) == 0 &&
+        memcmp(left->detail, right->detail, sizeof(left->detail)) == 0 &&
+        left->ready_tests == right->ready_tests &&
+        left->blocked_tests == right->blocked_tests &&
+        left->updated_at_ms == right->updated_at_ms &&
+        left->revision == right->revision &&
+        left->enabled == right->enabled;
+}
+/* Public records may arrive from a caller's memory. Each fixed text field
+ * must contain its own terminator; a later field cannot supply one for it. */
+static int RecordRejectsUnterminatedFields(void)
+{
+    UmiTestRuntimeHealth value;
+    umi_test_runtime_health_init(&value, "bounded-record");
+    memset(value.id, 'x', sizeof(value.id));
+    if (umi_test_runtime_health_validate(&value) != UMI_STATUS_INVALID_ARGUMENT) return 1;
+    umi_test_runtime_health_init(&value, "bounded-record");
+    memset(value.name, 'x', sizeof(value.name));
+    if (umi_test_runtime_health_validate(&value) != UMI_STATUS_INVALID_ARGUMENT) return 1;
+    umi_test_runtime_health_init(&value, "bounded-record");
+    memset(value.detail, 'x', sizeof(value.detail));
+    if (umi_test_runtime_health_validate(&value) != UMI_STATUS_INVALID_ARGUMENT) return 1;
+    return 0;
+}
+#define RECORD_TYPE UmiTestRuntimeHealth
+#define RECORD_INIT umi_test_runtime_health_init
+#define RECORD_VALIDATE umi_test_runtime_health_validate
+#define RECORD_INIT_CHECKED umi_test_runtime_health_init_checked
+#include "../record_integrity/record_construction_cases.h"
+
+/* Each mutation refusal must preserve the complete accepted value. These
+ * checks remain active in optimized builds where assert may be disabled. */
+static int RecordMutationCases(void)
+{
+    UmiTestRuntimeHealth value;
+    umi_test_runtime_health_init(&value, "mutation-record");
+    unsigned char before[sizeof(value)];
+    UmiTestRuntimeHealth other;
+    umi_test_runtime_health_init(&value, "identity-record");
+    umi_test_runtime_health_init(&other, "identity-record");
+    if (!umi_test_runtime_health_same_identity(&value, &other)) return 1;
+    memcpy(before, &value, sizeof(value));
+    memset(other.id, 'x', sizeof(other.id));
+    if (umi_test_runtime_health_same_identity(&value, &other) || umi_test_runtime_health_same_identity(&other, &value)) return 1;
+    if (memcmp(before, &value, sizeof(value)) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
+    if (RecordMutationCases() != 0) return 1;
+    if (RecordConstructionCases() != 0) return 1;
     if (CheckReviewedRecord() != 0) return 1;
     if (CheckRefusedEdits() != 0) return 1;
     UmiTestRuntimeHealth value;

@@ -127,3 +127,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_editor_marker_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_editor_marker_registry_edit_if_current,
     UmiEditorMarkerRegistry, UmiEditorMarkerSnapshot, UmiEditorMarkerEdit,
     umi_editor_marker_snapshot_validate, umi_editor_marker_registry_upsert, umi_editor_marker_registry_remove, UMI_EDITOR_MARKER_CAPACITY)
+
+/* Read accepted marker records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_editor_marker_registry_read_page,
+    UmiEditorMarkerRegistry, UmiEditorMarkerSnapshot, UMI_EDITOR_MARKER_CAPACITY)

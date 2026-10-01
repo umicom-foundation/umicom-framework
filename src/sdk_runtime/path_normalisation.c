@@ -14,6 +14,8 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/sdk_runtime/path_normalisation.h"
+#include "umicom/base/text.h"
+#include "../base/record_update_internal.h"
 #include <string.h>
 /*
  * Initialise sdk runtime path normalisation from caller-provided values so later
@@ -58,6 +60,8 @@ UmiStatus umi_sdk_runtime_path_normalisation_validate(const UmiSdkRuntimePathNor
  * Provide the sdk runtime path normalisation set path operation used by this module and
  * its client applications.
  */
+/* The shared text publication helper replaces a separate copy and revision increment. It avoids partial edits, overlapping-copy hazards and revision reuse; the previous implementation remains for review. */
+#if 0
 UmiStatus umi_sdk_runtime_path_normalisation_set_path(UmiSdkRuntimePathNormalisation *value,const char *path)
 {
     UmiStatus s;
@@ -71,10 +75,22 @@ UmiStatus umi_sdk_runtime_path_normalisation_set_path(UmiSdkRuntimePathNormalisa
     if(s==UMI_STATUS_OK)value->revision+=1U;
     return s;
     }
+#endif
+UmiStatus umi_sdk_runtime_path_normalisation_set_path(UmiSdkRuntimePathNormalisation *value,const char *path)
+{
+    /* A text edit and its revision are one publication. Framework's shared
+     * helper checks capacity before writing and supports text from this field
+     * itself. Refused edits leave the complete previous record unchanged. */
+    if (value == NULL || path == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_update(value->path, sizeof(value->path),
+                           path, &value->revision);
+}
 /*
  * Provide the sdk runtime path normalisation set detail operation used by this module and
  * its client applications.
  */
+/* The shared text publication helper replaces a separate copy and revision increment. It avoids partial edits, overlapping-copy hazards and revision reuse; the previous implementation remains for review. */
+#if 0
 UmiStatus umi_sdk_runtime_path_normalisation_set_detail(UmiSdkRuntimePathNormalisation *value,const char *detail)
 {
     UmiStatus s;
@@ -88,12 +104,41 @@ UmiStatus umi_sdk_runtime_path_normalisation_set_detail(UmiSdkRuntimePathNormali
     if(s==UMI_STATUS_OK)value->revision+=1U;
     return s;
     }
+#endif
+UmiStatus umi_sdk_runtime_path_normalisation_set_detail(UmiSdkRuntimePathNormalisation *value,const char *detail)
+{
+    /* A text edit and its revision are one publication. Framework's shared
+     * helper checks capacity before writing and supports text from this field
+     * itself. Refused edits leave the complete previous record unchanged. */
+    if (value == NULL || detail == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_update(value->detail, sizeof(value->detail),
+                           detail, &value->revision);
+}
 /*
  * Return the number of records represented by sdk runtime path normalisation set input
  * without changing their state.
  */
+/* Check revision capacity before mutation so refused edits preserve the field and token. The former unchecked implementation remains for engineering review. */
+#if 0
 UmiStatus umi_sdk_runtime_path_normalisation_set_input_count(UmiSdkRuntimePathNormalisation *value,uint64_t n)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if(value==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    value->input_count=n;
+    value->revision+=1U;
+    return UMI_STATUS_OK;
+    }
+#endif
+UmiStatus umi_sdk_runtime_path_normalisation_set_input_count(UmiSdkRuntimePathNormalisation *value,uint64_t n)
+{
+    /* Do not change a field when its observation token cannot advance.
+     * Reusing an old revision could make a stale review appear current. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -107,8 +152,27 @@ UmiStatus umi_sdk_runtime_path_normalisation_set_input_count(UmiSdkRuntimePathNo
  * Return the number of records represented by sdk runtime path normalisation set changed
  * without changing their state.
  */
+/* Check revision capacity before mutation so refused edits preserve the field and token. The former unchecked implementation remains for engineering review. */
+#if 0
 UmiStatus umi_sdk_runtime_path_normalisation_set_changed_count(UmiSdkRuntimePathNormalisation *value,uint64_t n)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if(value==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    value->changed_count=n;
+    value->revision+=1U;
+    return UMI_STATUS_OK;
+    }
+#endif
+UmiStatus umi_sdk_runtime_path_normalisation_set_changed_count(UmiSdkRuntimePathNormalisation *value,uint64_t n)
+{
+    /* Do not change a field when its observation token cannot advance.
+     * Reusing an old revision could make a stale review appear current. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -122,8 +186,27 @@ UmiStatus umi_sdk_runtime_path_normalisation_set_changed_count(UmiSdkRuntimePath
  * Provide the sdk runtime path normalisation set state operation used by this module and
  * its client applications.
  */
+/* Check revision capacity before mutation so refused edits preserve the field and token. The former unchecked implementation remains for engineering review. */
+#if 0
 UmiStatus umi_sdk_runtime_path_normalisation_set_state(UmiSdkRuntimePathNormalisation *value,UmiSdkRuntimeState state)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if(value==NULL||state>UMI_SDK_RUNTIME_STATE_MISSING)return UMI_STATUS_INVALID_ARGUMENT;
+    value->state=state;
+    value->revision+=1U;
+    return UMI_STATUS_OK;
+    }
+#endif
+UmiStatus umi_sdk_runtime_path_normalisation_set_state(UmiSdkRuntimePathNormalisation *value,UmiSdkRuntimeState state)
+{
+    /* Do not change a field when its observation token cannot advance.
+     * Reusing an old revision could make a stale review appear current. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -137,7 +220,26 @@ UmiStatus umi_sdk_runtime_path_normalisation_set_state(UmiSdkRuntimePathNormalis
  * Provide the sdk runtime path normalisation same identity operation used by this module
  * and its client applications.
  */
+/* Bounded identity comparison replaces an unchecked string scan. The
+ * previous comparison remains here for review of compatibility behavior. */
+#if 0
 bool umi_sdk_runtime_path_normalisation_same_identity(const UmiSdkRuntimePathNormalisation *left,const UmiSdkRuntimePathNormalisation *right)
 {
     return left!=NULL&&right!=NULL&&strcmp(left->id,right->id)==0;
     }
+#endif
+bool umi_sdk_runtime_path_normalisation_same_identity(const UmiSdkRuntimePathNormalisation *left, const UmiSdkRuntimePathNormalisation *right)
+{
+    /* Treat missing terminators as invalid identities instead of reading into
+     * adjacent fields. Other record state does not change identity equality. */
+    return left != NULL && right != NULL &&
+        UmiRecordTextFits(left->id, sizeof(left->id)) &&
+        UmiRecordTextFits(right->id, sizeof(right->id)) &&
+        strcmp(left->id, right->id) == 0;
+}
+
+/* A caller can reject an invalid path normalisation identity without
+ * erasing a previously accepted record. Defaults and domain validation stay
+ * with this owner; Framework supplies the common staged publication boundary. */
+UMI_DEFINE_CHECKED_RECORD_INIT(umi_sdk_runtime_path_normalisation_init_checked,
+    UmiSdkRuntimePathNormalisation, umi_sdk_runtime_path_normalisation_init, umi_sdk_runtime_path_normalisation_validate)

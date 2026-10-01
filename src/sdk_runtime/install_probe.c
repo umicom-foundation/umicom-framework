@@ -168,11 +168,30 @@ UmiStatus umi_sdk_runtime_install_probe_set_state(UmiSdkRuntimeInstallProbe *val
  * Provide the sdk runtime install probe same identity operation used by this module and
  * its client applications.
  */
+/* Bounded identity comparison replaces an unchecked string scan. The
+ * previous comparison remains here for review of compatibility behavior. */
+#if 0
 bool umi_sdk_runtime_install_probe_same_identity(const UmiSdkRuntimeInstallProbe *left, const UmiSdkRuntimeInstallProbe *right)
 { return left != NULL && right != NULL && strcmp(left->id, right->id) == 0; }
+#endif
+bool umi_sdk_runtime_install_probe_same_identity(const UmiSdkRuntimeInstallProbe *left, const UmiSdkRuntimeInstallProbe *right)
+{
+    /* Treat missing terminators as invalid identities instead of reading into
+     * adjacent fields. Other record state does not change identity equality. */
+    return left != NULL && right != NULL &&
+        UmiRecordTextFits(left->id, sizeof(left->id)) &&
+        UmiRecordTextFits(right->id, sizeof(right->id)) &&
+        strcmp(left->id, right->id) == 0;
+}
 
 /* Prepare related fields on a caller-owned copy, then publish them together.
  * Reusing the Framework guard keeps a delayed review from overwriting newer
  * state and leaves this model's validation rules with its existing validator. */
 UMI_DEFINE_REVIEWED_RECORD_EDIT(umi_sdk_runtime_install_probe_replace_if_current,
     UmiSdkRuntimeInstallProbe, umi_sdk_runtime_install_probe_validate)
+
+/* A caller can reject an invalid install probe identity without
+ * erasing a previously accepted record. Defaults and domain validation stay
+ * with this owner; Framework supplies the common staged publication boundary. */
+UMI_DEFINE_CHECKED_RECORD_INIT(umi_sdk_runtime_install_probe_init_checked,
+    UmiSdkRuntimeInstallProbe, umi_sdk_runtime_install_probe_init, umi_sdk_runtime_install_probe_validate)

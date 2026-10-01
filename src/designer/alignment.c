@@ -236,3 +236,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_designer_alignment_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_designer_alignment_registry_edit_if_current,
     UmiDesignerAlignmentRegistry, UmiDesignerAlignmentSnapshot, UmiDesignerAlignmentEdit,
     umi_designer_alignment_snapshot_validate, umi_designer_alignment_registry_upsert, umi_designer_alignment_registry_remove, UMI_DESIGNER_ALIGNMENT_CAPACITY)
+
+/* Read accepted alignment records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_designer_alignment_registry_read_page,
+    UmiDesignerAlignmentRegistry, UmiDesignerAlignmentSnapshot, UMI_DESIGNER_ALIGNMENT_CAPACITY)

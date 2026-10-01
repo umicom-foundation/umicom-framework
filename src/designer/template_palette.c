@@ -239,3 +239,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_designer_template_palette_registry_cap
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_designer_template_palette_registry_edit_if_current,
     UmiDesignerTemplatePaletteRegistry, UmiDesignerTemplatePaletteSnapshot, UmiDesignerTemplatePaletteEdit,
     umi_designer_template_palette_snapshot_validate, umi_designer_template_palette_registry_upsert, umi_designer_template_palette_registry_remove, UMI_DESIGNER_TEMPLATE_PALETTE_CAPACITY)
+
+/* Read accepted template palette records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_designer_template_palette_registry_read_page,
+    UmiDesignerTemplatePaletteRegistry, UmiDesignerTemplatePaletteSnapshot, UMI_DESIGNER_TEMPLATE_PALETTE_CAPACITY)

@@ -62,4 +62,6 @@ static void ContractPayload(UmiLanguageReferenceSnapshot *item)
 /* Exercise mixed edits through this domain's public types and owner. */
 #define CONTRACT_EDIT UmiLanguageReferenceEdit
 #define CONTRACT_EDIT_CURRENT umi_language_reference_registry_edit_if_current
+/* Page checks use this domain's real owner and complete payload comparator. */
+#define CONTRACT_READ_PAGE umi_language_reference_registry_read_page
 #include "snapshot_contract_cases.h"

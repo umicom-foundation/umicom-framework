@@ -168,11 +168,30 @@ UmiStatus umi_sdk_runtime_component_catalogue_set_state(UmiSdkRuntimeComponentCa
  * Provide the sdk runtime component catalogue same identity operation used by this module
  * and its client applications.
  */
+/* Bounded identity comparison replaces an unchecked string scan. The
+ * previous comparison remains here for review of compatibility behavior. */
+#if 0
 bool umi_sdk_runtime_component_catalogue_same_identity(const UmiSdkRuntimeComponentCatalogue *left, const UmiSdkRuntimeComponentCatalogue *right)
 { return left != NULL && right != NULL && strcmp(left->id, right->id) == 0; }
+#endif
+bool umi_sdk_runtime_component_catalogue_same_identity(const UmiSdkRuntimeComponentCatalogue *left, const UmiSdkRuntimeComponentCatalogue *right)
+{
+    /* Treat missing terminators as invalid identities instead of reading into
+     * adjacent fields. Other record state does not change identity equality. */
+    return left != NULL && right != NULL &&
+        UmiRecordTextFits(left->id, sizeof(left->id)) &&
+        UmiRecordTextFits(right->id, sizeof(right->id)) &&
+        strcmp(left->id, right->id) == 0;
+}
 
 /* Prepare related fields on a caller-owned copy, then publish them together.
  * Reusing the Framework guard keeps a delayed review from overwriting newer
  * state and leaves this model's validation rules with its existing validator. */
 UMI_DEFINE_REVIEWED_RECORD_EDIT(umi_sdk_runtime_component_catalogue_replace_if_current,
     UmiSdkRuntimeComponentCatalogue, umi_sdk_runtime_component_catalogue_validate)
+
+/* A caller can reject an invalid component catalogue identity without
+ * erasing a previously accepted record. Defaults and domain validation stay
+ * with this owner; Framework supplies the common staged publication boundary. */
+UMI_DEFINE_CHECKED_RECORD_INIT(umi_sdk_runtime_component_catalogue_init_checked,
+    UmiSdkRuntimeComponentCatalogue, umi_sdk_runtime_component_catalogue_init, umi_sdk_runtime_component_catalogue_validate)

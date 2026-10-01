@@ -125,3 +125,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_editor_selection_range_registry_captur
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_editor_selection_range_registry_edit_if_current,
     UmiEditorSelectionRangeRegistry, UmiEditorSelectionRangeSnapshot, UmiEditorSelectionRangeEdit,
     umi_editor_selection_range_snapshot_validate, umi_editor_selection_range_registry_upsert, umi_editor_selection_range_registry_remove, UMI_EDITOR_SELECTION_RANGE_CAPACITY)
+
+/* Read accepted selection range records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_editor_selection_range_registry_read_page,
+    UmiEditorSelectionRangeRegistry, UmiEditorSelectionRangeSnapshot, UMI_EDITOR_SELECTION_RANGE_CAPACITY)

@@ -14,6 +14,8 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/test_runtime/test_family.h"
+#include "umicom/base/text.h"
+#include "../base/record_update_internal.h"
 #include <string.h>
 /*
  * Initialise test runtime test family from caller-provided values so later operations
@@ -57,6 +59,8 @@ UmiStatus umi_test_runtime_test_family_validate(const UmiTestRuntimeTestFamily *
  * Provide the test runtime test family set detail operation used by this module and its
  * client applications.
  */
+/* The shared text publication helper replaces a separate copy and revision increment. It avoids partial edits, overlapping-copy hazards and revision reuse; the previous implementation remains for review. */
+#if 0
 UmiStatus umi_test_runtime_test_family_set_detail(UmiTestRuntimeTestFamily *value,const char *detail)
 {
     UmiStatus s;
@@ -70,12 +74,41 @@ UmiStatus umi_test_runtime_test_family_set_detail(UmiTestRuntimeTestFamily *valu
     if(s==UMI_STATUS_OK)value->revision+=1U;
     return s;
     }
+#endif
+UmiStatus umi_test_runtime_test_family_set_detail(UmiTestRuntimeTestFamily *value,const char *detail)
+{
+    /* A text edit and its revision are one publication. Framework's shared
+     * helper checks capacity before writing and supports text from this field
+     * itself. Refused edits leave the complete previous record unchanged. */
+    if (value == NULL || detail == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_update(value->detail, sizeof(value->detail),
+                           detail, &value->revision);
+}
 /*
  * Return the number of records represented by test runtime test family set member without
  * changing their state.
  */
+/* Check revision capacity before mutation so refused edits preserve the field and token. The former unchecked implementation remains for engineering review. */
+#if 0
 UmiStatus umi_test_runtime_test_family_set_member_count(UmiTestRuntimeTestFamily *value,uint64_t number)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if(value==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    value->member_count=number;
+    value->revision+=1U;
+    return UMI_STATUS_OK;
+    }
+#endif
+UmiStatus umi_test_runtime_test_family_set_member_count(UmiTestRuntimeTestFamily *value,uint64_t number)
+{
+    /* Do not change a field when its observation token cannot advance.
+     * Reusing an old revision could make a stale review appear current. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -89,8 +122,27 @@ UmiStatus umi_test_runtime_test_family_set_member_count(UmiTestRuntimeTestFamily
  * Provide the test runtime test family set generation operation used by this module and
  * its client applications.
  */
+/* Check revision capacity before mutation so refused edits preserve the field and token. The former unchecked implementation remains for engineering review. */
+#if 0
 UmiStatus umi_test_runtime_test_family_set_generation(UmiTestRuntimeTestFamily *value,uint64_t number)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if(value==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    value->generation=number;
+    value->revision+=1U;
+    return UMI_STATUS_OK;
+    }
+#endif
+UmiStatus umi_test_runtime_test_family_set_generation(UmiTestRuntimeTestFamily *value,uint64_t number)
+{
+    /* Do not change a field when its observation token cannot advance.
+     * Reusing an old revision could make a stale review appear current. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -104,7 +156,26 @@ UmiStatus umi_test_runtime_test_family_set_generation(UmiTestRuntimeTestFamily *
  * Provide the test runtime test family same identity operation used by this module and its
  * client applications.
  */
+/* Bounded identity comparison replaces an unchecked string scan. The
+ * previous comparison remains here for review of compatibility behavior. */
+#if 0
 bool umi_test_runtime_test_family_same_identity(const UmiTestRuntimeTestFamily *left,const UmiTestRuntimeTestFamily *right)
 {
     return left!=NULL&&right!=NULL&&strcmp(left->id,right->id)==0;
     }
+#endif
+bool umi_test_runtime_test_family_same_identity(const UmiTestRuntimeTestFamily *left, const UmiTestRuntimeTestFamily *right)
+{
+    /* Treat missing terminators as invalid identities instead of reading into
+     * adjacent fields. Other record state does not change identity equality. */
+    return left != NULL && right != NULL &&
+        UmiRecordTextFits(left->id, sizeof(left->id)) &&
+        UmiRecordTextFits(right->id, sizeof(right->id)) &&
+        strcmp(left->id, right->id) == 0;
+}
+
+/* A caller can reject an invalid test family identity without
+ * erasing a previously accepted record. Defaults and domain validation stay
+ * with this owner; Framework supplies the common staged publication boundary. */
+UMI_DEFINE_CHECKED_RECORD_INIT(umi_test_runtime_test_family_init_checked,
+    UmiTestRuntimeTestFamily, umi_test_runtime_test_family_init, umi_test_runtime_test_family_validate)

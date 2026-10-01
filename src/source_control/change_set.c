@@ -241,3 +241,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_source_control_change_set_registry_cap
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_source_control_change_set_registry_edit_if_current,
     UmiSourceControlChangeSetRegistry, UmiSourceControlChangeSetSnapshot, UmiSourceControlChangeSetEdit,
     umi_source_control_change_set_snapshot_validate, umi_source_control_change_set_registry_upsert, umi_source_control_change_set_registry_remove, UMI_SOURCE_CONTROL_CHANGE_SET_CAPACITY)
+
+/* Read accepted change set records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_source_control_change_set_registry_read_page,
+    UmiSourceControlChangeSetRegistry, UmiSourceControlChangeSetSnapshot, UMI_SOURCE_CONTROL_CHANGE_SET_CAPACITY)

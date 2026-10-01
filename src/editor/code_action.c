@@ -135,3 +135,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_editor_code_action_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_editor_code_action_registry_edit_if_current,
     UmiEditorCodeActionRegistry, UmiEditorCodeActionSnapshot, UmiEditorCodeActionEdit,
     umi_editor_code_action_snapshot_validate, umi_editor_code_action_registry_upsert, umi_editor_code_action_registry_remove, UMI_EDITOR_CODE_ACTION_CAPACITY)
+
+/* Read accepted code action records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_editor_code_action_registry_read_page,
+    UmiEditorCodeActionRegistry, UmiEditorCodeActionSnapshot, UMI_EDITOR_CODE_ACTION_CAPACITY)

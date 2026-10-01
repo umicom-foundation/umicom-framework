@@ -36,3 +36,12 @@ if(BUILD_TESTING)
     add_test(NAME reviewed-changes-lesson COMMAND umicom-reviewed-changes-lesson)
     add_test(NAME reviewed-package-lesson COMMAND umicom-reviewed-package-lesson)
 endif()
+
+# This lesson exercises value ownership across three independently exported
+# Framework libraries, using only the headers and targets from the installed SDK.
+add_executable(umicom-safe-values-lesson safe_values.c)
+target_link_libraries(umicom-safe-values-lesson PRIVATE
+    Umicom::platform Umicom::sdk_runtime Umicom::test_runtime)
+if(BUILD_TESTING)
+    add_test(NAME safe-values-lesson COMMAND umicom-safe-values-lesson)
+endif()

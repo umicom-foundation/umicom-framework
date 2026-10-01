@@ -61,4 +61,6 @@ static void ContractPayload(UmiProductMetadataProviderSnapshot *item)
 /* Exercise mixed edits through this domain's public types and owner. */
 #define CONTRACT_EDIT UmiProductMetadataProviderEdit
 #define CONTRACT_EDIT_CURRENT umi_product_metadata_provider_registry_edit_if_current
+/* Page checks use this domain's real owner and complete payload comparator. */
+#define CONTRACT_READ_PAGE umi_product_metadata_provider_registry_read_page
 #include "snapshot_contract_cases.h"

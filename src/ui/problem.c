@@ -243,3 +243,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_ui_problem_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_ui_problem_registry_edit_if_current,
     UmiUiProblemRegistry, UmiUiProblemSnapshot, UmiUiProblemEdit,
     umi_ui_problem_snapshot_validate, umi_ui_problem_registry_upsert, umi_ui_problem_registry_remove, UMI_UI_PROBLEM_CAPACITY)
+
+/* Read accepted problem records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_ui_problem_registry_read_page,
+    UmiUiProblemRegistry, UmiUiProblemSnapshot, UMI_UI_PROBLEM_CAPACITY)

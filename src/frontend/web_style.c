@@ -239,3 +239,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_frontend_web_style_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_frontend_web_style_registry_edit_if_current,
     UmiFrontendStyleRegistry, UmiFrontendStyleSnapshot, UmiFrontendStyleEdit,
     umi_frontend_web_style_snapshot_validate, umi_frontend_web_style_registry_upsert, umi_frontend_web_style_registry_remove, UMI_FRONTEND_WEB_STYLE_CAPACITY)
+
+/* Read accepted web style records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_frontend_web_style_registry_read_page,
+    UmiFrontendStyleRegistry, UmiFrontendStyleSnapshot, UMI_FRONTEND_WEB_STYLE_CAPACITY)

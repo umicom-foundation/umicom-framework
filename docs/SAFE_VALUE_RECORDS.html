@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Constructing and reading Framework values safely</title>
+<style>body{max-width:58rem;margin:3rem auto;padding:0 1.5rem;font:18px/1.65 system-ui,sans-serif;color:#172b3a}h1,h2{line-height:1.2}pre{overflow:auto;background:#eef3f6;padding:1rem;font-size:.9rem}code{font-family:Consolas,monospace}a{color:#075da1}li{margin:.7rem 0}</style></head><body>
+<header><p>Umicom Framework · Sammy Hegab, Umicom Foundation · MIT</p>
+<h1>Constructing and reading values safely</h1></header>
+<p>A value record stores a small description, such as a component identity or a language-service observation.
+It does not own a window, file handle or background task. This distinction lets Framework prepare a complete
+replacement before publishing it, without accidentally giving two objects ownership of one resource.</p>
+<h2>Construct a record and handle refusal</h2>
+<ol><li>Include the public header for your record. Use its <code>_init_checked</code> function when the identity
+comes from input that may be empty or too long. These functions are available for SDK runtime, test runtime,
+desktop control and the supported language-intelligence value records.</li>
+<li>Check the returned status. <code>INVALID_ARGUMENT</code> rejects a missing or empty identity.
+<code>CAPACITY_EXCEEDED</code> rejects an identity that does not fit, including its terminating zero byte.</li>
+<li>Use the record only after <code>UMI_STATUS_OK</code>. On refusal, the destination retains its previous bytes.
+On success, it receives the existing initializer's defaults, including its initial revision.</li></ol>
+<pre><code>UmiSdkRuntimeComponent component;
+UmiStatus status = umi_sdk_runtime_component_init_checked(&amp;component, "notes.application");
+if (status != UMI_STATUS_OK) {
+    /* Report the input problem; do not use an uninitialized component. */
+    return status;
+}</code></pre>
+<p>Construction starts a new value. It is not a way to edit an identity that other observers are using:
+initialization resets the fields and revision. Use setters or an available reviewed-replacement API for live edits.
+The original void initializers remain available for compatibility; they cannot report identity errors.</p>
+<h2>Edit without losing an accepted field</h2>
+<p>The covered text setters publish the complete text and its revision together. An oversized replacement does
+not clear the previous field. Text can come from the field itself, including a suffix. A full revision counter
+causes refusal before mutation; it never wraps around to make an old observation look current. Scalar setters
+with a status result follow the same refusal rule. Callers still serialize access on the owning thread.</p>
+<p>Fixed text arrays in a record need a terminator inside that member. A zero byte in the next field is not a
+valid terminator for the first field. Validators reject malformed arrays before domain helpers inspect them.
+Identity comparison also refuses unterminated identities. These checks do not establish UTF-8 validity,
+filesystem access, permissions or evidence that a described operation really happened.</p>
+<h2>Read a registry in small pages</h2>
+<p>A registry owns an ordered collection of accepted snapshots. A revision is its change counter. Keep one
+revision while reading every page so that rows from different collection states cannot silently mix.</p>
+<ol><li>Read the owner's revision and start with offset zero.</li>
+<li>Provide an output array and call the typed <code>_registry_read_page</code> function with that revision.</li>
+<li>On success, consume exactly <code>page.copied</code> entries. Continue at <code>page.next_offset</code>
+while <code>page.has_more</code> is true.</li>
+<li>If the function returns <code>INVALID_STATE</code>, discard the partial collection and obtain a new revision.
+Do not resume halfway through using the newer token. For an atomic user-facing result, stage all accepted
+pages in your own buffer before publishing the completed collection.</li></ol>
+<pre><code>uint64_t revision = umi_platform_bookmarks_registry_revision(registry);
+UmiBookmarkSnapshot items[16];
+UmiSnapshotPage page;
+UmiStatus status = umi_platform_bookmarks_registry_read_page(
+    registry, revision, 0, items, 16, &amp;page);</code></pre>
+<p>Offset equal to the row count returns an empty final page. Offset beyond the count is invalid. Capacity zero
+allows a null item array and returns metadata without advancing; do not use that query in a loop expecting progress.
+On any refusal, both outputs retain their previous bytes, so check status before reading them. Output storage
+must not overlap the registry or the page report. Pagination allocates nothing and performs no I/O.</p>
+<h2>Build the installed SDK lesson</h2>
+<p>The <a href="../examples/snapshot_contracts/safe_values.c">complete C23 example</a> constructs SDK and test
+records, refuses an invalid identity, reads three bookmarks in two pages, and detects a stale observation.</p>
+<ol><li>Install Framework into a prefix such as <code>C:/umicom-sdk</code>, including the platform,
+SDK runtime and test runtime libraries.</li><li>Copy the installed
+<code>share/umicom-framework/examples/snapshot_contracts</code> directory to your own working folder.</li>
+<li>From that folder, configure, build and run the lesson with your installed toolchain:</li></ol>
+<pre><code>cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH=C:/umicom-sdk -DBUILD_TESTING=ON
+cmake --build build --target umicom-safe-values-lesson
+ctest --test-dir build -R "^safe-values-lesson$" --output-on-failure</code></pre>
+<p>A successful run prints three bookmark identities and
+<code>Checked construction and consistent page reads completed.</code> If CMake cannot find
+<code>UmicomFramework</code>, check the installation prefix. A missing symbol usually means the linked library
+and public headers were installed from different source states: rebuild and reinstall the same Framework
+checkout together. A failed status check prints a failing test or nonzero process exit; do not treat it as success.</p>
+<h2>Extend a record or registry</h2>
+<p>Keep reusable ownership rules in Framework. When adding a field, extend its validator and its member-level
+regression comparison. Add fixed text members to bounded validation. Do not apply the value-copy helpers to
+structs that own pointers, resources or callbacks. A registry's page function preserves its existing insertion
+order and normalization; it does not sort, persist, lock, or refresh external data.</p>
+<p>See <a href="REVIEWED_STATE_UPDATES.html">reviewed state updates</a> for publishing a prepared edit after
+checking that the live revision still matches.</p></body></html>

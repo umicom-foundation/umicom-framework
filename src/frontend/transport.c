@@ -238,3 +238,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_frontend_transport_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_frontend_transport_registry_edit_if_current,
     UmiFrontendTransportRegistry, UmiFrontendTransportSnapshot, UmiFrontendTransportEdit,
     umi_frontend_transport_snapshot_validate, umi_frontend_transport_registry_upsert, umi_frontend_transport_registry_remove, UMI_FRONTEND_TRANSPORT_CAPACITY)
+
+/* Read accepted transport records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_frontend_transport_registry_read_page,
+    UmiFrontendTransportRegistry, UmiFrontendTransportSnapshot, UMI_FRONTEND_TRANSPORT_CAPACITY)

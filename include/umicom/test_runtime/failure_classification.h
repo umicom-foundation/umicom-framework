@@ -93,6 +93,18 @@ bool umi_test_runtime_failure_classification_same_identity(const UmiTestRuntimeF
 UmiStatus umi_test_runtime_failure_classification_replace_if_current(UmiTestRuntimeFailureClassification *value,
     uint64_t expected_revision, const UmiTestRuntimeFailureClassification *proposal);
 
+/** Construct the usual default value and report invalid input.
+ * A null or empty identity returns INVALID_ARGUMENT. An identity without a
+ * terminator in sizeof(value->id) readable bytes returns CAPACITY_EXCEEDED;
+ * a shorter C string is read only through its terminator. The existing domain
+ * validator checks the staged defaults before publication. Any refusal leaves
+ * the destination unchanged. id may refer to the destination's own text.
+ * This initializes a new value, resetting its fields and revision to the
+ * established defaults; do not use it as a live edit while observers retain
+ * that identity. It owns no resources, allocates nothing and performs no I/O.
+ * Existing void initialization remains available for compatibility. */
+UmiStatus umi_test_runtime_failure_classification_init_checked(UmiTestRuntimeFailureClassification *value, const char *id);
+
 #ifdef __cplusplus
 }
 #endif

@@ -238,3 +238,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_test_platform_run_session_registry_cap
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_test_platform_run_session_registry_edit_if_current,
     UmiTestPlatformRunSessionRegistry, UmiTestPlatformRunSessionSnapshot, UmiTestPlatformRunSessionEdit,
     umi_test_platform_run_session_snapshot_validate, umi_test_platform_run_session_registry_upsert, umi_test_platform_run_session_registry_remove, UMI_TEST_PLATFORM_RUN_SESSION_CAPACITY)
+
+/* Read accepted run session records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_test_platform_run_session_registry_read_page,
+    UmiTestPlatformRunSessionRegistry, UmiTestPlatformRunSessionSnapshot, UMI_TEST_PLATFORM_RUN_SESSION_CAPACITY)

@@ -37,6 +37,9 @@ typedef struct InteractiveChart {
     UmiGtk4TradingPanelContext *context;
     UmiTradingChartPersistence *persistence;
     GtkWidget *restore_button, *preview_text;
+    /* The root owns this section. Keep its identity so an explicit Preview can
+     * reveal the reviewed data without replacing widgets or chart state. */
+    GtkWidget *preview_section;
     uint64_t preview_id;
     GtkWidget *root, *area, *status, *message, *objects, *period, *studies;
     UmiTradingChartSceneInfo info;
@@ -677,6 +680,12 @@ static void ChartPreviewClicked(GtkButton *button, gpointer root)
             : "Review Saved chart details. Restore replaces this instrument's current drawings, including locked drawings, and view. Save instead replaces the saved copy with your current chart.");
     } else ChartMessage(state, "Preview changed. Preview the saved chart again before restoring.");
     g_string_free(text, TRUE);
+    /* A successful Preview should show the evidence the user must review
+     * before Restore. GTK does not mount a collapsed expander's body in its
+     * child tree. Reveal this existing section only after a complete preview;
+     * this changes presentation, never drawings, saved data or an order. */
+    if (status == UMI_STATUS_OK)
+        gtk_expander_set_expanded(GTK_EXPANDER(state->preview_section), TRUE);
 }
 static void ChartRestoreClicked(GtkButton *button, gpointer root)
 {
@@ -808,6 +817,8 @@ GtkWidget *UmiGtk4TradingInteractiveChartCreate(UmiGtk4TradingPanelContext *cont
     state->restore_button = ChartButton(persistence, "Restore preview", "trading.chart.restore", G_CALLBACK(ChartRestoreClicked), root);
     gtk_widget_set_sensitive(state->restore_button, FALSE); gtk_box_append(GTK_BOX(root), persistence);
     GtkWidget *details = gtk_expander_new("Saved chart details");
+    state->preview_section = details;
+    (void)umi_gtk4_automation_tag_widget(details, "trading.chart.saved-review");
     GtkWidget *scroll_preview = gtk_scrolled_window_new();
     gtk_scrolled_window_set_min_content_height(GTK_SCROLLED_WINDOW(scroll_preview), 120);
     gtk_scrolled_window_set_max_content_height(GTK_SCROLLED_WINDOW(scroll_preview), 200);

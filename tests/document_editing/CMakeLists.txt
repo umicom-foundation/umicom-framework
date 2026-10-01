@@ -50,6 +50,13 @@ if(TARGET umicom_ui_gtk4)
         set_tests_properties(framework.document_editing.gtk4.${case} PROPERTIES
             TIMEOUT 30 SKIP_RETURN_CODE 77 RUN_SERIAL TRUE LABELS "framework;document;gtk4;native;editing")
     endforeach()
+    # Exercise the real adapter and coordinator together: external text must
+    # remain a separate undo step from the user's next native editing action.
+    foreach(case external-history-large external-history-utf8 external-history-selection)
+        add_test(NAME framework.document_editing.gtk4.${case} COMMAND umicom-document-editing-gtk4-test ${case})
+        set_tests_properties(framework.document_editing.gtk4.${case} PROPERTIES
+            TIMEOUT 30 SKIP_RETURN_CODE 77 RUN_SERIAL TRUE LABELS "framework;document;gtk4;native;editing")
+    endforeach()
 endif()
 
 

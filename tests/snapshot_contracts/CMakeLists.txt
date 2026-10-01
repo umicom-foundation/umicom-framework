@@ -26,6 +26,13 @@ foreach(_contract IN LISTS _contracts)
     if(COMMAND umicom_register_validation_target)
         umicom_register_validation_target("${_target}")
     endif()
+    # Each real owner proves the same paging rules using its public payload.
+    foreach(_case page-read page-refused page-metadata)
+        set(_test "framework.snapshot_contracts.${_group}.${_name}.${_case}")
+        add_test(NAME "${_test}" COMMAND "${_target}" "${_case}")
+        set_tests_properties("${_test}" PROPERTIES TIMEOUT 30
+            LABELS "framework;snapshot-contracts;paging;${_group};regression")
+    endforeach()
     if(_contract IN_LIST _scoped_contracts)
         foreach(_case scope scope-empty scope-reject scope-capacity scope-stale scope-alias)
             set(_test "framework.snapshot_contracts.${_group}.${_name}.${_case}")
@@ -233,3 +240,18 @@ foreach(_lesson changes package)
         umicom_register_validation_target("${_target}")
     endif()
 endforeach()
+
+# Keep the installed-consumer lesson on the normal validation path as well.
+add_executable(umicom-safe-values-example ../../examples/snapshot_contracts/safe_values.c)
+target_link_libraries(umicom-safe-values-example PRIVATE
+    Umicom::platform Umicom::sdk_runtime Umicom::test_runtime)
+set_target_properties(umicom-safe-values-example PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+umicom_apply_warnings(umicom-safe-values-example)
+umicom_apply_sanitizers(umicom-safe-values-example)
+add_dependencies(umicom-snapshot-contract-checks umicom-safe-values-example)
+add_test(NAME framework.snapshot_contracts.safe-values-example COMMAND umicom-safe-values-example)
+set_tests_properties(framework.snapshot_contracts.safe-values-example PROPERTIES
+    TIMEOUT 30 LABELS "framework;snapshot-contracts;record-integrity;example")
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-safe-values-example)
+endif()

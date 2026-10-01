@@ -239,3 +239,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_ui_dock_model_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_ui_dock_model_registry_edit_if_current,
     UmiUiDockRegistry, UmiUiDockSnapshot, UmiUiDockEdit,
     umi_ui_dock_model_snapshot_validate, umi_ui_dock_model_registry_upsert, umi_ui_dock_model_registry_remove, UMI_UI_DOCK_MODEL_CAPACITY)
+
+/* Read accepted dock model records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_ui_dock_model_registry_read_page,
+    UmiUiDockRegistry, UmiUiDockSnapshot, UMI_UI_DOCK_MODEL_CAPACITY)

@@ -241,3 +241,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_debug_event_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_debug_event_registry_edit_if_current,
     UmiDebugEventRegistry, UmiDebugEventSnapshot, UmiDebugEventEdit,
     umi_debug_event_snapshot_validate, umi_debug_event_registry_upsert, umi_debug_event_registry_remove, UMI_DEBUG_EVENT_CAPACITY)
+
+/* Read accepted event records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_debug_event_registry_read_page,
+    UmiDebugEventRegistry, UmiDebugEventSnapshot, UMI_DEBUG_EVENT_CAPACITY)

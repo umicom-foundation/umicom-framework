@@ -303,4 +303,29 @@ UmiStatus Function(Registry *registry, uint64_t expected_revision, \
     if (out_result != NULL) *out_result = result; \
     return UMI_STATUS_OK; \
 }
+
+/* UI lists and SDK consumers can read a small page instead of reserving room
+ * for an entire registry. Every page must name the same observation revision;
+ * a writer between calls causes refusal before either output is touched.
+ * The owner still serializes access. This helper provides no cross-thread
+ * synchronization and accepts only inline value snapshots without resources. */
+#define UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(Function, Registry, Snapshot, Capacity) \
+UmiStatus Function(const Registry *registry, uint64_t expected_revision, \
+    size_t offset, Snapshot *items, size_t capacity, UmiSnapshotPage *out_page) \
+{ \
+    if (registry == NULL || out_page == NULL || (capacity != 0U && items == NULL)) \
+        return UMI_STATUS_INVALID_ARGUMENT; \
+    if (registry->revision != expected_revision) return UMI_STATUS_INVALID_STATE; \
+    if (registry->count > (Capacity)) return UMI_STATUS_INVALID_STATE; \
+    if (offset > registry->count) return UMI_STATUS_INVALID_ARGUMENT; \
+    size_t remaining = registry->count - offset; \
+    size_t copied = capacity < remaining ? capacity : remaining; \
+    UmiSnapshotPage page = {registry->revision, registry->count, offset, \
+        copied, offset + copied, offset + copied < registry->count}; \
+    /* All refusal checks precede both writes. The existing registry owns \
+     * ordering and normalization; pagination copies those accepted values. */ \
+    if (copied != 0U) memcpy(items, registry->items + offset, copied * sizeof(*items)); \
+    *out_page = page; \
+    return UMI_STATUS_OK; \
+}
 #endif

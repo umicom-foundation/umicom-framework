@@ -67,4 +67,6 @@ static void ContractPayload(UmiChartAnnotationSnapshot *item)
 /* Exercise mixed edits through this domain's public types and owner. */
 #define CONTRACT_EDIT UmiChartAnnotationEdit
 #define CONTRACT_EDIT_CURRENT umi_chart_annotation_registry_edit_if_current
+/* Page checks use this domain's real owner and complete payload comparator. */
+#define CONTRACT_READ_PAGE umi_chart_annotation_registry_read_page
 #include "snapshot_contract_cases.h"

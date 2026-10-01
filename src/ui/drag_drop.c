@@ -239,3 +239,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_ui_drag_drop_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_ui_drag_drop_registry_edit_if_current,
     UmiUiDragDropRegistry, UmiUiDragDropSnapshot, UmiUiDragDropEdit,
     umi_ui_drag_drop_snapshot_validate, umi_ui_drag_drop_registry_upsert, umi_ui_drag_drop_registry_remove, UMI_UI_DRAG_DROP_CAPACITY)
+
+/* Read accepted drag drop records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_ui_drag_drop_registry_read_page,
+    UmiUiDragDropRegistry, UmiUiDragDropSnapshot, UMI_UI_DRAG_DROP_CAPACITY)

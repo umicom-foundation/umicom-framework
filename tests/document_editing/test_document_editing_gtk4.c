@@ -28,6 +28,17 @@ static int TextEquals(UmiUiDocumentViewModel *views,const char *viewId,const cha
     int equal=status==UMI_STATUS_OK && bytes==strlen(expected) && memcmp(text,expected,bytes)==0;
     UmiUiDocumentViewModelFreeText(text);return equal;
 }
+/* Compare the native draft as well as its model. A history check must catch
+ * either side restoring an older document or losing a non-ASCII byte. */
+static int BufferEquals(GtkTextBuffer *buffer, const char *expected)
+{
+    GtkTextIter start, end;
+    gtk_text_buffer_get_bounds(buffer, &start, &end);
+    char *text = gtk_text_buffer_get_text(buffer, &start, &end, TRUE);
+    int equal = g_strcmp0(text, expected) == 0;
+    g_free(text);
+    return equal;
+}
 static GtkWidget *FindEditor(GtkWidget *root)
 {
     if(GTK_IS_TEXT_VIEW(root) && gtk_widget_has_css_class(root,"umicom-editor"))return root;
@@ -52,6 +63,8 @@ int main(int argc,char **argv)
     Result result={0};
     char first[UMI_UI_ID_CAPACITY],second[UMI_UI_ID_CAPACITY];
     int failed=0;
+    /* Keep large drafts off the Windows stack and release them on every exit. */
+    char *external=NULL, *edited=NULL;
     if(argc!=2)return 2;
     if(!gtk_init_check())return 77;
     application=gtk_application_new("org.umicom.editing.test",G_APPLICATION_NON_UNIQUE);
@@ -78,6 +91,63 @@ int main(int argc,char **argv)
     clipboard=gtk_widget_get_clipboard(window);
     REQUIRE(clipboard!=NULL);
 
+    if(strcmp(argv[1],"external-history-large")==0 ||
+       strcmp(argv[1],"external-history-utf8")==0 ||
+       strcmp(argv[1],"external-history-selection")==0) {
+        const int large = strcmp(argv[1],"external-history-large")==0;
+        const int selection = strcmp(argv[1],"external-history-selection")==0;
+        if (large) {
+            external = g_malloc(131073U);
+            memset(external, 'x', 131072U);
+            external[131071U] = 'z';
+            external[131072U] = '\0';
+        } else {
+            external = g_strdup("caf\xc3\xa9 notes");
+        }
+        /* An external producer updates the view, without explicitly syncing
+         * the coordinator. The editor must establish the next typing boundary. */
+        REQUIRE(umi_ui_document_view_model_find(views,first,&view)==UMI_STATUS_OK);
+        view.cursor_offset=0U;view.selection_length=0U;view.dirty=1;
+        REQUIRE(UmiUiDocumentViewModelUpsertText(views,&view,external,strlen(external))==UMI_STATUS_OK);
+        REQUIRE(umi_gtk4_adapter_refresh(adapter)==UMI_STATUS_OK);
+        GtkWidget *editor=FindEditor(window);REQUIRE(editor!=NULL);
+        GtkTextBuffer *buffer=gtk_text_view_get_buffer(GTK_TEXT_VIEW(editor));
+        REQUIRE(BufferEquals(buffer,external));
+        GtkTextIter begin, end;
+        if (selection) {
+            /* Delete the accented character and following space as part of
+             * the same replacement gesture; byte and character offsets differ. */
+            gtk_text_buffer_get_iter_at_offset(buffer,&begin,3);
+            gtk_text_buffer_get_iter_at_offset(buffer,&end,5);
+            gtk_text_buffer_select_range(buffer,&begin,&end);
+            edited = g_strdup("cafZnotes");
+        } else {
+            gtk_text_buffer_get_end_iter(buffer,&begin);
+            edited = g_strconcat(external,"!",NULL);
+        }
+        gtk_text_buffer_begin_user_action(buffer);
+        if (selection) gtk_text_buffer_delete(buffer,&begin,&end);
+        gtk_text_buffer_insert(buffer,&begin,selection?"Z":"!",1);
+        gtk_text_buffer_end_user_action(buffer);
+        REQUIRE(BufferEquals(buffer,edited) && TextEquals(views,first,edited));
+
+        /* Metadata refreshes retain this buffer and both history boundaries. */
+        REQUIRE(umi_ui_document_view_model_find(views,first,&view)==UMI_STATUS_OK);
+        view.word_wrap = !view.word_wrap;
+        REQUIRE(umi_ui_document_view_model_upsert(views,&view)==UMI_STATUS_OK);
+        REQUIRE(umi_gtk4_adapter_refresh(adapter)==UMI_STATUS_OK);
+        REQUIRE(FindEditor(window)==editor && gtk_text_view_get_buffer(GTK_TEXT_VIEW(editor))==buffer);
+        g_signal_emit_by_name(buffer,"undo");
+        REQUIRE(BufferEquals(buffer,external) && TextEquals(views,first,external));
+        g_signal_emit_by_name(buffer,"undo");
+        REQUIRE(BufferEquals(buffer,"Umicom Notes") && TextEquals(views,first,"Umicom Notes"));
+        g_signal_emit_by_name(buffer,"redo");
+        REQUIRE(BufferEquals(buffer,external) && TextEquals(views,first,external));
+        g_signal_emit_by_name(buffer,"redo");
+        REQUIRE(BufferEquals(buffer,edited) && TextEquals(views,first,edited));
+        REQUIRE(result.status==UMI_STATUS_OK);
+        goto cleanup;
+    }
     if(strcmp(argv[1],"source-signals")==0) {
         GtkWidget *editor=FindEditor(window);REQUIRE(editor!=NULL);
         GtkTextBuffer *buffer=gtk_text_view_get_buffer(GTK_TEXT_VIEW(editor));
@@ -146,6 +216,7 @@ int main(int argc,char **argv)
         REQUIRE(strcmp(active.view_id,second)==0 && TextEquals(views,second,"Keep this draft"));
     }
 cleanup:
+    g_free(edited);g_free(external);
     if(changed && clipboard)g_signal_handler_disconnect(clipboard,changed);
     if(adapter)(void)UmiGtk4AdapterBindDocumentEditing(adapter,NULL,NULL,NULL);
     /* Drain cancelled clipboard callbacks before destroying their owners. */

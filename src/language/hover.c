@@ -244,3 +244,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_language_hover_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_language_hover_registry_edit_if_current,
     UmiLanguageHoverRegistry, UmiLanguageHoverSnapshot, UmiLanguageHoverEdit,
     umi_language_hover_snapshot_validate, umi_language_hover_registry_upsert, umi_language_hover_registry_remove, UMI_LANGUAGE_HOVER_CAPACITY)
+
+/* Read accepted hover records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_language_hover_registry_read_page,
+    UmiLanguageHoverRegistry, UmiLanguageHoverSnapshot, UMI_LANGUAGE_HOVER_CAPACITY)

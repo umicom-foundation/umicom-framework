@@ -285,3 +285,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_platform_file_operation_queue_registry
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_platform_file_operation_queue_registry_edit_if_current,
     UmiFileOperationRegistry, UmiFileOperationSnapshot, UmiFileOperationEdit,
     umi_platform_file_operation_queue_snapshot_validate, umi_platform_file_operation_queue_registry_upsert, umi_platform_file_operation_queue_registry_remove, UMI_PLATFORM_FILE_OPERATION_QUEUE_CAPACITY)
+
+/* Read accepted file operation queue records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_platform_file_operation_queue_registry_read_page,
+    UmiFileOperationRegistry, UmiFileOperationSnapshot, UMI_PLATFORM_FILE_OPERATION_QUEUE_CAPACITY)

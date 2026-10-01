@@ -64,6 +64,23 @@ bool umi_desktop_application_placeholder_same_identity(const UmiDesktopApplicati
 /* Feature-specific policy helper keeps this decision in Framework rather than a thin application. */
 bool umi_desktop_application_placeholder_required(UmiDesktopControlAvailability availability, bool configured);
 
+/* Text setters publish a complete field and one revision together. Capacity,
+ * invalid-input and exhausted-revision refusals preserve the record. Scalar
+ * setters also refuse revision exhaustion. Call these on the value's owner;
+ * they do not supply locking or persist changes to a storage service. */
+
+/** Construct the usual default value and report invalid input.
+ * A null or empty identity returns INVALID_ARGUMENT. An identity without a
+ * terminator in sizeof(value->id) readable bytes returns CAPACITY_EXCEEDED;
+ * a shorter C string is read only through its terminator. The existing domain
+ * validator checks the staged defaults before publication. Any refusal leaves
+ * the destination unchanged. id may refer to the destination's own text.
+ * This initializes a new value, resetting its fields and revision to the
+ * established defaults; do not use it as a live edit while observers retain
+ * that identity. It owns no resources, allocates nothing and performs no I/O.
+ * Existing void initialization remains available for compatibility. */
+UmiStatus umi_desktop_application_placeholder_init_checked(UmiDesktopApplicationPlaceholderSnapshot *value, const char *id);
+
 #ifdef __cplusplus
 }
 #endif

@@ -262,3 +262,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_test_platform_result_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_test_platform_result_registry_edit_if_current,
     UmiTestPlatformResultRegistry, UmiTestPlatformResultSnapshot, UmiTestPlatformResultEdit,
     umi_test_platform_result_snapshot_validate, umi_test_platform_result_registry_upsert, umi_test_platform_result_registry_remove, UMI_TEST_PLATFORM_RESULT_CAPACITY)
+
+/* Read accepted result records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_test_platform_result_registry_read_page,
+    UmiTestPlatformResultRegistry, UmiTestPlatformResultSnapshot, UMI_TEST_PLATFORM_RESULT_CAPACITY)

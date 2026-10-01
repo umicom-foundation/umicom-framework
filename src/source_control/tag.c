@@ -243,3 +243,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_source_control_tag_registry_capture,
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_source_control_tag_registry_edit_if_current,
     UmiSourceControlTagRegistry, UmiSourceControlTagSnapshot, UmiSourceControlTagEdit,
     umi_source_control_tag_snapshot_validate, umi_source_control_tag_registry_upsert, umi_source_control_tag_registry_remove, UMI_SOURCE_CONTROL_TAG_CAPACITY)
+
+/* Read accepted tag records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_source_control_tag_registry_read_page,
+    UmiSourceControlTagRegistry, UmiSourceControlTagSnapshot, UMI_SOURCE_CONTROL_TAG_CAPACITY)

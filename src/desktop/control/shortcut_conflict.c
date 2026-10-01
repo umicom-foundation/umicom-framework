@@ -10,6 +10,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop/control/shortcut_conflict.h"
+#include "umicom/base/text.h"
+#include "../../base/record_update_internal.h"
 
 #include <string.h>
 
@@ -42,6 +44,13 @@ void umi_desktop_shortcut_conflict_init(UmiDesktopShortcutConflictSnapshot *valu
  */
 UmiStatus umi_desktop_shortcut_conflict_validate(const UmiDesktopShortcutConflictSnapshot *value)
 {
+    /* Validate each fixed field before any domain helper treats it as a C
+     * string. Add new inline text members here when extending this record. */
+    if (value == NULL || memchr(value->id, '\0', sizeof(value->id)) == NULL ||
+        memchr(value->subject_id, '\0', sizeof(value->subject_id)) == NULL ||
+        memchr(value->detail, '\0', sizeof(value->detail)) == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -62,6 +71,8 @@ UmiStatus umi_desktop_shortcut_conflict_validate(const UmiDesktopShortcutConflic
  * Provide the desktop shortcut conflict set subject operation used by this module and its
  * client applications.
  */
+/* The shared text publication helper replaces a separate copy and revision increment. It avoids partial edits, overlapping-copy hazards and revision reuse; the previous implementation remains for review. */
+#if 0
 UmiStatus umi_desktop_shortcut_conflict_set_subject(UmiDesktopShortcutConflictSnapshot *value, const char *subject_id)
 {
     UmiStatus status;
@@ -75,11 +86,26 @@ UmiStatus umi_desktop_shortcut_conflict_set_subject(UmiDesktopShortcutConflictSn
     if (status == UMI_STATUS_OK) value->revision += 1U;
     return status;
 }
+#endif
+UmiStatus umi_desktop_shortcut_conflict_set_subject(UmiDesktopShortcutConflictSnapshot *value, const char *subject_id)
+{
+    /* A text edit and its revision are one publication. Framework's shared
+     * helper checks capacity before writing and supports text from this field
+     * itself. Refused edits leave the complete previous record unchanged. */
+    if (value == NULL || subject_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Subject identities keep their existing nonempty, bounded contract. */
+    if (subject_id[0] == '\0' || !UmiRecordTextFits(subject_id, sizeof(value->subject_id)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_update(value->subject_id, sizeof(value->subject_id),
+                           subject_id, &value->revision);
+}
 
 /*
  * Provide the desktop shortcut conflict set detail operation used by this module and its
  * client applications.
  */
+/* The shared text publication helper replaces a separate copy and revision increment. It avoids partial edits, overlapping-copy hazards and revision reuse; the previous implementation remains for review. */
+#if 0
 UmiStatus umi_desktop_shortcut_conflict_set_detail(UmiDesktopShortcutConflictSnapshot *value, const char *detail)
 {
     UmiStatus status;
@@ -93,13 +119,42 @@ UmiStatus umi_desktop_shortcut_conflict_set_detail(UmiDesktopShortcutConflictSna
     if (status == UMI_STATUS_OK) value->revision += 1U;
     return status;
 }
+#endif
+UmiStatus umi_desktop_shortcut_conflict_set_detail(UmiDesktopShortcutConflictSnapshot *value, const char *detail)
+{
+    /* A text edit and its revision are one publication. Framework's shared
+     * helper checks capacity before writing and supports text from this field
+     * itself. Refused edits leave the complete previous record unchanged. */
+    if (value == NULL || detail == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_update(value->detail, sizeof(value->detail),
+                           detail, &value->revision);
+}
 
 /*
  * Provide the desktop shortcut conflict set state operation used by this module and its
  * client applications.
  */
+/* Check revision capacity before mutation so refused edits preserve the field and token. The former unchecked implementation remains for engineering review. */
+#if 0
 UmiStatus umi_desktop_shortcut_conflict_set_state(UmiDesktopShortcutConflictSnapshot *value, uint32_t state)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    value->state = state;
+    value->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_desktop_shortcut_conflict_set_state(UmiDesktopShortcutConflictSnapshot *value, uint32_t state)
+{
+    /* Do not change a field when its observation token cannot advance.
+     * Reusing an old revision could make a stale review appear current. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -114,8 +169,27 @@ UmiStatus umi_desktop_shortcut_conflict_set_state(UmiDesktopShortcutConflictSnap
  * Provide the desktop shortcut conflict set priority operation used by this module and its
  * client applications.
  */
+/* Check revision capacity before mutation so refused edits preserve the field and token. The former unchecked implementation remains for engineering review. */
+#if 0
 UmiStatus umi_desktop_shortcut_conflict_set_priority(UmiDesktopShortcutConflictSnapshot *value, uint32_t priority)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    value->priority = priority;
+    value->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_desktop_shortcut_conflict_set_priority(UmiDesktopShortcutConflictSnapshot *value, uint32_t priority)
+{
+    /* Do not change a field when its observation token cannot advance.
+     * Reusing an old revision could make a stale review appear current. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -130,8 +204,27 @@ UmiStatus umi_desktop_shortcut_conflict_set_priority(UmiDesktopShortcutConflictS
  * Provide the desktop shortcut conflict set enabled operation used by this module and its
  * client applications.
  */
+/* Check revision capacity before mutation so refused edits preserve the field and token. The former unchecked implementation remains for engineering review. */
+#if 0
 UmiStatus umi_desktop_shortcut_conflict_set_enabled(UmiDesktopShortcutConflictSnapshot *value, bool enabled)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    value->enabled = enabled;
+    value->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_desktop_shortcut_conflict_set_enabled(UmiDesktopShortcutConflictSnapshot *value, bool enabled)
+{
+    /* Do not change a field when its observation token cannot advance.
+     * Reusing an old revision could make a stale review appear current. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -146,9 +239,22 @@ UmiStatus umi_desktop_shortcut_conflict_set_enabled(UmiDesktopShortcutConflictSn
  * Provide the desktop shortcut conflict same identity operation used by this module and
  * its client applications.
  */
+/* Bounded identity comparison replaces an unchecked string scan. The
+ * previous comparison remains here for review of compatibility behavior. */
+#if 0
 bool umi_desktop_shortcut_conflict_same_identity(const UmiDesktopShortcutConflictSnapshot *left, const UmiDesktopShortcutConflictSnapshot *right)
 {
     return left != NULL && right != NULL && strcmp(left->id, right->id) == 0;
+}
+#endif
+bool umi_desktop_shortcut_conflict_same_identity(const UmiDesktopShortcutConflictSnapshot *left, const UmiDesktopShortcutConflictSnapshot *right)
+{
+    /* Treat missing terminators as invalid identities instead of reading into
+     * adjacent fields. Other record state does not change identity equality. */
+    return left != NULL && right != NULL &&
+        UmiRecordTextFits(left->id, sizeof(left->id)) &&
+        UmiRecordTextFits(right->id, sizeof(right->id)) &&
+        strcmp(left->id, right->id) == 0;
 }
 
 /*
@@ -165,3 +271,9 @@ bool umi_desktop_shortcut_conflict_conflicts(const char *left_chord, const char 
     return strcmp(left_chord, right_chord) == 0 &&
            (strcmp(left_context, right_context) == 0 || left_context[0] == '\0' || right_context[0] == '\0');
 }
+
+/* A caller can reject an invalid shortcut conflict identity without
+ * erasing a previously accepted record. Defaults and domain validation stay
+ * with this owner; Framework supplies the common staged publication boundary. */
+UMI_DEFINE_CHECKED_RECORD_INIT(umi_desktop_shortcut_conflict_init_checked,
+    UmiDesktopShortcutConflictSnapshot, umi_desktop_shortcut_conflict_init, umi_desktop_shortcut_conflict_validate)

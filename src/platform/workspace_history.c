@@ -295,3 +295,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_platform_workspace_history_registry_ca
 UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_platform_workspace_history_registry_edit_if_current,
     UmiWorkspaceHistoryRegistry, UmiWorkspaceHistorySnapshot, UmiWorkspaceHistoryEdit,
     umi_platform_workspace_history_snapshot_validate, umi_platform_workspace_history_registry_upsert, umi_platform_workspace_history_registry_remove, UMI_PLATFORM_WORKSPACE_HISTORY_CAPACITY)
+
+/* Read accepted workspace history records in bounded pages. The shared
+ * Framework rule refuses a changed observation before publishing output;
+ * this owner's existing row order and normalized fields remain authoritative. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_platform_workspace_history_registry_read_page,
+    UmiWorkspaceHistoryRegistry, UmiWorkspaceHistorySnapshot, UMI_PLATFORM_WORKSPACE_HISTORY_CAPACITY)
