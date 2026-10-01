@@ -178,3 +178,9 @@ include(GNUInstallDirs)
 install(DIRECTORY "${_snapshot_root}/examples/snapshot_contracts/"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/snapshot_contracts"
     COMPONENT Framework)
+
+# Keep the public explanation beside its installed consumer examples. Relative
+# guide links then resolve within the SDK without referring to a source checkout.
+install(FILES "${_snapshot_root}/docs/REVIEWED_STATE_UPDATES.html"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs"
+    COMPONENT Framework)

@@ -240,3 +240,9 @@ UMI_DEFINE_SNAPSHOT_DOCUMENT_REPLACE(umi_language_semantic_token_registry_replac
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_language_semantic_token_registry_capture,
     umi_language_semantic_token_registry_replace_if_current, UmiLanguageSemanticTokenRegistry, UmiLanguageSemanticTokenSnapshot,
     umi_language_semantic_token_snapshot_validate, umi_language_semantic_token_registry_upsert, UMI_LANGUAGE_SEMANTIC_TOKEN_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_language_semantic_token_registry_edit_if_current,
+    UmiLanguageSemanticTokenRegistry, UmiLanguageSemanticTokenSnapshot, UmiLanguageSemanticTokenEdit,
+    umi_language_semantic_token_snapshot_validate, umi_language_semantic_token_registry_upsert, umi_language_semantic_token_registry_remove, UMI_LANGUAGE_SEMANTIC_TOKEN_CAPACITY)

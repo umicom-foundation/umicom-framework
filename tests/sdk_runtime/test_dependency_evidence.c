@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 #include "umicom/sdk_runtime/dependency_evidence.h"
 /* A refused edit must preserve the whole record, including its observation
@@ -75,8 +76,79 @@ static int CheckRefusedEdits(void)
  * to the operating system.
  */
 
+
+/* A review edits a private record before it reaches the live owner. Check
+ * stale proposals, identity mistakes and invalid fields without using assert,
+ * so these checks also execute when the test is built with NDEBUG. */
+static int CheckReviewedRecord(void)
+{
+    UmiSdkRuntimeDependencyEvidence value;
+    umi_sdk_runtime_dependency_evidence_init(&value, "reviewed-record");
+    uint64_t observed = value.revision;
+    UmiSdkRuntimeDependencyEvidence proposal = value;
+    unsigned char before[sizeof(value)], proposed_before[sizeof(proposal)];
+    memcpy(before, &value, sizeof(value));
+    if (umi_sdk_runtime_dependency_evidence_set_detail(&proposal, "reviewed detail") != UMI_STATUS_OK) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (umi_sdk_runtime_dependency_evidence_set_path(&proposal, "reviewed path") != UMI_STATUS_OK) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (umi_sdk_runtime_dependency_evidence_set_required(&proposal, 3U) != UMI_STATUS_OK) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (umi_sdk_runtime_dependency_evidence_set_resolved(&proposal, 5U) != UMI_STATUS_OK) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (umi_sdk_runtime_dependency_evidence_set_state(&proposal, UMI_SDK_RUNTIME_STATE_READY) != UMI_STATUS_OK) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    /* A proposal may have its own history; it cannot choose the live token. */
+    proposal.revision = UINT64_MAX;
+    memcpy(proposed_before, &proposal, sizeof(proposal));
+    if (umi_sdk_runtime_dependency_evidence_replace_if_current(&value, observed, &proposal) != UMI_STATUS_OK) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (value.revision != observed + 1U) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (memcmp(proposed_before, &proposal, sizeof(proposal)) != 0) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (value.structure_size != proposal.structure_size) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (memcmp(value.id, proposal.id, sizeof(value.id)) != 0) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (memcmp(value.path, proposal.path, sizeof(value.path)) != 0) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (memcmp(value.detail, proposal.detail, sizeof(value.detail)) != 0) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (value.required != proposal.required) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (value.resolved != proposal.resolved) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (value.state != proposal.state) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (value.enabled != proposal.enabled) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    memcpy(before, &value, sizeof(value));
+    if (umi_sdk_runtime_dependency_evidence_replace_if_current(&value, observed, &proposal) != UMI_STATUS_INVALID_STATE) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (memcmp(before, &value, sizeof(value)) != 0) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    observed = value.revision;
+    proposal.id[0] = 'x';
+    if (umi_sdk_runtime_dependency_evidence_replace_if_current(&value, observed, &proposal) != UMI_STATUS_INVALID_ARGUMENT) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (memcmp(before, &value, sizeof(value)) != 0) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    proposal = value;
+    proposal.structure_size = 0U;
+    if (umi_sdk_runtime_dependency_evidence_replace_if_current(&value, observed, &proposal) != UMI_STATUS_INVALID_ARGUMENT) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (memcmp(before, &value, sizeof(value)) != 0) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    proposal = value;
+    memset(proposal.id, 'x', sizeof(proposal.id));
+    if (umi_sdk_runtime_dependency_evidence_replace_if_current(&value, observed, &proposal) != UMI_STATUS_INVALID_ARGUMENT) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (memcmp(before, &value, sizeof(value)) != 0) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    proposal = value;
+    memset(proposal.path, 'x', sizeof(proposal.path));
+    if (umi_sdk_runtime_dependency_evidence_replace_if_current(&value, observed, &proposal) != UMI_STATUS_INVALID_ARGUMENT) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (memcmp(before, &value, sizeof(value)) != 0) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    proposal = value;
+    memset(proposal.detail, 'x', sizeof(proposal.detail));
+    if (umi_sdk_runtime_dependency_evidence_replace_if_current(&value, observed, &proposal) != UMI_STATUS_INVALID_ARGUMENT) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (memcmp(before, &value, sizeof(value)) != 0) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (umi_sdk_runtime_dependency_evidence_replace_if_current(&value, observed, NULL) != UMI_STATUS_INVALID_ARGUMENT) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (umi_sdk_runtime_dependency_evidence_replace_if_current(NULL, observed, &proposal) != UMI_STATUS_INVALID_ARGUMENT) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (memcmp(before, &value, sizeof(value)) != 0) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    /* Even an unchanged self-publication receives a fresh observation token. */
+    if (umi_sdk_runtime_dependency_evidence_replace_if_current(&value, observed, &value) != UMI_STATUS_OK) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (value.revision != observed + 1U) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    value.revision = UINT64_MAX - 1U;
+    proposal = value;
+    if (umi_sdk_runtime_dependency_evidence_replace_if_current(&value, UINT64_MAX - 1U, &proposal) != UMI_STATUS_OK) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (value.revision != UINT64_MAX) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    memcpy(before, &value, sizeof(value));
+    if (umi_sdk_runtime_dependency_evidence_replace_if_current(&value, UINT64_MAX, &proposal) != UMI_STATUS_CAPACITY_EXCEEDED) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    if (memcmp(before, &value, sizeof(value)) != 0) { fprintf(stderr, "%s:%d: reviewed record check failed\n", __FILE__, __LINE__); return 1; }
+    return 0;
+}
+
 int main(void)
 {
+    if (CheckReviewedRecord() != 0) return 1;
     if (CheckRefusedEdits() != 0) return 1;
     UmiSdkRuntimeDependencyEvidence value; UmiSdkRuntimeDependencyEvidence same; uint64_t revision;
     umi_sdk_runtime_dependency_evidence_init(&value, "sdk-runtime.dependency_evidence");

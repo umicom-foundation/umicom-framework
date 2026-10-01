@@ -244,3 +244,9 @@ UMI_DEFINE_SNAPSHOT_DOCUMENT_REPLACE(umi_language_code_action_registry_replace_d
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_language_code_action_registry_capture,
     umi_language_code_action_registry_replace_if_current, UmiLanguageCodeActionRegistry, UmiLanguageCodeActionSnapshot,
     umi_language_code_action_snapshot_validate, umi_language_code_action_registry_upsert, UMI_LANGUAGE_CODE_ACTION_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_language_code_action_registry_edit_if_current,
+    UmiLanguageCodeActionRegistry, UmiLanguageCodeActionSnapshot, UmiLanguageCodeActionEdit,
+    umi_language_code_action_snapshot_validate, umi_language_code_action_registry_upsert, umi_language_code_action_registry_remove, UMI_LANGUAGE_CODE_ACTION_CAPACITY)

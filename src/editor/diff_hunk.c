@@ -120,3 +120,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_editor_diff_hunk_registry_upsert_many,
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_editor_diff_hunk_registry_capture,
     umi_editor_diff_hunk_registry_replace_if_current, UmiEditorDiffHunkRegistry, UmiEditorDiffHunkSnapshot,
     umi_editor_diff_hunk_snapshot_validate, umi_editor_diff_hunk_registry_upsert, UMI_EDITOR_DIFF_HUNK_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_editor_diff_hunk_registry_edit_if_current,
+    UmiEditorDiffHunkRegistry, UmiEditorDiffHunkSnapshot, UmiEditorDiffHunkEdit,
+    umi_editor_diff_hunk_snapshot_validate, umi_editor_diff_hunk_registry_upsert, umi_editor_diff_hunk_registry_remove, UMI_EDITOR_DIFF_HUNK_CAPACITY)

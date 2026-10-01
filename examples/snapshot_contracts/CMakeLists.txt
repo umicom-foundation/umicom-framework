@@ -26,3 +26,13 @@ target_link_libraries(umicom-reviewed-bookmarks-lesson PRIVATE Umicom::platform)
 if(BUILD_TESTING)
     add_test(NAME reviewed-bookmarks-lesson COMMAND umicom-reviewed-bookmarks-lesson)
 endif()
+
+# These lessons depend only on the installed public SDK, not source internals.
+add_executable(umicom-reviewed-changes-lesson reviewed_changes.c)
+target_link_libraries(umicom-reviewed-changes-lesson PRIVATE Umicom::platform)
+add_executable(umicom-reviewed-package-lesson reviewed_package.c)
+target_link_libraries(umicom-reviewed-package-lesson PRIVATE Umicom::sdk_runtime)
+if(BUILD_TESTING)
+    add_test(NAME reviewed-changes-lesson COMMAND umicom-reviewed-changes-lesson)
+    add_test(NAME reviewed-package-lesson COMMAND umicom-reviewed-package-lesson)
+endif()

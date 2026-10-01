@@ -91,4 +91,64 @@ restart recovery still belong to the persistence service.</li></ul>
 <p>Chart documents use a complete registry capture and then retain only the chosen
 pane's drawings. This keeps neighbouring charts unchanged while preserving the
 observation needed for later review.</p>
+<h2>Review insertions and removals together</h2>
+<p>Use <code>_registry_edit_if_current</code> when a review changes only some
+records. Each typed edit contains a kind and an item. An upsert inserts a new ID
+or replaces an existing one; a removal reads only the item's ID. Records you
+do not mention retain their payload and position relative to other survivors.</p>
+<ol><li>Capture the registry and keep its revision with your review.</li>
+<li>Create an array of the typed edits declared in that registry's header. Give
+each ID one operation. To change an existing row, supply its complete replacement
+using <code>UMI_SNAPSHOT_EDIT_UPSERT</code>. To remove it, use
+<code>UMI_SNAPSHOT_EDIT_REMOVE</code> and set <code>item.id</code>.</li>
+<li>Put removals before insertions when the registry is full. Operations run in
+the listed order on a private copy. A transaction can contain up to twice the
+registry's stored capacity, allowing a full set to be removed and replaced.</li>
+<li>Publish on the owner with the revision you reviewed. Check the returned
+status before updating the display or requesting a durable save.</li>
+<li>On failure, keep the review and explain the refusal. A missing removal gives
+<code>UMI_STATUS_NOT_FOUND</code>; repeated IDs give
+<code>UMI_STATUS_ALREADY_EXISTS</code>. The optional result identifies the edit
+that failed, when one applies. Nothing from the proposal has been published.</li></ol>
+<p>Success advances the owner once and gives every remaining row that publication
+revision. A current empty list makes no change; a stale empty list is still a
+conflict. Input edits are not changed. These rules let a properties panel keep
+its draft while the owner continues to hold a complete, usable collection.</p>
+<p>The <a href="../examples/snapshot_contracts/reviewed_changes.c">mixed bookmark
+lesson</a> deliberately tries a missing removal. Its preceding insertion does
+not leak into the registry. The lesson then makes a new, valid decision and
+shows that repeating the old review is refused.</p>
+<h2>Review a complete SDK or test record</h2>
+<p>For SDK and test-state models that declare <code>_replace_if_current</code>,
+several related fields can be prepared together. Copy the live value and remember
+its original revision. Apply ordinary setters to the copy, checking each result.
+Then pass that copy and the original revision to the live owner's checked
+replacement. The live record receives one new revision, regardless of how many
+setters were used while preparing the proposal.</p>
+<p>Both records must validate and retain the same ID. A proposal cannot rename
+another record, select the owner's revision or overwrite a newer value. Invalid
+fields and revision exhaustion leave the live value unchanged. This is a value
+operation: publishing a description of a package or test result does not inspect
+a package, execute a test or authenticate the supplied evidence.</p>
+<p>The <a href="../examples/snapshot_contracts/reviewed_package.c">package
+description lesson</a> shows related fields arriving together, followed by a
+stale description being refused. Its values explicitly remain awaiting inspection.</p>
+<h2>Try the public lessons</h2>
+<ol><li>Install the Framework SDK using the project's supported SDK installation
+workflow. Keep the install directory separate from your source checkout.</li>
+<li>Copy <code>examples/snapshot_contracts</code> to a separate working directory.
+Configure it with your C23 toolchain and the SDK's install prefix. For example:
+<pre><code>cmake -S . -B build -DCMAKE_PREFIX_PATH="C:/UmicomSDK" -DBUILD_TESTING=ON
+cmake --build build
+ctest --test-dir build --output-on-failure</code></pre>
+Replace <code>C:/UmicomSDK</code> with your actual SDK installation.</li>
+<li>The mixed-change lesson prints that a missing removal left the original
+draft intact, that a reviewed change succeeded, and that an old review was
+refused. The package lesson reports one publication followed by a stale refusal.
+A nonzero exit status means the observed behaviour did not match the lesson.</li>
+<li>If CMake cannot find <code>UmicomFramework</code>, check the installation
+prefix and the SDK's dependency setup. If the new symbols are unavailable,
+install matching headers and libraries together. Do not combine new headers
+with an older library. If a review is stale, obtain current state and review
+again rather than replacing the expected revision automatically.</li></ol>
 </body></html>

@@ -234,3 +234,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_ui_welcome_view_registry_upsert_many,
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_ui_welcome_view_registry_capture,
     umi_ui_welcome_view_registry_replace_if_current, UmiUiWelcomeItemRegistry, UmiUiWelcomeItemSnapshot,
     umi_ui_welcome_view_snapshot_validate, umi_ui_welcome_view_registry_upsert, UMI_UI_WELCOME_VIEW_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_ui_welcome_view_registry_edit_if_current,
+    UmiUiWelcomeItemRegistry, UmiUiWelcomeItemSnapshot, UmiUiWelcomeItemEdit,
+    umi_ui_welcome_view_snapshot_validate, umi_ui_welcome_view_registry_upsert, umi_ui_welcome_view_registry_remove, UMI_UI_WELCOME_VIEW_CAPACITY)

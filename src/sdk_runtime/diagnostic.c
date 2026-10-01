@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/sdk_runtime/diagnostic.h"
+#include "../base/record_update_internal.h"
 #include "umicom/base/text.h"
 #include <string.h>
 /*
@@ -169,3 +170,9 @@ UmiStatus umi_sdk_runtime_diagnostic_set_state(UmiSdkRuntimeDiagnostic *value, U
  */
 bool umi_sdk_runtime_diagnostic_same_identity(const UmiSdkRuntimeDiagnostic *left, const UmiSdkRuntimeDiagnostic *right)
 { return left != NULL && right != NULL && strcmp(left->id, right->id) == 0; }
+
+/* Prepare related fields on a caller-owned copy, then publish them together.
+ * Reusing the Framework guard keeps a delayed review from overwriting newer
+ * state and leaves this model's validation rules with its existing validator. */
+UMI_DEFINE_REVIEWED_RECORD_EDIT(umi_sdk_runtime_diagnostic_replace_if_current,
+    UmiSdkRuntimeDiagnostic, umi_sdk_runtime_diagnostic_validate)

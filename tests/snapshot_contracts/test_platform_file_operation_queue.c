@@ -67,4 +67,7 @@ static void ContractPayload(UmiFileOperationSnapshot *item)
  * including its field normalisation and failure-without-mutation contract. */
 #define CONTRACT_CAPTURE umi_platform_file_operation_queue_registry_capture
 #define CONTRACT_REPLACE_CURRENT umi_platform_file_operation_queue_registry_replace_if_current
+/* Exercise mixed edits through this domain's public types and owner. */
+#define CONTRACT_EDIT UmiFileOperationEdit
+#define CONTRACT_EDIT_CURRENT umi_platform_file_operation_queue_registry_edit_if_current
 #include "snapshot_contract_cases.h"

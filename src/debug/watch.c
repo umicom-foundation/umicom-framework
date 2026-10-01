@@ -237,3 +237,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_debug_watch_registry_upsert_many,
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_debug_watch_registry_capture,
     umi_debug_watch_registry_replace_if_current, UmiDebugWatchRegistry, UmiDebugWatchSnapshot,
     umi_debug_watch_snapshot_validate, umi_debug_watch_registry_upsert, UMI_DEBUG_WATCH_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_debug_watch_registry_edit_if_current,
+    UmiDebugWatchRegistry, UmiDebugWatchSnapshot, UmiDebugWatchEdit,
+    umi_debug_watch_snapshot_validate, umi_debug_watch_registry_upsert, umi_debug_watch_registry_remove, UMI_DEBUG_WATCH_CAPACITY)

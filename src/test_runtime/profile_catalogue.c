@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/test_runtime/profile_catalogue.h"
+#include "../base/record_update_internal.h"
 #include "umicom/base/text.h"
 #include <string.h>
 
@@ -237,3 +238,9 @@ bool umi_test_runtime_profile_catalogue_same_identity(const UmiTestRuntimeProfil
     if (left == NULL || right == NULL) return false;
     return strcmp(left->id, right->id) == 0;
 }
+
+/* Prepare related fields on a caller-owned copy, then publish them together.
+ * Reusing the Framework guard keeps a delayed review from overwriting newer
+ * state and leaves this model's validation rules with its existing validator. */
+UMI_DEFINE_REVIEWED_RECORD_EDIT(umi_test_runtime_profile_catalogue_replace_if_current,
+    UmiTestRuntimeProfileCatalogue, umi_test_runtime_profile_catalogue_validate)

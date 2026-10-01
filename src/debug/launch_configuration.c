@@ -241,3 +241,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_debug_launch_configuration_registry_upser
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_debug_launch_configuration_registry_capture,
     umi_debug_launch_configuration_registry_replace_if_current, UmiDebugLaunchConfigurationRegistry, UmiDebugLaunchConfigurationSnapshot,
     umi_debug_launch_configuration_snapshot_validate, umi_debug_launch_configuration_registry_upsert, UMI_DEBUG_LAUNCH_CONFIGURATION_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_debug_launch_configuration_registry_edit_if_current,
+    UmiDebugLaunchConfigurationRegistry, UmiDebugLaunchConfigurationSnapshot, UmiDebugLaunchConfigurationEdit,
+    umi_debug_launch_configuration_snapshot_validate, umi_debug_launch_configuration_registry_upsert, umi_debug_launch_configuration_registry_remove, UMI_DEBUG_LAUNCH_CONFIGURATION_CAPACITY)

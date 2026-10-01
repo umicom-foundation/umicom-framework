@@ -232,3 +232,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_designer_signal_binding_registry_upsert_m
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_designer_signal_binding_registry_capture,
     umi_designer_signal_binding_registry_replace_if_current, UmiDesignerSignalBindingRegistry, UmiDesignerSignalBindingSnapshot,
     umi_designer_signal_binding_snapshot_validate, umi_designer_signal_binding_registry_upsert, UMI_DESIGNER_SIGNAL_BINDING_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_designer_signal_binding_registry_edit_if_current,
+    UmiDesignerSignalBindingRegistry, UmiDesignerSignalBindingSnapshot, UmiDesignerSignalBindingEdit,
+    umi_designer_signal_binding_snapshot_validate, umi_designer_signal_binding_registry_upsert, umi_designer_signal_binding_registry_remove, UMI_DESIGNER_SIGNAL_BINDING_CAPACITY)

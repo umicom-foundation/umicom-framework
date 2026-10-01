@@ -120,3 +120,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_editor_fold_region_registry_upsert_many,
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_editor_fold_region_registry_capture,
     umi_editor_fold_region_registry_replace_if_current, UmiEditorFoldRegionRegistry, UmiEditorFoldRegionSnapshot,
     umi_editor_fold_region_snapshot_validate, umi_editor_fold_region_registry_upsert, UMI_EDITOR_FOLD_REGION_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_editor_fold_region_registry_edit_if_current,
+    UmiEditorFoldRegionRegistry, UmiEditorFoldRegionSnapshot, UmiEditorFoldRegionEdit,
+    umi_editor_fold_region_snapshot_validate, umi_editor_fold_region_registry_upsert, umi_editor_fold_region_registry_remove, UMI_EDITOR_FOLD_REGION_CAPACITY)

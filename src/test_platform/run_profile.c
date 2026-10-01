@@ -236,3 +236,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_test_platform_run_profile_registry_upsert
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_test_platform_run_profile_registry_capture,
     umi_test_platform_run_profile_registry_replace_if_current, UmiTestPlatformRunProfileRegistry, UmiTestPlatformRunProfileSnapshot,
     umi_test_platform_run_profile_snapshot_validate, umi_test_platform_run_profile_registry_upsert, UMI_TEST_PLATFORM_RUN_PROFILE_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_test_platform_run_profile_registry_edit_if_current,
+    UmiTestPlatformRunProfileRegistry, UmiTestPlatformRunProfileSnapshot, UmiTestPlatformRunProfileEdit,
+    umi_test_platform_run_profile_snapshot_validate, umi_test_platform_run_profile_registry_upsert, umi_test_platform_run_profile_registry_remove, UMI_TEST_PLATFORM_RUN_PROFILE_CAPACITY)

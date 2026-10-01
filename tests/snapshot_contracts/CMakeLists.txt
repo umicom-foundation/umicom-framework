@@ -36,6 +36,14 @@ foreach(_contract IN LISTS _contracts)
     endif()
     # Use each real owner so shared publication does not hide a domain's field
     # normalisation, record order, independent output or rejection behaviour.
+    # Mixed edits need their own rollback checks: a later missing removal
+    # must not leak an earlier successful insertion from private staging.
+    foreach(_case edit-mixed edit-rollback edit-review edit-capacity)
+        set(_test "framework.snapshot_contracts.${_group}.${_name}.${_case}")
+        add_test(NAME "${_test}" COMMAND "${_target}" "${_case}")
+        set_tests_properties("${_test}" PROPERTIES TIMEOUT 120
+            LABELS "framework;snapshot-contracts;reviewed-edits;${_group};regression")
+    endforeach()
     foreach(_case capture replace replace-reject replace-empty)
         set(_test "framework.snapshot_contracts.${_group}.${_name}.${_case}")
         add_test(NAME "${_test}" COMMAND "${_target}" "${_case}")
@@ -187,3 +195,41 @@ set_tests_properties(framework.snapshot_contracts.publication.editor PROPERTIES
 if(COMMAND umicom_register_validation_target)
     umicom_register_validation_target(umicom-editor-publication-test)
 endif()
+
+if(TARGET umicom-snapshot-allocation-test)
+    add_test(NAME framework.snapshot_contracts.edit-allocation
+        COMMAND umicom-snapshot-allocation-test edit-allocation)
+    set_tests_properties(framework.snapshot_contracts.edit-allocation PROPERTIES
+        TIMEOUT 30 LABELS "framework;snapshot-contracts;reviewed-edits;fault-injection")
+endif()
+
+# Exercise counter boundaries and allocation refusal with the real owner on
+# every host, without requiring the optional Linux linker-wrapper tests.
+foreach(_case edit-counter edit-memory)
+    add_test(NAME "framework.snapshot_contracts.publication.${_case}"
+        COMMAND umicom-publication-edges-test "${_case}")
+    set_tests_properties("framework.snapshot_contracts.publication.${_case}" PROPERTIES
+        TIMEOUT 30 LABELS "framework;snapshot-contracts;reviewed-edits;regression")
+endforeach()
+
+# Build the exact installed-consumer sources in-tree as well, so ordinary
+# qualification checks the public lesson behaviour alongside its owner tests.
+foreach(_lesson changes package)
+    set(_target "umicom-reviewed-${_lesson}-example")
+    add_executable("${_target}" "../../examples/snapshot_contracts/reviewed_${_lesson}.c")
+    if(_lesson STREQUAL "package")
+        target_link_libraries("${_target}" PRIVATE Umicom::sdk_runtime)
+    else()
+        target_link_libraries("${_target}" PRIVATE Umicom::platform)
+    endif()
+    set_target_properties("${_target}" PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings("${_target}")
+    umicom_apply_sanitizers("${_target}")
+    add_dependencies(umicom-snapshot-contract-checks "${_target}")
+    add_test(NAME "framework.snapshot_contracts.reviewed-${_lesson}-example" COMMAND "${_target}")
+    set_tests_properties("framework.snapshot_contracts.reviewed-${_lesson}-example" PROPERTIES
+        TIMEOUT 30 LABELS "framework;snapshot-contracts;reviewed-edits;example")
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target("${_target}")
+    endif()
+endforeach()

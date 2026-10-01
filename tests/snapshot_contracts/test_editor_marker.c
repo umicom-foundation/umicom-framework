@@ -60,4 +60,7 @@ static void ContractPayload(UmiEditorMarkerSnapshot *item)
  * including its field normalisation and failure-without-mutation contract. */
 #define CONTRACT_CAPTURE umi_editor_marker_registry_capture
 #define CONTRACT_REPLACE_CURRENT umi_editor_marker_registry_replace_if_current
+/* Exercise mixed edits through this domain's public types and owner. */
+#define CONTRACT_EDIT UmiEditorMarkerEdit
+#define CONTRACT_EDIT_CURRENT umi_editor_marker_registry_edit_if_current
 #include "snapshot_contract_cases.h"

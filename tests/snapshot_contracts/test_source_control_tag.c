@@ -59,4 +59,7 @@ static void ContractPayload(UmiSourceControlTagSnapshot *item)
  * including its field normalisation and failure-without-mutation contract. */
 #define CONTRACT_CAPTURE umi_source_control_tag_registry_capture
 #define CONTRACT_REPLACE_CURRENT umi_source_control_tag_registry_replace_if_current
+/* Exercise mixed edits through this domain's public types and owner. */
+#define CONTRACT_EDIT UmiSourceControlTagEdit
+#define CONTRACT_EDIT_CURRENT umi_source_control_tag_registry_edit_if_current
 #include "snapshot_contract_cases.h"

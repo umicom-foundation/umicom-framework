@@ -288,9 +288,17 @@ static int Allocation(CONTRACT_REGISTRY *registry)
 #endif
 
 #include "snapshot_transfer_cases.h"
+#include "snapshot_edit_cases.h"
 
 static int Run(CONTRACT_REGISTRY *registry, const char *name)
 {
+    if (strcmp(name, "edit-mixed") == 0) return EditMixed(registry);
+    if (strcmp(name, "edit-rollback") == 0) return EditRollback(registry);
+    if (strcmp(name, "edit-review") == 0) return EditReview(registry);
+    if (strcmp(name, "edit-capacity") == 0) return EditCapacity(registry);
+#ifdef UMI_TEST_SNAPSHOT_ALLOCATION
+    if (strcmp(name, "edit-allocation") == 0) return EditAllocation(registry);
+#endif
     if (strcmp(name, "capture") == 0) return TransferCapture(registry);
     if (strcmp(name, "replace") == 0) return TransferReplace(registry);
     if (strcmp(name, "replace-reject") == 0) return TransferReject(registry);

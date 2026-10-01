@@ -52,7 +52,16 @@ int main(int argc,char **argv)
     Balance(&f,100000,0);
     if(strcmp(name,"ownership")==0){
         UmiBankCommand c=Make(&f,UMI_BANK_TEST_CREDIT,"later");Id(&c.sourceAccountId,"account");c.amount=Cash(1);Send(&f,&f.operator,&c);
+        /* Observe both sides of the ownership boundary: the caller can edit
+         * its copy while the captured report keeps the accepted command.
+         * Retain the previous assertion, which did not inspect the edit. */
+#if 0
         UmiBankAuditRow copy=AuditRow(report,0);copy.event.command.id.value[0]='x';CHECK(AuditRow(report,0).event.command.id.value[0]=='c');
+#endif
+        UmiBankAuditRow copy = AuditRow(report, 0);
+        copy.event.command.id.value[0] = 'x';
+        CHECK(copy.event.command.id.value[0] == 'x');
+        CHECK(AuditRow(report, 0).event.command.id.value[0] == 'c');
         UmiBankOperationsDestroy(f.bank);f.bank=NULL;CHECK(AuditSummary(report).revision==9 && AuditSummary(report).count==9);
         UmiBankJournal j;OK(UmiBankAuditJournalAt(report,2,0,&j));CHECK(j.revision==3);
     }

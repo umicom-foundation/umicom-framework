@@ -239,3 +239,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_debug_variable_registry_upsert_many,
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_debug_variable_registry_capture,
     umi_debug_variable_registry_replace_if_current, UmiDebugVariableRegistry, UmiDebugVariableSnapshot,
     umi_debug_variable_snapshot_validate, umi_debug_variable_registry_upsert, UMI_DEBUG_VARIABLE_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_debug_variable_registry_edit_if_current,
+    UmiDebugVariableRegistry, UmiDebugVariableSnapshot, UmiDebugVariableEdit,
+    umi_debug_variable_snapshot_validate, umi_debug_variable_registry_upsert, umi_debug_variable_registry_remove, UMI_DEBUG_VARIABLE_CAPACITY)

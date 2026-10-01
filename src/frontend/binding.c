@@ -233,3 +233,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_frontend_binding_registry_upsert_many,
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_frontend_binding_registry_capture,
     umi_frontend_binding_registry_replace_if_current, UmiFrontendBindingRegistry, UmiFrontendBindingSnapshot,
     umi_frontend_binding_snapshot_validate, umi_frontend_binding_registry_upsert, UMI_FRONTEND_BINDING_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_frontend_binding_registry_edit_if_current,
+    UmiFrontendBindingRegistry, UmiFrontendBindingSnapshot, UmiFrontendBindingEdit,
+    umi_frontend_binding_snapshot_validate, umi_frontend_binding_registry_upsert, umi_frontend_binding_registry_remove, UMI_FRONTEND_BINDING_CAPACITY)

@@ -15,7 +15,16 @@
 #define OK(x) CHECK((x)==UMI_STATUS_OK)
 int main(int argc,char **argv)
 {
+    /* Reject a missing peer path before creating any debug resources. The
+     * result belongs to the accepted invocation and its cleanup path.
+     * Retain the former compact spelling for review of this warning fix. */
+#if 0
     if(argc!=2)return 2;int result=0;
+#endif
+    if (argc != 2) {
+        return 2;
+    }
+    int result = 0;
     UmiDebugRuntimePlatform *platform=NULL;UmiProtocolTransport *transport=NULL;UmiProtocolClient *client=NULL;
     UmiDebugController *controller=NULL;UmiDebugWorkspace *workspace=NULL;UmiDebugSelection *selection=NULL;UmiDapClient dap;
     char directory[UMI_PATH_CAPACITY];OK(umi_fs_temp_directory(directory,sizeof(directory)));

@@ -78,6 +78,20 @@ UmiStatus umi_test_runtime_health_touch(UmiTestRuntimeHealth *value, uint64_t up
  */
 bool umi_test_runtime_health_same_identity(const UmiTestRuntimeHealth *left, const UmiTestRuntimeHealth *right);
 
+
+/** Publish a complete reviewed value while expected_revision still matches.
+ * Copy the live record, edit that copy with the ordinary setters, and retain
+ * the revision observed before editing. Both values must validate and have
+ * the same ID. A stale review returns INVALID_STATE; exhausted revision space
+ * returns CAPACITY_EXCEEDED. All failures leave the live value unchanged.
+ * Success copies every proposal field and assigns one new live revision;
+ * the proposal's own revision does not control publication. Self-assignment
+ * is allowed and also advances once. Other overlapping storage is unsupported.
+ * Serialize access on the owner. This value operation allocates nothing and
+ * does not perform I/O, authenticate evidence or run the described workflow. */
+UmiStatus umi_test_runtime_health_replace_if_current(UmiTestRuntimeHealth *value,
+    uint64_t expected_revision, const UmiTestRuntimeHealth *proposal);
+
 #ifdef __cplusplus
 }
 #endif

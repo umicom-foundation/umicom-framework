@@ -237,3 +237,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_project_target_registry_upsert_many,
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_project_target_registry_capture,
     umi_project_target_registry_replace_if_current, UmiProjectTargetRegistry, UmiProjectTargetSnapshot,
     umi_project_target_snapshot_validate, umi_project_target_registry_upsert, UMI_PROJECT_TARGET_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_project_target_registry_edit_if_current,
+    UmiProjectTargetRegistry, UmiProjectTargetSnapshot, UmiProjectTargetEdit,
+    umi_project_target_snapshot_validate, umi_project_target_registry_upsert, umi_project_target_registry_remove, UMI_PROJECT_TARGET_CAPACITY)

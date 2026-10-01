@@ -231,3 +231,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_designer_clipboard_registry_upsert_many,
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_designer_clipboard_registry_capture,
     umi_designer_clipboard_registry_replace_if_current, UmiDesignerClipboardItemRegistry, UmiDesignerClipboardItemSnapshot,
     umi_designer_clipboard_snapshot_validate, umi_designer_clipboard_registry_upsert, UMI_DESIGNER_CLIPBOARD_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_designer_clipboard_registry_edit_if_current,
+    UmiDesignerClipboardItemRegistry, UmiDesignerClipboardItemSnapshot, UmiDesignerClipboardItemEdit,
+    umi_designer_clipboard_snapshot_validate, umi_designer_clipboard_registry_upsert, umi_designer_clipboard_registry_remove, UMI_DESIGNER_CLIPBOARD_CAPACITY)

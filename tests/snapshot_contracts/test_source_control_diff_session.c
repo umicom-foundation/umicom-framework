@@ -61,4 +61,7 @@ static void ContractPayload(UmiSourceControlDiffSessionSnapshot *item)
  * including its field normalisation and failure-without-mutation contract. */
 #define CONTRACT_CAPTURE umi_source_control_diff_session_registry_capture
 #define CONTRACT_REPLACE_CURRENT umi_source_control_diff_session_registry_replace_if_current
+/* Exercise mixed edits through this domain's public types and owner. */
+#define CONTRACT_EDIT UmiSourceControlDiffSessionEdit
+#define CONTRACT_EDIT_CURRENT umi_source_control_diff_session_registry_edit_if_current
 #include "snapshot_contract_cases.h"

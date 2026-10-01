@@ -63,7 +63,19 @@ static UmiStatus AuditFinish(AuditText *sink,size_t *required)
 }
 UmiStatus UmiBankAuditDescribe(const UmiBankAuditReport *report,char *output,size_t capacity,size_t *outRequired)
 {
+    /* Each optional output has its own validity rule. Keep these checks
+     * independent so a size-only query and a text-only request both start
+     * with defined output, even when the report is rejected below.
+     * The compact spelling is retained for comparison with this correction. */
+#if 0
     if(outRequired!=NULL)*outRequired=0;if(output!=NULL && capacity)output[0]='\0';
+#endif
+    if (outRequired != NULL) {
+        *outRequired = 0;
+    }
+    if (output != NULL && capacity != 0U) {
+        output[0] = '\0';
+    }
     if(report==NULL || (output==NULL && capacity))return UMI_STATUS_INVALID_ARGUMENT;
     AuditText sink={output,capacity,0,UMI_STATUS_OK};AuditContext(&sink,&report->summary);
     if(!report->summary.count)AuditAppend(&sink,"No accepted commands match these filters.\n");
@@ -76,7 +88,19 @@ UmiStatus UmiBankAuditDescribe(const UmiBankAuditReport *report,char *output,siz
 }
 UmiStatus UmiBankAuditDescribeEvent(const UmiBankAuditReport *report,size_t index,char *output,size_t capacity,size_t *outRequired)
 {
+    /* Each optional output has its own validity rule. Keep these checks
+     * independent so a size-only query and a text-only request both start
+     * with defined output, even when the report is rejected below.
+     * The compact spelling is retained for comparison with this correction. */
+#if 0
     if(outRequired!=NULL)*outRequired=0;if(output!=NULL && capacity)output[0]='\0';
+#endif
+    if (outRequired != NULL) {
+        *outRequired = 0;
+    }
+    if (output != NULL && capacity != 0U) {
+        output[0] = '\0';
+    }
     if(report==NULL || (output==NULL && capacity))return UMI_STATUS_INVALID_ARGUMENT;
     if(index>=report->summary.count)return UMI_STATUS_NOT_FOUND;
     AuditText sink={output,capacity,0,UMI_STATUS_OK};AuditContext(&sink,&report->summary);

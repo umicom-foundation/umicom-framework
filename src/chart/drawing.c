@@ -280,3 +280,9 @@ UmiStatus UmiChartDrawingRegistryReplacePane(UmiChartDrawingRegistry *registry,
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_chart_drawing_registry_capture,
     umi_chart_drawing_registry_replace_if_current, UmiChartDrawingRegistry, UmiChartDrawingSnapshot,
     umi_chart_drawing_snapshot_validate, umi_chart_drawing_registry_upsert, UMI_CHART_DRAWING_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_chart_drawing_registry_edit_if_current,
+    UmiChartDrawingRegistry, UmiChartDrawingSnapshot, UmiChartDrawingEdit,
+    umi_chart_drawing_snapshot_validate, umi_chart_drawing_registry_upsert, umi_chart_drawing_registry_remove, UMI_CHART_DRAWING_CAPACITY)

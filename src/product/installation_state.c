@@ -264,3 +264,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_product_installation_state_registry_upser
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_product_installation_state_registry_capture,
     umi_product_installation_state_registry_replace_if_current, UmiProductInstallationRegistry, UmiProductInstallationSnapshot,
     umi_product_installation_state_snapshot_validate, umi_product_installation_state_registry_upsert, UMI_PRODUCT_INSTALLATION_STATE_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_product_installation_state_registry_edit_if_current,
+    UmiProductInstallationRegistry, UmiProductInstallationSnapshot, UmiProductInstallationEdit,
+    umi_product_installation_state_snapshot_validate, umi_product_installation_state_registry_upsert, umi_product_installation_state_registry_remove, UMI_PRODUCT_INSTALLATION_STATE_CAPACITY)

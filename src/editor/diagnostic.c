@@ -128,3 +128,9 @@ UMI_DEFINE_SNAPSHOT_DOCUMENT_REPLACE(umi_editor_diagnostic_registry_replace_docu
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_editor_diagnostic_registry_capture,
     umi_editor_diagnostic_registry_replace_if_current, UmiEditorDiagnosticRegistry, UmiEditorDiagnosticSnapshot,
     umi_editor_diagnostic_snapshot_validate, umi_editor_diagnostic_registry_upsert, UMI_EDITOR_DIAGNOSTIC_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_editor_diagnostic_registry_edit_if_current,
+    UmiEditorDiagnosticRegistry, UmiEditorDiagnosticSnapshot, UmiEditorDiagnosticEdit,
+    umi_editor_diagnostic_snapshot_validate, umi_editor_diagnostic_registry_upsert, umi_editor_diagnostic_registry_remove, UMI_EDITOR_DIAGNOSTIC_CAPACITY)

@@ -233,3 +233,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_platform_bookmarks_registry_upsert_many,
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_platform_bookmarks_registry_capture,
     umi_platform_bookmarks_registry_replace_if_current, UmiBookmarkRegistry, UmiBookmarkSnapshot,
     umi_platform_bookmarks_snapshot_validate, umi_platform_bookmarks_registry_upsert, UMI_PLATFORM_BOOKMARKS_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_platform_bookmarks_registry_edit_if_current,
+    UmiBookmarkRegistry, UmiBookmarkSnapshot, UmiBookmarkEdit,
+    umi_platform_bookmarks_snapshot_validate, umi_platform_bookmarks_registry_upsert, umi_platform_bookmarks_registry_remove, UMI_PLATFORM_BOOKMARKS_CAPACITY)

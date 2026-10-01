@@ -148,6 +148,31 @@ UmiStatus umi_project_launch_profile_registry_replace_if_current(UmiProjectLaunc
     uint64_t expected_revision, const UmiProjectLaunchProfileSnapshot *items, size_t count,
     UmiSnapshotBatchResult *out_result);
 
+
+/** One reviewed change. For REMOVE, initialise item.id; its other fields are
+ * ignored. For UPSERT, supply a complete record under the usual domain rules.
+ * The edit remains caller-owned and is never changed by publication. */
+typedef struct UmiProjectLaunchProfileEdit {
+    UmiSnapshotEditKind kind;
+    UmiProjectLaunchProfileSnapshot item;
+} UmiProjectLaunchProfileEdit;
+
+/** Apply this ordered list only if expected_revision still matches this owner.
+ * A stale review returns INVALID_STATE, including for an empty list. Each ID
+ * may appear once; duplicates return ALREADY_EXISTS. A missing removal returns
+ * NOT_FOUND. Upserts retain normal field normalisation and capacity checks;
+ * when full, remove an existing row before adding its replacement.
+ * At most twice UMI_PROJECT_LAUNCH_PROFILE_CAPACITY edits are accepted. Success publishes
+ * all changes together, advances once, and stamps every remaining row with
+ * that revision. An empty current list is a no-op. Every refusal preserves
+ * the previous collection. out_result is optional and identifies a rejected
+ * edit where possible; validation describes text and duplicate-ID errors.
+ * Inputs/result must not overlap each other or the owner. Serialize access;
+ * staging allocates one registry and performs no I/O or external callbacks. */
+UmiStatus umi_project_launch_profile_registry_edit_if_current(UmiProjectLaunchProfileRegistry *registry,
+    uint64_t expected_revision, const UmiProjectLaunchProfileEdit *edits, size_t count,
+    UmiSnapshotBatchResult *out_result);
+
 #ifdef __cplusplus
 }
 #endif

@@ -240,3 +240,9 @@ UMI_DEFINE_SNAPSHOT_DOCUMENT_REPLACE(umi_language_reference_registry_replace_doc
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_language_reference_registry_capture,
     umi_language_reference_registry_replace_if_current, UmiLanguageReferenceRegistry, UmiLanguageReferenceSnapshot,
     umi_language_reference_snapshot_validate, umi_language_reference_registry_upsert, UMI_LANGUAGE_REFERENCE_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_language_reference_registry_edit_if_current,
+    UmiLanguageReferenceRegistry, UmiLanguageReferenceSnapshot, UmiLanguageReferenceEdit,
+    umi_language_reference_snapshot_validate, umi_language_reference_registry_upsert, umi_language_reference_registry_remove, UMI_LANGUAGE_REFERENCE_CAPACITY)

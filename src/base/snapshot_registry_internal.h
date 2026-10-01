@@ -232,4 +232,75 @@ UmiStatus Replace(Registry *registry, uint64_t expected_revision, \
     if (out_result != NULL) *out_result = result; \
     return UMI_STATUS_OK; \
 }
+
+/* A properties panel can review several insertions and removals together.
+ * Perform them on a private owner so a late refusal cannot publish half of
+ * that decision. As with capture/replacement, this helper is only for owners
+ * containing a value array, count and revision, without external callbacks.
+ * Keep new domain rules in Upsert/Remove; this layer supplies publication. */
+#define UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(Function, Registry, Snapshot, Edit, Validate, Upsert, Remove, Capacity) \
+    _Static_assert((Capacity) > 0U && (size_t)(Capacity) <= SIZE_MAX / 2U, "Snapshot edit capacity must permit a bounded pair of collections"); \
+UmiStatus Function(Registry *registry, uint64_t expected_revision, \
+    const Edit *edits, size_t count, UmiSnapshotBatchResult *out_result) \
+{ \
+    UmiSnapshotBatchResult result = {0U, SIZE_MAX, {UMI_SNAPSHOT_VALID, NULL, SIZE_MAX, 0U}}; \
+    if (out_result != NULL) *out_result = result; \
+    if (registry == NULL || (edits == NULL && count != 0U)) return UMI_STATUS_INVALID_ARGUMENT; \
+    if (registry->count > (size_t)(Capacity)) return UMI_STATUS_INVALID_STATE; \
+    if (registry->revision != expected_revision) return UMI_STATUS_INVALID_STATE; \
+    /* Twice the stored capacity permits removing a full collection and \
+     * adding its replacement. The bound also limits duplicate-ID scanning. */ \
+    if (count > (size_t)(Capacity) * 2U) return UMI_STATUS_CAPACITY_EXCEEDED; \
+    if (count == 0U) return UMI_STATUS_OK; \
+    if (registry->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED; \
+    const UmiSnapshotTextField identity = UMI_SNAPSHOT_TEXT_FIELD(Snapshot, id, 1); \
+    for (size_t index = 0U; index < count; ++index) { \
+        UmiStatus status; \
+        if (edits[index].kind == UMI_SNAPSHOT_EDIT_UPSERT) \
+            status = Validate(&edits[index].item, &result.validation); \
+        else if (edits[index].kind == UMI_SNAPSHOT_EDIT_REMOVE) \
+            status = UmiSnapshotValidateTextFields(&edits[index].item, sizeof(Snapshot), \
+                &identity, 1U, &result.validation); \
+        else status = UMI_STATUS_INVALID_ARGUMENT; \
+        if (status != UMI_STATUS_OK) { \
+            result.rejected_index = index; \
+            if (out_result != NULL) *out_result = result; \
+            return status; \
+        } \
+        for (size_t previous = 0U; previous < index; ++previous) { \
+            if (strcmp(edits[previous].item.id, edits[index].item.id) == 0) { \
+                result.rejected_index = index; \
+                result.validation = (UmiSnapshotValidation){UMI_SNAPSHOT_DUPLICATE_ID, "id", 0U, sizeof(edits[index].item.id)}; \
+                if (out_result != NULL) *out_result = result; \
+                return UMI_STATUS_ALREADY_EXISTS; \
+            } \
+        } \
+    } \
+    Registry *staged = malloc(sizeof(*staged)); \
+    if (staged == NULL) return UMI_STATUS_OUT_OF_MEMORY; \
+    *staged = *registry; \
+    /* Temporary mutation counters are private. Only the final publication \
+     * consumes the public revision, so several edits can use its last value. */ \
+    staged->revision = 0U; \
+    for (size_t index = 0U; index < count; ++index) { \
+        UmiStatus status = edits[index].kind == UMI_SNAPSHOT_EDIT_UPSERT \
+            ? Upsert(staged, &edits[index].item) : Remove(staged, edits[index].item.id); \
+        if (status != UMI_STATUS_OK) { \
+            result.rejected_index = index; \
+            free(staged); \
+            if (out_result != NULL) *out_result = result; \
+            return status; \
+        } \
+    } \
+    /* Stamp the resulting observation consistently, including surviving rows. \
+     * Their payload and order still follow the existing domain operations. */ \
+    staged->revision = registry->revision + 1U; \
+    for (size_t index = 0U; index < staged->count; ++index) \
+        staged->items[index].revision = staged->revision; \
+    *registry = *staged; \
+    free(staged); \
+    result.applied = count; \
+    if (out_result != NULL) *out_result = result; \
+    return UMI_STATUS_OK; \
+}
 #endif

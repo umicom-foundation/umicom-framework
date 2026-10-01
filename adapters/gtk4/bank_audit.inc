@@ -106,7 +106,17 @@ static void AuditCreate(BankUi *ui)
     for(unsigned i=0;i<=UMI_BANK_AUDIT_RECONCILIATION;++i)families[i]=UmiBankAuditFamilyName((UmiBankAuditFamily)i);
     families[UMI_BANK_AUDIT_RECONCILIATION+1]=NULL;
     const char *actions[UMI_BANK_ACTION_LAST+2];actions[0]="All actions";
+    /* GTK reads this as a terminated string list. Fill each action first,
+     * then write the terminator once, outside the loop. New action names
+     * remain supplied by the shared action catalogue.
+     * The earlier compact spelling is retained for engineering review. */
+#if 0
     for(unsigned i=1;i<=UMI_BANK_ACTION_LAST;++i)actions[i]=UmiBankActionName((UmiBankAction)i);actions[UMI_BANK_ACTION_LAST+1]=NULL;
+#endif
+    for (unsigned i = 1; i <= UMI_BANK_ACTION_LAST; ++i) {
+        actions[i] = UmiBankActionName((UmiBankAction)i);
+    }
+    actions[UMI_BANK_ACTION_LAST + 1] = NULL;
     GtkWidget *filters=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,6);
     ui->auditFamily=GTK_DROP_DOWN(QueueTag(gtk_drop_down_new_from_strings(families),"bank.audit.family"));
     ui->auditAction=GTK_DROP_DOWN(QueueTag(gtk_drop_down_new_from_strings(actions),"bank.audit.action"));

@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/test_runtime/failure_classification.h"
+#include "../base/record_update_internal.h"
 #include "umicom/base/text.h"
 #include <string.h>
 
@@ -237,3 +238,9 @@ bool umi_test_runtime_failure_classification_same_identity(const UmiTestRuntimeF
     if (left == NULL || right == NULL) return false;
     return strcmp(left->id, right->id) == 0;
 }
+
+/* Prepare related fields on a caller-owned copy, then publish them together.
+ * Reusing the Framework guard keeps a delayed review from overwriting newer
+ * state and leaves this model's validation rules with its existing validator. */
+UMI_DEFINE_REVIEWED_RECORD_EDIT(umi_test_runtime_failure_classification_replace_if_current,
+    UmiTestRuntimeFailureClassification, umi_test_runtime_failure_classification_validate)

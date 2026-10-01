@@ -592,3 +592,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_platform_resource_location_registry_upser
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_platform_resource_location_registry_capture,
     umi_platform_resource_location_registry_replace_if_current, UmiResourceLocationRegistry, UmiResourceLocationSnapshot,
     umi_platform_resource_location_snapshot_validate, umi_platform_resource_location_registry_upsert, UMI_PLATFORM_RESOURCE_LOCATION_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_platform_resource_location_registry_edit_if_current,
+    UmiResourceLocationRegistry, UmiResourceLocationSnapshot, UmiResourceLocationEdit,
+    umi_platform_resource_location_snapshot_validate, umi_platform_resource_location_registry_upsert, umi_platform_resource_location_registry_remove, UMI_PLATFORM_RESOURCE_LOCATION_CAPACITY)

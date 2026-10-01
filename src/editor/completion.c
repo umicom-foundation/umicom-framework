@@ -131,3 +131,9 @@ UMI_DEFINE_SNAPSHOT_DOCUMENT_REPLACE(umi_editor_completion_registry_replace_docu
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_editor_completion_registry_capture,
     umi_editor_completion_registry_replace_if_current, UmiEditorCompletionRegistry, UmiEditorCompletionSnapshot,
     umi_editor_completion_snapshot_validate, umi_editor_completion_registry_upsert, UMI_EDITOR_COMPLETION_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_editor_completion_registry_edit_if_current,
+    UmiEditorCompletionRegistry, UmiEditorCompletionSnapshot, UmiEditorCompletionEdit,
+    umi_editor_completion_snapshot_validate, umi_editor_completion_registry_upsert, umi_editor_completion_registry_remove, UMI_EDITOR_COMPLETION_CAPACITY)

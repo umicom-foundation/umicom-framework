@@ -65,4 +65,7 @@ static void ContractPayload(UmiUiNotificationItemSnapshot *item)
  * including its field normalisation and failure-without-mutation contract. */
 #define CONTRACT_CAPTURE umi_ui_notification_item_registry_capture
 #define CONTRACT_REPLACE_CURRENT umi_ui_notification_item_registry_replace_if_current
+/* Exercise mixed edits through this domain's public types and owner. */
+#define CONTRACT_EDIT UmiUiNotificationItemEdit
+#define CONTRACT_EDIT_CURRENT umi_ui_notification_item_registry_edit_if_current
 #include "snapshot_contract_cases.h"

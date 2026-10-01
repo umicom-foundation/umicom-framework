@@ -233,3 +233,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_designer_property_schema_registry_upsert_
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_designer_property_schema_registry_capture,
     umi_designer_property_schema_registry_replace_if_current, UmiDesignerPropertySchemaRegistry, UmiDesignerPropertySchemaSnapshot,
     umi_designer_property_schema_snapshot_validate, umi_designer_property_schema_registry_upsert, UMI_DESIGNER_PROPERTY_SCHEMA_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_designer_property_schema_registry_edit_if_current,
+    UmiDesignerPropertySchemaRegistry, UmiDesignerPropertySchemaSnapshot, UmiDesignerPropertySchemaEdit,
+    umi_designer_property_schema_snapshot_validate, umi_designer_property_schema_registry_upsert, umi_designer_property_schema_registry_remove, UMI_DESIGNER_PROPERTY_SCHEMA_CAPACITY)

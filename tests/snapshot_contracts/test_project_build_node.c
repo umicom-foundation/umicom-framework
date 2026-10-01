@@ -64,4 +64,7 @@ static void ContractPayload(UmiProjectBuildNodeSnapshot *item)
  * including its field normalisation and failure-without-mutation contract. */
 #define CONTRACT_CAPTURE umi_project_build_node_registry_capture
 #define CONTRACT_REPLACE_CURRENT umi_project_build_node_registry_replace_if_current
+/* Exercise mixed edits through this domain's public types and owner. */
+#define CONTRACT_EDIT UmiProjectBuildNodeEdit
+#define CONTRACT_EDIT_CURRENT umi_project_build_node_registry_edit_if_current
 #include "snapshot_contract_cases.h"

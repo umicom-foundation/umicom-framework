@@ -119,3 +119,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_editor_selection_range_registry_upsert_ma
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_editor_selection_range_registry_capture,
     umi_editor_selection_range_registry_replace_if_current, UmiEditorSelectionRangeRegistry, UmiEditorSelectionRangeSnapshot,
     umi_editor_selection_range_snapshot_validate, umi_editor_selection_range_registry_upsert, UMI_EDITOR_SELECTION_RANGE_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_editor_selection_range_registry_edit_if_current,
+    UmiEditorSelectionRangeRegistry, UmiEditorSelectionRangeSnapshot, UmiEditorSelectionRangeEdit,
+    umi_editor_selection_range_snapshot_validate, umi_editor_selection_range_registry_upsert, umi_editor_selection_range_registry_remove, UMI_EDITOR_SELECTION_RANGE_CAPACITY)

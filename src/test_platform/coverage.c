@@ -232,3 +232,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_test_platform_coverage_registry_upsert_ma
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_test_platform_coverage_registry_capture,
     umi_test_platform_coverage_registry_replace_if_current, UmiTestPlatformCoverageRegistry, UmiTestPlatformCoverageSnapshot,
     umi_test_platform_coverage_snapshot_validate, umi_test_platform_coverage_registry_upsert, UMI_TEST_PLATFORM_COVERAGE_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_test_platform_coverage_registry_edit_if_current,
+    UmiTestPlatformCoverageRegistry, UmiTestPlatformCoverageSnapshot, UmiTestPlatformCoverageEdit,
+    umi_test_platform_coverage_snapshot_validate, umi_test_platform_coverage_registry_upsert, umi_test_platform_coverage_registry_remove, UMI_TEST_PLATFORM_COVERAGE_CAPACITY)

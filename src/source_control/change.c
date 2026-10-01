@@ -237,3 +237,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_source_control_change_registry_upsert_man
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_source_control_change_registry_capture,
     umi_source_control_change_registry_replace_if_current, UmiSourceControlChangeRegistry, UmiSourceControlChangeSnapshot,
     umi_source_control_change_snapshot_validate, umi_source_control_change_registry_upsert, UMI_SOURCE_CONTROL_CHANGE_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_source_control_change_registry_edit_if_current,
+    UmiSourceControlChangeRegistry, UmiSourceControlChangeSnapshot, UmiSourceControlChangeEdit,
+    umi_source_control_change_snapshot_validate, umi_source_control_change_registry_upsert, umi_source_control_change_registry_remove, UMI_SOURCE_CONTROL_CHANGE_CAPACITY)

@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/sdk_runtime/install_probe.h"
+#include "../base/record_update_internal.h"
 #include "umicom/base/text.h"
 #include <string.h>
 /*
@@ -169,3 +170,9 @@ UmiStatus umi_sdk_runtime_install_probe_set_state(UmiSdkRuntimeInstallProbe *val
  */
 bool umi_sdk_runtime_install_probe_same_identity(const UmiSdkRuntimeInstallProbe *left, const UmiSdkRuntimeInstallProbe *right)
 { return left != NULL && right != NULL && strcmp(left->id, right->id) == 0; }
+
+/* Prepare related fields on a caller-owned copy, then publish them together.
+ * Reusing the Framework guard keeps a delayed review from overwriting newer
+ * state and leaves this model's validation rules with its existing validator. */
+UMI_DEFINE_REVIEWED_RECORD_EDIT(umi_sdk_runtime_install_probe_replace_if_current,
+    UmiSdkRuntimeInstallProbe, umi_sdk_runtime_install_probe_validate)

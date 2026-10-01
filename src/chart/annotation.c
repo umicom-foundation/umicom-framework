@@ -231,3 +231,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_chart_annotation_registry_upsert_many,
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_chart_annotation_registry_capture,
     umi_chart_annotation_registry_replace_if_current, UmiChartAnnotationRegistry, UmiChartAnnotationSnapshot,
     umi_chart_annotation_snapshot_validate, umi_chart_annotation_registry_upsert, UMI_CHART_ANNOTATION_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_chart_annotation_registry_edit_if_current,
+    UmiChartAnnotationRegistry, UmiChartAnnotationSnapshot, UmiChartAnnotationEdit,
+    umi_chart_annotation_snapshot_validate, umi_chart_annotation_registry_upsert, umi_chart_annotation_registry_remove, UMI_CHART_ANNOTATION_CAPACITY)

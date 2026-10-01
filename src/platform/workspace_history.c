@@ -289,3 +289,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_BATCH(umi_platform_workspace_history_registry_upser
 UMI_DEFINE_SNAPSHOT_REGISTRY_TRANSFER(umi_platform_workspace_history_registry_capture,
     umi_platform_workspace_history_registry_replace_if_current, UmiWorkspaceHistoryRegistry, UmiWorkspaceHistorySnapshot,
     umi_platform_workspace_history_snapshot_validate, umi_platform_workspace_history_registry_upsert, UMI_PLATFORM_WORKSPACE_HISTORY_CAPACITY)
+
+/* Share reviewed insertion/removal publication with other value registries.
+ * Domain-specific field rules stay in this owner's existing operations. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_platform_workspace_history_registry_edit_if_current,
+    UmiWorkspaceHistoryRegistry, UmiWorkspaceHistorySnapshot, UmiWorkspaceHistoryEdit,
+    umi_platform_workspace_history_snapshot_validate, umi_platform_workspace_history_registry_upsert, umi_platform_workspace_history_registry_remove, UMI_PLATFORM_WORKSPACE_HISTORY_CAPACITY)

@@ -10,6 +10,16 @@
 static int VerifyNativeAudit(const char *name)
 {
     GtkWidget *window;BankUi *ui=Create(&window);AuditCreate(ui);
+    /* The shared action catalogue supplies every selectable action exactly
+     * once. The GTK string list must stop after its final entry. */
+    GListModel *actions=gtk_drop_down_get_model(ui->auditAction);
+    CHECK(GTK_IS_STRING_LIST(actions));
+    CHECK(g_list_model_get_n_items(actions)==UMI_BANK_ACTION_LAST+1U);
+    CHECK(strcmp(gtk_string_list_get_string(GTK_STRING_LIST(actions),0),"All actions")==0);
+    for(unsigned action=1;action<=UMI_BANK_ACTION_LAST;++action){
+        CHECK(strcmp(gtk_string_list_get_string(GTK_STRING_LIST(actions),action),UmiBankActionName((UmiBankAction)action))==0);
+    }
+
     Fixture f={0};f.bank=ui->operations;f.serial=3;
     Id(&f.maker.id,"maker");f.maker.capabilities=UMI_BANK_CAP_CUSTOMERS|UMI_BANK_CAP_PAYMENTS;
     Id(&f.checker.id,"checker");f.checker.capabilities=UMI_BANK_CAP_APPROVE;

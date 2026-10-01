@@ -15,6 +15,17 @@ int main(int argc,char **argv)
         UmiBankCommand c=Make(&f,UMI_BANK_CHARGE_SUBMIT,"bad-text");Id(&c.sourceAccountId,"account");Id(&c.ownerId,"utf8");c.amount=Cash(1);c.name[0]=(char)0xff;c.name[1]=0;Send(&f,&f.maker,&c);
     }
     UmiBankAuditReport *report=AuditCapture(&f,q);size_t required=0;
+    /* Optional size and text outputs are independent. Rejected reports clear
+     * whichever outputs the caller supplied, without dereferencing the other. */
+    char refused[8]="before";
+    required=99;
+    CHECK(UmiBankAuditDescribe(NULL,refused,sizeof refused,&required)==UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(required==0 && refused[0]=='\0');
+    required=99;
+    CHECK(UmiBankAuditDescribeEvent(NULL,0,NULL,0,&required)==UMI_STATUS_INVALID_ARGUMENT && required==0);
+    memcpy(refused,"before",7);
+    CHECK(UmiBankAuditDescribeEvent(NULL,0,refused,sizeof refused,NULL)==UMI_STATUS_INVALID_ARGUMENT && refused[0]=='\0');
+
     if(strcmp(name,"summary")==0 || strcmp(name,"empty")==0){
         OK(UmiBankAuditDescribe(report,NULL,0,&required));char *text=malloc(required);CHECK(text!=NULL);OK(UmiBankAuditDescribe(report,text,required,NULL));
         CHECK(strstr(text,"LOCAL PRACTICE AUDIT") && strstr(text,"Captured revision: 9"));

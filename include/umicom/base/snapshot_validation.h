@@ -84,6 +84,14 @@ typedef struct UmiSnapshotCapture {
     uint64_t revision;
 } UmiSnapshotCapture;
 
+/** An edit either inserts/replaces a complete record or removes its ID.
+ * Removal reads only the fixed id array. No edit is an instruction to perform
+ * external I/O; services decide separately how accepted state is persisted. */
+typedef enum UmiSnapshotEditKind {
+    UMI_SNAPSHOT_EDIT_UPSERT = 1,
+    UMI_SNAPSHOT_EDIT_REMOVE = 2
+} UmiSnapshotEditKind;
+
 #ifdef __cplusplus
 }
 #endif
