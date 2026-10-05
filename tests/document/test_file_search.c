@@ -184,7 +184,15 @@ int main(int argc, char **argv)
     CHECK(UmiSearchPathFilterInit(strcmp(mode, "filter") == 0 || strcmp(mode, "session-filter") == 0 ? "*.c"
                                                                                                      : "",
                                   "", &filter) == UMI_STATUS_OK);
+    /* Name the fixture inputs and let C zero-initialise the remaining match
+     * record and count. This avoids assuming how many aggregate levels the
+     * shared match record contains. Retain the positional spelling for review. */
+#if 0
     Matches matches = {&f, mode, {0}, 0U};
+#endif
+    /* Name the fixture inputs and let C zero-initialise the remaining match
+     * record and count. */
+    Matches matches = {.files = &f, .mode = mode};
     UmiSearchStats stats;
     UmiStatus status;
     if (strncmp(mode, "session", 7U) == 0)

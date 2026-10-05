@@ -16,7 +16,16 @@ typedef struct AiImportPanel
     GtkCheckButton *approve;
     GtkLabel *message;
     GWeakRef host;
+/* A file choice and a file read have separate cancellation lifetimes.
+ * GtkFileDialog completion retains only this section root, never its host
+ * workspace; late completions still pass the existing weak-owner check.
+ * The superseded implementation is retained below for engineering review. */
+#if 0
     GtkFileChooserNative *chooser;
+#endif
+    /* Keep chooser cancellation separate from the later file worker's cancellation. */
+    GtkFileDialog *chooser;
+    GCancellable *chooserCancel;
     GCancellable *readCancel;
     UmiAiWorkspaceImport *plan;
     uint64_t generation;
@@ -52,8 +61,18 @@ static void AiImportFree(gpointer data)
     AiImportPanel *import = data;
     UmiAiWorkspaceImportDestroy(import->plan);
     g_clear_object(&import->readCancel);
+/* Dispose the asynchronous chooser through cancellation rather than the
+ * deprecated native-dialog destroy path. Its completion owns the root until
+ * result cleanup, so no callback borrows freed import state.
+ * The superseded implementation is retained below for engineering review. */
+#if 0
     if (import->chooser != NULL)
         gtk_native_dialog_destroy(GTK_NATIVE_DIALOG(import->chooser));
+#endif
+    /* Cancel only the chooser request; asynchronous completion retains its own root reference. */
+    if (import->chooserCancel != NULL)
+        g_cancellable_cancel(import->chooserCancel);
+    g_clear_object(&import->chooserCancel);
     g_clear_object(&import->chooser);
     g_weak_ref_clear(&import->host);
     g_free(import);
@@ -73,6 +92,11 @@ static void AiImportRetire(GtkWidget *root)
             g_cancellable_cancel(import->readCancel);
         UmiAiWorkspaceImportDestroy(import->plan);
         import->plan = NULL;
+/* Retire before cancelling so a late selection cannot start file I/O
+ * or access the released workspace. The pending completion owns the section
+ * root and must still consume its finish result and release that reference.
+ * The superseded implementation is retained below for engineering review. */
+#if 0
         GtkFileChooserNative *chooser = import->chooser;
         import->chooser = NULL;
         if (chooser != NULL)
@@ -80,6 +104,12 @@ static void AiImportRetire(GtkWidget *root)
             gtk_native_dialog_destroy(GTK_NATIVE_DIALOG(chooser));
             g_object_unref(chooser);
         }
+#endif
+        /* The closed flag is already set, so cancellation cannot authorise a new read. */
+        if (import->chooserCancel != NULL)
+            g_cancellable_cancel(import->chooserCancel);
+        g_clear_object(&import->chooser);
+        g_clear_object(&import->chooserCancel);
         gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(import->input)), "", 0);
         gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(import->preview)), "", 0);
         gtk_widget_set_sensitive(root, FALSE);
@@ -277,6 +307,12 @@ static UmiStatus AiImportReadStart(AiImportPanel *import, const char *path)
                                         "pending result; the database is unchanged.");
     return UMI_STATUS_OK;
 }
+/* The supported GTK 4.10 async/finish API replaces deprecated chooser
+ * signals. Keep native-file-only input, original bounded worker reads, weak
+ * host ownership, generation checks, preview and explicit save approval.
+ * Cancelling a dialog or closing a host never starts an import.
+ * The superseded implementation is retained below for engineering review. */
+#if 0
 static void AiImportFileSelected(GtkNativeDialog *dialog, int response, gpointer data)
 {
     GtkWidget *root = g_object_ref(data);
@@ -333,6 +369,73 @@ static void AiImportOpenFile(GtkButton *button, gpointer data)
             gtk_native_dialog_destroy(GTK_NATIVE_DIALOG(chooser));
             g_object_unref(chooser);
         }
+    }
+    g_object_unref(root);
+}
+#endif
+/* Always finish and release the selected file; a retired host receives no new file read. */
+static void AiImportFileSelected(GObject *source, GAsyncResult *result, gpointer data)
+{
+    /* This is the launch-held root reference, not borrowed callback data. */
+    GtkWidget *root = data;
+    AiImportPanel *import = g_object_get_data(G_OBJECT(root), "umicom-ai-import");
+    GError *error = NULL;
+    GFile *file = gtk_file_dialog_open_finish(GTK_FILE_DIALOG(source), result, &error);
+    const bool current = import->chooser == GTK_FILE_DIALOG(source);
+    if (current)
+    {
+        g_clear_object(&import->chooser);
+        g_clear_object(&import->chooserCancel);
+    }
+    if (current && !import->closed && AiImportOwner(import) != NULL && !import->loading)
+    {
+        if (file != NULL)
+        {
+            char *path = g_file_is_native(file) ? g_file_get_path(file) : NULL;
+            if (path == NULL)
+                gtk_label_set_text(import->message,
+                                   "Choose an ordinary local text file. Remote URIs cannot be imported here.");
+            else
+            {
+                UmiStatus status = AiImportReadStart(import, path);
+                if (status != UMI_STATUS_OK && !import->closed)
+                    gtk_label_set_text(import->message, Explain(status));
+                g_free(path);
+            }
+        }
+        else if (error != NULL &&
+                 !g_error_matches(error, GTK_DIALOG_ERROR, GTK_DIALOG_ERROR_DISMISSED) &&
+                 !g_error_matches(error, GTK_DIALOG_ERROR, GTK_DIALOG_ERROR_CANCELLED) &&
+                 !g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+            gtk_label_set_text(import->message, "The local file chooser could not be opened. Current text is unchanged.");
+    }
+    g_clear_error(&error);
+    g_clear_object(&file);
+    g_object_unref(root);
+}
+/* Start one asynchronous selection while retaining the section, not the borrowed workspace. */
+static void AiImportOpenFile(GtkButton *button, gpointer data)
+{
+    (void)button;
+    GtkWidget *root = g_object_ref(data);
+    AiImportPanel *import = g_object_get_data(G_OBJECT(root), "umicom-ai-import");
+    if (AiImportOwner(import) != NULL && !import->loading && import->chooser == NULL)
+    {
+        GtkRoot *host = gtk_widget_get_root(root);
+        GtkFileDialog *chooser = gtk_file_dialog_new();
+        gtk_file_dialog_set_title(chooser, "Choose a local UTF-8 text file");
+        gtk_file_dialog_set_accept_label(chooser, "Load text");
+        if (!import->closed)
+        {
+            import->chooser = chooser;
+            import->chooserCancel = g_cancellable_new();
+            /* Exactly one root reference belongs to the pending completion.
+             * It keeps UI state alive but grants no ownership of the host. */
+            gtk_file_dialog_open(chooser, GTK_IS_WINDOW(host) ? GTK_WINDOW(host) : NULL,
+                import->chooserCancel, AiImportFileSelected, g_object_ref(root));
+        }
+        else
+            g_object_unref(chooser);
     }
     g_object_unref(root);
 }

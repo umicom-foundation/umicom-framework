@@ -266,3 +266,8 @@ umi_trade_id_archive_decode
 umi_trade_id_archive_encode
 umi_valuation_archive_decode
 umi_valuation_archive_encode
+
+# Finance owns the public market-data-key quote archive.
+# These checks replace the former incorrect Trading-library assignment.
+umi_quote_archive_decode
+umi_quote_archive_encode

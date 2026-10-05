@@ -28,8 +28,12 @@ umi_bar_archive_decode
 umi_bar_archive_encode
 umi_order_request_archive_decode
 umi_order_request_archive_encode
-umi_quote_archive_decode
-umi_quote_archive_encode
+# These Finance quote definitions moved to their actual owner,
+# src/finance/core/quote.c. Their required-symbol checks remain enabled
+# in umicom_finance_workspace_archives.symbols; keep the old assignment
+# below for engineering review rather than dropping the checks.
+# umi_quote_archive_decode
+# umi_quote_archive_encode
 umi_trading_broker_route_archive_decode
 umi_trading_broker_route_archive_encode
 umi_trading_market_data_event_archive_decode

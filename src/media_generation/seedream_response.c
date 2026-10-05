@@ -157,7 +157,15 @@ UmiStatus UmiSeedreamDecode(const char *bytes, size_t length, const UmiCancellat
     if (status == UMI_STATUS_OK)
     {
         memcpy(out->model, model, sizeof(model));
+/* The JSON image_node is an integer node index, not result ownership.
+ * Publish the validated surface through the existing public image member;
+ * the following surface = NULL still transfers ownership exactly once.
+ * The superseded implementation is retained below for engineering review. */
+#if 0
         out->image_node = surface;
+#endif
+        /* Transfer the validated surface to the result; the next line retires the local owner. */
+        out->image = surface;
         surface = NULL;
     }
 done:

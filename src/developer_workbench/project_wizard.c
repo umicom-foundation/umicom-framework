@@ -334,7 +334,19 @@ static void UmiDeveloperWorkbenchProjectWizardArchiveRead(UmiArchiveReader *read
 }
 static UmiStatus UmiDeveloperWorkbenchProjectWizardArchiveValidate(const UmiDeveloperWorkbenchProjectWizard *value)
 {
+/* Wizard validation updates readiness, explanatory text and revision.
+ * Archive validation is an observation of a const input, not permission to
+ * edit it. Run the established validator on a private value copy so encoding
+ * cannot mutate the source, and decoding retains the reviewed stored fields.
+ * The validator owns no heap resources and performs no I/O.
+ * The superseded implementation is retained below for engineering review. */
+#if 0
     return umi_developer_workbench_project_wizard_validate(value);
+#endif
+    /* Run mutating validation on an owned copy, leaving the archive input unchanged. */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiDeveloperWorkbenchProjectWizard candidate = *value;
+    return umi_developer_workbench_project_wizard_validate(&candidate);
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_developer_workbench_project_wizard_archive_encode, umi_developer_workbench_project_wizard_archive_decode,
     UmiDeveloperWorkbenchProjectWizard, UmiDeveloperWorkbenchProjectWizardArchiveSchema, UmiDeveloperWorkbenchProjectWizardArchiveBound, UmiDeveloperWorkbenchProjectWizardArchiveWrite, UmiDeveloperWorkbenchProjectWizardArchiveRead, UmiDeveloperWorkbenchProjectWizardArchiveValidate)

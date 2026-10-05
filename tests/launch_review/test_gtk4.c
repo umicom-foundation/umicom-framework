@@ -55,6 +55,12 @@ static GFile *TestFinish(GtkFileDialog *picker, GAsyncResult *result, GError **e
 #define UmiGtk4NewProjectDialogCreate FixtureNewProjectCreate
 #define UmiGtk4BuildSettingsDialogCreate FixtureBuildSettingsCreate
 #define UmiGtk4DeveloperDialogDestroy FixtureDialogDestroy
+/* The public header was read before the fixture renaming macros. Its include
+ * guard correctly prevents a second declaration pass in the included source.
+ * Declare the renamed cleanup function here through the same macro so calls
+ * made before its definition have the exact public signature. This preserves
+ * the real controller and the existing operating-system picker substitution. */
+void UmiGtk4DeveloperDialogDestroy(UmiGtk4DeveloperDialog *dialog);
 #include "../../adapters/gtk4/developer_dialog_gtk4.c"
 #undef gtk_file_dialog_open
 #undef gtk_file_dialog_select_folder

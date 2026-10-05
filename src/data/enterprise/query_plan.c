@@ -25,7 +25,20 @@
     if (plan == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     if (memchr(plan->plan_id, '\0', sizeof(plan->plan_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     if (memchr(plan->root_table, '\0', sizeof(plan->root_table)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+/* The final success return is independent of the rejected-plan branch.
+ * Spell out the original branch boundaries without changing the row-limit
+ * requirement or the bounded string checks above.
+ * The superseded implementation is retained below for engineering review. */
+#if 0
 if(plan==NULL||plan->plan_id[0]=='\0'||plan->root_table[0]=='\0'||plan->row_limit==0U)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+#endif
+    /* Reject the same incomplete or unbounded plan, then return success separately. */
+    if (plan == NULL || plan->plan_id[0] == '\0' ||
+        plan->root_table[0] == '\0' || plan->row_limit == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    return UMI_STATUS_OK;
+}
 
 /* State transfer belongs to this Framework value owner. Explicit fields keep
  * padding and unused text out of saved data. Extend both directions and the
