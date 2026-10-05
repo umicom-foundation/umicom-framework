@@ -16,6 +16,7 @@
 #define UMICOM_DEVELOPER_WORKBENCH_QUICK_OPEN_H
 
 #include "umicom/developer_workbench/file_search_provider.h"
+#include "umicom/developer_workbench/quick_open_selection.h"
 
 #ifdef __cplusplus
 extern "C" {

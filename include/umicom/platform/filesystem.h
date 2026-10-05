@@ -27,6 +27,14 @@ extern "C" {
 #endif
 
 
+/* Filesystem paths use UTF-8 on Windows and native byte strings on POSIX.
+ * File contents remain unchanged bytes; a Unicode path does not select a text
+ * encoding for its contents. Prefer absolute paths for work queued to a worker.
+ * Windows accepts ordinary drive/UNC paths within OS and caller-buffer limits;
+ * this does not enable long paths or device namespaces across every operation.
+ * The legacy whole-file reader uses a long-sized seek and is intended for files
+ * that fit in memory. Use the bounded input-file contract for untrusted input.
+ */
 /**
  * Provide the fs read bytes operation used by this module and its client applications.
  */
@@ -63,6 +71,10 @@ UmiStatus umi_fs_make_directories(const char *path);
 /**
  * Provide the fs remove tree operation used by this module and its client applications.
  */
+/* Windows removes reparse points as leaves, refuses drive/share roots and
+ * bounds directory recursion to 128 levels. Removal may be partial on failure.
+ * Callers must own the tree and prevent concurrent parent/link replacement;
+ * this path-based operation is not an adversarial filesystem sandbox. */
 UmiStatus umi_fs_remove_tree(const char *path);
 /**
  * Provide the fs rename operation used by this module and its client applications.

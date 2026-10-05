@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/test_runtime/start_failure.h"
+#include "../base/value_archive_internal.h"
 #include "umicom/base/text.h"
 #include "../base/record_update_internal.h"
 #include <string.h>
@@ -242,3 +243,54 @@ bool umi_test_runtime_start_failure_same_identity(const UmiTestRuntimeStartFailu
  * with this owner; Framework supplies the common staged publication boundary. */
 UMI_DEFINE_CHECKED_RECORD_INIT(umi_test_runtime_start_failure_init_checked,
     UmiTestRuntimeStartFailure, umi_test_runtime_start_failure_init, umi_test_runtime_start_failure_validate)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x3cf6db1de503e7bf);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTestRuntimeStartFailure *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTestRuntimeStartFailure *)0)->category)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTestRuntimeStartFailure *)0)->detail)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiTestRuntimeStartFailure *)0)->id) - 1U +
+        8U + sizeof(((UmiTestRuntimeStartFailure *)0)->category) - 1U +
+        8U + sizeof(((UmiTestRuntimeStartFailure *)0)->detail) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiTestRuntimeStartFailure *value)
+{
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->category, sizeof(value->category));
+    UmiArchiveWriteText(writer, value->detail, sizeof(value->detail));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->native_status);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->attempt_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->active);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiTestRuntimeStartFailure *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->category, sizeof(value->category));
+    UmiArchiveReadText(reader, value->detail, sizeof(value->detail));
+    value->native_status = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->attempt_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->active = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus ArchiveValidate(const UmiTestRuntimeStartFailure *value)
+{
+    return umi_test_runtime_start_failure_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_test_runtime_start_failure_archive_encode, umi_test_runtime_start_failure_archive_decode,
+    UmiTestRuntimeStartFailure, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)

@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/sdk_runtime/runtime_file_catalogue.h"
+#include "../base/value_archive_internal.h"
 #include "umicom/base/text.h"
 #include "../base/record_update_internal.h"
 #include <string.h>
@@ -243,3 +244,57 @@ bool umi_sdk_runtime_runtime_file_catalogue_same_identity(const UmiSdkRuntimeRun
  * with this owner; Framework supplies the common staged publication boundary. */
 UMI_DEFINE_CHECKED_RECORD_INIT(umi_sdk_runtime_runtime_file_catalogue_init_checked,
     UmiSdkRuntimeRuntimeFileCatalogue, umi_sdk_runtime_runtime_file_catalogue_init, umi_sdk_runtime_runtime_file_catalogue_validate)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x20b242ff318314ad);
+    schema = (schema ^ (uint64_t)sizeof(((UmiSdkRuntimeRuntimeFileCatalogue *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiSdkRuntimeRuntimeFileCatalogue *)0)->path)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiSdkRuntimeRuntimeFileCatalogue *)0)->detail)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiSdkRuntimeRuntimeFileCatalogue *)0)->id) - 1U +
+        8U + sizeof(((UmiSdkRuntimeRuntimeFileCatalogue *)0)->path) - 1U +
+        8U + sizeof(((UmiSdkRuntimeRuntimeFileCatalogue *)0)->detail) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiSdkRuntimeRuntimeFileCatalogue *value)
+{
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->path, sizeof(value->path));
+    UmiArchiveWriteText(writer, value->detail, sizeof(value->detail));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->file_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->generation);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+    UmiArchiveWriteSigned(writer, (int64_t)value->state);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiSdkRuntimeRuntimeFileCatalogue *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->path, sizeof(value->path));
+    UmiArchiveReadText(reader, value->detail, sizeof(value->detail));
+    value->file_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->generation = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->state = (UmiSdkRuntimeState)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus ArchiveValidate(const UmiSdkRuntimeRuntimeFileCatalogue *value)
+{
+    return umi_sdk_runtime_runtime_file_catalogue_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_sdk_runtime_runtime_file_catalogue_archive_encode, umi_sdk_runtime_runtime_file_catalogue_archive_decode,
+    UmiSdkRuntimeRuntimeFileCatalogue, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)

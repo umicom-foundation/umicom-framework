@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/cross_application_panel/workspace_binding.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise panel workspace binding from caller-provided values so later operations
@@ -36,6 +37,16 @@ record->revision=1U;
  */
 UmiStatus umi_panel_workspace_binding_validate(const UmiPanelWorkspaceBinding *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->binding_id, '\0', sizeof(record->binding_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->panel_id, '\0', sizeof(record->panel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->workspace_id, '\0', sizeof(record->workspace_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->layout_id, '\0', sizeof(record->layout_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->perspective_id, '\0', sizeof(record->perspective_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
 /*
  * Protect caller-owned memory by checking that required state is available before it is
  * used.
@@ -174,3 +185,57 @@ if(store->count!=0U)memcpy(records,store->items,store->count*sizeof(store->items
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiPanelWorkspaceBindingArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xc8cc0ab1869db671);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelWorkspaceBinding *)0)->binding_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelWorkspaceBinding *)0)->panel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelWorkspaceBinding *)0)->workspace_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelWorkspaceBinding *)0)->layout_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelWorkspaceBinding *)0)->perspective_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiPanelWorkspaceBindingArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiPanelWorkspaceBinding *)0)->binding_id) - 1U +
+        8U + sizeof(((UmiPanelWorkspaceBinding *)0)->panel_id) - 1U +
+        8U + sizeof(((UmiPanelWorkspaceBinding *)0)->workspace_id) - 1U +
+        8U + sizeof(((UmiPanelWorkspaceBinding *)0)->layout_id) - 1U +
+        8U + sizeof(((UmiPanelWorkspaceBinding *)0)->perspective_id) - 1U +
+        8U +
+        8U;
+}
+static void UmiPanelWorkspaceBindingArchiveWrite(UmiArchiveWriter *writer, const UmiPanelWorkspaceBinding *value)
+{
+    UmiArchiveWriteText(writer, value->binding_id, sizeof(value->binding_id));
+    UmiArchiveWriteText(writer, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveWriteText(writer, value->workspace_id, sizeof(value->workspace_id));
+    UmiArchiveWriteText(writer, value->layout_id, sizeof(value->layout_id));
+    UmiArchiveWriteText(writer, value->perspective_id, sizeof(value->perspective_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiPanelWorkspaceBindingArchiveRead(UmiArchiveReader *reader, UmiPanelWorkspaceBinding *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->binding_id, sizeof(value->binding_id));
+    UmiArchiveReadText(reader, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveReadText(reader, value->workspace_id, sizeof(value->workspace_id));
+    UmiArchiveReadText(reader, value->layout_id, sizeof(value->layout_id));
+    UmiArchiveReadText(reader, value->perspective_id, sizeof(value->perspective_id));
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiPanelWorkspaceBindingArchiveValidate(const UmiPanelWorkspaceBinding *value)
+{
+    return umi_panel_workspace_binding_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_panel_workspace_binding_archive_encode, umi_panel_workspace_binding_archive_decode,
+    UmiPanelWorkspaceBinding, UmiPanelWorkspaceBindingArchiveSchema, UmiPanelWorkspaceBindingArchiveBound, UmiPanelWorkspaceBindingArchiveWrite, UmiPanelWorkspaceBindingArchiveRead, UmiPanelWorkspaceBindingArchiveValidate)

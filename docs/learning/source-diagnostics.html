@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Inspect source diagnostics</title><style>body{font:17px/1.6 system-ui;max-width:1000px;margin:32px auto;padding:0 24px;color:#183442}li{margin:10px 0}code{overflow-wrap:anywhere}</style></head><body>
+<h1>Inspect source diagnostics</h1>
+<p>Use <a href="diagnostic-locations.html">related diagnostic source navigation</a> to inspect the other declarations or locations referenced by a message.</p>
+<p>This guide describes the default notification mode. For a server that requires a request, follow <a href="pull-diagnostics.html">explicit pull diagnostics</a> and select that option in Problems.</p>
+<p>A diagnostic is an error, warning, information message or hint reported by a language server. It points to a source range and may include a code, an explanation address and related locations. Studio's Problems action asks a local server to inspect the captured draft. This is separate from compiler output produced by a build.</p>
+<h2>Inspect a draft in Studio</h2><ol>
+<li>Open the source document you want to inspect. A read-only document is supported. The entire current draft is captured, including unsaved text.</li>
+<li>Choose <strong>Problems…</strong> in the editor toolbar. Opening the form does not start a program.</li>
+<li>Enter the absolute executable path of your installed language server, its arguments and the absolute project folder. You can use <strong>Load saved server</strong> to reuse preferences for this language. A C or C++ server may need the project's compilation database to understand include paths and compile options.</li>
+<li>Choose <strong>Capture source diagnostics</strong>. The local server receives the captured source and can inspect the project folder. The temporary connection waits for its first matching diagnostic publication, then closes before displaying the result.</li>
+<li>Select a message in the searchable list. Read its full message, source label, code and related locations. Coordinates are one-based for display; columns count UTF-16 units and the range end is excluded. Explanation addresses are shown as text and are not opened automatically.</li>
+<!-- Primary-only navigation is retained for engineering review. The source
+      destination chooser now selects a primary or related range before opening. -->
+<template data-preserved="primary-diagnostic-navigation"><li>Choose <strong>Open reported range</strong> to select the primary range in the captured document. The draft remains unchanged. Related locations are informational in this form.</li></template>
+<li>Choose the reported range or a related destination in <strong>Source location to open</strong>, then choose <strong>Open reported range</strong>. Navigation preserves draft text and does not edit or save it.</li></ol>
+<p>Changing server settings retires the publication. If the source, caret, selection, permissions or document identity changed, close the form and capture again. The form cannot apply edits, run fixes or save files.</p>
+<h2>Understand what a result means</h2>
+<p>The displayed set is the first matching publication from a newly opened source session. An empty set means that publication contained no messages. It does not establish a successful build, completed background indexing, or a clean project. Other open unsaved documents are not sent. There is no continuous diagnostic subscription after the form returns its result.</p>
+<p>Some servers send diagnostics as notifications when a document opens. Others require a separate pull request; a pull-only server can time out in this workflow. No request method is invented to make those two protocols look interchangeable. A result with an explicit source version must match the captured version. An unversioned result can be accepted because this operation exclusively owns a fresh session and submits only that captured draft.</p>
+<h2>Use the Framework reader and capture service</h2><ol>
+<li>Copy the source and request settings into a worker-owned job. Call <code>UmiLanguageDiagnosticQueryNative</code> to open and capture one publication. Keep request inputs alive until it returns.</li>
+<li>Use <code>UmiLanguageDiagnosticCataloguePublication</code> to read the exact source URI and optional version, and <code>UmiLanguageDiagnosticCatalogueAt</code> for complete row metadata. Strings are borrowed until catalogue destruction.</li>
+<li>Read related messages with <code>UmiLanguageDiagnosticCatalogueRelated</code>. The original item JSON remains available as a length-delimited span, including opaque data. Keeping this data does not execute a fix or authorize sending it elsewhere.</li>
+<li>When integrating a different transport, use <code>UmiLanguageDiagnosticCatalogueReadNotification</code> or pass a complete parameters object to <code>UmiLanguageDiagnosticCatalogueCreate</code>. Each publication replaces the prior set; do not append it to stale rows. The legacy fixed-size decoder remains available for existing callers.</li>
+<li>Call <code>UmiLanguageDiagnosticCatalogueValidateSource</code> before using coordinates. It verifies the URI, supplied version and exact UTF-16 boundaries using one immutable source index. Same-document related ranges are checked too. Establish freshness separately when a server omits a version.</li>
+<li>On the document owner's thread, check the captured identity and source again before navigation. Destroy the catalogue when it is retired. Never use a display label as a file path or command.</li></ol>
+<p>The complete reader accepts up to 4,096 diagnostics and a 1 MiB JSON publication. A diagnostic can have 128 related messages, subject to the overall JSON and related-row limits. Messages allow 65,536 UTF-8 bytes, source and code fields 4,096 bytes, and URIs 8,192 bytes. Invalid or oversized input rejects the complete publication rather than silently omitting rows. The coordinate index accepts source up to 16 MiB. Native transport has the smaller 65,536-byte message limit, including escaped source and protocol envelope.</p>
+<h2>Troubleshooting</h2><ol>
+<li>If capture times out, check the installed server path, arguments, project configuration and whether the server publishes diagnostics on document open. Studio uses a five-second total read budget and a short additional cleanup allowance.</li>
+<li>If a range is rejected, capture the current source again. Framework does not clamp an invalid column or split a Unicode character to make a result appear valid.</li>
+<li>If a result becomes stale, close and reopen the form. Changing settings back does not restore the old result.</li>
+<li>If you need build qualification, run the normal project build and tests separately. Diagnostic messages are editing assistance, not compiler or test results.</li></ol>
+<p>Related guides: <a href="code-actions.html">Review code actions</a>, <a href="source-navigation.html">Source navigation</a>, <a href="document-symbols.html">Document symbols</a>.</p>
+</body></html>

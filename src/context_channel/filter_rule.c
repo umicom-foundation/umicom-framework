@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/filter_rule.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context filter rule from caller-provided values so later operations receive a
@@ -36,6 +37,15 @@ record->revision=1U;
  */
 UmiStatus umi_context_filter_rule_validate(const UmiContextFilterRule *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->filter_id, '\0', sizeof(record->filter_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->schema_id, '\0', sizeof(record->schema_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->field_name, '\0', sizeof(record->field_name)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->expected_text, '\0', sizeof(record->expected_text)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -188,3 +198,56 @@ if(store->count!=0U)memcpy(out_records,store->items,store->count*sizeof(store->i
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextFilterRuleArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xa25479ff6937f502);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextFilterRule *)0)->filter_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextFilterRule *)0)->schema_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextFilterRule *)0)->field_name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextFilterRule *)0)->expected_text)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextFilterRuleArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextFilterRule *)0)->filter_id) - 1U +
+        8U + sizeof(((UmiContextFilterRule *)0)->schema_id) - 1U +
+        8U + sizeof(((UmiContextFilterRule *)0)->field_name) - 1U +
+        8U + sizeof(((UmiContextFilterRule *)0)->expected_text) - 1U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextFilterRuleArchiveWrite(UmiArchiveWriter *writer, const UmiContextFilterRule *value)
+{
+    UmiArchiveWriteText(writer, value->filter_id, sizeof(value->filter_id));
+    UmiArchiveWriteText(writer, value->schema_id, sizeof(value->schema_id));
+    UmiArchiveWriteText(writer, value->field_name, sizeof(value->field_name));
+    UmiArchiveWriteText(writer, value->expected_text, sizeof(value->expected_text));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->invert);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextFilterRuleArchiveRead(UmiArchiveReader *reader, UmiContextFilterRule *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->filter_id, sizeof(value->filter_id));
+    UmiArchiveReadText(reader, value->schema_id, sizeof(value->schema_id));
+    UmiArchiveReadText(reader, value->field_name, sizeof(value->field_name));
+    UmiArchiveReadText(reader, value->expected_text, sizeof(value->expected_text));
+    value->invert = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextFilterRuleArchiveValidate(const UmiContextFilterRule *value)
+{
+    return umi_context_filter_rule_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_filter_rule_archive_encode, umi_context_filter_rule_archive_decode,
+    UmiContextFilterRule, UmiContextFilterRuleArchiveSchema, UmiContextFilterRuleArchiveBound, UmiContextFilterRuleArchiveWrite, UmiContextFilterRuleArchiveRead, UmiContextFilterRuleArchiveValidate)

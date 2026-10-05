@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Keep creative assets together</title><style>
+body{font:17px/1.65 system-ui,sans-serif;max-width:960px;margin:40px auto;padding:0 24px;color:#193744;background:#f8fbfc}
+h1,h2{line-height:1.25}code{background:#e8f0f4;padding:2px 5px}aside{border-left:4px solid #167f85;padding:12px 20px;background:#edf5f6}
+table{border-collapse:collapse;width:100%}th,td{border:1px solid #bdd0d8;text-align:left;padding:12px}a{color:#075c6e}
+</style></head><body><h1>Keep creative assets together</h1>
+<p>An asset library holds complete files in one portable collection. It can contain images, audio,
+video, lyrics and reference documents. Media, Music, CAD, Kitchen, Games, Web Studio and Mobile Studio
+use the same Framework library. A saved collection can be reopened by another creative workbench.</p>
+<aside>The library is separate from the scene project, song plan and provider pages. Importing a file
+does not place it on a timeline, decode a video, run code or upload anything. You choose those actions
+separately in tools that support the required format.</aside>
+<h2>Create a collection</h2><ol>
+<li>Open <strong>Creative workbench → Asset library</strong>. The initial empty library lives in memory.</li>
+<li>Enter a title, such as <code>Welcome tutorial</code>, and choose <strong>Apply library title</strong>.
+The summary shows the applied title. Merely editing the title field does not rename the library.</li>
+<li>Choose a source file or enter its complete absolute path. Selection alone does not import it.</li>
+<li>Give the asset a unique ID, such as <code>opening-image</code>, and a readable name. IDs start with
+a letter or digit and may contain letters, digits, dots, underscores and hyphens. IDs are case-sensitive
+and have at most 63 ASCII bytes; names and titles have at most 191 UTF-8 bytes.</li>
+<li>Select the declared purpose and choose <strong>Import complete file</strong>. Wait for the result.
+The summary increases only when the whole file has been captured. Its original file can subsequently
+move or change without altering this captured copy.</li>
+<li>Repeat with other files. Select an entry to see its ID, name, declared purpose and complete size.
+Use the move buttons to change its order.</li></ol>
+<p>There can be up to 32 entries with a combined payload of 64 MiB. Empty files are supported.
+The purpose is your description of the file, not a format check. Two IDs may deliberately hold
+identical bytes; an existing ID is never silently replaced.</p>
+<h2>Save and reopen</h2><ol>
+<li>Enter a new absolute library path, for example <code>C:\Projects\Tutorial\materials.umilibrary</code>
+on Windows or <code>/home/sam/projects/tutorial/materials.umilibrary</code> on Linux. The parent folder must exist.</li>
+<li>Choose <strong>Save library to new file</strong>. A successful result reports the path and written size.
+Existing files are never overwritten. Choose another name for each saved edit.</li>
+<li>To reopen later, choose the saved library file and then <strong>Open complete library</strong>.
+If the current library has unsaved edits, save them first or explicitly enable replacement.</li>
+<li>Changing the selected library path or editing the collection clears replacement approval.
+Opening replaces the current collection only after every entry and the complete bundle have passed validation.</li></ol>
+<p>The file contains the library title, asset IDs, names, purposes and complete bytes in order.
+It omits original machine paths and does not look up external files. It is plaintext. A SHA-256
+checksum detects damaged data; it does not prove who created the file or make untrusted media safe.</p>
+<h2>Use an asset</h2><ol>
+<li>Select it, then enter a new absolute destination and choose <strong>Export selected asset to new file</strong>
+to recover its original bytes. This does not convert its format.</li>
+<li>For a PNG, choose <strong>Copy selected asset to Assets editor</strong>, then switch to the
+<strong>Assets</strong> page. Preview or edit the independent capture there. Exporting an edited PNG
+does not alter the library entry; explicitly import the result under another ID if you want to keep it.</li>
+<li><strong>Remove selected asset from library</strong> changes only the in-memory collection.
+<strong>Undo last removal</strong> restores the most recent removed capture while its ID and capacity
+remain available. Another removal or a successful Open replaces that one-entry undo record.
+Save a new library file to retain your chosen membership.</li></ol>
+<h2>Recover from a refusal</h2><table><tr><th>Result</th><th>What to do</th></tr>
+<tr><td>ID already exists</td><td>Choose a different meaningful ID. The old entry remains intact.</td></tr>
+<tr><td>Capacity exceeded</td><td>Use smaller captures or create a separate saved collection. No truncated file is imported.</td></tr>
+<tr><td>Damaged or unsupported library</td><td>Keep the file for diagnosis and open another saved copy. The current collection remains intact.</td></tr>
+<tr><td>Destination already exists</td><td>Choose a new filename. The existing destination has not been overwritten.</td></tr>
+<tr><td>Cancelled or failed write</td><td>Read the result: a newly created partial or complete file may remain.
+Do not treat it as a successful save. Choose another filename before retrying.</td></tr>
+<tr><td>Assets editor busy</td><td>Wait for its existing operation, then copy the selected library asset again.</td></tr></table>
+<h2>For contributors</h2><p>The portable <code>asset_library.h</code> owner controls membership and ordering.
+Insert transfers a capture only on success; Detach returns it to the caller. Borrowed captures remain
+valid only while their library owner retains them. Keep these operations on one owner thread.</p>
+<p>The archive codec reuses the existing single-asset envelope and Framework SHA-256 implementation.
+Native Save streams existing bytes without allocating another whole-library buffer. Load temporarily
+holds the encoded bundle and decoded assets; retaining the previous collection or an editor copy uses
+additional memory. The last removed capture also occupies memory until replaced, reopened or closed. The GTK adapter transfers exclusive ownership to each worker and uses a weak widget
+reference on completion. Extend this shared boundary when adding a different host toolkit.</p>
+<p>File operations require ordinary absolute local paths and trusted parent directories. Final symlinks,
+devices and oversized files are refused by the shared file reader. Ancestor directories are not a
+filesystem sandbox. Cancellation is checked around native reads and between bounded codec chunks.</p>
+<p>Copyright Sammy Hegab, Umicom Foundation. MIT licence.</p></body></html>

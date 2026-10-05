@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review and restore saved workspaces</title>
+<style>body{font:17px/1.65 system-ui,sans-serif;max-width:900px;margin:2rem auto;padding:0 1.2rem;color:#172838}h1,h2{line-height:1.25}code{background:#edf3f7;padding:.1rem .25rem}li{margin:.65rem 0}table{border-collapse:collapse}td,th{padding:.7rem;border:1px solid #bbc8d2;text-align:left}</style></head>
+<body><h1>Review and restore saved workspaces</h1>
+<p>A workspace has several kinds of saved information. A named layout describes where panels appear. A desktop checkpoint contains notes and appearance preferences. These controls keep their scopes separate, so recovering an arrangement does not replay a business action.</p>
+<h2>Recover named layouts in an application</h2>
+<p>Studio and applications using Framework's shared Layout Library, including Trader and Bank, offer the same complete comparison. Media, Music and the other shared workstations use this control too. Storage must be connected by the application; a memory-only service cannot keep a library after the application closes.</p>
+<ol><li>Finish your layout edit using <strong>Apply and Lock</strong>, or cancel it. Open <strong>Layout Library</strong>.</li>
+<li>Choose <strong>Save library</strong> when you want to keep all named arrangements, including inactive layouts. This is separate from saving source files, media projects or account data.</li>
+<li>To inspect the saved copy, choose <strong>Review saved layouts</strong>. The current workspace stays unchanged. Read both sides of the comparison, including hidden panels, placement, size and linked context identifiers.</li>
+<li>If recovery used the last valid saved copy because the latest copy was unusable, the comparison explains that. Inspect it carefully; displaying it does not repair the saved data.</li>
+<li>Tick <strong>Replace my named layouts with this reviewed library</strong>, then choose <strong>Apply reviewed layouts</strong>. Only the exact arrangement displayed is applied. A later storage write cannot substitute different content.</li>
+<li>If you change your mind after applying, use the library's <strong>Undo</strong> action while the session history remains available. Undo changes the session arrangement; it does not rewrite saved storage.</li></ol>
+<p>The review includes the complete named list and panel geometry. It does not save or restore document drafts, executable processes, broker connections, orders, payments, credentials or application settings. Keep those items through their own application workflows.</p>
+<h2>Understand the two restore choices</h2>
+<table><thead><tr><th>Choice</th><th>What happens</th></tr></thead><tbody>
+<tr><td>Review saved layouts, then Apply reviewed layouts</td><td>Applies the exact captured library after comparison. It leaves storage and the application's existing Save revision unchanged.</td></tr>
+<tr><td>Confirm and Restore library</td><td>Uses the existing restore action to reread the latest library at that moment. It may therefore differ from an earlier preview, and refreshes the accepted storage evidence when successful.</td></tr></tbody></table>
+<p>A revision is a counter used to notice changes. If another window saves first, your older Save request is refused instead of overwriting its work. A fresh frozen review does not silently accept that competing revision. Inspect the latest saved content and, if appropriate, use the confirmed <strong>Restore library</strong> action before retrying Save. Export your current arrangements first if you want to keep a separate copy.</p>
+<h2>Choose an Umicom desktop checkpoint</h2>
+<ol><li>Open <strong>Persistent desktop workspace</strong> from the Umicom OS desktop shell, then choose <strong>Open workspace</strong>.</li>
+<li>The checkpoint list shows retained revisions, newest first, with the number of notes and the selected note's title. Up to eight complete checkpoints are retained. A record that cannot be read is marked unavailable.</li>
+<li>Select a usable checkpoint. This fills the checkpoint number; it does not restore anything. The manual number field remains available.</li>
+<li>Save or discard any unsaved draft before choosing <strong>Preview checkpoint</strong>. Compare the full notes and appearance preferences.</li>
+<li>Choose <strong>Restore reviewed checkpoint</strong> only when the comparison is the state you want. Restoration creates a new saved revision. Cancel leaves the current workspace unchanged.</li>
+<li>Choose <strong>Refresh checkpoints</strong> to reread the list. Refresh preserves unsaved editor text. Closing during a refresh still asks about an unsaved draft before ending the session.</li></ol>
+<h2>When a review cannot be applied</h2>
+<p>If the live layout changes after review, prepare a new comparison. An old review is deliberately refused. If storage is unavailable, finish editing, check the application's storage status and retry the explicit read. An unavailable checkpoint row does not hide older usable checkpoints. Do not assume an unreadable row was deleted.</p>
+<p>These are native application workspace features. The Umicom OS shell runs on the current operating system; this workflow does not install an OS or change its boot configuration.</p>
+<h2>Extend the shared implementation</h2>
+<p>Native hosts bind <code>umi_gtk4_ws_layout_library_set_saved_review_handler</code> after binding their existing file-exchange callbacks. The read callback uses <code>umi_ui_workspace_library_checkpoint_review</code> and returns owned evidence. The existing import publisher accepts the candidate only after its widgets accept the arrangement, keeping layout history in one place.</p>
+<p>Desktop shells read <code>UmiDesktopWorkspaceReadHistory</code> on the workspace's sole worker. Rows are copied observations, not restore permission. Use their stable revision numbers to prepare a fresh restore review; never pass a list position as a revision. Keep controllers alive through callbacks and disconnect retained controls during destruction.</p>
+</body></html>

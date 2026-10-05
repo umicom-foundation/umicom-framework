@@ -18,6 +18,7 @@
  */
 
 #include "umicom/ui/context.h"
+#include "umicom/ui/context_changes.h"
 
 #include <ctype.h>
 #include <inttypes.h>
@@ -60,6 +61,13 @@ static UmiStatus set_value(UmiUiContextStore *store,
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)umi_mutex_lock(store->mutex);
+    /* A revision guards reviewed changes. Never wrap it back to an earlier
+     * observation, even when an older single-key entry point is used. */
+    if (store->revision == UINT64_MAX) {
+        (void)umi_mutex_unlock(store->mutex);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     index = find_item(store, value->key);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
@@ -126,6 +134,10 @@ void umi_ui_context_store_destroy(UmiUiContextStore *store)
  * Provide the ui context set boolean operation used by this module and its client
  * applications.
  */
+/* Reject truncated context identity or text before publication.
+ * Existing setters retain their one-key behaviour; checked copies keep keys distinct.
+ * The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_ui_context_set_boolean(UmiUiContextStore *store,
                                      const char *key,
                                      int value)
@@ -141,11 +153,32 @@ UmiStatus umi_ui_context_set_boolean(UmiUiContextStore *store,
     item.boolean_value = value != 0;
     return set_value(store, &item);
 }
+#endif
+UmiStatus umi_ui_context_set_boolean(UmiUiContextStore *store,
+                                     const char *key,
+                                     int value)
+{
+    UmiUiContextSnapshot item = {0};
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (key == NULL || key[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    if (!umi_ui_copy_text(item.key, sizeof(item.key), key))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    item.kind = UMI_UI_CONTEXT_BOOLEAN;
+    item.boolean_value = value != 0;
+    return set_value(store, &item);
+}
 
 /*
  * Provide the ui context set integer operation used by this module and its client
  * applications.
  */
+/* Reject truncated context identity or text before publication.
+ * Existing setters retain their one-key behaviour; checked copies keep keys distinct.
+ * The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_ui_context_set_integer(UmiUiContextStore *store,
                                      const char *key,
                                      int64_t value)
@@ -161,11 +194,32 @@ UmiStatus umi_ui_context_set_integer(UmiUiContextStore *store,
     item.integer_value = value;
     return set_value(store, &item);
 }
+#endif
+UmiStatus umi_ui_context_set_integer(UmiUiContextStore *store,
+                                     const char *key,
+                                     int64_t value)
+{
+    UmiUiContextSnapshot item = {0};
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (key == NULL || key[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    if (!umi_ui_copy_text(item.key, sizeof(item.key), key))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    item.kind = UMI_UI_CONTEXT_INTEGER;
+    item.integer_value = value;
+    return set_value(store, &item);
+}
 
 /*
  * Provide the ui context set string operation used by this module and its client
  * applications.
  */
+/* Reject truncated context identity or text before publication.
+ * Existing setters retain their one-key behaviour; checked copies keep keys distinct.
+ * The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_ui_context_set_string(UmiUiContextStore *store,
                                     const char *key,
                                     const char *value)
@@ -183,6 +237,26 @@ UmiStatus umi_ui_context_set_string(UmiUiContextStore *store,
     item.kind = UMI_UI_CONTEXT_STRING;
     return set_value(store, &item);
 }
+#endif
+UmiStatus umi_ui_context_set_string(UmiUiContextStore *store,
+                                    const char *key,
+                                    const char *value)
+{
+    UmiUiContextSnapshot item = {0};
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (key == NULL || key[0] == '\0' || value == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (!umi_ui_copy_text(item.key, sizeof(item.key), key))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (!umi_ui_copy_text(item.string_value, sizeof(item.string_value), value))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    item.kind = UMI_UI_CONTEXT_STRING;
+    return set_value(store, &item);
+}
 
 /* Provide the ui context unset operation used by this module and its client applications. */
 UmiStatus umi_ui_context_unset(UmiUiContextStore *store, const char *key)
@@ -194,6 +268,13 @@ UmiStatus umi_ui_context_unset(UmiUiContextStore *store, const char *key)
      */
     if (store == NULL || key == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)umi_mutex_lock(store->mutex);
+    /* A revision guards reviewed changes. Never wrap it back to an earlier
+     * observation, even when an older single-key entry point is used. */
+    if (store->revision == UINT64_MAX) {
+        (void)umi_mutex_unlock(store->mutex);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     index = find_item(store, key);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
@@ -426,4 +507,132 @@ int umi_ui_context_evaluate(const UmiUiContextStore *store,
         cursor = next + 2;
     }
     return 1;
+}
+
+
+/* Check every fixed string before strcmp/copy. The batch accepts only the
+ * active typed field; unused fields are cleared in the published candidate. */
+static UmiStatus ContextChangeValidate(const UmiUiContextChange *change)
+{
+    if (memchr(change->value.key, '\0', sizeof(change->value.key)) == NULL ||
+        change->value.key[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    if (change->operation == UMI_UI_CONTEXT_CHANGE_REMOVE) return UMI_STATUS_OK;
+    if (change->operation != UMI_UI_CONTEXT_CHANGE_SET) return UMI_STATUS_INVALID_ARGUMENT;
+    switch (change->value.kind) {
+    case UMI_UI_CONTEXT_BOOLEAN:
+        return change->value.boolean_value == 0 || change->value.boolean_value == 1
+            ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+    case UMI_UI_CONTEXT_INTEGER: return UMI_STATUS_OK;
+    case UMI_UI_CONTEXT_STRING:
+        return memchr(change->value.string_value, '\0', sizeof(change->value.string_value)) != NULL
+            ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+    default: return UMI_STATUS_INVALID_ARGUMENT;
+    }
+}
+
+/* Search bounded candidate rows without needing another mutex or live store. */
+static size_t ContextCandidateFind(const UmiUiContextSnapshot *items, size_t count, const char *key)
+{
+    for (size_t index = 0U; index < count; ++index)
+        if (strcmp(items[index].key, key) == 0) return index;
+    return SIZE_MAX;
+}
+
+UmiStatus UmiUiContextApplyChanges(UmiUiContextStore *store, uint64_t expected_revision,
+    const UmiUiContextChange *changes, size_t count, uint64_t *out_revision)
+{
+    if (store == NULL || (count != 0U && changes == NULL)) return UMI_STATUS_INVALID_ARGUMENT;
+    if (count > UMI_UI_CONTEXT_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    for (size_t index = 0U; index < count; ++index) {
+        UmiStatus checked = ContextChangeValidate(&changes[index]);
+        if (checked != UMI_STATUS_OK) return checked;
+        for (size_t previous = 0U; previous < index; ++previous)
+            if (strcmp(changes[previous].value.key, changes[index].value.key) == 0)
+                return UMI_STATUS_ALREADY_EXISTS;
+    }
+    /* The UI model can be large. Use heap storage rather than consuming the
+     * native thread's C stack; allocation failure leaves the live model alone. */
+    UmiUiContextSnapshot *candidate = count != 0U
+        ? calloc(UMI_UI_CONTEXT_MAX, sizeof(*candidate)) : NULL;
+    if (count != 0U && candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    UmiStatus status = umi_mutex_lock(store->mutex);
+    if (status != UMI_STATUS_OK) { free(candidate); return status; }
+    if (store->revision != expected_revision) status = UMI_STATUS_INVALID_STATE;
+    else if (count != 0U && store->revision == UINT64_MAX) status = UMI_STATUS_CAPACITY_EXCEEDED;
+    size_t candidate_count = store->count;
+    if (status == UMI_STATUS_OK && count != 0U) {
+        memcpy(candidate, store->items, store->count * sizeof(*candidate));
+        for (size_t index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
+            if (changes[index].operation != UMI_UI_CONTEXT_CHANGE_REMOVE) continue;
+            size_t found = ContextCandidateFind(candidate, candidate_count, changes[index].value.key);
+            if (found == SIZE_MAX) { status = UMI_STATUS_NOT_FOUND; break; }
+            memmove(candidate + found, candidate + found + 1U, (candidate_count - found - 1U) * sizeof(*candidate));
+            memset(&candidate[--candidate_count], 0, sizeof(*candidate));
+        }
+        for (size_t index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
+            if (changes[index].operation != UMI_UI_CONTEXT_CHANGE_SET) continue;
+            const UmiUiContextSnapshot *value = &changes[index].value;
+            size_t found = ContextCandidateFind(candidate, candidate_count, value->key);
+            if (found == SIZE_MAX) {
+                if (candidate_count == UMI_UI_CONTEXT_MAX) { status = UMI_STATUS_CAPACITY_EXCEEDED; break; }
+                found = candidate_count++;
+            }
+            UmiUiContextSnapshot normalized = {0};
+            memcpy(normalized.key, value->key, strlen(value->key) + 1U);
+            normalized.kind = value->kind;
+            if (value->kind == UMI_UI_CONTEXT_BOOLEAN) normalized.boolean_value = value->boolean_value;
+            else if (value->kind == UMI_UI_CONTEXT_INTEGER) normalized.integer_value = value->integer_value;
+            else memcpy(normalized.string_value, value->string_value, strlen(value->string_value) + 1U);
+            candidate[found] = normalized;
+        }
+        if (status == UMI_STATUS_OK) {
+            memcpy(store->items, candidate, sizeof(store->items));
+            store->count = candidate_count;
+            ++store->revision;
+        }
+    }
+    if (status == UMI_STATUS_OK && out_revision != NULL) *out_revision = store->revision;
+    (void)umi_mutex_unlock(store->mutex);
+    free(candidate);
+    return status;
+}
+
+/* Capture related keys under the owner's mutex. The temporary rows keep every
+ * caller output unchanged if validation, allocation or locking fails. */
+UmiStatus UmiUiContextReadKeys(const UmiUiContextStore *store,
+    const char *const *keys, size_t count, UmiUiContextObservation *out_items,
+    uint64_t *out_revision)
+{
+    UmiUiContextObservation *candidate;
+    UmiStatus status;
+    uint64_t revision;
+    size_t index;
+    if (store == NULL || (count != 0U && (keys == NULL || out_items == NULL)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (count > UMI_UI_CONTEXT_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    for (index = 0U; index < count; ++index) {
+        size_t length;
+        if (keys[index] == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+        for (length = 0U; length < UMI_UI_CONTEXT_KEY_CAPACITY && keys[index][length] != '\0'; ++length) {}
+        if (length == 0U || length == UMI_UI_CONTEXT_KEY_CAPACITY)
+            return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    candidate = count != 0U ? calloc(count, sizeof(*candidate)) : NULL;
+    if (count != 0U && candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = umi_mutex_lock(store->mutex);
+    if (status != UMI_STATUS_OK) { free(candidate); return status; }
+    revision = store->revision;
+    for (index = 0U; index < count; ++index) {
+        size_t found = find_item(store, keys[index]);
+        if (found != SIZE_MAX) {
+            candidate[index].found = 1;
+            candidate[index].value = store->items[found];
+        }
+    }
+    (void)umi_mutex_unlock(store->mutex);
+    /* Neither store pointers nor borrowed strings escape the locked read. */
+    if (count != 0U) memcpy(out_items, candidate, count * sizeof(*candidate));
+    if (out_revision != NULL) *out_revision = revision;
+    free(candidate);
+    return UMI_STATUS_OK;
 }

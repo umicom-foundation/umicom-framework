@@ -18,6 +18,8 @@
  * contract does not expose toolkit objects, C++ types, or private structures.
  */
 #include "umicom/test_platform/run_profile.h"
+#include "../base/value_archive_internal.h"
+#include "../base/registry_archive_internal.h"
 #include "../base/snapshot_registry_internal.h"
 
 /* Validate every bounded text member before lookup. Value-only snapshot
@@ -248,3 +250,83 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_test_platform_run_profile_registry_edit_if
  * this owner's existing row order and normalized fields remain authoritative. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_test_platform_run_profile_registry_read_page,
     UmiTestPlatformRunProfileRegistry, UmiTestPlatformRunProfileSnapshot, UMI_TEST_PLATFORM_RUN_PROFILE_CAPACITY)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x9029d34d9fc9f705);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTestPlatformRunProfileSnapshot *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTestPlatformRunProfileSnapshot *)0)->name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTestPlatformRunProfileSnapshot *)0)->mode)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTestPlatformRunProfileSnapshot *)0)->configuration)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTestPlatformRunProfileSnapshot *)0)->filter)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiTestPlatformRunProfileSnapshot *)0)->id) - 1U +
+        8U + sizeof(((UmiTestPlatformRunProfileSnapshot *)0)->name) - 1U +
+        8U + sizeof(((UmiTestPlatformRunProfileSnapshot *)0)->mode) - 1U +
+        8U + sizeof(((UmiTestPlatformRunProfileSnapshot *)0)->configuration) - 1U +
+        8U + sizeof(((UmiTestPlatformRunProfileSnapshot *)0)->filter) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiTestPlatformRunProfileSnapshot *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->name, sizeof(value->name));
+    UmiArchiveWriteText(writer, value->mode, sizeof(value->mode));
+    UmiArchiveWriteText(writer, value->configuration, sizeof(value->configuration));
+    UmiArchiveWriteText(writer, value->filter, sizeof(value->filter));
+    UmiArchiveWriteSigned(writer, (int64_t)value->debug);
+    UmiArchiveWriteSigned(writer, (int64_t)value->coverage);
+    UmiArchiveWriteSigned(writer, (int64_t)value->default_profile);
+    UmiArchiveWriteSigned(writer, (int64_t)value->include_disabled);
+    UmiArchiveWriteSigned(writer, (int64_t)value->stop_on_failure);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->repeat_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->timeout_ms);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiTestPlatformRunProfileSnapshot *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->name, sizeof(value->name));
+    UmiArchiveReadText(reader, value->mode, sizeof(value->mode));
+    UmiArchiveReadText(reader, value->configuration, sizeof(value->configuration));
+    UmiArchiveReadText(reader, value->filter, sizeof(value->filter));
+    value->debug = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->coverage = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->default_profile = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->include_disabled = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->stop_on_failure = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->repeat_count = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->timeout_ms = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus ArchiveValidate(const UmiTestPlatformRunProfileSnapshot *value)
+{
+    return umi_test_platform_run_profile_snapshot_validate(value, NULL);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_test_platform_run_profile_snapshot_archive_encode, umi_test_platform_run_profile_snapshot_archive_decode,
+    UmiTestPlatformRunProfileSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Restoring this complete collection reuses its existing reviewed replacement
+ * rules. Decoding a saved value alone never changes a live registry. */
+UMI_DEFINE_REGISTRY_ARCHIVE(umi_test_platform_run_profile_registry_archive_encode, umi_test_platform_run_profile_registry_archive_restore,
+    UmiTestPlatformRunProfileRegistry, UmiTestPlatformRunProfileSnapshot, UMI_TEST_PLATFORM_RUN_PROFILE_CAPACITY, ArchiveSchema,
+    umi_test_platform_run_profile_snapshot_archive_encode, umi_test_platform_run_profile_snapshot_archive_decode, umi_test_platform_run_profile_registry_replace_if_current)

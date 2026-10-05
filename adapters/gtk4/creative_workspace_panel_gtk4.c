@@ -7,6 +7,13 @@
  *---------------------------------------------------------------------------*/
 #include "creative_workspace_private.h"
 #include "umicom/ui/gtk4/creative_audio.h"
+#include "umicom/ui/gtk4/creative_assets.h"
+#include "umicom/ui/gtk4/creative_library.h"
+#include "umicom/ui/gtk4/audio_arrangement.h"
+#include "umicom/media_generation/heygen_gtk4.h"
+#include "umicom/media_generation/seedream_gtk4.h"
+#include "umicom/media_generation/pixverse_gtk4.h"
+#include "umicom/ui/gtk4/song_plan_gtk4.h"
 #include <string.h>
 /* Each connected object is retained until its signal has been disconnected.
  * A caller retaining a button beyond the panel lifetime gets an inert widget. */
@@ -195,6 +202,67 @@ UmiStatus UmiCreativeGtkPanelCreate(UmiDataServer * server, const char * profile
     if (strcmp(profile, "music") == 0 || strcmp(profile, "media") == 0) {
         GtkWidget *audioPage = Page(GTK_NOTEBOOK(notebook), "Audio clip");
         gtk_box_append(GTK_BOX(audioPage), UmiCreativeAudioGtkCreate());
+    }
+    /* Asset capture is shared by creative products and remains separate from
+     * saved scene edits. Adding this last page preserves earlier tab indices. */
+    GtkWidget *assetPage = Page(GTK_NOTEBOOK(notebook), "Assets");
+    /* The inline editor construction is superseded by the named widget below
+     * so the shared library can reference it. The earlier construction remains
+     * disabled here for review; the same editor is still created exactly once. */
+#if 0
+    gtk_box_append(GTK_BOX(assetPage), UmiCreativeAssetsGtkCreate());
+#endif
+    /* Keep the same Assets page and capture editor. The library weakly refers
+     * to it so an explicit selected-asset copy can reuse PNG preview and edits. */
+    GtkWidget *assetEditor = UmiCreativeAssetsGtkCreate();
+    gtk_box_append(GTK_BOX(assetPage), assetEditor);
+    /* Media composes the Framework avatar workflow. Construction performs no
+     * storage or network access; each request starts from an explicit action. */
+    if (strcmp(profile, "media") == 0) {
+        GtkWidget *avatarPage = Page(GTK_NOTEBOOK(notebook), "Avatar videos");
+        GtkWidget *avatarPanel = NULL;
+        UmiStatus avatarStatus = UmiHeyGenGtkCreate("umicom-media", "default", &avatarPanel);
+        if (avatarStatus == UMI_STATUS_OK) gtk_box_append(GTK_BOX(avatarPage), avatarPanel);
+        else Text(avatarPage, umi_status_text(avatarStatus));
+    }
+
+    /* Image generation composes the same Framework request owner across desktop
+     * hosts. Appending a page preserves existing tools and their tab order. */
+    if (strcmp(profile, "media") == 0) {
+        GtkWidget *imagePage = Page(GTK_NOTEBOOK(notebook), "Seedream images");
+        GtkWidget *imagePanel = NULL;
+        UmiStatus imageStatus = UmiSeedreamGtkCreate("umicom-media", "default", &imagePanel);
+        if (imageStatus == UMI_STATUS_OK) gtk_box_append(GTK_BOX(imagePage), imagePanel);
+        else Text(imagePage, umi_status_text(imageStatus));
+    }
+    /* Media and Music compose the same owners. New pages are appended so the
+     * established tools, tab order and application behaviour stay available. */
+    if (strcmp(profile, "media") == 0 || strcmp(profile, "music") == 0) {
+        GtkWidget *songPage = Page(GTK_NOTEBOOK(notebook), "Song and video plan");
+        GtkWidget *songPanel = NULL;
+        UmiStatus songStatus = UmiSongPlanGtkCreate(&songPanel);
+        if (songStatus == UMI_STATUS_OK) gtk_box_append(GTK_BOX(songPage), songPanel);
+        else Text(songPage, umi_status_text(songStatus));
+        GtkWidget *videoPage = Page(GTK_NOTEBOOK(notebook), "PixVerse videos");
+        GtkWidget *videoPanel = NULL;
+        const char *application = strcmp(profile, "media") == 0 ? "umicom-media" : "umicom-music";
+        UmiStatus videoStatus = UmiPixVerseGtkCreate(application, "default", &videoPanel);
+        if (videoStatus == UMI_STATUS_OK) gtk_box_append(GTK_BOX(videoPage), videoPanel);
+        else Text(videoPage, umi_status_text(videoStatus));
+    }
+    /* Every creative profile composes the same portable asset library. Its
+     * appended page preserves existing tab indices and scene storage. */
+    GtkWidget *libraryPage = Page(GTK_NOTEBOOK(notebook), "Asset library");
+    GtkWidget *libraryPanel = UmiCreativeAssetLibraryGtkCreate(assetEditor);
+    if (libraryPanel != NULL) gtk_box_append(GTK_BOX(libraryPage), libraryPanel);
+    else Text(libraryPage, "The asset library could not be created.");
+    /* Audio placement and rendering are shared services. Media and Music only
+     * compose the native page; other hosts can use the same portable plan. */
+    if (strcmp(profile, "media") == 0 || strcmp(profile, "music") == 0) {
+        GtkWidget *arrangementPage = Page(GTK_NOTEBOOK(notebook), "Audio arrangement");
+        GtkWidget *arrangementPanel = UmiCreativeAudioArrangementGtkCreate();
+        if (arrangementPanel != NULL) gtk_box_append(GTK_BOX(arrangementPage), arrangementPanel);
+        else Text(arrangementPage, "The audio arrangement could not be created.");
     }
     GtkWidget * right = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
     gtk_paned_set_end_child(GTK_PANED(paned), right);

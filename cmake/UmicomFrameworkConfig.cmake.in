@@ -4,11 +4,13 @@ include(CMakeFindDependencyMacro)
 find_dependency(Threads)
 @UMICOM_FRAMEWORK_FIND_SQLITE@
 @UMICOM_FRAMEWORK_FIND_CAIRO@
+@UMICOM_FRAMEWORK_FIND_PNG@
 
 # Optional AI transport dependencies are installed only when that capability
 # is composed. Resolve them before importing static-library link interfaces;
 # a core-only Framework installation has no such fragment and remains unchanged.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiWorkspaceDependencies.cmake" OPTIONAL)
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomConnectionCheckDependencies.cmake" OPTIONAL)
 # Market-tape presentation has an optional, separately installed GTK dependency.
 # A core-only installation does not acquire a GUI requirement.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomMarketTapeDependencies.cmake" OPTIONAL)

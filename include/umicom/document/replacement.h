@@ -9,6 +9,7 @@
 #ifndef UMICOM_DOCUMENT_REPLACEMENT_H
 #define UMICOM_DOCUMENT_REPLACEMENT_H
 #include "umicom/document/coordinator.h"
+#include "umicom/editor/search_engine.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -76,6 +77,14 @@ UmiStatus UmiDocumentCoordinatorApplyReplacement(UmiDocumentCoordinator *coordin
 
 /** Release owned text and metadata. Accepts NULL, including after Apply. */
 void UmiDocumentReplacementPlanDestroy(UmiDocumentReplacementPlan *plan);
+/** Prepare the same immutable review with explicit case and whole-word policy.
+ * NULL keeps smart case. Only case_mode and whole_word are used; match limits
+ * and overlapping search do not truncate complete replacement. Policy is
+ * copied into the proposal, so later caller changes cannot alter approval. */
+UmiStatus UmiDocumentCoordinatorPrepareReplacementWithOptions(UmiDocumentCoordinator *coordinator,
+    UmiDocumentId documentId, const char *needle, const char *replacement,
+    const UmiEditorSearchOptions *options, UmiDocumentReplacementPlan **outPlan);
+
 #ifdef __cplusplus
 }
 #endif

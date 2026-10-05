@@ -15,6 +15,7 @@
 #ifndef UMICOM_COMPILER_NATIVE_DECLARATION_H
 #define UMICOM_COMPILER_NATIVE_DECLARATION_H
 #include <stdbool.h>
+#include "umicom/base/value_archive.h"
 #include <stdint.h>
 #include "umicom/base/status.h"
 #include "umicom/compiler/native/types.h"
@@ -38,6 +39,17 @@ UmiStatus umi_nc_declaration_init(UmiNativeDeclaration *declaration,uint32_t nod
  * Check that nc declaration satisfies its contract before another service relies on it.
  */
 UmiStatus umi_nc_declaration_validate(const UmiNativeDeclaration *declaration);
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_nc_declaration_archive_encode(const UmiNativeDeclaration *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_nc_declaration_archive_decode(const void *bytes, size_t byte_count,
+    UmiNativeDeclaration *value);
+
 #ifdef __cplusplus
 }
 #endif

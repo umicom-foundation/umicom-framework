@@ -133,8 +133,45 @@ static int RecordMutationCases(void)
     return 0;
 }
 
+/* Use nonzero domain fields to expose a codec that accidentally drops
+ * values. The existing initializer supplies required compatibility metadata. */
+static UmiTestRuntimeDurationBudget ArchiveSample(void)
+{
+    UmiTestRuntimeDurationBudget value;
+    umi_test_runtime_duration_budget_init(&value, "archive-record");
+    value.category[0] = 'a';
+    value.detail[0] = 'a';
+    value.expected_ms = (uint64_t)6U;
+    value.maximum_ms = (uint64_t)7U;
+    value.revision = (uint64_t)8U;
+    value.active = true;
+    return value;
+}
+/* Unused tails are not part of a C string and must not enter saved bytes. */
+static void ArchiveFillUnusedText(UmiTestRuntimeDurationBudget *value)
+{
+    {
+        size_t used = strlen(value->id) + 1U;
+        memset(value->id + used, 0xa5, sizeof(value->id) - used);
+    }
+    {
+        size_t used = strlen(value->category) + 1U;
+        memset(value->category + used, 0xa5, sizeof(value->category) - used);
+    }
+    {
+        size_t used = strlen(value->detail) + 1U;
+        memset(value->detail + used, 0xa5, sizeof(value->detail) - used);
+    }
+}
+#define ARCHIVE_TYPE UmiTestRuntimeDurationBudget
+#define ARCHIVE_ENCODE umi_test_runtime_duration_budget_archive_encode
+#define ARCHIVE_DECODE umi_test_runtime_duration_budget_archive_decode
+#define ARCHIVE_EQUAL RecordDefaultsEqual
+#include "../value_archive/record_cases.h"
+
 int main(void)
 {
+    if (ArchiveRecordCases() != 0) return 1;
     if (RecordMutationCases() != 0) return 1;
     if (RecordConstructionCases() != 0) return 1;
     UmiTestRuntimeDurationBudget value,same;

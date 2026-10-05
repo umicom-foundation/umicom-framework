@@ -21,6 +21,7 @@
 #define UMICOM_DEBUG_WORKBENCH_DEBUG_WORKSPACE_PROFILE_H
 
 #include "umicom/debug/workbench/types.h"
+#include "umicom/base/value_archive.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -64,6 +65,17 @@ int umi_debug_workbench_debug_workspace_profile_view_visible(const UmiDebugWorkb
  * service relies on it.
  */
 int umi_debug_workbench_debug_workspace_profile_valid(const UmiDebugWorkbenchDebugWorkspaceProfile *model);
+
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_debug_workbench_debug_workspace_profile_archive_encode(const UmiDebugWorkbenchDebugWorkspaceProfile *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_debug_workbench_debug_workspace_profile_archive_decode(const void *bytes, size_t byte_count,
+    UmiDebugWorkbenchDebugWorkspaceProfile *value);
 
 #ifdef __cplusplus
 }

@@ -17,6 +17,7 @@
 #define UMICOM_OBSERVABILITY_PERFORMANCE_DASHBOARD_LAYOUT_H
 
 #include <stdbool.h>
+#include "umicom/base/value_archive.h"
 #include <stddef.h>
 #include <stdint.h>
 #include "umicom/observability/performance/types.h"
@@ -54,6 +55,17 @@ UmiStatus umi_performance_dashboard_layout_observe(UmiPerformanceDashboardLayout
 bool umi_performance_dashboard_layout_same_identity(const UmiPerformanceDashboardLayout *left, const UmiPerformanceDashboardLayout *right);
 /* Domain-specific policy helper for dashboard layout. */
 bool umi_performance_dashboard_layout_capacity_available(size_t count, size_t capacity);
+
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_performance_dashboard_layout_archive_encode(const UmiPerformanceDashboardLayout *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_performance_dashboard_layout_archive_decode(const void *bytes, size_t byte_count,
+    UmiPerformanceDashboardLayout *value);
 
 #ifdef __cplusplus
 }

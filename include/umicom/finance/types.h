@@ -20,6 +20,7 @@
 #ifndef UMICOM_FINANCE_TYPES_H
 #define UMICOM_FINANCE_TYPES_H
 #include <stdint.h>
+#include "umicom/base/value_archive.h"
 #include <stddef.h>
 #ifdef __cplusplus
 extern "C" {
@@ -89,6 +90,24 @@ typedef struct UmiDecimal {
     int64_t coefficient;
     uint8_t scale;
 } UmiDecimal;
+
+/** Transfer this value using the portable format described in value_archive.h.
+ * NULL bytes with zero capacity measures the required size. Decode validates
+ * all fields before publishing and leaves the destination unchanged on refusal.
+ * Keep source and destination storage separate. Neither call performs I/O. */
+UmiStatus umi_currency_archive_encode(const UmiCurrency *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_currency_archive_decode(const void *bytes, size_t byte_count,
+    UmiCurrency *value);
+
+/** Transfer this value using the portable format described in value_archive.h.
+ * NULL bytes with zero capacity measures the required size. Decode validates
+ * all fields before publishing and leaves the destination unchanged on refusal.
+ * Keep source and destination storage separate. Neither call performs I/O. */
+UmiStatus umi_financial_id_archive_encode(const UmiFinancialId *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_financial_id_archive_decode(const void *bytes, size_t byte_count,
+    UmiFinancialId *value);
 
 #ifdef __cplusplus
 }

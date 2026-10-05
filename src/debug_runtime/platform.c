@@ -14,6 +14,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/platform.h"
+#include "umicom/base/arguments.h"
+#include "umicom/debug_runtime/variable_assignment.h"
 
 #include "umicom/base/text.h"
 #include "deadline.h"
@@ -2445,6 +2447,9 @@ UmiStatus umi_debug_runtime_platform_restart_frame(
  * Provide the debug runtime platform set variable operation used by this module and its
  * client applications.
  */
+/* Assignment responses carry body.value. The strict assignment decoder replaces the evaluate decoder, and heap storage replaces the large stack envelope.
+ * The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_debug_runtime_platform_set_variable(
     UmiDebugRuntimePlatform *platform,
     uint64_t variables_reference,
@@ -2493,11 +2498,77 @@ UmiStatus umi_debug_runtime_platform_set_variable(
     if (status == UMI_STATUS_OK) platform->revision += 1U;
     return status;
 }
+#endif
+UmiStatus umi_debug_runtime_platform_set_variable(
+    UmiDebugRuntimePlatform *platform,
+    uint64_t variables_reference,
+    const char *name,
+    const char *value,
+    uint32_t timeout_ms,
+    UmiDebugRuntimeEvaluateResult *out_result)
+{
+    UmiDebugRuntimeEnvelope *response = NULL;
+    uint64_t sequence = 0U;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (platform == NULL || platform->adapter == NULL ||
+        name == NULL || value == NULL || out_result == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (!platform->capabilities.supports_set_variable) {
+        return UMI_STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Keep large protocol buffers off the native UI stack. Decode the value
+     * field required by assignment replies instead of evaluate's result field. */
+    if (platform->revision == UINT64_MAX || umi_debug_variable_registry_revision(
+        umi_debug_service_variable(platform->service)) == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    response = malloc(sizeof *response);
+    if (response == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    /* Raw compatibility callers can also invalidate adapter object references.
+     * Clear captured values before any possible transport write, including a
+     * write whose reply later fails. Caller-visible request status is retained;
+     * a fresh inspection is needed after using either assignment entry point. */
+    umi_debug_variable_registry_clear(umi_debug_service_variable(platform->service));
+    platform->revision++;
+    status = umi_debug_runtime_request_set_variable(
+        platform->adapter,
+        variables_reference,
+        name,
+        value,
+        &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) { free(response); return status; }
+
+    status = umi_debug_runtime_adapter_wait_response(
+        platform->adapter,
+        sequence,
+        timeout_ms,
+        response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) { free(response); return status; }
+
+    status = strcmp(response->command, "setVariable") == 0 ?
+        UmiDebugRuntimeDecodeAssignmentValue(response->json, out_result) : UMI_STATUS_PARSE_ERROR;
+    free(response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    /* The operation generation advanced before the attempted mutation. */
+    return status;
+}
 
 /*
  * Provide the debug runtime platform set expression operation used by this module and its
  * client applications.
  */
+/* Assignment responses carry body.value. The strict assignment decoder replaces the evaluate decoder, and heap storage replaces the large stack envelope.
+ * The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_debug_runtime_platform_set_expression(
     UmiDebugRuntimePlatform *platform,
     const char *expression,
@@ -2544,6 +2615,69 @@ UmiStatus umi_debug_runtime_platform_set_expression(
     status = umi_debug_runtime_decode_evaluate(response.json, out_result);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) platform->revision += 1U;
+    return status;
+}
+#endif
+UmiStatus umi_debug_runtime_platform_set_expression(
+    UmiDebugRuntimePlatform *platform,
+    const char *expression,
+    const char *value,
+    uint64_t frame_id,
+    uint32_t timeout_ms,
+    UmiDebugRuntimeEvaluateResult *out_result)
+{
+    UmiDebugRuntimeEnvelope *response = NULL;
+    uint64_t sequence = 0U;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (platform == NULL || platform->adapter == NULL ||
+        expression == NULL || value == NULL || out_result == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (!platform->capabilities.supports_set_expression) {
+        return UMI_STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Keep large protocol buffers off the native UI stack. Decode the value
+     * field required by assignment replies instead of evaluate's result field. */
+    if (platform->revision == UINT64_MAX || umi_debug_variable_registry_revision(
+        umi_debug_service_variable(platform->service)) == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    response = malloc(sizeof *response);
+    if (response == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    /* Raw compatibility callers can also invalidate adapter object references.
+     * Clear captured values before any possible transport write, including a
+     * write whose reply later fails. Caller-visible request status is retained;
+     * a fresh inspection is needed after using either assignment entry point. */
+    umi_debug_variable_registry_clear(umi_debug_service_variable(platform->service));
+    platform->revision++;
+    status = umi_debug_runtime_request_set_expression(
+        platform->adapter,
+        expression,
+        value,
+        frame_id,
+        &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) { free(response); return status; }
+
+    status = umi_debug_runtime_adapter_wait_response(
+        platform->adapter,
+        sequence,
+        timeout_ms,
+        response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) { free(response); return status; }
+
+    status = strcmp(response->command, "setExpression") == 0 ?
+        UmiDebugRuntimeDecodeAssignmentValue(response->json, out_result) : UMI_STATUS_PARSE_ERROR;
+    free(response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    /* The operation generation advanced before the attempted mutation. */
     return status;
 }
 
@@ -2766,6 +2900,21 @@ UmiStatus UmiDebugRuntimePlatformLaunchNative(UmiDebugRuntimePlatform *platform,
         "native.launch", json, 0, working_directory, timeout_ms);
 }
 
+/* A vector is formatted losslessly before reaching the established native
+ * launcher. This keeps adapter selection, launch evidence and DAP setup in one
+ * place while making Run and Debug agree on empty values and quoted paths. */
+UmiStatus UmiDebugRuntimePlatformLaunchArguments(UmiDebugRuntimePlatform *platform,
+    const char *kind, const char *executable, const char *program,
+    const char *working_directory, const char *const *arguments, size_t count,
+    uint32_t timeout_ms)
+{
+    char text[sizeof(((UmiDebugLaunchConfigurationSnapshot *)0)->arguments)];
+    UmiStatus status = UmiArgumentsFormat(arguments, count, text, sizeof(text));
+    if (status != UMI_STATUS_OK) return status;
+    return UmiDebugRuntimePlatformLaunchNative(platform, kind, executable, program,
+        working_directory, text, timeout_ms);
+}
+
 UmiStatus UmiDebugRuntimePlatformInspectStopped(UmiDebugRuntimePlatform *platform,
     uint32_t timeout_ms)
 {
@@ -2812,3 +2961,7 @@ UmiStatus UmiDebugRuntimePlatformInspectStopped(UmiDebugRuntimePlatform *platfor
 
 /* Explicit child captures avoid replacing roots or reusing stale adapter IDs. */
 #include "variable_request.inc"
+#include "memory_request.inc"
+
+/* Share captured assignment policy with every native debugger host. */
+#include "variable_assignment.inc"

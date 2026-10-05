@@ -22,6 +22,7 @@
 #include "umicom/web/listener.h"
 #include "umicom/web/server_state.h"
 #include "umicom/web/service.h"
+#include "umicom/web/connection.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -50,6 +51,20 @@ UmiStatus umi_web_server_stop(UmiWebServer *server);
  * Provide the web server state operation used by this module and its client applications.
  */
 const UmiWebServerState *umi_web_server_state(const UmiWebServer *server);
+/* Serve one connection on a started, explicitly loopback-only IPv4 server
+ * bound to 127.0.0.1. Native Windows/POSIX adapter; other hosts may return
+ * NOT_IMPLEMENTED. wait_ms and exchange_ms are 1..60000. The exchange deadline
+ * covers reading and writing, but cannot preempt an application handler.
+ * Call from a dedicated owner/worker thread, never a GUI event handler.
+ * Keep server/service alive and unchanged until return. Handlers must not
+ * stop, start or destroy them; a nested ServeNext returns BUSY. Only Cancel's
+ * token may be requested from another thread. The token remains host-owned.
+ * Every accepted socket is closed. A timeout/error leaves the listener alive;
+ * no request is retried. This is unauthenticated local development transport,
+ * not a public hosting, TLS, sandbox or application authorization service. */
+UmiStatus UmiWebServerServeNext(UmiWebServer *server,uint32_t wait_ms,uint32_t exchange_ms,
+    const UmiCancellationToken *cancel,UmiWebExchangeResult *out);
+
 #ifdef __cplusplus
 }
 #endif

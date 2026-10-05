@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include <string.h>
+#include "../../base/value_archive_internal.h"
 #include "umicom/observability/performance/memory_pressure.h"
 
 /* Initialise deterministic record metadata before any measurement is observed. */
@@ -41,6 +42,13 @@ UmiStatus umi_performance_memory_pressure_init(UmiPerformanceMemoryPressure *rec
 
 /* Reject incompatible ABI snapshots and malformed stable identifiers. */
 UmiStatus umi_performance_memory_pressure_validate(const UmiPerformanceMemoryPressure *record) {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->id, '\0', sizeof(record->id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->subject_id, '\0', sizeof(record->subject_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -82,3 +90,66 @@ bool umi_performance_memory_pressure_same_identity(const UmiPerformanceMemoryPre
 bool umi_performance_memory_pressure_exceeds(double value, double threshold) {
     return value > threshold;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiPerformanceMemoryPressureArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x66f8cf732d46eb78);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPerformanceMemoryPressure *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPerformanceMemoryPressure *)0)->subject_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiPerformanceMemoryPressureArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiPerformanceMemoryPressure *)0)->id) - 1U +
+        8U + sizeof(((UmiPerformanceMemoryPressure *)0)->subject_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiPerformanceMemoryPressureArchiveWrite(UmiArchiveWriter *writer, const UmiPerformanceMemoryPressure *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->subject_id, sizeof(value->subject_id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->state);
+    UmiArchiveWriteSigned(writer, (int64_t)value->severity);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->timestamp_ns);
+    UmiArchiveWriteDouble(writer, value->value);
+    UmiArchiveWriteDouble(writer, value->auxiliary);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+}
+static void UmiPerformanceMemoryPressureArchiveRead(UmiArchiveReader *reader, UmiPerformanceMemoryPressure *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->subject_id, sizeof(value->subject_id));
+    value->state = (UmiPerformanceState)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->severity = (UmiPerformanceSeverity)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->timestamp_ns = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->value = UmiArchiveReadDouble(reader);
+    value->auxiliary = UmiArchiveReadDouble(reader);
+    value->count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiPerformanceMemoryPressureArchiveValidate(const UmiPerformanceMemoryPressure *value)
+{
+    return umi_performance_memory_pressure_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_performance_memory_pressure_archive_encode, umi_performance_memory_pressure_archive_decode,
+    UmiPerformanceMemoryPressure, UmiPerformanceMemoryPressureArchiveSchema, UmiPerformanceMemoryPressureArchiveBound, UmiPerformanceMemoryPressureArchiveWrite, UmiPerformanceMemoryPressureArchiveRead, UmiPerformanceMemoryPressureArchiveValidate)

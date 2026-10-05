@@ -1,0 +1,16 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-action-sources-test "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/test_action_sources.c")
+    target_link_libraries(umicom-action-sources-test PRIVATE Umicom::developer Umicom::editor Umicom::platform)
+    umicom_apply_warnings(umicom-action-sources-test)
+    umicom_apply_sanitizers(umicom-action-sources-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-action-sources-test)
+    endif()
+    foreach(case valid diagnostics secondary-diagnostics no-additional duplicate missing invalid-option cancel-before fragmented open-failure close-failure action-error shutdown-error malformed-action command disabled deferred annotated)
+        add_test(NAME framework.language_runtime.action_sources.${case} COMMAND umicom-action-sources-test ${case})
+        set_tests_properties(framework.language_runtime.action_sources.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;language;rename;ownership;regression")
+    endforeach()
+endif()

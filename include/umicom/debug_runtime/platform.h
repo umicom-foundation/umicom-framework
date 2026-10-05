@@ -83,6 +83,16 @@ UmiStatus UmiDebugRuntimePlatformLaunchNative(UmiDebugRuntimePlatform *platform,
     const char *kind, const char *executable, const char *program,
     const char *working_directory, const char *arguments, uint32_t timeout_ms);
 
+/** Launch a reviewed vector without reinterpreting its argument boundaries.
+ * Uses the same installed adapter, trust expectations, path checks and lifetime
+ * as LaunchNative. The lossless quoted representation must fit the existing
+ * native.launch arguments snapshot (1024 bytes); overflow refuses the launch.
+ * Empty arguments are retained. No shell expansion occurs. */
+UmiStatus UmiDebugRuntimePlatformLaunchArguments(UmiDebugRuntimePlatform *platform,
+    const char *kind, const char *executable, const char *program,
+    const char *working_directory, const char *const *arguments, size_t count,
+    uint32_t timeout_ms);
+
 /** Populate Threads, Stack, Scopes and non-expensive Variables after a stop.
  * Uses one shared timeout budget and the existing Debug Service registries.
  * Does not evaluate watches automatically: evaluating an expression can execute

@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/panel.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context panel from caller-provided values so later operations receive a known
@@ -33,6 +34,16 @@ record->revision=1U;
 /* Check that context panel satisfies its contract before another service relies on it. */
 UmiStatus umi_context_panel_validate(const UmiCrossApplicationPanel *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->panel_id, '\0', sizeof(record->panel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->application_id, '\0', sizeof(record->application_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->title, '\0', sizeof(record->title)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->component_id, '\0', sizeof(record->component_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->default_channel_id, '\0', sizeof(record->default_channel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -187,3 +198,63 @@ if(store->count!=0U)memcpy(out_records,store->items,store->count*sizeof(store->i
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiCrossApplicationPanelArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x38063a268dd99907);
+    schema = (schema ^ (uint64_t)sizeof(((UmiCrossApplicationPanel *)0)->panel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiCrossApplicationPanel *)0)->application_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiCrossApplicationPanel *)0)->title)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiCrossApplicationPanel *)0)->component_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiCrossApplicationPanel *)0)->default_channel_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiCrossApplicationPanelArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiCrossApplicationPanel *)0)->panel_id) - 1U +
+        8U + sizeof(((UmiCrossApplicationPanel *)0)->application_id) - 1U +
+        8U + sizeof(((UmiCrossApplicationPanel *)0)->title) - 1U +
+        8U + sizeof(((UmiCrossApplicationPanel *)0)->component_id) - 1U +
+        8U + sizeof(((UmiCrossApplicationPanel *)0)->default_channel_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiCrossApplicationPanelArchiveWrite(UmiArchiveWriter *writer, const UmiCrossApplicationPanel *value)
+{
+    UmiArchiveWriteText(writer, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveWriteText(writer, value->application_id, sizeof(value->application_id));
+    UmiArchiveWriteText(writer, value->title, sizeof(value->title));
+    UmiArchiveWriteText(writer, value->component_id, sizeof(value->component_id));
+    UmiArchiveWriteText(writer, value->default_channel_id, sizeof(value->default_channel_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->singleton);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->context_aware);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiCrossApplicationPanelArchiveRead(UmiArchiveReader *reader, UmiCrossApplicationPanel *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveReadText(reader, value->application_id, sizeof(value->application_id));
+    UmiArchiveReadText(reader, value->title, sizeof(value->title));
+    UmiArchiveReadText(reader, value->component_id, sizeof(value->component_id));
+    UmiArchiveReadText(reader, value->default_channel_id, sizeof(value->default_channel_id));
+    value->singleton = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->context_aware = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiCrossApplicationPanelArchiveValidate(const UmiCrossApplicationPanel *value)
+{
+    return umi_context_panel_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_panel_archive_encode, umi_context_panel_archive_decode,
+    UmiCrossApplicationPanel, UmiCrossApplicationPanelArchiveSchema, UmiCrossApplicationPanelArchiveBound, UmiCrossApplicationPanelArchiveWrite, UmiCrossApplicationPanelArchiveRead, UmiCrossApplicationPanelArchiveValidate)

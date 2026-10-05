@@ -19,6 +19,7 @@
 #include "umicom/ui/gtk4/workstation/shell_header.h"
 
 #include "umicom/application/portfolio.h"
+#include "umicom/ui/gtk4/application_processes.h"
 #include "umicom/ui/appearance_catalogue.h"
 #include "umicom/ui/gtk4/automation.h"
 
@@ -45,6 +46,7 @@ struct UmiGtk4WorkstationShellHeader {
     GtkWidget *application_catalogue_search;
     GtkWidget *application_catalogue_list;
     GtkWidget *application_catalogue_status;
+    GtkWidget *application_activity;
     GtkWidget *application_selected_count;
     GtkWidget *application_open_selected;
     GtkWidget *application_clear_selection;
@@ -53,6 +55,7 @@ struct UmiGtk4WorkstationShellHeader {
     GtkWidget *close_button;
     UmiGtk4WorkstationApplicationOpenHandler application_open_handler;
     void *application_open_user_data;
+    UmiGtk4ApplicationProcesses *application_processes;
     UmiApplicationRuntimeCatalogue *application_runtime_catalogue;
     UmiApplicationLaunchSelection *application_selection;
     bool syncing_application_selection;
@@ -666,6 +669,7 @@ static void sync_application_selection(UmiGtk4WorkstationShellHeader *header)
         const char *id = g_object_get_data(G_OBJECT(item), "umicom-application-id");
         GtkWidget *check = g_object_get_data(G_OBJECT(item), "umicom-application-check");
         GtkWidget *open = g_object_get_data(G_OBJECT(item), "umicom-application-open");
+        GtkWidget *new_instance = g_object_get_data(G_OBJECT(item), "umicom-application-new-instance");
         GtkWidget *availability = g_object_get_data(
             G_OBJECT(item), "umicom-application-availability");
         UmiApplicationLaunchChoice choice;
@@ -684,6 +688,8 @@ static void sync_application_selection(UmiGtk4WorkstationShellHeader *header)
             (choice.eligible || choice.selected));
         gtk_widget_set_sensitive(open,
             !header->dispatching_applications && choice.eligible);
+        if (new_instance != NULL)
+            gtk_widget_set_sensitive(new_instance,!header->dispatching_applications && choice.eligible);
         if (!record.installed) {
             message = "Native GUI not found. Build or install it, then Refresh.";
         } else if (!choice.eligible) {
@@ -762,7 +768,67 @@ UmiStatus umi_gtk4_ws_shell_header_catalogue_snapshot(
         header->application_selection, out_snapshot);
 }
 
+/* Display bounded process evidence separately from selection and filtering.
+ * Plain text is selectable for support, stays in memory, and contains no
+ * arguments, credentials or captured process output. */
+static void refresh_application_activity(UmiGtk4WorkstationShellHeader *header)
+{
+    GString *text;
+    UmiApplicationLaunchReceipt receipt;
+    size_t count = 0U;
+    if (header->application_activity == NULL || header->destroy_pending) return;
+    text = g_string_new("");
+    for (size_t index=0U; index<UMI_APPLICATION_LAUNCH_RECEIPT_CAPACITY; ++index) {
+        char description[256];
+        if (UmiGtk4ApplicationProcessesAt(header->application_processes,index,&receipt) != UMI_STATUS_OK) break;
+        if (UmiApplicationLaunchReceiptDescribe(&receipt,description,sizeof(description)) != UMI_STATUS_OK) continue;
+        g_string_append_printf(text,"%s\n%s\n%s\n\n",receipt.application_id,description,receipt.executable_path);
+        ++count;
+    }
+    if (count == 0U) g_string_append(text,"No native launches from this application window. Requests delegated to another host are reported by that host.");
+    gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(header->application_activity)),text->str,-1);
+    g_string_free(text,TRUE);
+}
+
+/* Copy native evidence into the existing catalogue row. A previous instance's
+ * late exit must not replace the visible outcome of a newer launch. This
+ * callback is detached before header release; wait completion owns no widgets. */
+static void on_application_process_changed(const UmiApplicationLaunchReceipt *receipt, void *context)
+{
+    UmiGtk4WorkstationShellHeader *header = context;
+    UmiApplicationLaunchReceipt latest;
+    char text[256];
+    if (header == NULL || header->destroy_pending) return;
+    header->operation_depth += 1U;
+    refresh_application_activity(header);
+    if (header->destroy_pending || UmiGtk4ApplicationProcessesLatest(header->application_processes,
+            receipt->application_id, &latest) != UMI_STATUS_OK || latest.id != receipt->id ||
+        UmiApplicationLaunchReceiptDescribe(receipt,text,sizeof(text)) != UMI_STATUS_OK) {
+        finish_header_operation(header);
+        return;
+    }
+    UmiStatus status = receipt->status;
+    if (receipt->state == UMI_APPLICATION_LAUNCH_RECEIPT_EXITED && receipt->exit_code != 0)
+        status = UMI_STATUS_UNAVAILABLE;
+    set_application_row_result(header,receipt->application_id,status,text);
+    finish_header_operation(header);
+}
+
+/* Consumers receive a value copy; no native process or receipt storage escapes. */
+UmiStatus UmiGtk4WorkstationApplicationReceipt(const UmiGtk4WorkstationShellHeader *header,
+    const char *application_id, UmiApplicationLaunchReceipt *out)
+{
+    if (header == NULL || header->destroy_pending) return UMI_STATUS_INVALID_ARGUMENT;
+    return UmiGtk4ApplicationProcessesLatest(header->application_processes,application_id,out);
+}
+
 /* Start one independently runnable application from the canonical portfolio. */
+/* The former fire-and-forget spawn could not report an early process exit.
+ * The shared native process owner below now reserves launch evidence, observes
+ * exit asynchronously and avoids duplicate standard opens. Explicit New window
+ * and delegated-host behaviour remain supported.
+ * The former implementation is retained for engineering review. */
+#if 0
 static UmiStatus launch_portfolio_application(
     UmiGtk4WorkstationShellHeader *header,
     const UmiApplicationDefinition *application,
@@ -863,6 +929,106 @@ finished:
     g_free(message);
     g_free(executable);
     if (error != NULL) g_error_free(error);
+    finish_header_operation(header);
+    return status;
+}
+#endif
+static UmiStatus launch_portfolio_application(
+    UmiGtk4WorkstationShellHeader *header,
+    const UmiApplicationDefinition *application,
+    UmiGtk4WorkstationApplicationOpenMode mode)
+{
+    char *executable = NULL;
+    char *message = NULL;
+    UmiStatus status = UMI_STATUS_OK;
+    uint64_t receipt_id = 0U;
+
+    if (header == NULL || header->destroy_pending || application == NULL ||
+        application->application_id == NULL ||
+        application->display_name == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    header->operation_depth += 1U;
+    if (mode == UMI_GTK4_WORKSTATION_APPLICATION_OPEN_STANDARD ||
+        mode == UMI_GTK4_WORKSTATION_APPLICATION_OPEN_NEW_WINDOW) {
+        UmiApplicationLaunchChoice choice;
+        status = umi_application_launch_selection_find(
+            header->application_selection, application->application_id, &choice);
+        if (status != UMI_STATUS_OK) goto reported;
+        if (!choice.eligible) {
+            status = UMI_STATUS_UNAVAILABLE;
+            message = g_strdup(choice.readiness_reason[0] != '\0'
+                ? choice.readiness_reason : "The shared launch gate blocks this application.");
+            goto reported;
+        }
+    }
+    if (header->application_open_handler != NULL) {
+        status = header->application_open_handler(
+            application->application_id,
+            mode,
+            header->application_open_user_data);
+        if (header->destroy_pending) goto finished;
+        if (status != UMI_STATUS_OK) {
+            message = g_strdup_printf(
+                "The active host declined %s: %s.",
+                application->display_name, umi_status_text(status));
+            goto reported;
+        }
+        goto reported;
+    }
+
+    executable = resolve_application_executable(application);
+    if (executable == NULL) {
+        message = g_strdup_printf(
+            "Native GUI for %s was not found. Build or install it, then Refresh.",
+            application->display_name);
+        status = UMI_STATUS_NOT_FOUND;
+        goto reported;
+    }
+
+    /* Framework owns native process evidence separately from this widget.
+     * A normal Open does not create another tracked instance; New window is
+     * the explicit route for independent windows. Delegated hosts above keep
+     * their established authority and do not enter this native launch path. */
+    status = UmiGtk4ApplicationProcessesStart(header->application_processes,
+        application->application_id, executable,
+        mode == UMI_GTK4_WORKSTATION_APPLICATION_OPEN_NEW_WINDOW, &receipt_id);
+    if (status == UMI_STATUS_ALREADY_EXISTS) {
+        message = g_strdup("An instance opened here is still active. Switch to its window, or use New window explicitly.");
+    } else if (receipt_id != 0U) {
+        UmiApplicationLaunchReceipt receipt;
+        char description[256];
+        if (UmiGtk4ApplicationProcessesLatest(header->application_processes,
+                application->application_id, &receipt) == UMI_STATUS_OK &&
+            UmiApplicationLaunchReceiptDescribe(&receipt,description,sizeof(description)) == UMI_STATUS_OK)
+            message = g_strdup(description);
+    }
+
+reported:
+    if (!header->destroy_pending) {
+        if (message == NULL && status != UMI_STATUS_OK)
+            message = g_strdup_printf("Launch request was not accepted: %s.",
+                umi_status_text(status));
+        set_application_row_result(header, application->application_id, status, message);
+        set_application_catalogue_status(header,
+            message != NULL ? message : (status == UMI_STATUS_OK
+                ? "Launch request accepted; startup is not yet confirmed."
+                : "Launch request was not accepted."),
+            status != UMI_STATUS_OK);
+        if (status == UMI_STATUS_OK && !header->dispatching_applications) {
+            (void)umi_application_launch_selection_set_selected(
+                header->application_selection, application->application_id, false);
+            sync_application_selection(header);
+            if (header->application_catalogue_button != NULL &&
+                gtk_widget_get_mapped(header->application_catalogue_button)) {
+                gtk_menu_button_popdown(
+                    GTK_MENU_BUTTON(header->application_catalogue_button));
+            }
+        }
+    }
+finished:
+    g_free(message);
+    g_free(executable);
     finish_header_operation(header);
     return status;
 }
@@ -1013,6 +1179,19 @@ static void on_application_catalogue_item_clicked(
         UMI_GTK4_WORKSTATION_APPLICATION_OPEN_STANDARD);
 }
 
+/* Each catalogue row can request an independent instance of that product.
+ * Reuse the host's existing New window authority; a declined request never
+ * falls back to an unmanaged process. Standard Open remains a separate action. */
+static void on_application_catalogue_new_window(GtkButton *button, gpointer data)
+{
+    UmiGtk4WorkstationShellHeader *header = data;
+    if (header == NULL || header->destroy_pending || header->dispatching_applications) return;
+    const char *id = g_object_get_data(G_OBJECT(button),"umicom-application-id");
+    const UmiApplicationDefinition *application = id != NULL ? umi_application_portfolio_find(id) : NULL;
+    if (application != NULL)
+        (void)launch_portfolio_application(header,application,UMI_GTK4_WORKSTATION_APPLICATION_OPEN_NEW_WINDOW);
+}
+
 /* Open another independent window for the current application. */
 static void on_new_application_window_clicked(
     GtkButton *button,
@@ -1120,6 +1299,21 @@ static GtkWidget *create_application_catalogue_item(
     gtk_box_append(GTK_BOX(item), check);
     gtk_box_append(GTK_BOX(item), content);
     gtk_box_append(GTK_BOX(item), button);
+    /* The explicit control avoids requiring users to launch the selected
+     * product first merely to find its own titlebar's New window button. */
+    GtkWidget *new_instance = gtk_button_new_with_label("New window");
+    gtk_widget_add_css_class(new_instance,"flat");
+    gtk_widget_set_valign(new_instance,GTK_ALIGN_START);
+    gtk_widget_set_tooltip_text(new_instance,"Open an independent instance of this application");
+    g_object_set_data_full(G_OBJECT(new_instance),"umicom-application-id",
+        g_strdup(application->application_id),g_free);
+    g_object_set_data(G_OBJECT(item),"umicom-application-new-instance",new_instance);
+    char *instance_id = g_strdup_printf("workstation.application.new-window.%s",application->application_id);
+    (void)umi_gtk4_automation_tag_widget(new_instance,instance_id);
+    g_free(instance_id);
+    g_signal_connect(new_instance,"clicked",G_CALLBACK(on_application_catalogue_new_window),header);
+    gtk_box_append(GTK_BOX(item),new_instance);
+
 
     search_text = g_strconcat(
         application->display_name,
@@ -1381,6 +1575,22 @@ static UmiStatus create_application_controls(
     gtk_box_append(
         GTK_BOX(catalogue_content),
         header->application_catalogue_status);
+    /* Process activity belongs to the shared catalogue, so every product
+     * exposes the same diagnostics without adding its own process manager. */
+    {
+        GtkWidget *activity = gtk_expander_new("Launch activity");
+        GtkWidget *activity_scroll = gtk_scrolled_window_new();
+        header->application_activity = gtk_text_view_new();
+        gtk_text_view_set_editable(GTK_TEXT_VIEW(header->application_activity),FALSE);
+        gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(header->application_activity),FALSE);
+        gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(header->application_activity),GTK_WRAP_WORD_CHAR);
+        (void)umi_gtk4_automation_tag_widget(header->application_activity,"workstation.application.activity");
+        gtk_widget_set_size_request(activity_scroll,-1,140);
+        gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(activity_scroll),header->application_activity);
+        gtk_expander_set_child(GTK_EXPANDER(activity),activity_scroll);
+        gtk_box_append(GTK_BOX(catalogue_content),activity);
+        refresh_application_activity(header);
+    }
     gtk_popover_set_child(
         GTK_POPOVER(header->application_catalogue_popover),
         catalogue_content);
@@ -1463,6 +1673,7 @@ static void disconnect_header_callbacks(
  * Disconnecting first also makes externally retained child widgets harmless. */
 static void release_header_storage(UmiGtk4WorkstationShellHeader *header)
 {
+    UmiGtk4ApplicationProcessesDestroy(header->application_processes);
     umi_application_launch_selection_destroy(header->application_selection);
     umi_application_runtime_catalogue_destroy(header->application_runtime_catalogue);
     g_free(header->resource_root);
@@ -1522,6 +1733,14 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
      * used.
      */
     if (header == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+
+    /* One shared receipt owner serves every native action in this header.
+     * Construction remains inert: only an explicit Open creates a process. */
+    status = UmiGtk4ApplicationProcessesCreate(&header->application_processes);
+    if (status == UMI_STATUS_OK)
+        status = UmiGtk4ApplicationProcessesObserve(header->application_processes,
+            on_application_process_changed, header);
+    if (status != UMI_STATUS_OK) goto fail;
 
     status = copy_text(
         header->state.application_id,
@@ -1693,6 +1912,10 @@ void umi_gtk4_ws_shell_header_destroy(
      */
     if (header == NULL || header->destroy_pending) return;
     header->destroy_pending = true;
+    /* Detach before callbacks are disconnected or deferred storage is released.
+     * Already opened applications keep running independently of this window. */
+    UmiGtk4ApplicationProcessesDestroy(header->application_processes);
+    header->application_processes = NULL;
     disconnect_header_callbacks(
         header->application_catalogue_popover, header);
     disconnect_header_callbacks(header->root, header);

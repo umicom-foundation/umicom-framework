@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Review replacements across open documents</title><style>body{font:17px/1.6 system-ui;max-width:900px;margin:3rem auto;padding:0 20px;color:#202630}code,pre{font-family:Consolas,monospace}pre{padding:1rem;background:#f1f4f7;overflow:auto}th,td{padding:.5rem;text-align:left;border-bottom:1px solid #ddd}a{color:#12649d}</style></head><body><h1>Review replacements across open documents</h1>
+<p>A draft is the text currently held by an editor, including changes that have not been saved.
+The document service can capture the set of open documents and ask the user to review a replacement in each draft.
+The service owns the sequence; applications supply the search text and present the decisions.</p>
+<h2>What the review includes</h2>
+<p>The starting set includes pinned tabs and untitled documents. Documents opened afterwards are excluded.
+The search is literal: punctuation is ordinary text, and replacement text has no template syntax.
+An ASCII uppercase letter in the search makes it case-sensitive; otherwise ASCII letters match without case.
+Non-ASCII text is matched exactly. An empty replacement removes matches; an empty search is rejected.</p>
+<p>Each question contains the complete draft and proposed text. Changes made before a document's turn
+appear in that question. Changes made after capture invalidate Apply, even if the text is later changed back.</p>
+<h2>Connect a native editor</h2>
+<ol><li>Bind the document coordinator with <code>UmiGtk4AdapterBindDocumentEditing</code>, using a completion callback that refreshes your application.</li>
+<li>Collect Find and Replace with fields. Call <code>UmiGtk4AdapterReviewOpenReplacements(adapter, needle, replacement)</code> on the GTK thread.</li>
+<li>Handle an immediate error using its returned status. A successful call opens the shared review window; no draft has yet been accepted.</li>
+<li>Let the shared window present Apply to this document, Skip this document and Stop. It prepares one document per idle dispatch.</li>
+<li>When the window closes, the existing edit callback reports completion, cancellation or failure and the document view is refreshed.</li>
+<li>Unbind editing before destroying the coordinator. This cancels pending work and disconnects controls retained by another owner.</li></ol>
+<p>Use <code>UmiGtk4AdapterReplacementReviewProgress</code> to inspect a live review and
+<code>UmiGtk4AdapterCancelReplacementReview</code> to stop and close it programmatically.
+The progress API returns <code>UMI_STATUS_NOT_FOUND</code> after the form closes.
+Native saving, closing and delayed paste cannot start another decision while the review is open.</p>
+<h2>Use the sequence without GTK</h2>
+<ol><li>Include <code>umicom/document/replacement_session.h</code> and create a session with the coordinator and two UTF-8 strings. The session copies both strings.</li>
+<li>Read progress. In READY, call <code>UmiDocumentReplacementSessionStep</code> once and inspect progress again. An OK return does not imply the whole sequence is complete.</li>
+<li>In REVIEW, call <code>UmiDocumentReplacementSessionTexts</code> and display both full buffers. They are borrowed until the next decision, cancellation or destruction; copy them for longer-lived widgets.</li>
+<li>Call <code>UmiDocumentReplacementSessionRespond</code> only after an explicit Apply, Skip or Stop decision. Apply repeats freshness checks against the captured document identity.</li>
+<li>At COMPLETE, CANCELLED or FAILED, display the counters and last status. Destroy the session when its progress is no longer needed.</li></ol>
+<p>Keep the coordinator, store and workbench alive while preparing, checking or applying. These are owner-thread operations.
+Cancellation, progress inspection and destruction use owned state and do not need to access the former coordinator.
+The implementation retains one complete text plan at a time; the existing document text limit still applies.</p>
+<h2>Understand the result</h2><table><thead><tr><th>Outcome</th><th>Meaning</th></tr></thead><tbody>
+<tr><td>Applied</td><td>The reviewed draft changed. It has its own Undo entry.</td></tr>
+<tr><td>Skipped</td><td>The user left this draft alone.</td></tr>
+<tr><td>Unchanged</td><td>No match or the replacement produced the same text.</td></tr>
+<tr><td>Read-only</td><td>The draft could not be edited when its turn started.</td></tr>
+<tr><td>Closed</td><td>The captured document no longer exists. A new tab with the same name is a different document.</td></tr>
+<tr><td>Remaining</td><td>Documents still awaiting a completed outcome, including a stopped or failed current question.</td></tr>
+</tbody></table><p>These document counts add up to the original total. The separate replacement count includes only accepted drafts.</p>
+<h2>Recover from a stopped review</h2>
+<p>If a draft changes, becomes read-only during its question, is saved under a different path, or cannot be prepared, the sequence stops.
+Inspect the explanation and start a new review of the current state. A stale proposal is never silently refreshed and applied.</p>
+<p>Stop keeps earlier accepted edits. Use Undo in each changed document to reverse its edit. This is not one transaction spanning all documents.
+No file is saved by replacement. Use the ordinary Save workflow afterwards. This feature does not search unopened files or rewrite the project on disk.</p>
+<footer><p>Sammy Hegab · Umicom Foundation · MIT</p></footer><p><a href="learning/complete-document-replacements.html">Review a complete replacement set before applying any draft</a></p>
+</body></html>

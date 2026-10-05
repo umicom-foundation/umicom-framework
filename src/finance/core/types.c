@@ -25,6 +25,12 @@ UmiStatus umi_financial_id_assign(UmiFinancialId *id,const char *value){/* Prote
 /* Test whether a reusable financial identifier is populated. */
 bool umi_financial_id_is_valid(const UmiFinancialId *id)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (id == NULL) return 0;
+    if (memchr(id->value, '\0', sizeof(id->value)) == NULL) return 0;
+
     /* The older financial-core entry point must enforce the same bounded
      * termination rule as orders, instruments and the rest of Framework. */
     return umi_financial_id_valid(id) != 0;

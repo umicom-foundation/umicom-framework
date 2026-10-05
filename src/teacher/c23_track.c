@@ -18,6 +18,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/teacher/c23_track.h"
+#include "../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -88,6 +89,13 @@ UmiStatus umi_teacher_c23_track_configure(UmiTeacherC23Track *value, const char 
 }
 /* Check that teacher c23 track satisfies its contract before another service relies on it. */
 UmiStatus umi_teacher_c23_track_validate(const UmiTeacherC23Track *value) {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(value->id, '\0', sizeof(value->id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(value->title, '\0', sizeof(value->title)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -110,3 +118,56 @@ uint32_t umi_teacher_c23_track_priority(const UmiTeacherC23Track *value, uint32_
     bonus = value->weight > 25U ? 25U : value->weight;
     return umi_teacher_clamp_score(relevance + bonus);
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiTeacherC23TrackArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x3fe3fcc716828745);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTeacherC23Track *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTeacherC23Track *)0)->title)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiTeacherC23TrackArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiTeacherC23Track *)0)->id) - 1U +
+        8U + sizeof(((UmiTeacherC23Track *)0)->title) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiTeacherC23TrackArchiveWrite(UmiArchiveWriter *writer, const UmiTeacherC23Track *value)
+{
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->title, sizeof(value->title));
+    UmiArchiveWriteSigned(writer, (int64_t)value->language);
+    UmiArchiveWriteSigned(writer, (int64_t)value->level);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->weight);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->required_score);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+    UmiArchiveWriteSigned(writer, (int64_t)value->enabled);
+}
+static void UmiTeacherC23TrackArchiveRead(UmiArchiveReader *reader, UmiTeacherC23Track *value)
+{
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->title, sizeof(value->title));
+    value->language = (UmiTeacherLanguage)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->level = (UmiTeacherLevel)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->weight = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->required_score = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->enabled = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+}
+static UmiStatus UmiTeacherC23TrackArchiveValidate(const UmiTeacherC23Track *value)
+{
+    return umi_teacher_c23_track_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_teacher_c23_track_archive_encode, umi_teacher_c23_track_archive_decode,
+    UmiTeacherC23Track, UmiTeacherC23TrackArchiveSchema, UmiTeacherC23TrackArchiveBound, UmiTeacherC23TrackArchiveWrite, UmiTeacherC23TrackArchiveRead, UmiTeacherC23TrackArchiveValidate)

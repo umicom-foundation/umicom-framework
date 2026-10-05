@@ -17,6 +17,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/repository/lock_policy.h"
+#include "../../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -72,3 +73,46 @@ UmiStatus umi_repository_lock_policy_validate(
     }
     return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiRepositoryLockPolicyArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x81fea5bc9830c60e);
+
+    return schema;
+}
+static size_t UmiRepositoryLockPolicyArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiRepositoryLockPolicyArchiveWrite(UmiArchiveWriter *writer, const UmiRepositoryLockPolicy *value)
+{
+    UmiArchiveWriteSigned(writer, (int64_t)value->dry_run);
+    UmiArchiveWriteSigned(writer, (int64_t)value->stage_gitlinks);
+    UmiArchiveWriteSigned(writer, (int64_t)value->require_all_heads);
+    UmiArchiveWriteSigned(writer, (int64_t)value->require_clean_parent);
+    UmiArchiveWriteSigned(writer, (int64_t)value->verify_after_stage);
+}
+static void UmiRepositoryLockPolicyArchiveRead(UmiArchiveReader *reader, UmiRepositoryLockPolicy *value)
+{
+    value->dry_run = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->stage_gitlinks = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->require_all_heads = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->require_clean_parent = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->verify_after_stage = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+}
+static UmiStatus UmiRepositoryLockPolicyArchiveValidate(const UmiRepositoryLockPolicy *value)
+{
+    return umi_repository_lock_policy_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_repository_lock_policy_archive_encode, umi_repository_lock_policy_archive_decode,
+    UmiRepositoryLockPolicy, UmiRepositoryLockPolicyArchiveSchema, UmiRepositoryLockPolicyArchiveBound, UmiRepositoryLockPolicyArchiveWrite, UmiRepositoryLockPolicyArchiveRead, UmiRepositoryLockPolicyArchiveValidate)

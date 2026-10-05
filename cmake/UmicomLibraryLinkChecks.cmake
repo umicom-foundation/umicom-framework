@@ -78,3 +78,10 @@ else()
         COMMAND "${CMAKE_COMMAND}" -E echo "Native editor linkage requires the real umicom_ui_gtk4 library. Enable the GTK configuration."
         COMMAND "${CMAKE_COMMAND}" -E false VERBATIM)
 endif()
+
+# Require the reviewed context implementation before offering its archive check.
+if(TARGET umicom_application)
+    umicom_require_library_source(umicom_application "src/application/runtime/context_review.c")
+    umicom_add_library_symbol_check(umicom_application
+        umicom-application-context-symbol-check application_context.symbols)
+endif()

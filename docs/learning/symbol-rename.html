@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Review a symbol rename</title>
+<style>body{font:17px/1.6 system-ui;max-width:1000px;margin:32px auto;padding:0 24px;color:#183442}code{overflow-wrap:anywhere}pre{padding:18px;background:#eef3f5;overflow:auto}li{margin:10px 0}td,th{border:1px solid #cadbe0;padding:10px;text-align:left}table{border-collapse:collapse}</style></head><body>
+<h1>Review a symbol rename</h1>
+<p>This guide describes the single-draft mode. For the explicit additional-drafts workflow, see <a href="complete-language-edits.html">Review a complete multi-document rename</a>.</p>
+<p>A symbol is a name with a meaning in source code, such as a function or a local variable. A language server can propose changes to that symbol's uses. This differs from replacing every matching word: the server uses its understanding of the language and project to decide which occurrences belong together.</p>
+<h2>Rename in Studio</h2><ol>
+<li>Open a writable source document and place the caret on the symbol. The current unsaved text is the source for the request. A selection is not treated as a text-search replacement.</li>
+<li>Choose <strong>Rename…</strong> in the editor toolbar. Opening this form captures the draft and caret; it does not start a server.</li>
+<li>Enter an absolute path to an installed language-server executable, its arguments, and the absolute project folder. You can choose <strong>Load saved server</strong> to reuse preferences for this language. Enter the <strong>New symbol name</strong>.</li>
+<li>Choose <strong>Request rename</strong>. The selected local program receives the captured draft and project location. It may inspect other files in that project. If it supports rename preparation, Framework first checks that its returned range belongs to the captured position.</li>
+<li>Read the proposed document list. The form can apply a complete proposal for this captured document only. If the server includes any other document, the entire proposal stays unapplied. Opening the other file does not bypass this restriction.</li>
+<li>Choose <strong>Preview complete draft</strong>. Compare the original text with the proposed result. The notes list changed ranges and refer to numbered explanations supplied by the server. Read every explanation marked <strong>Confirmation required</strong>.</li>
+<li>Select <strong>I approve the displayed rename and all listed confirmation requests</strong>, then choose <strong>Apply to captured draft</strong>. This changes the draft through the document owner. One Undo restores its captured text; saving remains a separate action.</li>
+</ol>
+<p>Changing the new name or server settings clears the proposal and approval. If the draft, permissions, caret or selection changes, close the form and capture again. Retrying with an earlier approval does not authorize a new result. Cancel leaves the draft unchanged.</p>
+<h2>How the shared services fit together</h2>
+<p><code>UmiLanguageRenameQueryNative</code> owns a temporary process connection and returns an immutable <code>UmiLanguageWorkspaceEditCatalogue</code>. It sends the complete captured document with a known protocol revision, performs the query, closes the document and shuts down before returning a usable result. It does not apply an edit or write a file.</p>
+<ol><li>Capture the source using <code>UmiDocumentSourceRequestCreate</code> on the document owner's thread. Copy the text and metadata before giving them to a worker.</li>
+<li>On the worker, create a rename request with the copied source, exact UTF-8 byte caret and new name. The query converts that caret to the UTF-16 coordinates expected by the server. Keep the inputs alive until the query returns.</li>
+<li>Retain the returned document versions and annotations. A server may return another document; its content has not been synchronized by this temporary request. Do not assume that a URI or a successful JSON parse proves its edits match an open unsaved draft.</li>
+<li>For a host that owns one draft, call <code>UmiLanguageWorkspaceEditCataloguePreviewSingleDocument</code>. It rejects the whole proposal if more than one document is listed or the exact URI differs. Its preview checks source coordinates, document revisions and overlapping edits.</li>
+<li>Back on the owning thread, check the original source request. Stage the complete proposed text, show the comparison and all required explanations, then apply only the revision that the user explicitly approved. Destroy the catalogue and preview when they are no longer needed.</li></ol>
+<p>Change explanations are literal text. They do not execute HTML, open URLs or run server commands. Range labels start at line and column one; columns use the protocol's UTF-16 units. Most characters use one unit, while a supplementary character such as an emoji uses two. The text comparison shows the actual characters.</p>
+<h2>Supported boundaries</h2>
+<table><tr><th>Situation</th><th>Behaviour</th></tr>
+<tr><td>Rename preparation is unavailable</td><td>A server that advertises rename without preparation can receive the rename request directly.</td></tr>
+<tr><td>Preparation returns no range</td><td>No rename is sent when preparation returns null. Default-behaviour preparation is not advertised or accepted.</td></tr>
+<tr><td>A required document revision differs</td><td>The proposal is refused. Framework does not guess which source the server intended.</td></tr>
+<tr><td>Several documents or file create/rename/delete operations</td><td>Studio does not apply any part of that proposal. The text catalogue refuses resource operations; a complete multi-document transaction is a separate capability.</td></tr>
+<tr><td>Server text contains markup</td><td>The form displays it literally and requires ordinary review.</td></tr></table>
+<p>The new name must be nonempty UTF-8, at most 1024 bytes, without ASCII control characters. The language server decides whether it is a valid name in that language. Native messages allow 65,536 bytes including escaped source and protocol fields; large drafts can exceed that limit. Studio permits five seconds of total response-reading time and a short additional cleanup allowance. These are temporary explicit requests, not a persistent project index. Other open unsaved drafts are not synchronized.</p>
+<h2>If a request cannot be used</h2><ol>
+<li>Check that the server executable and project paths are absolute, and that the program is a language server for this document's language.</li>
+<li>Try a valid symbol position and a valid new name. An empty result may mean the server cannot rename that symbol.</li>
+<li>If the source changed, cancel and reopen Rename. Do not reuse a comparison for a different draft.</li>
+<li>If other documents are listed, cancel this review. Use a tool that reviews and applies the whole project change, or keep the existing symbol name. Applying only the current file would leave the project inconsistent.</li>
+<li>For a timeout or transport limit, inspect the server's local setup and project size. The form does not silently fall back to text replacement.</li></ol>
+<p>Related guides: <a href="workspace-edit-review.html">Workspace change catalogues</a>, <a href="source-navigation.html">Definitions and references</a>, <a href="parameter-help.html">Parameter help</a>.</p>
+<p><a href="code-actions.html">Review code actions</a></p>
+</body></html>

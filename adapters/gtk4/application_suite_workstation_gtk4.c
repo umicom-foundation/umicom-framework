@@ -40,6 +40,7 @@ struct UmiApplicationSuiteGtk4Workstation {
     UmiUiWorkbenchCanvas canvas;
     UmiGtk4WorkspaceLayoutHost *host;
     /* A copied-row view; customisation remains the sole layout authority. */
+    UmiUiWorkspaceLibraryHistory *library_history;
     UmiGtk4WorkspaceLayoutLibrary *layout_library;
     UmiGtk4AppearanceEditor *appearance;
     UmiGtk4WorkstationShellHeader *identity;
@@ -1102,7 +1103,115 @@ static UmiStatus suite_publish_library_candidate(
     return UMI_STATUS_OK;
 }
 
+/* Recovery wraps the existing publisher; no second widget or product model
+ * is introduced. The callback context lives until this synchronous call ends. */
+typedef struct SuiteLibraryPublication {
+    UmiApplicationSuiteGtk4Workstation *workstation;
+    bool force_rebuild;
+} SuiteLibraryPublication;
+static UmiStatus suite_history_publish(const UmiUiWorkspaceCustomisation *candidate, void *context)
+{
+    SuiteLibraryPublication *publication = context;
+    return suite_publish_library_candidate(publication->workstation, candidate, publication->force_rebuild);
+}
+static UmiStatus suite_publish_library_change(UmiApplicationSuiteGtk4Workstation *workstation,
+    const UmiUiWorkspaceCustomisation *candidate, bool force_rebuild)
+{
+    if (candidate->revision == workstation->customisation.revision) return UMI_STATUS_OK;
+    UmiUiWorkspaceCheckpointScope scope;
+    char prefix[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    UmiStatus status = checkpoint_scope(workstation, &scope, prefix, sizeof(prefix));
+    if (status == UMI_STATUS_OK && workstation->library_history == NULL)
+        status = umi_ui_workspace_library_history_create(&workstation->library_history);
+    SuiteLibraryPublication publication = {workstation, force_rebuild};
+    if (status == UMI_STATUS_OK)
+        status = umi_ui_workspace_library_history_record(workstation->library_history, &scope,
+            &workstation->customisation, candidate, suite_history_publish, &publication);
+    return status;
+}
+static UmiStatus suite_library_history_read(UmiUiWorkspaceLibraryHistoryState *out_state, void *context)
+{
+    UmiApplicationSuiteGtk4Workstation *workstation = context;
+    if (workstation == NULL || out_state == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (workstation->library_history == NULL) { *out_state = (UmiUiWorkspaceLibraryHistoryState){0}; return UMI_STATUS_OK; }
+    return umi_ui_workspace_library_history_read(workstation->library_history, workstation->customisation.revision, out_state);
+}
+static UmiStatus suite_library_history_navigate(UmiUiWorkspaceLibraryHistoryDirection direction,
+    uint64_t expected_revision, void *context)
+{
+    UmiApplicationSuiteGtk4Workstation *workstation = context;
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (workstation->library_history == NULL) return UMI_STATUS_NOT_FOUND;
+    UmiUiWorkspaceCheckpointScope scope;
+    char prefix[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    UmiStatus status = checkpoint_scope(workstation, &scope, prefix, sizeof(prefix));
+    SuiteLibraryPublication publication = {workstation, true};
+    if (status == UMI_STATUS_OK)
+        status = umi_ui_workspace_library_history_navigate(workstation->library_history, &scope,
+            &workstation->customisation, direction, expected_revision, suite_history_publish, &publication);
+    if (status == UMI_STATUS_OK && workstation->layout_library != NULL)
+        (void)umi_gtk4_ws_layout_library_refresh(workstation->layout_library);
+    return status;
+}
+
 /* Every library command validates on private storage before native publication. */
+/* File exchange has no storage authority. Reuse the checkpoint scope and
+ * native candidate publisher so importing cannot bypass product tool rules. */
+static UmiStatus suite_library_export(char *bytes, size_t capacity, size_t *out_size, void *context)
+{
+    UmiApplicationSuiteGtk4Workstation *workstation = context;
+    UmiUiWorkspaceCheckpointScope scope;
+    char prefix[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    UmiStatus status = checkpoint_scope(workstation, &scope, prefix, sizeof(prefix));
+    if (status != UMI_STATUS_OK) return status;
+    return umi_ui_workspace_library_export(&scope, &workstation->customisation, 0U, bytes, capacity, out_size);
+}
+static UmiStatus suite_library_import(const void *bytes, size_t size,
+    UmiUiWorkspaceLibraryImport **out_review, void *context)
+{
+    UmiApplicationSuiteGtk4Workstation *workstation = context;
+    UmiUiWorkspaceCheckpointScope scope;
+    char prefix[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    UmiStatus status = checkpoint_scope(workstation, &scope, prefix, sizeof(prefix));
+    if (status != UMI_STATUS_OK) return status;
+    return umi_ui_workspace_library_import_review(&scope, &workstation->customisation, bytes, size, out_review);
+}
+/* Storage supplies frozen evidence; the existing native import publisher
+ * handles both sources and keeps layout history and rollback in one owner. */
+static UmiStatus suite_library_saved_review(UmiUiWorkspaceLibraryImport **out_review, void *context)
+{
+    UmiApplicationSuiteGtk4Workstation *workstation = context;
+    if (workstation->checkpoint_server == NULL) return UMI_STATUS_UNAVAILABLE;
+    UmiUiWorkspaceCheckpointScope scope;
+    char prefix[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    UmiStatus status = checkpoint_scope(workstation, &scope, prefix, sizeof(prefix));
+    if (status != UMI_STATUS_OK) return status;
+    return umi_ui_workspace_library_checkpoint_review(workstation->checkpoint_server,
+        &scope, &workstation->customisation, out_review);
+}
+static UmiStatus suite_library_import_apply(const UmiUiWorkspaceLibraryImport *review, void *context)
+{
+    UmiApplicationSuiteGtk4Workstation *workstation = context;
+    UmiUiWorkspaceCheckpointScope scope;
+    char prefix[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    UmiStatus status = checkpoint_scope(workstation, &scope, prefix, sizeof(prefix));
+    if (status != UMI_STATUS_OK) return status;
+    UmiUiWorkspaceCustomisation *candidate = malloc(sizeof(*candidate));
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = umi_ui_workspace_library_import_candidate(review, &scope, &workstation->customisation, candidate);
+/* Stage recovery evidence before publication. The former direct call
+     * is retained for review; the native publisher itself remains in use. */
+#if 0
+    if (status == UMI_STATUS_OK) status = suite_publish_library_candidate(workstation, candidate, true);
+#endif
+    if (status == UMI_STATUS_OK) status = suite_publish_library_change(workstation, candidate, true);
+    free(candidate);
+    /* Reproject the list after its owner accepts the imported arrangement. */
+    if (status == UMI_STATUS_OK && workstation->layout_library != NULL)
+        (void)umi_gtk4_ws_layout_library_refresh(workstation->layout_library);
+    return status;
+}
+
 static UmiStatus suite_layout_library_apply(
     const UmiUiWorkspaceLibraryRequest *request, void *context)
 {
@@ -1123,8 +1232,14 @@ static UmiStatus suite_layout_library_apply(
         free(candidate);
         return UMI_STATUS_OK;
     }
+/* Stage recovery evidence before publication. The former direct call
+     * is retained for review; the native publisher itself remains in use. */
+#if 0
     if (status == UMI_STATUS_OK)
         status = suite_publish_library_candidate(workstation, candidate, false);
+#endif
+    if (status == UMI_STATUS_OK)
+        status = suite_publish_library_change(workstation, candidate, false);
     free(candidate);
     return status;
 }
@@ -1236,7 +1351,12 @@ static UmiStatus suite_library_storage_operation(
         if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
         status = umi_ui_workspace_library_checkpoint_load_candidate(workstation->checkpoint_server,
             &scope, &workstation->customisation, candidate, &report);
-        if (status == UMI_STATUS_OK) status = suite_publish_library_candidate(workstation, candidate, true);
+    /* Stage recovery evidence before publication. The former direct call
+     * is retained for review; the native publisher itself remains in use. */
+#if 0
+    if (status == UMI_STATUS_OK) status = suite_publish_library_candidate(workstation, candidate, true);
+#endif
+    if (status == UMI_STATUS_OK) status = suite_publish_library_change(workstation, candidate, true);
     } else return UMI_STATUS_INVALID_ARGUMENT;
     free(candidate);
     workstation->library_storage_status = status;
@@ -3308,6 +3428,15 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
         status = umi_gtk4_ws_layout_library_set_preview_handler(workstation->layout_library,
             suite_library_preview, workstation);
         if (status != UMI_STATUS_OK) goto fail;
+        status = umi_gtk4_ws_layout_library_set_history_handlers(workstation->layout_library,
+            suite_library_history_read, suite_library_history_navigate, workstation);
+        if (status != UMI_STATUS_OK) goto fail;
+        status = umi_gtk4_ws_layout_library_set_exchange_handlers(workstation->layout_library,
+            suite_library_export, suite_library_import, suite_library_import_apply, workstation);
+    if (status == UMI_STATUS_OK)
+        status = umi_gtk4_ws_layout_library_set_saved_review_handler(workstation->layout_library,
+            suite_library_saved_review, workstation);
+        if (status != UMI_STATUS_OK) goto fail;
     }
 
     /* Keep layout creation reachable even on a completely empty canvas. */
@@ -3505,6 +3634,7 @@ void umi_application_suite_gtk4_workstation_destroy(
     workstation->automation = NULL;
     /* Deferred library requests borrow this workstation and must stop first. */
     umi_gtk4_ws_layout_library_destroy(workstation->layout_library);
+    umi_ui_workspace_library_history_destroy(workstation->library_history);
     workstation->layout_library = NULL;
     umi_gtk4_workspace_layout_host_destroy(workstation->host);
     workstation->host = NULL;
@@ -3712,3 +3842,36 @@ UmiStatus umi_application_suite_gtk4_workstation_library_preview(
     return umi_ui_workspace_library_checkpoint_preview(workstation->checkpoint_server,
         &scope, &workstation->customisation, out_preview);
 }
+
+/* Keep archive ownership and native publication in the shared layout host. */
+UmiStatus umi_application_suite_gtk4_workstation_library_export(
+    UmiApplicationSuiteGtk4Workstation *workstation, char *bytes, size_t capacity, size_t *out_size)
+{
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return suite_library_export(bytes, capacity, out_size, workstation);
+}
+
+/* Keep archive ownership and native publication in the shared layout host. */
+UmiStatus umi_application_suite_gtk4_workstation_library_import_review(
+    UmiApplicationSuiteGtk4Workstation *workstation, const void *bytes, size_t size, UmiUiWorkspaceLibraryImport **out_review)
+{
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return suite_library_import(bytes, size, out_review, workstation);
+}
+
+/* Keep archive ownership and native publication in the shared layout host. */
+UmiStatus umi_application_suite_gtk4_workstation_library_import_apply(
+    UmiApplicationSuiteGtk4Workstation *workstation, const UmiUiWorkspaceLibraryImport *review)
+{
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return suite_library_import_apply(review, workstation);
+}
+
+/* Public observation and navigation retain the same revision gate as GTK. */
+UmiStatus umi_application_suite_gtk4_workstation_library_history_read(
+    UmiApplicationSuiteGtk4Workstation *workstation, UmiUiWorkspaceLibraryHistoryState *out_state)
+{ return suite_library_history_read(out_state, workstation); }
+UmiStatus umi_application_suite_gtk4_workstation_library_history_navigate(
+    UmiApplicationSuiteGtk4Workstation *workstation, UmiUiWorkspaceLibraryHistoryDirection direction,
+    uint64_t expected_revision)
+{ return suite_library_history_navigate(direction, expected_revision, workstation); }

@@ -36,7 +36,30 @@ extern "C" {
 
 #define UMI_DOCUMENT_COMMAND_REVERT "umicom.document.revert"
 
+/* Delimiter navigation adds three commands to the established document
+ * catalogue. The previous count is retained for integration review. */
+#if 0
 #define UMI_DOCUMENT_COMMAND_COUNT 11U
+#endif
+/* Line editing extends the shared catalogue. Preserve the previous count
+ * for integration review; all earlier commands remain registered. */
+#if 0
+#define UMI_DOCUMENT_COMMAND_COUNT 14U
+#endif
+#define UMI_DOCUMENT_COMMAND_COUNT 23U
+#define UMI_DOCUMENT_COMMAND_DELETE_LINE "umicom.document.line-edit.delete-line"
+#define UMI_DOCUMENT_COMMAND_DUPLICATE_LINE "umicom.document.line-edit.duplicate-line"
+#define UMI_DOCUMENT_COMMAND_MOVE_LINE_UP "umicom.document.line-edit.move-line-up"
+#define UMI_DOCUMENT_COMMAND_MOVE_LINE_DOWN "umicom.document.line-edit.move-line-down"
+#define UMI_DOCUMENT_COMMAND_JOIN_LINE_WITH_NEXT "umicom.document.line-edit.join-line-with-next"
+#define UMI_DOCUMENT_COMMAND_TRIM_TRAILING_WHITESPACE "umicom.document.line-edit.trim-trailing-whitespace"
+#define UMI_DOCUMENT_COMMAND_INDENT_LINES "umicom.document.line-edit.indent-lines"
+#define UMI_DOCUMENT_COMMAND_OUTDENT_LINES "umicom.document.line-edit.outdent-lines"
+#define UMI_DOCUMENT_COMMAND_TOGGLE_LINE_COMMENT "umicom.document.line-edit.toggle-line-comment"
+
+#define UMI_DOCUMENT_COMMAND_MATCH_DELIMITER "umicom.document.match-delimiter"
+#define UMI_DOCUMENT_COMMAND_SELECT_DELIMITER_CONTENT "umicom.document.select-delimiter-content"
+#define UMI_DOCUMENT_COMMAND_SELECT_DELIMITER_PAIR "umicom.document.select-delimiter-pair"
 
 /**
  * Add document commands only after its inputs and available capacity have been checked.

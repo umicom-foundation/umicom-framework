@@ -48,6 +48,8 @@ struct UmiAiWorkspaceGtkPanel {
     size_t inspectedCount;
     uint64_t inspectedCorpusRevision;
     GtkTextBuffer *evidenceInspection;
+    GtkWidget *importPanel; /* An owned section with independent file-worker lifetime. */
+    GtkWidget *sourceLibrary; /* Owns reviewed source controls independently of borrowed services. */
     bool closed;
 };
 static bool Available(UmiAiWorkspaceGtkPanel *panel) { return panel != NULL && !panel->closed && panel->worker == NULL; }
@@ -363,6 +365,9 @@ static void ProviderChanged(GObject *object, GParamSpec *parameter, gpointer dat
     UmiAiWorkspaceGtkPanel *panel = data; (void)object; (void)parameter; if (!Available(panel)) return;
     gtk_editable_set_text(GTK_EDITABLE(panel->modelId), gtk_drop_down_get_selected(panel->provider) == 0U ? "extractive-preview" : "local-model");
 }
+#include "ai_workspace_import.inc"
+#include "ai_workspace_source_library.inc"
+
 UmiStatus UmiAiWorkspaceGtkPanelCreate(UmiAiWorkspace *workspace, UmiAiRuntime *runtime,
     UmiAiWorkspaceCancellation *cancellation, const char *storageDescription,
     const char *applicationId, UmiAiWorkspaceGtkPanel **outPanel)
@@ -437,6 +442,15 @@ UmiStatus UmiAiWorkspaceGtkPanelCreate(UmiAiWorkspace *workspace, UmiAiRuntime *
     panel->message = GTK_LABEL(gtk_label_new("Nothing is sent until a prepared job is approved and run."));
     gtk_label_set_wrap(panel->message, TRUE); gtk_box_append(GTK_BOX(panel->root), GTK_WIDGET(panel->message));
     Connect(panel, G_OBJECT(panel->provider), "notify::selected", G_CALLBACK(ProviderChanged));
+    /* This identity is cleared before service teardown. Import callbacks use
+     * it only on the GTK thread and never lend services to file workers. */
+    g_object_set_data(G_OBJECT(panel->root), "umicom-ai-workspace-owner", panel);
+    GtkWidget *importPage = Page(panel, "Import document");
+    panel->importPanel = AiImportCreate(panel);
+    gtk_box_append(GTK_BOX(importPage), panel->importPanel);
+    GtkWidget *libraryPage = Page(panel, "Review source changes");
+    panel->sourceLibrary = AiLibraryCreate(panel);
+    gtk_box_append(GTK_BOX(libraryPage), panel->sourceLibrary);
     NewJob(NULL, panel);
     gtk_notebook_set_current_page(panel->pages, strcmp(applicationId, "org.umicom.rag") == 0 ? 0 : 1);
     *outPanel = panel; return UMI_STATUS_OK;
@@ -446,6 +460,11 @@ void UmiAiWorkspaceGtkPanelDestroy(UmiAiWorkspaceGtkPanel *panel)
 {
     if (panel == NULL) return;
     panel->closed = true;
+    g_object_set_data(G_OBJECT(panel->root), "umicom-ai-workspace-owner", NULL);
+    AiLibraryRetire(panel->sourceLibrary);
+    g_clear_object(&panel->sourceLibrary);
+    AiImportRetire(panel->importPanel);
+    g_clear_object(&panel->importPanel);
     if (panel->pollSource != 0U) { g_source_remove(panel->pollSource); panel->pollSource = 0U; }
     /* The owner always joins once before releasing any borrowed service.
      * Cancellation is cooperative; configured local transport has a timeout.

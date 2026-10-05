@@ -120,6 +120,30 @@ UmiStatus umi_editor_navigation_history_snapshot(
     const UmiEditorNavigationHistory *history,
     UmiEditorNavigationHistorySnapshot *out_snapshot);
 
+/** A host reaches a copied destination before history moves. Return OK only
+ * after the visible destination has been applied. On failure, leave host state
+ * unchanged. The callback may inspect history; nested mutations return BUSY.
+ * It must not destroy the history or its owner. Calls use one owning thread. */
+typedef UmiStatus (*UmiEditorNavigationApplyFn)(void *context,
+    const UmiEditorSourceLocation *destination);
+
+/** Record a successful jump as departure followed by destination. Adjacent
+ * equal positions coalesce; a new branch drops forward entries and a full
+ * history evicts its oldest entry. Both locations are validated before mutation.
+ * Identical positions are a no-op. No allocation or host callback occurs. */
+UmiStatus UmiEditorNavigationHistoryRecordJump(UmiEditorNavigationHistory *history,
+    const UmiEditorSourceLocation *departure, const UmiEditorSourceLocation *destination);
+
+/** Move backward (-1) or forward (+1) only after apply succeeds. Capture the
+ * revision from snapshot first; stale requests fail before calling the host.
+ * Optional departure replaces the old current entry on success, preserving a
+ * caret moved since the previous jump. It does not create a new branch.
+ * A failed callback leaves history and optional out_location unchanged.
+ * Revision exhaustion refuses mutation instead of reusing an old revision. */
+UmiStatus UmiEditorNavigationHistoryTravel(UmiEditorNavigationHistory *history,
+    int direction, uint64_t expected_revision, const UmiEditorSourceLocation *departure,
+    UmiEditorNavigationApplyFn apply, void *context, UmiEditorSourceLocation *out_location);
+
 #ifdef __cplusplus
 }
 #endif

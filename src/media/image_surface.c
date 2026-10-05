@@ -13,8 +13,10 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/media/image_surface.h"
+#include "umicom/media/image_edit.h"
 
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 
 /* Private storage keeps pixel lifetime tied to one surface owner. */
@@ -190,5 +192,105 @@ UmiStatus umi_media_image_surface_snapshot(
     out_snapshot->height = surface->height;
     out_snapshot->pixel_count = surface->pixel_count;
     out_snapshot->revision = surface->revision;
+    return UMI_STATUS_OK;
+}
+
+
+/* Import complete decoder rows through the existing pixel owner. Explicit
+ * channels preserve portable RGBA ordering without lending writable storage. */
+UmiStatus UmiMediaImageSurfaceWriteRgbaRow(UmiMediaImageSurface *surface, size_t y, const void *rgba,
+                                           size_t byte_count)
+{
+    if (surface == NULL || rgba == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (y >= surface->height)
+        return UMI_STATUS_NOT_FOUND;
+    if (surface->width > SIZE_MAX / 4U || byte_count != surface->width * 4U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (surface->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    const unsigned char *bytes = rgba;
+    for (size_t x = 0U; x < surface->width; ++x)
+    {
+        UmiMediaRgbaPixel *pixel = &surface->pixels[y * surface->width + x];
+        pixel->red = bytes[x * 4U];
+        pixel->green = bytes[x * 4U + 1U];
+        pixel->blue = bytes[x * 4U + 2U];
+        pixel->alpha = bytes[x * 4U + 3U];
+    }
+    surface->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+
+/* Keep transformations in the surface owner so applications do not reinterpret
+ * channel storage or mutate a source used by another view. Coordinates map
+ * from the destination back into the crop, avoiding in-place pixel swaps. */
+UmiStatus UmiMediaImageSurfaceApplyEdit(const UmiMediaImageSurface *source, const UmiMediaImageEdit *edit,
+                                        const UmiCancellationToken *cancel,
+                                        UmiMediaImageSurface **out_surface)
+{
+    if (source == NULL || edit == NULL || out_surface == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (*out_surface != NULL)
+        return UMI_STATUS_INVALID_STATE;
+    if (edit->width == 0U || edit->height == 0U || edit->x >= source->width || edit->y >= source->height ||
+        edit->width > source->width - edit->x || edit->height > source->height - edit->y ||
+        (unsigned)edit->orientation > (unsigned)UMI_MEDIA_IMAGE_FLIP_VERTICAL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (edit->height > UMI_MEDIA_IMAGE_EDIT_MAX_PIXELS / edit->width)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (umi_cancellation_token_is_requested(cancel))
+        return UMI_STATUS_CANCELLED;
+    bool quarter = edit->orientation == UMI_MEDIA_IMAGE_CLOCKWISE ||
+                   edit->orientation == UMI_MEDIA_IMAGE_COUNTERCLOCKWISE;
+    size_t width = quarter ? edit->height : edit->width, height = quarter ? edit->width : edit->height;
+    UmiMediaImageSurface *result = NULL;
+    UmiStatus status = umi_media_image_surface_create(width, height, &result);
+    if (status != UMI_STATUS_OK)
+        return status;
+    for (size_t y = 0U; y < height; ++y)
+    {
+        if (umi_cancellation_token_is_requested(cancel))
+        {
+            umi_media_image_surface_destroy(result);
+            return UMI_STATUS_CANCELLED;
+        }
+        for (size_t x = 0U; x < width; ++x)
+        {
+            size_t source_x = x, source_y = y;
+            switch (edit->orientation)
+            {
+            case UMI_MEDIA_IMAGE_CLOCKWISE:
+                source_x = y;
+                source_y = edit->height - 1U - x;
+                break;
+            case UMI_MEDIA_IMAGE_HALF_TURN:
+                source_x = edit->width - 1U - x;
+                source_y = edit->height - 1U - y;
+                break;
+            case UMI_MEDIA_IMAGE_COUNTERCLOCKWISE:
+                source_x = edit->width - 1U - y;
+                source_y = x;
+                break;
+            case UMI_MEDIA_IMAGE_FLIP_HORIZONTAL:
+                source_x = edit->width - 1U - x;
+                break;
+            case UMI_MEDIA_IMAGE_FLIP_VERTICAL:
+                source_y = edit->height - 1U - y;
+                break;
+            default:
+                break;
+            }
+            result->pixels[y * width + x] =
+                source->pixels[(edit->y + source_y) * source->width + edit->x + source_x];
+        }
+    }
+    if (umi_cancellation_token_is_requested(cancel))
+    {
+        umi_media_image_surface_destroy(result);
+        return UMI_STATUS_CANCELLED;
+    }
+    *out_surface = result;
     return UMI_STATUS_OK;
 }

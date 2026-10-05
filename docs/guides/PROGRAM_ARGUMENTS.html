@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Share argument boundaries across program launches</title><style>
+body{font:17px/1.6 system-ui,sans-serif;max-width:960px;margin:3rem auto;padding:0 24px;color:#193341;background:#f8fbfc}
+h1,h2{line-height:1.25}h2{margin-top:2rem}pre{background:#eaf1f4;padding:18px;overflow:auto}code{font-family:Consolas,monospace}
+table{border-collapse:collapse;width:100%}td,th{padding:10px;border:1px solid #c8d7df;text-align:left;vertical-align:top}a{color:#075c89}
+</style></head><body><main>
+<h1>Share argument boundaries across program launches</h1>
+<p>Framework's base argument parser lets build runners, debugger adapters and language servers agree on where each argument begins and ends. It never invokes a shell. Applications collect settings and use the shared resolver instead of carrying their own parsing rules.</p>
+<h2>Use a build profile</h2>
+<ol><li>Initialise <code>UmiBuildProfile</code> with <code>umi_build_profile_init</code>.</li>
+<li>Set <code>run_program</code> and either <code>run_argument</code> or <code>run_arguments</code>. The first is a single literal value; the second uses the quoted grammar. Do not fill both.</li>
+<li>Validate the complete profile. Use <code>UmiBuildProfileArguments</code> to obtain its effective vector. A failed resolution clears the argument output.</li>
+<li>The CMake Run provider copies that vector into its owned command record. A debugger host passes it to <code>UmiDebugRuntimePlatformLaunchArguments</code>. The native launcher formats the vector losslessly before using the existing adapter and DAP lifecycle.</li>
+<li>Keep execution permission and project lifetime checks in the owning workflow. Resolving an argument list grants no permission to run it.</li></ol>
+<h2>Grammar and ownership</h2>
+<pre><code>--file "notes for review.txt" "" 'literal $HOME'</code></pre>
+<p>The result contains four arguments. Quotes group text, and an empty quoted string preserves an empty value. A backslash escapes quotes, backslashes and whitespace; otherwise it stays literal. No wildcard, environment-variable or command expansion occurs.</p>
+<p><code>UmiArguments</code> owns bounded text cells and pointers into those cells. Do not copy the pointers and then discard the record. Copy strings into the receiving owner's storage, or parse directly into its record. Input and output storage must not overlap. The language-server wrapper retains its established public structure and rebinds all copied pointers before returning.</p>
+<p><code>UmiArgumentsFormat</code> turns a vector into reversible quoted text. It measures the complete result before writing and clears the output on failure. This representation is intended for saved settings and review, not for a shell command.</p>
+<h2>Persistence and limits</h2>
+<p>Build profiles retain all previous member offsets and append the list field. Rebuild consumers against the matching header; the public structure is larger. The existing Data Server transaction saves the complete profile and its revision together. Earlier records without a list are loaded with their literal argument intact. A current record missing the list field is rejected as incomplete.</p>
+<p>The base parser accepts at most 32 arguments of 1,023 bytes each. Build profiles apply their narrower command-cell limit of 511 bytes per argument and a 1,023-byte list field. Native debugger launch evidence also has a 1,023-byte text limit after quoting. Overflow is reported before starting an adapter.</p>
+<h2>Extend the workflow</h2>
+<p>A new frontend should bind its fields to the profile, preserve the legacy literal field, and surface validation errors beside the inputs. A new debugger should accept a vector rather than parse an application-specific string. Extend the shared grammar only with regression coverage for spaces, quotes, empty values, Unicode, Windows paths, capacity failures and pointer ownership.</p>
+<p>The examples and regression source use production Framework APIs. Their presence is not a compiler, GUI or installed-debugger qualification result.</p>
+</main><footer><p>Umicom Foundation · Sammy Hegab · MIT</p></footer></body></html>

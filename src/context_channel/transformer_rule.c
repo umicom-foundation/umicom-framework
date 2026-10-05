@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/transformer_rule.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context transformer rule from caller-provided values so later operations
@@ -36,6 +37,16 @@ record->revision=1U;
  */
 UmiStatus umi_context_transformer_rule_validate(const UmiContextTransformerRule *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->transformer_id, '\0', sizeof(record->transformer_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->source_schema_id, '\0', sizeof(record->source_schema_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->target_schema_id, '\0', sizeof(record->target_schema_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->source_field, '\0', sizeof(record->source_field)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->target_field, '\0', sizeof(record->target_field)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -190,3 +201,57 @@ if(store->count!=0U)memcpy(out_records,store->items,store->count*sizeof(store->i
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextTransformerRuleArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xe69f02b35a513756);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextTransformerRule *)0)->transformer_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextTransformerRule *)0)->source_schema_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextTransformerRule *)0)->target_schema_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextTransformerRule *)0)->source_field)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextTransformerRule *)0)->target_field)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextTransformerRuleArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextTransformerRule *)0)->transformer_id) - 1U +
+        8U + sizeof(((UmiContextTransformerRule *)0)->source_schema_id) - 1U +
+        8U + sizeof(((UmiContextTransformerRule *)0)->target_schema_id) - 1U +
+        8U + sizeof(((UmiContextTransformerRule *)0)->source_field) - 1U +
+        8U + sizeof(((UmiContextTransformerRule *)0)->target_field) - 1U +
+        8U +
+        8U;
+}
+static void UmiContextTransformerRuleArchiveWrite(UmiArchiveWriter *writer, const UmiContextTransformerRule *value)
+{
+    UmiArchiveWriteText(writer, value->transformer_id, sizeof(value->transformer_id));
+    UmiArchiveWriteText(writer, value->source_schema_id, sizeof(value->source_schema_id));
+    UmiArchiveWriteText(writer, value->target_schema_id, sizeof(value->target_schema_id));
+    UmiArchiveWriteText(writer, value->source_field, sizeof(value->source_field));
+    UmiArchiveWriteText(writer, value->target_field, sizeof(value->target_field));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextTransformerRuleArchiveRead(UmiArchiveReader *reader, UmiContextTransformerRule *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->transformer_id, sizeof(value->transformer_id));
+    UmiArchiveReadText(reader, value->source_schema_id, sizeof(value->source_schema_id));
+    UmiArchiveReadText(reader, value->target_schema_id, sizeof(value->target_schema_id));
+    UmiArchiveReadText(reader, value->source_field, sizeof(value->source_field));
+    UmiArchiveReadText(reader, value->target_field, sizeof(value->target_field));
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextTransformerRuleArchiveValidate(const UmiContextTransformerRule *value)
+{
+    return umi_context_transformer_rule_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_transformer_rule_archive_encode, umi_context_transformer_rule_archive_decode,
+    UmiContextTransformerRule, UmiContextTransformerRuleArchiveSchema, UmiContextTransformerRuleArchiveBound, UmiContextTransformerRuleArchiveWrite, UmiContextTransformerRuleArchiveRead, UmiContextTransformerRuleArchiveValidate)

@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_context_host/endpoint.h"
+#include "../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -56,6 +57,16 @@ void umi_workbench_context_host_endpoint_init(
 UmiStatus umi_workbench_context_host_endpoint_validate(
     const UmiWorkbenchContextHostEndpoint *endpoint)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (endpoint == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(endpoint->endpoint_id, '\0', sizeof(endpoint->endpoint_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(endpoint->panel_id, '\0', sizeof(endpoint->panel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(endpoint->application_id, '\0', sizeof(endpoint->application_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(endpoint->display_name, '\0', sizeof(endpoint->display_name)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(endpoint->group_id, '\0', sizeof(endpoint->group_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -196,3 +207,78 @@ bool umi_workbench_context_host_endpoint_publishes(
     return umi_workbench_context_host_kind_allowed(
         endpoint->published_kinds_mask, kind);
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiWorkbenchContextHostEndpointArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xd39ab0f71dbfc9f1);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWorkbenchContextHostEndpoint *)0)->endpoint_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWorkbenchContextHostEndpoint *)0)->panel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWorkbenchContextHostEndpoint *)0)->application_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWorkbenchContextHostEndpoint *)0)->display_name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWorkbenchContextHostEndpoint *)0)->group_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiWorkbenchContextHostEndpointArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiWorkbenchContextHostEndpoint *)0)->endpoint_id) - 1U +
+        8U + sizeof(((UmiWorkbenchContextHostEndpoint *)0)->panel_id) - 1U +
+        8U + sizeof(((UmiWorkbenchContextHostEndpoint *)0)->application_id) - 1U +
+        8U + sizeof(((UmiWorkbenchContextHostEndpoint *)0)->display_name) - 1U +
+        8U + sizeof(((UmiWorkbenchContextHostEndpoint *)0)->group_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiWorkbenchContextHostEndpointArchiveWrite(UmiArchiveWriter *writer, const UmiWorkbenchContextHostEndpoint *value)
+{
+    UmiArchiveWriteText(writer, value->endpoint_id, sizeof(value->endpoint_id));
+    UmiArchiveWriteText(writer, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveWriteText(writer, value->application_id, sizeof(value->application_id));
+    UmiArchiveWriteText(writer, value->display_name, sizeof(value->display_name));
+    UmiArchiveWriteText(writer, value->group_id, sizeof(value->group_id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->role);
+    UmiArchiveWriteSigned(writer, (int64_t)value->state);
+    UmiArchiveWriteSigned(writer, (int64_t)value->mode);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->accepted_kinds_mask);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->published_kinds_mask);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->delivery_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->publish_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+}
+static void UmiWorkbenchContextHostEndpointArchiveRead(UmiArchiveReader *reader, UmiWorkbenchContextHostEndpoint *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->endpoint_id, sizeof(value->endpoint_id));
+    UmiArchiveReadText(reader, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveReadText(reader, value->application_id, sizeof(value->application_id));
+    UmiArchiveReadText(reader, value->display_name, sizeof(value->display_name));
+    UmiArchiveReadText(reader, value->group_id, sizeof(value->group_id));
+    value->role = (UmiWorkbenchContextHostPanelRole)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->state = (UmiWorkbenchContextHostEndpointState)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->mode = (UmiWorkbenchContextLinkMode)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->accepted_kinds_mask = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->published_kinds_mask = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->delivery_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->publish_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiWorkbenchContextHostEndpointArchiveValidate(const UmiWorkbenchContextHostEndpoint *value)
+{
+    return umi_workbench_context_host_endpoint_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_context_host_endpoint_archive_encode, umi_workbench_context_host_endpoint_archive_decode,
+    UmiWorkbenchContextHostEndpoint, UmiWorkbenchContextHostEndpointArchiveSchema, UmiWorkbenchContextHostEndpointArchiveBound, UmiWorkbenchContextHostEndpointArchiveWrite, UmiWorkbenchContextHostEndpointArchiveRead, UmiWorkbenchContextHostEndpointArchiveValidate)

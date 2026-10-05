@@ -1164,3 +1164,6 @@ UmiStatus UmiDocumentStoreMarkSavedSnapshot(UmiDocumentStore *store,
     (void)umi_mutex_unlock(store->mutex);
     return UMI_STATUS_OK;
 }
+
+/* Shared checked edits retain the existing authoritative store and mutex. */
+#include "document_store_edits.inc"

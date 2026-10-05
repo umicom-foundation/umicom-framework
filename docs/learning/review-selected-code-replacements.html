@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Review a replacement for selected code</title>
+<style>body{font:17px/1.65 system-ui;max-width:900px;margin:32px auto;padding:0 22px;color:#183642}h1,h2{line-height:1.25}code{background:#edf3f5;padding:2px 5px}li{margin:10px 0}a{color:#086a79}.note{padding:16px;background:#edf3f5}</style></head>
+<body><h1>Review a replacement for selected code</h1>
+<p>Studio can show how a proposed replacement changes the complete source draft before you apply it. The proposal may be your own edit or code you deliberately copy from a chat reply. The form treats it as plain text: it does not run commands, parse patch instructions or extract code from a model response automatically.</p>
+<h2>Prepare and inspect an edit</h2>
+<ol>
+<li>If you are using a chat reply, read it first and copy only the code you intend to propose. The <a href="reviewed-chat-follow-ups.html">chat follow-up guide</a> explains how to discuss earlier text. Copying a reply does not approve a source edit.</li>
+<li>In the source editor, select the code to replace. Open <strong>AI Coding</strong> and choose <strong>Review selected-code replacement…</strong>. The selection must be nonempty and belong to a writable source document.</li>
+<li>Check the document name, captured selection and byte position. The capture includes unsaved source changes and remains attached to this document throughout the review.</li>
+<li>Type or explicitly paste into <strong>Proposed replacement</strong>. It initially contains the captured selection, so opening the form does not propose a deletion. Emptying this field deliberately proposes removing the selection. Remove Markdown fences or explanation paragraphs if they are not intended source code.</li>
+<li>Choose <strong>Preview complete draft</strong>. Read both full texts, including the surrounding code. Use the comparison's difference navigation when available. Long files can exceed the line-alignment limits while both complete texts remain visible; follow the comparison's message.</li>
+<li>Select <strong>I approve replacing this captured selection with the reviewed text</strong>, then choose <strong>Apply reviewed replacement</strong>. The form closes after a successful change. Changing proposed text clears the preview and approval, so you must preview it again.</li>
+<li>Inspect the changed draft in the editor. <strong>Undo</strong> restores the captured draft. Save remains a separate action; applying the proposal never writes the source file to disk.</li>
+</ol>
+<p class="note">Cancel or closing the form leaves the source unchanged. The captured target is fixed: switching tabs or moving the caret does not redirect the edit. If the target's text, saved state, path, permissions or external-change state changes, Apply refuses the old proposal. Close it and capture the intended source again.</p>
+<h2>Recover without losing later work</h2>
+<ul>
+<li><strong>No selection or read-only target:</strong> select text in an editable source file before opening the action. The form does not choose a complete file for you.</li>
+<li><strong>Proposal is stale:</strong> keep any proposed text you still need, cancel the form and reopen it from the current source. A fresh capture prevents an old suggestion from overwriting newer typing.</li>
+<li><strong>Another document operation is active:</strong> finish or cancel that operation before opening or applying a proposal. Save All, reviewed Close and pending clipboard operations are checked at the relevant boundaries.</li>
+<li><strong>Unsupported text or size:</strong> use complete UTF-8 text without embedded zero bytes. The complete resulting document must fit Framework's eight-megabyte document limit and the comparison viewer's supported limit. No truncated replacement is applied.</li>
+<li><strong>Identical proposal:</strong> the comparison says that the text is unchanged. Applying closes the review without adding a new Undo step.</li>
+</ul>
+<h2>Privacy and ownership</h2>
+<p>This review uses window memory and the existing document service. It does not fetch provider text, automatically read the clipboard, write a transcript or save the source. Typing or pasting into the form is an explicit local action. The source, proposed input and comparison subtree are marked private for Framework's recording and screenshot policy.</p>
+<p>Closing the form releases its captured proposal and clears its input views. The application must unbind document editing before destroying its document coordinator; retained controls cannot call a retired owner. The operating system and clipboard may hold separate copies of text you copied or pasted.</p>
+<h2>Extend the shared workflow</h2>
+<p><code>UmiDocumentProposalCreate</code> captures a nonempty selection and the complete original draft. <code>UmiDocumentProposalSetText</code> prepares a full proposed draft without changing the source. The proposal has its own revision, so callers can reject approval for an older proposed text as well as changes to the source.</p>
+<p>Display the complete before-and-after texts, obtain explicit approval, then call <code>UmiDocumentProposalApply</code> with the revision shown to the user. The implementation reuses the replacement owner's identity, save-state and exact-byte checks and its existing Undo transaction. It does not introduce another document store. Use the coordinator's owner thread and keep its dependencies alive through checking and applying.</p>
+<p>GTK applications call <code>UmiGtk4AdapterReviewSelectedCode</code> after binding their existing document coordinator. The form owns the capture; the binding's invalidatable token protects application lifetime. A model response should remain untrusted text until the user chooses a replacement and reviews its effect. Add other proposal producers through this same boundary rather than granting them direct file-writing authority.</p>
+<p>Umicom Foundation · MIT</p></body></html>

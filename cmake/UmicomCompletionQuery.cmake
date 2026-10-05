@@ -1,0 +1,16 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-completion-query-test "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/test_completion_query.c")
+    target_link_libraries(umicom-completion-query-test PRIVATE Umicom::developer Umicom::editor Umicom::platform)
+    umicom_apply_warnings(umicom-completion-query-test)
+    umicom_apply_sanitizers(umicom-completion-query-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-completion-query-test)
+    endif()
+    foreach(case valid fragmented notification wrong-id server-request encoding sync-object sync-disabled sync-missing completion-missing duplicate init-error completion-error shutdown-error close-error write-error read-error timeout cancel-before cancel-during unicode empty no-nul-terminator invalid-source nul cursor byte-limit escaped-limit root state profile-disabled native-invalid arguments)
+        add_test(NAME framework.language_runtime.completion_query.${case} COMMAND umicom-completion-query-test ${case})
+        set_tests_properties(framework.language_runtime.completion_query.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;language;completion;ownership;regression")
+    endforeach()
+endif()

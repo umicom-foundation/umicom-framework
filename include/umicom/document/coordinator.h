@@ -25,7 +25,17 @@
 extern "C" {
 #endif
 
+/* File bytes can exceed the editable UTF-8 draft: converting LF to CRLF can
+ * double size, and UTF-16 can double it again. Open, reload and fingerprint
+ * checks share this bounded envelope; decoded normalized text must still fit
+ * UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES before any working copy is attached. */
+#define UMI_DOCUMENT_COORDINATOR_MAXIMUM_FILE_BYTES (4U * UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES + 3U)
+
 #define UMI_DOCUMENT_COORDINATOR_HISTORY_CAPACITY 32U
+/* Each history entry also retains valid caret/selection coordinates when the
+ * exact departure draft is available. Commands and captured native typing
+ * provide them; text-only synchronization uses boundary-safe clamping. Undo
+ * and Redo keep the same source owner and never activate an unrelated tab. */
 /* Each undo or redo stack retains at most this many owned text bytes,
  * including terminators. Oldest entries are evicted only after a successful
  * edit. The snapshot reports the number of steps still available. */

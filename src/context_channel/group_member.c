@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/group_member.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context group member from caller-provided values so later operations receive
@@ -36,6 +37,15 @@ record->revision=1U;
  */
 UmiStatus umi_context_group_member_validate(const UmiContextGroupMember *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->member_id, '\0', sizeof(record->member_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->group_id, '\0', sizeof(record->group_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->application_id, '\0', sizeof(record->application_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->panel_instance_id, '\0', sizeof(record->panel_instance_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -188,3 +198,56 @@ if(store->count!=0U)memcpy(out_records,store->items,store->count*sizeof(store->i
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextGroupMemberArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xe90473f423fe991d);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextGroupMember *)0)->member_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextGroupMember *)0)->group_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextGroupMember *)0)->application_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextGroupMember *)0)->panel_instance_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextGroupMemberArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextGroupMember *)0)->member_id) - 1U +
+        8U + sizeof(((UmiContextGroupMember *)0)->group_id) - 1U +
+        8U + sizeof(((UmiContextGroupMember *)0)->application_id) - 1U +
+        8U + sizeof(((UmiContextGroupMember *)0)->panel_instance_id) - 1U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextGroupMemberArchiveWrite(UmiArchiveWriter *writer, const UmiContextGroupMember *value)
+{
+    UmiArchiveWriteText(writer, value->member_id, sizeof(value->member_id));
+    UmiArchiveWriteText(writer, value->group_id, sizeof(value->group_id));
+    UmiArchiveWriteText(writer, value->application_id, sizeof(value->application_id));
+    UmiArchiveWriteText(writer, value->panel_instance_id, sizeof(value->panel_instance_id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->role);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextGroupMemberArchiveRead(UmiArchiveReader *reader, UmiContextGroupMember *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->member_id, sizeof(value->member_id));
+    UmiArchiveReadText(reader, value->group_id, sizeof(value->group_id));
+    UmiArchiveReadText(reader, value->application_id, sizeof(value->application_id));
+    UmiArchiveReadText(reader, value->panel_instance_id, sizeof(value->panel_instance_id));
+    value->role = (UmiContextSubscriptionRole)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextGroupMemberArchiveValidate(const UmiContextGroupMember *value)
+{
+    return umi_context_group_member_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_group_member_archive_encode, umi_context_group_member_archive_decode,
+    UmiContextGroupMember, UmiContextGroupMemberArchiveSchema, UmiContextGroupMemberArchiveBound, UmiContextGroupMemberArchiveWrite, UmiContextGroupMemberArchiveRead, UmiContextGroupMemberArchiveValidate)

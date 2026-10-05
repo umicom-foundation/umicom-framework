@@ -17,6 +17,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/intelligence_workbench/refactor_restore.h"
+#include "../../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -39,4 +40,53 @@ UmiStatus umi_editor_intel_refactor_restore_cancel(UmiEditorIntelRefactorRestore
  * Check that editor intel refactor restore satisfies its contract before another service
  * relies on it.
  */
-int umi_editor_intel_refactor_restore_valid(const UmiEditorIntelRefactorRestore *session){return session!=NULL&&umi_editor_intel_id_valid(session->session_id)&&session->phase>=UMI_EDITOR_INTEL_PHASE_PREPARING&&session->phase<=UMI_EDITOR_INTEL_PHASE_CANCELLED;}
+int umi_editor_intel_refactor_restore_valid(const UmiEditorIntelRefactorRestore *session){
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (session == NULL) return 0;
+    if (memchr(session->session_id, '\0', sizeof(session->session_id)) == NULL) return 0;
+return session!=NULL&&umi_editor_intel_id_valid(session->session_id)&&session->phase>=UMI_EDITOR_INTEL_PHASE_PREPARING&&session->phase<=UMI_EDITOR_INTEL_PHASE_CANCELLED;}
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiEditorIntelRefactorRestoreArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xf3e7180b01f0ef35);
+    schema = (schema ^ (uint64_t)sizeof(((UmiEditorIntelRefactorRestore *)0)->session_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiEditorIntelRefactorRestoreArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiEditorIntelRefactorRestore *)0)->session_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiEditorIntelRefactorRestoreArchiveWrite(UmiArchiveWriter *writer, const UmiEditorIntelRefactorRestore *value)
+{
+    UmiArchiveWriteText(writer, value->session_id, sizeof(value->session_id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->phase);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->item_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->changed);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiEditorIntelRefactorRestoreArchiveRead(UmiArchiveReader *reader, UmiEditorIntelRefactorRestore *value)
+{
+    UmiArchiveReadText(reader, value->session_id, sizeof(value->session_id));
+    value->phase = (UmiEditorIntelPhase)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->item_count = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->changed = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiEditorIntelRefactorRestoreArchiveValidate(const UmiEditorIntelRefactorRestore *value)
+{
+    return umi_editor_intel_refactor_restore_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_editor_intel_refactor_restore_archive_encode, umi_editor_intel_refactor_restore_archive_decode,
+    UmiEditorIntelRefactorRestore, UmiEditorIntelRefactorRestoreArchiveSchema, UmiEditorIntelRefactorRestoreArchiveBound, UmiEditorIntelRefactorRestoreArchiveWrite, UmiEditorIntelRefactorRestoreArchiveRead, UmiEditorIntelRefactorRestoreArchiveValidate)

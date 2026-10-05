@@ -17,6 +17,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/extension_host/dependency_constraint.h"
+#include "../../base/value_archive_internal.h"
 #include <string.h>
 
 /*
@@ -85,6 +86,13 @@ UmiStatus umi_plugin_extension_host_dependency_constraint_configure(UmiPluginExt
  */
 UmiStatus umi_plugin_extension_host_dependency_constraint_validate(const UmiPluginExtensionHostDependencyConstraint *value)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(value->id, '\0', sizeof(value->id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(value->subject, '\0', sizeof(value->subject)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -109,3 +117,54 @@ uint64_t umi_plugin_extension_host_dependency_constraint_fingerprint(const UmiPl
     result ^= ((uint64_t)value->version << 32U) ^ value->flags ^ value->risk;
     return result;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiPluginExtensionHostDependencyConstraintArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xdd7f816275a9a1c8);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPluginExtensionHostDependencyConstraint *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPluginExtensionHostDependencyConstraint *)0)->subject)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiPluginExtensionHostDependencyConstraintArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiPluginExtensionHostDependencyConstraint *)0)->id) - 1U +
+        8U + sizeof(((UmiPluginExtensionHostDependencyConstraint *)0)->subject) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiPluginExtensionHostDependencyConstraintArchiveWrite(UmiArchiveWriter *writer, const UmiPluginExtensionHostDependencyConstraint *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->subject, sizeof(value->subject));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->version);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->risk);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->flags);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiPluginExtensionHostDependencyConstraintArchiveRead(UmiArchiveReader *reader, UmiPluginExtensionHostDependencyConstraint *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->subject, sizeof(value->subject));
+    value->version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->risk = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->flags = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiPluginExtensionHostDependencyConstraintArchiveValidate(const UmiPluginExtensionHostDependencyConstraint *value)
+{
+    return umi_plugin_extension_host_dependency_constraint_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_plugin_extension_host_dependency_constraint_archive_encode, umi_plugin_extension_host_dependency_constraint_archive_decode,
+    UmiPluginExtensionHostDependencyConstraint, UmiPluginExtensionHostDependencyConstraintArchiveSchema, UmiPluginExtensionHostDependencyConstraintArchiveBound, UmiPluginExtensionHostDependencyConstraintArchiveWrite, UmiPluginExtensionHostDependencyConstraintArchiveRead, UmiPluginExtensionHostDependencyConstraintArchiveValidate)

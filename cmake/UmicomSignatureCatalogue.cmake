@@ -1,0 +1,16 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-signature-catalogue-test "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/test_signature_catalogue.c")
+    target_link_libraries(umicom-signature-catalogue-test PRIVATE Umicom::developer)
+    umicom_apply_warnings(umicom-signature-catalogue-test)
+    umicom_apply_sanitizers(umicom-signature-catalogue-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-signature-catalogue-test)
+    endif()
+    foreach(case valid null empty overload local-active default-active signature-fallback parameter-fallback local-fallback no-parameters empty-parameters unicode multiline zero-span ambiguous missing-substring empty-string split-surrogate range-overflow range-negative reversed tuple-short tuple-long tuple-fraction label-type negative-active active-fraction active-type active-overflow parameters-type documentation-type unknown-markup missing-markup signature-label-type missing-label signature-array-type parameter-doc-type literal-documentation duplicate embedded-nul owned response wrong-id error legacy label-limit legacy-limit signature-limit parameter-limit total-limit expanded-label-limit cancelled arguments)
+        add_test(NAME framework.language_runtime.signature_catalogue.${case} COMMAND umicom-signature-catalogue-test ${case})
+        set_tests_properties(framework.language_runtime.signature_catalogue.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;language;signatures;ownership;regression")
+    endforeach()
+endif()

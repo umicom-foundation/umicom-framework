@@ -160,6 +160,9 @@ static UmiStatus ProviderMessage(UmiIbkrConnection *c,char **f,size_t n)
 {
     uint64_t code;
     if((n!=5U&&n!=6U)||strcmp(f[1],"2")||!UmiIbkrUnsigned(f[3],&code)||code>INT_MAX||!UmiIbkrText(f[4],UMI_IBKR_FRAME_LIMIT,true))return UMI_STATUS_PARSE_ERROR;
+    /* Quote-scoped refusals belong to their subscription, not the account
+     * snapshot. The frame has already passed the diagnostic text bounds. */
+    if (UmiIbkrQuoteProviderMessage(c, f[2], (int)code, f[4])) return UMI_STATUS_OK;
     c->snapshot.providerCode=(int)code;
     /* Never crop UTF-8 in the middle of a code point. Long provider text
      * is explicitly omitted, not published as a complete diagnostic. */
@@ -181,7 +184,12 @@ static UmiStatus Decode(UmiIbkrConnection *c,const unsigned char *body,size_t le
     char number[21]={0};memcpy(number,body,(size_t)(first-body));
     if(!UmiIbkrUnsigned(number,&id))return UMI_STATUS_PARSE_ERROR;
     bool handshake=c->snapshot.state==UMI_IBKR_HANDSHAKE;
+    /* Retain the former account-only receive allowlist for review. Quote frames
+     * are now decoded by their request owner before entering application views. */
+#if 0
     if(!handshake&&id!=4U&&id!=9U&&id!=15U&&id!=49U&&id!=61U&&id!=62U&&id!=63U&&id!=64U)return Ignore(c);
+#endif
+    if(!handshake&&id!=1U&&id!=2U&&id!=58U&&id!=4U&&id!=9U&&id!=15U&&id!=49U&&id!=61U&&id!=62U&&id!=63U&&id!=64U)return Ignore(c);
     /* One bounded allocation per decoded control/observation message, released
      * before return. An ignored message is never parsed as a known structure. */
     char *copy=malloc(length+1U);if(!copy)return UMI_STATUS_OUT_OF_MEMORY;
@@ -197,6 +205,7 @@ static UmiStatus Decode(UmiIbkrConnection *c,const unsigned char *body,size_t le
             if(status==UMI_STATUS_OK){c->snapshot.protocolVersion=(int)id;c->snapshot.state=UMI_IBKR_WAITING;}
         }
     }else switch(id){
+    case 1: case 2: case 58: status=UmiIbkrQuoteFrame(c,id,f,n,now);break;
     case 4: status=ProviderMessage(c,f,n);break;
     case 9:{uint64_t order;
         if(n!=3U||strcmp(f[1],"1")||!UmiIbkrUnsigned(f[2],&order)||order>INT_MAX)status=UMI_STATUS_PARSE_ERROR;

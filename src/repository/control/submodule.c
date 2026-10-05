@@ -17,6 +17,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/repository/submodule.h"
+#include "../../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -96,6 +97,15 @@ UmiStatus umi_repository_submodule_init(
 UmiStatus umi_repository_submodule_validate(
     const UmiRepositorySubmodule *submodule)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (submodule == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(submodule->name, '\0', sizeof(submodule->name)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(submodule->path, '\0', sizeof(submodule->path)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(submodule->url, '\0', sizeof(submodule->url)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(submodule->branch, '\0', sizeof(submodule->branch)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -111,3 +121,49 @@ UmiStatus umi_repository_submodule_validate(
     }
     return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiRepositorySubmoduleArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xf4fab126e71a05ee);
+    schema = (schema ^ (uint64_t)sizeof(((UmiRepositorySubmodule *)0)->name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiRepositorySubmodule *)0)->path)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiRepositorySubmodule *)0)->url)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiRepositorySubmodule *)0)->branch)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiRepositorySubmoduleArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiRepositorySubmodule *)0)->name) - 1U +
+        8U + sizeof(((UmiRepositorySubmodule *)0)->path) - 1U +
+        8U + sizeof(((UmiRepositorySubmodule *)0)->url) - 1U +
+        8U + sizeof(((UmiRepositorySubmodule *)0)->branch) - 1U +
+        8U;
+}
+static void UmiRepositorySubmoduleArchiveWrite(UmiArchiveWriter *writer, const UmiRepositorySubmodule *value)
+{
+    UmiArchiveWriteText(writer, value->name, sizeof(value->name));
+    UmiArchiveWriteText(writer, value->path, sizeof(value->path));
+    UmiArchiveWriteText(writer, value->url, sizeof(value->url));
+    UmiArchiveWriteText(writer, value->branch, sizeof(value->branch));
+    UmiArchiveWriteSigned(writer, (int64_t)value->required);
+}
+static void UmiRepositorySubmoduleArchiveRead(UmiArchiveReader *reader, UmiRepositorySubmodule *value)
+{
+    UmiArchiveReadText(reader, value->name, sizeof(value->name));
+    UmiArchiveReadText(reader, value->path, sizeof(value->path));
+    UmiArchiveReadText(reader, value->url, sizeof(value->url));
+    UmiArchiveReadText(reader, value->branch, sizeof(value->branch));
+    value->required = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+}
+static UmiStatus UmiRepositorySubmoduleArchiveValidate(const UmiRepositorySubmodule *value)
+{
+    return umi_repository_submodule_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_repository_submodule_archive_encode, umi_repository_submodule_archive_decode,
+    UmiRepositorySubmodule, UmiRepositorySubmoduleArchiveSchema, UmiRepositorySubmoduleArchiveBound, UmiRepositorySubmoduleArchiveWrite, UmiRepositorySubmoduleArchiveRead, UmiRepositorySubmoduleArchiveValidate)

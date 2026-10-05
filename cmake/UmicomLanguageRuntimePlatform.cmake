@@ -18,9 +18,30 @@ include_guard(GLOBAL)
 if(NOT TARGET umicom_developer)
     message(FATAL_ERROR "Language Runtime requires the canonical umicom_developer target")
 endif()
+# Captured-source language replies use the editor's UTF-8/UTF-16 position index.
+# Declare that owner directly so catalogue-only consumers resolve it too.
+target_link_libraries(umicom_developer PRIVATE Umicom::editor)
+
 target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/arguments.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/builtin_profiles.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/completion_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/completion_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/completion_response.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/completion_preview.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/completion_query.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/server_preferences.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/location_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/symbol_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/call_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/signature_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/workspace_edit_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/code_action_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/diagnostic_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/diagnostic_context.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/hover_document.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/response_tree.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/text_edit_preview.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/decoder_support.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/decoders/code_actions.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/decoders/completion.c"
@@ -87,6 +108,8 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/requests/signature_help.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/requests/workspace_symbols.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/server.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/server_lifecycle.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/server_probe.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/server_manager.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/service_bridge.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/transport.c"
@@ -1049,3 +1072,210 @@ if(BUILD_TESTING)
             TIMEOUT 120 LABELS "framework;language-runtime;document-publication;regression")
     endforeach()
 endif()
+
+# Native process ownership checks complement the protocol-only fixtures above.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomLanguageProcessChecks.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomLanguageLifecycleChecks.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeLanguageHandshake.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomLanguageConnectionPanel.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomCompletionPlans.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomCompletionRouting.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomCompletionPreview.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomCompletionQuery.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomCompletionDocumentReview.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeCompletion.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomCompletionReviewPanel.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomLanguagePreferences.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomCompletionSettingsPanel.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomTextEditPreviews.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomFormattingQuery.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeFormatting.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomFormattingReviewPanel.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomHoverDocuments.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomHoverQuery.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeHover.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSourceInformationPanel.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomLocationCatalogue.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNavigationQuery.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeNavigation.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSourceNavigationPanel.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSymbolCatalogue.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSymbolQuery.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeSymbols.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDocumentSymbolsPanel.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSignatureCatalogue.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSignatureQuery.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeSignature.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomParameterHelpPanel.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkspaceEditCatalogue.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkspaceEditPreview.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomRenameQuery.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeRename.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomRenameReviewPanel.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkspaceEditScope.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomCodeActionCatalogue.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomCodeActionQuery.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeCodeActions.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomCodeActionReviewPanel.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDiagnosticCatalogue.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDiagnosticQuery.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeDiagnostics.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDiagnosticContext.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomActionDiagnosticsQuery.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeActionContext.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomRenameSources.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeRenameSources.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSourceWorkspaceEditReview.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomActionSources.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeActionSources.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomPullDiagnosticCatalogue.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomPullDiagnosticQuery.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativePullDiagnostics.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomPullDiagnosticsPanel.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomActionPullContext.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeActionPullContext.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkspaceSymbolQuery.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeWorkspaceSymbols.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkspaceSymbolsPanel.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomTypeNavigationQuery.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeTypeNavigation.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomTypeNavigationPanel.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomRangeFormattingQuery.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeRangeFormatting.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomRangeFormattingPanel.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomActionKindFilter.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomActionFilterQuery.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeActionFilter.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDiagnosticLocations.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSelectionLocations.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSelectionQuery.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeSelectionRanges.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSelectionRangePanel.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomJsonValueComparison.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomResolvedActionCatalogue.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomActionResolutionQuery.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeActionResolution.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkspaceActionResolutionPanel.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomCallCatalogue.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomCallQuery.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeCalls.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomCallPanel.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSnippetPanel.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSnippetStorage.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSnippetStoragePanel.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomTextFolding.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomActionMenu.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomQuickOpen.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDocumentSearchOptionsChecks.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDocumentReplacementOptionsChecks.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomFoldingLocations.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomFoldingQuery.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeFoldingRanges.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomFoldingRangePanel.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomLineEditPlan.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDocumentHistorySelection.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSecureRandom.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomRecoveryDraft.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomRecoveryStorage.cmake")

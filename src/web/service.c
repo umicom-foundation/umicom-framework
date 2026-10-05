@@ -19,7 +19,7 @@
 
 #include "umicom/web/service.h"
 #include <stdlib.h>
-struct UmiWebService{UmiWebRouter *router;UmiWebMiddlewareChain *middleware;UmiWebSessionStore *sessions;UmiWebOriginPolicy *origins;UmiWebEndpointRegistry *endpoints;UmiWebMetrics metrics;};
+struct UmiWebService{UmiWebRouter *router;UmiWebMiddlewareChain *middleware;UmiWebSessionStore *sessions;UmiWebOriginPolicy *origins;UmiWebEndpointRegistry *endpoints;UmiWebMetrics metrics;UmiWebRequestGate gate;void *gate_context;};
 /*
  * Initialise web service from caller-provided values so later operations receive a known
  * state.
@@ -36,4 +36,44 @@ UmiWebRouter *umi_web_service_router(UmiWebService *s){return s!=NULL?s->router:
  * Perform web service through the module contract so client applications do not duplicate
  * its policy.
  */
+/* Request admission belongs to the shared service so native, test and future transport adapters use the same gate before reaching application operations.
+ * The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_web_service_handle(UmiWebService *s,const UmiWebRequest *req,UmiWebResponse *res){UmiStatus st;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==NULL||req==NULL||res==NULL)return UMI_STATUS_INVALID_ARGUMENT;umi_web_response_init(res);st=umi_web_middleware_chain_run(s->middleware,req,res);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(st==UMI_STATUS_OK)st=umi_web_router_dispatch(s->router,req,res);umi_web_metrics_record(&s->metrics,req->body_length,res->status,res->body_length);return st;}
+#endif
+UmiStatus umi_web_service_handle(UmiWebService *s, const UmiWebRequest *req, UmiWebResponse *res)
+{
+    UmiStatus
+        st; /* Protect caller-owned memory by checking that required state is available before it is used. */
+    if (s == NULL || req == NULL || res == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    umi_web_response_init(res); /* Admission runs before any middleware or application route. A refusal
+ * response is intentional; a failing gate is still an operational error. */
+    bool accepted = true;
+    if (s->gate != NULL)
+    {
+        accepted = false;
+        st = s->gate(req, res, &accepted, s->gate_context);
+        if (st != UMI_STATUS_OK || !accepted)
+        {
+            umi_web_metrics_record(&s->metrics, req->body_length, res->status, res->body_length);
+            return st;
+        }
+    }
+    st = umi_web_middleware_chain_run(
+        s->middleware, req,
+        res); /* Protect caller-owned memory by checking that required state is available before it is used. */
+    if (st == UMI_STATUS_OK)
+        st = umi_web_router_dispatch(s->router, req, res);
+    umi_web_metrics_record(&s->metrics, req->body_length, res->status, res->body_length);
+    return st;
+}
+
+UmiStatus UmiWebServiceSetRequestGate(UmiWebService *service, UmiWebRequestGate gate, void *context)
+{
+    if (service == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    service->gate = gate;
+    service->gate_context = gate != NULL ? context : NULL;
+    return UMI_STATUS_OK;
+}

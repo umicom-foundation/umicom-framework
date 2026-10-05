@@ -16,6 +16,7 @@
 #ifndef UMICOM_LANGUAGE_RUNTIME_PLATFORM_H
 #define UMICOM_LANGUAGE_RUNTIME_PLATFORM_H
 #include "umicom/editor/session.h"
+#include "umicom/language_runtime/completion_catalogue.h"
 #include "umicom/language/service.h"
 #include "umicom/language_runtime/dispatcher.h"
 #include "umicom/language_runtime/server_manager.h"
@@ -173,6 +174,30 @@ UmiLanguageRuntimeDocumentSync *umi_language_runtime_platform_documents(UmiLangu
  * its client applications.
  */
 const UmiLanguageRuntimeDispatchState *umi_language_runtime_platform_dispatch_state(const UmiLanguageRuntimePlatform*p);
+
+/* Request and review richer completion edits on the platform's owning thread.
+ * First synchronize the document text through open_document/change_document.
+ * Pass that same authoritative buffer here so its revision can travel with
+ * the request. The buffer is borrowed only during this call; no source is
+ * changed. Keep the existing request_completion API for display-only clients. */
+UmiStatus UmiLanguageRuntimePlatformRequestCompletionReview(UmiLanguageRuntimePlatform *platform,
+    const char *document_id, uint32_t line, uint32_t character, const UmiEditorTextBuffer *buffer);
+/* Borrow the most recently received completion catalogue for this document.
+ * Only one catalogue is retained by the platform. The pointer expires on a
+ * subsequent accepted completion, document change/close, a new reviewed request
+ * for the same document, or platform destruction. No ownership is transferred.
+ * NOT_FOUND means no current response is available. Failure clears the output. */
+UmiStatus UmiLanguageRuntimePlatformCompletionCatalogue(const UmiLanguageRuntimePlatform *platform,
+    const char *document_id, const UmiLanguageCompletionCatalogue **out_catalogue);
+/* Prepare a selected reviewed response against the buffer revision captured at
+ * request time. Display-only requests cannot be applied through this function.
+ * A successful plan still needs explicit acceptance and Editor application
+ * with require_matching_revision=1. It performs no disk I/O or server command.
+ * The platform and editor buffer must be used on one owning thread. */
+UmiStatus UmiLanguageRuntimePlatformCompletionPlan(UmiLanguageRuntimePlatform *platform,
+    const char *document_id, size_t index, const UmiEditorTextBuffer *buffer,
+    UmiLanguageCompletionRange fallback_range, UmiLanguageCompletionAcceptance acceptance,
+    const UmiCancellationToken *cancel, UmiEditorWorkspaceEditSet **out_edits);
 #ifdef __cplusplus
 }
 #endif

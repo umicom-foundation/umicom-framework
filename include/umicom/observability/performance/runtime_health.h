@@ -17,6 +17,7 @@
 #define UMICOM_OBSERVABILITY_PERFORMANCE_RUNTIME_HEALTH_H
 
 #include <stdbool.h>
+#include "umicom/base/value_archive.h"
 #include <stddef.h>
 #include <stdint.h>
 #include "umicom/observability/performance/types.h"
@@ -54,6 +55,17 @@ UmiStatus umi_performance_runtime_health_observe(UmiPerformanceRuntimeHealth *re
 bool umi_performance_runtime_health_same_identity(const UmiPerformanceRuntimeHealth *left, const UmiPerformanceRuntimeHealth *right);
 /* Domain-specific policy helper for runtime health. */
 bool umi_performance_runtime_health_healthy(UmiPerformanceSeverity severity, bool failed);
+
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_performance_runtime_health_archive_encode(const UmiPerformanceRuntimeHealth *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_performance_runtime_health_archive_decode(const void *bytes, size_t byte_count,
+    UmiPerformanceRuntimeHealth *value);
 
 #ifdef __cplusplus
 }

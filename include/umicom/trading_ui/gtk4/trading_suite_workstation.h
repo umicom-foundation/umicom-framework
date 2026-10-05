@@ -17,6 +17,7 @@
 #ifndef UMICOM_TRADING_UI_GTK4_TRADING_SUITE_WORKSTATION_H
 #define UMICOM_TRADING_UI_GTK4_TRADING_SUITE_WORKSTATION_H
 
+#include "umicom/ui/workspace_library_exchange.h"
 #include <stddef.h>
 
 #include "umicom/ui/workspace_library.h"
@@ -263,6 +264,26 @@ UmiStatus UmiGtk4TradingSuiteBindChartStorage(UmiGtk4TradingSuiteWorkstation *wo
     UmiDataServer *server, const char *scope);
 /* Borrow the toolkit-neutral coordinator for thin host adapters and tests. */
 UmiTradingChartPersistence *UmiGtk4TradingSuiteChartPersistence(UmiGtk4TradingSuiteWorkstation *workstation);
+
+/* Portable library exchange uses the same owner and scope as the native
+ * Layout Library. Review owns copied bytes; apply refuses a stale workspace.
+ * Calls run on the GTK owner thread. They never save storage or place orders.
+ * The caller destroys the review after apply or cancellation. */
+UmiStatus umi_gtk4_trading_suite_workstation_library_export(
+    UmiGtk4TradingSuiteWorkstation *workstation, char *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_gtk4_trading_suite_workstation_library_import_review(
+    UmiGtk4TradingSuiteWorkstation *workstation, const void *bytes, size_t size, UmiUiWorkspaceLibraryImport **out_review);
+UmiStatus umi_gtk4_trading_suite_workstation_library_import_apply(
+    UmiGtk4TradingSuiteWorkstation *workstation, const UmiUiWorkspaceLibraryImport *review);
+
+/* Layout recovery stays with Framework. This owner-thread call neither
+ * saves product data nor runs a trade, payment or project command. */
+UmiStatus umi_gtk4_trading_suite_workstation_library_history_read(UmiGtk4TradingSuiteWorkstation *workstation,
+    UmiUiWorkspaceLibraryHistoryState *out_state);
+/* Layout recovery stays with Framework. This owner-thread call neither
+ * saves product data nor runs a trade, payment or project command. */
+UmiStatus umi_gtk4_trading_suite_workstation_library_history_navigate(UmiGtk4TradingSuiteWorkstation *workstation,
+    UmiUiWorkspaceLibraryHistoryDirection direction, uint64_t expected_revision);
 
 #ifdef __cplusplus
 }

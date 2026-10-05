@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/bookmark.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context bookmark from caller-provided values so later operations receive a
@@ -33,6 +34,16 @@ record->revision=1U;
 /* Check that context bookmark satisfies its contract before another service relies on it. */
 UmiStatus umi_context_bookmark_validate(const UmiContextBookmark *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->bookmark_id, '\0', sizeof(record->bookmark_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->context_id, '\0', sizeof(record->context_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->channel_id, '\0', sizeof(record->channel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->label, '\0', sizeof(record->label)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->user_id, '\0', sizeof(record->user_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -187,3 +198,60 @@ if(store->count!=0U)memcpy(out_records,store->items,store->count*sizeof(store->i
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextBookmarkArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x68b1dda288881cda);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextBookmark *)0)->bookmark_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextBookmark *)0)->context_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextBookmark *)0)->channel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextBookmark *)0)->label)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextBookmark *)0)->user_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextBookmarkArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextBookmark *)0)->bookmark_id) - 1U +
+        8U + sizeof(((UmiContextBookmark *)0)->context_id) - 1U +
+        8U + sizeof(((UmiContextBookmark *)0)->channel_id) - 1U +
+        8U + sizeof(((UmiContextBookmark *)0)->label) - 1U +
+        8U + sizeof(((UmiContextBookmark *)0)->user_id) - 1U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextBookmarkArchiveWrite(UmiArchiveWriter *writer, const UmiContextBookmark *value)
+{
+    UmiArchiveWriteText(writer, value->bookmark_id, sizeof(value->bookmark_id));
+    UmiArchiveWriteText(writer, value->context_id, sizeof(value->context_id));
+    UmiArchiveWriteText(writer, value->channel_id, sizeof(value->channel_id));
+    UmiArchiveWriteText(writer, value->label, sizeof(value->label));
+    UmiArchiveWriteText(writer, value->user_id, sizeof(value->user_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->shared);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->created_at_ms);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextBookmarkArchiveRead(UmiArchiveReader *reader, UmiContextBookmark *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->bookmark_id, sizeof(value->bookmark_id));
+    UmiArchiveReadText(reader, value->context_id, sizeof(value->context_id));
+    UmiArchiveReadText(reader, value->channel_id, sizeof(value->channel_id));
+    UmiArchiveReadText(reader, value->label, sizeof(value->label));
+    UmiArchiveReadText(reader, value->user_id, sizeof(value->user_id));
+    value->shared = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->created_at_ms = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextBookmarkArchiveValidate(const UmiContextBookmark *value)
+{
+    return umi_context_bookmark_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_bookmark_archive_encode, umi_context_bookmark_archive_decode,
+    UmiContextBookmark, UmiContextBookmarkArchiveSchema, UmiContextBookmarkArchiveBound, UmiContextBookmarkArchiveWrite, UmiContextBookmarkArchiveRead, UmiContextBookmarkArchiveValidate)

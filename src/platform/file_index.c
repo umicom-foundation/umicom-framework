@@ -127,8 +127,15 @@ static int contains_text(const char *text,
             char right = query[index];
             /* Apply this branch only when its contract condition is satisfied. */
             if (!case_sensitive) {
+                /* Filename queries fold ASCII letters explicitly. Locale-based
+                 * byte conversion can alter UTF-8 continuation bytes, so keep
+                 * other bytes exact. The former conversion remains for review. */
+#if 0
                 left = (char)tolower((unsigned char)left);
                 right = (char)tolower((unsigned char)right);
+#endif
+                if (left >= 'A' && left <= 'Z') left = (char)(left + ('a' - 'A'));
+                if (right >= 'A' && right <= 'Z') right = (char)(right + ('a' - 'A'));
             }
             /* Apply this branch only when its contract condition is satisfied. */
             if (left != right) {

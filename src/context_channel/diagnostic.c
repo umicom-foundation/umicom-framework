@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/diagnostic.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context diagnostic from caller-provided values so later operations receive a
@@ -36,6 +37,15 @@ record->revision=1U;
  */
 UmiStatus umi_context_diagnostic_validate(const UmiContextDiagnostic *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->diagnostic_id, '\0', sizeof(record->diagnostic_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->channel_id, '\0', sizeof(record->channel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->context_id, '\0', sizeof(record->context_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->message, '\0', sizeof(record->message)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -188,3 +198,59 @@ if(store->count!=0U)memcpy(out_records,store->items,store->count*sizeof(store->i
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextDiagnosticArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x9ce645f8b75cf9e4);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextDiagnostic *)0)->diagnostic_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextDiagnostic *)0)->channel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextDiagnostic *)0)->context_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextDiagnostic *)0)->message)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextDiagnosticArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextDiagnostic *)0)->diagnostic_id) - 1U +
+        8U + sizeof(((UmiContextDiagnostic *)0)->channel_id) - 1U +
+        8U + sizeof(((UmiContextDiagnostic *)0)->context_id) - 1U +
+        8U + sizeof(((UmiContextDiagnostic *)0)->message) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextDiagnosticArchiveWrite(UmiArchiveWriter *writer, const UmiContextDiagnostic *value)
+{
+    UmiArchiveWriteText(writer, value->diagnostic_id, sizeof(value->diagnostic_id));
+    UmiArchiveWriteText(writer, value->channel_id, sizeof(value->channel_id));
+    UmiArchiveWriteText(writer, value->context_id, sizeof(value->context_id));
+    UmiArchiveWriteText(writer, value->message, sizeof(value->message));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->severity);
+    UmiArchiveWriteSigned(writer, (int64_t)value->status);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->timestamp_ms);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextDiagnosticArchiveRead(UmiArchiveReader *reader, UmiContextDiagnostic *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->diagnostic_id, sizeof(value->diagnostic_id));
+    UmiArchiveReadText(reader, value->channel_id, sizeof(value->channel_id));
+    UmiArchiveReadText(reader, value->context_id, sizeof(value->context_id));
+    UmiArchiveReadText(reader, value->message, sizeof(value->message));
+    value->severity = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->status = (UmiStatus)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->timestamp_ms = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextDiagnosticArchiveValidate(const UmiContextDiagnostic *value)
+{
+    return umi_context_diagnostic_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_diagnostic_archive_encode, umi_context_diagnostic_archive_decode,
+    UmiContextDiagnostic, UmiContextDiagnosticArchiveSchema, UmiContextDiagnosticArchiveBound, UmiContextDiagnosticArchiveWrite, UmiContextDiagnosticArchiveRead, UmiContextDiagnosticArchiveValidate)

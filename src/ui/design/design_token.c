@@ -18,6 +18,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/design/design_token.h"
+#include "../../base/value_archive_internal.h"
 
 #include <string.h>
 /* Provide the init id operation used by this module and its client applications. */
@@ -35,4 +36,73 @@ UmiStatus umi_design_token_color(UmiDesignToken *token,const char *id,UmiDesignR
 /* Provide the design token text operation used by this module and its client applications. */
 UmiStatus umi_design_token_text(UmiDesignToken *token,const char *id,const char *value){UmiStatus s=init_id(token,id,UMI_DESIGN_VALUE_TEXT);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;return umi_design_copy_text(token->text,sizeof token->text,value);}
 /* Check that design token satisfies its contract before another service relies on it. */
-int umi_design_token_valid(const UmiDesignToken *token){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(token==NULL||token->id[0]=='\0')return 0;/* Select the behaviour associated with the requested command or state value. */ switch(token->kind){case UMI_DESIGN_VALUE_COLOR:return umi_design_color_valid(token->color);case UMI_DESIGN_VALUE_NUMBER:return umi_design_number_valid(token->number);case UMI_DESIGN_VALUE_TEXT:return token->text[0]!='\0';case UMI_DESIGN_VALUE_INTEGER:case UMI_DESIGN_VALUE_LENGTH:case UMI_DESIGN_VALUE_DURATION:return 1;default:return 0;}}
+int umi_design_token_valid(const UmiDesignToken *token){
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (token == NULL) return 0;
+    if (memchr(token->id, '\0', sizeof(token->id)) == NULL) return 0;
+    if (memchr(token->text, '\0', sizeof(token->text)) == NULL) return 0;
+/* Protect caller-owned memory by checking that required state is available before it is used. */ if(token==NULL||token->id[0]=='\0')return 0;/* Select the behaviour associated with the requested command or state value. */ switch(token->kind){case UMI_DESIGN_VALUE_COLOR:return umi_design_color_valid(token->color);case UMI_DESIGN_VALUE_NUMBER:return umi_design_number_valid(token->number);case UMI_DESIGN_VALUE_TEXT:return token->text[0]!='\0';case UMI_DESIGN_VALUE_INTEGER:case UMI_DESIGN_VALUE_LENGTH:case UMI_DESIGN_VALUE_DURATION:return 1;default:return 0;}}
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiDesignTokenArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x49e7ceccd76ba46e);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDesignToken *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDesignToken *)0)->text)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiDesignTokenArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiDesignToken *)0)->id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U + sizeof(((UmiDesignToken *)0)->text) - 1U;
+}
+static void UmiDesignTokenArchiveWrite(UmiArchiveWriter *writer, const UmiDesignToken *value)
+{
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->kind);
+    UmiArchiveWriteDouble(writer, value->color.red);
+    UmiArchiveWriteDouble(writer, value->color.green);
+    UmiArchiveWriteDouble(writer, value->color.blue);
+    UmiArchiveWriteDouble(writer, value->color.alpha);
+    UmiArchiveWriteDouble(writer, value->number);
+    UmiArchiveWriteSigned(writer, (int64_t)value->integer);
+    UmiArchiveWriteDouble(writer, value->length.value);
+    UmiArchiveWriteSigned(writer, (int64_t)value->length.unit);
+    UmiArchiveWriteText(writer, value->text, sizeof(value->text));
+}
+static void UmiDesignTokenArchiveRead(UmiArchiveReader *reader, UmiDesignToken *value)
+{
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    value->kind = (UmiDesignValueKind)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->color.red = UmiArchiveReadDouble(reader);
+    value->color.green = UmiArchiveReadDouble(reader);
+    value->color.blue = UmiArchiveReadDouble(reader);
+    value->color.alpha = UmiArchiveReadDouble(reader);
+    value->number = UmiArchiveReadDouble(reader);
+    value->integer = (int64_t)UmiArchiveReadSigned(reader, INT64_MIN, INT64_MAX);
+    value->length.value = UmiArchiveReadDouble(reader);
+    value->length.unit = (UmiDesignUnit)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    UmiArchiveReadText(reader, value->text, sizeof(value->text));
+}
+static UmiStatus UmiDesignTokenArchiveValidate(const UmiDesignToken *value)
+{
+    return umi_design_token_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_design_token_archive_encode, umi_design_token_archive_decode,
+    UmiDesignToken, UmiDesignTokenArchiveSchema, UmiDesignTokenArchiveBound, UmiDesignTokenArchiveWrite, UmiDesignTokenArchiveRead, UmiDesignTokenArchiveValidate)

@@ -19,6 +19,8 @@
  * responsibility for higher-level threading and persistence policy.
  */
 #include "umicom/product/marketplace.h"
+#include "../base/value_archive_internal.h"
+#include "../base/registry_archive_internal.h"
 #include "../base/snapshot_registry_internal.h"
 
 /* Validate every bounded text member before lookup. Value-only snapshot
@@ -246,3 +248,85 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_product_marketplace_registry_edit_if_curre
  * this owner's existing row order and normalized fields remain authoritative. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_product_marketplace_registry_read_page,
     UmiProductMarketplaceItemRegistry, UmiProductMarketplaceItemSnapshot, UMI_PRODUCT_MARKETPLACE_CAPACITY)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xc3823d2d86eee4d9);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProductMarketplaceItemSnapshot *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProductMarketplaceItemSnapshot *)0)->provider_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProductMarketplaceItemSnapshot *)0)->name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProductMarketplaceItemSnapshot *)0)->summary)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProductMarketplaceItemSnapshot *)0)->version)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProductMarketplaceItemSnapshot *)0)->category)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProductMarketplaceItemSnapshot *)0)->licence)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiProductMarketplaceItemSnapshot *)0)->id) - 1U +
+        8U + sizeof(((UmiProductMarketplaceItemSnapshot *)0)->provider_id) - 1U +
+        8U + sizeof(((UmiProductMarketplaceItemSnapshot *)0)->name) - 1U +
+        8U + sizeof(((UmiProductMarketplaceItemSnapshot *)0)->summary) - 1U +
+        8U + sizeof(((UmiProductMarketplaceItemSnapshot *)0)->version) - 1U +
+        8U + sizeof(((UmiProductMarketplaceItemSnapshot *)0)->category) - 1U +
+        8U + sizeof(((UmiProductMarketplaceItemSnapshot *)0)->licence) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiProductMarketplaceItemSnapshot *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->provider_id, sizeof(value->provider_id));
+    UmiArchiveWriteText(writer, value->name, sizeof(value->name));
+    UmiArchiveWriteText(writer, value->summary, sizeof(value->summary));
+    UmiArchiveWriteText(writer, value->version, sizeof(value->version));
+    UmiArchiveWriteText(writer, value->category, sizeof(value->category));
+    UmiArchiveWriteText(writer, value->licence, sizeof(value->licence));
+    UmiArchiveWriteSigned(writer, (int64_t)value->installed);
+    UmiArchiveWriteSigned(writer, (int64_t)value->update_available);
+    UmiArchiveWriteSigned(writer, (int64_t)value->trusted);
+    UmiArchiveWriteSigned(writer, (int64_t)value->compatible);
+    UmiArchiveWriteSigned(writer, (int64_t)value->rank);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiProductMarketplaceItemSnapshot *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->provider_id, sizeof(value->provider_id));
+    UmiArchiveReadText(reader, value->name, sizeof(value->name));
+    UmiArchiveReadText(reader, value->summary, sizeof(value->summary));
+    UmiArchiveReadText(reader, value->version, sizeof(value->version));
+    UmiArchiveReadText(reader, value->category, sizeof(value->category));
+    UmiArchiveReadText(reader, value->licence, sizeof(value->licence));
+    value->installed = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->update_available = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->trusted = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->compatible = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->rank = (int32_t)UmiArchiveReadSigned(reader, INT32_MIN, INT32_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus ArchiveValidate(const UmiProductMarketplaceItemSnapshot *value)
+{
+    return umi_product_marketplace_snapshot_validate(value, NULL);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_product_marketplace_snapshot_archive_encode, umi_product_marketplace_snapshot_archive_decode,
+    UmiProductMarketplaceItemSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Restoring this complete collection reuses its existing reviewed replacement
+ * rules. Decoding a saved value alone never changes a live registry. */
+UMI_DEFINE_REGISTRY_ARCHIVE(umi_product_marketplace_registry_archive_encode, umi_product_marketplace_registry_archive_restore,
+    UmiProductMarketplaceItemRegistry, UmiProductMarketplaceItemSnapshot, UMI_PRODUCT_MARKETPLACE_CAPACITY, ArchiveSchema,
+    umi_product_marketplace_snapshot_archive_encode, umi_product_marketplace_snapshot_archive_decode, umi_product_marketplace_registry_replace_if_current)

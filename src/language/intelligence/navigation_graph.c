@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/navigation_graph.h"
+#include "../../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise language intelligence navigation graph edge from caller-provided values so
@@ -67,6 +68,14 @@ UmiStatus umi_language_intelligence_navigation_graph_edge_set(
  */
 UmiStatus umi_language_intelligence_navigation_graph_edge_validate(const UmiLanguageIntelligenceNavigationGraphEdge *edge)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (edge == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(edge->source_id, '\0', sizeof(edge->source_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(edge->target_id, '\0', sizeof(edge->target_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(edge->relation, '\0', sizeof(edge->relation)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -88,3 +97,52 @@ int umi_language_intelligence_navigation_graph_edge_matches_source(
         edge->enabled != 0 && source_id != NULL &&
         strcmp(edge->source_id, source_id) == 0;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiLanguageIntelligenceNavigationGraphEdgeArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xf879edabf6363acc);
+    schema = (schema ^ (uint64_t)sizeof(((UmiLanguageIntelligenceNavigationGraphEdge *)0)->source_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiLanguageIntelligenceNavigationGraphEdge *)0)->target_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiLanguageIntelligenceNavigationGraphEdge *)0)->relation)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiLanguageIntelligenceNavigationGraphEdgeArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiLanguageIntelligenceNavigationGraphEdge *)0)->source_id) - 1U +
+        8U + sizeof(((UmiLanguageIntelligenceNavigationGraphEdge *)0)->target_id) - 1U +
+        8U + sizeof(((UmiLanguageIntelligenceNavigationGraphEdge *)0)->relation) - 1U +
+        8U +
+        8U;
+}
+static void UmiLanguageIntelligenceNavigationGraphEdgeArchiveWrite(UmiArchiveWriter *writer, const UmiLanguageIntelligenceNavigationGraphEdge *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->source_id, sizeof(value->source_id));
+    UmiArchiveWriteText(writer, value->target_id, sizeof(value->target_id));
+    UmiArchiveWriteText(writer, value->relation, sizeof(value->relation));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->weight);
+    UmiArchiveWriteSigned(writer, (int64_t)value->enabled);
+}
+static void UmiLanguageIntelligenceNavigationGraphEdgeArchiveRead(UmiArchiveReader *reader, UmiLanguageIntelligenceNavigationGraphEdge *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->source_id, sizeof(value->source_id));
+    UmiArchiveReadText(reader, value->target_id, sizeof(value->target_id));
+    UmiArchiveReadText(reader, value->relation, sizeof(value->relation));
+    value->weight = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->enabled = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+}
+static UmiStatus UmiLanguageIntelligenceNavigationGraphEdgeArchiveValidate(const UmiLanguageIntelligenceNavigationGraphEdge *value)
+{
+    return umi_language_intelligence_navigation_graph_edge_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_language_intelligence_navigation_graph_edge_archive_encode, umi_language_intelligence_navigation_graph_edge_archive_decode,
+    UmiLanguageIntelligenceNavigationGraphEdge, UmiLanguageIntelligenceNavigationGraphEdgeArchiveSchema, UmiLanguageIntelligenceNavigationGraphEdgeArchiveBound, UmiLanguageIntelligenceNavigationGraphEdgeArchiveWrite, UmiLanguageIntelligenceNavigationGraphEdgeArchiveRead, UmiLanguageIntelligenceNavigationGraphEdgeArchiveValidate)

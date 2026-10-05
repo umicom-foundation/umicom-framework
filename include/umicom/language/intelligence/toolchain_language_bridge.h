@@ -20,6 +20,7 @@
 #ifndef UMICOM_LANGUAGE_INTELLIGENCE_TOOLCHAIN_LANGUAGE_BRIDGE_H
 #define UMICOM_LANGUAGE_INTELLIGENCE_TOOLCHAIN_LANGUAGE_BRIDGE_H
 #include "umicom/language/intelligence/types.h"
+#include "umicom/base/value_archive.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -68,6 +69,17 @@ int umi_language_intelligence_toolchain_language_bridge_matches(
     const UmiLanguageIntelligenceToolchainLanguageBridge *mapping,
     const char *source_id,
     const char *scope_id);
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_language_intelligence_toolchain_language_bridge_archive_encode(const UmiLanguageIntelligenceToolchainLanguageBridge *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_language_intelligence_toolchain_language_bridge_archive_decode(const void *bytes, size_t byte_count,
+    UmiLanguageIntelligenceToolchainLanguageBridge *value);
+
 #ifdef __cplusplus
 }
 #endif

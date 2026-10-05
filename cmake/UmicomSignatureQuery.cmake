@@ -1,0 +1,16 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-signature-query-test "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/test_signature_query.c")
+    target_link_libraries(umicom-signature-query-test PRIVATE Umicom::developer Umicom::editor Umicom::platform)
+    umicom_apply_warnings(umicom-signature-query-test)
+    umicom_apply_sanitizers(umicom-signature-query-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-signature-query-test)
+    endif()
+    foreach(case valid object missing disabled encoding sync fragmented notification error invalid-content label-outside label-surrogate shutdown-error close-error timeout cancel-before cancel-during invalid-source invalid-caret state empty unicode native-invalid read-error write-error escaped-limit overloads markup wrong-id local-active)
+        add_test(NAME framework.language_runtime.signature_query.${case} COMMAND umicom-signature-query-test ${case})
+        set_tests_properties(framework.language_runtime.signature_query.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;language;signature;ownership;regression")
+    endforeach()
+endif()

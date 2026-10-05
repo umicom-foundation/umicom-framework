@@ -7,6 +7,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/workspace_library_checkpoint.h"
+#include "umicom/ui/workspace_library_exchange.h"
 #include "umicom/ui/workspace_library.h"
 #include "umicom/document/text_encoding.h"
 #include "umicom/workbench_layout_data/chunk_store.h"
@@ -424,6 +425,10 @@ done:
 
 /* Publish a candidate only after complete validation and read transaction
  * completion; the host decides whether its native presentation accepts it. */
+/* One transactional reader now serves ordinary loads and frozen reviews.
+ * Retaining its validated bytes prevents a second read from changing what a
+ * user has approved. The original reader is retained for engineering review. */
+#if 0
 UmiStatus umi_ui_workspace_library_checkpoint_load_candidate(
     UmiDataServer *server, const UmiUiWorkspaceCheckpointScope *scope,
     const UmiUiWorkspaceCustomisation *validation_model,
@@ -472,6 +477,66 @@ done:
     if (out_report != NULL) *out_report = report;
     return status;
 }
+#endif
+static UmiStatus library_read_candidate(
+    UmiDataServer *server, const UmiUiWorkspaceCheckpointScope *scope,
+    const UmiUiWorkspaceCustomisation *validation_model,
+    UmiUiWorkspaceCustomisation *out_candidate,
+    UmiUiWorkspaceLibraryCheckpointReport *out_report, char **out_archive)
+{
+    UmiUiWorkspaceLibraryCheckpointReport report;
+    UmiUiWorkspaceCustomisation *candidate = NULL;
+    UmiWorkbenchLayoutChunkStore store;
+    char primary[UMI_UI_CHECKPOINT_AGGREGATE_CAPACITY], backup[UMI_UI_CHECKPOINT_AGGREGATE_CAPACITY];
+    char *archive = NULL;
+    UmiStatus status;
+    if (storage_overlaps(validation_model, sizeof(*validation_model), out_candidate, sizeof(*out_candidate)) ||
+        storage_overlaps(validation_model, sizeof(*validation_model), out_report, sizeof(*out_report)) ||
+        storage_overlaps(out_candidate, sizeof(*out_candidate), out_report, sizeof(*out_report)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    library_report_init(server, &report);
+    status = umi_ui_checkpoint_internal_library_keys(scope, primary, backup);
+    if (status == UMI_STATUS_OK) status = library_validate_host(validation_model, scope);
+    if (status == UMI_STATUS_OK && (server == NULL || out_candidate == NULL)) status = UMI_STATUS_INVALID_ARGUMENT;
+    if (status == UMI_STATUS_OK && umi_data_server_in_transaction(server)) status = UMI_STATUS_BUSY;
+    if (status != UMI_STATUS_OK) goto done;
+    candidate = malloc(sizeof(*candidate));
+    if (candidate == NULL) { status = UMI_STATUS_OUT_OF_MEMORY; goto done; }
+    status = umi_workbench_layout_chunk_store_init(&store, server,
+        UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_MANIFEST,
+        UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_CHUNK);
+    if (status == UMI_STATUS_OK) status = umi_data_server_begin(server);
+    if (status != UMI_STATUS_OK) goto done;
+    (void)umi_ui_checkpoint_internal_read_revision(server, primary, &report.checkpoint);
+    report.checkpoint.primary_status = library_read_validated(&store, primary, scope,
+        validation_model, candidate, &archive, &report);
+    status = report.checkpoint.primary_status;
+    if (status != UMI_STATUS_OK && !infrastructure_failure(status)) {
+        UmiStatus backup_status = library_read_validated(&store, backup, scope,
+            validation_model, candidate, &archive, &report);
+        if (backup_status == UMI_STATUS_OK) {
+            status = UMI_STATUS_OK;
+            report.checkpoint.recovered_last_good = true;
+        } else if (report.checkpoint.primary_status == UMI_STATUS_NOT_FOUND) status = backup_status;
+    }
+    status = umi_ui_checkpoint_internal_finish_transaction(server, status);
+    if (status == UMI_STATUS_OK) {
+        *out_candidate = *candidate;
+        if (out_archive != NULL) { *out_archive = archive; archive = NULL; }
+    }
+done:
+    free(archive); free(candidate);
+    if (out_report != NULL) *out_report = report;
+    return status;
+}
+UmiStatus umi_ui_workspace_library_checkpoint_load_candidate(
+    UmiDataServer *server, const UmiUiWorkspaceCheckpointScope *scope,
+    const UmiUiWorkspaceCustomisation *validation_model,
+    UmiUiWorkspaceCustomisation *out_candidate,
+    UmiUiWorkspaceLibraryCheckpointReport *out_report)
+{
+    return library_read_candidate(server, scope, validation_model, out_candidate, out_report, NULL);
+}
 
 /* Read once through the canonical decoder and compare copied summaries. A
  * product preview must never adopt Save evidence or publish a native layout. */
@@ -500,5 +565,244 @@ UmiStatus umi_ui_workspace_library_checkpoint_preview(UmiDataServer *server,
         status = umi_ui_workspace_library_compare(&current, &preview->saved, &preview->comparison);
     if (status == UMI_STATUS_OK) *out_preview = *preview;
     free(preview); free(candidate);
+    return status;
+}
+
+/* Portable exchange stays beside the checkpoint codec so both entry points
+ * enforce exactly the same layout and context rules. A review owns bytes,
+ * never a mutable path which could name different content at apply time. */
+struct UmiUiWorkspaceLibraryImport {
+    /* Saved-store reviews also belong to the model that requested them.
+     * The pointer is compared for identity only and is never dereferenced. */
+    const UmiUiWorkspaceCustomisation *checkpoint_owner;
+    char *archive;
+    char scope_key[UMI_UI_CHECKPOINT_AGGREGATE_CAPACITY];
+    char layout_prefix[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    uint64_t expected_revision;
+    UmiUiWorkspaceLibraryPreview preview;
+    /* Complete copies let all native hosts review the same panel geometry.
+     * Keep the large layout arrays off the call stack and publish them only
+     * after the archive and current host have both passed validation. */
+    UmiUiWorkspaceLayout *current_layouts, *imported_layouts;
+    size_t current_count, imported_count;
+};
+
+/* Validate the scope before dereferencing its strings in the host validator. */
+static UmiStatus exchange_validate(const UmiUiWorkspaceCheckpointScope *scope,
+    const UmiUiWorkspaceCustomisation *model, char *key)
+{
+    char backup[UMI_UI_CHECKPOINT_AGGREGATE_CAPACITY];
+    UmiStatus status = umi_ui_checkpoint_internal_library_keys(scope, key, backup);
+    if (status == UMI_STATUS_OK) status = library_validate_host(model, scope);
+    if (status == UMI_STATUS_OK && model->edit_active) status = UMI_STATUS_BUSY;
+    return status;
+}
+
+/* Scope text is borrowed separately from its descriptor. Check those spans
+ * too, after scope validation has proved that each string is terminated. */
+static bool exchange_overlaps_scope(const UmiUiWorkspaceCheckpointScope *scope,
+    const void *output, size_t output_size)
+{
+    return storage_overlaps(scope->application_id, strlen(scope->application_id) + 1U, output, output_size) ||
+        storage_overlaps(scope->workspace_id, strlen(scope->workspace_id) + 1U, output, output_size) ||
+        storage_overlaps(scope->layout_prefix, strlen(scope->layout_prefix) + 1U, output, output_size);
+}
+
+/* Stage encoded bytes and decode them once before publishing any output.
+ * This also proves that all inactive layouts can be reopened by this host. */
+UmiStatus umi_ui_workspace_library_export(
+    const UmiUiWorkspaceCheckpointScope *scope,
+    const UmiUiWorkspaceCustomisation *model, uint64_t saved_at_ns,
+    char *bytes, size_t capacity, size_t *out_size)
+{
+    char key[UMI_UI_CHECKPOINT_AGGREGATE_CAPACITY];
+    char *archive = NULL;
+    UmiUiWorkspaceCustomisation *candidate;
+    UmiUiWorkspaceLibraryCheckpointReport report = {0};
+    UmiStatus status;
+    if (scope == NULL || model == NULL || out_size == NULL || (bytes == NULL && capacity != 0U))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (storage_overlaps(model, sizeof(*model), bytes, capacity) ||
+        storage_overlaps(scope, sizeof(*scope), bytes, capacity) ||
+        storage_overlaps(model, sizeof(*model), out_size, sizeof(*out_size)) ||
+        storage_overlaps(scope, sizeof(*scope), out_size, sizeof(*out_size)) ||
+        storage_overlaps(bytes, capacity, out_size, sizeof(*out_size))) return UMI_STATUS_INVALID_ARGUMENT;
+    status = exchange_validate(scope, model, key);
+    if (status != UMI_STATUS_OK) return status;
+    if (exchange_overlaps_scope(scope, bytes, capacity) ||
+        exchange_overlaps_scope(scope, out_size, sizeof(*out_size))) return UMI_STATUS_INVALID_ARGUMENT;
+
+    candidate = malloc(sizeof(*candidate));
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = archive_encode(scope, model, saved_at_ns, &archive);
+    if (status == UMI_STATUS_OK) status = archive_decode(scope, model, archive, candidate, &report);
+    if (status == UMI_STATUS_OK) {
+        const size_t length = strlen(archive);
+        if (bytes == NULL) *out_size = length;
+        else if (capacity <= length) { *out_size = length; status = UMI_STATUS_CAPACITY_EXCEEDED; }
+        else { memcpy(bytes, archive, length + 1U); *out_size = length; }
+    }
+    free(candidate); free(archive);
+    return status;
+}
+
+/* Build a review transactionally: neither malformed input nor an allocation
+ * failure can replace a caller's existing review or touch its live workspace. */
+UmiStatus umi_ui_workspace_library_import_review(
+    const UmiUiWorkspaceCheckpointScope *scope,
+    const UmiUiWorkspaceCustomisation *model, const void *bytes, size_t size,
+    UmiUiWorkspaceLibraryImport **out_review)
+{
+    char key[UMI_UI_CHECKPOINT_AGGREGATE_CAPACITY];
+    UmiUiWorkspaceLibraryImport *review;
+    UmiUiWorkspaceCustomisation *candidate;
+    UmiUiWorkspaceLibrarySnapshot *current;
+    UmiStatus status;
+    if (scope == NULL || model == NULL || bytes == NULL || out_review == NULL ||
+        size == 0U || size >= UMI_UI_WORKSPACE_LIBRARY_ARCHIVE_CAPACITY) return UMI_STATUS_INVALID_ARGUMENT;
+    if (storage_overlaps(model, sizeof(*model), out_review, sizeof(*out_review)) ||
+        storage_overlaps(scope, sizeof(*scope), out_review, sizeof(*out_review)) ||
+        storage_overlaps(bytes, size, out_review, sizeof(*out_review))) return UMI_STATUS_INVALID_ARGUMENT;
+    status = exchange_validate(scope, model, key);
+    if (status != UMI_STATUS_OK) return status;
+    if (exchange_overlaps_scope(scope, out_review, sizeof(*out_review))) return UMI_STATUS_INVALID_ARGUMENT;
+
+    if (memchr(bytes, '\0', size) != NULL) return UMI_STATUS_PARSE_ERROR;
+    if (strlen(scope->layout_prefix) >= UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY) return UMI_STATUS_INVALID_ARGUMENT;
+    review = calloc(1U, sizeof(*review));
+    candidate = malloc(sizeof(*candidate));
+    current = malloc(sizeof(*current));
+    if (review == NULL || candidate == NULL || current == NULL) {
+        free(review); free(candidate); free(current); return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    review->archive = malloc(size + 1U);
+    if (review->archive == NULL) { status = UMI_STATUS_OUT_OF_MEMORY; goto done; }
+    memcpy(review->archive, bytes, size); review->archive[size] = '\0';
+    memcpy(review->scope_key, key, strlen(key) + 1U);
+    memcpy(review->layout_prefix, scope->layout_prefix, strlen(scope->layout_prefix) + 1U);
+    review->expected_revision = model->revision;
+    const UmiUiWorkspaceLibraryPolicy policy = {scope->layout_prefix};
+    status = archive_decode(scope, model, review->archive, candidate, &review->preview.report);
+    if (status == UMI_STATUS_OK) status = umi_ui_workspace_library_snapshot(model, &policy, current);
+    if (status == UMI_STATUS_OK) status = umi_ui_workspace_library_snapshot(candidate, &policy, &review->preview.saved);
+    if (status == UMI_STATUS_OK)
+        status = umi_ui_workspace_library_compare(current, &review->preview.saved, &review->preview.comparison);
+    if (status == UMI_STATUS_OK) {
+        review->current_count = model->layout_count;
+        review->imported_count = candidate->layout_count;
+        if (review->current_count != 0U)
+            review->current_layouts = malloc(review->current_count * sizeof(*review->current_layouts));
+        if (review->imported_count != 0U)
+            review->imported_layouts = malloc(review->imported_count * sizeof(*review->imported_layouts));
+        if ((review->current_count && !review->current_layouts) ||
+            (review->imported_count && !review->imported_layouts)) status = UMI_STATUS_OUT_OF_MEMORY;
+        else {
+            if (review->current_count) memcpy(review->current_layouts, model->layouts,
+                review->current_count * sizeof(*review->current_layouts));
+            if (review->imported_count) memcpy(review->imported_layouts, candidate->layouts,
+                review->imported_count * sizeof(*review->imported_layouts));
+        }
+    }
+    if (status == UMI_STATUS_OK) { *out_review = review; review = NULL; }
+done:
+    umi_ui_workspace_library_import_destroy(review);
+    free(candidate); free(current);
+    return status;
+}
+
+const UmiUiWorkspaceLibraryPreview *umi_ui_workspace_library_import_summary(
+    const UmiUiWorkspaceLibraryImport *review)
+{
+    return review != NULL ? &review->preview : NULL;
+}
+
+/* Evidence access performs no decode and borrows nothing from the live model.
+ * A caller may dispose of the input bytes after preparing the review. */
+size_t umi_ui_workspace_library_import_layout_count(
+    const UmiUiWorkspaceLibraryImport *review, bool imported)
+{ return review ? (imported ? review->imported_count : review->current_count) : 0U; }
+
+const UmiUiWorkspaceLayout *umi_ui_workspace_library_import_layout(
+    const UmiUiWorkspaceLibraryImport *review, bool imported, size_t index)
+{
+    if (!review || index >= umi_ui_workspace_library_import_layout_count(review, imported)) return NULL;
+    return imported ? &review->imported_layouts[index] : &review->current_layouts[index];
+}
+
+/* Recheck current authority while retaining the exact reviewed payload. */
+UmiStatus umi_ui_workspace_library_import_candidate(
+    const UmiUiWorkspaceLibraryImport *review,
+    const UmiUiWorkspaceCheckpointScope *scope,
+    const UmiUiWorkspaceCustomisation *model,
+    UmiUiWorkspaceCustomisation *out_candidate)
+{
+    char key[UMI_UI_CHECKPOINT_AGGREGATE_CAPACITY];
+    UmiUiWorkspaceCustomisation *candidate;
+    UmiUiWorkspaceLibraryCheckpointReport report = {0};
+    UmiStatus status;
+    if (review == NULL || scope == NULL || model == NULL || out_candidate == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (storage_overlaps(model, sizeof(*model), out_candidate, sizeof(*out_candidate)) ||
+        storage_overlaps(scope, sizeof(*scope), out_candidate, sizeof(*out_candidate)) ||
+        storage_overlaps(review, sizeof(*review), out_candidate, sizeof(*out_candidate)) ||
+        storage_overlaps(review->current_layouts, review->current_count * sizeof(*review->current_layouts), out_candidate, sizeof(*out_candidate)) ||
+        storage_overlaps(review->imported_layouts, review->imported_count * sizeof(*review->imported_layouts), out_candidate, sizeof(*out_candidate)) ||
+        storage_overlaps(review->archive, strlen(review->archive) + 1U, out_candidate, sizeof(*out_candidate)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = exchange_validate(scope, model, key);
+    if (status != UMI_STATUS_OK) return status;
+    if (exchange_overlaps_scope(scope, out_candidate, sizeof(*out_candidate))) return UMI_STATUS_INVALID_ARGUMENT;
+
+    if (strcmp(key, review->scope_key) != 0 || strcmp(scope->layout_prefix, review->layout_prefix) != 0)
+        return UMI_STATUS_PERMISSION_DENIED;
+    if (review->checkpoint_owner != NULL && review->checkpoint_owner != model)
+        return UMI_STATUS_PERMISSION_DENIED;
+    if (model->revision != review->expected_revision) return UMI_STATUS_INVALID_STATE;
+    candidate = malloc(sizeof(*candidate));
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = archive_decode(scope, model, review->archive, candidate, &report);
+    if (status == UMI_STATUS_OK) *out_candidate = *candidate;
+    free(candidate);
+    return status;
+}
+
+void umi_ui_workspace_library_import_destroy(UmiUiWorkspaceLibraryImport *review)
+{
+    if (review != NULL) {
+        free(review->current_layouts); free(review->imported_layouts);
+    }
+    if (review != NULL) { free(review->archive); free(review); }
+}
+
+/* Read and validate one stored archive, then feed those exact bytes through
+ * the existing import owner. The review retains no live storage handle and
+ * never updates a host's compare-and-set evidence for a future Save. */
+UmiStatus umi_ui_workspace_library_checkpoint_review(UmiDataServer *server,
+    const UmiUiWorkspaceCheckpointScope *scope, const UmiUiWorkspaceCustomisation *model,
+    UmiUiWorkspaceLibraryImport **out_review)
+{
+    if (server == NULL || scope == NULL || model == NULL || out_review == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (storage_overlaps(model, sizeof(*model), out_review, sizeof(*out_review)) ||
+        storage_overlaps(scope, sizeof(*scope), out_review, sizeof(*out_review)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    char key[UMI_UI_CHECKPOINT_AGGREGATE_CAPACITY];
+    UmiStatus status = exchange_validate(scope, model, key);
+    if (status != UMI_STATUS_OK) return status;
+    if (exchange_overlaps_scope(scope, out_review, sizeof(*out_review))) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiUiWorkspaceCustomisation *candidate = malloc(sizeof(*candidate));
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    UmiUiWorkspaceLibraryCheckpointReport report;
+    UmiUiWorkspaceLibraryImport *review = NULL;
+    char *archive = NULL;
+    status = library_read_candidate(server, scope, model, candidate, &report, &archive);
+    if (status == UMI_STATUS_OK)
+        status = umi_ui_workspace_library_import_review(scope, model, archive, strlen(archive), &review);
+    if (status == UMI_STATUS_OK) {
+        review->checkpoint_owner = model;
+        review->preview.report = report;
+        *out_review = review;
+    }
+    free(archive); free(candidate);
     return status;
 }

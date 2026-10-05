@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Return to a source location · Umicom Framework</title>
+<style>body{font:17px/1.65 system-ui,sans-serif;max-width:960px;margin:40px auto;padding:0 24px;color:#203341}h1,h2{line-height:1.25}code,pre{font-family:Consolas,monospace}pre{background:#eff4f6;padding:20px;overflow:auto}a{color:#086879}td,th{padding:10px;border:1px solid #ccd6df;text-align:left}table{border-collapse:collapse}</style></head><body>
+<header><p>Umicom Framework · Document services</p><h1>Return to a source location</h1></header><main>
+<p>When you jump between source locations, the document coordinator remembers where you left and where you arrived. Studio presents this shared service as <strong>Navigate → Back</strong> and <strong>Navigate → Forward</strong>. It uses the working copies already open in the editor.</p>
+<h2>Try a return trip in Studio</h2><ol>
+<li>Open a source file containing several lines. Put the caret on its first line.</li>
+<li>Use <strong>Go to Line</strong> to visit another line. The document remains open and its text is unchanged.</li>
+<li>Choose <strong>Navigate → Back</strong> or press <strong>Alt+Left</strong>. The caret should return to the location you left.</li>
+<li>Choose <strong>Navigate → Forward</strong> or press <strong>Alt+Right</strong>. The caret should return to the later location.</li>
+<li>Open another file, use a Find in Files result, or cycle source tabs with <strong>Ctrl+Tab</strong>. Back can return across these jumps. A search result records one destination instead of adding a separate stop at the file's first line.</li></ol>
+<p>Command search also contains <strong>Navigate Back</strong>, <strong>Navigate Forward</strong> and <strong>Clear Navigation History</strong>. Back and Forward are available only when the corresponding history direction exists and the native editor is not waiting for a Paste, Save All or Close decision.</p>
+<h2>Understand what is remembered</h2>
+<p>History holds up to 64 locations in this coordinator's live documents. It stores document identity, line and byte column; it does not copy source text, save a file or change text undo/redo. A byte column counts UTF-8 bytes, which can differ from the number of visible characters. Landing inside a multi-byte character moves to that character's first byte.</p>
+<p>Repeated adjacent positions coalesce. After moving Back, a new jump starts a new branch and replaces the old Forward path. A full history drops its oldest location. Moving the caret with the mouse does not add a history entry, but its latest position is captured when you leave using Back or Forward.</p>
+<p>Locations follow the same open document through Save As. They resolve against its current draft, so later edits can change which text is on a recorded line. They are not permanent bookmarks, edit-aware anchors, a recent-files list or restart recovery. Clicking a tab directly is not itself recorded as a jump. Untitled and read-only documents can participate while they remain open.</p>
+<h2>Recover from an unavailable destination</h2><ol>
+<li>Read the reported status. A closed destination or a line removed by editing returns <code>NOT_FOUND</code>. The history cursor and active tab stay where they were.</li>
+<li>To open a closed saved file, use <strong>Reopen Closed Document</strong> separately. This reads its saved contents into a new working copy; it does not restore the old history identity.</li>
+<li>Use <strong>Clear Navigation History</strong> if old locations no longer help. This only clears location metadata. It does not close documents, discard text or clear text undo.</li>
+<li>If an action is busy, finish or cancel the existing editor decision. If a host reports a stale revision, read a fresh snapshot before making another explicit request.</li></ol>
+<h2>Use the shared document owner</h2>
+<p>Include <code>umicom/document/navigation_history.h</code> and link <code>Umicom::document</code>. Use the coordinator already managing the application's sources. A revision is an observation token: it identifies the history state the caller saw, preventing an old UI request from navigating a changed timeline.</p>
+<pre><code>#include "umicom/document/navigation_history.h"
+
+UmiStatus ReturnToPreviousSource(UmiDocumentCoordinator *documents)
+{
+    UmiDocumentNavigationHistorySnapshot history;
+    UmiStatus status = UmiDocumentCoordinatorNavigationSnapshot(documents, &amp;history);
+    if (status != UMI_STATUS_OK) return status;
+    if (history.busy) return UMI_STATUS_BUSY;
+    return UmiDocumentCoordinatorTravel(documents, -1, history.revision, NULL);
+}</code></pre>
+<p>The complete source example is <code>examples/editor_workflow/location_history.c</code>. Calls run on the coordinator's owning thread. The GTK adapter supplies matching availability, travel and clear functions through its existing editing binding. Applications need no additional history array.</p>
+<h2>Extend navigation safely</h2>
+<p>Framework's editor history also serves hosts outside the document coordinator. Use <code>UmiEditorNavigationHistoryTravel</code> with a callback that reaches the destination before returning success. If reaching it fails, leave the host unchanged and return that failure. History will keep its previous position and the caller's output untouched. Nested mutations are refused while the callback is active; the callback must not destroy its history owner.</p>
+<p>Open, Go To, source cycling and successful search navigation collect optional location metadata. A capture failure, such as insufficient memory, does not turn a successful source operation into a failure. Hosts can inspect <code>last_record_status</code> to report that this jump was not recorded. Revision counters refuse exhaustion instead of reusing an earlier token. History is released with its coordinator and is not written to disk.</p>
+<p>Related guides: <a href="REOPENING_DOCUMENTS.html">Reopen a closed document</a> · <a href="WORKING_WITH_DOCUMENTS.html">Work with source documents</a>.</p>
+</main></body></html>

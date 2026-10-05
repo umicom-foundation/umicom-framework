@@ -17,6 +17,7 @@
 #define UMICOM_OBSERVABILITY_PERFORMANCE_TRACE_FILTER_H
 
 #include <stdbool.h>
+#include "umicom/base/value_archive.h"
 #include <stddef.h>
 #include <stdint.h>
 #include "umicom/observability/performance/types.h"
@@ -53,6 +54,17 @@ UmiStatus umi_performance_trace_filter_observe(UmiPerformanceTraceFilter *record
 bool umi_performance_trace_filter_same_identity(const UmiPerformanceTraceFilter *left, const UmiPerformanceTraceFilter *right);
 /* Domain-specific policy helper for trace filter. */
 bool umi_performance_trace_filter_transition_allowed(UmiPerformanceState from, UmiPerformanceState to);
+
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_performance_trace_filter_archive_encode(const UmiPerformanceTraceFilter *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_performance_trace_filter_archive_decode(const void *bytes, size_t byte_count,
+    UmiPerformanceTraceFilter *value);
 
 #ifdef __cplusplus
 }

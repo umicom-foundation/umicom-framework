@@ -18,6 +18,8 @@
  * contract does not expose toolkit objects, C++ types, or private structures.
  */
 #include "umicom/debug/variable.h"
+#include "../base/value_archive_internal.h"
+#include "../base/registry_archive_internal.h"
 #include "../base/snapshot_registry_internal.h"
 /* Every field is described with its actual C member size; no string scan can
  * escape a supplied array. Domain values and legacy size/version normalisation
@@ -251,3 +253,72 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_debug_variable_registry_edit_if_current,
  * this owner's existing row order and normalized fields remain authoritative. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_debug_variable_registry_read_page,
     UmiDebugVariableRegistry, UmiDebugVariableSnapshot, UMI_DEBUG_VARIABLE_CAPACITY)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xc1590cb58dcce8ba);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDebugVariableSnapshot *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDebugVariableSnapshot *)0)->scope_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDebugVariableSnapshot *)0)->name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDebugVariableSnapshot *)0)->value)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDebugVariableSnapshot *)0)->type)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDebugVariableSnapshot *)0)->evaluate_name)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiDebugVariableSnapshot *)0)->id) - 1U +
+        8U + sizeof(((UmiDebugVariableSnapshot *)0)->scope_id) - 1U +
+        8U + sizeof(((UmiDebugVariableSnapshot *)0)->name) - 1U +
+        8U + sizeof(((UmiDebugVariableSnapshot *)0)->value) - 1U +
+        8U + sizeof(((UmiDebugVariableSnapshot *)0)->type) - 1U +
+        8U + sizeof(((UmiDebugVariableSnapshot *)0)->evaluate_name) - 1U +
+        8U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiDebugVariableSnapshot *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->scope_id, sizeof(value->scope_id));
+    UmiArchiveWriteText(writer, value->name, sizeof(value->name));
+    UmiArchiveWriteText(writer, value->value, sizeof(value->value));
+    UmiArchiveWriteText(writer, value->type, sizeof(value->type));
+    UmiArchiveWriteText(writer, value->evaluate_name, sizeof(value->evaluate_name));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->variables_reference);
+    UmiArchiveWriteSigned(writer, (int64_t)value->changed);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiDebugVariableSnapshot *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->scope_id, sizeof(value->scope_id));
+    UmiArchiveReadText(reader, value->name, sizeof(value->name));
+    UmiArchiveReadText(reader, value->value, sizeof(value->value));
+    UmiArchiveReadText(reader, value->type, sizeof(value->type));
+    UmiArchiveReadText(reader, value->evaluate_name, sizeof(value->evaluate_name));
+    value->variables_reference = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->changed = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus ArchiveValidate(const UmiDebugVariableSnapshot *value)
+{
+    return umi_debug_variable_snapshot_validate(value, NULL);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_debug_variable_snapshot_archive_encode, umi_debug_variable_snapshot_archive_decode,
+    UmiDebugVariableSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Restoring this complete collection reuses its existing reviewed replacement
+ * rules. Decoding a saved value alone never changes a live registry. */
+UMI_DEFINE_REGISTRY_ARCHIVE(umi_debug_variable_registry_archive_encode, umi_debug_variable_registry_archive_restore,
+    UmiDebugVariableRegistry, UmiDebugVariableSnapshot, UMI_DEBUG_VARIABLE_CAPACITY, ArchiveSchema,
+    umi_debug_variable_snapshot_archive_encode, umi_debug_variable_snapshot_archive_decode, umi_debug_variable_registry_replace_if_current)

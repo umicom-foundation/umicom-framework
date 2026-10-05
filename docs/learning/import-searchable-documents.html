@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Import a document for local source retrieval</title><style>body{font:17px/1.6 system-ui,sans-serif;max-width:960px;margin:40px auto;padding:0 24px;color:#172a35}h1,h2{line-height:1.25}code{background:#eef4f7;padding:2px 5px}li{margin:9px 0}.note{border-left:4px solid #188879;background:#edf8f5;padding:16px}a{color:#096879}</style></head><body>
+<h1>Import a document for local source retrieval</h1>
+<p>RAG means retrieval-augmented generation: look up relevant source passages, then include selected passages with a model question. The shared AI workspace in Umicom RAG, LLM and Creator can import a local text document into its existing source library. Importing text does not contact a model or send a request.</p>
+<h2>Load, review and save</h2><ol>
+<li>Open the application’s <strong>AI workspace</strong>, then its <strong>Import document</strong> tab.</li>
+<li>Enter a collection ID and collection name. A collection groups passages for search. If the ID already exists, use its exact current name; an import does not rename an existing collection.</li>
+<li>Choose a new document ID and a readable source title. IDs use letters, numbers, dots, underscores and hyphens, start with a letter or number, and have at most 55 bytes. An example is <code>workshop-notice</code>. Each passage receives an ID such as <code>workshop-notice.part.1</code>.</li>
+<li>Choose <strong>Load local text file…</strong> and select a UTF-8 text file, or paste its complete text into the input area. Plain text, Markdown and source files work when their contents satisfy the text rules. PDF, Word, image OCR and web-page extraction are not provided by this importer.</li>
+<li>Select <strong>Preview all passages</strong>. Read the destination, complete passage text, line ranges and byte offsets. A byte offset measures the position in encoded text; it can differ from a displayed character position. A long line may continue in another passage with the same line number.</li>
+<li>Select the approval checkbox, then <strong>Save reviewed passages together</strong>. The collection and all new passages save in one transaction, meaning one complete change. If the transaction fails, no partial import is published.</li>
+</ol>
+<p class="note">Editing any import field revokes the preview and approval. If another workspace operation changes saved state before you save, preview again. Existing passage IDs cause an error; choose a genuinely new document ID or use the existing passage editor when you intend to edit a specific saved source.</p>
+<h2>Search and ask a grounded question</h2><ol>
+<li>On <strong>Sources</strong>, enter the imported collection ID. Choose <strong>Reload shared workspace</strong> when you want to refresh the complete saved-source catalogue.</li>
+<li>Enter a search question and choose <strong>Inspect retrieval</strong>. Search ranks matching words locally. It does not manufacture embeddings or call a model.</li>
+<li>On <strong>Drafts and review</strong>, choose a grounded draft and enter your question. <strong>Prepare inspected results</strong> uses the copied passages from the search you inspected; it does not silently run a different search.</li>
+<li>Read the frozen request and its source passages. Approve and run it only when the provider, model and content are the ones you intend to use.</li>
+<li>The extractive preview copies source excerpts and is explicitly labelled as a preview, not an LLM answer. For actual generation, the configured local-model service must already be available. Check source references before relying on generated text.</li>
+</ol>
+<h2>Limits and recovery</h2><ul>
+<li>One import accepts at most <strong>98,240 input bytes</strong>. The workspace holds at most <strong>64 saved passages</strong>, with at most 1,535 UTF-8 bytes in each passage. Existing passages consume that allowance. Line-aware splitting can reach the passage limit before the input-byte limit; the importer rejects the complete import instead of omitting a tail.</li>
+<li>A leading UTF-8 byte-order mark is removed. Windows CRLF and old-style CR line endings become LF in the copied passages. The original file is not modified. The preview shows all normalized text before approval.</li>
+<li>Empty text, embedded zero bytes, invalid UTF-8 and unsupported control characters are refused. Save a plain UTF-8 export from the source application and inspect it before importing.</li>
+<li>The file chooser accepts ordinary local files with absolute paths. Directory, device and final-component link reads are refused. A selected file that is too large is rejected before allocating its contents. The reader checks its open handle for observable changes during reading; a changing file may need to be saved and loaded again.</li>
+<li>File reading occurs on a worker. Editing the form discards its pending result instead of overwriting your current text. Closing the workspace retires the form; a late file result cannot write into a closed application or database.</li>
+<li>A save failure leaves the previous library intact. Resolve the reported storage problem, reload and preview again. If a save succeeded but the form was closed before you saw confirmation, inspect the source catalogue before trying another ID.</li>
+</ul>
+<h2>Storage and privacy</h2>
+<p>The application’s shared workspace uses its existing local database. Imported text, collection names, titles and generated passage IDs are saved there. The importer does not store the selected file’s path automatically, upload it, save an API key or run instructions contained in it. Local storage is not a claim that the database is encrypted. Use operating-system account and disk protections appropriate to your documents.</p>
+<p>The import section is private to Framework’s recording and screenshot policy. Imported passages can later be included in a separately reviewed model request. Review that request’s destination and contents before sending. Saved jobs keep their original source evidence, even if a source is later edited or removed from the active library.</p>
+<p>To revise an existing document or remove its passages from search, follow <a href="review-source-library-changes.html">Review changes to your source library</a>. The shared review page can replace several explicitly selected passages in one transaction while retaining earlier job evidence.</p>
+<h2>Extend the shared service</h2>
+<p><code>UmiAiWorkspaceImportCreate</code> copies explicit bytes into an immutable import plan. Inspect its summary and every <code>UmiAiWorkspaceImportPassageAt</code> result before calling <code>UmiAiWorkspaceImportApply</code> with approval. Keep the workspace alive and use its owner thread. Apply checks the captured workspace revision and uses the established Data Server transaction and embedding-cache invalidation.</p>
+<p>New file-format extractors should produce bounded UTF-8 text and feed this same review boundary. Keep extraction separate from approval and persistence. The platform’s <code>UmiInputFileRead</code> supports bounded regular-file reads for other importers; use a worker for disk I/O and free returned bytes with <code>UmiInputFileFree</code>.</p>
+<p>Umicom Foundation · MIT</p></body></html>

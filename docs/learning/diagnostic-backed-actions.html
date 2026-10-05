@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Request fixes with fresh diagnostics</title><style>body{font:17px/1.6 system-ui;max-width:1000px;margin:32px auto;padding:0 24px;color:#183442}li{margin:10px 0}code{overflow-wrap:anywhere}</style></head><body>
+<h1>Request fixes with fresh diagnostics</h1>
+<p>Some language-server fixes depend on diagnostic data that identifies a problem and its proposed remedy. Studio can capture this data and request actions while the same server connection remains open. This gives the server its original context without replaying data from a previous process.</p>
+<h2>Use the option in Studio</h2><ol>
+<li>Open a writable source draft, place the caret near a reported problem or select the relevant expression, and choose <strong>Actions…</strong>.</li>
+<li>Enter or load the local language server and project settings.</li>
+<li>Select <strong>Include fresh diagnostics for fixes</strong>. It is off by default because it requires the server to publish diagnostics when the captured document opens.</li>
+<li>Choose <strong>Request code actions</strong>. Framework opens the captured draft, waits for a matching publication, checks its source ranges, then sends relevant diagnostic objects with the action request. Those operations share the same read timeout.</li>
+<li>Select an available action. Preview its complete result, inspect all confirmation explanations, approve the displayed proposal, then apply it. One Undo restores the draft; Save remains separate.</li></ol>
+<p>Changing the option retires previous choices and approval, including a pending result. The same rules still refuse disabled actions, commands, deferred resolution, resource operations and proposals that cannot be applied completely to the captured document.</p>
+<h2>What is included</h2>
+<p>Framework preserves the original JSON of relevant diagnostic objects, including numeric or string codes and opaque data supplied by the server. Nonempty ranges are compared as half-open intervals: a range ending at the selection's start does not overlap it. A zero-length diagnostic or a caret also matches a touching boundary, which keeps missing-token messages at a selection endpoint useful. Related locations alone do not select a primary diagnostic.</p>
+<p>An empty matching publication is valid and produces an empty diagnostic context. A missing publication, wrong source ranges or an oversized request causes a reported failure. The option does not silently retry without context, infer a successful build, synchronize other unsaved documents or keep a persistent diagnostic subscription.</p>
+<h2>Extend another Framework host</h2><ol>
+<li>Use <code>UmiLanguageCodeActionQueryNativeWithDiagnostics</code> with the ordinary captured source-range request. The existing basic query remains available when diagnostic capture is not needed.</li>
+<li>For an already owned STARTING server, use <code>UmiLanguageCodeActionQueryOnServerWithDiagnostics</code>. Give the operation exclusive ownership until it returns and destroy the server object afterward.</li>
+<li>If implementing another transport, use <code>UmiLanguageDiagnosticContextCreate</code> with the publication, exact source identity, known version and range. It validates the complete source publication before selecting rows and creates its own JSON array.</li>
+<li>Read the array with <code>UmiLanguageDiagnosticContextJson</code> while the context owner lives. Destroy it after sending. The catalogue and source can be released after context creation, but its opaque data must stay within the server session that produced it.</li>
+<li>Retain the existing document review boundary. Diagnostic context helps the server propose an action; it does not approve or apply the action.</li></ol>
+<h2>If no fixes appear</h2><ol>
+<li>Check whether the selected server publishes diagnostics and has the project's compile options. A pull-only server cannot supply this option's publication.</li>
+<li>If startup or analysis times out, correct the server configuration or retry after reducing the project workload. Disabling the option is an explicit choice to request range-only actions.</li>
+<li>If the source changed, close and recapture it. Do not transplant opaque diagnostic data from an earlier connection.</li>
+<li>If the response or outgoing context exceeds native message limits, reduce the source or choose a more focused workflow. Framework never sends a truncated set as though it were complete.</li></ol>
+<p>Related guides: <a href="source-diagnostics.html">Inspect diagnostics</a>, <a href="code-actions.html">Review code actions</a>.</p>
+</body></html>

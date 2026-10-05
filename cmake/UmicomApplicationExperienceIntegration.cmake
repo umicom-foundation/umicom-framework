@@ -69,6 +69,7 @@ if(NOT _umicom_experience_integrated)
         "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/feature_gate.c"
         "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/capability_status.c"
         "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/context_binding.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/context_review.c"
         "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/launch_profile.c"
         "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/session_snapshot.c"
         "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/runtime_health.c"
@@ -202,3 +203,37 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiMcpPlatform.cmake")
 
 # AI reasoning now feeds bounded proposals into the existing governed Helix path.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiHelixBridge.cmake")
+
+# Context transactions are toolkit-neutral and belong to the application/UI
+# owners. Separate case names make a boundary failure easy to identify.
+if(BUILD_TESTING AND NOT TARGET umicom-application-context-review-test)
+    add_executable(umicom-application-context-review-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_context_review.c")
+    target_link_libraries(umicom-application-context-review-test PRIVATE Umicom::application)
+    umicom_apply_warnings(umicom-application-context-review-test)
+    umicom_apply_sanitizers(umicom-application-context-review-test)
+    foreach(context_case publication owned_inputs cancel unbound invalid malformed_store bounded_text
+            exhaustion entry_exhaustion replace_full missing_remove ui_capacity projection_capacity
+            empty stale_cache stale_ui session owner detach ui_missing_remove ui_divergence)
+        add_test(NAME framework.application.context_review.${context_case}
+            COMMAND umicom-application-context-review-test ${context_case})
+        set_tests_properties(framework.application.context_review.${context_case}
+            PROPERTIES LABELS "framework;application;context-review")
+    endforeach()
+    add_executable(umicom-ui-context-changes-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ui/test_context_changes.c")
+    target_link_libraries(umicom-ui-context-changes-test PRIVATE Umicom::ui)
+    umicom_apply_warnings(umicom-ui-context-changes-test)
+    umicom_apply_sanitizers(umicom-ui-context-changes-test)
+    foreach(context_case publication empty replacement capacity legacy_text duplicate
+            missing invalid unterminated count stale read read_invalid)
+        add_test(NAME framework.ui.context_changes.${context_case}
+            COMMAND umicom-ui-context-changes-test ${context_case})
+        set_tests_properties(framework.ui.context_changes.${context_case}
+            PROPERTIES LABELS "framework;ui;context-review")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-application-context-review-test)
+        umicom_register_validation_target(umicom-ui-context-changes-test)
+    endif()
+endif()

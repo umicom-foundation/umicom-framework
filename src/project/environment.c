@@ -18,6 +18,8 @@
  * contract does not expose toolkit objects, C++ types, or private structures.
  */
 #include "umicom/project/environment.h"
+#include "../base/value_archive_internal.h"
+#include "../base/registry_archive_internal.h"
 #include "../base/snapshot_registry_internal.h"
 /* Every field is described with its actual C member size; no string scan can
  * escape a supplied array. Domain values and legacy size/version normalisation
@@ -251,3 +253,69 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_project_environment_registry_edit_if_curre
  * this owner's existing row order and normalized fields remain authoritative. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_project_environment_registry_read_page,
     UmiProjectEnvironmentRegistry, UmiProjectEnvironmentSnapshot, UMI_PROJECT_ENVIRONMENT_CAPACITY)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x99d16a043e924dce);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProjectEnvironmentSnapshot *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProjectEnvironmentSnapshot *)0)->project_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProjectEnvironmentSnapshot *)0)->name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProjectEnvironmentSnapshot *)0)->toolchain_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProjectEnvironmentSnapshot *)0)->path_prefix)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProjectEnvironmentSnapshot *)0)->variables)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiProjectEnvironmentSnapshot *)0)->id) - 1U +
+        8U + sizeof(((UmiProjectEnvironmentSnapshot *)0)->project_id) - 1U +
+        8U + sizeof(((UmiProjectEnvironmentSnapshot *)0)->name) - 1U +
+        8U + sizeof(((UmiProjectEnvironmentSnapshot *)0)->toolchain_id) - 1U +
+        8U + sizeof(((UmiProjectEnvironmentSnapshot *)0)->path_prefix) - 1U +
+        8U + sizeof(((UmiProjectEnvironmentSnapshot *)0)->variables) - 1U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiProjectEnvironmentSnapshot *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->project_id, sizeof(value->project_id));
+    UmiArchiveWriteText(writer, value->name, sizeof(value->name));
+    UmiArchiveWriteText(writer, value->toolchain_id, sizeof(value->toolchain_id));
+    UmiArchiveWriteText(writer, value->path_prefix, sizeof(value->path_prefix));
+    UmiArchiveWriteText(writer, value->variables, sizeof(value->variables));
+    UmiArchiveWriteSigned(writer, (int64_t)value->inherit_parent);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiProjectEnvironmentSnapshot *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->project_id, sizeof(value->project_id));
+    UmiArchiveReadText(reader, value->name, sizeof(value->name));
+    UmiArchiveReadText(reader, value->toolchain_id, sizeof(value->toolchain_id));
+    UmiArchiveReadText(reader, value->path_prefix, sizeof(value->path_prefix));
+    UmiArchiveReadText(reader, value->variables, sizeof(value->variables));
+    value->inherit_parent = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus ArchiveValidate(const UmiProjectEnvironmentSnapshot *value)
+{
+    return umi_project_environment_snapshot_validate(value, NULL);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_project_environment_snapshot_archive_encode, umi_project_environment_snapshot_archive_decode,
+    UmiProjectEnvironmentSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Restoring this complete collection reuses its existing reviewed replacement
+ * rules. Decoding a saved value alone never changes a live registry. */
+UMI_DEFINE_REGISTRY_ARCHIVE(umi_project_environment_registry_archive_encode, umi_project_environment_registry_archive_restore,
+    UmiProjectEnvironmentRegistry, UmiProjectEnvironmentSnapshot, UMI_PROJECT_ENVIRONMENT_CAPACITY, ArchiveSchema,
+    umi_project_environment_snapshot_archive_encode, umi_project_environment_snapshot_archive_decode, umi_project_environment_registry_replace_if_current)

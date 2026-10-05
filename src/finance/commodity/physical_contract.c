@@ -17,6 +17,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/finance/commodity/physical_contract.h"
+#include "../../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -54,5 +55,85 @@ UmiStatus umi_commodity_physical_contract_init(UmiCommodityPhysicalContract *val
 /* Keep shared validation deterministic and independent of application UI state. */
 bool umi_commodity_physical_contract_valid(const UmiCommodityPhysicalContract *value)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (value == NULL) return 0;
+    if (memchr(value->id.value, '\0', sizeof(value->id.value)) == NULL) return 0;
+    if (memchr(value->commodity_id.value, '\0', sizeof(value->commodity_id.value)) == NULL) return 0;
+    if (memchr(value->buyer_party_id.value, '\0', sizeof(value->buyer_party_id.value)) == NULL) return 0;
+    if (memchr(value->seller_party_id.value, '\0', sizeof(value->seller_party_id.value)) == NULL) return 0;
+    if (memchr(value->quantity.unit_code, '\0', sizeof(value->quantity.unit_code)) == NULL) return 0;
+    if (memchr(value->price_currency.code, '\0', sizeof(value->price_currency.code)) == NULL) return 0;
+
     return value != NULL && (umi_commodity_text_valid(value->id.value) && umi_commodity_text_valid(value->commodity_id.value) && value->quantity.units > 0 && value->delivery_end_ms > value->delivery_start_ms && value->active);
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiCommodityPhysicalContractArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xda86d19a8b172c8f);
+    schema = (schema ^ (uint64_t)sizeof(((UmiCommodityPhysicalContract *)0)->id.value)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiCommodityPhysicalContract *)0)->commodity_id.value)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiCommodityPhysicalContract *)0)->buyer_party_id.value)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiCommodityPhysicalContract *)0)->seller_party_id.value)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiCommodityPhysicalContract *)0)->quantity.unit_code)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiCommodityPhysicalContract *)0)->price_currency.code)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiCommodityPhysicalContractArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiCommodityPhysicalContract *)0)->id.value) - 1U +
+        8U + sizeof(((UmiCommodityPhysicalContract *)0)->commodity_id.value) - 1U +
+        8U + sizeof(((UmiCommodityPhysicalContract *)0)->buyer_party_id.value) - 1U +
+        8U + sizeof(((UmiCommodityPhysicalContract *)0)->seller_party_id.value) - 1U +
+        8U +
+        8U +
+        8U + sizeof(((UmiCommodityPhysicalContract *)0)->quantity.unit_code) - 1U +
+        8U + sizeof(((UmiCommodityPhysicalContract *)0)->price_currency.code) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiCommodityPhysicalContractArchiveWrite(UmiArchiveWriter *writer, const UmiCommodityPhysicalContract *value)
+{
+    UmiArchiveWriteText(writer, value->id.value, sizeof(value->id.value));
+    UmiArchiveWriteText(writer, value->commodity_id.value, sizeof(value->commodity_id.value));
+    UmiArchiveWriteText(writer, value->buyer_party_id.value, sizeof(value->buyer_party_id.value));
+    UmiArchiveWriteText(writer, value->seller_party_id.value, sizeof(value->seller_party_id.value));
+    UmiArchiveWriteSigned(writer, (int64_t)value->quantity.units);
+    UmiArchiveWriteSigned(writer, (int64_t)value->quantity.scale);
+    UmiArchiveWriteText(writer, value->quantity.unit_code, sizeof(value->quantity.unit_code));
+    UmiArchiveWriteText(writer, value->price_currency.code, sizeof(value->price_currency.code));
+    UmiArchiveWriteSigned(writer, (int64_t)value->price_minor_units_per_unit);
+    UmiArchiveWriteSigned(writer, (int64_t)value->delivery_start_ms);
+    UmiArchiveWriteSigned(writer, (int64_t)value->delivery_end_ms);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->active);
+}
+static void UmiCommodityPhysicalContractArchiveRead(UmiArchiveReader *reader, UmiCommodityPhysicalContract *value)
+{
+    UmiArchiveReadText(reader, value->id.value, sizeof(value->id.value));
+    UmiArchiveReadText(reader, value->commodity_id.value, sizeof(value->commodity_id.value));
+    UmiArchiveReadText(reader, value->buyer_party_id.value, sizeof(value->buyer_party_id.value));
+    UmiArchiveReadText(reader, value->seller_party_id.value, sizeof(value->seller_party_id.value));
+    value->quantity.units = (int64_t)UmiArchiveReadSigned(reader, INT64_MIN, INT64_MAX);
+    value->quantity.scale = (int32_t)UmiArchiveReadSigned(reader, INT32_MIN, INT32_MAX);
+    UmiArchiveReadText(reader, value->quantity.unit_code, sizeof(value->quantity.unit_code));
+    UmiArchiveReadText(reader, value->price_currency.code, sizeof(value->price_currency.code));
+    value->price_minor_units_per_unit = (int64_t)UmiArchiveReadSigned(reader, INT64_MIN, INT64_MAX);
+    value->delivery_start_ms = (int64_t)UmiArchiveReadSigned(reader, INT64_MIN, INT64_MAX);
+    value->delivery_end_ms = (int64_t)UmiArchiveReadSigned(reader, INT64_MIN, INT64_MAX);
+    value->active = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiCommodityPhysicalContractArchiveValidate(const UmiCommodityPhysicalContract *value)
+{
+    return umi_commodity_physical_contract_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_commodity_physical_contract_archive_encode, umi_commodity_physical_contract_archive_decode,
+    UmiCommodityPhysicalContract, UmiCommodityPhysicalContractArchiveSchema, UmiCommodityPhysicalContractArchiveBound, UmiCommodityPhysicalContractArchiveWrite, UmiCommodityPhysicalContractArchiveRead, UmiCommodityPhysicalContractArchiveValidate)

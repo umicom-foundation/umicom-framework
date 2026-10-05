@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Review changes to your source library</title><style>body{font:17px/1.6 system-ui,sans-serif;max-width:960px;margin:40px auto;padding:0 24px;color:#172a35}h1,h2{line-height:1.25}code{background:#eef4f7;padding:2px 5px}li{margin:9px 0}.note{border-left:4px solid #188879;background:#edf8f5;padding:16px}a{color:#096879}</style></head><body>
+<h1>Review changes to your source library</h1>
+<p>A source library contains the text passages used to answer grounded questions. When a notice changes or a document becomes outdated, update the passages used by future searches while keeping the evidence behind earlier answers. Umicom RAG, LLM and Creator use the same Framework service for this work.</p>
+<h2>Replace saved passages</h2><ol>
+<li>Open the application’s AI workspace and select <strong>Review source changes</strong>.</li>
+<li>Choose <strong>Refresh saved passages</strong>. This shows the current workspace’s passage IDs, collection, title and source line ranges. If another application changed the database, first use <strong>Reload shared workspace</strong>.</li>
+<li>Select exactly the passages you want to replace. Use Ctrl to select individual rows or Shift for a range. A matching title or ID prefix does not automatically select a whole document. Unselected passages remain in the library.</li>
+<li>Choose <strong>Replace selected passages</strong>. To start from saved text, select <strong>Copy selected text to editor</strong>. It joins the selected texts in displayed order without adding separators. Check that this order matches the document; individual sources may need separating line breaks.</li>
+<li>Enter the destination collection ID and name, replacement document ID and title. An existing collection needs its exact saved name. For a new collection, both fields are saved with the replacement. The replacement ID creates passages such as <code>notice.part.1</code>. You may reuse IDs of selected passages. An ID belonging to an unselected passage causes an error.</li>
+<li>Edit or paste the complete replacement text. This is a document replacement, so its line numbers start at 1. UTF-8 validation, byte limits, line-ending normalization and passage splitting follow the <a href="import-searchable-documents.html">document import rules</a>.</li>
+<li>Select <strong>Preview complete source change</strong>. Read every <strong>BEFORE</strong> passage and every <strong>AFTER</strong> passage, including their IDs, collection, title and line ranges. The preview is complete; it does not replace storage yet.</li>
+<li>Select <strong>I approve exactly the source changes shown above</strong>, then <strong>Apply reviewed source change</strong>. All selected removals, replacement passages and any new collection commit together.</li>
+<li>Refresh the list and run a new search from <strong>Sources</strong>. Future searches use the new text. Refresh and preview again before making another change.</li>
+</ol>
+<p class="note">For example, an imported notice may occupy <code>notice.part.1</code> and <code>notice.part.2</code>. Select both when replacing the whole notice. If the new text fits one passage, only the reviewed replacement <code>notice.part.1</code> remains. Selecting only the first passage leaves the second untouched and can cause an ID collision if the replacement also needs <code>notice.part.2</code>.</p>
+<h2>Remove sources from future searches</h2><ol>
+<li>Refresh the list and select exactly the passages to remove.</li>
+<li>Choose <strong>Remove selected passages from search</strong>. Replacement fields and editor text are ignored for this operation.</li>
+<li>Preview the complete change. The preview lists the affected BEFORE passages and has no AFTER passages.</li>
+<li>Approve and apply. Refresh the list to confirm the selected passages are absent. Empty collections are retained.</li>
+</ol>
+<h2>What happens to earlier answers?</h2>
+<p>Saved jobs retain their copied source text, source revisions, original request and response. Updating or removing a live source does not rewrite those citations. Use <strong>Evidence inspection</strong> to compare a saved job’s sources with the current library. It can distinguish a changed source from one that has been removed.</p>
+<p>Removal from search is not secure erasure: the old text can remain in saved jobs, database history or backups. The source-review controls follow Framework’s private recording policy, but this is not database encryption. No file is overwritten, no provider is contacted and no model is run by these source changes.</p>
+<h2>When a change cannot be applied</h2><ul>
+<li><strong>Workspace changed or busy:</strong> a job, passage, collection or external writer changed the saved revision, or work is running. Wait for the work to finish, reload if necessary, refresh the list and review again. The old preview is never applied to a different revision.</li>
+<li><strong>Identifier collision:</strong> inspect which unselected passage owns the proposed ID. Select it only if you also intend to replace its content, or choose a different replacement document ID. Do not assume all similar IDs belong together.</li>
+<li><strong>Capacity reached:</strong> the shared workspace supports 64 saved passages. Selected passages release their places within the same transaction, so replacement can succeed even when the library is full. The remaining passages plus the replacement must fit. The complete change is refused if it does not fit.</li>
+<li><strong>No approval:</strong> read the preview and select the approval checkbox. Editing any selection, operation or replacement field revokes the old approval.</li>
+<li><strong>Storage failure:</strong> the transaction rolls back rather than publishing part of a replacement. Resolve the storage problem, reload and inspect the library before retrying. If the window closed after the change committed, inspect saved sources before repeating the operation.</li>
+<li><strong>Identical replacement:</strong> the reviewed operation succeeds without creating a new revision or discarding cached embeddings. The persisted workspace is still checked for an intervening writer.</li>
+</ul>
+<h2>Extend the shared service</h2>
+<p>Include <code>umicom/ai_workspace/source_change.h</code>. Prepare a replacement with <code>UmiAiWorkspaceSourceReplacementCreate</code> or a removal with <code>UmiAiWorkspaceSourceRemovalCreate</code>, supplying explicit source IDs. The service copies the selected sources and complete replacement. Inspect its summary and every before/after record, then call <code>UmiAiWorkspaceSourceChangeApply</code> only after approval.</p>
+<p>Keep the borrowed workspace alive and use its owner thread. Destroy unused captures with <code>UmiAiWorkspaceSourceChangeDestroy</code>. A successful capture is consumed and cannot be applied twice. The existing Data Server owns persistence and stale-writer checks; new interfaces should reuse that boundary. Existing single-passage APIs remain available for callers that already use them.</p>
+<p>The <code>examples/ai_source_change_main.c</code> source demonstrates selection, preview and explicit application using an in-memory workspace. Production applications use their existing local database connection. File watching, PDF/Word extraction, automatic document grouping and model-generated embeddings remain separate capabilities.</p>
+<p>Umicom Foundation · MIT</p></body></html>

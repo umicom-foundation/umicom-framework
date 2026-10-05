@@ -1,0 +1,18 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# Reuse document UTF-8 validation rather than accepting lossy cache text.
+include_guard(GLOBAL)
+target_sources(umicom_developer PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/build_cache.c")
+target_link_libraries(umicom_developer PRIVATE Umicom::document)
+if(BUILD_TESTING)
+    add_executable(umicom-build-cache-test "${CMAKE_CURRENT_LIST_DIR}/../tests/build_cache/test_cache.c")
+    target_link_libraries(umicom-build-cache-test PRIVATE Umicom::developer)
+    umicom_apply_warnings(umicom-build-cache-test)
+    umicom_apply_sanitizers(umicom-build-cache-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-build-cache-test)
+    endif()
+    foreach(case valid crlf bom quoted-key source-mismatch build-mismatch missing duplicate wrong-type malformed controls unicode-invalid embedded-nul field-limit byte-limit optional-empty literal-values)
+        add_test(NAME framework.build_cache.${case} COMMAND umicom-build-cache-test ${case})
+        set_tests_properties(framework.build_cache.${case} PROPERTIES TIMEOUT 30 LABELS "framework;developer;cmake;regression")
+    endforeach()
+endif()

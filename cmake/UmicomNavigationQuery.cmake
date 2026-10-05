@@ -1,0 +1,16 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-navigation-query-test "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/test_navigation_query.c")
+    target_link_libraries(umicom-navigation-query-test PRIVATE Umicom::developer Umicom::editor Umicom::platform)
+    umicom_apply_warnings(umicom-navigation-query-test)
+    umicom_apply_sanitizers(umicom-navigation-query-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-navigation-query-test)
+    endif()
+    foreach(case definition object references references-declaration references-object references-link link origin-outside self-outside self-surrogate external missing disabled encoding sync fragmented notification error invalid-result shutdown-error close-error timeout cancel-before cancel-during invalid-source invalid-caret invalid-kind invalid-declaration state empty unicode native-invalid read-error write-error wrong-id)
+        add_test(NAME framework.language_runtime.navigation_query.${case} COMMAND umicom-navigation-query-test ${case})
+        set_tests_properties(framework.language_runtime.navigation_query.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;language;navigation;ownership;regression")
+    endforeach()
+endif()

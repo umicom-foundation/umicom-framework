@@ -19,6 +19,15 @@ extern "C" {
  * This supplements the legacy string reader without changing its contract. */
 UmiStatus UmiLanguageRuntimeJsonText(const UmiLanguageRuntimeJsonDocument *document,
     int token, char *out, size_t capacity);
+/** Decode a length-delimited JSON string interior (without surrounding quotes).
+ * NULL output with zero capacity validates and measures without allocating.
+ * outSize receives decoded bytes excluding the terminator on success. Failure
+ * changes neither output nor outSize. Output and input must not overlap, and
+ * input must remain unchanged during both validation and decoding passes.
+ * This shares UTF-8, surrogate and non-NUL policy with parsed string tokens. */
+UmiStatus UmiLanguageRuntimeJsonTextSpan(const void *encoded, size_t length,
+    char *out, size_t capacity, size_t *outSize);
+
 #ifdef __cplusplus
 }
 #endif

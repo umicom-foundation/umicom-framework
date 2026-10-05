@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/context_validator.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context validator from caller-provided values so later operations receive a
@@ -131,6 +132,15 @@ UmiStatus umi_context_validator_record_failure(UmiContextValidator *state,UmiSta
 /* Check that context validator satisfies its contract before another service relies on it. */
 UmiStatus umi_context_validator_validate(const UmiContextValidator *state)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (state == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->validation_id, '\0', sizeof(state->validation_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->context_id, '\0', sizeof(state->context_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->schema_id, '\0', sizeof(state->schema_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->message, '\0', sizeof(state->message)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -158,3 +168,68 @@ bool umi_context_validator_covers_sequence(const UmiContextValidator *state,uint
 {
     return state!=NULL&&state->item_count!=0U&&sequence>=state->first_sequence&&sequence<=state->last_sequence;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextValidatorArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x035df03f18619949);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextValidator *)0)->validation_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextValidator *)0)->context_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextValidator *)0)->schema_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextValidator *)0)->message)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextValidatorArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextValidator *)0)->validation_id) - 1U +
+        8U + sizeof(((UmiContextValidator *)0)->context_id) - 1U +
+        8U + sizeof(((UmiContextValidator *)0)->schema_id) - 1U +
+        8U + sizeof(((UmiContextValidator *)0)->message) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextValidatorArchiveWrite(UmiArchiveWriter *writer, const UmiContextValidator *value)
+{
+    UmiArchiveWriteText(writer, value->validation_id, sizeof(value->validation_id));
+    UmiArchiveWriteText(writer, value->context_id, sizeof(value->context_id));
+    UmiArchiveWriteText(writer, value->schema_id, sizeof(value->schema_id));
+    UmiArchiveWriteText(writer, value->message, sizeof(value->message));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->first_sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->last_sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->item_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->failure_count);
+    UmiArchiveWriteSigned(writer, (int64_t)value->status);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextValidatorArchiveRead(UmiArchiveReader *reader, UmiContextValidator *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->validation_id, sizeof(value->validation_id));
+    UmiArchiveReadText(reader, value->context_id, sizeof(value->context_id));
+    UmiArchiveReadText(reader, value->schema_id, sizeof(value->schema_id));
+    UmiArchiveReadText(reader, value->message, sizeof(value->message));
+    value->first_sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->last_sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->item_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->failure_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->status = (UmiStatus)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextValidatorArchiveValidate(const UmiContextValidator *value)
+{
+    return umi_context_validator_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_validator_archive_encode, umi_context_validator_archive_decode,
+    UmiContextValidator, UmiContextValidatorArchiveSchema, UmiContextValidatorArchiveBound, UmiContextValidatorArchiveWrite, UmiContextValidatorArchiveRead, UmiContextValidatorArchiveValidate)

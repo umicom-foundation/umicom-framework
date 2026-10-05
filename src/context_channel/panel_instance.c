@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/panel_instance.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context panel instance from caller-provided values so later operations
@@ -36,6 +37,16 @@ record->revision=1U;
  */
 UmiStatus umi_context_panel_instance_validate(const UmiCrossApplicationPanelInstance *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->instance_id, '\0', sizeof(record->instance_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->panel_id, '\0', sizeof(record->panel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->application_id, '\0', sizeof(record->application_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->layout_node_id, '\0', sizeof(record->layout_node_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->channel_id, '\0', sizeof(record->channel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -190,3 +201,63 @@ if(store->count!=0U)memcpy(out_records,store->items,store->count*sizeof(store->i
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiCrossApplicationPanelInstanceArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x87126d07daf4484c);
+    schema = (schema ^ (uint64_t)sizeof(((UmiCrossApplicationPanelInstance *)0)->instance_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiCrossApplicationPanelInstance *)0)->panel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiCrossApplicationPanelInstance *)0)->application_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiCrossApplicationPanelInstance *)0)->layout_node_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiCrossApplicationPanelInstance *)0)->channel_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiCrossApplicationPanelInstanceArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiCrossApplicationPanelInstance *)0)->instance_id) - 1U +
+        8U + sizeof(((UmiCrossApplicationPanelInstance *)0)->panel_id) - 1U +
+        8U + sizeof(((UmiCrossApplicationPanelInstance *)0)->application_id) - 1U +
+        8U + sizeof(((UmiCrossApplicationPanelInstance *)0)->layout_node_id) - 1U +
+        8U + sizeof(((UmiCrossApplicationPanelInstance *)0)->channel_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiCrossApplicationPanelInstanceArchiveWrite(UmiArchiveWriter *writer, const UmiCrossApplicationPanelInstance *value)
+{
+    UmiArchiveWriteText(writer, value->instance_id, sizeof(value->instance_id));
+    UmiArchiveWriteText(writer, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveWriteText(writer, value->application_id, sizeof(value->application_id));
+    UmiArchiveWriteText(writer, value->layout_node_id, sizeof(value->layout_node_id));
+    UmiArchiveWriteText(writer, value->channel_id, sizeof(value->channel_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->visible);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->active);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->last_context_sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiCrossApplicationPanelInstanceArchiveRead(UmiArchiveReader *reader, UmiCrossApplicationPanelInstance *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->instance_id, sizeof(value->instance_id));
+    UmiArchiveReadText(reader, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveReadText(reader, value->application_id, sizeof(value->application_id));
+    UmiArchiveReadText(reader, value->layout_node_id, sizeof(value->layout_node_id));
+    UmiArchiveReadText(reader, value->channel_id, sizeof(value->channel_id));
+    value->visible = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->active = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->last_context_sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiCrossApplicationPanelInstanceArchiveValidate(const UmiCrossApplicationPanelInstance *value)
+{
+    return umi_context_panel_instance_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_panel_instance_archive_encode, umi_context_panel_instance_archive_decode,
+    UmiCrossApplicationPanelInstance, UmiCrossApplicationPanelInstanceArchiveSchema, UmiCrossApplicationPanelInstanceArchiveBound, UmiCrossApplicationPanelInstanceArchiveWrite, UmiCrossApplicationPanelInstanceArchiveRead, UmiCrossApplicationPanelInstanceArchiveValidate)

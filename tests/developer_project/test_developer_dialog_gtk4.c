@@ -99,9 +99,23 @@ int main(void)
     accept = Find(GTK_WIDGET(form), "developer.dialog.accept");
     CHECK(GTK_IS_CHECK_BUTTON(trust) && GTK_IS_BUTTON(accept));
     CHECK(!gtk_check_button_get_active(GTK_CHECK_BUTTON(trust)));
+    /* An unmatched quote or two competing argument fields must keep the form
+     * open without applying any partial settings or changing the trust choice. */
+    GtkWidget *arguments = Find(GTK_WIDGET(form), "developer.build.arguments");
+    GtkWidget *literal = Find(GTK_WIDGET(form), "developer.build.field.9");
+    CHECK(GTK_IS_ENTRY(arguments) && GTK_IS_ENTRY(literal));
+    gtk_editable_set_text(GTK_EDITABLE(arguments), "\"unfinished");
+    g_signal_emit_by_name(accept, "clicked");
+    CHECK(probe.applied == 0U && gtk_widget_get_visible(GTK_WIDGET(form)));
+    gtk_editable_set_text(GTK_EDITABLE(arguments), "--file \"notes for review.txt\" \"\"");
+    gtk_editable_set_text(GTK_EDITABLE(literal), "old literal");
+    g_signal_emit_by_name(accept, "clicked");
+    CHECK(probe.applied == 0U && gtk_widget_get_visible(GTK_WIDGET(form)));
+    gtk_editable_set_text(GTK_EDITABLE(literal), "");
     gtk_check_button_set_active(GTK_CHECK_BUTTON(trust), TRUE);
     g_signal_emit_by_name(accept, "clicked");
     CHECK(probe.applied == 1U && probe.trusted == 1);
+    CHECK(strcmp(probe.profile.run_arguments, "--file \"notes for review.txt\" \"\"") == 0);
     CHECK(!gtk_widget_get_visible(GTK_WIDGET(form)));
     /* Test the parent-first teardown order as well as dialog-first above. */
     gtk_window_destroy(parent);

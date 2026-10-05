@@ -123,10 +123,22 @@ UmiStatus UmiIbkrConnectionOpen(UmiIbkrConnection *c, uint64_t now)
  * represented. StartApi is private to the handshake. */
 UmiStatus UmiIbkrQueueFields(UmiIbkrConnection *c, const char *const *fields, size_t count)
 {
+    /* Quote subscriptions add request/cancel market data and data-type selection
+     * to this read-only allowlist. Message 2 cancels market data; order cancel
+     * (message 4) and order placement (message 3) remain forbidden. The previous
+     * account-only allowlist is retained for review. */
+#if 0
     if (!c || !fields || count < 2 || count > 6) return UMI_STATUS_INVALID_ARGUMENT;
     const char *id = fields[0];
     if (!id || (strcmp(id,"71") && strcmp(id,"49") && strcmp(id,"62") &&
                 strcmp(id,"63") && strcmp(id,"61") && strcmp(id,"64")))
+        return UMI_STATUS_PERMISSION_DENIED;
+#endif
+    if (!c || !fields || count < 2U || count > 20U) return UMI_STATUS_INVALID_ARGUMENT;
+    const char *id = fields[0];
+    if (!id || (strcmp(id,"71") && strcmp(id,"49") && strcmp(id,"62") &&
+                strcmp(id,"63") && strcmp(id,"61") && strcmp(id,"64") &&
+                strcmp(id,"1") && strcmp(id,"2") && strcmp(id,"59")))
         return UMI_STATUS_PERMISSION_DENIED;
     size_t length = 0;
     for (size_t i=0; i<count; ++i) {

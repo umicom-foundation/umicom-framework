@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/context_merge.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context merge from caller-provided values so later operations receive a known
@@ -131,6 +132,15 @@ UmiStatus umi_context_merge_record_failure(UmiContextMerge *state,UmiStatus stat
 /* Check that context merge satisfies its contract before another service relies on it. */
 UmiStatus umi_context_merge_validate(const UmiContextMerge *state)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (state == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->merge_id, '\0', sizeof(state->merge_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->conflict_id, '\0', sizeof(state->conflict_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->resolution, '\0', sizeof(state->resolution)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->result_context_id, '\0', sizeof(state->result_context_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -158,3 +168,68 @@ bool umi_context_merge_covers_sequence(const UmiContextMerge *state,uint64_t seq
 {
     return state!=NULL&&state->item_count!=0U&&sequence>=state->first_sequence&&sequence<=state->last_sequence;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextMergeArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x94df3625575165fb);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextMerge *)0)->merge_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextMerge *)0)->conflict_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextMerge *)0)->resolution)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextMerge *)0)->result_context_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextMergeArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextMerge *)0)->merge_id) - 1U +
+        8U + sizeof(((UmiContextMerge *)0)->conflict_id) - 1U +
+        8U + sizeof(((UmiContextMerge *)0)->resolution) - 1U +
+        8U + sizeof(((UmiContextMerge *)0)->result_context_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextMergeArchiveWrite(UmiArchiveWriter *writer, const UmiContextMerge *value)
+{
+    UmiArchiveWriteText(writer, value->merge_id, sizeof(value->merge_id));
+    UmiArchiveWriteText(writer, value->conflict_id, sizeof(value->conflict_id));
+    UmiArchiveWriteText(writer, value->resolution, sizeof(value->resolution));
+    UmiArchiveWriteText(writer, value->result_context_id, sizeof(value->result_context_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->first_sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->last_sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->item_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->failure_count);
+    UmiArchiveWriteSigned(writer, (int64_t)value->status);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextMergeArchiveRead(UmiArchiveReader *reader, UmiContextMerge *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->merge_id, sizeof(value->merge_id));
+    UmiArchiveReadText(reader, value->conflict_id, sizeof(value->conflict_id));
+    UmiArchiveReadText(reader, value->resolution, sizeof(value->resolution));
+    UmiArchiveReadText(reader, value->result_context_id, sizeof(value->result_context_id));
+    value->first_sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->last_sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->item_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->failure_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->status = (UmiStatus)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextMergeArchiveValidate(const UmiContextMerge *value)
+{
+    return umi_context_merge_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_merge_archive_encode, umi_context_merge_archive_decode,
+    UmiContextMerge, UmiContextMergeArchiveSchema, UmiContextMergeArchiveBound, UmiContextMergeArchiveWrite, UmiContextMergeArchiveRead, UmiContextMergeArchiveValidate)

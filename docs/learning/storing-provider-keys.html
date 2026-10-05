@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Store provider keys on this computer | Umicom Framework</title>
+<style>body{font:17px/1.65 system-ui,sans-serif;max-width:920px;margin:40px auto;padding:0 24px;color:#172b3a}pre{background:#eff4f7;padding:20px;overflow:auto}code{font-family:ui-monospace,monospace}h1,h2{line-height:1.2}aside{border-left:4px solid #17677a;padding:12px 20px;background:#f3f8fa}a{color:#075d78}</style></head><body>
+<p>Umicom Framework · Security</p><h1>Store provider keys on this computer</h1>
+<p>A provider key lets a remote service recognise an account. Treat it like a password.
+The shared secret-provider interface lets application code refer to a key by an alias,
+such as <code>vault://image-service</code>, without saving the key in a project.</p>
+<aside>This guide describes a Framework API for application developers. It does not add
+a connection screen, authenticate with an AI company, or submit a generation request.</aside>
+<h2>Choose a storage boundary</h2>
+<p><code>umi_secret_provider_platform</code> uses Windows Credential Manager for the
+current operating-system user. Credentials persist on this computer; the adapter does
+not request roaming to another computer. Other platforms return
+<code>UMI_STATUS_UNAVAILABLE</code> until a secure native adapter is supplied. There is
+no fallback that writes keys into a text file or ordinary database.</p>
+<p>An application's local database can keep the provider name, model selection and
+secret reference. Keep the secret value in the credential store. Do not include that
+value in database exports, source control, diagnostic reports, prompts, URLs or process
+arguments. A local password is different: store a salted password verifier through the
+local-profile service, not the password itself.</p>
+<h2>Connect the provider to your application</h2><ol>
+<li><p>Include <code>umicom/security/platform_secrets.h</code> and link your target to
+<code>Umicom::security</code>. Start with a zero-initialised provider.</p></li>
+<li><p>Choose stable, non-secret application and profile aliases. Each alias and key name
+is 1–96 characters, starts with a lower-case ASCII letter and contains only lower-case
+letters, digits, dots, underscores or hyphens. Use aliases rather than email addresses.
+Keep them stable between sessions so the same stored record can be found.</p></li>
+<li><p>Create the provider and check its result before offering persistent storage:</p>
+<pre><code>UmiSecretProvider provider = {0};
+UmiStatus status = umi_secret_provider_platform(
+    "org.umicom.media", "local-owner", &amp;provider);
+if (status != UMI_STATUS_OK) {
+    /* Explain that secure storage is unavailable. Do not save a plaintext copy. */
+    return status;
+}</code></pre></li>
+<li><p>When the user explicitly chooses to save a key, pass their input buffer to
+<code>umi_secret_set(&amp;provider, "image-service", user_input)</code>. Check the status,
+then clear that input buffer with <code>umi_secret_clear</code>. The provider accepts
+1–2048 bytes before the terminating NUL and preserves those bytes. Saving under an
+existing alias replaces its value; do not silently overwrite another account's key.</p></li>
+<li><p>Resolve a key only when an authorised operation needs it. Use a worker thread
+for native storage calls so the application remains responsive. Clear the returned
+buffer as soon as the provider request has finished using it.</p>
+<pre><code>char key[UMI_PLATFORM_SECRET_VALUE_CAPACITY] = {0};
+status = umi_secret_get(&amp;provider, "image-service", key, sizeof(key));
+if (status == UMI_STATUS_OK) {
+    /* The service adapter may now authenticate to its reviewed HTTPS endpoint.
+     * Keep the key out of logs and never forward it across a redirect. */
+}
+umi_secret_clear(key, sizeof(key));</code></pre></li>
+<li><p>Dispose the provider after all operations using it have finished:
+<code>umi_secret_provider_dispose(&amp;provider)</code>. Disposal releases the local
+handle; it does not erase the user's saved credentials. To forget one local key after
+the user requests it, call <code>umi_secret_remove</code> with its exact alias.
+Forgetting a local key does not revoke it at the remote service.</p></li></ol>
+<h2>Use references with the existing registry</h2>
+<p>You can transfer the provider into <code>UmiSecretProviderRegistry</code> under a name
+such as <code>vault</code>. A successful <code>umi_secret_provider_registry_add</code>
+takes ownership and clears the supplied provider. On failure, the caller still owns it.
+Then use <code>vault://image-service</code> with the registry's store, resolve and remove
+functions. Destroy the registry after its workers have stopped. The registry does not
+change the storage backend's scope or grant permission to use a remote account.</p>
+<h2>Understand the privacy limits</h2>
+<p>Profile aliases keep records separate, but they do not enforce separate security
+identities. Other processes running under the same Windows user can access generic
+credentials. A local-profile password does not encrypt these records. Applications
+must enforce their unlocked-profile policy before reading a key; use separate OS users
+when separate operating-system access is required.</p>
+<p>Local credential storage is not offline inference. When the user chooses a remote
+provider, authentication is sent to that service and the submitted content leaves
+the computer. Show the destination and content before sending, enforce provider-specific
+TLS and authentication rules, and describe that service's retention policy separately.
+Do not embed a developer-owned shared key in a distributed application.</p>
+<h2>Handle failures without losing the user's intent</h2><ul>
+<li><strong>NOT_FOUND:</strong> no value exists under that application, profile and key
+alias. Ask the user to configure that connection; do not reuse a previous buffer.</li>
+<li><strong>CAPACITY_EXCEEDED:</strong> a name or value is too long, or the receiving
+buffer is too small. Reject the input without truncating a credential.</li>
+<li><strong>PERMISSION_DENIED or UNAVAILABLE:</strong> the OS store refused access or
+is unavailable. Keep the connection disconnected and explain the storage problem.</li>
+<li><strong>PARSE_ERROR:</strong> the stored value does not match the adapter's bounded
+text contract. Do not attempt authentication with the malformed value.</li></ul>
+<p>The native get callback clears the entire supplied output buffer before lookup,
+including unsuccessful lookups. Calls using a malformed provider object can fail in
+the generic helper before reaching that callback; callers should always initialise and
+clear their buffers. Concurrent writes are not a compare-and-swap transaction. Serialise
+changes to a connection and confirm the intended account before replacement.</p>
+<h2>Extend the service</h2><p>A Linux keyring or macOS Keychain adapter should implement
+the same get, set, remove and destroy operations, with equivalent ownership and failure
+rules. Keep native credentials outside the project database. Add isolated failure cases
+as well as platform integration coverage; an in-memory fixture cannot establish the
+operating system's storage behaviour.</p>
+<p>Native API reference: <a href="https://learn.microsoft.com/en-us/windows/win32/api/wincred/ns-wincred-credentialw">Microsoft credential structure and persistence rules</a>.</p>
+<footer>Sammy Hegab · Umicom Foundation · MIT</footer></body></html>

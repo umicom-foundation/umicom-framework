@@ -19,6 +19,8 @@
  * responsibility for higher-level threading and persistence policy.
  */
 #include "umicom/designer/property_schema.h"
+#include "../base/value_archive_internal.h"
+#include "../base/registry_archive_internal.h"
 #include "../base/snapshot_registry_internal.h"
 
 /* Validate every bounded text member before lookup. Value-only snapshot
@@ -245,3 +247,75 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_designer_property_schema_registry_edit_if_
  * this owner's existing row order and normalized fields remain authoritative. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_designer_property_schema_registry_read_page,
     UmiDesignerPropertySchemaRegistry, UmiDesignerPropertySchemaSnapshot, UMI_DESIGNER_PROPERTY_SCHEMA_CAPACITY)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x00b4bf5d2405e04f);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDesignerPropertySchemaSnapshot *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDesignerPropertySchemaSnapshot *)0)->component_type)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDesignerPropertySchemaSnapshot *)0)->property_name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDesignerPropertySchemaSnapshot *)0)->value_type)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDesignerPropertySchemaSnapshot *)0)->default_value)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDesignerPropertySchemaSnapshot *)0)->category)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiDesignerPropertySchemaSnapshot *)0)->id) - 1U +
+        8U + sizeof(((UmiDesignerPropertySchemaSnapshot *)0)->component_type) - 1U +
+        8U + sizeof(((UmiDesignerPropertySchemaSnapshot *)0)->property_name) - 1U +
+        8U + sizeof(((UmiDesignerPropertySchemaSnapshot *)0)->value_type) - 1U +
+        8U + sizeof(((UmiDesignerPropertySchemaSnapshot *)0)->default_value) - 1U +
+        8U + sizeof(((UmiDesignerPropertySchemaSnapshot *)0)->category) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiDesignerPropertySchemaSnapshot *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->component_type, sizeof(value->component_type));
+    UmiArchiveWriteText(writer, value->property_name, sizeof(value->property_name));
+    UmiArchiveWriteText(writer, value->value_type, sizeof(value->value_type));
+    UmiArchiveWriteText(writer, value->default_value, sizeof(value->default_value));
+    UmiArchiveWriteText(writer, value->category, sizeof(value->category));
+    UmiArchiveWriteSigned(writer, (int64_t)value->required);
+    UmiArchiveWriteSigned(writer, (int64_t)value->bindable);
+    UmiArchiveWriteSigned(writer, (int64_t)value->order);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiDesignerPropertySchemaSnapshot *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->component_type, sizeof(value->component_type));
+    UmiArchiveReadText(reader, value->property_name, sizeof(value->property_name));
+    UmiArchiveReadText(reader, value->value_type, sizeof(value->value_type));
+    UmiArchiveReadText(reader, value->default_value, sizeof(value->default_value));
+    UmiArchiveReadText(reader, value->category, sizeof(value->category));
+    value->required = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->bindable = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->order = (int32_t)UmiArchiveReadSigned(reader, INT32_MIN, INT32_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus ArchiveValidate(const UmiDesignerPropertySchemaSnapshot *value)
+{
+    return umi_designer_property_schema_snapshot_validate(value, NULL);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_designer_property_schema_snapshot_archive_encode, umi_designer_property_schema_snapshot_archive_decode,
+    UmiDesignerPropertySchemaSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Restoring this complete collection reuses its existing reviewed replacement
+ * rules. Decoding a saved value alone never changes a live registry. */
+UMI_DEFINE_REGISTRY_ARCHIVE(umi_designer_property_schema_registry_archive_encode, umi_designer_property_schema_registry_archive_restore,
+    UmiDesignerPropertySchemaRegistry, UmiDesignerPropertySchemaSnapshot, UMI_DESIGNER_PROPERTY_SCHEMA_CAPACITY, ArchiveSchema,
+    umi_designer_property_schema_snapshot_archive_encode, umi_designer_property_schema_snapshot_archive_decode, umi_designer_property_schema_registry_replace_if_current)

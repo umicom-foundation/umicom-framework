@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/risk_limit.h"
+#include "../../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise treasury risk limit from caller-provided values so later operations receive a
@@ -40,6 +41,12 @@ UmiStatus umi_treasury_risk_limit_init(UmiTreasuryRiskLimit *value,
  * it.
  */
 bool umi_treasury_risk_limit_valid(const UmiTreasuryRiskLimit *value) {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (value == NULL) return 0;
+    if (memchr(value->id, '\0', sizeof(value->id)) == NULL) return 0;
+
     return value != NULL && (umi_treasury_id_valid(value->id) && value->hard_limit_minor > 0 && value->warning_limit_minor >= 0 && value->warning_limit_minor <= value->hard_limit_minor);
 }
 
@@ -55,3 +62,40 @@ int64_t umi_treasury_risk_limit_buffer_minor(const UmiTreasuryRiskLimit *value) 
     if (value == NULL) return (int64_t)0;
     return value->hard_limit_minor - value->warning_limit_minor;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiTreasuryRiskLimitArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x8ae1e7d98fd16019);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTreasuryRiskLimit *)0)->id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiTreasuryRiskLimitArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiTreasuryRiskLimit *)0)->id) - 1U +
+        8U +
+        8U;
+}
+static void UmiTreasuryRiskLimitArchiveWrite(UmiArchiveWriter *writer, const UmiTreasuryRiskLimit *value)
+{
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->hard_limit_minor);
+    UmiArchiveWriteSigned(writer, (int64_t)value->warning_limit_minor);
+}
+static void UmiTreasuryRiskLimitArchiveRead(UmiArchiveReader *reader, UmiTreasuryRiskLimit *value)
+{
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    value->hard_limit_minor = (int64_t)UmiArchiveReadSigned(reader, INT64_MIN, INT64_MAX);
+    value->warning_limit_minor = (int64_t)UmiArchiveReadSigned(reader, INT64_MIN, INT64_MAX);
+}
+static UmiStatus UmiTreasuryRiskLimitArchiveValidate(const UmiTreasuryRiskLimit *value)
+{
+    return umi_treasury_risk_limit_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_treasury_risk_limit_archive_encode, umi_treasury_risk_limit_archive_decode,
+    UmiTreasuryRiskLimit, UmiTreasuryRiskLimitArchiveSchema, UmiTreasuryRiskLimitArchiveBound, UmiTreasuryRiskLimitArchiveWrite, UmiTreasuryRiskLimitArchiveRead, UmiTreasuryRiskLimitArchiveValidate)

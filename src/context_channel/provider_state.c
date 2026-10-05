@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/provider_state.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context provider state from caller-provided values so later operations
@@ -36,6 +37,13 @@ record->revision=1U;
  */
 UmiStatus umi_context_provider_state_validate(const UmiContextProviderState *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->provider_id, '\0', sizeof(record->provider_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->message, '\0', sizeof(record->message)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -184,3 +192,57 @@ if(store->count!=0U)memcpy(out_records,store->items,store->count*sizeof(store->i
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextProviderStateArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xa6a17a0288517b81);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextProviderState *)0)->provider_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextProviderState *)0)->message)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextProviderStateArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextProviderState *)0)->provider_id) - 1U +
+        8U + sizeof(((UmiContextProviderState *)0)->message) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextProviderStateArchiveWrite(UmiArchiveWriter *writer, const UmiContextProviderState *value)
+{
+    UmiArchiveWriteText(writer, value->provider_id, sizeof(value->provider_id));
+    UmiArchiveWriteText(writer, value->message, sizeof(value->message));
+    UmiArchiveWriteSigned(writer, (int64_t)value->status);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->last_success_ms);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->last_failure_ms);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->publish_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->failure_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextProviderStateArchiveRead(UmiArchiveReader *reader, UmiContextProviderState *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->provider_id, sizeof(value->provider_id));
+    UmiArchiveReadText(reader, value->message, sizeof(value->message));
+    value->status = (UmiStatus)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->last_success_ms = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->last_failure_ms = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->publish_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->failure_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextProviderStateArchiveValidate(const UmiContextProviderState *value)
+{
+    return umi_context_provider_state_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_provider_state_archive_encode, umi_context_provider_state_archive_decode,
+    UmiContextProviderState, UmiContextProviderStateArchiveSchema, UmiContextProviderStateArchiveBound, UmiContextProviderStateArchiveWrite, UmiContextProviderStateArchiveRead, UmiContextProviderStateArchiveValidate)

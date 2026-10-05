@@ -603,3 +603,57 @@ UmiStatus umi_application_product_gtk4_workstation_library_preview(UmiApplicatio
 {
     return workstation != NULL ? umi_application_suite_gtk4_workstation_library_preview(workstation->layout, out_preview) : UMI_STATUS_INVALID_ARGUMENT;
 }
+
+/* Layout recovery stays with Framework. This owner-thread call neither
+ * saves product data nor runs a trade, payment or project command. */
+UmiStatus umi_application_product_gtk4_workstation_library_history_read(UmiApplicationProductGtk4Workstation *workstation,
+    UmiUiWorkspaceLibraryHistoryState *out_state)
+{
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_application_suite_gtk4_workstation_library_history_read(workstation->layout, out_state);
+}
+
+/* Layout recovery stays with Framework. This owner-thread call neither
+ * saves product data nor runs a trade, payment or project command. */
+UmiStatus umi_application_product_gtk4_workstation_library_history_navigate(UmiApplicationProductGtk4Workstation *workstation,
+    UmiUiWorkspaceLibraryHistoryDirection direction, uint64_t expected_revision)
+{
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_application_suite_gtk4_workstation_library_history_navigate(workstation->layout, direction, expected_revision);
+}
+
+/* Layout recovery stays with Framework. This owner-thread call neither
+ * saves product data nor runs a trade, payment or project command. */
+UmiStatus umi_application_product_gtk4_workstation_library_export(UmiApplicationProductGtk4Workstation *workstation,
+    char *bytes, size_t capacity, size_t *out_size)
+{
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_application_suite_gtk4_workstation_library_export(workstation->layout, bytes, capacity, out_size);
+}
+
+/* Layout recovery stays with Framework. This owner-thread call neither
+ * saves product data nor runs a trade, payment or project command. */
+UmiStatus umi_application_product_gtk4_workstation_library_import_review(UmiApplicationProductGtk4Workstation *workstation,
+    const void *bytes, size_t size, UmiUiWorkspaceLibraryImport **out_review)
+{
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_application_suite_gtk4_workstation_library_import_review(workstation->layout, bytes, size, out_review);
+}
+
+/* Layout recovery stays with Framework. This owner-thread call neither
+ * saves product data nor runs a trade, payment or project command. */
+UmiStatus umi_application_product_gtk4_workstation_library_import_apply(UmiApplicationProductGtk4Workstation *workstation,
+    const UmiUiWorkspaceLibraryImport *review)
+{
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_application_suite_gtk4_workstation_library_import_apply(workstation->layout, review);
+}
+
+/* Layout recovery stays with Framework. This owner-thread call neither
+ * saves product data nor runs a trade, payment or project command. */
+UmiStatus umi_application_product_gtk4_workstation_library_apply(UmiApplicationProductGtk4Workstation *workstation,
+    const UmiUiWorkspaceLibraryRequest *request)
+{
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_application_suite_gtk4_workstation_library_apply(workstation->layout, request);
+}

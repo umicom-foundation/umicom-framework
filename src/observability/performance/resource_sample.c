@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include <string.h>
+#include "../../base/value_archive_internal.h"
 #include "umicom/observability/performance/resource_sample.h"
 
 /* Initialise deterministic record metadata before any measurement is observed. */
@@ -41,6 +42,13 @@ UmiStatus umi_performance_resource_sample_init(UmiPerformanceResourceSample *rec
 
 /* Reject incompatible ABI snapshots and malformed stable identifiers. */
 UmiStatus umi_performance_resource_sample_validate(const UmiPerformanceResourceSample *record) {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->id, '\0', sizeof(record->id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->subject_id, '\0', sizeof(record->subject_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -82,3 +90,66 @@ bool umi_performance_resource_sample_same_identity(const UmiPerformanceResourceS
 double umi_performance_resource_sample_ratio(double numerator, double denominator) {
     return umi_performance_safe_ratio(numerator, denominator);
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiPerformanceResourceSampleArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x87a897fc2b3d123e);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPerformanceResourceSample *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPerformanceResourceSample *)0)->subject_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiPerformanceResourceSampleArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiPerformanceResourceSample *)0)->id) - 1U +
+        8U + sizeof(((UmiPerformanceResourceSample *)0)->subject_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiPerformanceResourceSampleArchiveWrite(UmiArchiveWriter *writer, const UmiPerformanceResourceSample *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->subject_id, sizeof(value->subject_id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->state);
+    UmiArchiveWriteSigned(writer, (int64_t)value->severity);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->timestamp_ns);
+    UmiArchiveWriteDouble(writer, value->value);
+    UmiArchiveWriteDouble(writer, value->auxiliary);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+}
+static void UmiPerformanceResourceSampleArchiveRead(UmiArchiveReader *reader, UmiPerformanceResourceSample *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->subject_id, sizeof(value->subject_id));
+    value->state = (UmiPerformanceState)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->severity = (UmiPerformanceSeverity)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->timestamp_ns = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->value = UmiArchiveReadDouble(reader);
+    value->auxiliary = UmiArchiveReadDouble(reader);
+    value->count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiPerformanceResourceSampleArchiveValidate(const UmiPerformanceResourceSample *value)
+{
+    return umi_performance_resource_sample_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_performance_resource_sample_archive_encode, umi_performance_resource_sample_archive_decode,
+    UmiPerformanceResourceSample, UmiPerformanceResourceSampleArchiveSchema, UmiPerformanceResourceSampleArchiveBound, UmiPerformanceResourceSampleArchiveWrite, UmiPerformanceResourceSampleArchiveRead, UmiPerformanceResourceSampleArchiveValidate)

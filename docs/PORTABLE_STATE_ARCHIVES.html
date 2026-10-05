@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Saving and restoring Framework values</title>
+<style>body{max-width:900px;margin:3rem auto;padding:0 1.5rem;font:18px/1.6 system-ui,sans-serif;color:#203047}h1,h2{line-height:1.2}pre{overflow:auto;padding:1rem;background:#eef3f8;border-radius:6px}code{font-size:.9em}table{border-collapse:collapse;width:100%}td,th{padding:.6rem;border:1px solid #bbc8d4;text-align:left}aside{border-left:4px solid #386c96;padding:1rem;background:#eff7fc}</style></head>
+<body><h1>Saving and restoring Framework values</h1>
+<p>A value archive is a bounded sequence of bytes that represents a record or an ordered registry. It lets storage services retain a value without copying a C structure's padding, unused text or machine-specific integer layout. The existing domain still decides whether the restored fields are valid.</p>
+<p>The public APIs live beside their records. For example, bookmarks provide <code>umi_platform_bookmarks_snapshot_archive_encode</code> and <code>umi_platform_bookmarks_snapshot_archive_decode</code>. The bookmark registry adds <code>umi_platform_bookmarks_registry_archive_encode</code> and <code>umi_platform_bookmarks_registry_archive_restore</code>. SDK, testing, desktop, editor, language, project, debug, source-control, UI, designer and chart value families use the same ownership rules.</p>
+<h2>Save a complete collection</h2>
+<ol><li>On the registry's owner thread, read its current revision. A revision is an observation token for that particular owner, not a timestamp or an authorization.</li>
+<li>Call the registry encoder with that revision, a null buffer and zero capacity. Check the returned status and required byte count before allocating.</li>
+<li>Allocate the reported space and encode using the same revision. If the owner changed, discard the old measurement and start again. An undersized buffer receives no partial bytes.</li>
+<li>Give the completed bytes to the existing storage service. Use a Data Server transaction when saving related state together. Check both storage and commit results, and retain the previous accepted save after a failure.</li>
+<li>Free your buffer after the storage operation has completed. The codecs never retain it.</li></ol>
+<pre><code>uint64_t observed = umi_platform_bookmarks_registry_revision(registry);
+size_t bytes_needed = 0;
+UmiStatus status = umi_platform_bookmarks_registry_archive_encode(
+    registry, observed, NULL, 0, &amp;bytes_needed);
+/* Check status, allocate bytes_needed bytes, then call again with the
+   same observed revision and the allocated buffer. */</code></pre>
+<p>The complete, compilable <a href="../examples/value_archive/main.c">storage lesson</a> includes allocation, transaction errors, recovery and cleanup. It reuses <code>UmiBlobStore</code> over an in-memory Data Server. The same codec can supply another supported storage adapter; file durability and cross-process conflict handling remain that adapter's responsibility.</p>
+<h2>Restore after review</h2>
+<ol><li>Read the saved bytes into owned, bounded storage. Apply a product-specific size limit before accepting a large input.</li>
+<li>Decide which saved collection the user wants to restore. Restoration replaces the complete collection; an empty archive clears it.</li>
+<li>Observe the destination registry's current revision immediately before preparing the restore. Pass that observation to <code>archive_restore</code>.</li>
+<li>Inspect the returned status. The decoder verifies the envelope, field layout, checksum, text bounds and each domain value before the existing replacement operation checks duplicate identities and publishes everything together.</li>
+<li>Refresh the UI only after successful publication. A refused restore keeps all previous rows and their revision. Successful publication uses the destination's next revision; it never adopts a saved counter as current authority.</li></ol>
+<aside>Restored values are evidence. A saved command, debugger state, account observation or order draft must be reviewed and revalidated by its live service. Decoding does not connect a broker, run a command, restore credentials, acquire a permission or submit an order.</aside>
+<h2>Use the installed SDK lesson</h2>
+<p>Copy the installed <code>examples/value_archive</code> directory into a writable working directory. Replace the installation path below with your Framework SDK location, and use a shell containing your C compiler and CMake.</p>
+<ol><li>Configure the lesson against the installed SDK:<pre><code>cmake -S . -B build -DCMAKE_PREFIX_PATH="C:/UmicomSDK" -DBUILD_TESTING=ON</code></pre></li>
+<li>Build the independent consumer:<pre><code>cmake --build build</code></pre></li>
+<li>Run the lesson's check:<pre><code>ctest --test-dir build --output-on-failure</code></pre></li></ol>
+<p>The expected console message is <code>Recovered bookmark: Notes project (file:///workspace/notes.c)</code>. This lesson demonstrates storage handoff and recovery into a new registry within one process. It uses no real project files and does not prove disk-crash recovery or installed-product readiness.</p>
+<h2>Understand refusals</h2>
+<table><thead><tr><th>Status</th><th>Meaning and next step</th></tr></thead><tbody>
+<tr><td>INVALID_ARGUMENT</td><td>Check pointers, buffer rules and the domain fields. No output value is published.</td></tr>
+<tr><td>INVALID_STATE</td><td>The owner changed after observation. Obtain a new observation and review again; do not force an old revision.</td></tr>
+<tr><td>CAPACITY_EXCEEDED</td><td>For encoding, allocate the required output size when reported. For restoration, reduce the collection or investigate exhausted owner counters. Do not reset a live counter.</td></tr>
+<tr><td>PARSE_ERROR</td><td>The bytes are damaged, truncated, noncanonical or outside the typed numeric/text bounds. Retain the previous state and recover another saved copy.</td></tr>
+<tr><td>UNAVAILABLE</td><td>The field layout is incompatible, or the host cannot represent a required floating value. Use an explicit migration; never reinterpret raw struct bytes.</td></tr>
+<tr><td>ALREADY_EXISTS</td><td>The saved collection contains duplicate identities. Examine the rejected row; do not silently discard it.</td></tr>
+<tr><td>OUT_OF_MEMORY</td><td>Temporary restoration storage could not be allocated. The live collection remains intact.</td></tr></tbody></table>
+<h2>Limits and extension points</h2>
+<p>Archives are limited to 16 MiB. Individual types have tighter bounds. Restoration also bounds its decoded row storage and uses the existing owner's replacement scratch allocation. The in-memory Data Server's single text value is smaller: the lesson's hexadecimal blob adapter can store at most 2,047 binary bytes through that backend. Larger workspaces need a suitable storage adapter or a separately designed transactional chunk store; do not assume the archive limit is a storage guarantee.</p>
+<p>Text ends at its first null terminator. Unused text space and C padding are excluded; text bytes otherwise follow the domain's existing validation and are not automatically normalized. Integer fields have explicit byte order and range checks. Floating fields require finite binary64 values and retain signed zero. A record's structure-size field is rebuilt locally, while other compatibility fields remain subject to its validator.</p>
+<p>The checksum detects accidental damage, not a malicious sender. Archives are neither encrypted nor authenticated. Choose deliberately which values may be saved or exported; keep secrets in their established credential storage. A successful envelope inspection alone does not establish valid domain state.</p>
+<p>To extend a record, add its new field to the encoder, decoder, schema identity, size bound, validator and member-by-member regression fixture. Schema identity includes the record name, ordered field types and text capacities. Changes to that identity require an explicit migration decision. Keep resource-owning pointers, callbacks and operating-system handles out of these value archives.</p>
+<p>Related lessons: <a href="SAFE_VALUE_RECORDS.html">safe value ownership</a> and <a href="REVIEWED_STATE_UPDATES.html">reviewed state publication</a>.</p>
+<footer><p>Sammy Hegab · Umicom Foundation · MIT</p></footer></body></html>

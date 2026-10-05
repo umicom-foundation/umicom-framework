@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Save emitted build output to a new file</title><style>body{font:17px/1.6 system-ui;max-width:900px;margin:2rem auto;padding:0 24px;color:#18252d}code,pre{font-family:monospace}pre{padding:16px;background:#f1f5f7;overflow:auto}h1,h2{line-height:1.2}a{color:#07658a}</style></head><body><main><h1>Save emitted build output to a new file</h1>
+<p>The live output viewer keeps a bounded tail so a long build does not consume unbounded memory. Optional log
+capture records all bytes received from the workflow in a new file while that viewer continues to update.</p>
+<h2>Capture a workflow</h2><ol>
+<li>Choose an absolute path in an existing directory that the developer controls. Use a new filename, preferably
+outside source checkouts, so build output is not accidentally included in source commits.</li>
+<li>Call <code>UmiBuildProjectSessionSubmitLogged</code> with the existing session, validated profile, requested phase,
+current trust decision and selected path. The path is reserved using exclusive creation: an existing file or symlink
+is refused rather than opened or overwritten. Parent aliases may be followed; this API is not a filesystem sandbox.</li>
+<li>Keep polling the live view and completed phase results as before. Call <code>UmiBuildProjectSessionReadLog</code>
+for copied file progress. The read performs no disk access and does not borrow the worker's file handle.</li>
+<li>After completion, inspect both the build status and the log status. <code>capture_complete</code> means all emitted
+bytes were written and the file closed successfully. A failed or cancelled build can still have a complete capture
+of the output it emitted.</li>
+<li>Retain or remove log files according to the developer's own policy. Starting another job or destroying the session
+does not delete earlier files. Logs can contain source paths, diagnostics and other program output.</li></ol>
+<pre><code>#include "umicom/build/log_capture.h"
+
+/* The host supplies an existing session and its reviewed project profile.
+ * Choosing a file does not replace the workspace trust decision. */
+UmiStatus StartLoggedBuild(UmiBuildProjectSession *session,
+    const UmiBuildProfile *profile, bool trusted, const char *new_log_path)
+{
+    return UmiBuildProjectSessionSubmitLogged(session, profile,
+        UMI_BUILD_PHASE_BUILD, trusted, new_log_path);
+}</code></pre>
+<h2>Know what is saved</h2>
+<p>The file concatenates raw merged standard output and standard error from every attempted phase. It has no added
+headers, separators or text conversion, and preserves NUL bytes and invalid text sequences. Commands, phase identities
+and structured diagnostics remain in completed-result history. Output not emitted by a tool cannot be recovered;
+for example, cancellation may prevent a tool from flushing its own buffers.</p>
+<p>Logging uses native incremental writes and does not accumulate the whole file in memory. It has no automatic size
+limit or rotation. Slow storage can delay the worker and cancellation. The destination is opened before submission;
+that native filesystem operation can also take time. At completion the writer asks the operating system to flush,
+then closes its handle. Success is not a guarantee against power loss or later external edits.</p>
+<p>Legacy custom executors expose only their bounded final output. That useful evidence is saved once per phase, but
+<code>capture_complete</code> remains false. An observed custom executor must synchronously emit all intended bytes
+before returning and must honour cancellation.</p>
+<h2>Recover from errors</h2><ol>
+<li><strong>Already exists:</strong> choose another filename. Never retry with automatic overwrite.</li>
+<li><strong>Not found:</strong> check that the selected parent folder already exists.</li>
+<li><strong>Invalid argument:</strong> use an ordinary absolute path without dot segments. Windows requires a UTF-8
+drive path and refuses UNC paths, device aliases and alternate data streams.</li>
+<li><strong>Write, flush or close failure:</strong> retain the file as partial evidence. Compare <code>bytes_received</code>
+with <code>file.bytes_written</code> and inspect <code>file.status</code>. Later writes do not retry after an error.
+The build continues independently; it is not restarted or automatically cancelled.</li>
+<li><strong>Cancelled job:</strong> inspect the saved prefix and the actual build status. No subsequent phase is
+invented, and the capture does not imply that the whole requested workflow ran.</li></ol>
+<p>For other Framework services, <code>UmiOutputFileCreate</code>, <code>UmiOutputFileWrite</code>,
+<code>UmiOutputFileRead</code> and <code>UmiOutputFileClose</code> expose the same file ownership rules. Serialize these
+calls on their owner and destroy the writer only after its final I/O operation. Destruction closes an open handle
+but leaves the file on disk.</p>
+</main></body></html>

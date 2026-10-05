@@ -18,6 +18,7 @@
 #include "umicom/ui/gtk4/automation.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /* Child controls may be externally retained. Their signals are weakly bound
  * to the root; no callback can use this state after root finalisation. */
@@ -114,6 +115,18 @@ static void Navigate(GtkButton *button, gpointer root)
     UpdateNavigation(view);
 }
 
+/* Label ownership must be settled before creating GTK objects. Property and
+ * buffer observers may release or change the caller's original storage. */
+static char *ComparisonLabelCopy(const char *label, const char *fallback)
+{
+    const char *source = label != NULL ? label : fallback;
+    size_t bytes = strlen(source);
+    if (bytes == SIZE_MAX) return NULL;
+    char *copy = malloc(bytes + 1U);
+    if (copy != NULL) memcpy(copy, source, bytes + 1U);
+    return copy;
+}
+
 UmiStatus UmiGtk4TextComparisonCreate(const char *left, size_t leftLength,
     const char *right, size_t rightLength, const char *leftLabel,
     const char *rightLabel, GtkWidget **outWidget)
@@ -129,6 +142,19 @@ UmiStatus UmiGtk4TextComparisonCreate(const char *left, size_t leftLength,
     if (view == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     UmiStatus status = UmiTextComparisonCreate(left, leftLength, right, rightLength, &view->model);
     if (status != UMI_STATUS_OK) { free(view); return status; }
+    /* Render from the model's immutable copies. Continuing to use borrowed
+     * input here would let a synchronous GTK observer alter the second pane
+     * after the model captured it, or free text owned by a cancelled review. */
+    status = UmiTextComparisonText(view->model, 0, &left, &leftLength);
+    if (status == UMI_STATUS_OK) status = UmiTextComparisonText(view->model, 1, &right, &rightLength);
+    if (status != UMI_STATUS_OK) { DestroyView(view); return status; }
+    char *ownedLeftLabel = ComparisonLabelCopy(leftLabel, "Left text");
+    char *ownedRightLabel = ComparisonLabelCopy(rightLabel, "Right text");
+    if (ownedLeftLabel == NULL || ownedRightLabel == NULL) {
+        free(ownedLeftLabel); free(ownedRightLabel); DestroyView(view);
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    leftLabel = ownedLeftLabel; rightLabel = ownedRightLabel;
     view->row = SIZE_MAX;
     UmiTextComparisonSummary summary;
     (void)UmiTextComparisonGetSummary(view->model, &summary);
@@ -157,6 +183,8 @@ UmiStatus UmiGtk4TextComparisonCreate(const char *left, size_t leftLength,
         leftLabel != NULL ? leftLabel : "Left text", "umicom.comparison.left", &view->left));
     gtk_paned_set_end_child(GTK_PANED(panes), TextPane(right, rightLength,
         rightLabel != NULL ? rightLabel : "Right text", "umicom.comparison.right", &view->right));
+    /* GTK has copied both labels; the immutable model retains both texts. */
+    free(ownedLeftLabel); free(ownedRightLabel);
     gtk_paned_set_resize_start_child(GTK_PANED(panes), TRUE);
     gtk_paned_set_resize_end_child(GTK_PANED(panes), TRUE);
     gtk_paned_set_shrink_start_child(GTK_PANED(panes), FALSE);

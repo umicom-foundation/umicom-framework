@@ -1,0 +1,15 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# Included inside the existing native attachment, where the target is available.
+if(BUILD_TESTING)
+    add_executable(umicom-quick-open-native-test "${CMAKE_CURRENT_LIST_DIR}/../tests/ui_workstation/test_quick_open_gtk4.c")
+    target_link_libraries(umicom-quick-open-native-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-quick-open-native-test)
+    umicom_apply_sanitizers(umicom-quick-open-native-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-quick-open-native-test)
+    endif()
+    foreach(case initial filter empty next previous stale-page refresh stale-open explicit-open query-invalidates retained-row retained-entry parent-close close-during-read changed-during-read coalesced malformed-count malformed-root read-failure literal-label escape destroy-once invalid-create)
+        add_test(NAME framework.developer.quick_open.gtk4.${case} COMMAND umicom-quick-open-native-test ${case})
+        set_tests_properties(framework.developer.quick_open.gtk4.${case} PROPERTIES TIMEOUT 45 SKIP_RETURN_CODE 77 LABELS "framework;developer;quick-open;gtk4;ownership;regression")
+    endforeach()
+endif()

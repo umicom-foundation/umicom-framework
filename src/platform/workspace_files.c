@@ -30,6 +30,10 @@
 #include <unistd.h>
 #endif
 
+/* Portable names must mean the same thing when creating, reading and editing
+ * a project entry. The shared private helper below replaces this local copy;
+ * the original is retained for engineering review. */
+#if 0
 /* Windows device aliases are invalid even with an extension, so a project
  * created on Linux can be checked out and edited on Windows as well. */
 static int ReservedName(const char *name, size_t length)
@@ -79,6 +83,9 @@ static UmiStatus ValidateRelative(const char *path, char *normalised)
     }
     return umi_path_normalise(path, normalised, UMI_PATH_CAPACITY);
 }
+
+#endif
+#include "workspace_name_internal.h"
 
 #ifdef _WIN32
 /* Translate only known OS outcomes; never turn denied access into success. */

@@ -16,6 +16,7 @@
 #define UMICOM_DATA_ENTERPRISE_QUERY_PLAN_H
 
 #include <stddef.h>
+#include "umicom/base/value_archive.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include "umicom/base/status.h"
@@ -32,6 +33,17 @@ typedef struct UmiDataQueryPlan { char plan_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
 /* Initialise a query plan rooted at one logical table. */ UmiStatus umi_data_query_plan_init(UmiDataQueryPlan *plan,const char *plan_id,const char *root_table);
 /* Add bounded structural complexity evidence. */ UmiStatus umi_data_query_plan_shape(UmiDataQueryPlan *plan,size_t predicates,size_t projections,size_t joins,size_t orders,uint64_t row_limit);
 /* Validate safe, bounded query plan state. */ UmiStatus umi_data_query_plan_validate(const UmiDataQueryPlan *plan);
+
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_data_query_plan_archive_encode(const UmiDataQueryPlan *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_data_query_plan_archive_decode(const void *bytes, size_t byte_count,
+    UmiDataQueryPlan *value);
 
 #ifdef __cplusplus
 }

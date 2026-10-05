@@ -17,6 +17,8 @@
 #define UMICOM_PLATFORM_SEARCH_SESSION_H
 
 #include "umicom/platform/search.h"
+#include "umicom/platform/search_filter.h"
+#include "umicom/platform/search_reader.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,6 +52,11 @@ typedef struct UmiFileSearchSnapshot {
  * This is saved-file search, not search of unsaved editor drafts or a sandbox. */
 UmiStatus UmiFileSearchCreate(const UmiFileIndex *index,
     UmiFileSearchSession **outSession);
+/* Copy a reader once for the session lifetime. Its context must outlive
+ * Destroy, which drains any worker before releasing session memory. NULL uses
+ * raw-byte search. No decoder setting is mutated while a request runs. */
+UmiStatus UmiFileSearchCreateWithReader(const UmiFileIndex *index,const UmiSearchFileReader *reader,
+    UmiFileSearchSession **out_session);
 void UmiFileSearchDestroy(UmiFileSearchSession *session);
 
 /** Start a literal query on one lazy worker. At most one request is outstanding;
@@ -59,6 +66,16 @@ void UmiFileSearchDestroy(UmiFileSearchSession *session);
  * earlier results. Case-insensitive search folds ASCII letters only. */
 UmiStatus UmiFileSearchStart(UmiFileSearchSession *session, const char *query,
     int caseSensitive, uint64_t expectedRevision);
+/** Start a search with copied include/exclude path patterns. NULL means all
+ * indexed files. Validate before scheduling; bad filters preserve earlier
+ * results. Worker reads never borrow the caller's filter or entry widgets. */
+UmiStatus UmiFileSearchStartFiltered(UmiFileSearchSession *session, const char *query,
+    int caseSensitive, uint64_t expectedRevision, const UmiSearchPathFilter *filter);
+/** Read the filter captured for an accepted request, including while active.
+ * A different/zero request ID or stale workspace returns BUSY without changing
+ * output. Call on the owner thread; this does not wait or access any file. */
+UmiStatus UmiFileSearchFilterRead(UmiFileSearchSession *session, uint64_t requestId,
+    UmiSearchPathFilter *outFilter);
 /** Non-blocking cooperative cancellation; an already completed result remains. */
 UmiStatus UmiFileSearchCancel(UmiFileSearchSession *session);
 /** Invalidate results and request cancellation when a host changes workspace. */

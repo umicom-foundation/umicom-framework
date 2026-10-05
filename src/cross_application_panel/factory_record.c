@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/cross_application_panel/factory_record.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise panel factory record from caller-provided values so later operations receive
@@ -36,6 +37,15 @@ record->revision=1U;
  */
 UmiStatus umi_panel_factory_record_validate(const UmiPanelFactoryRecord *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->factory_id, '\0', sizeof(record->factory_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->panel_id, '\0', sizeof(record->panel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->provider_id, '\0', sizeof(record->provider_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->component_id, '\0', sizeof(record->component_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
 /*
  * Protect caller-owned memory by checking that required state is available before it is
  * used.
@@ -172,3 +182,56 @@ if(store->count!=0U)memcpy(records,store->items,store->count*sizeof(store->items
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiPanelFactoryRecordArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x6301eb8444766f89);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelFactoryRecord *)0)->factory_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelFactoryRecord *)0)->panel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelFactoryRecord *)0)->provider_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelFactoryRecord *)0)->component_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiPanelFactoryRecordArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiPanelFactoryRecord *)0)->factory_id) - 1U +
+        8U + sizeof(((UmiPanelFactoryRecord *)0)->panel_id) - 1U +
+        8U + sizeof(((UmiPanelFactoryRecord *)0)->provider_id) - 1U +
+        8U + sizeof(((UmiPanelFactoryRecord *)0)->component_id) - 1U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiPanelFactoryRecordArchiveWrite(UmiArchiveWriter *writer, const UmiPanelFactoryRecord *value)
+{
+    UmiArchiveWriteText(writer, value->factory_id, sizeof(value->factory_id));
+    UmiArchiveWriteText(writer, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveWriteText(writer, value->provider_id, sizeof(value->provider_id));
+    UmiArchiveWriteText(writer, value->component_id, sizeof(value->component_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->priority);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiPanelFactoryRecordArchiveRead(UmiArchiveReader *reader, UmiPanelFactoryRecord *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->factory_id, sizeof(value->factory_id));
+    UmiArchiveReadText(reader, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveReadText(reader, value->provider_id, sizeof(value->provider_id));
+    UmiArchiveReadText(reader, value->component_id, sizeof(value->component_id));
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->priority = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiPanelFactoryRecordArchiveValidate(const UmiPanelFactoryRecord *value)
+{
+    return umi_panel_factory_record_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_panel_factory_record_archive_encode, umi_panel_factory_record_archive_decode,
+    UmiPanelFactoryRecord, UmiPanelFactoryRecordArchiveSchema, UmiPanelFactoryRecordArchiveBound, UmiPanelFactoryRecordArchiveWrite, UmiPanelFactoryRecordArchiveRead, UmiPanelFactoryRecordArchiveValidate)

@@ -18,6 +18,8 @@
  * value; callers own external resources and coordinate cross-thread mutation.
  */
 #include "umicom/editor/cursor.h"
+#include "../base/value_archive_internal.h"
+#include "../base/registry_archive_internal.h"
 #include "../base/snapshot_registry_internal.h"
 
 /* Validate every bounded text member before lookup. Value-only snapshot
@@ -131,3 +133,65 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_editor_cursor_registry_edit_if_current,
  * this owner's existing row order and normalized fields remain authoritative. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_editor_cursor_registry_read_page,
     UmiEditorCursorRegistry, UmiEditorCursorSnapshot, UMI_EDITOR_CURSOR_CAPACITY)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x7be34b1fd5bae188);
+    schema = (schema ^ (uint64_t)sizeof(((UmiEditorCursorSnapshot *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiEditorCursorSnapshot *)0)->document_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiEditorCursorSnapshot *)0)->id) - 1U +
+        8U + sizeof(((UmiEditorCursorSnapshot *)0)->document_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiEditorCursorSnapshot *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->document_id, sizeof(value->document_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->line);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->column);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->preferred_column);
+    UmiArchiveWriteSigned(writer, (int64_t)value->primary);
+    UmiArchiveWriteSigned(writer, (int64_t)value->visible);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiEditorCursorSnapshot *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->document_id, sizeof(value->document_id));
+    value->line = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->column = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->preferred_column = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->primary = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->visible = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus ArchiveValidate(const UmiEditorCursorSnapshot *value)
+{
+    return umi_editor_cursor_snapshot_validate(value, NULL);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_editor_cursor_snapshot_archive_encode, umi_editor_cursor_snapshot_archive_decode,
+    UmiEditorCursorSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Restoring this complete collection reuses its existing reviewed replacement
+ * rules. Decoding a saved value alone never changes a live registry. */
+UMI_DEFINE_REGISTRY_ARCHIVE(umi_editor_cursor_registry_archive_encode, umi_editor_cursor_registry_archive_restore,
+    UmiEditorCursorRegistry, UmiEditorCursorSnapshot, UMI_EDITOR_CURSOR_CAPACITY, ArchiveSchema,
+    umi_editor_cursor_snapshot_archive_encode, umi_editor_cursor_snapshot_archive_decode, umi_editor_cursor_registry_replace_if_current)

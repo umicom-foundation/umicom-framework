@@ -21,6 +21,7 @@
 #define INCLUDE_UMICOM_UI_DESIGN_ALERT_SPEC_H
 
 #include "umicom/ui/design/types.h"
+#include "umicom/base/value_archive.h"
 #include "umicom/ui/design/semantic_role.h"
 #include "umicom/ui/design/density.h"
 
@@ -43,6 +44,17 @@ typedef struct UmiDesignAlertSpec {
 UmiStatus umi_design_alert_spec_init(UmiDesignAlertSpec *spec, UmiUiSeverity severity, const char *message, int dismissible, int actionable);
 /* Return one when the semantic specification is internally consistent. */
 int umi_design_alert_spec_valid(const UmiDesignAlertSpec *spec);
+
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_design_alert_spec_archive_encode(const UmiDesignAlertSpec *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_design_alert_spec_archive_decode(const void *bytes, size_t byte_count,
+    UmiDesignAlertSpec *value);
 
 #ifdef __cplusplus
 }

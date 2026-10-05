@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/trade.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise trade context from caller-provided values so later operations receive a known
@@ -33,6 +34,16 @@ void umi_trade_context_init(UmiTradeContext *context)
 /* Check that trade context satisfies its contract before another service relies on it. */
 UmiStatus umi_trade_context_validate(const UmiTradeContext *context)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (context == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(context->trade_id, '\0', sizeof(context->trade_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(context->source_system, '\0', sizeof(context->source_system)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(context->product_type, '\0', sizeof(context->product_type)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(context->book_id, '\0', sizeof(context->book_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(context->counterparty_id, '\0', sizeof(context->counterparty_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -166,3 +177,57 @@ UmiStatus umi_trade_context_set_version(UmiTradeContext *context, uint64_t value
     context->revision += 1U;
     return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiTradeContextArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x7a2b762cdd6a702f);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTradeContext *)0)->trade_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTradeContext *)0)->source_system)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTradeContext *)0)->product_type)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTradeContext *)0)->book_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTradeContext *)0)->counterparty_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiTradeContextArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiTradeContext *)0)->trade_id) - 1U +
+        8U + sizeof(((UmiTradeContext *)0)->source_system) - 1U +
+        8U + sizeof(((UmiTradeContext *)0)->product_type) - 1U +
+        8U + sizeof(((UmiTradeContext *)0)->book_id) - 1U +
+        8U + sizeof(((UmiTradeContext *)0)->counterparty_id) - 1U +
+        8U +
+        8U;
+}
+static void UmiTradeContextArchiveWrite(UmiArchiveWriter *writer, const UmiTradeContext *value)
+{
+    UmiArchiveWriteText(writer, value->trade_id, sizeof(value->trade_id));
+    UmiArchiveWriteText(writer, value->source_system, sizeof(value->source_system));
+    UmiArchiveWriteText(writer, value->product_type, sizeof(value->product_type));
+    UmiArchiveWriteText(writer, value->book_id, sizeof(value->book_id));
+    UmiArchiveWriteText(writer, value->counterparty_id, sizeof(value->counterparty_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->version);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiTradeContextArchiveRead(UmiArchiveReader *reader, UmiTradeContext *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->trade_id, sizeof(value->trade_id));
+    UmiArchiveReadText(reader, value->source_system, sizeof(value->source_system));
+    UmiArchiveReadText(reader, value->product_type, sizeof(value->product_type));
+    UmiArchiveReadText(reader, value->book_id, sizeof(value->book_id));
+    UmiArchiveReadText(reader, value->counterparty_id, sizeof(value->counterparty_id));
+    value->version = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiTradeContextArchiveValidate(const UmiTradeContext *value)
+{
+    return umi_trade_context_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_trade_context_archive_encode, umi_trade_context_archive_decode,
+    UmiTradeContext, UmiTradeContextArchiveSchema, UmiTradeContextArchiveBound, UmiTradeContextArchiveWrite, UmiTradeContextArchiveRead, UmiTradeContextArchiveValidate)

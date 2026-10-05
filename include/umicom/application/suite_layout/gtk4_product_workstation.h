@@ -124,6 +124,31 @@ UmiStatus umi_application_product_gtk4_workstation_library_snapshot(UmiApplicati
  * Later Restore rereads storage. Failure leaves output unchanged. */
 UmiStatus umi_application_product_gtk4_workstation_library_preview(UmiApplicationProductGtk4Workstation *workstation, UmiUiWorkspaceLibraryPreview *out_preview);
 
+/* Layout recovery stays with Framework. This owner-thread call neither
+ * saves product data nor runs a trade, payment or project command. */
+UmiStatus umi_application_product_gtk4_workstation_library_history_read(UmiApplicationProductGtk4Workstation *workstation,
+    UmiUiWorkspaceLibraryHistoryState *out_state);
+/* Layout recovery stays with Framework. This owner-thread call neither
+ * saves product data nor runs a trade, payment or project command. */
+UmiStatus umi_application_product_gtk4_workstation_library_history_navigate(UmiApplicationProductGtk4Workstation *workstation,
+    UmiUiWorkspaceLibraryHistoryDirection direction, uint64_t expected_revision);
+/* Layout recovery stays with Framework. This owner-thread call neither
+ * saves product data nor runs a trade, payment or project command. */
+UmiStatus umi_application_product_gtk4_workstation_library_export(UmiApplicationProductGtk4Workstation *workstation,
+    char *bytes, size_t capacity, size_t *out_size);
+/* Layout recovery stays with Framework. This owner-thread call neither
+ * saves product data nor runs a trade, payment or project command. */
+UmiStatus umi_application_product_gtk4_workstation_library_import_review(UmiApplicationProductGtk4Workstation *workstation,
+    const void *bytes, size_t size, UmiUiWorkspaceLibraryImport **out_review);
+/* Layout recovery stays with Framework. This owner-thread call neither
+ * saves product data nor runs a trade, payment or project command. */
+UmiStatus umi_application_product_gtk4_workstation_library_import_apply(UmiApplicationProductGtk4Workstation *workstation,
+    const UmiUiWorkspaceLibraryImport *review);
+/* Layout recovery stays with Framework. This owner-thread call neither
+ * saves product data nor runs a trade, payment or project command. */
+UmiStatus umi_application_product_gtk4_workstation_library_apply(UmiApplicationProductGtk4Workstation *workstation,
+    const UmiUiWorkspaceLibraryRequest *request);
+
 #ifdef __cplusplus
 }
 #endif

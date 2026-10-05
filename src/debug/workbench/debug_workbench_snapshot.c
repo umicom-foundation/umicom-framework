@@ -18,6 +18,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug/workbench/debug_workbench_snapshot.h"
+#include "../../base/value_archive_internal.h"
 #include <string.h>
 
 /*
@@ -54,4 +55,61 @@ UmiStatus umi_debug_workbench_debug_workbench_snapshot_capture(UmiDebugWorkbench
  * another service relies on it.
  */
 int umi_debug_workbench_debug_workbench_snapshot_valid(const UmiDebugWorkbenchDebugWorkbenchSnapshot *model)
-{ return model != NULL && model->generation > 0U && (model->active_session_id[0] == '\0' || umi_debug_workbench_id_valid(model->active_session_id)); }
+{
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (model == NULL) return 0;
+    if (memchr(model->active_session_id, '\0', sizeof(model->active_session_id)) == NULL) return 0;
+    if (memchr(model->active_item_id, '\0', sizeof(model->active_item_id)) == NULL) return 0;
+ return model != NULL && model->generation > 0U && (model->active_session_id[0] == '\0' || umi_debug_workbench_id_valid(model->active_session_id)); }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiDebugWorkbenchDebugWorkbenchSnapshotArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x380b65fdf93aee57);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDebugWorkbenchDebugWorkbenchSnapshot *)0)->active_session_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDebugWorkbenchDebugWorkbenchSnapshot *)0)->active_item_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiDebugWorkbenchDebugWorkbenchSnapshotArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiDebugWorkbenchDebugWorkbenchSnapshot *)0)->active_session_id) - 1U +
+        8U + sizeof(((UmiDebugWorkbenchDebugWorkbenchSnapshot *)0)->active_item_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiDebugWorkbenchDebugWorkbenchSnapshotArchiveWrite(UmiArchiveWriter *writer, const UmiDebugWorkbenchDebugWorkbenchSnapshot *value)
+{
+    UmiArchiveWriteText(writer, value->active_session_id, sizeof(value->active_session_id));
+    UmiArchiveWriteText(writer, value->active_item_id, sizeof(value->active_item_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->session_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->breakpoint_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->thread_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->watch_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->generation);
+}
+static void UmiDebugWorkbenchDebugWorkbenchSnapshotArchiveRead(UmiArchiveReader *reader, UmiDebugWorkbenchDebugWorkbenchSnapshot *value)
+{
+    UmiArchiveReadText(reader, value->active_session_id, sizeof(value->active_session_id));
+    UmiArchiveReadText(reader, value->active_item_id, sizeof(value->active_item_id));
+    value->session_count = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->breakpoint_count = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->thread_count = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->watch_count = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->generation = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiDebugWorkbenchDebugWorkbenchSnapshotArchiveValidate(const UmiDebugWorkbenchDebugWorkbenchSnapshot *value)
+{
+    return umi_debug_workbench_debug_workbench_snapshot_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_debug_workbench_debug_workbench_snapshot_archive_encode, umi_debug_workbench_debug_workbench_snapshot_archive_decode,
+    UmiDebugWorkbenchDebugWorkbenchSnapshot, UmiDebugWorkbenchDebugWorkbenchSnapshotArchiveSchema, UmiDebugWorkbenchDebugWorkbenchSnapshotArchiveBound, UmiDebugWorkbenchDebugWorkbenchSnapshotArchiveWrite, UmiDebugWorkbenchDebugWorkbenchSnapshotArchiveRead, UmiDebugWorkbenchDebugWorkbenchSnapshotArchiveValidate)

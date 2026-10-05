@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Reading build output while a job runs</title><style>body{font:17px/1.6 system-ui;max-width:900px;margin:2rem auto;padding:0 24px;color:#18252d}code,pre{font-family:monospace}pre{padding:16px;background:#f1f5f7;overflow:auto}h1,h2{line-height:1.2}a{color:#07658a}</style></head><body><main><h1>Reading build output while a job runs</h1>
+<p>A build phase is one step in a project workflow, such as configuration, compilation, testing or running a program.
+Framework can publish output during each step. Applications read an owned copy, so their interface does not borrow
+a buffer that the worker is changing.</p>
+<h2>Connect a frontend</h2>
+<ol><li>Create a project session with <code>umi_build_project_session_create</code>. The built-in executor streams
+output automatically. Keep the session alive until the worker has finished or session destruction has joined it.</li>
+<li>Submit a validated profile with the owner's current workspace trust decision. Merely reading output never
+starts a compiler or grants permission to execute project code.</li>
+<li>Allocate a <code>UmiBuildOutputSnapshot</code> on the heap. It contains a fixed-size byte buffer and is too
+large to be a routine local variable in a small UI thread stack.</li>
+<li>On the frontend's owning thread, call <code>UmiBuildProjectSessionReadOutput</code>. An operation identifier
+of zero means that no job has been submitted. A nonzero identifier and changing revision mean new evidence is available.</li>
+<li>For a GTK frontend, create <code>UmiBuildOutputGtk4Create()</code> once and pass each successful snapshot to
+<code>UmiBuildOutputGtk4Update</code>. GTK remains on its owning thread; process callbacks never touch widgets.</li>
+<li>Continue collecting completed results with <code>umi_build_project_session_result_at</code>. Use the final
+status to determine success. Receiving text is not proof that a build or test passed.</li></ol>
+<p>This polling helper illustrates the ownership boundary. The caller supplies a live session and presenter;</p>
+<pre><code>#include &lt;stdlib.h&gt;
+#include "umicom/build/live_output_gtk4.h"
+
+UmiStatus RefreshBuildOutput(UmiBuildProjectSession *session, GtkWidget *panel)
+{
+    /* The caller owns this copy; the worker never borrows it. */
+    UmiBuildOutputSnapshot *output = calloc(1U, sizeof(*output));
+    if (output == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    UmiStatus status = UmiBuildProjectSessionReadOutput(session, output);
+    if (status == UMI_STATUS_OK) status = UmiBuildOutputGtk4Update(panel, output);
+    free(output);
+    return status;
+}</code></pre>
+<h2>Choose the appropriate execution interface</h2>
+<p><code>UmiBuildRunnerRunObserved</code> supplies raw process chunks to a synchronous observer. The ordinary
+<code>umi_build_runner_run</code> uses the same path with no observer. Both preserve cancellation, child-process-tree
+ownership, diagnostic parsing and completed history. The callback borrows its bytes only until it returns; copy what
+you need promptly and do not destroy or re-enter the runner from that callback.</p>
+<p>Hosts with their own transport can use <code>UmiBuildProjectSessionCreateObserved</code>. Provide an observed
+executor and leave <code>config.execute</code> empty. The executor must emit chunks synchronously before returning,
+honour the cancellation token, and release no session-owned objects. Existing custom executors remain supported:
+their output appears when the phase finishes, with <code>streamed</code> set to false.</p>
+<h2>Understand the limits</h2>
+<ul><li>The snapshot retains the latest 65,535 raw bytes of the current phase. At the next phase its byte count
+starts again. Slow polling can miss an entire phase; completed-result history remains the place to review earlier phases.</li>
+<li><code>length</code> is the number of bytes retained; <code>total_bytes</code> counts received bytes in this phase.
+<code>truncated</code> means earlier bytes were omitted. A legacy executor reports only its already-bounded final buffer.</li>
+<li>Standard output and standard error are merged. Chunks are not necessarily lines or complete UTF-8 characters.
+Embedded NUL bytes are valid evidence, so use the supplied length instead of <code>strlen</code>.</li>
+<li>The GTK display makes NUL visible as ␀ and replaces invalid UTF-8 for readability. This does not change the raw snapshot.</li>
+<li>Follow output scrolls to new evidence. Turning it off preserves the displayed text and selection. Refresh output
+shows the latest copy once; Copy displayed output copies the visible transcript even when newer evidence is waiting.</li>
+<li>The transcript does not interpret terminal escape commands, accept program input, or save a complete log file.
+The existing completed diagnostic parser still operates on its own bounded final result buffer.</li></ul>
+<h2>Troubleshoot missing output</h2>
+<ol><li>Check whether the phase is still running or has failed to launch. A tool can buffer its own output until it flushes.</li>
+<li>Check Follow output. If paused, choose Refresh output or turn following back on.</li>
+<li>For a custom executor, inspect <code>streamed</code>. Final-output-only executors cannot provide progress they never emitted.</li>
+<li>If an operation or revision is stale, obtain a fresh snapshot. Do not overwrite a newer display with an earlier job's data.</li>
+<li>If <code>counters_saturated</code> is set, refresh on every poll; revision equality is no longer sufficient.</li></ol>
+<h2>Keep a full emitted-output file</h2><p>The bounded viewer can now be used alongside an optional capture file. See <a href="saving-build-logs.html">saving build logs</a> for deliberate file selection, completeness checks and recovery. The viewer and copied display remain bounded as described above.</p></main></body></html>

@@ -33,6 +33,12 @@ typedef struct InteractiveChart {
     char appearance_id[128], appearance_pane[128];
     uint64_t appearance_revision;
     GtkWidget *appearance_fields, *appearance_color, *appearance_width, *appearance_fill, *appearance_note;
+    /* Exact coordinates are an explicit draft bound to a displayed drawing.
+     * Quote refreshes never overwrite these fields or select another target. */
+    char geometry_id[128], geometry_pane[128];
+    uint64_t geometry_revision;
+    GtkWidget *geometry_inputs[4], *geometry_fields, *geometry_note;
+    int geometry_loading;
     int references;
     UmiGtk4TradingPanelContext *context;
     UmiTradingChartPersistence *persistence;
@@ -523,6 +529,7 @@ static UmiStatus ChartSelectedDrawing(InteractiveChart *state,UmiChartDrawingSna
 static GtkWidget *ChartButton(GtkWidget *box, const char *label, const char *tag,
     GCallback callback, GtkWidget *root);
 #include "drawing_appearance_gtk4.inc"
+#include "drawing_coordinates_gtk4.inc"
 #include "drawing_history_gtk4.inc"
 
 static void ChartObjectSelectionChanged(GObject *object,GParamSpec *spec,gpointer root)
@@ -728,8 +735,16 @@ GtkWidget *UmiGtk4TradingInteractiveChartCreate(UmiGtk4TradingPanelContext *cont
         g_object_set_data(G_OBJECT(button), "chart-action", GINT_TO_POINTER(i + 1));
     }
     ChartTimeframeCreate(state, top);
+/* The selector now exposes the shared candle studies without changing earlier choice indices.
+ * The previous implementation is retained for engineering review. */
+#if 0
     const char *studies[] = {"Candles", "SMA", "EMA", NULL};
+#endif
+    const char *studies[] = {"Candles", "SMA", "EMA", "Rolling VWMA", "Bollinger bands", "Donchian channel", "Volume at bar close", NULL};
     state->studies = gtk_drop_down_new_from_strings(studies);
+    gtk_widget_set_tooltip_text(state->studies,
+        "Period counts candles, or price buckets for Volume at bar close (an approximation). VWMA weights close by candle volume; this is not tick/session VWAP. "
+        "Bollinger uses two population standard deviations. Donchian uses the window's highest high and lowest low.");
     gtk_drop_down_set_selected(GTK_DROP_DOWN(state->studies), (guint)snapshot.chart_study);
     state->period = gtk_spin_button_new_with_range(2, 200, 1);
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(state->period), (double)snapshot.chart_study_period);
@@ -737,7 +752,12 @@ GtkWidget *UmiGtk4TradingInteractiveChartCreate(UmiGtk4TradingPanelContext *cont
 #if 0
     gtk_widget_set_tooltip_text(state->period, "Moving average period in retained bars");
 #endif
+/* The shared selector also controls band windows and profile buckets. Keep the
+ * previous moving-average help for review; the new wording describes each mode. */
+#if 0
     gtk_widget_set_tooltip_text(state->period, "Moving average period in candles of the selected timeframe");
+#endif
+    gtk_widget_set_tooltip_text(state->period, "Study window in chart candles; for Volume at bar close, this is the number of price buckets");
     gtk_box_append(GTK_BOX(top), state->studies); gtk_box_append(GTK_BOX(top), state->period);
     (void)umi_gtk4_automation_tag_widget(state->studies, "trading.chart.study");
     GtkWidget *body = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
@@ -802,6 +822,7 @@ GtkWidget *UmiGtk4TradingInteractiveChartCreate(UmiGtk4TradingPanelContext *cont
     (void)ChartButton(objectActions, "Show all", "trading.chart.show-all", G_CALLBACK(ChartPaneVisibilityClicked), root);
     gtk_box_append(GTK_BOX(root),objectActions);
     ChartAppearanceCreate(state);
+    ChartCoordinatesCreate(state);
     ChartHistoryCreate(state);
     g_signal_connect_object(state->objects,"notify::selected",G_CALLBACK(ChartObjectSelectionChanged),G_OBJECT(root),0);
 

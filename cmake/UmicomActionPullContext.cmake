@@ -1,0 +1,16 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-action-pull-context-test "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/test_action_pull_context.c")
+    target_link_libraries(umicom-action-pull-context-test PRIVATE Umicom::developer Umicom::editor Umicom::platform)
+    umicom_apply_warnings(umicom-action-pull-context-test)
+    umicom_apply_sanitizers(umicom-action-pull-context-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-action-pull-context-test)
+    endif()
+    foreach(case valid primary-only empty filter point raw none notification invalid-mode negative-mode missing-provider missing-actions diagnostic-error unchanged related invalid-diagnostics outside missing action-error close-error shutdown-error cancel-before invalid-source duplicate-source)
+        add_test(NAME framework.language_runtime.action_pull_context.${case} COMMAND umicom-action-pull-context-test ${case})
+        set_tests_properties(framework.language_runtime.action_pull_context.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;language;diagnostic;ownership;regression")
+    endforeach()
+endif()

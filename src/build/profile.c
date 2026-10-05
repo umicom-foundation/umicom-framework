@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/build/profile.h"
+#include "umicom/platform/path.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -88,6 +89,34 @@ UmiStatus umi_build_profile_set(UmiBuildProfile *profile,
     return status;
 }
 
+/* Old settings contain a single literal value; only the new field opts into
+ * quoted parsing. Centralising this decision prevents Debug from interpreting
+ * a saved literal differently from Run. */
+UmiStatus UmiBuildProfileArguments(const UmiBuildProfile *profile, UmiArguments *out)
+{
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    memset(out, 0, sizeof(*out));
+    if (profile == NULL ||
+        memchr(profile->run_argument, '\0', sizeof(profile->run_argument)) == NULL ||
+        memchr(profile->run_arguments, '\0', sizeof(profile->run_arguments)) == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (profile->run_argument[0] != '\0' && profile->run_arguments[0] != '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (profile->run_arguments[0] == '\0') {
+        if (profile->run_argument[0] != '\0') {
+            strcpy(out->storage[0], profile->run_argument);
+            out->values[0] = out->storage[0]; out->count = 1U;
+        }
+        return UMI_STATUS_OK;
+    }
+    UmiStatus status = UmiArgumentsParse(profile->run_arguments, out);
+    for (size_t index = 0U; status == UMI_STATUS_OK && index < out->count; ++index)
+        if (strlen(out->values[index]) >= UMI_BUILD_ARGUMENT_CAPACITY)
+            status = UMI_STATUS_CAPACITY_EXCEEDED;
+    if (status != UMI_STATUS_OK) memset(out, 0, sizeof(*out));
+    return status;
+}
+
 UmiStatus umi_build_profile_validate(const UmiBuildProfile *profile,
                                      char *out_message,
                                      size_t message_capacity)
@@ -134,6 +163,43 @@ UmiStatus umi_build_profile_validate(const UmiBuildProfile *profile,
         status = UMI_STATUS_INVALID_ARGUMENT;
         message = "Parallel job count must be greater than zero";
     }
+    if (status == UMI_STATUS_OK &&
+        memchr(profile->run_working_directory, '\0', sizeof(profile->run_working_directory)) == NULL) {
+        status = UMI_STATUS_INVALID_ARGUMENT;
+        message = "The program working directory is not terminated";
+    }
+#ifdef _WIN32
+    /* A drive-relative or rooted-without-drive folder depends on process state.
+     * Require a full Windows root or an ordinary project-relative path. */
+    if (status == UMI_STATUS_OK && profile->run_working_directory[0] != '\0' &&
+        !umi_path_is_absolute(profile->run_working_directory) &&
+        (profile->run_working_directory[0] == '/' || profile->run_working_directory[0] == '\\' ||
+         strchr(profile->run_working_directory, ':') != NULL)) {
+        status = UMI_STATUS_INVALID_ARGUMENT;
+        message = "Use a full drive or network path, or a folder relative to the project";
+    }
+#endif
+    /* Stage selections are explicit values, not executable command fragments.
+     * Reject truncated fields and competing legacy/stage choices before a
+     * provider can construct an argument vector from this profile. */
+    if (status == UMI_STATUS_OK) {
+        if (memchr(profile->configure_preset, '\0', sizeof(profile->configure_preset)) == NULL ||
+            memchr(profile->build_preset, '\0', sizeof(profile->build_preset)) == NULL ||
+            memchr(profile->test_preset, '\0', sizeof(profile->test_preset)) == NULL) {
+            status = UMI_STATUS_INVALID_ARGUMENT;
+            message = "A stage preset name is not terminated";
+        } else if (profile->preset[0] != '\0' && (profile->configure_preset[0] != '\0' ||
+                   profile->build_preset[0] != '\0' || profile->test_preset[0] != '\0')) {
+            status = UMI_STATUS_INVALID_ARGUMENT;
+            message = "Clear the shared CMake preset before selecting separate stage presets";
+        }
+    }
+    if (status == UMI_STATUS_OK) {
+        UmiArguments arguments;
+        status = UmiBuildProfileArguments(profile, &arguments);
+        if (status != UMI_STATUS_OK)
+            message = "Use either the single literal argument or the quoted argument list; check quotes, argument lengths and count";
+    }
     if (out_message != NULL && message_capacity > 0U) {
         (void)snprintf(out_message, message_capacity, "%s", message);
     }
@@ -147,6 +213,10 @@ int umi_build_profile_equal(const UmiBuildProfile *left,
         umi_build_profile_validate(right, NULL, 0U) != UMI_STATUS_OK) {
         return 0;
     }
+    if (strcmp(left->run_working_directory, right->run_working_directory) != 0) return 0;
+    if (strcmp(left->configure_preset, right->configure_preset) != 0 ||
+        strcmp(left->build_preset, right->build_preset) != 0 ||
+        strcmp(left->test_preset, right->test_preset) != 0) return 0;
     return strcmp(left->profile_id, right->profile_id) == 0 &&
            strcmp(left->source_directory, right->source_directory) == 0 &&
            strcmp(left->build_directory, right->build_directory) == 0 &&
@@ -157,9 +227,31 @@ int umi_build_profile_equal(const UmiBuildProfile *left,
            strcmp(left->build_target, right->build_target) == 0 &&
            strcmp(left->run_program, right->run_program) == 0 &&
            strcmp(left->run_argument, right->run_argument) == 0 &&
+           strcmp(left->run_arguments, right->run_arguments) == 0 &&
            strcmp(left->install_directory, right->install_directory) == 0 &&
            left->parallel_jobs == right->parallel_jobs &&
            left->timeout_ms == right->timeout_ms &&
            left->build_testing == right->build_testing &&
            left->strict_warnings == right->strict_warnings;
+}
+
+/* Resolve once from an explicit project root. This shared operation keeps Run
+ * and Debug independent of Studio's own process directory and never creates
+ * folders as a side effect of reviewing settings. */
+UmiStatus UmiBuildProfileLaunchDirectory(const UmiBuildProfile *profile,
+    const char *absoluteProjectDirectory, char *outDirectory, size_t capacity)
+{
+    char resolved[UMI_BUILD_PATH_CAPACITY];
+    if (outDirectory == NULL || capacity == 0U || absoluteProjectDirectory == NULL ||
+        !umi_path_is_absolute(absoluteProjectDirectory)) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = umi_build_profile_validate(profile, NULL, 0U);
+    if (status != UMI_STATUS_OK) return status;
+    const char *directory = profile->run_working_directory[0] == '\0'
+        ? absoluteProjectDirectory : profile->run_working_directory;
+    status = umi_path_absolute(directory, absoluteProjectDirectory, resolved, sizeof(resolved));
+    if (status != UMI_STATUS_OK) return status;
+    size_t length = strlen(resolved);
+    if (length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+    memcpy(outDirectory, resolved, length + 1U);
+    return UMI_STATUS_OK;
 }

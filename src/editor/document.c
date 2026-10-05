@@ -18,6 +18,8 @@
  * value; callers own external resources and coordinate cross-thread mutation.
  */
 #include "umicom/editor/document.h"
+#include "../base/value_archive_internal.h"
+#include "../base/registry_archive_internal.h"
 #include "../base/snapshot_registry_internal.h"
 
 /* Validate every bounded text member before lookup. Value-only snapshot
@@ -161,3 +163,73 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_editor_document_registry_edit_if_current,
  * this owner's existing row order and normalized fields remain authoritative. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_editor_document_registry_read_page,
     UmiEditorDocumentRegistry, UmiEditorDocumentSnapshot, UMI_EDITOR_DOCUMENT_CAPACITY)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x5db8d38c20c85f0c);
+    schema = (schema ^ (uint64_t)sizeof(((UmiEditorDocumentSnapshot *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiEditorDocumentSnapshot *)0)->uri)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiEditorDocumentSnapshot *)0)->language_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiEditorDocumentSnapshot *)0)->title)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiEditorDocumentSnapshot *)0)->id) - 1U +
+        8U + sizeof(((UmiEditorDocumentSnapshot *)0)->uri) - 1U +
+        8U + sizeof(((UmiEditorDocumentSnapshot *)0)->language_id) - 1U +
+        8U + sizeof(((UmiEditorDocumentSnapshot *)0)->title) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiEditorDocumentSnapshot *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->uri, sizeof(value->uri));
+    UmiArchiveWriteText(writer, value->language_id, sizeof(value->language_id));
+    UmiArchiveWriteText(writer, value->title, sizeof(value->title));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->version);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->byte_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->line_count);
+    UmiArchiveWriteSigned(writer, (int64_t)value->dirty);
+    UmiArchiveWriteSigned(writer, (int64_t)value->read_only);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiEditorDocumentSnapshot *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->uri, sizeof(value->uri));
+    UmiArchiveReadText(reader, value->language_id, sizeof(value->language_id));
+    UmiArchiveReadText(reader, value->title, sizeof(value->title));
+    value->version = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->byte_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->line_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->dirty = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->read_only = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus ArchiveValidate(const UmiEditorDocumentSnapshot *value)
+{
+    return umi_editor_document_snapshot_validate(value, NULL);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_editor_document_snapshot_archive_encode, umi_editor_document_snapshot_archive_decode,
+    UmiEditorDocumentSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Restoring this complete collection reuses its existing reviewed replacement
+ * rules. Decoding a saved value alone never changes a live registry. */
+UMI_DEFINE_REGISTRY_ARCHIVE(umi_editor_document_registry_archive_encode, umi_editor_document_registry_archive_restore,
+    UmiEditorDocumentRegistry, UmiEditorDocumentSnapshot, UMI_EDITOR_DOCUMENT_CAPACITY, ArchiveSchema,
+    umi_editor_document_snapshot_archive_encode, umi_editor_document_snapshot_archive_decode, umi_editor_document_registry_replace_if_current)

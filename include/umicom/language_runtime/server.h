@@ -43,6 +43,8 @@ UmiStatus umi_language_runtime_server_start(const char*server_id,const UmiLangua
  * Provide the language runtime server create with transport operation used by this module
  * and its client applications.
  */
+/* Ownership moves only on success. Failure leaves the transport unchanged
+ * and *out NULL. Identity and fixed profile text are checked before transfer. */
 UmiStatus umi_language_runtime_server_create_with_transport(const char*server_id,const UmiLanguageServerProfile*profile,const char*root_uri,UmiLanguageRuntimeTransport*transport,UmiLanguageRuntimeServer**out);
 /**
  * Release or reset state held by language runtime server so the same storage can be reused
@@ -68,6 +70,10 @@ UmiStatus umi_language_runtime_server_send_notification(UmiLanguageRuntimeServer
  * Provide the language runtime server receive operation used by this module and its client
  * applications.
  */
+/* timeout_ms is the total receive wait across frame fragments. Partial bytes
+ * remain buffered for a later call. Zero polls available input. NOT_FOUND or
+ * an error leaves the output envelope unchanged; malformed frames may have
+ * been consumed. The transport must honour its own read timeout contract. */
 UmiStatus umi_language_runtime_server_receive(UmiLanguageRuntimeServer*s,uint32_t timeout_ms,UmiLanguageRuntimeEnvelope*out);
 /**
  * Provide the language runtime server stop operation used by this module and its client

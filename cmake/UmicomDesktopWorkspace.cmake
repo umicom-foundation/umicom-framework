@@ -13,6 +13,7 @@ endforeach()
 set(_dw_root "${CMAKE_CURRENT_LIST_DIR}/..")
 add_library(umicom_desktop_workspace STATIC
     "${_dw_root}/src/desktop_workspace/model.c"
+    "${_dw_root}/src/desktop_workspace/restore_review.c"
     "${_dw_root}/src/desktop_workspace/codec.c"
     "${_dw_root}/src/desktop_workspace/repository.c"
     "${_dw_root}/src/desktop_workspace/local.c"
@@ -53,3 +54,18 @@ if(BUILD_TESTING)
     add_subdirectory("${_dw_root}/tests/desktop_workspace" "${CMAKE_CURRENT_BINARY_DIR}/desktop-workspace-tests")
 endif()
 unset(_dw_root)
+
+# The example demonstrates the same review contract used by the native shell.
+add_executable(umicom-desktop-workspace-restore-example "${CMAKE_CURRENT_LIST_DIR}/../examples/desktop_workspace/review_restore.c")
+target_link_libraries(umicom-desktop-workspace-restore-example PRIVATE Umicom::desktop_workspace)
+set_target_properties(umicom-desktop-workspace-restore-example PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+if(COMMAND umicom_apply_warnings)
+    umicom_apply_warnings(umicom-desktop-workspace-restore-example)
+endif()
+if(COMMAND umicom_apply_sanitizers)
+    umicom_apply_sanitizers(umicom-desktop-workspace-restore-example)
+endif()
+install(TARGETS umicom-desktop-workspace-restore-example RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Framework)
+if(BUILD_TESTING)
+    add_test(NAME framework.desktop_workspace.restore_review.example COMMAND umicom-desktop-workspace-restore-example)
+endif()

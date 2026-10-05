@@ -80,3 +80,64 @@ install(TARGETS umicom_ui_workspace_checkpoint
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+# Exercise file exchange without GTK, storage or application side effects.
+if(BUILD_TESTING)
+    add_executable(umicom-ui-workspace-library-exchange-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ui/test_workspace_library_exchange.c")
+    target_link_libraries(umicom-ui-workspace-library-exchange-test PRIVATE Umicom::ui_workspace_checkpoint)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-ui-workspace-library-exchange-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-ui-workspace-library-exchange-test)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-ui-workspace-library-exchange-test)
+    endif()
+    add_test(NAME framework.ui.workspace_library_exchange COMMAND umicom-ui-workspace-library-exchange-test)
+    set_tests_properties(framework.ui.workspace_library_exchange PROPERTIES
+        LABELS "framework;ui;workspace;import;regression" TIMEOUT 60)
+endif()
+
+# History stages canonical archives before native publication, so the bridge
+# owns recovery without moving widget ownership into the portable UI model.
+target_sources(umicom_ui_workspace_checkpoint PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ui/workspace_library_history.c")
+if(BUILD_TESTING)
+    add_executable(umicom-ui-workspace-library-history-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ui/test_workspace_library_history.c")
+    target_link_libraries(umicom-ui-workspace-library-history-test PRIVATE Umicom::ui_workspace_checkpoint)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-ui-workspace-library-history-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-ui-workspace-library-history-test)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-ui-workspace-library-history-test)
+    endif()
+    add_test(NAME framework.ui.workspace_library_history COMMAND umicom-ui-workspace-library-history-test)
+    set_tests_properties(framework.ui.workspace_library_history PROPERTIES
+        LABELS "framework;ui;workspace;history;regression" TIMEOUT 60)
+endif()
+
+# Recovery scenarios share production storage and ownership boundaries.
+if(BUILD_TESTING)
+    add_executable(umicom-saved-library-review-test "${CMAKE_CURRENT_LIST_DIR}/../tests/ui/test_saved_library_review.c")
+    target_link_libraries(umicom-saved-library-review-test PRIVATE Umicom::ui_workspace_checkpoint)
+    set_target_properties(umicom-saved-library-review-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-saved-library-review-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-saved-library-review-test)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-saved-library-review-test)
+    endif()
+    foreach(case IN ITEMS evidence frozen stale foreign recovery missing transaction invalid)
+        add_test(NAME framework.ui.saved_library_review.${case} COMMAND umicom-saved-library-review-test ${case})
+        set_tests_properties(framework.ui.saved_library_review.${case} PROPERTIES TIMEOUT 30 LABELS "framework;workspace;recovery;regression")
+    endforeach()
+endif()

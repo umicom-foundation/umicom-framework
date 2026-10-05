@@ -51,6 +51,11 @@ typedef struct LibraryFixture {
     bool malformed_storage_read;
     bool destroy_on_storage;
     bool destroy_on_storage_read;
+    UmiUiWorkspaceLibraryHistoryState history;
+    size_t history_calls;
+    bool destroy_on_history_read;
+    bool destroy_on_history_apply;
+    bool fail_history_read;
 } LibraryFixture;
 
 /* This fixture reads cached owner evidence only; no DataServer/file is used. */
@@ -528,6 +533,101 @@ cleanup:
     return failed;
 }
 
+
+/* These callbacks isolate queued request and native lifetime behavior. The
+ * portable history regression separately exercises actual archived layouts. */
+static UmiStatus history_read(UmiUiWorkspaceLibraryHistoryState *out, void *context)
+{
+    LibraryFixture *fixture = context;
+    if (fixture->fail_history_read) return UMI_STATUS_UNAVAILABLE;
+    *out = fixture->history;
+    if (fixture->destroy_on_history_read) {
+        umi_gtk4_ws_layout_library_destroy(fixture->library); fixture->library = NULL;
+    }
+    return UMI_STATUS_OK;
+}
+static UmiStatus history_apply(UmiUiWorkspaceLibraryHistoryDirection direction,
+    uint64_t expected_revision, void *context)
+{
+    LibraryFixture *fixture = context;
+    ++fixture->history_calls;
+    fixture->nested_status = umi_gtk4_ws_layout_library_refresh(fixture->library);
+    fixture->last_expected_revision = expected_revision;
+    if (expected_revision != fixture->model->revision) {
+        fixture->history.stale = true;
+        return UMI_STATUS_INVALID_STATE;
+    }
+    if (direction != UMI_UI_WORKSPACE_LIBRARY_HISTORY_UNDO) return UMI_STATUS_INVALID_ARGUMENT;
+    ++fixture->model->revision;
+    fixture->history.undo_count = 0U; fixture->history.redo_count = 1U;
+    fixture->history.expected_revision = fixture->model->revision;
+    if (fixture->destroy_on_history_apply) {
+        umi_gtk4_ws_layout_library_destroy(fixture->library); fixture->library = NULL;
+    }
+    return UMI_STATUS_OK;
+}
+static int test_history_controls(void)
+{
+    LibraryFixture fixture = {0};
+    GtkWidget *root = NULL, *held = NULL;
+    int failed = 0;
+    fixture.model = calloc(1U, sizeof(*fixture.model));
+    CHECK(fixture.model != NULL);
+    fixture.policy.layout_prefix = "test.layout.";
+    umi_ui_workspace_customisation_init(fixture.model);
+    CHECK(umi_ui_workspace_customisation_create_blank_layout(fixture.model, "test.layout.history", "History") == UMI_STATUS_OK);
+    CHECK(umi_gtk4_ws_layout_library_create(read_library, apply_library, &fixture, &fixture.library) == UMI_STATUS_OK);
+    root = g_object_ref(umi_gtk4_ws_layout_library_popover(fixture.library));
+    GtkWidget *undo = find_id(root, "workstation.layout-library.undo");
+    GtkWidget *redo = find_id(root, "workstation.layout-library.redo");
+    CHECK(GTK_IS_BUTTON(undo) && GTK_IS_BUTTON(redo) && !gtk_widget_get_sensitive(undo));
+    CHECK(umi_gtk4_ws_layout_library_set_history_handlers(fixture.library, history_read, NULL, &fixture) == UMI_STATUS_INVALID_ARGUMENT);
+    fixture.history.undo_count = 1U; fixture.history.expected_revision = fixture.model->revision;
+    CHECK(umi_gtk4_ws_layout_library_set_history_handlers(fixture.library, history_read, history_apply, &fixture) == UMI_STATUS_OK);
+    CHECK(gtk_widget_get_sensitive(undo) && !gtk_widget_get_sensitive(redo));
+    g_signal_emit_by_name(undo, "clicked");
+    CHECK(!gtk_widget_get_sensitive(undo));
+    CHECK(umi_gtk4_ws_layout_library_set_history_handlers(fixture.library, NULL, NULL, NULL) == UMI_STATUS_BUSY);
+    ++fixture.model->revision;
+    drain_ready();
+    CHECK(fixture.history_calls == 1U && fixture.nested_status == UMI_STATUS_BUSY);
+    CHECK(fixture.last_expected_revision + 1U == fixture.model->revision && !gtk_widget_get_sensitive(undo));
+    fixture.history.stale = false; fixture.history.expected_revision = fixture.model->revision;
+    fixture.fail_history_read = true;
+    CHECK(umi_gtk4_ws_layout_library_refresh(fixture.library) == UMI_STATUS_UNAVAILABLE);
+    CHECK(!gtk_widget_get_sensitive(undo));
+    fixture.fail_history_read = false;
+    fixture.history.undo_count = UMI_UI_WORKSPACE_LIBRARY_HISTORY_LIMIT + 1U;
+    CHECK(umi_gtk4_ws_layout_library_refresh(fixture.library) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(!gtk_widget_get_sensitive(undo));
+    fixture.history.undo_count = 1U;
+    CHECK(umi_gtk4_ws_layout_library_refresh(fixture.library) == UMI_STATUS_OK);
+    held = g_object_ref(undo);
+    g_signal_emit_by_name(undo, "clicked");
+    umi_gtk4_ws_layout_library_destroy(fixture.library); fixture.library = NULL;
+    drain_ready(); g_signal_emit_by_name(held, "clicked"); drain_ready();
+    CHECK(fixture.history_calls == 1U);
+    g_clear_object(&held); g_clear_object(&root);
+    CHECK(umi_gtk4_ws_layout_library_create(read_library, apply_library, &fixture, &fixture.library) == UMI_STATUS_OK);
+    root = g_object_ref(umi_gtk4_ws_layout_library_popover(fixture.library));
+    CHECK(umi_gtk4_ws_layout_library_set_history_handlers(fixture.library, history_read, history_apply, &fixture) == UMI_STATUS_OK);
+    undo = find_id(root, "workstation.layout-library.undo");
+    fixture.destroy_on_history_apply = true;
+    g_signal_emit_by_name(undo, "clicked"); drain_ready();
+    CHECK(fixture.library == NULL && fixture.history_calls == 2U);
+    g_signal_emit_by_name(undo, "clicked"); drain_ready(); CHECK(fixture.history_calls == 2U);
+    g_clear_object(&root);
+    fixture.destroy_on_history_apply = false;
+    CHECK(umi_gtk4_ws_layout_library_create(read_library, apply_library, &fixture, &fixture.library) == UMI_STATUS_OK);
+    fixture.destroy_on_history_read = true;
+    CHECK(umi_gtk4_ws_layout_library_set_history_handlers(fixture.library, history_read, history_apply, &fixture) == UMI_STATUS_CANCELLED);
+    CHECK(fixture.library == NULL);
+cleanup:
+    umi_gtk4_ws_layout_library_destroy(fixture.library);
+    g_clear_object(&held); g_clear_object(&root); free(fixture.model);
+    return failed;
+}
+
 int main(void)
 {
     LibraryFixture fixture = {0};
@@ -555,6 +655,7 @@ int main(void)
     (void)g_setenv("GTK_A11Y", "test", TRUE);
     if (!gtk_init_check()) return 77;
     CHECK(test_storage_controls() == 0);
+    CHECK(test_history_controls() == 0);
     CHECK(test_order_controls() == 0);
     CHECK(test_automatic_copy() == 0);
     CHECK(test_copy_id_limits() == 0);

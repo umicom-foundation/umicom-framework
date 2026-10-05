@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Working with reviewed project files</title>
+<style>body{max-width:58rem;margin:3rem auto;padding:0 1.2rem;font:18px/1.6 system-ui;color:#202b36}code,pre{font-family:ui-monospace,monospace}pre{background:#f0f3f5;padding:1rem;overflow:auto}h1,h2{line-height:1.2}aside{border-left:4px solid #39718d;padding:0 1rem}</style></head>
+<body><main><h1>Working with reviewed project files</h1>
+<p>Studio's coding adapter and Framework's local coding workspace use the same file service.
+The service reads complete files and writes a complete replacement before publishing it.
+Reviewing and approving a proposed change remains the coding service's responsibility.</p>
+<h2>Apply a reviewed change</h2><ol>
+<li>Open the project you intend to edit. Keep source files in ordinary folders beneath its
+root. Create required parent folders with the project's file tools before applying a patch.</li>
+<li>Read the proposed before and after text, including every affected filename.
+Preparing or recording a patch does not approve it and does not write source files.</li>
+<li>Approve the reviewed patch explicitly. If its before text no longer matches the file,
+review the newer contents and prepare a fresh change instead of bypassing the conflict.</li>
+<li>Apply the approved change. Framework opens existing parent folders, writes a temporary
+sibling file, flushes and closes it, then publishes the selected file. Unicode names use
+explicit UTF-8 conversion on Windows.</li>
+<li>Inspect the resulting source. Revert through the coding service if needed; reversion
+also checks the current contents before restoring the previous text.</li></ol>
+<h2>Use the service from C</h2>
+<p>A workspace adapter captures an absolute root when it is initialized. A later change to
+the process's current directory therefore does not redirect its file operations.
+Keep the adapter's workspace alive until all calls have finished.</p>
+<pre><code>#include "umicom/ai_coding_runtime/local_workspace.h"
+
+UmiAiCodingLocalWorkspace *workspace = NULL;
+UmiAiCodingWorkspaceAdapter adapter;
+UmiStatus status = umi_ai_coding_local_workspace_create(projectRoot, &amp;workspace);
+if (status == UMI_STATUS_OK) {
+    status = umi_ai_coding_local_workspace_adapter(workspace, &amp;adapter);
+    if (status == UMI_STATUS_OK) {
+        /* Pass the adapter to your approved patch workflow.
+         * The workflow still owns approval and conflict review. */
+    }
+}
+umi_ai_coding_local_workspace_destroy(workspace);</code></pre>
+<p>The lower-level <code>UmiRootedFileRead</code>, <code>UmiRootedFileWrite</code>,
+<code>UmiRootedFileRemove</code> and <code>UmiRootedFileExists</code> functions are
+declared in <code>umicom/platform/rooted_files.h</code>. They accept an absolute root
+and a portable relative filename. They grant no workspace trust or editing permission.</p>
+<h2>Handle failures without losing source</h2><ul>
+<li><strong>Missing parent:</strong> create the intended folder separately. The file service
+does not invent a directory tree from a proposed patch.</li>
+<li><strong>Capacity exceeded:</strong> a bounded read refused the entire file. No partial
+text is returned. Choose an appropriate supported limit before requesting another read.</li>
+<li><strong>Binary text:</strong> the coding adapter refuses embedded NUL bytes. Use the
+binary platform reader for binary data instead of presenting it as editable patch text.</li>
+<li><strong>Permission denied:</strong> inspect file permissions, Windows read-only state,
+open handles and links. Do not automatically retry with broader privileges.</li>
+<li><strong>Invalid path:</strong> use an ordinary filename. Traversal, repository metadata
+paths, Windows device aliases, alternate streams and ambiguous names are refused.</li></ul>
+<h2>Understand the limits</h2>
+<aside><p>This is single-file publication, not a transaction across several files and not
+an operating-system sandbox. Serialize edits within your application. An external program
+can still change a file between the coding service's review and its later write.</p></aside>
+<p>The selected root and its descendants must not be symbolic links or Windows reparse points.
+Ancestors above that root are trusted. POSIX operations use opened directory descriptors;
+Windows retains parent handles during the call. A root containing a literal backslash on
+POSIX is refused because portable Framework paths treat that character as a separator.</p>
+<p>Replacement copies ordinary POSIX permission bits, but not ownership, access-control
+lists or other extended metadata. Windows read-only files are refused. Hard-linked aliases
+keep the previous file contents when a new file replaces the selected directory entry.
+If you depend on special file metadata, review that requirement before using this adapter.</p>
+<p>Flush and close errors are reported, and a failed publication keeps the prior destination.
+A failed temporary-file cleanup may leave a sibling named <code>.umicom-write-...</code>.
+Do not treat that file as an applied patch. Power-loss durability of the parent directory
+is not guaranteed. The synchronous APIs belong on an application worker when used by a GUI.</p>
+<p>For general filesystem operations, see <a href="unicode-project-paths.html">Unicode project paths</a>.</p>
+</main></body></html>

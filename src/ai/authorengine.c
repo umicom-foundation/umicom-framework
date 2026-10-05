@@ -18,6 +18,7 @@
  */
 
 #include "umicom/ai/authorengine.h"
+#include "../base/value_archive_internal.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -25,6 +26,14 @@
 /* Validate AI command configuration before any field is copied or launched. */
 UmiStatus umi_ai_authorengine_validate(const UmiAiAuthorEngineConfig *config)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (config == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(config->executable, '\0', sizeof(config->executable)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(config->workspace, '\0', sizeof(config->workspace)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(config->provider, '\0', sizeof(config->provider)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /* AI operations require an executable, workspace and governed provider. */
     if (config == NULL || config->executable[0] == '\0' || config->workspace[0] == '\0' || config->provider[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -228,3 +237,42 @@ UmiStatus umi_ai_authorengine_plan_invocation(
     }
     return status;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiAiAuthorEngineConfigArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xcc23aed75cf961ef);
+    schema = (schema ^ (uint64_t)sizeof(((UmiAiAuthorEngineConfig *)0)->executable)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiAiAuthorEngineConfig *)0)->workspace)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiAiAuthorEngineConfig *)0)->provider)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiAiAuthorEngineConfigArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiAiAuthorEngineConfig *)0)->executable) - 1U +
+        8U + sizeof(((UmiAiAuthorEngineConfig *)0)->workspace) - 1U +
+        8U + sizeof(((UmiAiAuthorEngineConfig *)0)->provider) - 1U;
+}
+static void UmiAiAuthorEngineConfigArchiveWrite(UmiArchiveWriter *writer, const UmiAiAuthorEngineConfig *value)
+{
+    UmiArchiveWriteText(writer, value->executable, sizeof(value->executable));
+    UmiArchiveWriteText(writer, value->workspace, sizeof(value->workspace));
+    UmiArchiveWriteText(writer, value->provider, sizeof(value->provider));
+}
+static void UmiAiAuthorEngineConfigArchiveRead(UmiArchiveReader *reader, UmiAiAuthorEngineConfig *value)
+{
+    UmiArchiveReadText(reader, value->executable, sizeof(value->executable));
+    UmiArchiveReadText(reader, value->workspace, sizeof(value->workspace));
+    UmiArchiveReadText(reader, value->provider, sizeof(value->provider));
+}
+static UmiStatus UmiAiAuthorEngineConfigArchiveValidate(const UmiAiAuthorEngineConfig *value)
+{
+    return umi_ai_authorengine_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_ai_authorengine_archive_encode, umi_ai_authorengine_archive_decode,
+    UmiAiAuthorEngineConfig, UmiAiAuthorEngineConfigArchiveSchema, UmiAiAuthorEngineConfigArchiveBound, UmiAiAuthorEngineConfigArchiveWrite, UmiAiAuthorEngineConfigArchiveRead, UmiAiAuthorEngineConfigArchiveValidate)

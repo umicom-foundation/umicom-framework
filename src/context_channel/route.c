@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/route.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context route from caller-provided values so later operations receive a known
@@ -33,6 +34,15 @@ record->revision=1U;
 /* Check that context route satisfies its contract before another service relies on it. */
 UmiStatus umi_context_route_validate(const UmiContextRoute *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->route_id, '\0', sizeof(record->route_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->source_channel_id, '\0', sizeof(record->source_channel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->target_channel_id, '\0', sizeof(record->target_channel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->required_schema_id, '\0', sizeof(record->required_schema_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -185,3 +195,59 @@ if(store->count!=0U)memcpy(out_records,store->items,store->count*sizeof(store->i
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextRouteArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x7b5ab61bafd45108);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextRoute *)0)->route_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextRoute *)0)->source_channel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextRoute *)0)->target_channel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextRoute *)0)->required_schema_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextRouteArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextRoute *)0)->route_id) - 1U +
+        8U + sizeof(((UmiContextRoute *)0)->source_channel_id) - 1U +
+        8U + sizeof(((UmiContextRoute *)0)->target_channel_id) - 1U +
+        8U + sizeof(((UmiContextRoute *)0)->required_schema_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextRouteArchiveWrite(UmiArchiveWriter *writer, const UmiContextRoute *value)
+{
+    UmiArchiveWriteText(writer, value->route_id, sizeof(value->route_id));
+    UmiArchiveWriteText(writer, value->source_channel_id, sizeof(value->source_channel_id));
+    UmiArchiveWriteText(writer, value->target_channel_id, sizeof(value->target_channel_id));
+    UmiArchiveWriteText(writer, value->required_schema_id, sizeof(value->required_schema_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->allow_self_route);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->priority);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextRouteArchiveRead(UmiArchiveReader *reader, UmiContextRoute *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->route_id, sizeof(value->route_id));
+    UmiArchiveReadText(reader, value->source_channel_id, sizeof(value->source_channel_id));
+    UmiArchiveReadText(reader, value->target_channel_id, sizeof(value->target_channel_id));
+    UmiArchiveReadText(reader, value->required_schema_id, sizeof(value->required_schema_id));
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->allow_self_route = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->priority = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextRouteArchiveValidate(const UmiContextRoute *value)
+{
+    return umi_context_route_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_route_archive_encode, umi_context_route_archive_decode,
+    UmiContextRoute, UmiContextRouteArchiveSchema, UmiContextRouteArchiveBound, UmiContextRouteArchiveWrite, UmiContextRouteArchiveRead, UmiContextRouteArchiveValidate)

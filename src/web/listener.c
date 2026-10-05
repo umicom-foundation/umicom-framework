@@ -18,6 +18,7 @@
  */
 
 #include "umicom/web/listener.h"
+#include <string.h>
 #if defined(_WIN32)
 /*
  * Provide the web listener platform open operation used by this module and its client
@@ -42,7 +43,16 @@ UmiStatus umi_web_listener_platform_open(const UmiWebServerConfig *config,UmiWeb
 void umi_web_listener_platform_close(UmiWebListener *listener);
 #endif
 /* Provide the web listener open operation used by this module and its client applications. */
+/* Listener admission now enforces the existing loopback-only setting before native bind; the platform adapter remains responsible for socket creation.
+ * The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_web_listener_open(const UmiWebServerConfig *config,UmiWebListener *out_listener){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_web_server_config_validate(config)!=UMI_STATUS_OK||out_listener==NULL)return UMI_STATUS_INVALID_ARGUMENT;return umi_web_listener_platform_open(config,out_listener);}
+#endif
+UmiStatus umi_web_listener_open(const UmiWebServerConfig *config,UmiWebListener *out_listener){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_web_server_config_validate(config)!=UMI_STATUS_OK||out_listener==NULL)return UMI_STATUS_INVALID_ARGUMENT;/* Enforce loopback intent before bind, not after a socket has already
+ * become reachable. An explicit non-loopback server keeps its legacy API. */
+if(config->loopback_only!=0&&config->loopback_only!=1)return UMI_STATUS_INVALID_ARGUMENT;
+if(config->loopback_only&&strcmp(config->bind_address,"127.0.0.1")!=0)return UMI_STATUS_PERMISSION_DENIED;
+return umi_web_listener_platform_open(config,out_listener);}
 /*
  * Provide the web listener close operation used by this module and its client
  * applications.

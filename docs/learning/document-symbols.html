@@ -1,0 +1,87 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{font:17px/1.6 system-ui;max-width:960px;margin:36px auto;padding:0 24px;color:#193542}code{overflow-wrap:anywhere}td,th{padding:10px;border:1px solid #cbdce1;text-align:left}table{border-collapse:collapse}</style>
+<title>Explore a source document outline</title></head><body>
+<h1>Explore a source document outline</h1>
+<p>To find names across the server's project index, use <a href="workspace-symbols.html">project symbol search</a>. Document outlines remain the default.</p>
+<p>A document outline lists declarations such as functions, classes, fields and
+variables. Framework owns the captured source, language-server request and returned
+symbol tree. Studio supplies discovery controls and the current project folder.</p>
+<ol>
+<li>Open a source document. The outline uses the whole current draft, including
+unsaved changes. Read-only documents are supported.</li>
+<li>Choose <strong>Symbols…</strong> in the editor command bar, or
+<strong>Document symbols…</strong> in the Outline panel. Scroll the command bar
+horizontally if necessary. Opening the form captures the draft; it does not
+start a program.</li>
+<li>Enter a trusted language server's absolute executable path, arguments and
+project folder, or choose <strong>Load saved server</strong>. The same per-language
+local settings serve completion, formatting, source information and navigation.
+Loading settings does not start the server. Paths and arguments are unencrypted
+preferences, so keep credentials out of them.</li>
+<li>Choose <strong>Request document symbols</strong>. The selected local server
+receives the captured source and can inspect the project folder. The temporary
+connection closes before its result is published.</li>
+<li>Search the list for a name. Rows show the symbol kind, any deprecation marker,
+its URI and position, and available detail or container text. Indentation means
+the server supplied an explicit parent-child relationship. Flat server results
+remain flat even when they name a container.</li>
+<li>Select a row and choose <strong>Open selected location</strong>. A hierarchical
+symbol selects its identifier range. A flat result opens the starting caret of
+its reveal range. Existing unsaved target drafts are kept. Back and Forward use
+the normal document navigation history; this action neither saves nor edits text.</li>
+</ol>
+<h2>Troubleshooting</h2><table>
+<tr><th>What you see</th><th>What to try</th></tr>
+<tr><td>An empty outline</td><td>The server may return no symbols for this document.
+Check its language and project settings. A temporary connection may not have
+the indexing state available to a persistent editor session.</td></tr>
+<tr><td>Stale capture or unavailable opening</td><td>Close the form and capture
+again after editing, moving the caret, saving or changing permissions. Changing
+server settings invalidates the current list. No stale row is used to edit source.</td></tr>
+<tr><td>Unsupported capability</td><td>The server must advertise document symbols,
+document open/close synchronization and UTF-16 positions. This workflow does not
+handle arbitrary server-to-client configuration requests.</td></tr>
+<tr><td>Timeout or excessive response</td><td>The native form has a five-second
+read budget, a 65536-byte message capacity including the escaped draft and JSON
+envelope, and at most 4096 parser tokens. A large outline or draft can exceed this.
+Synchronous launch and writes may finish before cancellation.</td></tr>
+<tr><td>A destination cannot open</td><td>The selected range must fit the current
+target. New destinations require a supported local file URI. A source file moved
+since indexing or an out-of-range result is refused without replacing the current draft.</td></tr>
+</table>
+<h2>Extend the outline services</h2>
+<p><code>UmiLanguageSymbolCatalogueCreate</code> reads either hierarchical document
+symbols or flat symbol information. Every row owns its strings and preserves
+its source range. The catalogue stores explicit children in preorder: a parent
+appears before its descendants, and each child holds its parent's stable row index.
+Root rows have <code>parent == SIZE_MAX</code>. Never infer hierarchy from flat
+container names or overlapping ranges.</p>
+<p>The reader allows 4096 rows, 32 hierarchy levels, 4096 UTF-8 bytes per name,
+detail or container, 8192 URI bytes and 1 MiB of JSON. An invalid row fails the
+complete read. Names consisting only of Unicode whitespace are rejected. Unknown
+positive symbol kinds remain available to the host, which displays a generic kind;
+unknown positive tags are ignored. Deprecation tags are retained. Only the decoded
+catalogue owns strings returned by <code>At</code>; they expire on Destroy.</p>
+<p><code>UmiLanguageSymbolQueryNative</code> uses the shared source-query connection
+owner, advertises hierarchical support and validates all ranges referring to the
+captured document with one immutable text-position index. It has the smaller
+native transport limits described above. A supplied-server call requires a new
+connection in its starting state; it must not take over an active editor session.</p>
+<p>The GTK form shares inspection-only capture, worker cancellation and saved
+settings with the other source tools. Symbols never acquire Stage or Apply
+permission. Rows store decoded metadata separately from their display labels:
+clicking Open uses <code>UmiDocumentCoordinatorOpenSourceRange</code>, not text
+parsed back from a label. This preserves Unicode coordinates and existing drafts.</p>
+<h2>Current boundaries</h2>
+<p>This searchable list shows indentation but is not a persistent collapsible tree.
+It refreshes only when requested; automatic indexing and caret tracking are not
+implemented here. A new local destination is loaded synchronously after explicit
+Open. Local path syntax checks are not a project confinement boundary and may
+follow filesystem aliases. The language session owns only the direct child,
+not descendants started by a server.</p>
+<p>See <a href="source-navigation.html">source navigation and local targets</a>,
+<a href="native-completion-review.html">server preferences and completion</a>,
+and <a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_documentSymbol">the document-symbol protocol</a>.</p>
+<p><a href="parameter-help.html">Read function signatures and parameter help</a></p>
+</body></html>

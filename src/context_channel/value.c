@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/value.h"
+#include "../base/value_archive_internal.h"
 #include <math.h>
 #include <string.h>
 /*
@@ -115,6 +116,13 @@ return UMI_STATUS_OK;
 /* Check that context value satisfies its contract before another service relies on it. */
 UmiStatus umi_context_value_validate(const UmiContextValue *value)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(value->name, '\0', sizeof(value->name)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(value->text, '\0', sizeof(value->text)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -153,3 +161,54 @@ bool umi_context_value_equal(const UmiContextValue *left, const UmiContextValue 
     
 }
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextValueArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xd108ae9082bb5ad2);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextValue *)0)->name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextValue *)0)->text)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextValueArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiContextValue *)0)->name) - 1U +
+        8U + sizeof(((UmiContextValue *)0)->text) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextValueArchiveWrite(UmiArchiveWriter *writer, const UmiContextValue *value)
+{
+    UmiArchiveWriteSigned(writer, (int64_t)value->kind);
+    UmiArchiveWriteText(writer, value->name, sizeof(value->name));
+    UmiArchiveWriteText(writer, value->text, sizeof(value->text));
+    UmiArchiveWriteSigned(writer, (int64_t)value->integer_value);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->unsigned_value);
+    UmiArchiveWriteDouble(writer, value->decimal_value);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->boolean_value);
+}
+static void UmiContextValueArchiveRead(UmiArchiveReader *reader, UmiContextValue *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    value->kind = (UmiContextValueKind)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    UmiArchiveReadText(reader, value->name, sizeof(value->name));
+    UmiArchiveReadText(reader, value->text, sizeof(value->text));
+    value->integer_value = (int64_t)UmiArchiveReadSigned(reader, INT64_MIN, INT64_MAX);
+    value->unsigned_value = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->decimal_value = UmiArchiveReadDouble(reader);
+    value->boolean_value = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiContextValueArchiveValidate(const UmiContextValue *value)
+{
+    return umi_context_value_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_value_archive_encode, umi_context_value_archive_decode,
+    UmiContextValue, UmiContextValueArchiveSchema, UmiContextValueArchiveBound, UmiContextValueArchiveWrite, UmiContextValueArchiveRead, UmiContextValueArchiveValidate)

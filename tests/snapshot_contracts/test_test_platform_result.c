@@ -74,4 +74,51 @@ static void ContractPayload(UmiTestPlatformResultSnapshot *item)
 #define CONTRACT_EDIT_CURRENT umi_test_platform_result_registry_edit_if_current
 /* Page checks use this domain's real owner and complete payload comparator. */
 #define CONTRACT_READ_PAGE umi_test_platform_result_registry_read_page
+/* Build a complete public snapshot; registry normalization is checked
+ * separately by the collection restore cases. */
+static UmiTestPlatformResultSnapshot ArchiveSample(void)
+{
+    UmiTestPlatformResultSnapshot value = {0};
+    ContractPayload(&value);
+    memcpy(value.id, "archive-record", sizeof("archive-record"));
+    value.struct_size = (uint32_t)sizeof(value);
+    value.revision = 17U;
+    return value;
+}
+/* Unused tails are not part of a C string and must not enter saved bytes. */
+static void ArchiveFillUnusedText(UmiTestPlatformResultSnapshot *value)
+{
+    {
+        size_t used = strlen(value->id) + 1U;
+        memset(value->id + used, 0xa5, sizeof(value->id) - used);
+    }
+    {
+        size_t used = strlen(value->session_id) + 1U;
+        memset(value->session_id + used, 0xa5, sizeof(value->session_id) - used);
+    }
+    {
+        size_t used = strlen(value->item_id) + 1U;
+        memset(value->item_id + used, 0xa5, sizeof(value->item_id) - used);
+    }
+    {
+        size_t used = strlen(value->message) + 1U;
+        memset(value->message + used, 0xa5, sizeof(value->message) - used);
+    }
+    {
+        size_t used = strlen(value->failure_details) + 1U;
+        memset(value->failure_details + used, 0xa5, sizeof(value->failure_details) - used);
+    }
+    {
+        size_t used = strlen(value->attachment_id) + 1U;
+        memset(value->attachment_id + used, 0xa5, sizeof(value->attachment_id) - used);
+    }
+}
+#define ARCHIVE_TYPE UmiTestPlatformResultSnapshot
+#define ARCHIVE_ENCODE umi_test_platform_result_snapshot_archive_encode
+#define ARCHIVE_DECODE umi_test_platform_result_snapshot_archive_decode
+#define ARCHIVE_EQUAL ContractSnapshotEqual
+#include "../value_archive/record_cases.h"
+
+#define CONTRACT_ARCHIVE_ENCODE umi_test_platform_result_registry_archive_encode
+#define CONTRACT_ARCHIVE_RESTORE umi_test_platform_result_registry_archive_restore
 #include "snapshot_contract_cases.h"

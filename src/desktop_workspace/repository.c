@@ -16,6 +16,7 @@
  * No UI, SQLite call or filesystem deletion belongs in this implementation.
  *---------------------------------------------------------------------------*/
 #include "internal.h"
+#include "umicom/desktop_workspace/history.h"
 
 typedef struct DwRecord { uint64_t bytes; unsigned chunks; char hash[65]; } DwRecord;
 static void Detail(UmiDesktopWorkspace *w, const char *text)
@@ -303,4 +304,58 @@ void UmiDesktopWorkspaceDestroy(UmiDesktopWorkspace *w)
     if (w->ownsServer) umi_data_server_destroy(w->server);
     DwGuardRelease(w->guard);
     free(w);
+}
+
+/* Reuse the repository's head check and checkpoint decoder in one transaction.
+ * A picker should show a damaged row, but it must not combine observations
+ * from different heads or publish partial results after a backend failure. */
+UmiStatus UmiDesktopWorkspaceReadHistory(UmiDesktopWorkspace *workspace,
+    UmiDesktopWorkspaceHistory *outHistory)
+{
+    if (workspace == NULL || outHistory == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    const uintptr_t ownerAddress = (uintptr_t)workspace, outputAddress = (uintptr_t)outHistory;
+    if (ownerAddress <= outputAddress ? outputAddress - ownerAddress < sizeof(*workspace)
+        : ownerAddress - outputAddress < sizeof(*outHistory)) return UMI_STATUS_INVALID_ARGUMENT;
+    if (workspace->closed || workspace->poisoned || workspace->oldest == 0U ||
+        workspace->snapshot.revision < workspace->oldest ||
+        workspace->snapshot.revision - workspace->oldest >= UMI_DESKTOP_WORKSPACE_HISTORY)
+        return UMI_STATUS_INVALID_STATE;
+    if (umi_data_server_in_transaction(workspace->server)) return UMI_STATUS_BUSY;
+    UmiDesktopWorkspaceSnapshot *snapshot = malloc(sizeof(*snapshot));
+    UmiDesktopWorkspaceHistory *history = calloc(1U, sizeof(*history));
+    if (snapshot == NULL || history == NULL) { free(snapshot); free(history); return UMI_STATUS_OUT_OF_MEMORY; }
+    UmiStatus status = umi_data_server_begin(workspace->server);
+    if (status != UMI_STATUS_OK) { free(snapshot); free(history); return status; }
+    status = CheckHead(workspace);
+    history->currentRevision = workspace->snapshot.revision;
+    const size_t count = (size_t)(workspace->snapshot.revision - workspace->oldest) + 1U;
+    for (size_t index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
+        UmiDesktopWorkspaceHistoryRow *row = &history->rows[index];
+        row->revision = history->currentRevision - (uint64_t)index;
+        row->status = ReadGeneration(workspace, row->revision, snapshot);
+        if (row->status == UMI_STATUS_OK) {
+            row->noteCount = snapshot->noteCount;
+            row->theme = snapshot->theme;
+            row->fontPoints = snapshot->fontPoints;
+            for (size_t note = 0U; note < snapshot->noteCount; ++note)
+                if (!strcmp(snapshot->selectedNote, snapshot->notes[note].id))
+                    memcpy(row->selectedTitle, snapshot->notes[note].title, sizeof(row->selectedTitle));
+        } else if (row->status != UMI_STATUS_NOT_FOUND && row->status != UMI_STATUS_PARSE_ERROR) {
+            status = row->status;
+        }
+        ++history->count;
+    }
+    if (status == UMI_STATUS_OK) status = umi_data_server_commit(workspace->server);
+    if (status != UMI_STATUS_OK) {
+        /* A failed inspection must not overwrite a successful Save's detail
+         * with the mutation-specific rollback message. A broken rollback does
+         * poison this connection because its transaction state is uncertain. */
+        if (umi_data_server_rollback(workspace->server) != UMI_STATUS_OK) {
+            workspace->poisoned = 1;
+            Detail(workspace, "Checkpoint inspection could not end its transaction. Close and reopen this workspace before continuing.");
+            status = UMI_STATUS_IO_ERROR;
+        }
+    } else *outHistory = *history;
+    free(snapshot); free(history);
+    return status;
 }

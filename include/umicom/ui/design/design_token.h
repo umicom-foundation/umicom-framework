@@ -21,6 +21,7 @@
 #define INCLUDE_UMICOM_UI_DESIGN_DESIGN_TOKEN_H
 
 #include "umicom/ui/design/types.h"
+#include "umicom/base/value_archive.h"
 #include "umicom/ui/design/color.h"
 
 #ifdef __cplusplus
@@ -40,6 +41,17 @@ UmiStatus umi_design_token_color(UmiDesignToken *token, const char *id, UmiDesig
 UmiStatus umi_design_token_text(UmiDesignToken *token, const char *id, const char *value);
 /* Return one when the token identifier and typed value are valid. */
 int umi_design_token_valid(const UmiDesignToken *token);
+
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_design_token_archive_encode(const UmiDesignToken *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_design_token_archive_decode(const void *bytes, size_t byte_count,
+    UmiDesignToken *value);
 
 #ifdef __cplusplus
 }

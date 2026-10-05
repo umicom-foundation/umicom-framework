@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include <string.h>
+#include "../../base/value_archive_internal.h"
 #include "umicom/observability/performance/coverage_file.h"
 
 /* Initialise deterministic record metadata before any measurement is observed. */
@@ -41,6 +42,13 @@ UmiStatus umi_performance_coverage_file_init(UmiPerformanceCoverageFile *record,
 
 /* Reject incompatible ABI snapshots and malformed stable identifiers. */
 UmiStatus umi_performance_coverage_file_validate(const UmiPerformanceCoverageFile *record) {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->id, '\0', sizeof(record->id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->subject_id, '\0', sizeof(record->subject_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -86,3 +94,66 @@ double umi_performance_coverage_file_coverage_percent(uint64_t covered, uint64_t
     if (covered > total) covered = total;
     return ((double)covered / (double)total) * 100.0;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiPerformanceCoverageFileArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x18c97af6b74b3037);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPerformanceCoverageFile *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPerformanceCoverageFile *)0)->subject_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiPerformanceCoverageFileArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiPerformanceCoverageFile *)0)->id) - 1U +
+        8U + sizeof(((UmiPerformanceCoverageFile *)0)->subject_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiPerformanceCoverageFileArchiveWrite(UmiArchiveWriter *writer, const UmiPerformanceCoverageFile *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->subject_id, sizeof(value->subject_id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->state);
+    UmiArchiveWriteSigned(writer, (int64_t)value->severity);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->timestamp_ns);
+    UmiArchiveWriteDouble(writer, value->value);
+    UmiArchiveWriteDouble(writer, value->auxiliary);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+}
+static void UmiPerformanceCoverageFileArchiveRead(UmiArchiveReader *reader, UmiPerformanceCoverageFile *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->subject_id, sizeof(value->subject_id));
+    value->state = (UmiPerformanceState)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->severity = (UmiPerformanceSeverity)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->timestamp_ns = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->value = UmiArchiveReadDouble(reader);
+    value->auxiliary = UmiArchiveReadDouble(reader);
+    value->count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiPerformanceCoverageFileArchiveValidate(const UmiPerformanceCoverageFile *value)
+{
+    return umi_performance_coverage_file_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_performance_coverage_file_archive_encode, umi_performance_coverage_file_archive_decode,
+    UmiPerformanceCoverageFile, UmiPerformanceCoverageFileArchiveSchema, UmiPerformanceCoverageFileArchiveBound, UmiPerformanceCoverageFileArchiveWrite, UmiPerformanceCoverageFileArchiveRead, UmiPerformanceCoverageFileArchiveValidate)

@@ -25,12 +25,32 @@ struct UmiEditorNavigationHistory {
     size_t current_index;
     size_t capacity;
     uint64_t revision;
+    /* A host callback cannot start a competing mutation of this timeline. */
+    int applying;
 };
 
 /* Provide the next revision operation used by this module and its client applications. */
+/* Reviewed travel uses revisions as stale-request guards. Mutators now refuse
+ * exhaustion before changing state; the wrapping policy is retained for review. */
+#if 0
 static uint64_t next_revision(uint64_t revision)
 {
     return revision == UINT64_MAX ? 1U : revision + 1U;
+}
+#endif
+static uint64_t next_revision(uint64_t revision)
+{
+    return revision + 1U;
+}
+
+/* Keep the same mutation guard on every entry point, including older APIs.
+ * This makes callback re-entry safe without a lock or an application copy. */
+static UmiStatus HistoryMutationReady(const UmiEditorNavigationHistory *history)
+{
+    if (history == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (history->applying) return UMI_STATUS_BUSY;
+    if (history->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    return UMI_STATUS_OK;
 }
 
 /*
@@ -104,6 +124,9 @@ UmiStatus umi_editor_navigation_history_record(
     UmiEditorNavigationHistory *history,
     const UmiEditorSourceLocation *location)
 {
+    UmiStatus readiness = HistoryMutationReady(history);
+    if (readiness != UMI_STATUS_OK) return readiness;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -148,6 +171,9 @@ UmiStatus umi_editor_navigation_history_replace_current(
     UmiEditorNavigationHistory *history,
     const UmiEditorSourceLocation *location)
 {
+    UmiStatus readiness = HistoryMutationReady(history);
+    if (readiness != UMI_STATUS_OK) return readiness;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -192,6 +218,9 @@ UmiStatus umi_editor_navigation_history_go_back(
     UmiEditorNavigationHistory *history,
     UmiEditorSourceLocation *out_location)
 {
+    UmiStatus readiness = HistoryMutationReady(history);
+    if (readiness != UMI_STATUS_OK) return readiness;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -217,6 +246,9 @@ UmiStatus umi_editor_navigation_history_go_forward(
     UmiEditorNavigationHistory *history,
     UmiEditorSourceLocation *out_location)
 {
+    UmiStatus readiness = HistoryMutationReady(history);
+    if (readiness != UMI_STATUS_OK) return readiness;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -264,6 +296,9 @@ UmiStatus umi_editor_navigation_history_at(
 UmiStatus umi_editor_navigation_history_clear(
     UmiEditorNavigationHistory *history)
 {
+    UmiStatus readiness = HistoryMutationReady(history);
+    if (readiness != UMI_STATUS_OK) return readiness;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -303,5 +338,50 @@ UmiStatus umi_editor_navigation_history_snapshot(
         history->current_index > 0U;
     out_snapshot->can_go_forward = history->count > 0U &&
         history->current_index + 1U < history->count;
+    return UMI_STATUS_OK;
+}
+
+
+UmiStatus UmiEditorNavigationHistoryRecordJump(UmiEditorNavigationHistory *history,
+    const UmiEditorSourceLocation *departure, const UmiEditorSourceLocation *destination)
+{
+    UmiStatus status = HistoryMutationReady(history);
+    if (status != UMI_STATUS_OK) return status;
+    if (umi_editor_source_location_validate(departure) != UMI_STATUS_OK ||
+        umi_editor_source_location_validate(destination) != UMI_STATUS_OK)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (umi_editor_source_location_same_position(departure, destination)) return UMI_STATUS_OK;
+    if (history->revision >= UINT64_MAX - 1U) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Validation and counter space are checked for both records. These calls
+     * neither allocate nor notify observers, so the pair cannot partly fail. */
+    status = umi_editor_navigation_history_record(history, departure);
+    if (status == UMI_STATUS_OK) status = umi_editor_navigation_history_record(history, destination);
+    return status;
+}
+
+UmiStatus UmiEditorNavigationHistoryTravel(UmiEditorNavigationHistory *history,
+    int direction, uint64_t expected_revision, const UmiEditorSourceLocation *departure,
+    UmiEditorNavigationApplyFn apply, void *context, UmiEditorSourceLocation *out_location)
+{
+    UmiStatus status = HistoryMutationReady(history);
+    if (status != UMI_STATUS_OK) return status;
+    if ((direction != -1 && direction != 1) || apply == NULL ||
+        (departure != NULL && umi_editor_source_location_validate(departure) != UMI_STATUS_OK))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (history->revision != expected_revision) return UMI_STATUS_INVALID_STATE;
+    if (history->count == 0U || (direction < 0 ? history->current_index == 0U :
+            history->current_index + 1U >= history->count)) return UMI_STATUS_NOT_FOUND;
+    size_t target = direction < 0 ? history->current_index - 1U : history->current_index + 1U;
+    UmiEditorSourceLocation destination = history->entries[target];
+    UmiEditorSourceLocation leaving;
+    if (departure != NULL) leaving = *departure;
+    history->applying = 1;
+    status = apply(context, &destination);
+    history->applying = 0;
+    if (status != UMI_STATUS_OK) return status;
+    if (departure != NULL) history->entries[history->current_index] = leaving;
+    history->current_index = target;
+    ++history->revision;
+    if (out_location != NULL) *out_location = destination;
     return UMI_STATUS_OK;
 }

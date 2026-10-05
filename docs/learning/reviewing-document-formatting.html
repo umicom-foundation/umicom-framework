@@ -1,0 +1,72 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Review document formatting</title>
+<style>body{font:17px/1.6 system-ui;max-width:960px;margin:36px auto;padding:0 24px;color:#193542}code{overflow-wrap:anywhere}th,td{padding:10px;border:1px solid #cbdce1;text-align:left}table{border-collapse:collapse}</style></head>
+<body><h1>Review document formatting</h1>
+<p>To focus a request on selected text, use <a href="range-formatting.html">selected-range formatting</a> and review its complete result. Whole-document formatting remains the default.</p>
+<p>Formatting adjusts a document's layout using the language server you select.
+Framework captures the current draft, requests edits and constructs a complete
+result without changing the editor. You decide whether to apply that result.</p>
+<h2>Use Format in Studio</h2><ol>
+<li>Open a writable source document and choose <strong>Format…</strong> in the
+editor command bar. Scroll the bar horizontally if needed. The form captures the
+whole draft, including unsaved text. A selection does not restrict formatting
+to that selection.</li>
+<li>Enter the absolute path to a trusted language-server program, its arguments
+and the project folder. If you saved this language's server choice previously,
+choose <strong>Load saved server</strong>. Loading fills the form without launching.</li>
+<li>Choose a tab width from 1 to 32 and whether to use spaces for indentation.
+These are preferences sent to the server; the server determines the edits.
+The options apply to this review and are not saved with the server path.</li>
+<li>Choose <strong>Request formatting</strong>. The worker sends the captured
+source after initialization, receives the edits, closes the document and stops
+the temporary connection. The server can inspect the selected project folder.</li>
+<li>Choose <strong>Preview complete draft</strong> and inspect both texts.
+Select <strong>I approve the displayed result</strong> only when it is correct.</li>
+<li>Choose <strong>Apply to captured draft</strong>. Framework rechecks the
+document and applies the result through its existing history. Use Undo to restore
+the earlier text. Save remains a separate action. Cancel leaves the draft unchanged.</li></ol>
+<h2>When a result cannot be applied</h2>
+<p>A changed document, caret, selection or saved state invalidates the capture.
+Close the form and capture again. Changing connection or indentation settings
+discards the previous result. A late reply cannot publish into a retired editor
+binding. Completion and formatting share one review slot, so finish one before
+opening the other.</p>
+<table><tr><th>Message or situation</th><th>What to check</th></tr>
+<tr><td>The server cannot provide formatting</td><td>Choose a server that
+advertises document formatting, document open/close synchronization and UTF-16
+positions. A syntax checker without formatting support is insufficient.</td></tr>
+<tr><td>The response is rejected</td><td>The server must return an ordinary
+text-edit array or null. Overlapping edits, invalid positions and annotated
+edits requiring a separate confirmation model are refused.</td></tr>
+<tr><td>No edits</td><td>Null and an empty array are valid. Preview shows the
+unchanged document; the server may consider it already formatted.</td></tr>
+<tr><td>Timeout or capacity exceeded</td><td>The native request has a five-second
+read budget and a 65536-byte JSON message capacity, including the envelope and
+escaped source. The native parser also has a 4096-token limit. Large documents
+or servers requiring client configuration requests need further integration.</td></tr></table>
+<h2>How contributors can extend it</h2>
+<p><code>UmiLanguageFormattingQueryNative</code> handles the temporary protocol
+connection and returns an owned <code>UmiLanguageTextEditPreview</code>.
+The preview service independently supports up to 256 edits, a 1 MiB JSON reply,
+and source/result text up to 16 MiB. The native transport has the smaller limits
+above. Each range refers to the original source; Unicode positions are checked
+before constructing any result. Inserts at the same position keep their response
+order and may precede one replacement there.</p>
+<p>For repeated range lookups, <code>UmiEditorTextPositionIndexCreate</code>
+captures the source and builds sparse checkpoints. Each lookup uses binary
+search followed by a short local Unicode scan. Formatting shares this index
+across all edit endpoints instead of rescanning the draft from its beginning.
+The index validates the entire captured source, keeps its revision metadata and
+owns its bytes; build a fresh index after the source changes.</p>
+<p>Keep process work on a worker with copied inputs. Only the GTK thread uses
+the document coordinator. The source request stages a whole result and routes
+approved application through the existing Undo transaction. A caret inside a
+replacement moves to its end; other positions account for preceding edits.
+The service refuses a mapped caret that would split a newly formed CRLF pair.</p>
+<p>Cancellation is observed between native reads. Launch and synchronous writes
+may finish first. Cleanup owns the direct child, not all descendants it might
+start. This workflow does not implement format-on-save, a persistent indexing
+session, range formatting, tool installation or arbitrary server callbacks.</p>
+<p>See <a href="native-completion-review.html">language-server settings and
+completion review</a> and <a href="reviewing-source-tool-results.html">source
+capture and document history</a>.</p></body></html>

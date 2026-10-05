@@ -15,6 +15,10 @@ struct UmiDebugVariableTarget {
     UmiDebugThreadSnapshot thread;
     uint64_t ancestors[UMI_DEBUG_VARIABLE_INSPECTION_DEPTH];
     size_t ancestorCount;
+    /* Assignment addresses a name in its parent container, not the child
+     * reference used to expand this row. Keep both identities distinct. */
+    uint64_t containerReference;
+    int ambiguousName;
 };
 struct UmiDebugVariablePage {
     UmiDebugVariableTarget parent;

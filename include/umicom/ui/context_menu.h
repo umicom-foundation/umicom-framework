@@ -22,6 +22,7 @@
 #define UMICOM_UI_CONTEXT_MENU_H
 
 #include <stddef.h>
+#include "umicom/base/value_archive.h"
 #include <stdint.h>
 #include "umicom/base/status.h"
 #include "umicom/base/snapshot_validation.h"
@@ -183,6 +184,38 @@ UmiStatus umi_ui_context_menu_registry_edit_if_current(UmiUiContextMenuItemRegis
 UmiStatus umi_ui_context_menu_registry_read_page(const UmiUiContextMenuItemRegistry *registry,
     uint64_t expected_revision, size_t offset, UmiUiContextMenuItemSnapshot *items,
     size_t capacity, UmiSnapshotPage *out_page);
+
+/** Encode this value using Framework's portable archive ownership rules in
+ * value_archive.h. NULL bytes with zero capacity measures the exact size.
+ * Decoding checks the complete schema, checksum, text bounds and domain
+ * validator before publishing. Structure size is rebuilt for the local host;
+ * a saved revision is evidence, not authority to replace a live owner.
+ * Keep source and destination storage separate. Neither call performs I/O. */
+UmiStatus umi_ui_context_menu_snapshot_archive_encode(const UmiUiContextMenuItemSnapshot *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_ui_context_menu_snapshot_archive_decode(const void *bytes, size_t byte_count,
+    UmiUiContextMenuItemSnapshot *value);
+
+/** Encode the ordered collection only at expected_revision. Use the same
+ * revision for measurement and encoding; an intervening edit is INVALID_STATE.
+ * Short output reports the required size without writing bytes. The common
+ * archive byte limit applies. Serialize access on the owning thread. */
+UmiStatus umi_ui_context_menu_registry_archive_encode(const UmiUiContextMenuItemRegistry *registry,
+    uint64_t expected_revision, void *bytes, size_t capacity, size_t *out_size);
+/** Restore all rows only at the caller's current observation revision.
+ * Every row is decoded before the existing replace_if_current operation
+ * validates duplicate identities and publishes the collection atomically.
+ * Corrupt, incompatible, oversized or stale input leaves the owner unchanged.
+ * Publication assigns fresh local revisions; saved row counters grant no
+ * authority. An empty archive deliberately clears the collection. This uses
+ * bounded staging allocation plus the replacement owner's scratch storage.
+ * Optional out_result is initialized on every return; rejected_index identifies
+ * a bad row when available. Its validation detail describes domain publication,
+ * while the return status describes envelope/codec failures. Keep input,
+ * result and registry storage separate. No files, callbacks or commands run. */
+UmiStatus umi_ui_context_menu_registry_archive_restore(UmiUiContextMenuItemRegistry *registry,
+    uint64_t expected_revision, const void *bytes, size_t byte_count,
+    UmiSnapshotBatchResult *out_result);
 
 #ifdef __cplusplus
 }

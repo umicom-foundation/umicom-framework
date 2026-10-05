@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/payments/idempotency_record.h"
+#include "../../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise payments idempotency record from caller-provided values so later operations
@@ -46,6 +47,14 @@ UmiStatus umi_payments_idempotency_record_init(UmiPaymentsIdempotencyRecord *val
  * relies on it.
  */
 bool umi_payments_idempotency_record_valid(const UmiPaymentsIdempotencyRecord *value) {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (value == NULL) return 0;
+    if (memchr(value->id.value, '\0', sizeof(value->id.value)) == NULL) return 0;
+    if (memchr(value->payment_id.value, '\0', sizeof(value->payment_id.value)) == NULL) return 0;
+    if (memchr(value->idempotency_key, '\0', sizeof(value->idempotency_key)) == NULL) return 0;
+
     return value!=NULL && (value->idempotency_key[0]!='\0' && value->fingerprint!=0U);
 }
 
@@ -61,3 +70,45 @@ bool umi_payments_idempotency_record_replay_safe(const UmiPaymentsIdempotencyRec
     if(value==NULL) return (bool)0;
     return value->fingerprint!=0U;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiPaymentsIdempotencyRecordArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x42a4ed4008150ac6);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPaymentsIdempotencyRecord *)0)->id.value)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPaymentsIdempotencyRecord *)0)->payment_id.value)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPaymentsIdempotencyRecord *)0)->idempotency_key)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiPaymentsIdempotencyRecordArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiPaymentsIdempotencyRecord *)0)->id.value) - 1U +
+        8U + sizeof(((UmiPaymentsIdempotencyRecord *)0)->payment_id.value) - 1U +
+        8U + sizeof(((UmiPaymentsIdempotencyRecord *)0)->idempotency_key) - 1U +
+        8U;
+}
+static void UmiPaymentsIdempotencyRecordArchiveWrite(UmiArchiveWriter *writer, const UmiPaymentsIdempotencyRecord *value)
+{
+    UmiArchiveWriteText(writer, value->id.value, sizeof(value->id.value));
+    UmiArchiveWriteText(writer, value->payment_id.value, sizeof(value->payment_id.value));
+    UmiArchiveWriteText(writer, value->idempotency_key, sizeof(value->idempotency_key));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->fingerprint);
+}
+static void UmiPaymentsIdempotencyRecordArchiveRead(UmiArchiveReader *reader, UmiPaymentsIdempotencyRecord *value)
+{
+    UmiArchiveReadText(reader, value->id.value, sizeof(value->id.value));
+    UmiArchiveReadText(reader, value->payment_id.value, sizeof(value->payment_id.value));
+    UmiArchiveReadText(reader, value->idempotency_key, sizeof(value->idempotency_key));
+    value->fingerprint = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiPaymentsIdempotencyRecordArchiveValidate(const UmiPaymentsIdempotencyRecord *value)
+{
+    return umi_payments_idempotency_record_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_payments_idempotency_record_archive_encode, umi_payments_idempotency_record_archive_decode,
+    UmiPaymentsIdempotencyRecord, UmiPaymentsIdempotencyRecordArchiveSchema, UmiPaymentsIdempotencyRecordArchiveBound, UmiPaymentsIdempotencyRecordArchiveWrite, UmiPaymentsIdempotencyRecordArchiveRead, UmiPaymentsIdempotencyRecordArchiveValidate)

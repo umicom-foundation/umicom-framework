@@ -12,10 +12,80 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+/* Test assertions also construct the existing fixture. Keep them active in
+ * Release so the public-library regression covers the same initialized data. */
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
 #include "umicom/ui/enterprise/inspector_section.h"
 #include <stdio.h>
 /*
  * Start this command or application, report setup failures, and return a process exit code
  * to the operating system.
  */
-int main(void){UmiUiEntInspectorSection v;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_inspector_section_init(&v)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_copy_text(v.section_id,sizeof v.section_id,"id")!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_ui_ent_inspector_section_validate(&v))return 9;puts("ok");return 0;}
+#include "../value_archive/transfer_cases.h"
+
+#include "umicom/ui/enterprise/inspector_section.h"
+/* Compare the complete domain value rather than using struct padding or
+ * re-decoding an expected byte stream. Add new public fields to this check. */
+static int UmiUiEntInspectorSectionTransferEqual(const UmiUiEntInspectorSection *a, const UmiUiEntInspectorSection *b)
+{
+    return strcmp(a->section_id, b->section_id) == 0 &&
+        strcmp(a->label, b->label) == 0 &&
+        a->order == b->order &&
+        a->collapsed == b->collapsed;
+}
+/* Bytes after a string terminator can hold obsolete data. They must not be
+ * included when a value is saved or transferred to another workspace. */
+static void UmiUiEntInspectorSectionTransferTails(UmiUiEntInspectorSection *value)
+{
+    (void)value;
+    {
+        size_t used = strlen(value->section_id) + 1U;
+        memset(value->section_id + used, 0xa5, sizeof(value->section_id) - used);
+    }
+    {
+        size_t used = strlen(value->label) + 1U;
+        memset(value->label + used, 0xa5, sizeof(value->label) - used);
+    }
+}
+/* Damage one fixed string at a time. Refusal must precede domain string
+ * reads and must leave both the destination bytes and size output unchanged. */
+static int UmiUiEntInspectorSectionTransferMalformed(const UmiUiEntInspectorSection *sample)
+{
+    (void)sample;
+    {
+        UmiUiEntInspectorSection invalid = *sample;
+        unsigned char bytes[48], expected[48];
+        size_t written = 77U;
+        memset(invalid.section_id, 'x', sizeof(invalid.section_id));
+        memset(bytes, 0xa5, sizeof(bytes)); memcpy(expected, bytes, sizeof(bytes));
+        if (!(!umi_ui_ent_inspector_section_validate(&invalid)) ||
+            umi_ui_ent_inspector_section_archive_encode(&invalid, bytes, sizeof(bytes), &written) == UMI_STATUS_OK ||
+            written != 77U || memcmp(bytes, expected, sizeof(bytes)) != 0) {
+            fprintf(stderr, "Unterminated section_id was not refused before publication.\n");
+            return 1;
+        }
+    }
+    {
+        UmiUiEntInspectorSection invalid = *sample;
+        unsigned char bytes[48], expected[48];
+        size_t written = 77U;
+        memset(invalid.label, 'x', sizeof(invalid.label));
+        memset(bytes, 0xa5, sizeof(bytes)); memcpy(expected, bytes, sizeof(bytes));
+        if (!(!umi_ui_ent_inspector_section_validate(&invalid)) ||
+            umi_ui_ent_inspector_section_archive_encode(&invalid, bytes, sizeof(bytes), &written) == UMI_STATUS_OK ||
+            written != 77U || memcmp(bytes, expected, sizeof(bytes)) != 0) {
+            fprintf(stderr, "Unterminated label was not refused before publication.\n");
+            return 1;
+        }
+    }
+    return 0;
+}
+UMI_TEST_VALUE_TRANSFER(UmiUiEntInspectorSectionTransferCases, UmiUiEntInspectorSection,
+    umi_ui_ent_inspector_section_archive_encode, umi_ui_ent_inspector_section_archive_decode,
+    UmiUiEntInspectorSectionTransferEqual, UmiUiEntInspectorSectionTransferTails, UmiUiEntInspectorSectionTransferMalformed)
+
+int main(void){UmiUiEntInspectorSection v;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_inspector_section_init(&v)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_copy_text(v.section_id,sizeof v.section_id,"id")!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_ui_ent_inspector_section_validate(&v))return 9;
+    if (UmiUiEntInspectorSectionTransferCases(&v) != 0) return 1;
+puts("ok");return 0;}

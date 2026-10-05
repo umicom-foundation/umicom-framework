@@ -17,6 +17,35 @@
 #include "umicom/application_shell/profiles/file_menu.h"
 
 static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
+    /* Hosts bind these to the document coordinator, then query its history. */
+    {
+        .structure_size = (uint32_t)sizeof(UmiApplicationShellContribution),
+        .api_version = UMI_APPLICATION_SHELL_API_VERSION,
+        .contribution_id = "umicom.shell.file-menu.reopen-closed",
+        .title = "Reopen Closed Document",
+        .description = "Open the latest saved path again without restoring discarded edits.",
+        .command_id = "file.reopen-closed",
+        .group_id = "file",
+        .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
+        .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
+        .order = 340,
+        .flags = UMI_APPLICATION_SHELL_VISIBLE,
+        .revision = 1U
+    },
+    {
+        .structure_size = (uint32_t)sizeof(UmiApplicationShellContribution),
+        .api_version = UMI_APPLICATION_SHELL_API_VERSION,
+        .contribution_id = "umicom.shell.file-menu.forget-closed",
+        .title = "Forget Last Closed Document",
+        .description = "Skip the latest closed path without deleting its file.",
+        .command_id = "file.forget-closed",
+        .group_id = "file",
+        .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
+        .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
+        .order = 350,
+        .flags = UMI_APPLICATION_SHELL_VISIBLE,
+        .revision = 1U
+    },
     {
         .structure_size = (uint32_t)sizeof(UmiApplicationShellContribution),
         .api_version = UMI_APPLICATION_SHELL_API_VERSION,

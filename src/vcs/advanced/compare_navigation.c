@@ -17,6 +17,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/vcs/advanced/compare_navigation.h"
+#include "../../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -102,3 +103,44 @@ int umi_vcs_advanced_compare_navigation_previous(UmiVcsAdvancedCompareNavigation
     }
     return 0;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiVcsAdvancedCompareNavigationArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xff820525a806ab85);
+
+    return schema;
+}
+static size_t UmiVcsAdvancedCompareNavigationArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiVcsAdvancedCompareNavigationArchiveWrite(UmiArchiveWriter *writer, const UmiVcsAdvancedCompareNavigation *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->change_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->current_index);
+    UmiArchiveWriteSigned(writer, (int64_t)value->wrap);
+}
+static void UmiVcsAdvancedCompareNavigationArchiveRead(UmiArchiveReader *reader, UmiVcsAdvancedCompareNavigation *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->change_count = (size_t)UmiArchiveReadUnsigned(reader, SIZE_MAX);
+    value->current_index = (size_t)UmiArchiveReadUnsigned(reader, SIZE_MAX);
+    value->wrap = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+}
+static UmiStatus UmiVcsAdvancedCompareNavigationArchiveValidate(const UmiVcsAdvancedCompareNavigation *value)
+{
+    return umi_vcs_advanced_compare_navigation_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_vcs_advanced_compare_navigation_archive_encode, umi_vcs_advanced_compare_navigation_archive_decode,
+    UmiVcsAdvancedCompareNavigation, UmiVcsAdvancedCompareNavigationArchiveSchema, UmiVcsAdvancedCompareNavigationArchiveBound, UmiVcsAdvancedCompareNavigationArchiveWrite, UmiVcsAdvancedCompareNavigationArchiveRead, UmiVcsAdvancedCompareNavigationArchiveValidate)

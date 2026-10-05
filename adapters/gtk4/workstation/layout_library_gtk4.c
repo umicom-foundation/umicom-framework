@@ -37,7 +37,18 @@ typedef struct PendingLibraryStorageRequest {
 } PendingLibraryStorageRequest;
 
 struct UmiGtk4WorkspaceLayoutLibrary {
+    GtkWidget *history_box;
+    GtkWidget *undo_library;
+    GtkWidget *redo_library;
+    GtkWidget *history_status;
+    UmiGtk4WorkspaceLayoutLibraryHistoryReadHandler history_read_handler;
+    UmiGtk4WorkspaceLayoutLibraryHistoryApplyHandler history_apply_handler;
+    void *history_context;
+    UmiUiWorkspaceLibraryHistoryState history_state;
+    bool history_valid;
     GtkWidget *popover;
+    GtkWidget *exchange_box;
+    UmiGtk4WorkspaceLibraryExchange *exchange;
     GtkWidget *list;
     GtkWidget *search;
     GtkWidget *selected_label;
@@ -119,6 +130,8 @@ void umi_gtk4_ws_layout_library_destroy(UmiGtk4WorkspaceLayoutLibrary *library)
 {
     if (library == NULL || library->destroy_requested) return;
     library->destroy_requested = true;
+    umi_gtk4_ws_library_exchange_destroy(library->exchange);
+    library->exchange = NULL;
     if (library->pending_id != 0U) {
         guint source = library->pending_id;
         library->pending_id = 0U;
@@ -194,6 +207,30 @@ static UmiStatus refresh_storage_state(UmiGtk4WorkspaceLayoutLibrary *library)
     return UMI_STATUS_OK;
 }
 
+/* Read history evidence on the owning thread. The revision in this view is
+ * never authority by itself: the owner rechecks it when navigation executes. */
+static UmiStatus refresh_history_state(UmiGtk4WorkspaceLayoutLibrary *library)
+{
+    library->history_valid = false;
+    if (library->history_read_handler == NULL) return UMI_STATUS_OK;
+    UmiUiWorkspaceLibraryHistoryState state = {0};
+    library->in_callback = true;
+    UmiStatus status = library->history_read_handler(&state, library->history_context);
+    library->in_callback = false;
+    if (library->destroy_requested) return UMI_STATUS_CANCELLED;
+    if (status == UMI_STATUS_OK && (state.undo_count > UMI_UI_WORKSPACE_LIBRARY_HISTORY_LIMIT ||
+        state.redo_count > UMI_UI_WORKSPACE_LIBRARY_HISTORY_LIMIT - state.undo_count))
+        status = UMI_STATUS_INVALID_ARGUMENT;
+    if (status == UMI_STATUS_OK) {
+        library->history_state = state;
+        library->history_valid = true;
+        gtk_label_set_text(GTK_LABEL(library->history_status), state.stale
+            ? "The workspace changed outside this history. The next library change starts a new history."
+            : "Undo and Redo affect this session's layout library only. Save library keeps the chosen result for restart.");
+    } else gtk_label_set_text(GTK_LABEL(library->history_status), "Layout history is unavailable. Refresh to read its current state.");
+    return status;
+}
+
 /* Resolve an identity only inside a validated copied snapshot. */
 static const UmiUiWorkspaceLibraryRow *selected_row(const UmiGtk4WorkspaceLayoutLibrary *library)
 {
@@ -255,6 +292,13 @@ static void update_controls(UmiGtk4WorkspaceLayoutLibrary *library)
         library->pending_id == 0U && !library->in_callback && !library->destroy_requested &&
         library->storage_valid && library->storage_state.supported &&
         library->storage_operation_handler != NULL;
+    const bool history_ready = library->valid && library->history_valid && !library->snapshot.editing &&
+        library->pending_id == 0U && !library->in_callback && !library->destroy_requested &&
+        !library->history_state.busy && !library->history_state.stale &&
+        library->history_state.expected_revision == library->snapshot.customisation_revision &&
+        library->history_apply_handler != NULL;
+    gtk_widget_set_sensitive(library->undo_library, history_ready && library->history_state.undo_count != 0U);
+    gtk_widget_set_sensitive(library->redo_library, history_ready && library->history_state.redo_count != 0U);
     char *message = row != NULL ? g_strdup_printf("Selected: %s\n%s", row->name, row->layout_id)
         : g_strdup("Select a layout from the list.");
     gtk_label_set_text(GTK_LABEL(library->selected_label), message);
@@ -435,6 +479,9 @@ static UmiStatus refresh_view(UmiGtk4WorkspaceLayoutLibrary *library)
     if (changed) rebuild_rows(library);
     status = refresh_storage_state(library);
     if (library->destroy_requested) { g_free(candidate); return UMI_STATUS_CANCELLED; }
+    UmiStatus history_status = refresh_history_state(library);
+    if (library->destroy_requested) { g_free(candidate); return UMI_STATUS_CANCELLED; }
+    if (status == UMI_STATUS_OK) status = history_status;
     update_controls(library);
     show_status(library, status != UMI_STATUS_OK ? umi_status_text(status) :
         (candidate->editing ? "Finish or cancel Edit Layout before changing the library."
@@ -614,6 +661,64 @@ static void on_storage_clicked(GtkButton *button, gpointer data)
     if (library->pending_id == 0U) { g_free(pending); return; }
     show_status(library, restore ? "Restoring the confirmed named layout library…" : "Saving the named layout library…", false);
     update_controls(library);
+}
+
+/* Idle dispatch avoids rebuilding a layout from inside the button's signal
+ * stack. Only copied direction and revision survive until that dispatch. */
+typedef struct PendingLibraryHistory {
+    UmiGtk4WorkspaceLayoutLibrary *library;
+    UmiUiWorkspaceLibraryHistoryDirection direction;
+    uint64_t expected_revision;
+} PendingLibraryHistory;
+static gboolean history_from_idle(gpointer data)
+{
+    PendingLibraryHistory *pending = data;
+    UmiGtk4WorkspaceLayoutLibrary *library = pending->library;
+    library->pending_id = 0U; ++library->operation_depth;
+    library->in_callback = true;
+    UmiStatus status = library->history_apply_handler(pending->direction,
+        pending->expected_revision, library->history_context);
+    library->in_callback = false;
+    if (!library->destroy_requested) {
+        (void)refresh_view(library);
+        if (!library->destroy_requested)
+            show_status(library, status == UMI_STATUS_OK ? "Layout history applied. Saved files and product data were not changed."
+                : status == UMI_STATUS_INVALID_STATE ? "The workspace changed. Review the refreshed library before trying again."
+                : umi_status_text(status), status != UMI_STATUS_OK);
+    }
+    (void)finish_operation(library);
+    return G_SOURCE_REMOVE;
+}
+static void on_history_clicked(GtkButton *button, gpointer data)
+{
+    UmiGtk4WorkspaceLayoutLibrary *library = data;
+    if (library->destroy_requested || library->in_callback || library->pending_id != 0U ||
+        library->history_apply_handler == NULL || !gtk_widget_get_sensitive(GTK_WIDGET(button))) return;
+    PendingLibraryHistory *pending = g_try_new0(PendingLibraryHistory, 1);
+    if (pending == NULL) { show_status(library, umi_status_text(UMI_STATUS_OUT_OF_MEMORY), true); return; }
+    pending->library = library;
+    pending->direction = GTK_WIDGET(button) == library->undo_library
+        ? UMI_UI_WORKSPACE_LIBRARY_HISTORY_UNDO : UMI_UI_WORKSPACE_LIBRARY_HISTORY_REDO;
+    pending->expected_revision = library->snapshot.customisation_revision;
+    library->pending_id = g_idle_add_full(G_PRIORITY_DEFAULT_IDLE, history_from_idle, pending, g_free);
+    if (library->pending_id == 0U) g_free(pending);
+    update_controls(library);
+}
+UmiStatus umi_gtk4_ws_layout_library_set_history_handlers(UmiGtk4WorkspaceLayoutLibrary *library,
+    UmiGtk4WorkspaceLayoutLibraryHistoryReadHandler read_handler,
+    UmiGtk4WorkspaceLayoutLibraryHistoryApplyHandler apply_handler, void *context)
+{
+    if (library == NULL || library->destroy_requested || ((read_handler == NULL) != (apply_handler == NULL)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (library->in_callback || library->pending_id != 0U) return UMI_STATUS_BUSY;
+    ++library->operation_depth;
+    library->history_read_handler = read_handler; library->history_apply_handler = apply_handler;
+    library->history_context = context;
+    gtk_widget_set_visible(library->history_box, read_handler != NULL);
+    UmiStatus status = refresh_history_state(library);
+    if (!library->destroy_requested) update_controls(library);
+    (void)finish_operation(library);
+    return status;
 }
 
 /* The read operation shares the existing deferred lifetime discipline. Its
@@ -846,6 +951,23 @@ UmiStatus umi_gtk4_ws_layout_library_create(
     box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
     title = gtk_label_new("Layout Library");
     notice = gtk_label_new(""); library->notice = notice;
+    library->history_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+    GtkWidget *history_actions = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+    library->undo_library = gtk_button_new_with_label("Undo layout change");
+    library->redo_library = gtk_button_new_with_label("Redo layout change");
+    library->history_status = gtk_label_new("");
+    gtk_label_set_wrap(GTK_LABEL(library->history_status), TRUE);
+    gtk_label_set_max_width_chars(GTK_LABEL(library->history_status), 64);
+    gtk_label_set_xalign(GTK_LABEL(library->history_status), 0.0F);
+    gtk_box_append(GTK_BOX(history_actions), library->undo_library);
+    gtk_box_append(GTK_BOX(history_actions), library->redo_library);
+    gtk_box_append(GTK_BOX(library->history_box), history_actions);
+    gtk_box_append(GTK_BOX(library->history_box), library->history_status);
+    gtk_widget_set_visible(library->history_box, FALSE);
+    (void)umi_gtk4_automation_tag_widget(library->undo_library, "workstation.layout-library.undo");
+    (void)umi_gtk4_automation_tag_widget(library->redo_library, "workstation.layout-library.redo");
+    g_signal_connect(library->undo_library, "clicked", G_CALLBACK(on_history_clicked), library);
+    g_signal_connect(library->redo_library, "clicked", G_CALLBACK(on_history_clicked), library);
     library->search = gtk_search_entry_new(); library->list = gtk_list_box_new();
     empty = gtk_label_new("No layouts match this search.");
     library->selected_label = gtk_label_new(""); library->new_id = gtk_entry_new();
@@ -940,12 +1062,15 @@ UmiStatus umi_gtk4_ws_layout_library_create(
     gtk_box_append(GTK_BOX(box), actions);
     gtk_box_append(GTK_BOX(box), order_actions);
     gtk_box_append(GTK_BOX(box), order_hint);
+    gtk_box_append(GTK_BOX(box), library->history_box);
     gtk_box_append(GTK_BOX(box), gtk_separator_new(GTK_ORIENTATION_HORIZONTAL));
     gtk_box_append(GTK_BOX(box), library->storage_status);
     gtk_box_append(GTK_BOX(box), library->confirm_restore);
     gtk_box_append(GTK_BOX(box), storage_actions);
     gtk_box_append(GTK_BOX(box), library->preview_text);
     gtk_box_append(GTK_BOX(box), library->status);
+    library->exchange_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+    gtk_box_append(GTK_BOX(box), library->exchange_box);
     /* Both control groups remain reachable on smaller desktops without an
      * expanding popover forcing the native application outside its monitor. */
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(outer_scroll), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
@@ -991,4 +1116,35 @@ UmiStatus umi_gtk4_ws_layout_library_create(
     else umi_gtk4_ws_layout_library_destroy(library);
     (void)finish_operation(library);
     return status;
+}
+
+/* The exchange controller owns its asynchronous state independently. Destroy
+ * it before releasing this view so queued file completions cannot call a dead
+ * product context, even when a chooser outlives the visible popover. */
+UmiStatus umi_gtk4_ws_layout_library_set_exchange_handlers(
+    UmiGtk4WorkspaceLayoutLibrary *library,
+    UmiGtk4WorkspaceLibraryExportHandler export_handler,
+    UmiGtk4WorkspaceLibraryImportHandler import_handler,
+    UmiGtk4WorkspaceLibraryImportApplyHandler apply_handler, void *context)
+{
+    if (library == NULL || library->destroy_requested) return UMI_STATUS_INVALID_ARGUMENT;
+    if (library->pending_id != 0U || library->in_callback) return UMI_STATUS_BUSY;
+    if (library->exchange != NULL) return UMI_STATUS_INVALID_STATE;
+    const UmiStatus status = umi_gtk4_ws_library_exchange_create(export_handler,
+        import_handler, apply_handler, context, &library->exchange);
+    if (status == UMI_STATUS_OK) gtk_box_append(GTK_BOX(library->exchange_box),
+        umi_gtk4_ws_library_exchange_widget(library->exchange));
+    return status;
+}
+
+/* The exchange controller already owns cancellation and copied review state.
+ * Forwarding avoids a second restore model in the surrounding popover. */
+UmiStatus umi_gtk4_ws_layout_library_set_saved_review_handler(
+    UmiGtk4WorkspaceLayoutLibrary *library,
+    UmiGtk4WorkspaceLibrarySavedReviewHandler handler, void *context)
+{
+    if (library == NULL || library->destroy_requested) return UMI_STATUS_INVALID_ARGUMENT;
+    if (library->pending_id != 0U || library->in_callback) return UMI_STATUS_BUSY;
+    if (library->exchange == NULL) return UMI_STATUS_INVALID_STATE;
+    return umi_gtk4_ws_library_exchange_set_saved_review_handler(library->exchange, handler, context);
 }

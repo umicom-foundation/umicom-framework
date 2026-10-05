@@ -55,6 +55,10 @@ UmiStatus UmiDocumentCoordinatorGetEditState(UmiDocumentCoordinator *coordinator
 /** Undo/redo and Select All operate on documentId without activating another
  * tab. Undo/redo use the coordinator's existing bounded history. Read-only
  * documents permit selection/copy but reject changes and history traversal. */
+/* Captured command and native-typing selections travel with their source.
+ * Redo restores the position left before Undo; moving before Redo similarly
+ * supplies the position for a later Undo. Legacy text-only steps clamp to
+ * valid UTF-8/CRLF boundaries when a prior position was not captured. */
 UmiStatus UmiDocumentCoordinatorUndo(UmiDocumentCoordinator *coordinator,
     UmiDocumentId documentId);
 UmiStatus UmiDocumentCoordinatorRedo(UmiDocumentCoordinator *coordinator,
@@ -93,6 +97,19 @@ void UmiDocumentEditPlanDestroy(UmiDocumentEditPlan *plan);
  * This is an owner-thread operation, not a cross-thread or filesystem lock. */
 UmiStatus UmiDocumentCoordinatorApplyEdit(UmiDocumentCoordinator *coordinator,
     UmiDocumentEditPlan *plan, const char *replacement, size_t bytes);
+
+/** Record a completed native typing group using its pre-action capture.
+ * Synchronize earlier typing, then PrepareEdit before the toolkit changes
+ * text. After it publishes the complete new draft and selection to the view,
+ * CommitTyping records one history step with the captured departure position.
+ * The store must still match the capture and the same view/path must exist.
+ * Read-only, changed store identity and invalid UTF-8 refuse the commit while
+ * leaving the visible typed draft available for recovery. Unchanged text adds
+ * no history. Success consumes the capture; destroy it afterwards. Use the
+ * owner thread. No file is saved and no toolkit undo stack is created. */
+UmiStatus UmiDocumentCoordinatorCommitTyping(UmiDocumentCoordinator *coordinator,
+    UmiDocumentEditPlan *capture);
+
 #ifdef __cplusplus
 }
 #endif

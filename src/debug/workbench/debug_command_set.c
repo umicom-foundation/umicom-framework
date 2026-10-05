@@ -18,6 +18,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug/workbench/debug_command_set.h"
+#include "../../base/value_archive_internal.h"
 #include <string.h>
 
 /*
@@ -92,3 +93,43 @@ int umi_debug_workbench_debug_command_set_valid(const UmiDebugWorkbenchDebugComm
 {
     return model != NULL && model->revision > 0U && umi_debug_workbench_command_bit(model->primary_command) != 0U;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiDebugWorkbenchDebugCommandSetArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x682fdda1ae2626d3);
+
+    return schema;
+}
+static size_t UmiDebugWorkbenchDebugCommandSetArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiDebugWorkbenchDebugCommandSetArchiveWrite(UmiArchiveWriter *writer, const UmiDebugWorkbenchDebugCommandSet *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled_commands);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->visible_commands);
+    UmiArchiveWriteSigned(writer, (int64_t)value->primary_command);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiDebugWorkbenchDebugCommandSetArchiveRead(UmiArchiveReader *reader, UmiDebugWorkbenchDebugCommandSet *value)
+{
+    value->enabled_commands = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->visible_commands = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->primary_command = (UmiDebugWorkbenchCommand)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiDebugWorkbenchDebugCommandSetArchiveValidate(const UmiDebugWorkbenchDebugCommandSet *value)
+{
+    return umi_debug_workbench_debug_command_set_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_debug_workbench_debug_command_set_archive_encode, umi_debug_workbench_debug_command_set_archive_decode,
+    UmiDebugWorkbenchDebugCommandSet, UmiDebugWorkbenchDebugCommandSetArchiveSchema, UmiDebugWorkbenchDebugCommandSetArchiveBound, UmiDebugWorkbenchDebugCommandSetArchiveWrite, UmiDebugWorkbenchDebugCommandSetArchiveRead, UmiDebugWorkbenchDebugCommandSetArchiveValidate)

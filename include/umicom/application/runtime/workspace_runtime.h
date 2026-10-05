@@ -76,6 +76,9 @@ UmiStatus umi_application_workspace_runtime_set_context(
     UmiApplicationWorkspaceRuntime *runtime,
     const char *group_id,
     const char *value);
+/* Remove a linked group from the cache and bound UI store as one operation. */
+UmiStatus umi_application_workspace_runtime_clear_context(
+    UmiApplicationWorkspaceRuntime *runtime, const char *group_id);
 /* Bind the product runtime to the existing Framework workbench. Once bound,
  * layout, panel and context changes are projected through canonical UI models. */
 UmiStatus umi_application_workspace_runtime_bind_workbench(

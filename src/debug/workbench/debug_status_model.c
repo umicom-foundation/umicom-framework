@@ -18,6 +18,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug/workbench/debug_status_model.h"
+#include "../../base/value_archive_internal.h"
 #include <string.h>
 
 /*
@@ -37,4 +38,61 @@ UmiStatus umi_debug_workbench_debug_status_model_update(UmiDebugWorkbenchDebugSt
  * service relies on it.
  */
 int umi_debug_workbench_debug_status_model_valid(const UmiDebugWorkbenchDebugStatusModel *model)
-{ return model != NULL && umi_debug_workbench_id_valid(model->session_id) && model->phase >= UMI_DEBUG_WORKBENCH_SESSION_IDLE && model->phase <= UMI_DEBUG_WORKBENCH_SESSION_FAILED && model->revision > 0U; }
+{
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (model == NULL) return 0;
+    if (memchr(model->session_id, '\0', sizeof(model->session_id)) == NULL) return 0;
+    if (memchr(model->stop_reason, '\0', sizeof(model->stop_reason)) == NULL) return 0;
+ return model != NULL && umi_debug_workbench_id_valid(model->session_id) && model->phase >= UMI_DEBUG_WORKBENCH_SESSION_IDLE && model->phase <= UMI_DEBUG_WORKBENCH_SESSION_FAILED && model->revision > 0U; }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiDebugWorkbenchDebugStatusModelArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x4abec1dba24c81af);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDebugWorkbenchDebugStatusModel *)0)->session_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDebugWorkbenchDebugStatusModel *)0)->stop_reason)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiDebugWorkbenchDebugStatusModelArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiDebugWorkbenchDebugStatusModel *)0)->session_id) - 1U +
+        8U + sizeof(((UmiDebugWorkbenchDebugStatusModel *)0)->stop_reason) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiDebugWorkbenchDebugStatusModelArchiveWrite(UmiArchiveWriter *writer, const UmiDebugWorkbenchDebugStatusModel *value)
+{
+    UmiArchiveWriteText(writer, value->session_id, sizeof(value->session_id));
+    UmiArchiveWriteText(writer, value->stop_reason, sizeof(value->stop_reason));
+    UmiArchiveWriteSigned(writer, (int64_t)value->phase);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->thread_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->frame_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->variable_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiDebugWorkbenchDebugStatusModelArchiveRead(UmiArchiveReader *reader, UmiDebugWorkbenchDebugStatusModel *value)
+{
+    UmiArchiveReadText(reader, value->session_id, sizeof(value->session_id));
+    UmiArchiveReadText(reader, value->stop_reason, sizeof(value->stop_reason));
+    value->phase = (UmiDebugWorkbenchSessionPhase)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->thread_count = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->frame_count = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->variable_count = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiDebugWorkbenchDebugStatusModelArchiveValidate(const UmiDebugWorkbenchDebugStatusModel *value)
+{
+    return umi_debug_workbench_debug_status_model_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_debug_workbench_debug_status_model_archive_encode, umi_debug_workbench_debug_status_model_archive_decode,
+    UmiDebugWorkbenchDebugStatusModel, UmiDebugWorkbenchDebugStatusModelArchiveSchema, UmiDebugWorkbenchDebugStatusModelArchiveBound, UmiDebugWorkbenchDebugStatusModelArchiveWrite, UmiDebugWorkbenchDebugStatusModelArchiveRead, UmiDebugWorkbenchDebugStatusModelArchiveValidate)

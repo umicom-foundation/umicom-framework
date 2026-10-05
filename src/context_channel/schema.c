@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/schema.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context schema from caller-provided values so later operations receive a
@@ -33,6 +34,14 @@ record->revision=1U;
 /* Check that context schema satisfies its contract before another service relies on it. */
 UmiStatus umi_context_schema_validate(const UmiContextSchema *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->schema_id, '\0', sizeof(record->schema_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->display_name, '\0', sizeof(record->display_name)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->description, '\0', sizeof(record->description)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -183,3 +192,58 @@ if(store->count!=0U)memcpy(out_records,store->items,store->count*sizeof(store->i
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextSchemaArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x6691ede005efa846);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextSchema *)0)->schema_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextSchema *)0)->display_name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextSchema *)0)->description)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextSchemaArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextSchema *)0)->schema_id) - 1U +
+        8U + sizeof(((UmiContextSchema *)0)->display_name) - 1U +
+        8U + sizeof(((UmiContextSchema *)0)->description) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextSchemaArchiveWrite(UmiArchiveWriter *writer, const UmiContextSchema *value)
+{
+    UmiArchiveWriteText(writer, value->schema_id, sizeof(value->schema_id));
+    UmiArchiveWriteText(writer, value->display_name, sizeof(value->display_name));
+    UmiArchiveWriteText(writer, value->description, sizeof(value->description));
+    UmiArchiveWriteSigned(writer, (int64_t)value->kind);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->schema_version);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->minimum_compatible_version);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->sensitive);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextSchemaArchiveRead(UmiArchiveReader *reader, UmiContextSchema *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->schema_id, sizeof(value->schema_id));
+    UmiArchiveReadText(reader, value->display_name, sizeof(value->display_name));
+    UmiArchiveReadText(reader, value->description, sizeof(value->description));
+    value->kind = (UmiContextKind)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->schema_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->minimum_compatible_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->sensitive = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextSchemaArchiveValidate(const UmiContextSchema *value)
+{
+    return umi_context_schema_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_schema_archive_encode, umi_context_schema_archive_decode,
+    UmiContextSchema, UmiContextSchemaArchiveSchema, UmiContextSchemaArchiveBound, UmiContextSchemaArchiveWrite, UmiContextSchemaArchiveRead, UmiContextSchemaArchiveValidate)

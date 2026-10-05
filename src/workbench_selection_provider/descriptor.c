@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_selection_provider/descriptor.h"
+#include "../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -129,6 +130,17 @@ UmiStatus umi_workbench_selection_provider_descriptor_set_routing(
 UmiStatus umi_workbench_selection_provider_descriptor_validate(
     const UmiWorkbenchSelectionProviderDescriptor *descriptor)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (descriptor == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(descriptor->provider_id, '\0', sizeof(descriptor->provider_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(descriptor->application_id, '\0', sizeof(descriptor->application_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(descriptor->panel_id, '\0', sizeof(descriptor->panel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(descriptor->display_name, '\0', sizeof(descriptor->display_name)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(descriptor->default_source_id, '\0', sizeof(descriptor->default_source_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(descriptor->default_group_id, '\0', sizeof(descriptor->default_group_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -150,3 +162,76 @@ UmiStatus umi_workbench_selection_provider_descriptor_validate(
     }
     return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiWorkbenchSelectionProviderDescriptorArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xba1dea2551ec0d0c);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWorkbenchSelectionProviderDescriptor *)0)->provider_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWorkbenchSelectionProviderDescriptor *)0)->application_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWorkbenchSelectionProviderDescriptor *)0)->panel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWorkbenchSelectionProviderDescriptor *)0)->display_name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWorkbenchSelectionProviderDescriptor *)0)->default_source_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWorkbenchSelectionProviderDescriptor *)0)->default_group_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiWorkbenchSelectionProviderDescriptorArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiWorkbenchSelectionProviderDescriptor *)0)->provider_id) - 1U +
+        8U + sizeof(((UmiWorkbenchSelectionProviderDescriptor *)0)->application_id) - 1U +
+        8U + sizeof(((UmiWorkbenchSelectionProviderDescriptor *)0)->panel_id) - 1U +
+        8U + sizeof(((UmiWorkbenchSelectionProviderDescriptor *)0)->display_name) - 1U +
+        8U + sizeof(((UmiWorkbenchSelectionProviderDescriptor *)0)->default_source_id) - 1U +
+        8U + sizeof(((UmiWorkbenchSelectionProviderDescriptor *)0)->default_group_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiWorkbenchSelectionProviderDescriptorArchiveWrite(UmiArchiveWriter *writer, const UmiWorkbenchSelectionProviderDescriptor *value)
+{
+    UmiArchiveWriteText(writer, value->provider_id, sizeof(value->provider_id));
+    UmiArchiveWriteText(writer, value->application_id, sizeof(value->application_id));
+    UmiArchiveWriteText(writer, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveWriteText(writer, value->display_name, sizeof(value->display_name));
+    UmiArchiveWriteText(writer, value->default_source_id, sizeof(value->default_source_id));
+    UmiArchiveWriteText(writer, value->default_group_id, sizeof(value->default_group_id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->kind);
+    UmiArchiveWriteSigned(writer, (int64_t)value->state);
+    UmiArchiveWriteSigned(writer, (int64_t)value->selection_kind);
+    UmiArchiveWriteSigned(writer, (int64_t)value->context_kind);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->capabilities);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+}
+static void UmiWorkbenchSelectionProviderDescriptorArchiveRead(UmiArchiveReader *reader, UmiWorkbenchSelectionProviderDescriptor *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->provider_id, sizeof(value->provider_id));
+    UmiArchiveReadText(reader, value->application_id, sizeof(value->application_id));
+    UmiArchiveReadText(reader, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveReadText(reader, value->display_name, sizeof(value->display_name));
+    UmiArchiveReadText(reader, value->default_source_id, sizeof(value->default_source_id));
+    UmiArchiveReadText(reader, value->default_group_id, sizeof(value->default_group_id));
+    value->kind = (UmiWorkbenchSelectionProviderKind)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->state = (UmiWorkbenchSelectionProviderRuntimeState)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->selection_kind = (UmiWorkbenchSelectionKind)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->context_kind = (UmiContextKind)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->capabilities = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiWorkbenchSelectionProviderDescriptorArchiveValidate(const UmiWorkbenchSelectionProviderDescriptor *value)
+{
+    return umi_workbench_selection_provider_descriptor_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_selection_provider_descriptor_archive_encode, umi_workbench_selection_provider_descriptor_archive_decode,
+    UmiWorkbenchSelectionProviderDescriptor, UmiWorkbenchSelectionProviderDescriptorArchiveSchema, UmiWorkbenchSelectionProviderDescriptorArchiveBound, UmiWorkbenchSelectionProviderDescriptorArchiveWrite, UmiWorkbenchSelectionProviderDescriptorArchiveRead, UmiWorkbenchSelectionProviderDescriptorArchiveValidate)

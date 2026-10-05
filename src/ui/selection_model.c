@@ -19,6 +19,8 @@
  * responsibility for higher-level threading and persistence policy.
  */
 #include "umicom/ui/selection_model.h"
+#include "../base/value_archive_internal.h"
+#include "../base/registry_archive_internal.h"
 #include "../base/snapshot_registry_internal.h"
 /* Every field is described with its actual C member size; no string scan can
  * escape a supplied array. Domain values and legacy size/version normalisation
@@ -286,3 +288,58 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_ui_selection_model_registry_edit_if_curren
  * this owner's existing row order and normalized fields remain authoritative. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_ui_selection_model_registry_read_page,
     UmiUiSelectionModelRegistry, UmiUiSelectionModelSnapshot, UMI_UI_SELECTION_MODEL_CAPACITY)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x3850ccaa5f9bef8a);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiSelectionModelSnapshot *)0)->id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiUiSelectionModelSnapshot *)0)->id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiUiSelectionModelSnapshot *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->selected);
+    UmiArchiveWriteSigned(writer, (int64_t)value->focused);
+    UmiArchiveWriteSigned(writer, (int64_t)value->anchor);
+    UmiArchiveWriteSigned(writer, (int64_t)value->order);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiUiSelectionModelSnapshot *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    value->selected = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->focused = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->anchor = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->order = (int32_t)UmiArchiveReadSigned(reader, INT32_MIN, INT32_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus ArchiveValidate(const UmiUiSelectionModelSnapshot *value)
+{
+    return umi_ui_selection_model_snapshot_validate(value, NULL);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_ui_selection_model_snapshot_archive_encode, umi_ui_selection_model_snapshot_archive_decode,
+    UmiUiSelectionModelSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Restoring this complete collection reuses its existing reviewed replacement
+ * rules. Decoding a saved value alone never changes a live registry. */
+UMI_DEFINE_REGISTRY_ARCHIVE(umi_ui_selection_model_registry_archive_encode, umi_ui_selection_model_registry_archive_restore,
+    UmiUiSelectionModelRegistry, UmiUiSelectionModelSnapshot, UMI_UI_SELECTION_MODEL_CAPACITY, ArchiveSchema,
+    umi_ui_selection_model_snapshot_archive_encode, umi_ui_selection_model_snapshot_archive_decode, umi_ui_selection_model_registry_replace_if_current)

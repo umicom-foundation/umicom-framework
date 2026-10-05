@@ -16,6 +16,7 @@
 #ifndef UMICOM_CROSS_APPLICATION_PANEL_CONTEXT_BINDING_H
 #define UMICOM_CROSS_APPLICATION_PANEL_CONTEXT_BINDING_H
 #include "umicom/cross_application_panel/types.h"
+#include "umicom/base/value_archive.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -78,6 +79,17 @@ const UmiPanelContextBinding *umi_panel_context_binding_store_find_const(const U
  * client applications.
  */
 UmiStatus umi_panel_context_binding_store_snapshot(const UmiPanelContextBindingStore *store,UmiPanelContextBinding *records,size_t capacity,size_t *out_count);
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_panel_context_binding_archive_encode(const UmiPanelContextBinding *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_panel_context_binding_archive_decode(const void *bytes, size_t byte_count,
+    UmiPanelContextBinding *value);
+
 #ifdef __cplusplus
 }
 #endif

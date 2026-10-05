@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/cross_application_panel/contribution.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise panel contribution from caller-provided values so later operations receive a
@@ -36,6 +37,17 @@ record->revision=1U;
  */
 UmiStatus umi_panel_contribution_validate(const UmiPanelContribution *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->contribution_id, '\0', sizeof(record->contribution_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->application_id, '\0', sizeof(record->application_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->panel_id, '\0', sizeof(record->panel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->menu_path, '\0', sizeof(record->menu_path)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->command_id, '\0', sizeof(record->command_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->icon_resource_id, '\0', sizeof(record->icon_resource_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
 /*
  * Protect caller-owned memory by checking that required state is available before it is
  * used.
@@ -176,3 +188,64 @@ if(store->count!=0U)memcpy(records,store->items,store->count*sizeof(store->items
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiPanelContributionArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x7582304acdafb4d5);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelContribution *)0)->contribution_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelContribution *)0)->application_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelContribution *)0)->panel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelContribution *)0)->menu_path)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelContribution *)0)->command_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelContribution *)0)->icon_resource_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiPanelContributionArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiPanelContribution *)0)->contribution_id) - 1U +
+        8U + sizeof(((UmiPanelContribution *)0)->application_id) - 1U +
+        8U + sizeof(((UmiPanelContribution *)0)->panel_id) - 1U +
+        8U + sizeof(((UmiPanelContribution *)0)->menu_path) - 1U +
+        8U + sizeof(((UmiPanelContribution *)0)->command_id) - 1U +
+        8U + sizeof(((UmiPanelContribution *)0)->icon_resource_id) - 1U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiPanelContributionArchiveWrite(UmiArchiveWriter *writer, const UmiPanelContribution *value)
+{
+    UmiArchiveWriteText(writer, value->contribution_id, sizeof(value->contribution_id));
+    UmiArchiveWriteText(writer, value->application_id, sizeof(value->application_id));
+    UmiArchiveWriteText(writer, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveWriteText(writer, value->menu_path, sizeof(value->menu_path));
+    UmiArchiveWriteText(writer, value->command_id, sizeof(value->command_id));
+    UmiArchiveWriteText(writer, value->icon_resource_id, sizeof(value->icon_resource_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->priority);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiPanelContributionArchiveRead(UmiArchiveReader *reader, UmiPanelContribution *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->contribution_id, sizeof(value->contribution_id));
+    UmiArchiveReadText(reader, value->application_id, sizeof(value->application_id));
+    UmiArchiveReadText(reader, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveReadText(reader, value->menu_path, sizeof(value->menu_path));
+    UmiArchiveReadText(reader, value->command_id, sizeof(value->command_id));
+    UmiArchiveReadText(reader, value->icon_resource_id, sizeof(value->icon_resource_id));
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->priority = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiPanelContributionArchiveValidate(const UmiPanelContribution *value)
+{
+    return umi_panel_contribution_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_panel_contribution_archive_encode, umi_panel_contribution_archive_decode,
+    UmiPanelContribution, UmiPanelContributionArchiveSchema, UmiPanelContributionArchiveBound, UmiPanelContributionArchiveWrite, UmiPanelContributionArchiveRead, UmiPanelContributionArchiveValidate)

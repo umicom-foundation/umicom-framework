@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/context_preference.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context preference from caller-provided values so later operations receive a
@@ -134,6 +135,15 @@ UmiStatus umi_context_preference_record_failure(UmiContextPreference *state,UmiS
  */
 UmiStatus umi_context_preference_validate(const UmiContextPreference *state)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (state == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->preference_id, '\0', sizeof(state->preference_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->user_id, '\0', sizeof(state->user_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->default_colour, '\0', sizeof(state->default_colour)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->default_channel, '\0', sizeof(state->default_channel)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -161,3 +171,68 @@ bool umi_context_preference_covers_sequence(const UmiContextPreference *state,ui
 {
     return state!=NULL&&state->item_count!=0U&&sequence>=state->first_sequence&&sequence<=state->last_sequence;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextPreferenceArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x4a1fa5a47da5cbbd);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextPreference *)0)->preference_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextPreference *)0)->user_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextPreference *)0)->default_colour)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextPreference *)0)->default_channel)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextPreferenceArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextPreference *)0)->preference_id) - 1U +
+        8U + sizeof(((UmiContextPreference *)0)->user_id) - 1U +
+        8U + sizeof(((UmiContextPreference *)0)->default_colour) - 1U +
+        8U + sizeof(((UmiContextPreference *)0)->default_channel) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextPreferenceArchiveWrite(UmiArchiveWriter *writer, const UmiContextPreference *value)
+{
+    UmiArchiveWriteText(writer, value->preference_id, sizeof(value->preference_id));
+    UmiArchiveWriteText(writer, value->user_id, sizeof(value->user_id));
+    UmiArchiveWriteText(writer, value->default_colour, sizeof(value->default_colour));
+    UmiArchiveWriteText(writer, value->default_channel, sizeof(value->default_channel));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->first_sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->last_sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->item_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->failure_count);
+    UmiArchiveWriteSigned(writer, (int64_t)value->status);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextPreferenceArchiveRead(UmiArchiveReader *reader, UmiContextPreference *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->preference_id, sizeof(value->preference_id));
+    UmiArchiveReadText(reader, value->user_id, sizeof(value->user_id));
+    UmiArchiveReadText(reader, value->default_colour, sizeof(value->default_colour));
+    UmiArchiveReadText(reader, value->default_channel, sizeof(value->default_channel));
+    value->first_sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->last_sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->item_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->failure_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->status = (UmiStatus)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextPreferenceArchiveValidate(const UmiContextPreference *value)
+{
+    return umi_context_preference_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_preference_archive_encode, umi_context_preference_archive_decode,
+    UmiContextPreference, UmiContextPreferenceArchiveSchema, UmiContextPreferenceArchiveBound, UmiContextPreferenceArchiveWrite, UmiContextPreferenceArchiveRead, UmiContextPreferenceArchiveValidate)

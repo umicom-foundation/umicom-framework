@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/channel.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context channel from caller-provided values so later operations receive a
@@ -33,6 +34,14 @@ record->revision=1U;
 /* Check that context channel satisfies its contract before another service relies on it. */
 UmiStatus umi_context_channel_validate(const UmiContextChannel *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->channel_id, '\0', sizeof(record->channel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->display_name, '\0', sizeof(record->display_name)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->schema_id, '\0', sizeof(record->schema_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -183,3 +192,61 @@ if(store->count!=0U)memcpy(out_records,store->items,store->count*sizeof(store->i
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextChannelArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xa86bb92e690cd144);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextChannel *)0)->channel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextChannel *)0)->display_name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextChannel *)0)->schema_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextChannelArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextChannel *)0)->channel_id) - 1U +
+        8U + sizeof(((UmiContextChannel *)0)->display_name) - 1U +
+        8U + sizeof(((UmiContextChannel *)0)->schema_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextChannelArchiveWrite(UmiArchiveWriter *writer, const UmiContextChannel *value)
+{
+    UmiArchiveWriteText(writer, value->channel_id, sizeof(value->channel_id));
+    UmiArchiveWriteText(writer, value->display_name, sizeof(value->display_name));
+    UmiArchiveWriteText(writer, value->schema_id, sizeof(value->schema_id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->kind);
+    UmiArchiveWriteSigned(writer, (int64_t)value->colour);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->persistent);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->last_sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextChannelArchiveRead(UmiArchiveReader *reader, UmiContextChannel *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->channel_id, sizeof(value->channel_id));
+    UmiArchiveReadText(reader, value->display_name, sizeof(value->display_name));
+    UmiArchiveReadText(reader, value->schema_id, sizeof(value->schema_id));
+    value->kind = (UmiContextKind)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->colour = (UmiContextChannelColour)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->persistent = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->last_sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextChannelArchiveValidate(const UmiContextChannel *value)
+{
+    return umi_context_channel_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_channel_archive_encode, umi_context_channel_archive_decode,
+    UmiContextChannel, UmiContextChannelArchiveSchema, UmiContextChannelArchiveBound, UmiContextChannelArchiveWrite, UmiContextChannelArchiveRead, UmiContextChannelArchiveValidate)

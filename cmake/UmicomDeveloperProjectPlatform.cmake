@@ -446,6 +446,26 @@ function(umicom_attach_developer_dialogs_gtk4)
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers(umicom-developer-dialog-gtk4-test)
         endif()
+        # Lifetime scenarios use the actual forms and their public callback API.
+        add_executable(umicom-developer-settings-lifetime-test
+            "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../tests/developer_project/test_settings_lifetime_gtk4.c")
+        target_link_libraries(umicom-developer-settings-lifetime-test PRIVATE Umicom::ui_gtk4)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(umicom-developer-settings-lifetime-test)
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(umicom-developer-settings-lifetime-test)
+        endif()
+        foreach(settingsCase IN ITEMS stage-fields mixed-fields owner-destroy parent-destroy
+                retained cancel recursive retry notify-close project-owner-destroy project-retained project-cancel)
+            add_test(NAME framework.ide_workflow.settings.gtk4.${settingsCase}
+                COMMAND umicom-developer-settings-lifetime-test ${settingsCase})
+            set_tests_properties(framework.ide_workflow.settings.gtk4.${settingsCase} PROPERTIES
+                SKIP_RETURN_CODE 77 TIMEOUT 60 LABELS "framework;ide-workflow;gtk4;ownership")
+        endforeach()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-developer-settings-lifetime-test)
+        endif()
         set(dialogTestDirectory "${CMAKE_CURRENT_BINARY_DIR}/qualification/developer_dialog")
         file(MAKE_DIRECTORY "${dialogTestDirectory}")
         add_test(NAME framework.ide_workflow.developer_dialog.gtk4 COMMAND umicom-developer-dialog-gtk4-test)

@@ -19,6 +19,8 @@
  * responsibility for higher-level threading and persistence policy.
  */
 #include "umicom/designer/signal_binding.h"
+#include "../base/value_archive_internal.h"
+#include "../base/registry_archive_internal.h"
 #include "../base/snapshot_registry_internal.h"
 
 /* Validate every bounded text member before lookup. Value-only snapshot
@@ -244,3 +246,65 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_designer_signal_binding_registry_edit_if_c
  * this owner's existing row order and normalized fields remain authoritative. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_designer_signal_binding_registry_read_page,
     UmiDesignerSignalBindingRegistry, UmiDesignerSignalBindingSnapshot, UMI_DESIGNER_SIGNAL_BINDING_CAPACITY)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x06c5cbb9844886bf);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDesignerSignalBindingSnapshot *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDesignerSignalBindingSnapshot *)0)->node_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDesignerSignalBindingSnapshot *)0)->signal_name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDesignerSignalBindingSnapshot *)0)->command_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDesignerSignalBindingSnapshot *)0)->argument)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiDesignerSignalBindingSnapshot *)0)->id) - 1U +
+        8U + sizeof(((UmiDesignerSignalBindingSnapshot *)0)->node_id) - 1U +
+        8U + sizeof(((UmiDesignerSignalBindingSnapshot *)0)->signal_name) - 1U +
+        8U + sizeof(((UmiDesignerSignalBindingSnapshot *)0)->command_id) - 1U +
+        8U + sizeof(((UmiDesignerSignalBindingSnapshot *)0)->argument) - 1U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiDesignerSignalBindingSnapshot *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->node_id, sizeof(value->node_id));
+    UmiArchiveWriteText(writer, value->signal_name, sizeof(value->signal_name));
+    UmiArchiveWriteText(writer, value->command_id, sizeof(value->command_id));
+    UmiArchiveWriteText(writer, value->argument, sizeof(value->argument));
+    UmiArchiveWriteSigned(writer, (int64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiDesignerSignalBindingSnapshot *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->node_id, sizeof(value->node_id));
+    UmiArchiveReadText(reader, value->signal_name, sizeof(value->signal_name));
+    UmiArchiveReadText(reader, value->command_id, sizeof(value->command_id));
+    UmiArchiveReadText(reader, value->argument, sizeof(value->argument));
+    value->enabled = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus ArchiveValidate(const UmiDesignerSignalBindingSnapshot *value)
+{
+    return umi_designer_signal_binding_snapshot_validate(value, NULL);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_designer_signal_binding_snapshot_archive_encode, umi_designer_signal_binding_snapshot_archive_decode,
+    UmiDesignerSignalBindingSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Restoring this complete collection reuses its existing reviewed replacement
+ * rules. Decoding a saved value alone never changes a live registry. */
+UMI_DEFINE_REGISTRY_ARCHIVE(umi_designer_signal_binding_registry_archive_encode, umi_designer_signal_binding_registry_archive_restore,
+    UmiDesignerSignalBindingRegistry, UmiDesignerSignalBindingSnapshot, UMI_DESIGNER_SIGNAL_BINDING_CAPACITY, ArchiveSchema,
+    umi_designer_signal_binding_snapshot_archive_encode, umi_designer_signal_binding_snapshot_archive_decode, umi_designer_signal_binding_registry_replace_if_current)

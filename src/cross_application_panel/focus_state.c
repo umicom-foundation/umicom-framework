@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/cross_application_panel/focus_state.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise panel focus state from caller-provided values so later operations receive a
@@ -33,6 +34,13 @@ record->revision=1U;
 /* Check that panel focus state satisfies its contract before another service relies on it. */
 UmiStatus umi_panel_focus_state_validate(const UmiPanelFocusState *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->instance_id, '\0', sizeof(record->instance_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->previous_instance_id, '\0', sizeof(record->previous_instance_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
 /*
  * Protect caller-owned memory by checking that required state is available before it is
  * used.
@@ -165,3 +173,51 @@ if(store->count!=0U)memcpy(records,store->items,store->count*sizeof(store->items
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiPanelFocusStateArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xa03d86c9de74bb09);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelFocusState *)0)->instance_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelFocusState *)0)->previous_instance_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiPanelFocusStateArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiPanelFocusState *)0)->instance_id) - 1U +
+        8U + sizeof(((UmiPanelFocusState *)0)->previous_instance_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiPanelFocusStateArchiveWrite(UmiArchiveWriter *writer, const UmiPanelFocusState *value)
+{
+    UmiArchiveWriteText(writer, value->instance_id, sizeof(value->instance_id));
+    UmiArchiveWriteText(writer, value->previous_instance_id, sizeof(value->previous_instance_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->reason);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->focused);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->timestamp_ms);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiPanelFocusStateArchiveRead(UmiArchiveReader *reader, UmiPanelFocusState *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->instance_id, sizeof(value->instance_id));
+    UmiArchiveReadText(reader, value->previous_instance_id, sizeof(value->previous_instance_id));
+    value->reason = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->focused = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->timestamp_ms = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiPanelFocusStateArchiveValidate(const UmiPanelFocusState *value)
+{
+    return umi_panel_focus_state_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_panel_focus_state_archive_encode, umi_panel_focus_state_archive_decode,
+    UmiPanelFocusState, UmiPanelFocusStateArchiveSchema, UmiPanelFocusStateArchiveBound, UmiPanelFocusStateArchiveWrite, UmiPanelFocusStateArchiveRead, UmiPanelFocusStateArchiveValidate)

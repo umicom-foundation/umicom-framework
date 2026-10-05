@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/mosaic/designer_selection.h"
+#include "../../base/value_archive_internal.h"
 #include <string.h>
 
 /*
@@ -53,6 +54,13 @@ UmiStatus umi_ui_mosaic_designer_selection_bind(UmiUiMosaicDesignerSelection *va
  * relies on it.
  */
 UmiStatus umi_ui_mosaic_designer_selection_validate(const UmiUiMosaicDesignerSelection *value) {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(value->workspace_id, '\0', sizeof(value->workspace_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(value->active_id, '\0', sizeof(value->active_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -82,3 +90,50 @@ UmiStatus umi_ui_mosaic_designer_selection_advance(UmiUiMosaicDesignerSelection 
     value->revision += 1U;
     return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiUiMosaicDesignerSelectionArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x322dbd5a85faa774);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiMosaicDesignerSelection *)0)->workspace_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiMosaicDesignerSelection *)0)->active_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiUiMosaicDesignerSelectionArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiUiMosaicDesignerSelection *)0)->workspace_id) - 1U +
+        8U + sizeof(((UmiUiMosaicDesignerSelection *)0)->active_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiUiMosaicDesignerSelectionArchiveWrite(UmiArchiveWriter *writer, const UmiUiMosaicDesignerSelection *value)
+{
+    UmiArchiveWriteText(writer, value->workspace_id, sizeof(value->workspace_id));
+    UmiArchiveWriteText(writer, value->active_id, sizeof(value->active_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->selection_count);
+    UmiArchiveWriteSigned(writer, (int64_t)value->mode);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->valid);
+}
+static void UmiUiMosaicDesignerSelectionArchiveRead(UmiArchiveReader *reader, UmiUiMosaicDesignerSelection *value)
+{
+    UmiArchiveReadText(reader, value->workspace_id, sizeof(value->workspace_id));
+    UmiArchiveReadText(reader, value->active_id, sizeof(value->active_id));
+    value->revision = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->selection_count = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->mode = (UmiUiMosaicEditMode)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->valid = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiUiMosaicDesignerSelectionArchiveValidate(const UmiUiMosaicDesignerSelection *value)
+{
+    return umi_ui_mosaic_designer_selection_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_ui_mosaic_designer_selection_archive_encode, umi_ui_mosaic_designer_selection_archive_decode,
+    UmiUiMosaicDesignerSelection, UmiUiMosaicDesignerSelectionArchiveSchema, UmiUiMosaicDesignerSelectionArchiveBound, UmiUiMosaicDesignerSelectionArchiveWrite, UmiUiMosaicDesignerSelectionArchiveRead, UmiUiMosaicDesignerSelectionArchiveValidate)

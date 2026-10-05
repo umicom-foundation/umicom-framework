@@ -33,6 +33,11 @@ UmiStatus UmiGtk4BuildSettingsDialogCreate(GtkWindow *parent,
     const UmiBuildProfile *profile, int trusted, UmiGtk4BuildSettingsApplied onApplied,
     void *context, UmiGtk4DeveloperDialog **outDialog);
 /** Accept/Cancel hides the form. The owner retains it until Destroy. */
+/** Destroy may be called from an acceptance callback on the GTK thread. Clear
+ * the owner's stored handle at that point; the callback's borrowed result stays
+ * valid until it returns. Hidden forms and controls retained after destruction
+ * cannot accept another result. Recursive acceptance is ignored. A failed
+ * acceptance leaves a visible form available for correction and retry. */
 void UmiGtk4DeveloperDialogDestroy(UmiGtk4DeveloperDialog *dialog);
 #ifdef __cplusplus
 }

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Choose and review a program launch</title><style>body{font:17px/1.65 system-ui;max-width:980px;margin:3rem auto;padding:0 24px;color:#173747;background:#f8fbfc}h1,h2{line-height:1.25}code{font-family:Consolas,monospace}td,th{border:1px solid #c8d7df;padding:12px;text-align:left}table{border-collapse:collapse;width:100%}a{color:#075c89}</style></head><body><main>
+<h1>Choose and review a program launch</h1>
+<p>Project Settings separates three things: the executable to start, the folder it starts in, and the arguments it receives. Framework can describe these values before you save them. Reviewing settings does not build the project, start a debugger or run the application.</p>
+<h2>Select the program and its working folder</h2>
+<ol>
+<li>Open your project in Studio, then choose <strong>Project Settings</strong> in the Build panel. The project folder identifies the open project and is read-only in this form.</li>
+<li>Choose <strong>Choose program file…</strong> and select the executable produced by your build. On Windows this is normally an <code>.exe</code> file. The chooser copies its complete local path into <strong>Program to run</strong>; it does not start it. If the file has not been built yet, enter its expected project-relative path manually, such as <code>build/bin/notes.exe</code>.</li>
+<li>Choose <strong>Choose working folder…</strong> to use an existing local folder for application data. Leave <strong>Program working folder</strong> empty to start in the project root. You may also enter a project-relative folder such as <code>sample data</code>. The executable path is independent of this folder.</li>
+<li>Use either the single literal argument field or the argument-list field. In the list, spaces separate values and quotes keep spaces within a value. <code>""</code> supplies an empty argument. Clear the single argument before using the list.</li>
+<li>Choose <strong>Review launch settings</strong>. Read the Run program, native Debug program, working folder and numbered argument values. Backslashes, quotes and control characters in arguments are escaped for display so each value has a clear boundary. This description is not a shell command.</li>
+<li>Choose <strong>Apply Settings</strong> when the values are correct, or Cancel to discard the form edits. Build and Run/Debug remain separate application actions with their existing trust checks and build workflow.</li>
+</ol>
+<p>Changing a launch field makes the description out of date. Review again before relying on it. A chooser result cannot replace a field that was edited while that chooser was open. A remote URI that has no local filesystem path is rejected; mounted remote storage may still appear as a local path.</p>
+<h2>Make executable lookup explicit</h2>
+<table><thead><tr><th>Program field</th><th>Run</th><th>Native Debug</th></tr></thead><tbody>
+<tr><td>A complete local path selected in the chooser</td><td>Uses that explicit path.</td><td>Uses that explicit path.</td></tr>
+<tr><td><code>build/bin/notes</code> or <code>./notes</code></td><td>Resolves from the project root.</td><td>Resolves from the project root.</td></tr>
+<tr><td>A bare name such as <code>notes</code></td><td>Preserves the existing operating-system program lookup. The actual search order depends on the platform.</td><td>Preserves the existing project-relative file lookup.</td></tr>
+</tbody></table>
+<p>The review highlights this last difference. To choose the same file for both actions, select its absolute path or enter a path beginning with <code>./</code>. Framework does not guess which executable a bare name was intended to mean. On Windows, use a complete drive or network path; ambiguous spellings such as <code>C:notes.exe</code> and a rooted path without a drive are rejected by launch planning.</p>
+<h2>What the review does and does not establish</h2>
+<p>The review validates stored field bounds, argument syntax and path resolution. Control characters in paths are rejected so they cannot masquerade as extra review fields. It performs no filesystem read and no process launch. It does not prove that a file exists, is executable, matches the debugger architecture, has debug symbols, or has permission to access its working folder. A selected file can also change before launch. Relative paths and parent-folder aliases are not a security boundary.</p>
+<p>The plan stores argument values in its own memory. Native Debug can still reject values that exceed its adapter protocol limits even when a Run description succeeds. Build tools continue using the project root for preset discovery; this working folder applies to the launched program.</p>
+<h2>Recover from a problem</h2>
+<ol>
+<li>If review reports a missing program, choose an executable or enter its expected path. Do not put the program and arguments together in the program field.</li>
+<li>If argument review fails, check closing quotes, field lengths and whether both argument fields are filled. Clear the conflicting field, then review again.</li>
+<li>If the native chooser is cancelled or fails, existing field text is retained. You can enter paths manually. Choosing a path never silently saves the form.</li>
+<li>If launching fails after a successful review, check the build output, actual executable path, working-folder existence and permissions. For native Debug, also check the selected debugger, executable format and debug information.</li>
+<li>If a chooser is still open, finish or cancel it before applying settings. Closing the form cancels its pending chooser and prevents late results from editing a retired form.</li>
+</ol>
+<h2>Extend the shared behaviour</h2>
+<p><code>UmiBuildLaunchPlanCreate</code> belongs to the build library and accepts an already absolute project root. Its result owns all strings and can be copied without rebinding pointers. It leaves caller output unchanged on failure. Use the shared description when adding another launch surface, and keep its compatibility distinction between unqualified Run names and project-relative debugger files visible.</p>
+<p><code>UmiBuildLaunchSelectPath</code> copies an explicit absolute selection into one profile field. It does not save the profile or grant trust. The native form retains its controller until the asynchronous chooser finishes, rejects stale selections and guards nested GTK notifications. Use the matching completion operation for file and folder selection; see the <a href="https://docs.gtk.org/gtk4/method.FileDialog.open.html">GTK file chooser API</a> and <a href="https://docs.gtk.org/gtk4/method.FileDialog.select_folder.html">folder chooser API</a>.</p>
+<p>For build-stage choices and saved-folder behaviour, read <a href="project-stage-presets.html">Choose project presets and a program working folder</a>.</p>
+</main><footer><p>Umicom Foundation · Sammy Hegab · MIT</p></footer></body></html>

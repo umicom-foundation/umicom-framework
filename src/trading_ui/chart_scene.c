@@ -8,6 +8,8 @@
 
 #include "umicom/trading_ui/chart_scene.h"
 #include "umicom/chart/indicator.h"
+#include "umicom/chart/candle_study.h"
+#include "umicom/chart/volume_profile.h"
 #include "umicom/chart/drawing_tools.h"
 #include "umicom/trading/chart_timeframe.h"
 #include <math.h>
@@ -56,6 +58,58 @@ static UmiStatus ChartLevel(UmiChartRenderScene *scene, const UmiChartPlotViewpo
     if (status == UMI_STATUS_OK) status = umi_chart_render_scene_add_text(scene,
         (UmiChartRenderPoint){v->area.x + 8, y - 4}, label, color);
     return status;
+}
+/* Compute all retained candles before projection. This keeps a rolling
+ * window stable as the visible chart is zoomed or panned. Missing volume breaks
+ * a VWMA segment; it never becomes a zero-price line or a bridge over a gap. */
+static UmiStatus CandleStudy(UmiChartRenderScene *scene, const UmiChartPlotViewport *viewport,
+    const UmiChartCandle *candles, size_t count, UmiTradingChartStudy choice, size_t period)
+{
+    UmiChartCandleStudyKind kind=choice==UMI_TRADING_CHART_STUDY_VOLUME_WEIGHTED ? UMI_CHART_CANDLE_STUDY_VOLUME_WEIGHTED :
+        choice==UMI_TRADING_CHART_STUDY_BOLLINGER ? UMI_CHART_CANDLE_STUDY_BOLLINGER : UMI_CHART_CANDLE_STUDY_DONCHIAN;
+    UmiChartCandleStudy *study=calloc(1U,sizeof(*study));
+    if (study==NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    UmiStatus status=UmiChartCandleStudyCompute(candles,count,kind,period,study);
+    UmiChartColor middle={0.98,0.72,0.20,1.0}, edge={0.40,0.72,0.94,1.0};
+    for (size_t i=1U;status==UMI_STATUS_OK && i<study->count;++i) {
+        const UmiChartStudySample *a=&study->samples[i-1U], *b=&study->samples[i];
+        if (!a->valid || !b->valid) continue;
+        status=ChartSegment(scene,viewport,(UmiChartPoint){a->time_ms,a->centre},(UmiChartPoint){b->time_ms,b->centre},middle,1.7);
+        if (status==UMI_STATUS_OK && study->bands) status=ChartSegment(scene,viewport,
+            (UmiChartPoint){a->time_ms,a->lower},(UmiChartPoint){b->time_ms,b->lower},edge,1.2);
+        if (status==UMI_STATUS_OK && study->bands) status=ChartSegment(scene,viewport,
+            (UmiChartPoint){a->time_ms,a->upper},(UmiChartPoint){b->time_ms,b->upper},edge,1.2);
+    }
+    free(study); return status;
+}
+/* Use the entire retained candle set, then clip only the drawing. Panning
+ * does not recompute buckets from a different subset. The label makes the
+ * close-volume approximation visible beside the chart, not only in a manual. */
+static UmiStatus VolumeProfile(UmiChartRenderScene *scene,const UmiChartPlotViewport *v,
+    const UmiChartCandle *candles,size_t count,size_t bins)
+{
+    UmiChartVolumeProfile *profile=calloc(1U,sizeof(*profile)); if(profile==NULL)return UMI_STATUS_OUT_OF_MEMORY;
+    UmiStatus status=UmiChartVolumeProfileFromCandles(candles,count,bins,0.70,profile);
+    UmiChartColor area={0.30,0.56,0.90,0.50}, outside={0.55,0.60,0.68,0.32}, control={0.98,0.72,0.20,1.0};
+    if(status==UMI_STATUS_OK)status=umi_chart_render_scene_add_text(scene,(UmiChartRenderPoint){v->area.x+8,v->area.y+14},
+        profile->has_volume ? "Volume at bar close (approx.) | retained candles | 70% area" : "Volume profile: no positive volume",control);
+    for(size_t i=0U;status==UMI_STATUS_OK && profile->has_volume && i<profile->bin_count;++i) {
+        const UmiChartVolumeBin *bin=&profile->bins[i];
+        if(bin->volume==0.0 || bin->upper<v->minimum_value || bin->lower>v->maximum_value)continue;
+        double top,bottom;
+        status=umi_chart_plot_map_value(v,fmin(bin->upper,v->maximum_value),&top);
+        if(status==UMI_STATUS_OK)status=umi_chart_plot_map_value(v,fmax(bin->lower,v->minimum_value),&bottom);
+        if(status!=UMI_STATUS_OK)break;
+        if(top==bottom) { top=fmax(v->area.y,top-2.0); bottom=fmin(v->area.y+v->area.height,bottom+2.0); }
+        double width=bin->volume/profile->bins[profile->control_bin].volume*v->area.width*0.25;
+        if(width>0.0 && bottom>top) status=umi_chart_render_scene_add_filled_rectangle(scene,
+            (UmiChartRenderRectangle){v->area.x+v->area.width-width,top,width,bottom-top},
+            i>=profile->area_first && i<=profile->area_last ? area : outside);
+    }
+    if(status==UMI_STATUS_OK && profile->has_volume)status=ChartLevel(scene,v,profile->control_price,"Profile control",control);
+    if(status==UMI_STATUS_OK && profile->has_volume)status=ChartLevel(scene,v,profile->area_low,"Profile area low",area);
+    if(status==UMI_STATUS_OK && profile->has_volume)status=ChartLevel(scene,v,profile->area_high,"Profile area high",area);
+    free(profile); return status;
 }
 UmiStatus UmiTradingChartBuildScene(UmiTradingWorkspace *workspace,
     UmiTradingChartSceneInfo *out_info, UmiChartRenderScene **out_scene)
@@ -112,8 +166,14 @@ UmiStatus UmiTradingChartBuildScene(UmiTradingWorkspace *workspace,
     UmiChartRenderScene *scene = NULL;
     UmiChartSeries *input = NULL, *output = NULL;
     /* Four commands per candle plus bounded levels, registry drawings and axes. */
+/* Reserve enough commands for candles, volume and three complete study lines.
+ * The previous implementation is retained for engineering review. */
+#if 0
     status = umi_chart_render_scene_create(count * 4U + drawing_count * 2U +
         UMI_TRADING_MAX_ORDERS * 4U + 160U, &scene);
+#endif
+    status = umi_chart_render_scene_create(count * 8U + drawing_count * 2U +
+        UMI_TRADING_MAX_ORDERS * 4U + 160U + UMI_CHART_VOLUME_PROFILE_MAX_BINS + 8U, &scene);
     if (status != UMI_STATUS_OK) return status;
 #define CHART_TRY(call) do { status = (call); if (status != UMI_STATUS_OK) goto done; } while (0)
     CHART_TRY(umi_chart_render_scene_set_coordinate_size(scene, UMI_TRADING_CHART_WIDTH, UMI_TRADING_CHART_HEIGHT));
@@ -157,7 +217,20 @@ UmiStatus UmiTradingChartBuildScene(UmiTradingWorkspace *workspace,
             (UmiChartRenderRectangle){fmax(18, fmin(894 - bar_width, x - bar_width / 2)), 522 - height, bar_width, height},
             candles[i].close >= candles[i].open ? style.positive_color : style.negative_color));
     }
+/* Candle studies use OHLCV directly; the close-series path continues serving SMA and EMA.
+ * The previous implementation is retained for engineering review. */
+#if 0
     if (snapshot.chart_study != UMI_TRADING_CHART_STUDY_NONE) {
+#endif
+    if (snapshot.chart_study >= UMI_TRADING_CHART_STUDY_VOLUME_WEIGHTED &&
+        snapshot.chart_study <= UMI_TRADING_CHART_STUDY_DONCHIAN) {
+        CHART_TRY(CandleStudy(scene,&info.price,candles,count,snapshot.chart_study,snapshot.chart_study_period));
+    }
+    if (snapshot.chart_study == UMI_TRADING_CHART_STUDY_VOLUME_PROFILE) {
+        CHART_TRY(VolumeProfile(scene,&info.price,candles,count,snapshot.chart_study_period));
+    }
+    if (snapshot.chart_study == UMI_TRADING_CHART_STUDY_SIMPLE_AVERAGE ||
+        snapshot.chart_study == UMI_TRADING_CHART_STUDY_EXPONENTIAL_AVERAGE) {
         input = calloc(1, sizeof *input); output = calloc(1, sizeof *output);
         if (input == NULL || output == NULL) { status = UMI_STATUS_OUT_OF_MEMORY; goto done; }
         CHART_TRY(umi_chart_series_init(input, "close", UMI_CHART_LINE));

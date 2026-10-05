@@ -72,6 +72,11 @@ const char *umi_application_context_binding_get(
 UmiStatus umi_application_context_binding_clear(
     UmiApplicationContextBindingStore *store,
     const char *group_id);
+/* Validate the public value store before traversing its bounded entries. Invalid
+ * counts, unterminated text and duplicate group names are rejected without edits. */
+UmiStatus umi_application_context_binding_validate(
+    const UmiApplicationContextBindingStore *store);
+
 /* Copy current context-link values into the canonical UI context store.
  * This keeps command/menu expressions and linked application panels on one context authority. */
 UmiStatus umi_application_context_binding_apply_to_ui(

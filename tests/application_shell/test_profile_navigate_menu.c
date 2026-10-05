@@ -36,6 +36,9 @@ int main(void)
      * assert(profile->contribution_count == 9U);
      */
     /* Two adjacent-source commands join the existing ten contributions. */    // assert(profile->contribution_count == 10U);    assert(profile->contribution_count == 12U);
+    /* Keep the earlier count notes above. The assertion below is executable;
+     * the prior inline comment unintentionally swallowed its count check. */
+    assert(profile->contribution_count == 12U);
     assert(umi_application_shell_profile_validate(profile) == UMI_STATUS_OK);
 
     assert(umi_application_shell_registry_create(&registry) == UMI_STATUS_OK);
@@ -48,6 +51,14 @@ int main(void)
         "umicom.shell.navigate-menu.root",
         &contribution) == UMI_STATUS_OK);
 
+    /* A shell contribution must wait for the document host's availability. */
+    assert(umi_application_shell_registry_find(registry,
+        "umicom.shell.navigate-menu.back", &contribution) == UMI_STATUS_OK);
+    assert((contribution.flags & UMI_APPLICATION_SHELL_VISIBLE) != 0U);
+    assert((contribution.flags & UMI_APPLICATION_SHELL_ENABLED) == 0U);
+    assert(umi_application_shell_registry_find(registry,
+        "umicom.shell.navigate-menu.forward", &contribution) == UMI_STATUS_OK);
+    assert((contribution.flags & UMI_APPLICATION_SHELL_ENABLED) == 0U);
     umi_application_shell_registry_destroy(registry);
     return 0;
 }

@@ -17,6 +17,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/intelligence_workbench/refactor_transaction.h"
+#include "../../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -44,4 +45,53 @@ UmiStatus umi_editor_intel_refactor_transaction_rollback(UmiEditorIntelRefactorT
  * Check that editor intel refactor transaction satisfies its contract before another
  * service relies on it.
  */
-int umi_editor_intel_refactor_transaction_valid(const UmiEditorIntelRefactorTransaction *transaction){return transaction!=NULL&&umi_editor_intel_id_valid(transaction->transaction_id)&&transaction->applied_operations<=transaction->total_operations&&transaction->phase>=UMI_EDITOR_INTEL_PHASE_READY&&transaction->phase<=UMI_EDITOR_INTEL_PHASE_ROLLED_BACK;}
+int umi_editor_intel_refactor_transaction_valid(const UmiEditorIntelRefactorTransaction *transaction){
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (transaction == NULL) return 0;
+    if (memchr(transaction->transaction_id, '\0', sizeof(transaction->transaction_id)) == NULL) return 0;
+return transaction!=NULL&&umi_editor_intel_id_valid(transaction->transaction_id)&&transaction->applied_operations<=transaction->total_operations&&transaction->phase>=UMI_EDITOR_INTEL_PHASE_READY&&transaction->phase<=UMI_EDITOR_INTEL_PHASE_ROLLED_BACK;}
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiEditorIntelRefactorTransactionArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x877308d19227ec25);
+    schema = (schema ^ (uint64_t)sizeof(((UmiEditorIntelRefactorTransaction *)0)->transaction_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiEditorIntelRefactorTransactionArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiEditorIntelRefactorTransaction *)0)->transaction_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiEditorIntelRefactorTransactionArchiveWrite(UmiArchiveWriter *writer, const UmiEditorIntelRefactorTransaction *value)
+{
+    UmiArchiveWriteText(writer, value->transaction_id, sizeof(value->transaction_id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->phase);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->total_operations);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->applied_operations);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiEditorIntelRefactorTransactionArchiveRead(UmiArchiveReader *reader, UmiEditorIntelRefactorTransaction *value)
+{
+    UmiArchiveReadText(reader, value->transaction_id, sizeof(value->transaction_id));
+    value->phase = (UmiEditorIntelPhase)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->total_operations = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->applied_operations = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiEditorIntelRefactorTransactionArchiveValidate(const UmiEditorIntelRefactorTransaction *value)
+{
+    return umi_editor_intel_refactor_transaction_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_editor_intel_refactor_transaction_archive_encode, umi_editor_intel_refactor_transaction_archive_decode,
+    UmiEditorIntelRefactorTransaction, UmiEditorIntelRefactorTransactionArchiveSchema, UmiEditorIntelRefactorTransactionArchiveBound, UmiEditorIntelRefactorTransactionArchiveWrite, UmiEditorIntelRefactorTransactionArchiveRead, UmiEditorIntelRefactorTransactionArchiveValidate)

@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_developer_experience/preferences.h"
+#include "../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -63,3 +64,58 @@ UmiStatus umi_ai_developer_preferences_validate(
 
     return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiAiDeveloperPreferencesArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x2dfd85d179b1f17b);
+
+    return schema;
+}
+static size_t UmiAiDeveloperPreferencesArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiAiDeveloperPreferencesArchiveWrite(UmiArchiveWriter *writer, const UmiAiDeveloperPreferences *value)
+{
+    UmiArchiveWriteSigned(writer, (int64_t)value->diff_layout);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->diff_context_lines);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->visible_rows);
+    UmiArchiveWriteSigned(writer, (int64_t)value->auto_follow_active_task);
+    UmiArchiveWriteSigned(writer, (int64_t)value->auto_open_review);
+    UmiArchiveWriteSigned(writer, (int64_t)value->show_tool_arguments);
+    UmiArchiveWriteSigned(writer, (int64_t)value->show_validation_output);
+    UmiArchiveWriteSigned(writer, (int64_t)value->show_context_token_estimates);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiAiDeveloperPreferencesArchiveRead(UmiArchiveReader *reader, UmiAiDeveloperPreferences *value)
+{
+    value->diff_layout = (UmiAiDeveloperDiffLayout)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->diff_context_lines = (size_t)UmiArchiveReadUnsigned(reader, SIZE_MAX);
+    value->visible_rows = (size_t)UmiArchiveReadUnsigned(reader, SIZE_MAX);
+    value->auto_follow_active_task = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->auto_open_review = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->show_tool_arguments = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->show_validation_output = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->show_context_token_estimates = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiAiDeveloperPreferencesArchiveValidate(const UmiAiDeveloperPreferences *value)
+{
+    return umi_ai_developer_preferences_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_ai_developer_preferences_archive_encode, umi_ai_developer_preferences_archive_decode,
+    UmiAiDeveloperPreferences, UmiAiDeveloperPreferencesArchiveSchema, UmiAiDeveloperPreferencesArchiveBound, UmiAiDeveloperPreferencesArchiveWrite, UmiAiDeveloperPreferencesArchiveRead, UmiAiDeveloperPreferencesArchiveValidate)

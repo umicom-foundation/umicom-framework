@@ -1,0 +1,17 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+target_sources(umicom_document PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../src/document/recovery_draft.c")
+
+if(BUILD_TESTING)
+    add_executable(umicom-recovery-draft-test "${CMAKE_CURRENT_LIST_DIR}/../tests/document/test_recovery_draft.c")
+    target_link_libraries(umicom-recovery-draft-test PRIVATE Umicom::document)
+    umicom_apply_warnings(umicom-recovery-draft-test)
+    umicom_apply_sanitizers(umicom-recovery-draft-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-recovery-draft-test)
+    endif()
+    foreach(case round-trip unicode crlf bare-cr empty large maximum source-owned encoded-owned name-empty name-control name-unterminated path-control language-invalid key-short key-upper key-long key-invalid text-nul text-invalid cursor-out selection-out cursor-scalar selection-scalar cursor-crlf selection-crlf size-mismatch source-limit decode-limit cancelled-create cancelled-decode null-create null-decode null-encode null-read truncated trailing magic header-nul header-long field-order negative plus leading-zero overflow empty-number metadata-nul length-mismatch key-generate key-capacity key-null)
+        add_test(NAME framework.document.recovery_draft.${case} COMMAND umicom-recovery-draft-test ${case})
+        set_tests_properties(framework.document.recovery_draft.${case} PROPERTIES TIMEOUT 45 LABELS "framework;document;recovery;regression")
+    endforeach()
+endif()

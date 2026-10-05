@@ -28,6 +28,9 @@ struct UmiFileSearchSession {
     UmiCancellationToken *cancellation;
     UmiMutex *mutex;
     UmiFileSearchSnapshot state;
+    UmiSearchPathFilter filter;
+    UmiSearchFileReader reader;
+    int has_reader;
     UmiSearchMatch *matches;
     size_t count;
 };
@@ -53,6 +56,9 @@ static void PublishProgress(const UmiSearchStats *stats, void *userData)
     (void)umi_mutex_unlock(session->mutex);
 }
 
+/* A search session now retains an immutable reader descriptor so document decoding runs on its existing worker.
+ * The former implementation is retained for engineering review. */
+#if 0
 static UmiStatus RunSearch(UmiTaskContext *context, void *userData)
 {
     UmiFileSearchSession *session = userData;
@@ -68,8 +74,45 @@ static UmiStatus RunSearch(UmiTaskContext *context, void *userData)
     options.expectedRevision = session->state.indexRevision;
     options.progress = PublishProgress;
     options.progressUserData = session;
+    /* The worker uses its immutable captured filter, never live UI inputs.
+     * Keep the former unfiltered dispatch for review of this ownership change. */
+#if 0
     status = UmiSearchFileIndexWithOptions(session->index, &request, &options,
         CollectMatch, session, &stats);
+#endif
+    status = UmiSearchFileIndexScoped(session->index, &request, &options,
+        &session->filter, CollectMatch, session, &stats);
+    (void)umi_mutex_lock(session->mutex);
+    session->state.stats = stats;
+    session->state.status = session->state.stale ? UMI_STATUS_BUSY : status;
+    session->state.ready = !session->state.stale && status == UMI_STATUS_OK;
+    (void)umi_mutex_unlock(session->mutex);
+    return status;
+}
+#endif
+static UmiStatus RunSearch(UmiTaskContext *context, void *userData)
+{
+    UmiFileSearchSession *session = userData;
+    UmiSearchRequest request = umi_search_request_default(session->state.query);
+    UmiSearchOptions options = {0};
+    UmiSearchStats stats = {0};
+    UmiStatus status;
+    (void)context;
+    request.case_sensitive = session->state.caseSensitive;
+    request.cancellation = session->cancellation;
+    request.maximum_results = UMI_FILE_SEARCH_MAX_RESULTS;
+    request.maximum_file_size = UMI_FILE_SEARCH_MAX_FILE_BYTES;
+    options.expectedRevision = session->state.indexRevision;
+    options.progress = PublishProgress;
+    options.progressUserData = session;
+    /* The worker uses its immutable captured filter, never live UI inputs.
+     * Keep the former unfiltered dispatch for review of this ownership change. */
+#if 0
+    status = UmiSearchFileIndexWithOptions(session->index, &request, &options,
+        CollectMatch, session, &stats);
+#endif
+    status = UmiSearchFileIndexWithReader(session->index, &request, &options,
+        &session->filter, session->has_reader ? &session->reader : NULL, CollectMatch, session, &stats);
     (void)umi_mutex_lock(session->mutex);
     session->state.stats = stats;
     session->state.status = session->state.stale ? UMI_STATUS_BUSY : status;
@@ -78,6 +121,10 @@ static UmiStatus RunSearch(UmiTaskContext *context, void *userData)
     return status;
 }
 
+/* Retain the raw constructor contract while allowing higher document layers
+ * to supply decoding without introducing a Platform link dependency on them.
+ * The previous constructor remains available for engineering review. */
+#if 0
 UmiStatus UmiFileSearchCreate(const UmiFileIndex *index,
     UmiFileSearchSession **outSession)
 {
@@ -96,6 +143,33 @@ UmiStatus UmiFileSearchCreate(const UmiFileIndex *index,
     *outSession = session;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus UmiFileSearchCreateWithReader(const UmiFileIndex *index, const UmiSearchFileReader *reader,
+    UmiFileSearchSession **outSession)
+{
+    UmiFileSearchSession *session;
+    UmiStatus status;
+    if (outSession == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outSession = NULL;
+    if (index == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (reader != NULL && (reader->read == NULL || reader->release == NULL || reader->maximum_serialized_bytes == 0U))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    session = calloc(1U, sizeof(*session));
+    if (session == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    session->index = index;
+    if (reader != NULL) { session->reader = *reader; session->has_reader = 1; }
+    status = umi_mutex_create(&session->mutex);
+    if (status == UMI_STATUS_OK)
+        status = umi_cancellation_token_create(&session->cancellation);
+    if (status != UMI_STATUS_OK) { UmiFileSearchDestroy(session); return status; }
+    *outSession = session;
+    return UMI_STATUS_OK;
+}
+UmiStatus UmiFileSearchCreate(const UmiFileIndex *index,
+    UmiFileSearchSession **outSession)
+{
+    return UmiFileSearchCreateWithReader(index, NULL, outSession);
+}
 
 void UmiFileSearchDestroy(UmiFileSearchSession *session)
 {
@@ -111,6 +185,10 @@ void UmiFileSearchDestroy(UmiFileSearchSession *session)
     free(session);
 }
 
+/* Capture search scope beside the existing copied query before publishing a
+ * task. The previous start path is retained for review; the compatibility
+ * entry point below requests an empty filter and preserves its old meaning. */
+#if 0
 UmiStatus UmiFileSearchStart(UmiFileSearchSession *session, const char *query,
     int caseSensitive, uint64_t expectedRevision)
 {
@@ -170,6 +248,94 @@ UmiStatus UmiFileSearchStart(UmiFileSearchSession *session, const char *query,
     }
     return status;
 }
+#endif
+
+UmiStatus UmiFileSearchStartFiltered(UmiFileSearchSession *session, const char *query,
+    int caseSensitive, uint64_t expectedRevision, const UmiSearchPathFilter *filter)
+{
+    size_t length = 0U;
+    char copiedQuery[UMI_FILE_SEARCH_QUERY_CAPACITY];
+    UmiFileIndexPage page;
+    UmiSearchMatch *rows;
+    UmiTask *task = NULL;
+    UmiTaskConfig taskConfig = {0};
+    UmiStatus status;
+    if (session == NULL || query == NULL || (caseSensitive != 0 && caseSensitive != 1))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    while (length < sizeof copiedQuery && query[length] != '\0') ++length;
+    if (length == 0U || length == sizeof copiedQuery ||
+        memchr(query, '\n', length) != NULL || memchr(query, '\r', length) != NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    memcpy(copiedQuery, query, length + 1U);
+    UmiSearchPathFilter copiedFilter = {0};
+    if (filter != NULL) {
+        status = UmiSearchPathFilterInit(filter->include_patterns, filter->exclude_patterns, &copiedFilter);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    if (session->queue != NULL) {
+        UmiTaskQueueStats queued = umi_task_queue_stats(session->queue);
+        if (queued.queued != 0U || queued.running != 0U) return UMI_STATUS_BUSY;
+    }
+    status = UmiFileIndexReadPage(session->index, "", 1, 0U,
+        expectedRevision, NULL, 0U, &page);
+    if (status != UMI_STATUS_OK) return status;
+    if (!umi_path_is_absolute(page.stats.root)) return UMI_STATUS_INVALID_STATE;
+    if (session->state.requestId == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    rows = calloc(UMI_FILE_SEARCH_MAX_RESULTS, sizeof(*rows));
+    if (rows == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    if (session->queue == NULL) {
+        UmiTaskQueueConfig config = umi_task_queue_config_default();
+        config.worker_count = 1U; config.capacity = 1U;
+        status = umi_task_queue_create(&config, &session->queue);
+    }
+    taskConfig.label = "Find in Files";
+    taskConfig.function = RunSearch; taskConfig.user_data = session;
+    if (status == UMI_STATUS_OK) status = umi_task_create(&taskConfig, &task);
+    if (status != UMI_STATUS_OK) { free(rows); return status; }
+    umi_task_destroy(session->task);
+    session->task = task;
+    free(session->matches); session->matches = rows; session->count = 0U;
+    umi_cancellation_token_reset(session->cancellation);
+    (void)umi_mutex_lock(session->mutex);
+    uint64_t requestId = session->state.requestId + 1U;
+    memset(&session->state, 0, sizeof session->state);
+    memcpy(session->state.query, copiedQuery, length + 1U);
+    memcpy(session->state.root, page.stats.root, sizeof session->state.root);
+    session->state.requestId = requestId;
+    session->state.indexRevision = page.stats.revision;
+    session->state.caseSensitive = caseSensitive;
+    session->filter = copiedFilter;
+    session->state.active = 1; session->state.status = UMI_STATUS_BUSY;
+    (void)umi_mutex_unlock(session->mutex);
+    status = umi_task_queue_submit(session->queue, task);
+    if (status != UMI_STATUS_OK) {
+        (void)umi_mutex_lock(session->mutex);
+        session->state.active = 0; session->state.status = status;
+        (void)umi_mutex_unlock(session->mutex);
+    }
+    return status;
+}
+
+UmiStatus UmiFileSearchStart(UmiFileSearchSession *session, const char *query,
+    int caseSensitive, uint64_t expectedRevision)
+{
+    return UmiFileSearchStartFiltered(session, query, caseSensitive, expectedRevision, NULL);
+}
+
+UmiStatus UmiFileSearchFilterRead(UmiFileSearchSession *session, uint64_t requestId,
+    UmiSearchPathFilter *outFilter)
+{
+    if (session == NULL || outFilter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiFileSearchSnapshot snapshot;
+    UmiStatus status = UmiFileSearchRead(session, &snapshot);
+    if (status != UMI_STATUS_OK) return status;
+    if (requestId == 0U || requestId != snapshot.requestId || snapshot.stale) return UMI_STATUS_BUSY;
+    (void)umi_mutex_lock(session->mutex);
+    *outFilter = session->filter;
+    (void)umi_mutex_unlock(session->mutex);
+    return UMI_STATUS_OK;
+}
+
 
 UmiStatus UmiFileSearchCancel(UmiFileSearchSession *session)
 {

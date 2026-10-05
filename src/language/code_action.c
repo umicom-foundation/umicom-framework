@@ -18,6 +18,8 @@
  * contract does not expose toolkit objects, C++ types, or private structures.
  */
 #include "umicom/language/code_action.h"
+#include "../base/value_archive_internal.h"
+#include "../base/registry_archive_internal.h"
 #include "../base/snapshot_registry_internal.h"
 
 /* Validate every bounded text member before lookup. Value-only snapshot
@@ -256,3 +258,69 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_language_code_action_registry_edit_if_curr
  * this owner's existing row order and normalized fields remain authoritative. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_language_code_action_registry_read_page,
     UmiLanguageCodeActionRegistry, UmiLanguageCodeActionSnapshot, UMI_LANGUAGE_CODE_ACTION_CAPACITY)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xb9c8bef656b03ab0);
+    schema = (schema ^ (uint64_t)sizeof(((UmiLanguageCodeActionSnapshot *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiLanguageCodeActionSnapshot *)0)->document_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiLanguageCodeActionSnapshot *)0)->title)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiLanguageCodeActionSnapshot *)0)->kind)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiLanguageCodeActionSnapshot *)0)->command_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiLanguageCodeActionSnapshot *)0)->argument)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiLanguageCodeActionSnapshot *)0)->id) - 1U +
+        8U + sizeof(((UmiLanguageCodeActionSnapshot *)0)->document_id) - 1U +
+        8U + sizeof(((UmiLanguageCodeActionSnapshot *)0)->title) - 1U +
+        8U + sizeof(((UmiLanguageCodeActionSnapshot *)0)->kind) - 1U +
+        8U + sizeof(((UmiLanguageCodeActionSnapshot *)0)->command_id) - 1U +
+        8U + sizeof(((UmiLanguageCodeActionSnapshot *)0)->argument) - 1U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiLanguageCodeActionSnapshot *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->document_id, sizeof(value->document_id));
+    UmiArchiveWriteText(writer, value->title, sizeof(value->title));
+    UmiArchiveWriteText(writer, value->kind, sizeof(value->kind));
+    UmiArchiveWriteText(writer, value->command_id, sizeof(value->command_id));
+    UmiArchiveWriteText(writer, value->argument, sizeof(value->argument));
+    UmiArchiveWriteSigned(writer, (int64_t)value->preferred);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiLanguageCodeActionSnapshot *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->document_id, sizeof(value->document_id));
+    UmiArchiveReadText(reader, value->title, sizeof(value->title));
+    UmiArchiveReadText(reader, value->kind, sizeof(value->kind));
+    UmiArchiveReadText(reader, value->command_id, sizeof(value->command_id));
+    UmiArchiveReadText(reader, value->argument, sizeof(value->argument));
+    value->preferred = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus ArchiveValidate(const UmiLanguageCodeActionSnapshot *value)
+{
+    return umi_language_code_action_snapshot_validate(value, NULL);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_language_code_action_snapshot_archive_encode, umi_language_code_action_snapshot_archive_decode,
+    UmiLanguageCodeActionSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Restoring this complete collection reuses its existing reviewed replacement
+ * rules. Decoding a saved value alone never changes a live registry. */
+UMI_DEFINE_REGISTRY_ARCHIVE(umi_language_code_action_registry_archive_encode, umi_language_code_action_registry_archive_restore,
+    UmiLanguageCodeActionRegistry, UmiLanguageCodeActionSnapshot, UMI_LANGUAGE_CODE_ACTION_CAPACITY, ArchiveSchema,
+    umi_language_code_action_snapshot_archive_encode, umi_language_code_action_snapshot_archive_decode, umi_language_code_action_registry_replace_if_current)

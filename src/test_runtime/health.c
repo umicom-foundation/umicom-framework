@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/test_runtime/health.h"
+#include "../base/value_archive_internal.h"
 #include "../base/record_update_internal.h"
 #include "umicom/base/text.h"
 #include <string.h>
@@ -263,3 +264,57 @@ UMI_DEFINE_REVIEWED_RECORD_EDIT(umi_test_runtime_health_replace_if_current,
  * with this owner; Framework supplies the common staged publication boundary. */
 UMI_DEFINE_CHECKED_RECORD_INIT(umi_test_runtime_health_init_checked,
     UmiTestRuntimeHealth, umi_test_runtime_health_init, umi_test_runtime_health_validate)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x1cb433f9e726d715);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTestRuntimeHealth *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTestRuntimeHealth *)0)->name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTestRuntimeHealth *)0)->detail)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiTestRuntimeHealth *)0)->id) - 1U +
+        8U + sizeof(((UmiTestRuntimeHealth *)0)->name) - 1U +
+        8U + sizeof(((UmiTestRuntimeHealth *)0)->detail) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiTestRuntimeHealth *value)
+{
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->name, sizeof(value->name));
+    UmiArchiveWriteText(writer, value->detail, sizeof(value->detail));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->ready_tests);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->blocked_tests);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->updated_at_ms);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiTestRuntimeHealth *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->name, sizeof(value->name));
+    UmiArchiveReadText(reader, value->detail, sizeof(value->detail));
+    value->ready_tests = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->blocked_tests = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->updated_at_ms = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus ArchiveValidate(const UmiTestRuntimeHealth *value)
+{
+    return umi_test_runtime_health_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_test_runtime_health_archive_encode, umi_test_runtime_health_archive_decode,
+    UmiTestRuntimeHealth, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)

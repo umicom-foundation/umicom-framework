@@ -19,6 +19,8 @@
  * responsibility for higher-level threading and persistence policy.
  */
 #include "umicom/ui/command_surface.h"
+#include "../base/value_archive_internal.h"
+#include "../base/registry_archive_internal.h"
 #include "../base/snapshot_registry_internal.h"
 /* Every field is described with its actual C member size; no string scan can
  * escape a supplied array. Domain values and legacy size/version normalisation
@@ -247,3 +249,79 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_ui_command_surface_registry_edit_if_curren
  * this owner's existing row order and normalized fields remain authoritative. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_ui_command_surface_registry_read_page,
     UmiUiCommandSurfaceRegistry, UmiUiCommandSurfaceSnapshot, UMI_UI_COMMAND_SURFACE_CAPACITY)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xddea30596245b805);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiCommandSurfaceSnapshot *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiCommandSurfaceSnapshot *)0)->command_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiCommandSurfaceSnapshot *)0)->title)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiCommandSurfaceSnapshot *)0)->category)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiCommandSurfaceSnapshot *)0)->icon_name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiCommandSurfaceSnapshot *)0)->key_hint)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiCommandSurfaceSnapshot *)0)->when_expression)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiUiCommandSurfaceSnapshot *)0)->id) - 1U +
+        8U + sizeof(((UmiUiCommandSurfaceSnapshot *)0)->command_id) - 1U +
+        8U + sizeof(((UmiUiCommandSurfaceSnapshot *)0)->title) - 1U +
+        8U + sizeof(((UmiUiCommandSurfaceSnapshot *)0)->category) - 1U +
+        8U + sizeof(((UmiUiCommandSurfaceSnapshot *)0)->icon_name) - 1U +
+        8U + sizeof(((UmiUiCommandSurfaceSnapshot *)0)->key_hint) - 1U +
+        8U + sizeof(((UmiUiCommandSurfaceSnapshot *)0)->when_expression) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiUiCommandSurfaceSnapshot *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->command_id, sizeof(value->command_id));
+    UmiArchiveWriteText(writer, value->title, sizeof(value->title));
+    UmiArchiveWriteText(writer, value->category, sizeof(value->category));
+    UmiArchiveWriteText(writer, value->icon_name, sizeof(value->icon_name));
+    UmiArchiveWriteText(writer, value->key_hint, sizeof(value->key_hint));
+    UmiArchiveWriteText(writer, value->when_expression, sizeof(value->when_expression));
+    UmiArchiveWriteSigned(writer, (int64_t)value->enabled);
+    UmiArchiveWriteSigned(writer, (int64_t)value->visible);
+    UmiArchiveWriteSigned(writer, (int64_t)value->score);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiUiCommandSurfaceSnapshot *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->command_id, sizeof(value->command_id));
+    UmiArchiveReadText(reader, value->title, sizeof(value->title));
+    UmiArchiveReadText(reader, value->category, sizeof(value->category));
+    UmiArchiveReadText(reader, value->icon_name, sizeof(value->icon_name));
+    UmiArchiveReadText(reader, value->key_hint, sizeof(value->key_hint));
+    UmiArchiveReadText(reader, value->when_expression, sizeof(value->when_expression));
+    value->enabled = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->visible = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->score = (int32_t)UmiArchiveReadSigned(reader, INT32_MIN, INT32_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus ArchiveValidate(const UmiUiCommandSurfaceSnapshot *value)
+{
+    return umi_ui_command_surface_snapshot_validate(value, NULL);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_ui_command_surface_snapshot_archive_encode, umi_ui_command_surface_snapshot_archive_decode,
+    UmiUiCommandSurfaceSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Restoring this complete collection reuses its existing reviewed replacement
+ * rules. Decoding a saved value alone never changes a live registry. */
+UMI_DEFINE_REGISTRY_ARCHIVE(umi_ui_command_surface_registry_archive_encode, umi_ui_command_surface_registry_archive_restore,
+    UmiUiCommandSurfaceRegistry, UmiUiCommandSurfaceSnapshot, UMI_UI_COMMAND_SURFACE_CAPACITY, ArchiveSchema,
+    umi_ui_command_surface_snapshot_archive_encode, umi_ui_command_surface_snapshot_archive_decode, umi_ui_command_surface_registry_replace_if_current)

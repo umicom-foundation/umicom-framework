@@ -17,6 +17,7 @@
 
 #include <errno.h>
 #include <inttypes.h>
+#include <stdbool.h>
 #include <limits.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -40,7 +41,10 @@ static const ProfileTextField TEXT_FIELDS[] = {
     PROFILE_FIELD(build_directory), PROFILE_FIELD(generator),
     PROFILE_FIELD(compiler), PROFILE_FIELD(configuration), PROFILE_FIELD(preset),
     PROFILE_FIELD(build_target), PROFILE_FIELD(run_program),
-    PROFILE_FIELD(run_argument), PROFILE_FIELD(install_directory)
+    PROFILE_FIELD(run_argument), PROFILE_FIELD(install_directory),
+    PROFILE_FIELD(run_arguments),
+    PROFILE_FIELD(configure_preset), PROFILE_FIELD(build_preset), PROFILE_FIELD(test_preset),
+    PROFILE_FIELD(run_working_directory)
 };
 #undef PROFILE_FIELD
 static const char *const NUMBER_FIELDS[] = {
@@ -161,14 +165,46 @@ static UmiStatus ReadProfile(UmiDataServer *server, const char *prefix,
     UmiStatus status = ReadField(server, prefix, "schema", schema, sizeof(schema));
     if (status == UMI_STATUS_NOT_FOUND) return CheckAbsent(server, prefix);
     if (status != UMI_STATUS_OK) return status;
+    /* The additional stored field is mandatory in new records. Older records
+     * retain their literal-argument semantics; a missing new field in a current
+     * record is corruption, not permission to launch with fewer arguments. The
+     * former schema-only check remains below for compatibility review. */
+#if 0
     if (strcmp(schema, "1") != 0) return UMI_STATUS_INVALID_STATE;
+#endif
+    bool legacyArguments = strcmp(schema, "1") == 0;
+    /* Stage names are required in current records. Earlier records retain
+     * the shared-preset contract and receive empty independent stage fields.
+     * The former argument-only format check remains for migration review. */
+#if 0
+    if (!legacyArguments && strcmp(schema, "2") != 0) return UMI_STATUS_INVALID_STATE;
+#endif
+    bool legacyStages = legacyArguments || strcmp(schema, "2") == 0;
+    if (!legacyStages && strcmp(schema, "3") != 0) return UMI_STATUS_INVALID_STATE;
     (void)memset(profile, 0, sizeof(*profile));
     for (size_t index = 0U; index < sizeof(TEXT_FIELDS)/sizeof(TEXT_FIELDS[0]); ++index) {
         const ProfileTextField *field = &TEXT_FIELDS[index];
         status = ReadField(server, prefix, field->name,
             (char *)profile + field->offset, field->capacity);
+        /* Existing records predate the explicit argument-list field. Its absence
+         * means the original literal argument remains authoritative. Other
+         * missing fields still identify a corrupt, incomplete record. */
+        if (status == UMI_STATUS_NOT_FOUND && legacyArguments && field->offset == offsetof(UmiBuildProfile, run_arguments))
+            status = UMI_STATUS_OK;
+        if (status == UMI_STATUS_NOT_FOUND && legacyStages &&
+            (field->offset == offsetof(UmiBuildProfile, configure_preset) ||
+             field->offset == offsetof(UmiBuildProfile, build_preset) ||
+             field->offset == offsetof(UmiBuildProfile, test_preset) ||
+             field->offset == offsetof(UmiBuildProfile, run_working_directory)))
+            status = UMI_STATUS_OK;
         if (status != UMI_STATUS_OK) break;
     }
+    /* An older format cannot describe independent stages. Reject a downgraded
+     * marker with active stage data instead of silently changing its meaning.
+     * Empty fields left by an older writer remain safe to migrate. */
+    if (status == UMI_STATUS_OK && legacyStages &&
+        (profile->configure_preset[0] != '\0' || profile->build_preset[0] != '\0' ||
+         profile->test_preset[0] != '\0' || profile->run_working_directory[0] != '\0')) status = UMI_STATUS_PARSE_ERROR;
     if (status == UMI_STATUS_OK) status = ReadUnsigned(server, prefix, "parallel_jobs", UINT_MAX, &number);
     if (status == UMI_STATUS_OK) profile->parallel_jobs = (unsigned)number;
     if (status == UMI_STATUS_OK) status = ReadUnsigned(server, prefix, "timeout_ms", UINT32_MAX, &number);
@@ -250,7 +286,18 @@ UmiStatus UmiBuildProfileStoreSave(UmiDataServer *server,
         (void)snprintf(number, sizeof(number), "%" PRIu64, revision + 1U);
         status = WriteField(server, prefix, "revision", number);
     }
+    /* Mark the complete argument-list record in the same transaction as its
+     * fields. The previous format write is retained for migration review. */
+#if 0
     if (status == UMI_STATUS_OK) status = WriteField(server, prefix, "schema", "1");
+#endif
+    /* Publish stage fields and their required-field marker in one transaction.
+     * Keep the former write for review; older readers must reject this format
+     * rather than silently forgetting a build or test preset. */
+#if 0
+    if (status == UMI_STATUS_OK) status = WriteField(server, prefix, "schema", "2");
+#endif
+    if (status == UMI_STATUS_OK) status = WriteField(server, prefix, "schema", "3");
     if (status == UMI_STATUS_OK) {
         status = umi_data_server_commit(server);
         if (status == UMI_STATUS_OK) { *outRevision = revision + 1U; return status; }

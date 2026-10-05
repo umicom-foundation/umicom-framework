@@ -19,6 +19,7 @@
 
 #ifndef UMICOM_WEB_SERVICE_H
 #define UMICOM_WEB_SERVICE_H
+#include <stdbool.h>
 #include "umicom/web/endpoint.h"
 #include "umicom/web/metrics.h"
 #include "umicom/web/middleware.h"
@@ -32,6 +33,16 @@ extern "C" {
  * Represent the web service data shared with callers of this public contract.
  */
 typedef struct UmiWebService UmiWebService;
+/* A request gate decides whether middleware and routes may see a request.
+ * On success set accepted=true to continue, or fill the response and leave it
+ * false to finish with an intentional rejection. Operational failure returns
+ * a failed status. No gate is installed by default. Gate and context are
+ * borrowed; configure them on the service owner thread outside dispatch. */
+typedef UmiStatus (*UmiWebRequestGate)(const UmiWebRequest *request,
+    UmiWebResponse *response,bool *accepted,void *context);
+UmiStatus UmiWebServiceSetRequestGate(UmiWebService *service,
+    UmiWebRequestGate gate,void *context);
+
 /**
  * Initialise web service from caller-provided values so later operations receive a known
  * state.

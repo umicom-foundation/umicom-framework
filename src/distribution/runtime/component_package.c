@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/distribution/runtime/component_package.h"
+#include "../../base/value_archive_internal.h"
 
 /*
  * Initialise dr component package from caller-provided values so later operations receive
@@ -23,7 +24,14 @@ void umi_dr_component_package_init(UmiDrComponentPackage *value) { /* Protect ca
  * Check that dr component package satisfies its contract before another service relies on
  * it.
  */
-bool umi_dr_component_package_valid(const UmiDrComponentPackage *value) { return value != NULL && (value->id[0] != '\0' && value->component_id[0] != '\0'); }
+bool umi_dr_component_package_valid(const UmiDrComponentPackage *value) {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (value == NULL) return 0;
+    if (memchr(value->id, '\0', sizeof(value->id)) == NULL) return 0;
+    if (memchr(value->component_id, '\0', sizeof(value->component_id)) == NULL) return 0;
+ return value != NULL && (value->id[0] != '\0' && value->component_id[0] != '\0'); }
 /*
  * Provide the dr component package fingerprint operation used by this module and its
  * client applications.
@@ -36,3 +44,53 @@ uint64_t umi_dr_component_package_fingerprint(const UmiDrComponentPackage *value
     h = umi_dr_hash_combine(h, (uint64_t)sizeof(*value));
     return h;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiDrComponentPackageArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xd72554c266b96abe);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDrComponentPackage *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDrComponentPackage *)0)->component_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiDrComponentPackageArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiDrComponentPackage *)0)->id) - 1U +
+        8U + sizeof(((UmiDrComponentPackage *)0)->component_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiDrComponentPackageArchiveWrite(UmiArchiveWriter *writer, const UmiDrComponentPackage *value)
+{
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->component_id, sizeof(value->component_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->version.major);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->version.minor);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->version.patch);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->dependency_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->optional);
+}
+static void UmiDrComponentPackageArchiveRead(UmiArchiveReader *reader, UmiDrComponentPackage *value)
+{
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->component_id, sizeof(value->component_id));
+    value->version.major = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->version.minor = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->version.patch = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->dependency_count = (size_t)UmiArchiveReadUnsigned(reader, SIZE_MAX);
+    value->optional = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiDrComponentPackageArchiveValidate(const UmiDrComponentPackage *value)
+{
+    return umi_dr_component_package_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_dr_component_package_archive_encode, umi_dr_component_package_archive_decode,
+    UmiDrComponentPackage, UmiDrComponentPackageArchiveSchema, UmiDrComponentPackageArchiveBound, UmiDrComponentPackageArchiveWrite, UmiDrComponentPackageArchiveRead, UmiDrComponentPackageArchiveValidate)

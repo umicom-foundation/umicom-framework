@@ -21,6 +21,8 @@
 
 #include "umicom/language_runtime/decoders/workspace_edit.h"
 #include "umicom/language_runtime/decoders/text_edits.h"
+#include "umicom/language_runtime/workspace_edit_catalogue.h"
+#include "umicom/language_runtime/json_tree.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,6 +32,9 @@
  * Provide the language runtime decode workspace edit operation used by this module and its
  * client applications.
  */
+/* Complete workspace decoding replaces incremental publication. The legacy projection keeps its fixed contract and refuses versions or annotations it cannot represent; retain the previous reader for review.
+ * The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_language_runtime_decode_workspace_edit(
     const char *json,
     UmiLanguageRuntimeWorkspaceEdit *out)
@@ -138,4 +143,49 @@ UmiStatus umi_language_runtime_decode_workspace_edit(
 cleanup:
     free(edits);
     return status;
+}
+#endif
+UmiStatus umi_language_runtime_decode_workspace_edit(const char *json,UmiLanguageRuntimeWorkspaceEdit *out)
+{
+    if(json==NULL || out==NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    memset(out,0,sizeof(*out));
+    UmiJsonTree *tree=NULL;UmiJsonTreeLimits limits={1024U*1024U,131072U,32U};
+    UmiStatus status=UmiJsonTreeCreate(json,strlen(json),&limits,NULL,&tree);int result=-1,error=-1;
+    if(status==UMI_STATUS_OK) status=UmiJsonTreeMember(tree,0,"result",&result);
+    if(status==UMI_STATUS_NOT_FOUND) status=UMI_STATUS_PARSE_ERROR;
+    if(status==UMI_STATUS_OK) {
+        UmiStatus found=UmiJsonTreeMember(tree,0,"error",&error);
+        if(found!=UMI_STATUS_NOT_FOUND) status=found==UMI_STATUS_OK?UMI_STATUS_PARSE_ERROR:found;
+    }
+    const char *span=NULL;size_t bytes=0U;
+    if(status==UMI_STATUS_OK) status=UmiJsonTreeSourceSpan(tree,result,&span,&bytes);
+    UmiLanguageWorkspaceEditCatalogue *catalogue=NULL;
+    if(status==UMI_STATUS_OK) status=UmiLanguageWorkspaceEditCatalogueCreate(span,bytes,NULL,&catalogue);
+    /* This legacy structure has no place for confirmation annotations or a
+     * required document revision. Refuse those requests instead of dropping
+     * their conditions. New review workflows retain the complete catalogue. */
+    if(status==UMI_STATUS_OK && UmiLanguageWorkspaceEditCatalogueAnnotationCount(catalogue)!=0U) status=UMI_STATUS_NOT_IMPLEMENTED;
+    UmiLanguageRuntimeWorkspaceEdit *candidate=status==UMI_STATUS_OK?calloc(1U,sizeof(*candidate)):NULL;
+    if(status==UMI_STATUS_OK && candidate==NULL) status=UMI_STATUS_OUT_OF_MEMORY;
+    for(size_t i=0U;status==UMI_STATUS_OK && i<UmiLanguageWorkspaceEditCatalogueCount(catalogue);++i) {
+        UmiLanguageWorkspaceDocumentChange document;status=UmiLanguageWorkspaceEditCatalogueDocument(catalogue,i,&document);
+        if(status==UMI_STATUS_OK && document.has_version) status=UMI_STATUS_NOT_IMPLEMENTED;
+        if(status==UMI_STATUS_OK && document.edit_count>UMI_LANGUAGE_RUNTIME_MAX_EDITS-candidate->count) status=UMI_STATUS_CAPACITY_EXCEEDED;
+        if(status!=UMI_STATUS_OK) break;
+        for(size_t j=0U;status==UMI_STATUS_OK && j<document.edit_count;++j) {
+            UmiLanguageWorkspaceTextChange edit;status=UmiLanguageWorkspaceEditCatalogueEdit(catalogue,i,j,&edit);
+            if(status!=UMI_STATUS_OK) break;
+            UmiLanguageRuntimeWorkspaceEditItem *item=&candidate->items[candidate->count];
+            if(strlen(document.uri)>=sizeof(item->uri) || edit.text_bytes>=sizeof(item->edit.new_text)) {status=UMI_STATUS_CAPACITY_EXCEEDED;break;}
+            memcpy(item->uri,document.uri,strlen(document.uri)+1U);
+            memcpy(item->edit.new_text,edit.text,edit.text_bytes+1U);
+            item->edit.range.start.line=(uint32_t)edit.range.start.line;
+            item->edit.range.start.character=(uint32_t)edit.range.start.utf16_column;
+            item->edit.range.end.line=(uint32_t)edit.range.end.line;
+            item->edit.range.end.character=(uint32_t)edit.range.end.utf16_column;
+            ++candidate->count;
+        }
+    }
+    if(status==UMI_STATUS_OK) *out=*candidate;
+    free(candidate);UmiLanguageWorkspaceEditCatalogueDestroy(catalogue);UmiJsonTreeDestroy(tree);return status;
 }

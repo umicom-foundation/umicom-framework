@@ -63,4 +63,43 @@ static void ContractPayload(UmiProductMetadataProviderSnapshot *item)
 #define CONTRACT_EDIT_CURRENT umi_product_metadata_provider_registry_edit_if_current
 /* Page checks use this domain's real owner and complete payload comparator. */
 #define CONTRACT_READ_PAGE umi_product_metadata_provider_registry_read_page
+/* Build a complete public snapshot; registry normalization is checked
+ * separately by the collection restore cases. */
+static UmiProductMetadataProviderSnapshot ArchiveSample(void)
+{
+    UmiProductMetadataProviderSnapshot value = {0};
+    ContractPayload(&value);
+    memcpy(value.id, "archive-record", sizeof("archive-record"));
+    value.struct_size = (uint32_t)sizeof(value);
+    value.revision = 17U;
+    return value;
+}
+/* Unused tails are not part of a C string and must not enter saved bytes. */
+static void ArchiveFillUnusedText(UmiProductMetadataProviderSnapshot *value)
+{
+    {
+        size_t used = strlen(value->id) + 1U;
+        memset(value->id + used, 0xa5, sizeof(value->id) - used);
+    }
+    {
+        size_t used = strlen(value->name) + 1U;
+        memset(value->name + used, 0xa5, sizeof(value->name) - used);
+    }
+    {
+        size_t used = strlen(value->endpoint) + 1U;
+        memset(value->endpoint + used, 0xa5, sizeof(value->endpoint) - used);
+    }
+    {
+        size_t used = strlen(value->kind) + 1U;
+        memset(value->kind + used, 0xa5, sizeof(value->kind) - used);
+    }
+}
+#define ARCHIVE_TYPE UmiProductMetadataProviderSnapshot
+#define ARCHIVE_ENCODE umi_product_metadata_provider_snapshot_archive_encode
+#define ARCHIVE_DECODE umi_product_metadata_provider_snapshot_archive_decode
+#define ARCHIVE_EQUAL ContractSnapshotEqual
+#include "../value_archive/record_cases.h"
+
+#define CONTRACT_ARCHIVE_ENCODE umi_product_metadata_provider_registry_archive_encode
+#define CONTRACT_ARCHIVE_RESTORE umi_product_metadata_provider_registry_archive_restore
 #include "snapshot_contract_cases.h"

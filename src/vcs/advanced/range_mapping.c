@@ -17,6 +17,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/vcs/advanced/range_mapping.h"
+#include "../../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -77,3 +78,50 @@ int umi_vcs_advanced_range_mapping_contains_source(const UmiVcsAdvancedRangeMapp
     if (umi_vcs_advanced_range_mapping_validate(value) != UMI_STATUS_OK) return 0;
     return line >= value->source_start && line < value->source_start + value->source_count;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiVcsAdvancedRangeMappingArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x9197562e7184a484);
+
+    return schema;
+}
+static size_t UmiVcsAdvancedRangeMappingArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiVcsAdvancedRangeMappingArchiveWrite(UmiArchiveWriter *writer, const UmiVcsAdvancedRangeMapping *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->source_start);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->source_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->target_start);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->target_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->confidence_percent);
+}
+static void UmiVcsAdvancedRangeMappingArchiveRead(UmiArchiveReader *reader, UmiVcsAdvancedRangeMapping *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->source_start = (size_t)UmiArchiveReadUnsigned(reader, SIZE_MAX);
+    value->source_count = (size_t)UmiArchiveReadUnsigned(reader, SIZE_MAX);
+    value->target_start = (size_t)UmiArchiveReadUnsigned(reader, SIZE_MAX);
+    value->target_count = (size_t)UmiArchiveReadUnsigned(reader, SIZE_MAX);
+    value->confidence_percent = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+}
+static UmiStatus UmiVcsAdvancedRangeMappingArchiveValidate(const UmiVcsAdvancedRangeMapping *value)
+{
+    return umi_vcs_advanced_range_mapping_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_vcs_advanced_range_mapping_archive_encode, umi_vcs_advanced_range_mapping_archive_decode,
+    UmiVcsAdvancedRangeMapping, UmiVcsAdvancedRangeMappingArchiveSchema, UmiVcsAdvancedRangeMappingArchiveBound, UmiVcsAdvancedRangeMappingArchiveWrite, UmiVcsAdvancedRangeMappingArchiveRead, UmiVcsAdvancedRangeMappingArchiveValidate)

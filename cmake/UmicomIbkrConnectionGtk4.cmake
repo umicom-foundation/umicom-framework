@@ -13,6 +13,12 @@ add_library(umicom_ibkr_connection_gtk4 STATIC "${_ibkr_gtk_root}/adapters/gtk4/
 add_library(Umicom::ibkr_connection_gtk4 ALIAS umicom_ibkr_connection_gtk4)
 set_target_properties(umicom_ibkr_connection_gtk4 PROPERTIES EXPORT_NAME ibkr_connection_gtk4)
 target_link_libraries(umicom_ibkr_connection_gtk4 PUBLIC Umicom::ibkr_connection PkgConfig::IBKR_GTK4)
+# Position review reuses the canonical native UI when that optional frontend is
+# enabled. The standalone connection inspector remains available without it.
+if(TARGET Umicom::ui_gtk4)
+    target_link_libraries(umicom_ibkr_connection_gtk4 PRIVATE Umicom::ui_gtk4)
+    target_compile_definitions(umicom_ibkr_connection_gtk4 PRIVATE UMI_IBKR_HAS_FILTERED_CHOICES=1)
+endif()
 umicom_ibkr_target(umicom_ibkr_connection_gtk4)
 install(TARGETS umicom_ibkr_connection_gtk4 EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
@@ -42,9 +48,25 @@ if(BUILD_TESTING)
     add_executable(umicom-ibkr-gtk-test "${_ibkr_gtk_root}/tests/ibkr_connection/test_gtk.c")
     target_link_libraries(umicom-ibkr-gtk-test PRIVATE Umicom::ibkr_connection_gtk4)
     umicom_ibkr_target(umicom-ibkr-gtk-test)
-    foreach(_case IN ITEMS construction default_paper mode_ports live_ack retained_controls independent_windows retained_parent)
+    foreach(_case IN ITEMS construction default_paper mode_ports live_ack retained_controls independent_windows retained_parent quote_controls)
         add_test(NAME framework.ibkr_connection.gtk_${_case} COMMAND umicom-ibkr-gtk-test ${_case})
         set_tests_properties(framework.ibkr_connection.gtk_${_case} PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 20)
     endforeach()
 endif()
+# Report lifecycle checks never connect to a broker or create a file.
+if(BUILD_TESTING)
+    foreach(case report-no-request report-reentrant report-retained)
+        add_test(NAME framework.ibkr_observations.gtk.${case} COMMAND umicom-ibkr-gtk-test ${case})
+        set_tests_properties(framework.ibkr_observations.gtk.${case} PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 20
+            LABELS "framework;broker;csv;gtk4;ownership;regression")
+    endforeach()
+endif()
 unset(_ibkr_gtk_root)
+
+if(BUILD_TESTING AND TARGET Umicom::ui_gtk4)
+    foreach(case position-no-capture position-retained)
+        add_test(NAME framework.ibkr_positions.gtk4.${case} COMMAND umicom-ibkr-gtk-test ${case})
+        set_tests_properties(framework.ibkr_positions.gtk4.${case} PROPERTIES TIMEOUT 20 SKIP_RETURN_CODE 77
+            LABELS "framework;broker;positions;gtk4;ownership;regression")
+    endforeach()
+endif()

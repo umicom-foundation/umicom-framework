@@ -19,6 +19,7 @@
 #ifndef UMICOM_TEST_WORKBENCH_PROBLEM_QUICK_FIX_MODEL_H
 #define UMICOM_TEST_WORKBENCH_PROBLEM_QUICK_FIX_MODEL_H
 #include "umicom/test/workbench/workbench_types.h"
+#include "umicom/base/value_archive.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -56,6 +57,17 @@ UmiStatus umi_problem_quick_fix_model_set_state(UmiProblemQuickFixModel *model,U
  * on it.
  */
 int umi_problem_quick_fix_model_valid(const UmiProblemQuickFixModel *model);
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_problem_quick_fix_model_archive_encode(const UmiProblemQuickFixModel *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_problem_quick_fix_model_archive_decode(const void *bytes, size_t byte_count,
+    UmiProblemQuickFixModel *value);
+
 #ifdef __cplusplus
 }
 #endif

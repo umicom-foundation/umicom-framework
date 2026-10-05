@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Save provider connection settings</title><style>body{font:17px/1.65 system-ui;max-width:980px;margin:36px auto;padding:0 22px;color:#163342}pre{background:#eff5f7;padding:18px;overflow:auto}code{font-size:.92em}table{border-collapse:collapse;width:100%}th,td{border:1px solid #c7d6dc;padding:10px;text-align:left;vertical-align:top}a{color:#006c79}</style></head><body>
+<!-- Umicom Framework | Sammy Hegab, Umicom Foundation | MIT -->
+<h1>Save provider connection settings</h1>
+<p>A connection combines a provider name, an endpoint, a model choice and a reference to a credential. An endpoint is the address an adapter will contact. A credential reference names a key in a separate store; it is not the key itself.</p>
+<p><code>Umicom::provider_connections</code> supplies this shared C service. It saves settings through the Data Server, checks edits against the last reviewed revision, and obtains credentials only when the host explicitly requests an enabled connection. It does not authenticate a user, launch a model server or make a network request. Application connection screens and individual remote provider adapters must compose this service.</p>
+<h2>What is saved</h2>
+<table><tr><th>Information</th><th>Location and purpose</th></tr>
+<tr><td>IDs, display label, endpoint, model, timeout, enabled state</td><td>The host's local settings database. These are non-secret settings; they are not encrypted by this service.</td></tr>
+<tr><td><code>vault:personal-key</code></td><td>A reference in the same database. The part before the colon selects a registered secret provider; the part after it is that provider's key alias.</td></tr>
+<tr><td>Actual API key</td><td>A separate credential store, such as the <a href="storing-provider-keys.html">native secret provider</a>. It is never passed to the settings save API.</td></tr>
+<tr><td>Application/profile scope</td><td>A namespace that keeps settings separate. It does not grant access rights or independently encrypt a user's data.</td></tr></table>
+<h2>1. Choose the storage owner</h2>
+<p>Link your host target to <code>Umicom::provider_connections</code> and include <code>umicom/provider_connections/connections.h</code>. Open a Data Server with <code>umi_data_server_create_sqlite</code> at an absolute per-user path chosen by the host. Do not derive the path from the process's current directory. Keep the file outside source checkouts and published content. A memory Data Server is useful for temporary work and lessons, but loses its settings when destroyed.</p>
+<p>Call <code>UmiProviderConnectionsOpen(server, "studio", "owner", &amp;store)</code>. The application and profile aliases each allow 48 characters: a lower-case ASCII letter followed by lower-case letters, digits, dots, underscores or hyphens. Do not use an email address or a password as an alias. Keep the Data Server alive while this store exists.</p>
+<h2>2. Read before editing</h2>
+<p>Allocate <code>UmiProviderConnectionSnapshot</code> with <code>calloc</code> in hosts with small thread stacks, then call <code>UmiProviderConnectionsRead</code>. An empty scope has zero records and revision zero. A revision is a number identifying the saved state you reviewed. Preserve it while the user edits their draft.</p>
+<pre><code>UmiProviderConnection connection = {0};
+strcpy(connection.id, "personal");
+strcpy(connection.provider_id, "example");
+strcpy(connection.label, "My provider connection");
+strcpy(connection.endpoint, "https://api.example.invalid/inference");
+strcpy(connection.model, "example/model");
+strcpy(connection.secret_reference, "vault:personal-key");
+connection.route = UMI_PROVIDER_CONNECTION_HTTPS;
+connection.timeout_ms = 30000U;
+connection.enabled = false;
+
+uint64_t saved_revision = 0U;
+UmiStatus status = UmiProviderConnectionsPut(store, &amp;connection,
+    false, snapshot-&gt;revision, &amp;saved_revision);</code></pre>
+<p>The example address is deliberately non-working. The assignments above copy known short literals; bound and validate user-entered text before copying it into fixed fields. Check every returned status before proceeding. Passing <code>false</code> creates a new record and rejects a duplicate ID. Passing <code>true</code> replaces an existing record and rejects a missing ID. Successful saves return a new revision. Failure leaves the output revision unchanged.</p>
+<h2>3. Handle competing edits</h2>
+<p>If another window saves first, your save returns <code>UMI_STATUS_BUSY</code>. Read again, show the latest values beside the user's draft, and let them review the conflict. Do not automatically retry with the new revision, because doing so could overwrite their other window's work. The revision belongs to the whole application/profile scope, so even an edit to another connection requires a fresh review.</p>
+<p>Removal uses <code>UmiProviderConnectionsRemove(store, id, reviewed_revision, &amp;saved_revision)</code>. Removing the last record preserves the revision. Removing and recreating an ID therefore cannot make an older draft valid again. Removing settings does not remove or revoke a credential, which might still be used by another connection.</p>
+<h2>4. Prepare an approved request</h2>
+<ol><li>Unlock the host's local profile through its authentication flow. This settings service does not perform that step.</li>
+<li>Have the provider-specific adapter approve the endpoint and authentication method. URL syntax alone does not establish that a destination is trustworthy. An IBKR TWS session, for example, must not be treated as a generic API-key connection.</li>
+<li>Register a secret provider belonging to this application/profile scope. For native storage, create it with <code>umi_secret_provider_platform</code> and add it to the registry as <code>vault</code>. Successful registry registration transfers provider ownership to the registry. Check each status; unsupported secure storage must not fall back to a plaintext database.</li>
+<li>Store or replace a credential only after the user explicitly requests it. Secret-store writes and settings writes are separate operations. If saving settings fails after saving a key, report that distinction and let the user decide whether to keep or remove the key.</li>
+<li>After reviewing and enabling the saved connection, call <code>UmiProviderConnectionsAcquire</code> with the reviewed revision. It rejects disabled or stale settings before invoking a credential callback. Settings reads and saves never look up credentials.</li>
+<li>Use the returned settings and secret together. Do not fetch a different endpoint afterwards. The adapter must verify TLS, apply its own destination policy and prevent credential forwarding to redirected destinations. Clear the secret buffer with <code>umi_secret_clear</code> after use, including failed requests. Never log it.</li></ol>
+<p>Acquisition ends the database transaction before calling the credential provider. A later edit affects future acquisitions, not an operation already prepared. The host must coordinate cancelling pending work when the user locks their profile or disables a connection. Remote requests still send authentication and selected content to that provider; local key storage does not make remote processing offline.</p>
+<h2>5. Configure a local model</h2>
+<p>Use <code>UMI_PROVIDER_CONNECTION_LOOPBACK</code> and an endpoint such as <code>http://127.0.0.1:8080/v1/chat/completions</code>. The port must be between 1024 and 65535, and the secret reference must be empty. This prevents this route from obtaining a stored API key. The host still needs a compatible, trusted server and a transport adapter. This service does not download models, start processes or verify which process owns the port.</p>
+<p>Remote endpoints use lower-case <code>https://</code> with an ASCII host, optional port, and a restricted path. Query strings, fragments, user information, percent escapes, backslashes and dot path segments are rejected. Model identifiers allow ASCII letters, digits, dots, underscores, hyphens, slashes and colons; an empty model means the adapter must obtain that choice elsewhere. Labels accept single-line UTF-8. Never put credentials in any of these fields.</p>
+<h2>Recovery and limits</h2>
+<table><tr><th>Result</th><th>Response</th></tr>
+<tr><td><code>BUSY</code></td><td>Another edit changed the scope or another operation owns the database transaction. Preserve the draft, reread when available, and review.</td></tr>
+<tr><td><code>PARSE_ERROR</code></td><td>Saved metadata is damaged or inconsistent. Preserve the database for recovery; do not overwrite it with an empty catalogue.</td></tr>
+<tr><td><code>CAPACITY_EXCEEDED</code></td><td>The scope has 32 records, a field exceeds its limit, the Data Server has no space, or a secret buffer is too small. Explain which operation failed and retain the draft.</td></tr>
+<tr><td><code>INVALID_STATE</code> after a database failure</td><td>The store could not confirm rollback. Stop using it, join its workers, close it, and recover or reopen the Data Server before creating a replacement. Do not report the edit as saved.</td></tr>
+<tr><td>Missing credential or unavailable secure store</td><td>Keep the non-secret settings. Ask the user to reconnect or provision the missing credential through the host's secure flow.</td></tr></table>
+<p>The index is authoritative; records outside it are not listed. A new save refuses to overwrite an orphan record with the same ID. External database edits and file rollback bypass the service's revision protocol. Treat the local database as host-controlled storage, not as an authenticated audit log.</p>
+<p>Join all users before destroying the store, registry and Data Server, in that order. Run synchronous database and vault work on the host's owned worker when it could block a graphical interface. The existing integration designer's in-memory connection catalogue remains available; this separate service adds durable, reviewed storage without changing that catalogue's API.</p>
+<p>For a small credential-free example, read <code>examples/provider_connections/saved_connections.c</code>. Its expected output is <code>Saved draft: Local model server (disabled)</code>. The example uses memory and performs no network or vault operations.</p>
+</body></html>

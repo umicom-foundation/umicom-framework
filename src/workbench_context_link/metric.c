@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_context_link/metric.h"
+#include "../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -55,6 +56,14 @@ void umi_workbench_context_link_metric_init(UmiWorkbenchContextLinkMetric *recor
 UmiStatus umi_workbench_context_link_metric_validate(
     const UmiWorkbenchContextLinkMetric *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->metric_id, '\0', sizeof(record->metric_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->name, '\0', sizeof(record->name)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->unit, '\0', sizeof(record->unit)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -208,3 +217,73 @@ void umi_workbench_context_link_metric_touch(
     record->timestamp_ms = timestamp_ms;
     ++record->revision;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiWorkbenchContextLinkMetricArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x9f53a7c4797397c3);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWorkbenchContextLinkMetric *)0)->metric_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWorkbenchContextLinkMetric *)0)->name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWorkbenchContextLinkMetric *)0)->unit)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiWorkbenchContextLinkMetricArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiWorkbenchContextLinkMetric *)0)->metric_id) - 1U +
+        8U + sizeof(((UmiWorkbenchContextLinkMetric *)0)->name) - 1U +
+        8U + sizeof(((UmiWorkbenchContextLinkMetric *)0)->unit) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiWorkbenchContextLinkMetricArchiveWrite(UmiArchiveWriter *writer, const UmiWorkbenchContextLinkMetric *value)
+{
+    UmiArchiveWriteText(writer, value->metric_id, sizeof(value->metric_id));
+    UmiArchiveWriteText(writer, value->name, sizeof(value->name));
+    UmiArchiveWriteText(writer, value->unit, sizeof(value->unit));
+    UmiArchiveWriteSigned(writer, (int64_t)value->context_kind);
+    UmiArchiveWriteSigned(writer, (int64_t)value->colour);
+    UmiArchiveWriteSigned(writer, (int64_t)value->mode);
+    UmiArchiveWriteSigned(writer, (int64_t)value->state);
+    UmiArchiveWriteSigned(writer, (int64_t)value->origin);
+    UmiArchiveWriteSigned(writer, (int64_t)value->priority);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->flags);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->timestamp_ms);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiWorkbenchContextLinkMetricArchiveRead(UmiArchiveReader *reader, UmiWorkbenchContextLinkMetric *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->metric_id, sizeof(value->metric_id));
+    UmiArchiveReadText(reader, value->name, sizeof(value->name));
+    UmiArchiveReadText(reader, value->unit, sizeof(value->unit));
+    value->context_kind = (UmiContextKind)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->colour = (UmiContextChannelColour)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->mode = (UmiWorkbenchContextLinkMode)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->state = (UmiWorkbenchContextLinkState)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->origin = (UmiWorkbenchContextLinkOrigin)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->priority = (UmiWorkbenchContextLinkPriority)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->flags = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->timestamp_ms = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiWorkbenchContextLinkMetricArchiveValidate(const UmiWorkbenchContextLinkMetric *value)
+{
+    return umi_workbench_context_link_metric_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_context_link_metric_archive_encode, umi_workbench_context_link_metric_archive_decode,
+    UmiWorkbenchContextLinkMetric, UmiWorkbenchContextLinkMetricArchiveSchema, UmiWorkbenchContextLinkMetricArchiveBound, UmiWorkbenchContextLinkMetricArchiveWrite, UmiWorkbenchContextLinkMetricArchiveRead, UmiWorkbenchContextLinkMetricArchiveValidate)

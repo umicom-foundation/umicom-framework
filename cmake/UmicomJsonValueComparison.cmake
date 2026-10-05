@@ -1,0 +1,16 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-json-value-comparison-test "${CMAKE_CURRENT_LIST_DIR}/../tests/json_tree/test_value_comparison.c")
+    target_link_libraries(umicom-json-value-comparison-test PRIVATE Umicom::developer)
+    umicom_apply_warnings(umicom-json-value-comparison-test)
+    umicom_apply_sanitizers(umicom-json-value-comparison-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-json-value-comparison-test)
+    endif()
+    foreach(case null null-bool bool bool-change integer numeric-spelling negative-zero big-integer string escape unicode array array-order array-count object-order key-escape nested key-change value-change object-count empty-array empty-object type-change string-number duplicate-left duplicate-right duplicate-escaped nested-duplicate cancel null-left null-right negative-node outside-node null-output subtree long-key deep wide)
+        add_test(NAME framework.language_runtime.json_value_comparison.${case} COMMAND umicom-json-value-comparison-test ${case})
+        set_tests_properties(framework.language_runtime.json_value_comparison.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;language;locations;ownership;regression")
+    endforeach()
+endif()

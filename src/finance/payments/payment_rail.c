@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/payments/payment_rail.h"
+#include "../../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise payments payment rail from caller-provided values so later operations receive
@@ -46,6 +47,13 @@ UmiStatus umi_payments_payment_rail_init(UmiPaymentsPaymentRail *value,
  * it.
  */
 bool umi_payments_payment_rail_valid(const UmiPaymentsPaymentRail *value) {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (value == NULL) return 0;
+    if (memchr(value->id.value, '\0', sizeof(value->id.value)) == NULL) return 0;
+    if (memchr(value->name, '\0', sizeof(value->name)) == NULL) return 0;
+
     return value!=NULL && (value->name[0]!='\0' && value->maximum_minor>0 && value->kind>=UMI_PAYMENTS_RAIL_INTERNAL && value->kind<=UMI_PAYMENTS_RAIL_CORRESPONDENT);
 }
 
@@ -61,3 +69,47 @@ bool umi_payments_payment_rail_instant(const UmiPaymentsPaymentRail *value) {
     if(value==NULL) return (bool)0;
     return value->supports_instant;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiPaymentsPaymentRailArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x4af563343744976c);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPaymentsPaymentRail *)0)->id.value)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPaymentsPaymentRail *)0)->name)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiPaymentsPaymentRailArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiPaymentsPaymentRail *)0)->id.value) - 1U +
+        8U +
+        8U + sizeof(((UmiPaymentsPaymentRail *)0)->name) - 1U +
+        8U +
+        8U;
+}
+static void UmiPaymentsPaymentRailArchiveWrite(UmiArchiveWriter *writer, const UmiPaymentsPaymentRail *value)
+{
+    UmiArchiveWriteText(writer, value->id.value, sizeof(value->id.value));
+    UmiArchiveWriteSigned(writer, (int64_t)value->kind);
+    UmiArchiveWriteText(writer, value->name, sizeof(value->name));
+    UmiArchiveWriteSigned(writer, (int64_t)value->maximum_minor);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->supports_instant);
+}
+static void UmiPaymentsPaymentRailArchiveRead(UmiArchiveReader *reader, UmiPaymentsPaymentRail *value)
+{
+    UmiArchiveReadText(reader, value->id.value, sizeof(value->id.value));
+    value->kind = (UmiPaymentsRailKind)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    UmiArchiveReadText(reader, value->name, sizeof(value->name));
+    value->maximum_minor = (int64_t)UmiArchiveReadSigned(reader, INT64_MIN, INT64_MAX);
+    value->supports_instant = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiPaymentsPaymentRailArchiveValidate(const UmiPaymentsPaymentRail *value)
+{
+    return umi_payments_payment_rail_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_payments_payment_rail_archive_encode, umi_payments_payment_rail_archive_decode,
+    UmiPaymentsPaymentRail, UmiPaymentsPaymentRailArchiveSchema, UmiPaymentsPaymentRailArchiveBound, UmiPaymentsPaymentRailArchiveWrite, UmiPaymentsPaymentRailArchiveRead, UmiPaymentsPaymentRailArchiveValidate)

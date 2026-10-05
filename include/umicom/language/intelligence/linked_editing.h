@@ -20,6 +20,7 @@
 #ifndef UMICOM_LANGUAGE_INTELLIGENCE_LINKED_EDITING_H
 #define UMICOM_LANGUAGE_INTELLIGENCE_LINKED_EDITING_H
 #include "umicom/language/intelligence/types.h"
+#include "umicom/base/value_archive.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -60,6 +61,17 @@ UmiStatus umi_language_intelligence_linked_editing_validate(const UmiLanguageInt
  * and its client applications.
  */
 int umi_language_intelligence_linked_editing_is_nested(const UmiLanguageIntelligenceLinkedEditing *value);
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_language_intelligence_linked_editing_archive_encode(const UmiLanguageIntelligenceLinkedEditing *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_language_intelligence_linked_editing_archive_decode(const void *bytes, size_t byte_count,
+    UmiLanguageIntelligenceLinkedEditing *value);
+
 #ifdef __cplusplus
 }
 #endif

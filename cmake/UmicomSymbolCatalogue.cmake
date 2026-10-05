@@ -1,0 +1,16 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-symbol-catalogue-test "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/test_symbol_catalogue.c")
+    target_link_libraries(umicom-symbol-catalogue-test PRIVATE Umicom::developer)
+    umicom_apply_warnings(umicom-symbol-catalogue-test)
+    umicom_apply_sanitizers(umicom-symbol-catalogue-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-symbol-catalogue-test)
+    endif()
+    foreach(case hierarchy flat empty null selection owned large capacity depth depth-limit name-empty name-space name-unicode-space name-unicode name-limit detail detail-type container kind-unknown kind-zero kind-fraction tags tag-unknown tag-invalid deprecated deprecated-type selection-outside missing-selection reversed negative mixed child-flat children-type duplicate uri uri-quote uri-invalid-utf8 flat-uri response wrong-id error cancelled arguments)
+        add_test(NAME framework.language_runtime.symbol_catalogue.${case} COMMAND umicom-symbol-catalogue-test ${case})
+        set_tests_properties(framework.language_runtime.symbol_catalogue.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;language;locations;ownership;regression")
+    endforeach()
+endif()

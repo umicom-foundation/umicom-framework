@@ -132,6 +132,9 @@ UmiStatus UmiGtk4EditorCommandForView(UmiGtk4Adapter *adapter,
     const char *commandId, const char *viewId);
 int UmiGtk4EditorHasDocument(UmiGtk4Adapter *adapter, const char *viewId);
 UmiStatus UmiGtk4EditorSynchronise(UmiGtk4Adapter *adapter, const char *viewId);
+/* Captures belong to one grouped native action and borrow no GTK widgets. */
+UmiStatus UmiGtk4EditorCaptureTyping(UmiGtk4Adapter *adapter, const char *viewId, UmiDocumentEditPlan **out_capture);
+UmiStatus UmiGtk4EditorCommitTyping(UmiGtk4Adapter *adapter, UmiDocumentEditPlan *capture);
 /**
  * Provide the gtk4 build shell operation used by this module and its client applications.
  */

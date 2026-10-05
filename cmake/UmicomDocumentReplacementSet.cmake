@@ -1,0 +1,20 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+target_sources(umicom_document PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../src/document/replacement_set.c")
+if(BUILD_TESTING)
+    add_executable(umicom-document-replacement-set-test "${CMAKE_CURRENT_LIST_DIR}/../tests/document/test_replacement_set.c")
+    target_link_libraries(umicom-document-replacement-set-test PRIVATE Umicom::document)
+    umicom_apply_warnings(umicom-document-replacement-set-test)
+    umicom_apply_sanitizers(umicom-document-replacement-set-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-document-replacement-set-test)
+    endif()
+    foreach(case capture apply review-all partial-review repeated-review approval revision stale-first stale-last closed read-only empty-needle empty-replacement same-replacement no-match smart-case sensitive owned-inputs untitled pinned new-document undo pending-typing invalid-source invalid-input consumed arguments)
+        add_test(NAME framework.document.replacement_set.${case} COMMAND umicom-document-replacement-set-test ${case})
+        set_tests_properties(framework.document.replacement_set.${case} PROPERTIES TIMEOUT 30 LABELS "framework;document;replacement;transaction;regression")
+    endforeach()
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDocumentReplacementSetPanel.cmake")
+
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/complete-document-replacements.html" DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/learning)

@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/context_transform.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context transform from caller-provided values so later operations receive a
@@ -131,6 +132,15 @@ UmiStatus umi_context_transform_record_failure(UmiContextTransform *state,UmiSta
 /* Check that context transform satisfies its contract before another service relies on it. */
 UmiStatus umi_context_transform_validate(const UmiContextTransform *state)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (state == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->plan_id, '\0', sizeof(state->plan_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->source_schema, '\0', sizeof(state->source_schema)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->target_schema, '\0', sizeof(state->target_schema)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->transformer_id, '\0', sizeof(state->transformer_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -158,3 +168,68 @@ bool umi_context_transform_covers_sequence(const UmiContextTransform *state,uint
 {
     return state!=NULL&&state->item_count!=0U&&sequence>=state->first_sequence&&sequence<=state->last_sequence;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextTransformArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xfdc82835cdae5c15);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextTransform *)0)->plan_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextTransform *)0)->source_schema)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextTransform *)0)->target_schema)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextTransform *)0)->transformer_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextTransformArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextTransform *)0)->plan_id) - 1U +
+        8U + sizeof(((UmiContextTransform *)0)->source_schema) - 1U +
+        8U + sizeof(((UmiContextTransform *)0)->target_schema) - 1U +
+        8U + sizeof(((UmiContextTransform *)0)->transformer_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextTransformArchiveWrite(UmiArchiveWriter *writer, const UmiContextTransform *value)
+{
+    UmiArchiveWriteText(writer, value->plan_id, sizeof(value->plan_id));
+    UmiArchiveWriteText(writer, value->source_schema, sizeof(value->source_schema));
+    UmiArchiveWriteText(writer, value->target_schema, sizeof(value->target_schema));
+    UmiArchiveWriteText(writer, value->transformer_id, sizeof(value->transformer_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->first_sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->last_sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->item_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->failure_count);
+    UmiArchiveWriteSigned(writer, (int64_t)value->status);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextTransformArchiveRead(UmiArchiveReader *reader, UmiContextTransform *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->plan_id, sizeof(value->plan_id));
+    UmiArchiveReadText(reader, value->source_schema, sizeof(value->source_schema));
+    UmiArchiveReadText(reader, value->target_schema, sizeof(value->target_schema));
+    UmiArchiveReadText(reader, value->transformer_id, sizeof(value->transformer_id));
+    value->first_sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->last_sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->item_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->failure_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->status = (UmiStatus)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextTransformArchiveValidate(const UmiContextTransform *value)
+{
+    return umi_context_transform_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_transform_archive_encode, umi_context_transform_archive_decode,
+    UmiContextTransform, UmiContextTransformArchiveSchema, UmiContextTransformArchiveBound, UmiContextTransformArchiveWrite, UmiContextTransformArchiveRead, UmiContextTransformArchiveValidate)

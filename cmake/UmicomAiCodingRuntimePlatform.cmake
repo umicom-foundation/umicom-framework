@@ -57,6 +57,7 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/ai_coding_runtime/ignore.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/ai_coding_runtime/language.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/ai_coding_runtime/local_workspace.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_coding_runtime/local_files.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/ai_coding_runtime/patch_preview.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/ai_coding_runtime/path.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/ai_coding_runtime/platform.c"

@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/cross_application_panel/instance.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise panel instance from caller-provided values so later operations receive a
@@ -33,6 +34,17 @@ record->revision=1U;
 /* Check that panel instance satisfies its contract before another service relies on it. */
 UmiStatus umi_panel_instance_validate(const UmiPanelInstance *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->instance_id, '\0', sizeof(record->instance_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->panel_id, '\0', sizeof(record->panel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->application_id, '\0', sizeof(record->application_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->layout_node_id, '\0', sizeof(record->layout_node_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->workspace_id, '\0', sizeof(record->workspace_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->channel_id, '\0', sizeof(record->channel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
 /*
  * Protect caller-owned memory by checking that required state is available before it is
  * used.
@@ -173,3 +185,70 @@ if(store->count!=0U)memcpy(records,store->items,store->count*sizeof(store->items
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiPanelInstanceArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x8f9acfc630c96b63);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelInstance *)0)->instance_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelInstance *)0)->panel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelInstance *)0)->application_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelInstance *)0)->layout_node_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelInstance *)0)->workspace_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelInstance *)0)->channel_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiPanelInstanceArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiPanelInstance *)0)->instance_id) - 1U +
+        8U + sizeof(((UmiPanelInstance *)0)->panel_id) - 1U +
+        8U + sizeof(((UmiPanelInstance *)0)->application_id) - 1U +
+        8U + sizeof(((UmiPanelInstance *)0)->layout_node_id) - 1U +
+        8U + sizeof(((UmiPanelInstance *)0)->workspace_id) - 1U +
+        8U + sizeof(((UmiPanelInstance *)0)->channel_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiPanelInstanceArchiveWrite(UmiArchiveWriter *writer, const UmiPanelInstance *value)
+{
+    UmiArchiveWriteText(writer, value->instance_id, sizeof(value->instance_id));
+    UmiArchiveWriteText(writer, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveWriteText(writer, value->application_id, sizeof(value->application_id));
+    UmiArchiveWriteText(writer, value->layout_node_id, sizeof(value->layout_node_id));
+    UmiArchiveWriteText(writer, value->workspace_id, sizeof(value->workspace_id));
+    UmiArchiveWriteText(writer, value->channel_id, sizeof(value->channel_id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->placement);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->visible);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->active);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->locked);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiPanelInstanceArchiveRead(UmiArchiveReader *reader, UmiPanelInstance *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->instance_id, sizeof(value->instance_id));
+    UmiArchiveReadText(reader, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveReadText(reader, value->application_id, sizeof(value->application_id));
+    UmiArchiveReadText(reader, value->layout_node_id, sizeof(value->layout_node_id));
+    UmiArchiveReadText(reader, value->workspace_id, sizeof(value->workspace_id));
+    UmiArchiveReadText(reader, value->channel_id, sizeof(value->channel_id));
+    value->placement = (UmiPanelPlacement)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->visible = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->active = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->locked = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiPanelInstanceArchiveValidate(const UmiPanelInstance *value)
+{
+    return umi_panel_instance_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_panel_instance_archive_encode, umi_panel_instance_archive_decode,
+    UmiPanelInstance, UmiPanelInstanceArchiveSchema, UmiPanelInstanceArchiveBound, UmiPanelInstanceArchiveWrite, UmiPanelInstanceArchiveRead, UmiPanelInstanceArchiveValidate)

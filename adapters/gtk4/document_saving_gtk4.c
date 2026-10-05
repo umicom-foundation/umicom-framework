@@ -150,6 +150,8 @@ UmiStatus UmiGtk4AdapterDocumentSaveAll(UmiGtk4Adapter *adapter,
     // if (adapter->document_save_run != NULL || adapter->edit_cancel != NULL) return UMI_STATUS_BUSY;
     if (adapter->document_save_run != NULL || adapter->edit_cancel != NULL ||
         UmiGtk4AdapterDocumentCloseBusy(adapter)) return UMI_STATUS_BUSY;
+    /* Keep saving separate from a currently reviewed draft replacement. */
+    if (UmiGtk4AdapterReplacementReviewBusy(adapter)) return UMI_STATUS_BUSY;
     SaveRun *run = g_try_new0(SaveRun, 1);
     if (run == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     run->references = 1U;

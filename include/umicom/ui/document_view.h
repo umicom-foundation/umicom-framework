@@ -162,6 +162,28 @@ UmiStatus UmiUiDocumentViewModelCopyText(const UmiUiDocumentViewModel *model,
     const char *viewId, char **outText, size_t *outLength);
 void UmiUiDocumentViewModelFreeText(char *text);
 
+/* A selection capture pairs bytes with their source identity under one model
+ * lock. Names and paths are deliberately absent: callers decide separately
+ * whether any document metadata belongs in an exported request. */
+typedef struct UmiUiDocumentSelectionInfo {
+    char view_id[UMI_UI_ID_CAPACITY];
+    char document_id[UMI_UI_ID_CAPACITY];
+    size_t byte_offset, byte_count;
+    uint64_t text_revision;
+} UmiUiDocumentSelectionInfo;
+
+/* Copy only the nonempty selection of an explicitly chosen active view.
+ * expected_revision is the document-view model revision, including selection
+ * changes. A stale revision returns BUSY. Bounds and capacity are checked
+ * before copying; neither output changes on failure. Text is zero-terminated
+ * and never silently truncated. This byte-oriented operation does not read a
+ * file or validate encoding; a text consumer must validate the copied UTF-8.
+ * The caller owns both outputs, which must not overlap. No model pointer is
+ * retained by the copy, and no complete-draft allocation is needed. */
+UmiStatus UmiUiDocumentViewModelCopySelection(const UmiUiDocumentViewModel *model,
+    const char *view_id, uint64_t expected_revision, char *out_text,
+    size_t capacity, UmiUiDocumentSelectionInfo *out_info);
+
 /** Read inexpensive complete-text metadata without copying the draft. */
 UmiStatus UmiUiDocumentViewModelTextInfo(const UmiUiDocumentViewModel *model,
     const char *viewId, UmiUiDocumentTextInfo *outInfo);

@@ -176,8 +176,39 @@ static int RegistryEditMemory(void)
     return 0;
 }
 
+
+/* Exercise both restoration staging and final owner publication. This fixture
+ * already owns the private counter and allocator; no test controls enter the
+ * public SDK or production allocation policy. */
+static int RegistryArchiveEdges(void)
+{
+    UmiBookmarkRegistry *registry = NULL;
+    REQUIRE(umi_platform_bookmarks_registry_create(&registry) == UMI_STATUS_OK);
+    UmiBookmarkSnapshot input = {0};
+    memcpy(input.id, "retained", sizeof("retained"));
+    REQUIRE(umi_platform_bookmarks_registry_upsert(registry, &input) == UMI_STATUS_OK);
+    unsigned char bytes[1024]; size_t size = 0U;
+    uint64_t revision = registry->revision;
+    REQUIRE(umi_platform_bookmarks_registry_archive_encode(registry, revision, bytes, sizeof(bytes), &size) == UMI_STATUS_OK);
+    UmiSnapshotBatchResult result;
+    refuse_next_staging = 1;
+    REQUIRE(umi_platform_bookmarks_registry_archive_restore(registry, revision, bytes, size, &result) == UMI_STATUS_OUT_OF_MEMORY);
+    REQUIRE(refuse_next_staging == 0 && result.applied == 0U);
+    REQUIRE(registry->revision == revision && registry->count == 1U && strcmp(registry->items[0].id, "retained") == 0);
+    registry->revision = UINT64_MAX;
+    REQUIRE(umi_platform_bookmarks_registry_archive_restore(registry, UINT64_MAX, bytes, size, &result) == UMI_STATUS_CAPACITY_EXCEEDED);
+    REQUIRE(registry->revision == UINT64_MAX && registry->count == 1U && result.applied == 0U);
+    registry->count = UMI_PLATFORM_BOOKMARKS_CAPACITY + 1U;
+    REQUIRE(umi_platform_bookmarks_registry_archive_encode(registry, UINT64_MAX, bytes, sizeof(bytes), &size) == UMI_STATUS_INVALID_STATE);
+    REQUIRE(umi_platform_bookmarks_registry_archive_restore(registry, UINT64_MAX, bytes, size, &result) == UMI_STATUS_INVALID_STATE);
+    registry->count = 1U;
+    umi_platform_bookmarks_registry_destroy(registry);
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
+    if (argc == 2 && strcmp(argv[1], "archive-edges") == 0) return RegistryArchiveEdges();
     if (argc != 2) return 2;
     if (strcmp(argv[1], "edit-counter") == 0) return RegistryEditBoundary();
     if (strcmp(argv[1], "edit-memory") == 0) return RegistryEditMemory();

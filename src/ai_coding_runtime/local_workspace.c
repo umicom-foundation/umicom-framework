@@ -23,6 +23,10 @@ struct UmiAiCodingLocalWorkspace {
     char root[UMI_AI_CODING_RUNTIME_PATH_CAPACITY];
 };
 
+/* Shared native file access replaces duplicated narrow-character I/O so
+ * coding edits use one Unicode, link and complete-file publication policy.
+ * The previous callbacks remain here for engineering review. */
+#if 0
 /* Provide the full path operation used by this module and its client applications. */
 static UmiStatus full_path(
     UmiAiCodingLocalWorkspace *workspace,
@@ -213,6 +217,31 @@ static UmiStatus local_exists(
     return fclose(stream) == 0 ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
 }
 
+#endif
+
+/* Keep this adapter thin. It owns the captured root; Framework's file service
+ * owns handles and temporary storage only for the duration of each call. */
+static UmiStatus local_read(void *data, const char *path, char *text, size_t capacity, size_t *length)
+{
+    UmiAiCodingLocalWorkspace *workspace = data;
+    return UmiAiCodingWorkspaceReadFile(workspace != NULL ? workspace->root : NULL, path, text, capacity, length);
+}
+static UmiStatus local_write(void *data, const char *path, const char *text, size_t length)
+{
+    UmiAiCodingLocalWorkspace *workspace = data;
+    return UmiAiCodingWorkspaceWriteFile(workspace != NULL ? workspace->root : NULL, path, text, length);
+}
+static UmiStatus local_remove(void *data, const char *path)
+{
+    UmiAiCodingLocalWorkspace *workspace = data;
+    return UmiAiCodingWorkspaceRemoveFile(workspace != NULL ? workspace->root : NULL, path);
+}
+static UmiStatus local_exists(void *data, const char *path, int *exists)
+{
+    UmiAiCodingLocalWorkspace *workspace = data;
+    return UmiAiCodingWorkspaceFileExists(workspace != NULL ? workspace->root : NULL, path, exists);
+}
+
 /*
  * Initialise ai coding local workspace from caller-provided values so later operations
  * receive a known state.
@@ -248,7 +277,13 @@ UmiStatus umi_ai_coding_local_workspace_create(
      */
     if (workspace == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
+    /* Capturing an absolute root prevents a later process-directory change
+     * from redirecting an approved edit. Retain the verbatim copy for review. */
+#if 0
     (void)memcpy(workspace->root, root, length + 1U);
+#endif
+    UmiStatus status = UmiAiCodingWorkspaceRootResolve(root, workspace->root, sizeof(workspace->root));
+    if (status != UMI_STATUS_OK) { free(workspace); return status; }
     *out_workspace = workspace;
     return UMI_STATUS_OK;
 }

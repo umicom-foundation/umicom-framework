@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/delivery_receipt.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context delivery receipt from caller-provided values so later operations
@@ -36,6 +37,16 @@ record->revision=1U;
  */
 UmiStatus umi_context_delivery_receipt_validate(const UmiContextDeliveryReceipt *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->receipt_id, '\0', sizeof(record->receipt_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->context_id, '\0', sizeof(record->context_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->subscription_id, '\0', sizeof(record->subscription_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->application_id, '\0', sizeof(record->application_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->panel_id, '\0', sizeof(record->panel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -190,3 +201,63 @@ if(store->count!=0U)memcpy(out_records,store->items,store->count*sizeof(store->i
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextDeliveryReceiptArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x286413814f55102f);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextDeliveryReceipt *)0)->receipt_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextDeliveryReceipt *)0)->context_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextDeliveryReceipt *)0)->subscription_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextDeliveryReceipt *)0)->application_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextDeliveryReceipt *)0)->panel_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextDeliveryReceiptArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextDeliveryReceipt *)0)->receipt_id) - 1U +
+        8U + sizeof(((UmiContextDeliveryReceipt *)0)->context_id) - 1U +
+        8U + sizeof(((UmiContextDeliveryReceipt *)0)->subscription_id) - 1U +
+        8U + sizeof(((UmiContextDeliveryReceipt *)0)->application_id) - 1U +
+        8U + sizeof(((UmiContextDeliveryReceipt *)0)->panel_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextDeliveryReceiptArchiveWrite(UmiArchiveWriter *writer, const UmiContextDeliveryReceipt *value)
+{
+    UmiArchiveWriteText(writer, value->receipt_id, sizeof(value->receipt_id));
+    UmiArchiveWriteText(writer, value->context_id, sizeof(value->context_id));
+    UmiArchiveWriteText(writer, value->subscription_id, sizeof(value->subscription_id));
+    UmiArchiveWriteText(writer, value->application_id, sizeof(value->application_id));
+    UmiArchiveWriteText(writer, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->state);
+    UmiArchiveWriteSigned(writer, (int64_t)value->status);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->delivered_at_ms);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextDeliveryReceiptArchiveRead(UmiArchiveReader *reader, UmiContextDeliveryReceipt *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->receipt_id, sizeof(value->receipt_id));
+    UmiArchiveReadText(reader, value->context_id, sizeof(value->context_id));
+    UmiArchiveReadText(reader, value->subscription_id, sizeof(value->subscription_id));
+    UmiArchiveReadText(reader, value->application_id, sizeof(value->application_id));
+    UmiArchiveReadText(reader, value->panel_id, sizeof(value->panel_id));
+    value->state = (UmiContextDeliveryState)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->status = (UmiStatus)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->delivered_at_ms = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextDeliveryReceiptArchiveValidate(const UmiContextDeliveryReceipt *value)
+{
+    return umi_context_delivery_receipt_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_delivery_receipt_archive_encode, umi_context_delivery_receipt_archive_decode,
+    UmiContextDeliveryReceipt, UmiContextDeliveryReceiptArchiveSchema, UmiContextDeliveryReceiptArchiveBound, UmiContextDeliveryReceiptArchiveWrite, UmiContextDeliveryReceiptArchiveRead, UmiContextDeliveryReceiptArchiveValidate)

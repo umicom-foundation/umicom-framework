@@ -53,11 +53,14 @@
 #define UMI_MKDIR(path) mkdir((path), 0775)
 #endif
 
+/* The portable separator helper remains owned by the POSIX directory creator. */
+#ifndef _WIN32
 /* Provide the is separator operation used by this module and its client applications. */
 static int umi_is_separator(char value)
 {
     return value == '/' || value == '\\';
 }
+#endif
 
 /* Provide the copy string operation used by this module and its client applications. */
 static UmiStatus umi_copy_string(char *destination,
@@ -84,6 +87,10 @@ static UmiStatus umi_copy_string(char *destination,
     return UMI_STATUS_OK;
 }
 
+/* The ANSI deletion helpers cannot address UTF-8 project names reliably.
+ * Native wide-path operations below replace them while retaining their retry
+ * policy. The former implementation remains here for engineering review. */
+#if 0
 #ifdef _WIN32
 /*
  * Provide the windows delete retryable operation used by this module and its client
@@ -164,6 +171,17 @@ static UmiStatus umi_windows_remove_directory(const char *path)
 }
 #endif
 
+#endif
+#ifdef _WIN32
+#include "filesystem_win32.inc"
+#else
+/* POSIX paths already use native byte strings; keep their stream semantics. */
+static FILE *umi_native_fopen(const char *path, const char *mode)
+{
+    return fopen(path, mode);
+}
+#endif
+
 /* Provide the fs read bytes operation used by this module and its client applications. */
 UmiStatus umi_fs_read_bytes(const char *path,
                             unsigned char **out_bytes,
@@ -190,7 +208,13 @@ UmiStatus umi_fs_read_bytes(const char *path,
         *out_size = 0U;
     }
 
+    /* Route the path through the shared native encoding boundary. The former
+     * narrow open remains for review; the byte-stream mode is unchanged. */
+#if 0
     file = fopen(path, "rb");
+#else
+    file = umi_native_fopen(path, "rb");
+#endif
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -251,7 +275,13 @@ UmiStatus umi_fs_write_bytes(const char *path,
     if (path == NULL || (size > 0U && bytes == NULL)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Route the path through the shared native encoding boundary. The former
+     * narrow open remains for review; the byte-stream mode is unchanged. */
+#if 0
     file = fopen(path, "wb");
+#else
+    file = umi_native_fopen(path, "wb");
+#endif
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -305,7 +335,13 @@ static UmiStatus umi_fs_write_mode(const char *path,
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Route the path through the shared native encoding boundary. The former
+     * narrow open remains for review; the byte-stream mode is unchanged. */
+#if 0
     file = fopen(path, mode);
+#else
+    file = umi_native_fopen(path, mode);
+#endif
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -339,22 +375,46 @@ UmiStatus umi_fs_append_text(const char *path, const char *text)
 /* Provide the fs exists operation used by this module and its client applications. */
 int umi_fs_exists(const char *path)
 {
+#ifdef _WIN32
+    /* Wide stat preserves file-kind checks without interpreting UTF-8 as ANSI. */
+    struct _stat64 info;
+    return path != NULL && umi_windows_stat(path, &info) == 0;
+#else
+    /* This byte-path implementation remains active on POSIX and is retained
+     * for review of the former Windows route. */
     struct stat info;
     return path != NULL && stat(path, &info) == 0;
+#endif
 }
 
 /* Provide the fs is file operation used by this module and its client applications. */
 int umi_fs_is_file(const char *path)
 {
+#ifdef _WIN32
+    /* Wide stat preserves file-kind checks without interpreting UTF-8 as ANSI. */
+    struct _stat64 info;
+    return path != NULL && umi_windows_stat(path, &info) == 0 && (info.st_mode & _S_IFMT) == _S_IFREG;
+#else
+    /* This byte-path implementation remains active on POSIX and is retained
+     * for review of the former Windows route. */
     struct stat info;
     return path != NULL && stat(path, &info) == 0 && S_ISREG(info.st_mode);
+#endif
 }
 
 /* Provide the fs is directory operation used by this module and its client applications. */
 int umi_fs_is_directory(const char *path)
 {
+#ifdef _WIN32
+    /* Wide stat preserves file-kind checks without interpreting UTF-8 as ANSI. */
+    struct _stat64 info;
+    return path != NULL && umi_windows_stat(path, &info) == 0 && (info.st_mode & _S_IFMT) == _S_IFDIR;
+#else
+    /* This byte-path implementation remains active on POSIX and is retained
+     * for review of the former Windows route. */
     struct stat info;
     return path != NULL && stat(path, &info) == 0 && S_ISDIR(info.st_mode);
+#endif
 }
 
 /* Provide the fs is absolute operation used by this module and its client applications. */
@@ -406,6 +466,14 @@ UmiStatus umi_fs_parent(char *out_path,
  */
 UmiStatus umi_fs_make_directories(const char *path)
 {
+#ifdef _WIN32
+    /* Keep platform encoding and lifetime policy in Framework so applications
+     * do not need their own Windows-specific copies of this operation. */
+    if (path == NULL || path[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_windows_make_directories(path);
+#else
+    /* The previous byte-path implementation remains active on POSIX. Its
+     * Windows branches are retained for review of the native replacement. */
     char working[UMI_PATH_CAPACITY];
     size_t index;
     size_t length;
@@ -454,6 +522,7 @@ UmiStatus umi_fs_make_directories(const char *path)
         return UMI_STATUS_IO_ERROR;
     }
     return UMI_STATUS_OK;
+#endif
 }
 
 UmiStatus umi_fs_copy_file(const char *source, const char *destination)
@@ -478,7 +547,13 @@ UmiStatus umi_fs_copy_file(const char *source, const char *destination)
         (void)umi_fs_make_directories(parent);
     }
 
+    /* Route the path through the shared native encoding boundary. The former
+     * narrow open remains for review; the byte-stream mode is unchanged. */
+#if 0
     input = fopen(source, "rb");
+#else
+    input = umi_native_fopen(source, "rb");
+#endif
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -487,7 +562,13 @@ UmiStatus umi_fs_copy_file(const char *source, const char *destination)
         return UMI_STATUS_IO_ERROR;
     }
 
+    /* Route the path through the shared native encoding boundary. The former
+     * narrow open remains for review; the byte-stream mode is unchanged. */
+#if 0
     output = fopen(destination, "wb");
+#else
+    output = umi_native_fopen(destination, "wb");
+#endif
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -523,6 +604,14 @@ UmiStatus umi_fs_copy_file(const char *source, const char *destination)
 
 UmiStatus umi_fs_remove_tree(const char *path)
 {
+#ifdef _WIN32
+    /* Keep platform encoding and lifetime policy in Framework so applications
+     * do not need their own Windows-specific copies of this operation. */
+    if (path == NULL || path[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_windows_remove_tree(path);
+#else
+    /* The previous byte-path implementation remains active on POSIX. Its
+     * Windows branches are retained for review of the native replacement. */
     DIR *directory;
     struct dirent *entry;
 
@@ -592,10 +681,19 @@ UmiStatus umi_fs_remove_tree(const char *path)
 #else
     return rmdir(path) == 0 ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
 #endif
+#endif
 }
 
 UmiStatus umi_fs_rename(const char *source, const char *destination)
 {
+#ifdef _WIN32
+    /* Keep platform encoding and lifetime policy in Framework so applications
+     * do not need their own Windows-specific copies of this operation. */
+    if (source == NULL || destination == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_windows_rename(source, destination);
+#else
+    /* The previous byte-path implementation remains active on POSIX. Its
+     * Windows branches are retained for review of the native replacement. */
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -606,6 +704,7 @@ UmiStatus umi_fs_rename(const char *source, const char *destination)
     return rename(source, destination) == 0
         ? UMI_STATUS_OK
         : UMI_STATUS_IO_ERROR;
+#endif
 }
 
 UmiStatus umi_fs_current_directory(char *out_path, size_t capacity)
@@ -618,9 +717,15 @@ UmiStatus umi_fs_current_directory(char *out_path, size_t capacity)
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 #ifdef _WIN32
+    /* Decode the native directory explicitly. Retain the locale-dependent
+     * lookup for review; the replacement returns a complete UTF-8 name. */
+#if 0
     return _getcwd(out_path, (int)capacity) != NULL
         ? UMI_STATUS_OK
         : UMI_STATUS_IO_ERROR;
+#else
+    return umi_windows_current_directory(out_path, capacity);
+#endif
 #else
     return getcwd(out_path, capacity) != NULL
         ? UMI_STATUS_OK
@@ -630,6 +735,14 @@ UmiStatus umi_fs_current_directory(char *out_path, size_t capacity)
 
 UmiStatus umi_fs_temp_directory(char *out_path, size_t capacity)
 {
+#ifdef _WIN32
+    /* Keep platform encoding and lifetime policy in Framework so applications
+     * do not need their own Windows-specific copies of this operation. */
+    if (out_path == NULL || capacity == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_windows_temp_directory(out_path, capacity);
+#else
+    /* The previous byte-path implementation remains active on POSIX. Its
+     * Windows branches are retained for review of the native replacement. */
     const char *value;
 
     /*
@@ -663,6 +776,7 @@ UmiStatus umi_fs_temp_directory(char *out_path, size_t capacity)
 #endif
     }
     return umi_copy_string(out_path, capacity, value);
+#endif
 }
 
 UmiStatus umi_fs_executable_path(char *out_path, size_t capacity)

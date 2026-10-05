@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/production/identifier.h"
+#include "../../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -46,6 +47,12 @@ UmiStatus umi_application_production_identifier_set(
 int umi_application_production_identifier_valid(
     const UmiApplicationProductionIdentifier *identifier)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (identifier == NULL) return 0;
+    if (memchr(identifier->value, '\0', sizeof(identifier->value)) == NULL) return 0;
+
     return identifier != NULL && identifier->value[0] != '\0';
 }
 
@@ -62,3 +69,34 @@ int umi_application_production_identifier_equal(
            strcmp(left->value, right->value) == 0;
 }
 
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiApplicationProductionIdentifierArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x6b8537c231beaf3f);
+    schema = (schema ^ (uint64_t)sizeof(((UmiApplicationProductionIdentifier *)0)->value)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiApplicationProductionIdentifierArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiApplicationProductionIdentifier *)0)->value) - 1U;
+}
+static void UmiApplicationProductionIdentifierArchiveWrite(UmiArchiveWriter *writer, const UmiApplicationProductionIdentifier *value)
+{
+    UmiArchiveWriteText(writer, value->value, sizeof(value->value));
+}
+static void UmiApplicationProductionIdentifierArchiveRead(UmiArchiveReader *reader, UmiApplicationProductionIdentifier *value)
+{
+    UmiArchiveReadText(reader, value->value, sizeof(value->value));
+}
+static UmiStatus UmiApplicationProductionIdentifierArchiveValidate(const UmiApplicationProductionIdentifier *value)
+{
+    return umi_application_production_identifier_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_application_production_identifier_archive_encode, umi_application_production_identifier_archive_decode,
+    UmiApplicationProductionIdentifier, UmiApplicationProductionIdentifierArchiveSchema, UmiApplicationProductionIdentifierArchiveBound, UmiApplicationProductionIdentifierArchiveWrite, UmiApplicationProductionIdentifierArchiveRead, UmiApplicationProductionIdentifierArchiveValidate)

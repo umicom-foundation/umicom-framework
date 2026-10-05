@@ -18,6 +18,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug/workbench/watch_expression_item.h"
+#include "../../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -96,5 +97,90 @@ UmiStatus umi_debug_workbench_watch_expression_item_set_enabled(UmiDebugWorkbenc
  */
 int umi_debug_workbench_watch_expression_item_valid(const UmiDebugWorkbenchWatchExpressionItem *model)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (model == NULL) return 0;
+    if (memchr(model->value.id, '\0', sizeof(model->value.id)) == NULL) return 0;
+    if (memchr(model->value.label, '\0', sizeof(model->value.label)) == NULL) return 0;
+    if (memchr(model->value.detail, '\0', sizeof(model->value.detail)) == NULL) return 0;
+    if (memchr(model->value.location.path, '\0', sizeof(model->value.location.path)) == NULL) return 0;
+
     return model != NULL && umi_debug_workbench_entry_valid(&model->value) && model->revision > 0U;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiDebugWorkbenchWatchExpressionItemArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x97f22c11f6b58105);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDebugWorkbenchWatchExpressionItem *)0)->value.id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDebugWorkbenchWatchExpressionItem *)0)->value.label)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDebugWorkbenchWatchExpressionItem *)0)->value.detail)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDebugWorkbenchWatchExpressionItem *)0)->value.location.path)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiDebugWorkbenchWatchExpressionItemArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiDebugWorkbenchWatchExpressionItem *)0)->value.id) - 1U +
+        8U + sizeof(((UmiDebugWorkbenchWatchExpressionItem *)0)->value.label) - 1U +
+        8U + sizeof(((UmiDebugWorkbenchWatchExpressionItem *)0)->value.detail) - 1U +
+        8U + sizeof(((UmiDebugWorkbenchWatchExpressionItem *)0)->value.location.path) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiDebugWorkbenchWatchExpressionItemArchiveWrite(UmiArchiveWriter *writer, const UmiDebugWorkbenchWatchExpressionItem *value)
+{
+    UmiArchiveWriteText(writer, value->value.id, sizeof(value->value.id));
+    UmiArchiveWriteText(writer, value->value.label, sizeof(value->value.label));
+    UmiArchiveWriteText(writer, value->value.detail, sizeof(value->value.detail));
+    UmiArchiveWriteText(writer, value->value.location.path, sizeof(value->value.location.path));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->value.location.range.start.line);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->value.location.range.start.column);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->value.location.range.end.line);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->value.location.range.end.column);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->value.state);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->value.flags);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->value.value);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->value.revision);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->selected);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiDebugWorkbenchWatchExpressionItemArchiveRead(UmiArchiveReader *reader, UmiDebugWorkbenchWatchExpressionItem *value)
+{
+    UmiArchiveReadText(reader, value->value.id, sizeof(value->value.id));
+    UmiArchiveReadText(reader, value->value.label, sizeof(value->value.label));
+    UmiArchiveReadText(reader, value->value.detail, sizeof(value->value.detail));
+    UmiArchiveReadText(reader, value->value.location.path, sizeof(value->value.location.path));
+    value->value.location.range.start.line = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->value.location.range.start.column = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->value.location.range.end.line = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->value.location.range.end.column = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->value.state = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->value.flags = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->value.value = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->value.revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->selected = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiDebugWorkbenchWatchExpressionItemArchiveValidate(const UmiDebugWorkbenchWatchExpressionItem *value)
+{
+    return umi_debug_workbench_watch_expression_item_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_debug_workbench_watch_expression_item_archive_encode, umi_debug_workbench_watch_expression_item_archive_decode,
+    UmiDebugWorkbenchWatchExpressionItem, UmiDebugWorkbenchWatchExpressionItemArchiveSchema, UmiDebugWorkbenchWatchExpressionItemArchiveBound, UmiDebugWorkbenchWatchExpressionItemArchiveWrite, UmiDebugWorkbenchWatchExpressionItemArchiveRead, UmiDebugWorkbenchWatchExpressionItemArchiveValidate)

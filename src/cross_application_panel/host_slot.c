@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/cross_application_panel/host_slot.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise panel host slot from caller-provided values so later operations receive a
@@ -33,6 +34,14 @@ record->revision=1U;
 /* Check that panel host slot satisfies its contract before another service relies on it. */
 UmiStatus umi_panel_host_slot_validate(const UmiPanelHostSlot *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->slot_id, '\0', sizeof(record->slot_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->instance_id, '\0', sizeof(record->instance_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->container_id, '\0', sizeof(record->container_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
 /*
  * Protect caller-owned memory by checking that required state is available before it is
  * used.
@@ -167,3 +176,55 @@ if(store->count!=0U)memcpy(records,store->items,store->count*sizeof(store->items
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiPanelHostSlotArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xdc64a2ab1d5b28e3);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelHostSlot *)0)->slot_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelHostSlot *)0)->instance_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelHostSlot *)0)->container_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiPanelHostSlotArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiPanelHostSlot *)0)->slot_id) - 1U +
+        8U + sizeof(((UmiPanelHostSlot *)0)->instance_id) - 1U +
+        8U + sizeof(((UmiPanelHostSlot *)0)->container_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiPanelHostSlotArchiveWrite(UmiArchiveWriter *writer, const UmiPanelHostSlot *value)
+{
+    UmiArchiveWriteText(writer, value->slot_id, sizeof(value->slot_id));
+    UmiArchiveWriteText(writer, value->instance_id, sizeof(value->instance_id));
+    UmiArchiveWriteText(writer, value->container_id, sizeof(value->container_id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->placement);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->order);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->visible);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiPanelHostSlotArchiveRead(UmiArchiveReader *reader, UmiPanelHostSlot *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->slot_id, sizeof(value->slot_id));
+    UmiArchiveReadText(reader, value->instance_id, sizeof(value->instance_id));
+    UmiArchiveReadText(reader, value->container_id, sizeof(value->container_id));
+    value->placement = (UmiPanelPlacement)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->order = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->visible = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiPanelHostSlotArchiveValidate(const UmiPanelHostSlot *value)
+{
+    return umi_panel_host_slot_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_panel_host_slot_archive_encode, umi_panel_host_slot_archive_decode,
+    UmiPanelHostSlot, UmiPanelHostSlotArchiveSchema, UmiPanelHostSlotArchiveBound, UmiPanelHostSlotArchiveWrite, UmiPanelHostSlotArchiveRead, UmiPanelHostSlotArchiveValidate)

@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/mosaic/application_panel_pack.h"
+#include "../../base/value_archive_internal.h"
 #include <string.h>
 
 /*
@@ -60,6 +61,13 @@ UmiStatus umi_ui_mosaic_application_panel_pack_place(UmiUiMosaicApplicationPanel
  * service relies on it.
  */
 UmiStatus umi_ui_mosaic_application_panel_pack_validate(const UmiUiMosaicApplicationPanelPack *value) {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(value->id, '\0', sizeof(value->id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(value->panel_id, '\0', sizeof(value->panel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     uint32_t end_row; uint32_t end_column;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -91,3 +99,56 @@ uint32_t umi_ui_mosaic_application_panel_pack_area(const UmiUiMosaicApplicationP
     if (value == NULL) return 0U;
     return (uint32_t)value->row_span * (uint32_t)value->column_span;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiUiMosaicApplicationPanelPackArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x117013ae0dadd1fc);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiMosaicApplicationPanelPack *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiMosaicApplicationPanelPack *)0)->panel_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiUiMosaicApplicationPanelPackArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiUiMosaicApplicationPanelPack *)0)->id) - 1U +
+        8U + sizeof(((UmiUiMosaicApplicationPanelPack *)0)->panel_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiUiMosaicApplicationPanelPackArchiveWrite(UmiArchiveWriter *writer, const UmiUiMosaicApplicationPanelPack *value)
+{
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->application);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->row);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->column);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->row_span);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->column_span);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->active);
+}
+static void UmiUiMosaicApplicationPanelPackArchiveRead(UmiArchiveReader *reader, UmiUiMosaicApplicationPanelPack *value)
+{
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->panel_id, sizeof(value->panel_id));
+    value->application = (UmiUiMosaicApplication)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->row = (uint16_t)UmiArchiveReadUnsigned(reader, UINT16_MAX);
+    value->column = (uint16_t)UmiArchiveReadUnsigned(reader, UINT16_MAX);
+    value->row_span = (uint16_t)UmiArchiveReadUnsigned(reader, UINT16_MAX);
+    value->column_span = (uint16_t)UmiArchiveReadUnsigned(reader, UINT16_MAX);
+    value->active = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiUiMosaicApplicationPanelPackArchiveValidate(const UmiUiMosaicApplicationPanelPack *value)
+{
+    return umi_ui_mosaic_application_panel_pack_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_ui_mosaic_application_panel_pack_archive_encode, umi_ui_mosaic_application_panel_pack_archive_decode,
+    UmiUiMosaicApplicationPanelPack, UmiUiMosaicApplicationPanelPackArchiveSchema, UmiUiMosaicApplicationPanelPackArchiveBound, UmiUiMosaicApplicationPanelPackArchiveWrite, UmiUiMosaicApplicationPanelPackArchiveRead, UmiUiMosaicApplicationPanelPackArchiveValidate)

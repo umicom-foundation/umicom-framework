@@ -1,0 +1,33 @@
+<!doctype html>
+<!-- Sammy Hegab, Umicom Foundation. Licensed under MIT. -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Integrating source bookmarks</title><style>body{font:17px/1.6 system-ui,sans-serif;max-width:900px;margin:2rem auto;padding:0 1.5rem;color:#172337}h1,h2{line-height:1.25}code,pre{background:#eef2f6}pre{padding:1rem;overflow:auto}li{margin:.6rem 0}table{border-collapse:collapse;width:100%}th,td{padding:.6rem;border:1px solid #cbd5e1;text-align:left;vertical-align:top}</style></head><body>
+<h1>Integrating source bookmarks</h1>
+
+<p>The document coordinator owns session bookmarks because it already owns open-document identity and source navigation. Applications ask this owner to mark or visit locations instead of keeping a second list keyed by file name. This also supports unsaved drafts whose display names are not unique paths.</p>
+<h2>Use the shared owner</h2>
+<ol><li>Include <code>umicom/document/bookmarks.h</code> and use the same coordinator that owns the editor's working copies.</li>
+<li>Call <code>UmiDocumentCoordinatorToggleBookmark</code> to add or remove the active line. The optional output reports whether a bookmark was added. It is unchanged on failure.</li>
+<li>Read <code>UmiDocumentCoordinatorBookmarks</code>. Its count includes closed-document locations; <code>open_count</code> counts locations whose original documents remain open. A line in an open document may still have been deleted.</li>
+<li>Pass the snapshot's revision to <code>UmiDocumentCoordinatorTravelBookmark</code>, using +1 for next and -1 for previous. The revision is a freshness token: it prevents an action based on an older bookmark set from silently applying to a changed set.</li>
+<li>Enumerate copied rows with <code>UmiDocumentCoordinatorBookmarkAt</code> if your host needs a list. Use <code>UmiDocumentCoordinatorClearBookmarks</code> to clear metadata after checking the displayed revision.</li></ol>
+<pre><code>UmiDocumentBookmarksSnapshot bookmarks;
+UmiStatus status = UmiDocumentCoordinatorBookmarks(documents, &amp;bookmarks);
+if (status == UMI_STATUS_OK) {
+    status = UmiDocumentCoordinatorTravelBookmark(documents, 1, bookmarks.revision);
+}
+/* Show status through the host's existing notification path. */</code></pre>
+<h2>Keep ownership and navigation together</h2>
+<p>Calls run on the coordinator's owning thread. The coordinator retains a bounded array of 64 copied locations, without borrowing source text or allocating a second document store. Each row keeps the original document and view identities, a display name captured when marked, and a one-based line and UTF-8 byte column. A byte column counts encoded bytes, not screen cells.</p>
+<p>Travel resolves the current full draft before selecting its tab. Closed identities and missing lines are skipped; columns clamp to a valid text boundary. A successful visit enters the existing Back/Forward timeline. Failed resolution leaves the active tab unchanged. Text, pins, read-only state, dirty markers and text Undo history are not edited.</p>
+<p>Save As retains a live identity. Closing and reopening a path does not reconnect old bookmarks. Positions are fixed coordinates, not moving text markers. The array is session memory, not a persisted bookmark database. Existing generic path bookmark APIs remain separate.</p>
+<h2>Connect a GTK host</h2>
+<ol><li>Bind document editing through the existing <code>UmiGtk4AdapterBindDocumentEditing</code> ownership contract.</li>
+<li>Query <code>UmiGtk4AdapterBookmarkEnabled</code> when presenting commands. The action is zero for Toggle, +1 for Next, -1 for Previous, and 2 for Clear.</li>
+<li>Dispatch with <code>UmiGtk4AdapterBookmarkCommand</code>. It rechecks availability and rejects overlapping save, close, replacement-review and clipboard work.</li>
+<li>Use the existing editing completion callback for feedback. That callback can release the host, so do not dereference the host after dispatch.</li>
+<li>Unbind before destroying the coordinator. A retained control must resolve a live binding before dispatching.</li></ol>
+<h2>Extend the feature safely</h2>
+<p>A future persistent bookmark list needs explicit file identity and reopen policy; saving a session view identifier would not provide either. A future moving marker needs a defined response to insertions, deletions and Undo. Add those policies to the shared document owner and cover the transition cases before exposing them in application controls.</p>
+<p>Regression sources in <code>tests/document/test_bookmarks.c</code> and <code>tests/document/test_bookmarks_gtk4.c</code> cover identity, capacity, navigation, stale requests and native binding lifetime. Their registration supplies coverage to run; it does not establish qualification by itself.</p>
+</body></html>

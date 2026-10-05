@@ -361,7 +361,14 @@ static UmiStatus revert_command(void *user_data, const char *argument,
     return status;
 }
 
+/* Commands share the same language/profile policy as native source navigation. */
+#include "delimiter_commands.inc"
+#include "line_edit_commands.inc"
+
 /* Add document commands only after its inputs and available capacity have been checked. */
+/* Shared line-edit commands extend document search and automation while retaining the established commands, permissions and history owner.
+ * The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_document_commands_register(UmiCommandRegistry *registry,
                                           UmiDocumentCoordinator *coordinator)
 {
@@ -381,7 +388,70 @@ UmiStatus umi_document_commands_register(UmiCommandRegistry *registry,
         {UMI_DOCUMENT_COMMAND_FIND, "Find", "Find text in the active document", find_command},
         {UMI_DOCUMENT_COMMAND_REPLACE, "Replace", "Replace the first matching text", replace_command},
         {UMI_DOCUMENT_COMMAND_GO_TO_LINE, "Go to Line", "Select a one-based document line", go_to_line_command},
-        {UMI_DOCUMENT_COMMAND_REVERT, "Reload from Disk", "Reload a saved document; unsaved text requires explicit review", revert_command}
+        {UMI_DOCUMENT_COMMAND_REVERT, "Reload from Disk", "Reload a saved document; unsaved text requires explicit review", revert_command},
+        {UMI_DOCUMENT_COMMAND_MATCH_DELIMITER, "Matching Bracket", "Jump to the paired bracket at or before the caret", MatchDelimiterCommand},
+        {UMI_DOCUMENT_COMMAND_SELECT_DELIMITER_CONTENT, "Select Inside Brackets", "Select the nearest complete enclosing pair's content", SelectDelimiterContentCommand},
+        {UMI_DOCUMENT_COMMAND_SELECT_DELIMITER_PAIR, "Select Bracket Pair", "Select the nearest complete enclosing pair with its brackets", SelectDelimiterPairCommand}
+    };
+    UmiCommandDescriptor descriptor;
+    size_t index;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (registry == NULL || coordinator == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < sizeof(DEFINITIONS) / sizeof(DEFINITIONS[0]); ++index) {
+        (void)memset(&descriptor, 0, sizeof(descriptor));
+        descriptor.structure_size = sizeof(descriptor);
+        descriptor.command_id = DEFINITIONS[index].id;
+        descriptor.title = DEFINITIONS[index].title;
+        descriptor.category = "Document";
+        descriptor.description = DEFINITIONS[index].description;
+        descriptor.required_permission = "document.edit";
+        descriptor.flags = UMI_COMMAND_MUTATES_STATE;
+        descriptor.handler = DEFINITIONS[index].handler;
+        descriptor.user_data = coordinator;
+        status = umi_command_registry_register(registry, &descriptor);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+    }
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_document_commands_register(UmiCommandRegistry *registry,
+                                          UmiDocumentCoordinator *coordinator)
+{
+    static const struct Definition {
+        const char *id;
+        const char *title;
+        const char *description;
+        UmiRegisteredCommandHandler handler;
+    } DEFINITIONS[] = {
+        {UMI_DOCUMENT_COMMAND_NEW, "New File", "Create an untitled working copy", new_command},
+        {UMI_DOCUMENT_COMMAND_OPEN, "Open File", "Decode and open a local document", open_command},
+        {UMI_DOCUMENT_COMMAND_SAVE, "Save", "Atomically save the active document", save_command},
+        {UMI_DOCUMENT_COMMAND_SAVE_AS, "Save As", "Save the active document under another path", save_as_command},
+        {UMI_DOCUMENT_COMMAND_CLOSE, "Close", "Close the active document safely", close_command},
+        {UMI_DOCUMENT_COMMAND_UNDO, "Undo", "Undo the latest working-copy state", undo_command},
+        {UMI_DOCUMENT_COMMAND_REDO, "Redo", "Redo the latest working-copy state", redo_command},
+        {UMI_DOCUMENT_COMMAND_FIND, "Find", "Find text in the active document", find_command},
+        {UMI_DOCUMENT_COMMAND_REPLACE, "Replace", "Replace the first matching text", replace_command},
+        {UMI_DOCUMENT_COMMAND_GO_TO_LINE, "Go to Line", "Select a one-based document line", go_to_line_command},
+        {UMI_DOCUMENT_COMMAND_REVERT, "Reload from Disk", "Reload a saved document; unsaved text requires explicit review", revert_command},
+        {UMI_DOCUMENT_COMMAND_MATCH_DELIMITER, "Matching Bracket", "Jump to the paired bracket at or before the caret", MatchDelimiterCommand},
+        {UMI_DOCUMENT_COMMAND_SELECT_DELIMITER_CONTENT, "Select Inside Brackets", "Select the nearest complete enclosing pair's content", SelectDelimiterContentCommand},
+        {UMI_DOCUMENT_COMMAND_SELECT_DELIMITER_PAIR, "Select Bracket Pair", "Select the nearest complete enclosing pair with its brackets", SelectDelimiterPairCommand},
+        {UMI_DOCUMENT_COMMAND_DELETE_LINE, "Delete Current Line", "Delete the caret line with Undo", DeleteLineCommand},
+        {UMI_DOCUMENT_COMMAND_DUPLICATE_LINE, "Duplicate Current Line", "Copy the caret line and move to the copy", DuplicateLineCommand},
+        {UMI_DOCUMENT_COMMAND_MOVE_LINE_UP, "Move Current Line Up", "Exchange the caret line with the previous line", MoveLineUpCommand},
+        {UMI_DOCUMENT_COMMAND_MOVE_LINE_DOWN, "Move Current Line Down", "Exchange the caret line with the next line", MoveLineDownCommand},
+        {UMI_DOCUMENT_COMMAND_JOIN_LINE_WITH_NEXT, "Join Next Line", "Join the caret line to the next line", JoinLineCommand},
+        {UMI_DOCUMENT_COMMAND_TRIM_TRAILING_WHITESPACE, "Trim Trailing Whitespace", "Remove spaces and tabs at line ends throughout the draft", TrimLinesCommand},
+        {UMI_DOCUMENT_COMMAND_INDENT_LINES, "Indent Selected Lines", "Add four spaces to selected lines or the caret line", IndentLinesCommand},
+        {UMI_DOCUMENT_COMMAND_OUTDENT_LINES, "Outdent Selected Lines", "Remove one tab or up to four spaces from selected lines", OutdentLinesCommand},
+        {UMI_DOCUMENT_COMMAND_TOGGLE_LINE_COMMENT, "Toggle // Comment", "Toggle the literal // prefix on selected nonblank lines", CommentLinesCommand}
     };
     UmiCommandDescriptor descriptor;
     size_t index;

@@ -18,6 +18,8 @@
  * contract does not expose toolkit objects, C++ types, or private structures.
  */
 #include "umicom/language/document.h"
+#include "../base/value_archive_internal.h"
+#include "../base/registry_archive_internal.h"
 #include "../base/snapshot_registry_internal.h"
 
 /* Validate every bounded text member before lookup. Value-only snapshot
@@ -244,3 +246,66 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_language_document_registry_edit_if_current
  * this owner's existing row order and normalized fields remain authoritative. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_language_document_registry_read_page,
     UmiLanguageDocumentRegistry, UmiLanguageDocumentSnapshot, UMI_LANGUAGE_DOCUMENT_CAPACITY)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xc8d1946f2a1a99d8);
+    schema = (schema ^ (uint64_t)sizeof(((UmiLanguageDocumentSnapshot *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiLanguageDocumentSnapshot *)0)->uri)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiLanguageDocumentSnapshot *)0)->language_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiLanguageDocumentSnapshot *)0)->id) - 1U +
+        8U + sizeof(((UmiLanguageDocumentSnapshot *)0)->uri) - 1U +
+        8U + sizeof(((UmiLanguageDocumentSnapshot *)0)->language_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiLanguageDocumentSnapshot *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->uri, sizeof(value->uri));
+    UmiArchiveWriteText(writer, value->language_id, sizeof(value->language_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->version);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->line_count);
+    UmiArchiveWriteSigned(writer, (int64_t)value->open);
+    UmiArchiveWriteSigned(writer, (int64_t)value->dirty);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiLanguageDocumentSnapshot *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->uri, sizeof(value->uri));
+    UmiArchiveReadText(reader, value->language_id, sizeof(value->language_id));
+    value->version = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->line_count = (size_t)UmiArchiveReadUnsigned(reader, SIZE_MAX);
+    value->open = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->dirty = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus ArchiveValidate(const UmiLanguageDocumentSnapshot *value)
+{
+    return umi_language_document_snapshot_validate(value, NULL);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_language_document_snapshot_archive_encode, umi_language_document_snapshot_archive_decode,
+    UmiLanguageDocumentSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Restoring this complete collection reuses its existing reviewed replacement
+ * rules. Decoding a saved value alone never changes a live registry. */
+UMI_DEFINE_REGISTRY_ARCHIVE(umi_language_document_registry_archive_encode, umi_language_document_registry_archive_restore,
+    UmiLanguageDocumentRegistry, UmiLanguageDocumentSnapshot, UMI_LANGUAGE_DOCUMENT_CAPACITY, ArchiveSchema,
+    umi_language_document_snapshot_archive_encode, umi_language_document_snapshot_archive_decode, umi_language_document_registry_replace_if_current)

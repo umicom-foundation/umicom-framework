@@ -657,6 +657,9 @@ failure:
  * Provide the transform line swap operation used by this module and its client
  * applications.
  */
+/* Keep the caret attached to moved source when adjacent lines have different lengths; the new offset uses the actual reconstructed line boundary.
+ * The former implementation is retained for engineering review. */
+#if 0
 static UmiStatus transform_line_swap(
     const UmiEditorEditEngine *engine,
     const UmiEditorTextBufferView *view,
@@ -747,11 +750,108 @@ static UmiStatus transform_line_swap(
     *out_lines = 2U;
     return UMI_STATUS_OK;
 }
+#endif
+static UmiStatus transform_line_swap(
+    const UmiEditorEditEngine *engine,
+    const UmiEditorTextBufferView *view,
+    size_t first_line,
+    size_t second_line,
+    const UmiEditorEditCommandRequest *request,
+    char **out_bytes,
+    size_t *out_count,
+    size_t *out_cursor,
+    size_t *out_lines)
+{
+    size_t first_start;
+    size_t first_end;
+    size_t second_start;
+    size_t second_end;
+    size_t second_block_end;
+    size_t first_content_end;
+    size_t second_content_end;
+    TextBuilder builder = {0};
+    UmiStatus status;
+
+    status = umi_editor_line_index_line_range(engine->line_index,
+                                               first_line,
+                                               &first_start,
+                                               &first_end);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_editor_line_index_line_range(engine->line_index,
+                                               second_line,
+                                               &second_start,
+                                               &second_end);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    first_content_end = content_end(view->bytes, first_start, first_end);
+    second_content_end = content_end(view->bytes, second_start, second_end);
+    second_block_end = block_end(engine, second_line, view->byte_count);
+
+    status = builder_append(&builder, view->bytes, first_start);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = builder_append(&builder,
+                                view->bytes + second_start,
+                                second_content_end - second_start);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = builder_append(&builder,
+                                view->bytes + first_content_end,
+                                second_start - first_content_end);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = builder_append(&builder,
+                                view->bytes + first_start,
+                                first_content_end - first_start);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = builder_append(&builder,
+                                view->bytes + second_content_end,
+                                second_block_end - second_content_end);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = builder_append(&builder,
+                                view->bytes + second_block_end,
+                                view->byte_count - second_block_end);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) {
+        builder_discard(&builder);
+        return status;
+    }
+    *out_bytes = builder.bytes;
+    *out_count = builder.count;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (request->cursor_offset >= second_start &&
+        request->cursor_offset <= second_content_end) {
+        *out_cursor = first_start + request->cursor_offset - second_start;
+    } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (request->cursor_offset >= first_start &&
+               request->cursor_offset <= first_content_end) {
+        /* The moved first line starts after the second line's content and
+         * the original separator, not at its previous neighbor's offset. */
+        *out_cursor = first_start + (second_content_end - second_start) +
+            (second_start - first_content_end) + request->cursor_offset - first_start;
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
+        *out_cursor = request->cursor_offset;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (*out_cursor > *out_count) *out_cursor = *out_count;
+    *out_lines = 2U;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the transform line command operation used by this module and its client
  * applications.
  */
+/* Duplicate unterminated final lines using the nearby line-ending convention and place the caret in the new copy; existing transformations remain shared by all editor hosts.
+ * The former implementation is retained for engineering review. */
+#if 0
 static UmiStatus transform_line_command(
     const UmiEditorEditEngine *engine,
     const UmiEditorTextBufferView *view,
@@ -919,6 +1019,414 @@ static UmiStatus transform_line_command(
                                                    &next_end);
         /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        left_end = content_end(view->bytes, start, end);
+        right_start = next_start;
+        /*
+         * Continue only while work remains available; the loop body advances the state on each
+         * pass.
+         */
+        while (right_start < next_end &&
+               (view->bytes[right_start] == ' ' ||
+                view->bytes[right_start] == '\t')) {
+            right_start += 1U;
+        }
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (left_end == start || right_start == next_end) {
+            separator = NULL;
+            separator_count = 0U;
+        }
+        status = replace_alloc(view->bytes,
+                               view->byte_count,
+                               left_end,
+                               right_start - left_end,
+                               separator,
+                               separator_count,
+                               out_bytes,
+                               out_count);
+        *out_cursor = left_end + separator_count;
+        *out_lines = 2U;
+        return status;
+    }
+    return UMI_STATUS_INVALID_ARGUMENT;
+}
+#endif
+/* Joining uses content boundaries for both lines so an empty CRLF line does not create a trailing space; the earlier transform is retained for review.
+ * The former implementation is retained for engineering review. */
+#if 0
+static UmiStatus transform_line_command(
+    const UmiEditorEditEngine *engine,
+    const UmiEditorTextBufferView *view,
+    const UmiEditorEditCommandRequest *request,
+    char **out_bytes,
+    size_t *out_count,
+    size_t *out_cursor,
+    size_t *out_lines)
+{
+    size_t first_line;
+    size_t last_line;
+    size_t start;
+    size_t end;
+    size_t end_block;
+    size_t count = umi_editor_line_index_count(engine->line_index);
+    UmiStatus status = selected_lines(engine,
+                                      view->byte_count,
+                                      request,
+                                      &first_line,
+                                      &last_line);
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (request->kind == UMI_EDITOR_EDIT_COMMAND_INDENT_LINES ||
+        request->kind == UMI_EDITOR_EDIT_COMMAND_OUTDENT_LINES ||
+        request->kind == UMI_EDITOR_EDIT_COMMAND_TOGGLE_LINE_COMMENT) {
+        return transform_line_prefixes(engine,
+                                       view,
+                                       request,
+                                       first_line,
+                                       last_line,
+                                       out_bytes,
+                                       out_count,
+                                       out_cursor,
+                                       out_lines);
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (request->kind == UMI_EDITOR_EDIT_COMMAND_MOVE_LINE_UP) {
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (first_line == 0U) return UMI_STATUS_NOT_FOUND;
+        return transform_line_swap(engine,
+                                   view,
+                                   first_line - 1U,
+                                   first_line,
+                                   request,
+                                   out_bytes,
+                                   out_count,
+                                   out_cursor,
+                                   out_lines);
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (request->kind == UMI_EDITOR_EDIT_COMMAND_MOVE_LINE_DOWN ||
+        request->kind == UMI_EDITOR_EDIT_COMMAND_TRANSPOSE_LINES) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (first_line + 1U >= count) return UMI_STATUS_NOT_FOUND;
+        return transform_line_swap(engine,
+                                   view,
+                                   first_line,
+                                   first_line + 1U,
+                                   request,
+                                   out_bytes,
+                                   out_count,
+                                   out_cursor,
+                                   out_lines);
+    }
+
+    status = umi_editor_line_index_line_range(engine->line_index,
+                                               first_line,
+                                               &start,
+                                               &end);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    end_block = block_end(engine, first_line, view->byte_count);
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (request->kind == UMI_EDITOR_EDIT_COMMAND_DELETE_LINE) {
+        size_t remove_start = start;
+        size_t remove_end = end_block;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (count == 1U) {
+            remove_start = 0U;
+            remove_end = view->byte_count;
+        } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (first_line + 1U == count) {
+            size_t previous_start;
+            size_t previous_end;
+            status = umi_editor_line_index_line_range(engine->line_index,
+                                                       first_line - 1U,
+                                                       &previous_start,
+                                                       &previous_end);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
+            if (status != UMI_STATUS_OK) return status;
+            remove_start = content_end(view->bytes,
+                                       previous_start,
+                                       previous_end);
+        }
+        status = replace_alloc(view->bytes,
+                               view->byte_count,
+                               remove_start,
+                               remove_end - remove_start,
+                               NULL,
+                               0U,
+                               out_bytes,
+                               out_count);
+        *out_cursor = remove_start;
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (*out_cursor > *out_count) *out_cursor = *out_count;
+        *out_lines = 1U;
+        return status;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (request->kind == UMI_EDITOR_EDIT_COMMAND_DUPLICATE_LINE) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (first_line + 1U < count) {
+            status = replace_alloc(view->bytes,
+                                   view->byte_count,
+                                   end_block,
+                                   0U,
+                                   view->bytes + start,
+                                   end_block - start,
+                                   out_bytes,
+                                   out_count);
+            *out_cursor = end_block + request->cursor_offset - start;
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
+            TextBuilder insertion = {0};
+            /* An unterminated final line needs a separator before its copy.
+             * Reuse the preceding line's ending so CRLF files stay CRLF. */
+            size_t separator_bytes = start >= 2U && view->bytes[start - 2U] == '\r' ? 2U : 1U;
+            status = builder_append(&insertion, separator_bytes == 2U ? "\r\n" : "\n", separator_bytes);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
+            if (status == UMI_STATUS_OK) {
+                status = builder_append(&insertion,
+                                        view->bytes + start,
+                                        end - start);
+            }
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
+            if (status == UMI_STATUS_OK) {
+                status = replace_alloc(view->bytes,
+                                       view->byte_count,
+                                       view->byte_count,
+                                       0U,
+                                       insertion.bytes,
+                                       insertion.count,
+                                       out_bytes,
+                                       out_count);
+            }
+            builder_discard(&insertion);
+            *out_cursor = view->byte_count + separator_bytes + request->cursor_offset - start;
+        }
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (*out_cursor > *out_count) *out_cursor = *out_count;
+        *out_lines = 1U;
+        return status;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (request->kind == UMI_EDITOR_EDIT_COMMAND_JOIN_LINE_WITH_NEXT) {
+        size_t next_start;
+        size_t next_end;
+        size_t left_end;
+        size_t right_start;
+        const char *separator = " ";
+        size_t separator_count = 1U;
+
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (first_line + 1U >= count) return UMI_STATUS_NOT_FOUND;
+        status = umi_editor_line_index_line_range(engine->line_index,
+                                                   first_line + 1U,
+                                                   &next_start,
+                                                   &next_end);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+        left_end = content_end(view->bytes, start, end);
+        right_start = next_start;
+        /*
+         * Continue only while work remains available; the loop body advances the state on each
+         * pass.
+         */
+        while (right_start < next_end &&
+               (view->bytes[right_start] == ' ' ||
+                view->bytes[right_start] == '\t')) {
+            right_start += 1U;
+        }
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (left_end == start || right_start == next_end) {
+            separator = NULL;
+            separator_count = 0U;
+        }
+        status = replace_alloc(view->bytes,
+                               view->byte_count,
+                               left_end,
+                               right_start - left_end,
+                               separator,
+                               separator_count,
+                               out_bytes,
+                               out_count);
+        *out_cursor = left_end + separator_count;
+        *out_lines = 2U;
+        return status;
+    }
+    return UMI_STATUS_INVALID_ARGUMENT;
+}
+#endif
+static UmiStatus transform_line_command(
+    const UmiEditorEditEngine *engine,
+    const UmiEditorTextBufferView *view,
+    const UmiEditorEditCommandRequest *request,
+    char **out_bytes,
+    size_t *out_count,
+    size_t *out_cursor,
+    size_t *out_lines)
+{
+    size_t first_line;
+    size_t last_line;
+    size_t start;
+    size_t end;
+    size_t end_block;
+    size_t count = umi_editor_line_index_count(engine->line_index);
+    UmiStatus status = selected_lines(engine,
+                                      view->byte_count,
+                                      request,
+                                      &first_line,
+                                      &last_line);
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (request->kind == UMI_EDITOR_EDIT_COMMAND_INDENT_LINES ||
+        request->kind == UMI_EDITOR_EDIT_COMMAND_OUTDENT_LINES ||
+        request->kind == UMI_EDITOR_EDIT_COMMAND_TOGGLE_LINE_COMMENT) {
+        return transform_line_prefixes(engine,
+                                       view,
+                                       request,
+                                       first_line,
+                                       last_line,
+                                       out_bytes,
+                                       out_count,
+                                       out_cursor,
+                                       out_lines);
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (request->kind == UMI_EDITOR_EDIT_COMMAND_MOVE_LINE_UP) {
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (first_line == 0U) return UMI_STATUS_NOT_FOUND;
+        return transform_line_swap(engine,
+                                   view,
+                                   first_line - 1U,
+                                   first_line,
+                                   request,
+                                   out_bytes,
+                                   out_count,
+                                   out_cursor,
+                                   out_lines);
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (request->kind == UMI_EDITOR_EDIT_COMMAND_MOVE_LINE_DOWN ||
+        request->kind == UMI_EDITOR_EDIT_COMMAND_TRANSPOSE_LINES) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (first_line + 1U >= count) return UMI_STATUS_NOT_FOUND;
+        return transform_line_swap(engine,
+                                   view,
+                                   first_line,
+                                   first_line + 1U,
+                                   request,
+                                   out_bytes,
+                                   out_count,
+                                   out_cursor,
+                                   out_lines);
+    }
+
+    status = umi_editor_line_index_line_range(engine->line_index,
+                                               first_line,
+                                               &start,
+                                               &end);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    end_block = block_end(engine, first_line, view->byte_count);
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (request->kind == UMI_EDITOR_EDIT_COMMAND_DELETE_LINE) {
+        size_t remove_start = start;
+        size_t remove_end = end_block;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (count == 1U) {
+            remove_start = 0U;
+            remove_end = view->byte_count;
+        } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (first_line + 1U == count) {
+            size_t previous_start;
+            size_t previous_end;
+            status = umi_editor_line_index_line_range(engine->line_index,
+                                                       first_line - 1U,
+                                                       &previous_start,
+                                                       &previous_end);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
+            if (status != UMI_STATUS_OK) return status;
+            remove_start = content_end(view->bytes,
+                                       previous_start,
+                                       previous_end);
+        }
+        status = replace_alloc(view->bytes,
+                               view->byte_count,
+                               remove_start,
+                               remove_end - remove_start,
+                               NULL,
+                               0U,
+                               out_bytes,
+                               out_count);
+        *out_cursor = remove_start;
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (*out_cursor > *out_count) *out_cursor = *out_count;
+        *out_lines = 1U;
+        return status;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (request->kind == UMI_EDITOR_EDIT_COMMAND_DUPLICATE_LINE) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (first_line + 1U < count) {
+            status = replace_alloc(view->bytes,
+                                   view->byte_count,
+                                   end_block,
+                                   0U,
+                                   view->bytes + start,
+                                   end_block - start,
+                                   out_bytes,
+                                   out_count);
+            *out_cursor = end_block + request->cursor_offset - start;
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
+            TextBuilder insertion = {0};
+            /* An unterminated final line needs a separator before its copy.
+             * Reuse the preceding line's ending so CRLF files stay CRLF. */
+            size_t separator_bytes = start >= 2U && view->bytes[start - 2U] == '\r' ? 2U : 1U;
+            status = builder_append(&insertion, separator_bytes == 2U ? "\r\n" : "\n", separator_bytes);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
+            if (status == UMI_STATUS_OK) {
+                status = builder_append(&insertion,
+                                        view->bytes + start,
+                                        end - start);
+            }
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
+            if (status == UMI_STATUS_OK) {
+                status = replace_alloc(view->bytes,
+                                       view->byte_count,
+                                       view->byte_count,
+                                       0U,
+                                       insertion.bytes,
+                                       insertion.count,
+                                       out_bytes,
+                                       out_count);
+            }
+            builder_discard(&insertion);
+            *out_cursor = view->byte_count + separator_bytes + request->cursor_offset - start;
+        }
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (*out_cursor > *out_count) *out_cursor = *out_count;
+        *out_lines = 1U;
+        return status;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (request->kind == UMI_EDITOR_EDIT_COMMAND_JOIN_LINE_WITH_NEXT) {
+        size_t next_start;
+        size_t next_end;
+        size_t left_end;
+        size_t right_start;
+        const char *separator = " ";
+        size_t separator_count = 1U;
+
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (first_line + 1U >= count) return UMI_STATUS_NOT_FOUND;
+        status = umi_editor_line_index_line_range(engine->line_index,
+                                                   first_line + 1U,
+                                                   &next_start,
+                                                   &next_end);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+        /* Treat CRLF as one separator when deciding whether the next
+         * line is empty. A CR byte is not content requiring an extra space. */
+        next_end = content_end(view->bytes, next_start, next_end);
         left_end = content_end(view->bytes, start, end);
         right_start = next_start;
         /*
@@ -1630,3 +2138,6 @@ const UmiEditorLineIndex *umi_editor_edit_engine_line_index(
 {
     return engine != NULL ? engine->line_index : NULL;
 }
+
+/* Stateless proposals reuse these transforms without a second Undo owner. */
+#include "line_edit_plan.inc"

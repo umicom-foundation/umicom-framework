@@ -1,0 +1,44 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Narrow a file search · Umicom Framework</title><style>body{font:17px/1.6 system-ui,sans-serif;color:#203341;max-width:960px;margin:40px auto;padding:0 24px}code,pre{font-family:Consolas,monospace}pre{padding:20px;background:#eff4f6;overflow:auto}table{border-collapse:collapse;width:100%}td,th{padding:12px;border:1px solid #ccd7dd;text-align:left}a{color:#086879}</style></head><body>
+<header><p>Umicom Framework · Project files</p><h1>Narrow a file search</h1></header><main>
+<p>A project can contain source code, generated files, notes and third-party libraries. Include and exclude patterns help focus a saved-file text search on the files you need. Framework applies the patterns before opening files, so excluded files do not consume the result limit or fail the search because their contents are unreadable.</p>
+<h2>Try the controls in Studio</h2>
+<ol><li>Open a project, refresh Explorer if its file list has changed, then open the Search panel.</li>
+<li>Enter the literal text to find, such as <code>savedCount</code>.</li>
+<li>In <strong>Files to include</strong>, enter <code>*.c;*.h</code> to search C sources and headers.</li>
+<li>In <strong>Files to exclude</strong>, enter <code>generated/*</code> to skip that folder and its descendants. Change this to the actual generated folder in your project.</li>
+<li>Choose <strong>Find in Files</strong>. Read the captured scope beside the results. Editing the fields prepares another query; it does not change a search already running or relabel existing results.</li>
+<li>Clear both fields and search again to return to all indexed files.</li></ol>
+<p>Search reads saved bytes. It does not save drafts, execute project tools or change the index's own exclusion rules. Opening a result preserves an existing working copy. If an unsaved edit moved the match, search navigation reports that the saved location is no longer present rather than selecting unrelated text.</p>
+<h2>Read the pattern rules</h2>
+<table><thead><tr><th>Pattern</th><th>Meaning</th></tr></thead><tbody>
+<tr><td><code>*.c;*.h</code></td><td>Either basename pattern matches at any folder depth.</td></tr>
+<tr><td><code>src/*.c</code></td><td>A workspace-relative path starting with <code>src/</code> and ending with <code>.c</code>, including nested folders.</td></tr>
+<tr><td><code>generated/*</code></td><td>Everything below the workspace's generated folder.</td></tr>
+<tr><td><code>note?.c</code></td><td>A basename with exactly one byte between <code>note</code> and <code>.c</code>.</td></tr>
+<tr><td>Blank Include</td><td>All indexed files are initially eligible.</td></tr>
+<tr><td>Blank Exclude</td><td>No additional exclusion is applied.</td></tr>
+</tbody></table>
+<p>A pattern without a slash applies to the filename; one with a slash applies to the whole workspace-relative path. <code>*</code> matches zero or more bytes, including slashes. <code>?</code> matches one byte, which may be only part of a multibyte UTF-8 character. Matching is case-sensitive on every platform: <code>*.C</code> differs from <code>*.c</code>. The text query's <strong>Match case</strong> checkbox does not change path matching.</p>
+<p>Separate alternatives with semicolons. Exclude wins when both lists match. Backslashes become forward slashes, and spaces around each pattern are trimmed. Spaces inside a name remain literal. Each field permits 511 bytes and up to 16 patterns. Brackets, braces, control characters, absolute paths and empty list items are rejected. This syntax has no regular expressions, escape sequences, brace expansion or special double-star operator; consecutive stars behave like one star.</p>
+<h2>Recover from an input error</h2>
+<ol><li>Remove a trailing semicolon or empty item, such as the middle item in <code>*.c;;*.h</code>.</li>
+<li>Replace a brace expression such as <code>*.{c,h}</code> with <code>*.c;*.h</code>.</li>
+<li>Use a workspace-relative pattern instead of an absolute drive path.</li>
+<li>Shorten an overlong list or reduce it to at most 16 patterns. Your previous results remain available when a new request is rejected.</li></ol>
+<p>If the workspace or index changes, rerun the search. Results remain tied to their original request and index revision; changing scope cannot make an old result belong to a new request. Cancellation keeps files unchanged and does not cancel a separate build or Explorer refresh.</p>
+<h2>Use the shared C API</h2>
+<p>Include <code>umicom/platform/search_session.h</code> and link <code>Umicom::platform</code>. The session must already own an index whose root is absolute:</p>
+<pre><code>UmiSearchPathFilter filter;
+UmiStatus status = UmiSearchPathFilterInit("*.c;*.h", "generated/*", &amp;filter);
+if (status == UMI_STATUS_OK) {
+    status = UmiFileSearchStartFiltered(session, "savedCount", 1, 0U, &amp;filter);
+}</code></pre>
+<p>An <code>OK</code> start result means the request was accepted, not that the search finished. Poll <code>UmiFileSearchRead</code> on the owner thread, and use matches only when <code>ready</code> is true. Keep the index alive until the session is destroyed. The filter and query are copied before the worker is submitted; the caller can then reuse its input storage.</p>
+<p>Use <code>UmiFileSearchFilterRead</code> with the request ID to label the captured scope, and <code>UmiFileSearchMatchAt</code> to copy an individual result. A different or stale request is rejected. The original <code>UmiFileSearchStart</code> remains available and clears the extra filter for that request.</p>
+<p>A synchronous tool can call <code>UmiSearchFileIndexScoped</code> with the existing request, progress and result callbacks. It copies the filter and retains the normal bounded reads, cancellation and revision checks. Its streaming sink can receive earlier matches before a later error; discard partial results when the workflow requires a complete set. <code>files_considered</code> includes candidates rejected by the filter; rejected candidates are not counted as searched, binary or oversized files.</p>
+<p>These filters express search intent. They do not grant access, create a filesystem sandbox or stop another service from reading a path. The normal index, filesystem and operating-system rules still apply.</p>
+<h2>Extend the implementation</h2>
+<p>Keep syntax and matching in <code>src/platform/search_filter.c</code>, and file reads in <code>src/platform/search.c</code>. New frontends should call the shared session rather than removing rows after a broad search: filtering rows afterwards would still read excluded files and spend the match limit on them. Add focused scenarios to <code>tests/test_search_filter.c</code> when changing syntax or worker ownership.</p>
+<p>Continue with <a href="PROJECT_FILES.html">project files and the shared index</a>.</p>
+</main><footer><p>Sammy Hegab · Umicom Foundation · MIT</p></footer></body></html>

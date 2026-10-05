@@ -7,6 +7,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/debug_runtime/variable_inspection.h"
+#include "umicom/debug_runtime/variable_assignment.h"
 #include "umicom/language_runtime/json_text.h"
 #include "umicom/language_runtime/json_document.h"
 #include <stdlib.h>
@@ -91,4 +92,27 @@ UmiStatus UmiDebugRuntimeDecodeVariableChildren(const char *json, UmiDebugVariab
     }
     if (status == UMI_STATUS_OK) *out = *children;
     free(doc); free(children); return status;
+}
+
+/* Assignment replies use a different required field from evaluate replies.
+ * Reuse the same complete-document and bounded member readers as child lists
+ * so both paths reject ambiguous or truncated adapter data consistently. */
+UmiStatus UmiDebugRuntimeDecodeAssignmentValue(const char *json, UmiDebugRuntimeEvaluateResult *out)
+{
+    if (json == NULL || out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiLanguageRuntimeJsonDocument *doc = malloc(sizeof *doc);
+    if (doc == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    UmiDebugRuntimeEvaluateResult value = {0}; int body = -1; uint32_t reference = 0U;
+    UmiStatus status = UmiLanguageRuntimeJsonParseComplete(json, doc);
+    if (status == UMI_STATUS_OK) status = Member(doc, 0, "body", &body);
+    if (status == UMI_STATUS_OK) status = Text(doc, body, "value", 1, value.result, sizeof value.result);
+    if (status == UMI_STATUS_OK) status = Text(doc, body, "type", 0, value.type, sizeof value.type);
+    if (status == UMI_STATUS_OK) status = Text(doc, body, "memoryReference", 0, value.memory_reference, sizeof value.memory_reference);
+    if (status == UMI_STATUS_OK) status = Number(doc, body, "variablesReference", 0, &reference);
+    value.variables_reference = reference;
+    if (status == UMI_STATUS_OK) status = Number(doc, body, "namedVariables", 0, &value.named_variables);
+    if (status == UMI_STATUS_OK) status = Number(doc, body, "indexedVariables", 0, &value.indexed_variables);
+    free(doc);
+    if (status == UMI_STATUS_OK) *out = value;
+    return status;
 }

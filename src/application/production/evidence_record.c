@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/production/evidence_record.h"
+#include "../../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -80,6 +81,13 @@ UmiStatus umi_application_production_evidence_record_set(
 UmiStatus umi_application_production_evidence_record_validate(
     const UmiApplicationProductionEvidenceRecord *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->evidence_id, '\0', sizeof(record->evidence_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->reference, '\0', sizeof(record->reference)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -94,3 +102,47 @@ UmiStatus umi_application_production_evidence_record_validate(
     return UMI_STATUS_OK;
 }
 
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiApplicationProductionEvidenceRecordArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xfcb6fa477197b7f3);
+    schema = (schema ^ (uint64_t)sizeof(((UmiApplicationProductionEvidenceRecord *)0)->evidence_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiApplicationProductionEvidenceRecord *)0)->reference)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiApplicationProductionEvidenceRecordArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiApplicationProductionEvidenceRecord *)0)->evidence_id) - 1U +
+        8U + sizeof(((UmiApplicationProductionEvidenceRecord *)0)->reference) - 1U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiApplicationProductionEvidenceRecordArchiveWrite(UmiArchiveWriter *writer, const UmiApplicationProductionEvidenceRecord *value)
+{
+    UmiArchiveWriteText(writer, value->evidence_id, sizeof(value->evidence_id));
+    UmiArchiveWriteText(writer, value->reference, sizeof(value->reference));
+    UmiArchiveWriteSigned(writer, (int64_t)value->kind);
+    UmiArchiveWriteSigned(writer, (int64_t)value->state);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiApplicationProductionEvidenceRecordArchiveRead(UmiArchiveReader *reader, UmiApplicationProductionEvidenceRecord *value)
+{
+    UmiArchiveReadText(reader, value->evidence_id, sizeof(value->evidence_id));
+    UmiArchiveReadText(reader, value->reference, sizeof(value->reference));
+    value->kind = (UmiApplicationProductionEvidenceKind)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->state = (UmiApplicationProductionEvidenceState)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiApplicationProductionEvidenceRecordArchiveValidate(const UmiApplicationProductionEvidenceRecord *value)
+{
+    return umi_application_production_evidence_record_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_application_production_evidence_record_archive_encode, umi_application_production_evidence_record_archive_decode,
+    UmiApplicationProductionEvidenceRecord, UmiApplicationProductionEvidenceRecordArchiveSchema, UmiApplicationProductionEvidenceRecordArchiveBound, UmiApplicationProductionEvidenceRecordArchiveWrite, UmiApplicationProductionEvidenceRecordArchiveRead, UmiApplicationProductionEvidenceRecordArchiveValidate)

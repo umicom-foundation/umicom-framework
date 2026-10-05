@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/distribution/runtime/rollback_plan.h"
+#include "../../base/value_archive_internal.h"
 
 /*
  * Initialise dr rollback plan from caller-provided values so later operations receive a
@@ -20,7 +21,14 @@
  */
 void umi_dr_rollback_plan_init(UmiDrRollbackPlan *value) { /* Protect caller-owned memory by checking that required state is available before it is used. */ if (value != NULL) { *value = (UmiDrRollbackPlan){0};  } }
 /* Check that dr rollback plan satisfies its contract before another service relies on it. */
-bool umi_dr_rollback_plan_valid(const UmiDrRollbackPlan *value) { return value != NULL && (value->id[0] != '\0' && value->checkpoint_id[0] != '\0' && value->verified); }
+bool umi_dr_rollback_plan_valid(const UmiDrRollbackPlan *value) {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (value == NULL) return 0;
+    if (memchr(value->id, '\0', sizeof(value->id)) == NULL) return 0;
+    if (memchr(value->checkpoint_id, '\0', sizeof(value->checkpoint_id)) == NULL) return 0;
+ return value != NULL && (value->id[0] != '\0' && value->checkpoint_id[0] != '\0' && value->verified); }
 /*
  * Provide the dr rollback plan fingerprint operation used by this module and its client
  * applications.
@@ -33,3 +41,53 @@ uint64_t umi_dr_rollback_plan_fingerprint(const UmiDrRollbackPlan *value) {
     h = umi_dr_hash_combine(h, (uint64_t)sizeof(*value));
     return h;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiDrRollbackPlanArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xfdba08494684a6cf);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDrRollbackPlan *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDrRollbackPlan *)0)->checkpoint_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiDrRollbackPlanArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiDrRollbackPlan *)0)->id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U + sizeof(((UmiDrRollbackPlan *)0)->checkpoint_id) - 1U +
+        8U +
+        8U;
+}
+static void UmiDrRollbackPlanArchiveWrite(UmiArchiveWriter *writer, const UmiDrRollbackPlan *value)
+{
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->restore_version.major);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->restore_version.minor);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->restore_version.patch);
+    UmiArchiveWriteText(writer, value->checkpoint_id, sizeof(value->checkpoint_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->preserve_user_data);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->verified);
+}
+static void UmiDrRollbackPlanArchiveRead(UmiArchiveReader *reader, UmiDrRollbackPlan *value)
+{
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    value->restore_version.major = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->restore_version.minor = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->restore_version.patch = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->checkpoint_id, sizeof(value->checkpoint_id));
+    value->preserve_user_data = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->verified = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiDrRollbackPlanArchiveValidate(const UmiDrRollbackPlan *value)
+{
+    return umi_dr_rollback_plan_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_dr_rollback_plan_archive_encode, umi_dr_rollback_plan_archive_decode,
+    UmiDrRollbackPlan, UmiDrRollbackPlanArchiveSchema, UmiDrRollbackPlanArchiveBound, UmiDrRollbackPlanArchiveWrite, UmiDrRollbackPlanArchiveRead, UmiDrRollbackPlanArchiveValidate)

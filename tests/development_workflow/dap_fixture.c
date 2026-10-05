@@ -15,6 +15,28 @@
 #include <io.h>
 #include <fcntl.h>
 #endif
+/* Inspect the received JSON independently of the launch formatter. Existing
+ * scenarios remain unchanged unless the dedicated argument marker is present. */
+static int CheckLaunchArguments(const char *json)
+{
+    if (strstr(json, "--umicom-argument-check") == NULL) return 1;
+    UmiLanguageRuntimeJsonDocument *document = malloc(sizeof(*document));
+    if (document == NULL) return 0;
+    int valid = umi_language_runtime_json_parse(json, document) == UMI_STATUS_OK;
+    int launch = valid ? umi_language_runtime_json_object_get(document, 0, "arguments") : -1;
+    int args = launch >= 0 ? umi_language_runtime_json_object_get(document, launch, "args") : -1;
+    const char *expected[] = {"--umicom-argument-check", "two words", "", "C:\\Folder with spaces\\", "caf\xc3\xa9", "literal;$(value)"};
+    if (args < 0 || umi_language_runtime_json_array_count(document, args) != 6U) valid = 0;
+    for (size_t index = 0U; valid && index < 6U; ++index) {
+        char value[128];
+        int item = umi_language_runtime_json_array_at(document, args, index);
+        if (umi_language_runtime_json_string(document, item, value, sizeof(value)) != UMI_STATUS_OK ||
+            strcmp(value, expected[index]) != 0) valid = 0;
+    }
+    free(document);
+    return valid;
+}
+
 static uint64_t sequence = 1U;
 static int Write(const char *text) {
     if (printf("Content-Length: %zu\r\n\r\n%s", strlen(text), text) < 0) return 0;
@@ -35,6 +57,8 @@ static int Event(const char *event, const char *body) {
 #include "../watch_edit/peer.inc"
 #include "../variable_inspection/peer.inc"
 #include "../scope_inspection/peer.inc"
+#include "../variable_assignment/peer.inc"
+#include "../memory_inspection/peer.inc"
 int main(int argc, char **argv) {
 #ifdef _WIN32
     (void)_setmode(_fileno(stdin),_O_BINARY); (void)_setmode(_fileno(stdout),_O_BINARY);
@@ -52,12 +76,30 @@ int main(int argc, char **argv) {
         if(umi_debug_runtime_message_parse(json,&request)!=UMI_STATUS_OK) return 4;
         const char *cmd=request.command;
         fprintf(stderr,"fixture got %s seq %llu\n",cmd,(unsigned long long)request.sequence);
+        /* Memory scenarios negotiate their own capability and verify each read.
+         * All older fixture modes keep their existing replies below. */
+        if (strncmp(mode, "memory-inspection-", 18) == 0 &&
+            (strcmp(cmd, "initialize") == 0 || strcmp(cmd, "variables") == 0 || strcmp(cmd, "readMemory") == 0)) {
+            if (!MemoryPeerReply(&request, mode, json)) return 19;
+            continue;
+        }
+        if (strncmp(mode, "variable-assignment-", 20) == 0 &&
+            (strcmp(cmd, "variables") == 0 || strcmp(cmd, "setVariable") == 0 || strcmp(cmd, "setExpression") == 0)) {
+            if (!AssignmentPeerReply(&request, mode, json)) return 18;
+            continue;
+        }
         if(strcmp(cmd,"initialize")==0) {
             if(strcmp(mode,"initialized-first")==0 && !Event("initialized","{}")) return 5;
 /* Property synchronization tests explicitly negotiate optional capabilities; older fixture modes keep their original advertised set. The previous implementation remains for engineering review. */
 #if 0
             if(!Response(request.sequence,cmd,1,"{\"supportsConfigurationDoneRequest\":true,\"supportsTerminateRequest\":true}")) return 5;
 #endif
+            /* Assignment modes negotiate only their own optional capability. */
+            if (strncmp(mode, "variable-assignment-", 20) == 0 && strcmp(mode, "variable-assignment-unsupported") != 0) {
+                if (!Response(request.sequence, cmd, 1,
+                    "{\"supportsConfigurationDoneRequest\":true,\"supportsTerminateRequest\":true,\"supportsSetVariable\":true,\"supportsSetExpression\":true}")) return 5;
+                continue;
+            }
             if (strncmp(mode, "properties-", 11) == 0 && strcmp(mode, "properties-unsupported") != 0) {
                 if (!Response(request.sequence, cmd, 1,
                     "{\"supportsConfigurationDoneRequest\":true,\"supportsTerminateRequest\":true,\"supportsConditionalBreakpoints\":true,\"supportsLogPoints\":true}")) return 5;
@@ -65,6 +107,7 @@ int main(int argc, char **argv) {
                 if(!Response(request.sequence,cmd,1,"{\"supportsConfigurationDoneRequest\":true,\"supportsTerminateRequest\":true}")) return 5;
             }
         } else if(strcmp(cmd,"launch")==0) {
+            if (!CheckLaunchArguments(json)) return 16;
             launch=request.sequence;
             if(strcmp(mode,"reject-launch")==0) { if(!Response(launch,cmd,0,"{}")) return 5; }
             else if(strcmp(mode,"no-initialized")==0) { /* Keep the pipe open, no fabricated readiness. */ }

@@ -16,6 +16,7 @@
 #include "umicom/application/runtime/workspace_runtime.h"
 
 #include <string.h>
+#include "umicom/application/runtime/context_review.h"
 
 #include "umicom/application/runtime/layout_session.h"
 #include "umicom/application/runtime/panel_state.h"
@@ -251,6 +252,9 @@ UmiStatus umi_application_workspace_runtime_set_layout_locked(
  * Provide the application workspace runtime set context operation used by this module and
  * its client applications.
  */
+/* Stage linked changes in Framework and publish UI state before committing the application cache.
+ * The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_application_workspace_runtime_set_context(
     UmiApplicationWorkspaceRuntime *runtime,
     const char *group_id,
@@ -273,4 +277,55 @@ UmiStatus umi_application_workspace_runtime_set_context(
     (void)umi_application_operation_log_record(&runtime->operations,
         UMI_APPLICATION_OPERATION_CONTEXT_CHANGE, group_id, result);
     return result;
+}
+#endif
+/* Preserve failed-attempt diagnostics for the older convenience API. The log
+ * borrows its target, so use a durable scope label rather than caller text. */
+static UmiStatus workspace_context_failure(UmiApplicationWorkspaceRuntime *runtime,
+    UmiStatus status)
+{
+    if (runtime != NULL && runtime->structure_size == sizeof(*runtime) &&
+        runtime->operations.structure_size == sizeof(runtime->operations))
+        (void)umi_application_operation_log_record(&runtime->operations,
+            UMI_APPLICATION_OPERATION_CONTEXT_CHANGE, "context-links", status);
+    return status;
+}
+
+/* Translate a one-key convenience call into the same reviewed transaction used
+ * by multi-panel editors. Text is bounded before copying into the request. */
+static UmiStatus workspace_context_change(UmiApplicationWorkspaceRuntime *runtime,
+    UmiApplicationContextChangeKind operation, const char *group_id, const char *value)
+{
+    UmiApplicationContextChange change = {0};
+    UmiApplicationContextReview *review = NULL;
+    UmiStatus status;
+    size_t length;
+    if (group_id == NULL || (operation == UMI_APPLICATION_CONTEXT_SET && value == NULL))
+        return workspace_context_failure(runtime, UMI_STATUS_INVALID_ARGUMENT);
+    for (length = 0U; length < sizeof(change.group_id) && group_id[length] != '\0'; ++length) {}
+    if (length == 0U || length == sizeof(change.group_id)) return workspace_context_failure(runtime, UMI_STATUS_INVALID_ARGUMENT);
+    memcpy(change.group_id, group_id, length + 1U);
+    if (operation == UMI_APPLICATION_CONTEXT_SET) {
+        for (length = 0U; length < sizeof(change.value) && value[length] != '\0'; ++length) {}
+        if (length == sizeof(change.value)) return workspace_context_failure(runtime, UMI_STATUS_INVALID_ARGUMENT);
+        memcpy(change.value, value, length + 1U);
+    }
+    change.operation = operation;
+    status = umi_application_context_review_prepare(runtime, &change, 1U, &review);
+    if (status == UMI_STATUS_OK) status = umi_application_context_review_apply(runtime, review);
+    umi_application_context_review_destroy(review);
+    return status == UMI_STATUS_OK ? status : workspace_context_failure(runtime, status);
+}
+
+UmiStatus umi_application_workspace_runtime_set_context(
+    UmiApplicationWorkspaceRuntime *runtime, const char *group_id, const char *value)
+{
+    return workspace_context_change(runtime, UMI_APPLICATION_CONTEXT_SET, group_id, value);
+}
+
+/* Clearing a link removes it from both stores and preserves unrelated UI keys. */
+UmiStatus umi_application_workspace_runtime_clear_context(
+    UmiApplicationWorkspaceRuntime *runtime, const char *group_id)
+{
+    return workspace_context_change(runtime, UMI_APPLICATION_CONTEXT_REMOVE, group_id, NULL);
 }

@@ -13,3 +13,21 @@ UmiGtk4AdapterDocumentSaveAllProgress
 # Shared lifecycle checks for owned review dialogs.
 UmiGtk4WindowIsOpen
 UmiGtk4WatchWindowClosed
+
+# Recently closed saved paths, owned by the document coordinator.
+UmiGtk4AdapterReopenDocumentEnabled
+UmiGtk4AdapterReopenDocument
+UmiGtk4AdapterForgetClosedDocument
+
+UmiGtk4AdapterNavigationHistoryEnabled
+UmiGtk4AdapterTravelDocument
+UmiGtk4AdapterClearNavigationHistory
+
+# Sequential reviewed edits use the existing native document lifetime.
+UmiGtk4AdapterReviewOpenReplacements
+UmiGtk4AdapterReplacementReviewBusy
+UmiGtk4AdapterReplacementReviewProgress
+UmiGtk4AdapterCancelReplacementReview
+
+UmiGtk4AdapterBookmarkEnabled
+UmiGtk4AdapterBookmarkCommand

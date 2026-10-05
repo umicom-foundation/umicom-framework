@@ -10,6 +10,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/test_platform/build_readiness/product_profile.h"
+#include "../../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -71,6 +72,15 @@ UmiStatus umi_test_platform_product_validation_profile_init(
 UmiStatus umi_test_platform_product_validation_profile_validate(
     const UmiTestPlatformProductValidationProfile *profile)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (profile == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(profile->product_id, '\0', sizeof(profile->product_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(profile->display_name, '\0', sizeof(profile->display_name)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(profile->preset, '\0', sizeof(profile->preset)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(profile->test_regex, '\0', sizeof(profile->test_regex)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -85,3 +95,56 @@ UmiStatus umi_test_platform_product_validation_profile_validate(
         return UMI_STATUS_INVALID_STATE;
     return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiTestPlatformProductValidationProfileArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xa67ec2c8e0d78417);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTestPlatformProductValidationProfile *)0)->product_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTestPlatformProductValidationProfile *)0)->display_name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTestPlatformProductValidationProfile *)0)->preset)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTestPlatformProductValidationProfile *)0)->test_regex)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiTestPlatformProductValidationProfileArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiTestPlatformProductValidationProfile *)0)->product_id) - 1U +
+        8U + sizeof(((UmiTestPlatformProductValidationProfile *)0)->display_name) - 1U +
+        8U + sizeof(((UmiTestPlatformProductValidationProfile *)0)->preset) - 1U +
+        8U + sizeof(((UmiTestPlatformProductValidationProfile *)0)->test_regex) - 1U +
+        8U +
+        8U;
+}
+static void UmiTestPlatformProductValidationProfileArchiveWrite(UmiArchiveWriter *writer, const UmiTestPlatformProductValidationProfile *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->product_id, sizeof(value->product_id));
+    UmiArchiveWriteText(writer, value->display_name, sizeof(value->display_name));
+    UmiArchiveWriteText(writer, value->preset, sizeof(value->preset));
+    UmiArchiveWriteText(writer, value->test_regex, sizeof(value->test_regex));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled_in_default_preset);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->requires_all_modules);
+}
+static void UmiTestPlatformProductValidationProfileArchiveRead(UmiArchiveReader *reader, UmiTestPlatformProductValidationProfile *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->product_id, sizeof(value->product_id));
+    UmiArchiveReadText(reader, value->display_name, sizeof(value->display_name));
+    UmiArchiveReadText(reader, value->preset, sizeof(value->preset));
+    UmiArchiveReadText(reader, value->test_regex, sizeof(value->test_regex));
+    value->enabled_in_default_preset = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->requires_all_modules = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiTestPlatformProductValidationProfileArchiveValidate(const UmiTestPlatformProductValidationProfile *value)
+{
+    return umi_test_platform_product_validation_profile_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_test_platform_product_validation_profile_archive_encode, umi_test_platform_product_validation_profile_archive_decode,
+    UmiTestPlatformProductValidationProfile, UmiTestPlatformProductValidationProfileArchiveSchema, UmiTestPlatformProductValidationProfileArchiveBound, UmiTestPlatformProductValidationProfileArchiveWrite, UmiTestPlatformProductValidationProfileArchiveRead, UmiTestPlatformProductValidationProfileArchiveValidate)

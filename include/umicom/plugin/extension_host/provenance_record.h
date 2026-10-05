@@ -20,6 +20,7 @@
 #define UMICOM_PLUGIN_EXTENSION_HOST_PROVENANCE_RECORD_H
 
 #include <stddef.h>
+#include "umicom/base/value_archive.h"
 #include <stdint.h>
 
 #include "umicom/base/status.h"
@@ -64,6 +65,17 @@ UmiStatus umi_plugin_extension_host_provenance_record_validate(const UmiPluginEx
  * module and its client applications.
  */
 uint64_t umi_plugin_extension_host_provenance_record_fingerprint(const UmiPluginExtensionHostProvenanceRecord *value);
+
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_plugin_extension_host_provenance_record_archive_encode(const UmiPluginExtensionHostProvenanceRecord *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_plugin_extension_host_provenance_record_archive_decode(const void *bytes, size_t byte_count,
+    UmiPluginExtensionHostProvenanceRecord *value);
 
 #ifdef __cplusplus
 }

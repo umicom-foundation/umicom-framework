@@ -16,6 +16,7 @@
 #define UMICOM_UI_MOSAIC_CONTEXT_LINK_COLOUR_H
 
 #include <stdbool.h>
+#include "umicom/base/value_archive.h"
 #include <stdint.h>
 #include "umicom/ui/mosaic/types.h"
 
@@ -41,6 +42,17 @@ void umi_ui_mosaic_context_link_colour_init(UmiUiMosaicContextLinkColour *value)
 UmiStatus umi_ui_mosaic_context_link_colour_set(UmiUiMosaicContextLinkColour *value, const char *group_id, const char *context_type, const char *member_id);
 /* Validates typed link identities before routing context. */
 UmiStatus umi_ui_mosaic_context_link_colour_validate(const UmiUiMosaicContextLinkColour *value);
+
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_ui_mosaic_context_link_colour_archive_encode(const UmiUiMosaicContextLinkColour *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_ui_mosaic_context_link_colour_archive_decode(const void *bytes, size_t byte_count,
+    UmiUiMosaicContextLinkColour *value);
 
 #ifdef __cplusplus
 }

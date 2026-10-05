@@ -1,0 +1,16 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-workspace-edit-preview-test "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/test_workspace_edit_preview.c")
+    target_link_libraries(umicom-workspace-edit-preview-test PRIVATE Umicom::developer)
+    umicom_apply_warnings(umicom-workspace-edit-preview-test)
+    umicom_apply_sanitizers(umicom-workspace-edit-preview-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-workspace-edit-preview-test)
+    endif()
+    foreach(case basic version version-missing version-mismatch null-version annotation unicode surrogate multiline overlap ordered-inserts late-invalid too-many invalid-index invalid-source invalid-caret cancelled empty-edits delete source-owned remote-uri)
+        add_test(NAME framework.language_runtime.workspace_edit_preview.${case} COMMAND umicom-workspace-edit-preview-test ${case})
+        set_tests_properties(framework.language_runtime.workspace_edit_preview.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;language;workspace-edits;ownership;regression")
+    endforeach()
+endif()

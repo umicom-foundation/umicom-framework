@@ -18,6 +18,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug/workbench/debug_keymap_context.h"
+#include "../../base/value_archive_internal.h"
 #include <string.h>
 
 /*
@@ -92,3 +93,43 @@ int umi_debug_workbench_debug_keymap_context_valid(const UmiDebugWorkbenchDebugK
 {
     return model != NULL && model->revision > 0U && umi_debug_workbench_command_bit(model->primary_command) != 0U;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiDebugWorkbenchDebugKeymapContextArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x3c2b3ec388e0fd6b);
+
+    return schema;
+}
+static size_t UmiDebugWorkbenchDebugKeymapContextArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiDebugWorkbenchDebugKeymapContextArchiveWrite(UmiArchiveWriter *writer, const UmiDebugWorkbenchDebugKeymapContext *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled_commands);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->visible_commands);
+    UmiArchiveWriteSigned(writer, (int64_t)value->primary_command);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiDebugWorkbenchDebugKeymapContextArchiveRead(UmiArchiveReader *reader, UmiDebugWorkbenchDebugKeymapContext *value)
+{
+    value->enabled_commands = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->visible_commands = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->primary_command = (UmiDebugWorkbenchCommand)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiDebugWorkbenchDebugKeymapContextArchiveValidate(const UmiDebugWorkbenchDebugKeymapContext *value)
+{
+    return umi_debug_workbench_debug_keymap_context_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_debug_workbench_debug_keymap_context_archive_encode, umi_debug_workbench_debug_keymap_context_archive_decode,
+    UmiDebugWorkbenchDebugKeymapContext, UmiDebugWorkbenchDebugKeymapContextArchiveSchema, UmiDebugWorkbenchDebugKeymapContextArchiveBound, UmiDebugWorkbenchDebugKeymapContextArchiveWrite, UmiDebugWorkbenchDebugKeymapContextArchiveRead, UmiDebugWorkbenchDebugKeymapContextArchiveValidate)

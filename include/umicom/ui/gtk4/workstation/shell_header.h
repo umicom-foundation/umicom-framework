@@ -18,6 +18,7 @@
 #ifndef UMICOM_UI_GTK4_WORKSTATION_SHELL_HEADER_H
 #define UMICOM_UI_GTK4_WORKSTATION_SHELL_HEADER_H
 
+#include "umicom/application/launch_receipts.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -240,6 +241,13 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
  */
 void umi_gtk4_ws_shell_header_destroy(
     UmiGtk4WorkstationShellHeader *header);
+
+/** Copy the most recent native launch receipt for this header and application.
+ * Delegated host requests do not create local process evidence. NOT_FOUND
+ * means no retained native receipt; a successful process start is not proof
+ * that its UI or services are ready. History is bounded and memory-only. */
+UmiStatus UmiGtk4WorkstationApplicationReceipt(const UmiGtk4WorkstationShellHeader *header,
+    const char *application_id, UmiApplicationLaunchReceipt *out);
 
 /** Borrow the GTK root that the application places in its top-level bar. */
 GtkWidget *umi_gtk4_ws_shell_header_widget(

@@ -28,8 +28,19 @@ static UmiStatus cmake_command(const UmiBuildProfile *profile,
     if (profile == NULL || out_command == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Validate value records at the provider boundary as well as in runners.
+     * Direct callers must not bypass conflicting or unterminated preset checks. */
+    UmiStatus validation = umi_build_profile_validate(profile, NULL, 0U);
+    if (validation != UMI_STATUS_OK) return validation;
     umi_build_command_init(out_command, "cmake");
     if (phase == UMI_BUILD_PHASE_CONFIGURE) {
+        /* CMake resolves preset inheritance, environment and binary directory.
+         * Do not silently replace those reviewed settings with GUI defaults. */
+        if (profile->configure_preset[0] != '\0') {
+            return umi_build_command_add_argument(out_command, "--preset") &&
+                   umi_build_command_add_argument(out_command, profile->configure_preset)
+                ? UMI_STATUS_OK : UMI_STATUS_CAPACITY_EXCEEDED;
+        }
         if (profile->preset[0] != '\0') {
             if (!umi_build_command_add_argument(out_command, "--preset") ||
                 !umi_build_command_add_argument(out_command, profile->preset)) {
@@ -86,6 +97,19 @@ static UmiStatus cmake_command(const UmiBuildProfile *profile,
     }
     if (phase == UMI_BUILD_PHASE_BUILD ||
         phase == UMI_BUILD_PHASE_CLEAN) {
+        if (profile->build_preset[0] != '\0') {
+            if (!umi_build_command_add_argument(out_command, "--build") ||
+                !umi_build_command_add_argument(out_command, "--preset") ||
+                !umi_build_command_add_argument(out_command, profile->build_preset))
+                return UMI_STATUS_CAPACITY_EXCEEDED;
+            /* Clean is an explicit action. Override only its target; ordinary
+             * Build honours the preset's targets, configuration and job count. */
+            if (phase == UMI_BUILD_PHASE_CLEAN &&
+                (!umi_build_command_add_argument(out_command, "--target") ||
+                 !umi_build_command_add_argument(out_command, "clean")))
+                return UMI_STATUS_CAPACITY_EXCEEDED;
+            return UMI_STATUS_OK;
+        }
         if (!umi_build_command_add_argument(out_command, "--build") ||
             !umi_build_command_add_argument(out_command,
                                             profile->build_directory)) {
@@ -134,11 +158,31 @@ static UmiStatus cmake_command(const UmiBuildProfile *profile,
     }
     if (phase == UMI_BUILD_PHASE_RUN && profile->run_program[0] != '\0') {
         umi_build_command_init(out_command, profile->run_program);
+        /* The runner has already resolved source_directory to the project
+         * root. Only Run receives this folder; build tools still use the root
+         * so they can find the project's presets. Empty keeps the old default. */
+        if (profile->run_working_directory[0] != '\0') {
+            UmiStatus directoryStatus = UmiBuildProfileLaunchDirectory(profile,
+                profile->source_directory, out_command->working_directory,
+                sizeof(out_command->working_directory));
+            if (directoryStatus != UMI_STATUS_OK) return directoryStatus;
+        }
+        /* The profile resolver preserves old literal inputs and shares exact
+         * argument boundaries with the debugger. The former single-argument
+         * path is retained below for review. */
+#if 0
         if (profile->run_argument[0] != '\0' &&
             !umi_build_command_add_argument(out_command,
                                             profile->run_argument)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
+#endif
+        UmiArguments arguments;
+        UmiStatus status = UmiBuildProfileArguments(profile, &arguments);
+        if (status != UMI_STATUS_OK) return status;
+        for (size_t index = 0U; index < arguments.count; ++index)
+            if (!umi_build_command_add_argument(out_command, arguments.values[index]))
+                return UMI_STATUS_CAPACITY_EXCEEDED;
         return UMI_STATUS_OK;
     }
     return UMI_STATUS_NOT_IMPLEMENTED;

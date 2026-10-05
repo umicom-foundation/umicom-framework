@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/broker_connectivity/ibkr_adapter.h"
+#include "../base/value_archive_internal.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -31,6 +32,13 @@ void umi_ibkr_adapter_config_init(UmiIbkrAdapterConfig *config)
 
 UmiStatus umi_ibkr_adapter_config_validate(const UmiIbkrAdapterConfig *config)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (config == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(config->host, '\0', sizeof(config->host)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(config->account, '\0', sizeof(config->account)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     if (config == NULL || config->host[0] == '\0' ||
         config->port == 0U || config->clientId < 0) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -145,3 +153,50 @@ UmiStatus umi_ibkr_adapter_map_status(
     }
     return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiIbkrAdapterConfigArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xce63d388927cd89d);
+    schema = (schema ^ (uint64_t)sizeof(((UmiIbkrAdapterConfig *)0)->host)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiIbkrAdapterConfig *)0)->account)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiIbkrAdapterConfigArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiIbkrAdapterConfig *)0)->host) - 1U +
+        8U +
+        8U +
+        8U + sizeof(((UmiIbkrAdapterConfig *)0)->account) - 1U +
+        8U +
+        8U;
+}
+static void UmiIbkrAdapterConfigArchiveWrite(UmiArchiveWriter *writer, const UmiIbkrAdapterConfig *value)
+{
+    UmiArchiveWriteText(writer, value->host, sizeof(value->host));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->port);
+    UmiArchiveWriteSigned(writer, (int64_t)value->clientId);
+    UmiArchiveWriteText(writer, value->account, sizeof(value->account));
+    UmiArchiveWriteSigned(writer, (int64_t)value->paperOnly);
+    UmiArchiveWriteSigned(writer, (int64_t)value->readOnly);
+}
+static void UmiIbkrAdapterConfigArchiveRead(UmiArchiveReader *reader, UmiIbkrAdapterConfig *value)
+{
+    UmiArchiveReadText(reader, value->host, sizeof(value->host));
+    value->port = (uint16_t)UmiArchiveReadUnsigned(reader, UINT16_MAX);
+    value->clientId = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    UmiArchiveReadText(reader, value->account, sizeof(value->account));
+    value->paperOnly = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->readOnly = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+}
+static UmiStatus UmiIbkrAdapterConfigArchiveValidate(const UmiIbkrAdapterConfig *value)
+{
+    return umi_ibkr_adapter_config_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_ibkr_adapter_config_archive_encode, umi_ibkr_adapter_config_archive_decode,
+    UmiIbkrAdapterConfig, UmiIbkrAdapterConfigArchiveSchema, UmiIbkrAdapterConfigArchiveBound, UmiIbkrAdapterConfigArchiveWrite, UmiIbkrAdapterConfigArchiveRead, UmiIbkrAdapterConfigArchiveValidate)

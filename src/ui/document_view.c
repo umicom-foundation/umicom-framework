@@ -384,6 +384,43 @@ UmiStatus UmiUiDocumentViewModelCopyText(const UmiUiDocumentViewModel *model,
     return UMI_STATUS_OK;
 }
 
+/* Keep selection coordinates and source bytes in the same critical section.
+ * Reading the bounded source_text preview here would export the wrong bytes
+ * for a selection beyond that preview in a larger document. */
+UmiStatus UmiUiDocumentViewModelCopySelection(const UmiUiDocumentViewModel *model,
+    const char *view_id, uint64_t expected_revision, char *out_text,
+    size_t capacity, UmiUiDocumentSelectionInfo *out_info)
+{
+    if (model == NULL || view_id == NULL || out_text == NULL || out_info == NULL || capacity == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    (void)umi_mutex_lock(model->mutex);
+    UmiStatus status = UMI_STATUS_OK;
+    size_t index = find_item(model, view_id);
+    if (expected_revision != model->revision) status = UMI_STATUS_BUSY;
+    else if (index == SIZE_MAX) status = UMI_STATUS_NOT_FOUND;
+    else {
+        const UmiUiDocumentViewSnapshot *view = &model->items[index];
+        size_t offset = view->cursor_offset, length = view->selection_length;
+        size_t total = model->content[index].length;
+        if (!view->active || length == 0U) status = UMI_STATUS_INVALID_STATE;
+        /* Subtraction avoids wrapping offset + length on malformed metadata. */
+        else if (offset > total || length > total - offset) status = UMI_STATUS_INVALID_ARGUMENT;
+        else if (length >= capacity) status = UMI_STATUS_CAPACITY_EXCEEDED;
+        else {
+            UmiUiDocumentSelectionInfo info = {0};
+            memcpy(info.view_id, view->view_id, sizeof(info.view_id));
+            memcpy(info.document_id, view->document_id, sizeof(info.document_id));
+            info.byte_offset = offset; info.byte_count = length;
+            info.text_revision = model->content[index].revision;
+            memcpy(out_text, ContentBytes(model, index) + offset, length);
+            out_text[length] = '\0';
+            *out_info = info;
+        }
+    }
+    (void)umi_mutex_unlock(model->mutex);
+    return status;
+}
+
 /* Pair allocation and release within the same Framework runtime. */
 void UmiUiDocumentViewModelFreeText(char *text)
 {
@@ -1208,3 +1245,6 @@ size_t umi_ui_document_view_model_group_count(
     (void)umi_mutex_unlock(model->mutex);
     return count;
 }
+
+/* Prepared publication is private to shared document ownership. */
+#include "document_text_batch.inc"

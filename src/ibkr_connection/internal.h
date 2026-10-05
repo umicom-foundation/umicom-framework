@@ -6,6 +6,7 @@
 #ifndef UMICOM_IBKR_CONNECTION_INTERNAL_H
 #define UMICOM_IBKR_CONNECTION_INTERNAL_H
 #include "umicom/broker_connectivity/connection.h"
+#include "umicom/broker_connectivity/quotes.h"
 #define UMI_IBKR_FRAME_LIMIT 65536U
 #define UMI_IBKR_TX_LIMIT 8192U
 /* Private injectable I/O permits deterministic failure tests. BUSY means no
@@ -28,11 +29,16 @@ struct UmiIbkrConnection {
     uint64_t startedAt, lastNow, pingAt;
     unsigned char rx[UMI_IBKR_FRAME_LIMIT+4U], tx[UMI_IBKR_TX_LIMIT];
     size_t rxSize, txSize;
+    UmiIbkrQuoteSnapshot quotes[UMI_IBKR_QUOTE_CAPACITY];
+    uint32_t nextQuoteRequest;
 };
 UmiStatus UmiIbkrConnectionCreateWithIo(const UmiIbkrConnectionOptions *, const UmiIbkrIo *, UmiIbkrConnection **);
 UmiStatus UmiIbkrNativeIo(UmiIbkrIo *outIo, void (**outDestroy)(void *));
 UmiStatus UmiIbkrProcessFrame(UmiIbkrConnection *, const unsigned char *, size_t, uint64_t);
 UmiStatus UmiIbkrQueueFields(UmiIbkrConnection *, const char *const *, size_t);
+/* Private wire callbacks share the connection's bounded request ownership. */
+UmiStatus UmiIbkrQuoteFrame(UmiIbkrConnection *, uint64_t, char **, size_t, uint64_t);
+bool UmiIbkrQuoteProviderMessage(UmiIbkrConnection *, const char *, int, const char *);
 bool UmiIbkrText(const char *text, size_t capacity, bool allowEmpty);
 bool UmiIbkrUnsigned(const char *, uint64_t *);
 bool UmiIbkrDecimalText(const char *);

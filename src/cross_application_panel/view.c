@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/cross_application_panel/view.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise panel view from caller-provided values so later operations receive a known
@@ -33,6 +34,17 @@ record->revision=1U;
 /* Check that panel view satisfies its contract before another service relies on it. */
 UmiStatus umi_panel_view_validate(const UmiPanelView *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->view_id, '\0', sizeof(record->view_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->panel_id, '\0', sizeof(record->panel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->instance_id, '\0', sizeof(record->instance_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->title, '\0', sizeof(record->title)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->subtitle, '\0', sizeof(record->subtitle)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->empty_message, '\0', sizeof(record->empty_message)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
 /*
  * Protect caller-owned memory by checking that required state is available before it is
  * used.
@@ -173,3 +185,64 @@ if(store->count!=0U)memcpy(records,store->items,store->count*sizeof(store->items
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiPanelViewArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x56af20137004795d);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelView *)0)->view_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelView *)0)->panel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelView *)0)->instance_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelView *)0)->title)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelView *)0)->subtitle)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelView *)0)->empty_message)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiPanelViewArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiPanelView *)0)->view_id) - 1U +
+        8U + sizeof(((UmiPanelView *)0)->panel_id) - 1U +
+        8U + sizeof(((UmiPanelView *)0)->instance_id) - 1U +
+        8U + sizeof(((UmiPanelView *)0)->title) - 1U +
+        8U + sizeof(((UmiPanelView *)0)->subtitle) - 1U +
+        8U + sizeof(((UmiPanelView *)0)->empty_message) - 1U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiPanelViewArchiveWrite(UmiArchiveWriter *writer, const UmiPanelView *value)
+{
+    UmiArchiveWriteText(writer, value->view_id, sizeof(value->view_id));
+    UmiArchiveWriteText(writer, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveWriteText(writer, value->instance_id, sizeof(value->instance_id));
+    UmiArchiveWriteText(writer, value->title, sizeof(value->title));
+    UmiArchiveWriteText(writer, value->subtitle, sizeof(value->subtitle));
+    UmiArchiveWriteText(writer, value->empty_message, sizeof(value->empty_message));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->visible);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->active);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiPanelViewArchiveRead(UmiArchiveReader *reader, UmiPanelView *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->view_id, sizeof(value->view_id));
+    UmiArchiveReadText(reader, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveReadText(reader, value->instance_id, sizeof(value->instance_id));
+    UmiArchiveReadText(reader, value->title, sizeof(value->title));
+    UmiArchiveReadText(reader, value->subtitle, sizeof(value->subtitle));
+    UmiArchiveReadText(reader, value->empty_message, sizeof(value->empty_message));
+    value->visible = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->active = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiPanelViewArchiveValidate(const UmiPanelView *value)
+{
+    return umi_panel_view_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_panel_view_archive_encode, umi_panel_view_archive_decode,
+    UmiPanelView, UmiPanelViewArchiveSchema, UmiPanelViewArchiveBound, UmiPanelViewArchiveWrite, UmiPanelViewArchiveRead, UmiPanelViewArchiveValidate)

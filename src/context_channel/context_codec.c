@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/context_codec.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context codec from caller-provided values so later operations receive a known
@@ -131,6 +132,15 @@ UmiStatus umi_context_codec_record_failure(UmiContextCodec *state,UmiStatus stat
 /* Check that context codec satisfies its contract before another service relies on it. */
 UmiStatus umi_context_codec_validate(const UmiContextCodec *state)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (state == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->codec_id, '\0', sizeof(state->codec_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->schema_id, '\0', sizeof(state->schema_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->media_type, '\0', sizeof(state->media_type)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->encoding, '\0', sizeof(state->encoding)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -158,3 +168,68 @@ bool umi_context_codec_covers_sequence(const UmiContextCodec *state,uint64_t seq
 {
     return state!=NULL&&state->item_count!=0U&&sequence>=state->first_sequence&&sequence<=state->last_sequence;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextCodecArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xae7497adf95228e6);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextCodec *)0)->codec_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextCodec *)0)->schema_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextCodec *)0)->media_type)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextCodec *)0)->encoding)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextCodecArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextCodec *)0)->codec_id) - 1U +
+        8U + sizeof(((UmiContextCodec *)0)->schema_id) - 1U +
+        8U + sizeof(((UmiContextCodec *)0)->media_type) - 1U +
+        8U + sizeof(((UmiContextCodec *)0)->encoding) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextCodecArchiveWrite(UmiArchiveWriter *writer, const UmiContextCodec *value)
+{
+    UmiArchiveWriteText(writer, value->codec_id, sizeof(value->codec_id));
+    UmiArchiveWriteText(writer, value->schema_id, sizeof(value->schema_id));
+    UmiArchiveWriteText(writer, value->media_type, sizeof(value->media_type));
+    UmiArchiveWriteText(writer, value->encoding, sizeof(value->encoding));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->first_sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->last_sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->item_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->failure_count);
+    UmiArchiveWriteSigned(writer, (int64_t)value->status);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextCodecArchiveRead(UmiArchiveReader *reader, UmiContextCodec *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->codec_id, sizeof(value->codec_id));
+    UmiArchiveReadText(reader, value->schema_id, sizeof(value->schema_id));
+    UmiArchiveReadText(reader, value->media_type, sizeof(value->media_type));
+    UmiArchiveReadText(reader, value->encoding, sizeof(value->encoding));
+    value->first_sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->last_sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->item_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->failure_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->status = (UmiStatus)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextCodecArchiveValidate(const UmiContextCodec *value)
+{
+    return umi_context_codec_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_codec_archive_encode, umi_context_codec_archive_decode,
+    UmiContextCodec, UmiContextCodecArchiveSchema, UmiContextCodecArchiveBound, UmiContextCodecArchiveWrite, UmiContextCodecArchiveRead, UmiContextCodecArchiveValidate)

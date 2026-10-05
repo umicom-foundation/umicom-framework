@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/cross_application_panel/bookmark.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise panel bookmark from caller-provided values so later operations receive a
@@ -33,6 +34,16 @@ record->revision=1U;
 /* Check that panel bookmark satisfies its contract before another service relies on it. */
 UmiStatus umi_panel_bookmark_validate(const UmiPanelBookmark *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->bookmark_id, '\0', sizeof(record->bookmark_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->panel_id, '\0', sizeof(record->panel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->instance_id, '\0', sizeof(record->instance_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->label, '\0', sizeof(record->label)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->workspace_id, '\0', sizeof(record->workspace_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
 /*
  * Protect caller-owned memory by checking that required state is available before it is
  * used.
@@ -171,3 +182,57 @@ if(store->count!=0U)memcpy(records,store->items,store->count*sizeof(store->items
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiPanelBookmarkArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x6df0f41582fc6d98);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelBookmark *)0)->bookmark_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelBookmark *)0)->panel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelBookmark *)0)->instance_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelBookmark *)0)->label)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelBookmark *)0)->workspace_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiPanelBookmarkArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiPanelBookmark *)0)->bookmark_id) - 1U +
+        8U + sizeof(((UmiPanelBookmark *)0)->panel_id) - 1U +
+        8U + sizeof(((UmiPanelBookmark *)0)->instance_id) - 1U +
+        8U + sizeof(((UmiPanelBookmark *)0)->label) - 1U +
+        8U + sizeof(((UmiPanelBookmark *)0)->workspace_id) - 1U +
+        8U +
+        8U;
+}
+static void UmiPanelBookmarkArchiveWrite(UmiArchiveWriter *writer, const UmiPanelBookmark *value)
+{
+    UmiArchiveWriteText(writer, value->bookmark_id, sizeof(value->bookmark_id));
+    UmiArchiveWriteText(writer, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveWriteText(writer, value->instance_id, sizeof(value->instance_id));
+    UmiArchiveWriteText(writer, value->label, sizeof(value->label));
+    UmiArchiveWriteText(writer, value->workspace_id, sizeof(value->workspace_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->created_at_ms);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiPanelBookmarkArchiveRead(UmiArchiveReader *reader, UmiPanelBookmark *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->bookmark_id, sizeof(value->bookmark_id));
+    UmiArchiveReadText(reader, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveReadText(reader, value->instance_id, sizeof(value->instance_id));
+    UmiArchiveReadText(reader, value->label, sizeof(value->label));
+    UmiArchiveReadText(reader, value->workspace_id, sizeof(value->workspace_id));
+    value->created_at_ms = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiPanelBookmarkArchiveValidate(const UmiPanelBookmark *value)
+{
+    return umi_panel_bookmark_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_panel_bookmark_archive_encode, umi_panel_bookmark_archive_decode,
+    UmiPanelBookmark, UmiPanelBookmarkArchiveSchema, UmiPanelBookmarkArchiveBound, UmiPanelBookmarkArchiveWrite, UmiPanelBookmarkArchiveRead, UmiPanelBookmarkArchiveValidate)

@@ -18,19 +18,31 @@ endfunction()
 add_library(umicom_ibkr_connection STATIC
     "${_umi_ibkr_root}/src/ibkr_connection/session.c"
     "${_umi_ibkr_root}/src/ibkr_connection/protocol.c"
+    "${_umi_ibkr_root}/src/ibkr_connection/quotes.c"
+    "${_umi_ibkr_root}/src/ibkr_connection/position_review.c"
     "${_umi_ibkr_root}/src/ibkr_connection/network.c")
+# Captured report formatting shares the existing connection owner and CSV rules.
+target_sources(umicom_ibkr_connection PRIVATE "${_umi_ibkr_root}/src/ibkr_connection/observation_export.c")
 add_library(Umicom::ibkr_connection ALIAS umicom_ibkr_connection)
 set_target_properties(umicom_ibkr_connection PROPERTIES EXPORT_NAME ibkr_connection)
 target_include_directories(umicom_ibkr_connection PUBLIC
     $<BUILD_INTERFACE:${_umi_ibkr_root}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(umicom_ibkr_connection PUBLIC Umicom::trading)
+# New-file output uses the canonical platform handle owner.
+target_link_libraries(umicom_ibkr_connection PRIVATE Umicom::platform)
 if(WIN32)
     target_link_libraries(umicom_ibkr_connection PRIVATE ws2_32)
 endif()
 umicom_ibkr_target(umicom_ibkr_connection)
 install(TARGETS umicom_ibkr_connection EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+install(FILES "${_umi_ibkr_root}/include/umicom/broker_connectivity/observation_export.h"
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/broker_connectivity COMPONENT Framework)
+# The additional review contract is installed alongside the existing broker API.
+install(FILES "${_umi_ibkr_root}/include/umicom/broker_connectivity/position_review.h"
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/broker_connectivity COMPONENT Framework)
 install(FILES "${_umi_ibkr_root}/include/umicom/broker_connectivity/connection.h"
+    "${_umi_ibkr_root}/include/umicom/broker_connectivity/quotes.h"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/broker_connectivity COMPONENT Framework)
 add_executable(umicom-broker-connect "${_umi_ibkr_root}/examples/ibkr_connection/main.c")
 add_executable(umicom-broker-profile-example "${_umi_ibkr_root}/examples/ibkr_connection/lesson.c")
@@ -51,3 +63,6 @@ endif()
 install(FILES "${_umi_ibkr_root}/docs/learning/paper-live-connections.html"
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)
 unset(_umi_ibkr_root)
+
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/export-broker-observations.html"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)

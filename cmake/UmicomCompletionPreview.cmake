@@ -1,0 +1,16 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-completion-preview-test "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/test_completion_preview.c")
+    target_link_libraries(umicom-completion-preview-test PRIVATE Umicom::developer Umicom::editor Umicom::platform)
+    umicom_apply_warnings(umicom-completion-preview-test)
+    umicom_apply_sanitizers(umicom-completion-preview-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-completion-preview-test)
+    endif()
+    foreach(case replace fallback insert import preceding-delete following mixed-order delete unicode empty crlf bad-source cursor-split range-split multiline overlap snippet command owned cancel nul limit missing-choice arguments)
+        add_test(NAME framework.language_runtime.completion_preview.${case} COMMAND umicom-completion-preview-test ${case})
+        set_tests_properties(framework.language_runtime.completion_preview.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;language;completion;editor;regression")
+    endforeach()
+endif()

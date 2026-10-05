@@ -17,6 +17,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/vcs/advanced/moved_block.h"
+#include "../../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -70,3 +71,50 @@ int umi_vcs_advanced_moved_block_is_significant(const UmiVcsAdvancedMovedBlock *
            value->confidence_percent >= minimum_confidence &&
            value->old_start != value->new_start;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiVcsAdvancedMovedBlockArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x75f6f2ec1c0315de);
+
+    return schema;
+}
+static size_t UmiVcsAdvancedMovedBlockArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiVcsAdvancedMovedBlockArchiveWrite(UmiArchiveWriter *writer, const UmiVcsAdvancedMovedBlock *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->old_start);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->new_start);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->line_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->fingerprint);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->confidence_percent);
+}
+static void UmiVcsAdvancedMovedBlockArchiveRead(UmiArchiveReader *reader, UmiVcsAdvancedMovedBlock *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->old_start = (size_t)UmiArchiveReadUnsigned(reader, SIZE_MAX);
+    value->new_start = (size_t)UmiArchiveReadUnsigned(reader, SIZE_MAX);
+    value->line_count = (size_t)UmiArchiveReadUnsigned(reader, SIZE_MAX);
+    value->fingerprint = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->confidence_percent = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+}
+static UmiStatus UmiVcsAdvancedMovedBlockArchiveValidate(const UmiVcsAdvancedMovedBlock *value)
+{
+    return umi_vcs_advanced_moved_block_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_vcs_advanced_moved_block_archive_encode, umi_vcs_advanced_moved_block_archive_decode,
+    UmiVcsAdvancedMovedBlock, UmiVcsAdvancedMovedBlockArchiveSchema, UmiVcsAdvancedMovedBlockArchiveBound, UmiVcsAdvancedMovedBlockArchiveWrite, UmiVcsAdvancedMovedBlockArchiveRead, UmiVcsAdvancedMovedBlockArchiveValidate)

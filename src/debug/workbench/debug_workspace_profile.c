@@ -18,6 +18,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug/workbench/debug_workspace_profile.h"
+#include "../../base/value_archive_internal.h"
 #include <string.h>
 
 /* Provide the view bit operation used by this module and its client applications. */
@@ -52,4 +53,56 @@ int umi_debug_workbench_debug_workspace_profile_view_visible(const UmiDebugWorkb
  * service relies on it.
  */
 int umi_debug_workbench_debug_workspace_profile_valid(const UmiDebugWorkbenchDebugWorkspaceProfile *model)
-{ return model != NULL && umi_debug_workbench_id_valid(model->workspace_id) && view_bit(model->primary_view) != 0U && model->revision > 0U; }
+{
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (model == NULL) return 0;
+    if (memchr(model->workspace_id, '\0', sizeof(model->workspace_id)) == NULL) return 0;
+ return model != NULL && umi_debug_workbench_id_valid(model->workspace_id) && view_bit(model->primary_view) != 0U && model->revision > 0U; }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiDebugWorkbenchDebugWorkspaceProfileArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xe895dc4613705ff8);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDebugWorkbenchDebugWorkspaceProfile *)0)->workspace_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiDebugWorkbenchDebugWorkspaceProfileArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiDebugWorkbenchDebugWorkspaceProfile *)0)->workspace_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiDebugWorkbenchDebugWorkspaceProfileArchiveWrite(UmiArchiveWriter *writer, const UmiDebugWorkbenchDebugWorkspaceProfile *value)
+{
+    UmiArchiveWriteText(writer, value->workspace_id, sizeof(value->workspace_id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->primary_view);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->visible_views);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->follow_instruction_pointer);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->open_console_on_output);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiDebugWorkbenchDebugWorkspaceProfileArchiveRead(UmiArchiveReader *reader, UmiDebugWorkbenchDebugWorkspaceProfile *value)
+{
+    UmiArchiveReadText(reader, value->workspace_id, sizeof(value->workspace_id));
+    value->primary_view = (UmiDebugWorkbenchViewKind)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->visible_views = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->follow_instruction_pointer = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->open_console_on_output = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiDebugWorkbenchDebugWorkspaceProfileArchiveValidate(const UmiDebugWorkbenchDebugWorkspaceProfile *value)
+{
+    return umi_debug_workbench_debug_workspace_profile_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_debug_workbench_debug_workspace_profile_archive_encode, umi_debug_workbench_debug_workspace_profile_archive_decode,
+    UmiDebugWorkbenchDebugWorkspaceProfile, UmiDebugWorkbenchDebugWorkspaceProfileArchiveSchema, UmiDebugWorkbenchDebugWorkspaceProfileArchiveBound, UmiDebugWorkbenchDebugWorkspaceProfileArchiveWrite, UmiDebugWorkbenchDebugWorkspaceProfileArchiveRead, UmiDebugWorkbenchDebugWorkspaceProfileArchiveValidate)

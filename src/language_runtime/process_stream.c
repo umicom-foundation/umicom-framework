@@ -18,9 +18,23 @@
 #define _POSIX_C_SOURCE 200809L
 #endif
 #endif
+/* Feature declarations must precede system headers on POSIX hosts. */
+#ifndef _WIN32
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#ifndef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 200809L
+#endif
+#endif
 #include "umicom/language_runtime/process_stream.h"
 #include <stdlib.h>
 #include <string.h>
+/* The original launchers are retained for engineering review. The native
+ * backends below replace ANSI command construction and unchecked POSIX child
+ * setup, while keeping this API's inherited environment and child-only lifetime.
+ * Shared platform helpers now own argument quoting and launch preparation. */
+#if 0
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -101,4 +115,29 @@ UmiStatus umi_language_runtime_process_stream_stop(UmiLanguageRuntimeProcessStre
  * be reused safely.
  */
 void umi_language_runtime_process_stream_destroy(UmiLanguageRuntimeProcessStream*s){/* Apply this branch only when its contract condition is satisfied. */ if(!s)return;(void)umi_language_runtime_process_stream_stop(s,100);cf(&s->in_w);cf(&s->out_r);free(s);}
+#endif
+
+#endif
+
+/* Validate every borrowed argument before creating resources or a child. In
+ * particular, a NULL element must not truncate POSIX argv or become an
+ * unrelated capacity error on Windows. Empty arguments are valid values. */
+static UmiStatus LanguageProcessValidate(const UmiLanguageRuntimeProcessStreamConfig *config,
+    UmiLanguageRuntimeProcessStream **out)
+{
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out = NULL;
+    if (config == NULL || config->program == NULL || config->program[0] == '\0' ||
+        config->argument_count > UMI_LANGUAGE_RUNTIME_MAX_ARGUMENTS ||
+        (config->argument_count != 0U && config->arguments == NULL))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t i = 0U; i < config->argument_count; ++i)
+        if (config->arguments[i] == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return UMI_STATUS_OK;
+}
+
+#ifdef _WIN32
+#include "process_stream_win32.inc"
+#else
+#include "process_stream_posix.inc"
 #endif

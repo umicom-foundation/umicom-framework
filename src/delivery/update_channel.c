@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/delivery/update_channel.h"
+#include "../base/value_archive_internal.h"
 #include "delivery_internal.h"
 #include <string.h>
 
@@ -52,6 +53,13 @@ UmiStatus umi_update_channel_init(UmiUpdateChannel *channel,
 /* Check that update channel satisfies its contract before another service relies on it. */
 UmiStatus umi_update_channel_validate(const UmiUpdateChannel *channel)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (channel == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(channel->channel_id, '\0', sizeof(channel->channel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(channel->feed_url, '\0', sizeof(channel->feed_url)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -86,3 +94,50 @@ int umi_update_channel_offers(const UmiUpdateChannel *channel,
     }
     return 1;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiUpdateChannelArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xa01208f97f5399eb);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUpdateChannel *)0)->channel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUpdateChannel *)0)->feed_url)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiUpdateChannelArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiUpdateChannel *)0)->channel_id) - 1U +
+        8U + sizeof(((UmiUpdateChannel *)0)->feed_url) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiUpdateChannelArchiveWrite(UmiArchiveWriter *writer, const UmiUpdateChannel *value)
+{
+    UmiArchiveWriteText(writer, value->channel_id, sizeof(value->channel_id));
+    UmiArchiveWriteText(writer, value->feed_url, sizeof(value->feed_url));
+    UmiArchiveWriteSigned(writer, (int64_t)value->channel);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->rollout_percentage);
+    UmiArchiveWriteSigned(writer, (int64_t)value->allow_prerelease);
+    UmiArchiveWriteSigned(writer, (int64_t)value->require_signature);
+}
+static void UmiUpdateChannelArchiveRead(UmiArchiveReader *reader, UmiUpdateChannel *value)
+{
+    UmiArchiveReadText(reader, value->channel_id, sizeof(value->channel_id));
+    UmiArchiveReadText(reader, value->feed_url, sizeof(value->feed_url));
+    value->channel = (UmiReleaseChannel)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->rollout_percentage = (unsigned)UmiArchiveReadUnsigned(reader, UINT_MAX);
+    value->allow_prerelease = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->require_signature = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+}
+static UmiStatus UmiUpdateChannelArchiveValidate(const UmiUpdateChannel *value)
+{
+    return umi_update_channel_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_update_channel_archive_encode, umi_update_channel_archive_decode,
+    UmiUpdateChannel, UmiUpdateChannelArchiveSchema, UmiUpdateChannelArchiveBound, UmiUpdateChannelArchiveWrite, UmiUpdateChannelArchiveRead, UmiUpdateChannelArchiveValidate)

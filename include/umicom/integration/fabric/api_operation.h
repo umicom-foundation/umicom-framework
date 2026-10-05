@@ -16,6 +16,7 @@
 #define UMICOM_INTEGRATION_FABRIC_API_OPERATION_H
 
 #include <stddef.h>
+#include "umicom/base/value_archive.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include "umicom/base/status.h"
@@ -47,6 +48,17 @@ UmiStatus umi_fabric_api_operation_init(UmiFabricApiOperation *item, const char 
  * it.
  */
 UmiStatus umi_fabric_api_operation_validate(const UmiFabricApiOperation *item);
+
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_fabric_api_operation_archive_encode(const UmiFabricApiOperation *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_fabric_api_operation_archive_decode(const void *bytes, size_t byte_count,
+    UmiFabricApiOperation *value);
 
 #ifdef __cplusplus
 }

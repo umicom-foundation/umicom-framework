@@ -21,6 +21,7 @@
  *   Describe modules that contribute replaceable service implementations.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/provider_descriptor.h"
+#include "../../base/value_archive_internal.h"
 
 
 #include <string.h>
@@ -59,7 +60,55 @@ UmiStatus umi_bootstrap_provider_descriptor_init(
  */
 bool umi_bootstrap_provider_descriptor_valid(
     const UmiBootstrapProviderDescriptor *descriptor) {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (descriptor == NULL) return 0;
+    if (memchr(descriptor->provider_id, '\0', sizeof(descriptor->provider_id)) == NULL) return 0;
+    if (memchr(descriptor->module_id, '\0', sizeof(descriptor->module_id)) == NULL) return 0;
+
     return descriptor != NULL &&
            umi_bootstrap_id_valid(descriptor->provider_id) &&
            umi_bootstrap_id_valid(descriptor->module_id);
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiBootstrapProviderDescriptorArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xd84709aafe1a3fad);
+    schema = (schema ^ (uint64_t)sizeof(((UmiBootstrapProviderDescriptor *)0)->provider_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiBootstrapProviderDescriptor *)0)->module_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiBootstrapProviderDescriptorArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiBootstrapProviderDescriptor *)0)->provider_id) - 1U +
+        8U + sizeof(((UmiBootstrapProviderDescriptor *)0)->module_id) - 1U +
+        8U +
+        8U;
+}
+static void UmiBootstrapProviderDescriptorArchiveWrite(UmiArchiveWriter *writer, const UmiBootstrapProviderDescriptor *value)
+{
+    UmiArchiveWriteText(writer, value->provider_id, sizeof(value->provider_id));
+    UmiArchiveWriteText(writer, value->module_id, sizeof(value->module_id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->priority);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+}
+static void UmiBootstrapProviderDescriptorArchiveRead(UmiArchiveReader *reader, UmiBootstrapProviderDescriptor *value)
+{
+    UmiArchiveReadText(reader, value->provider_id, sizeof(value->provider_id));
+    UmiArchiveReadText(reader, value->module_id, sizeof(value->module_id));
+    value->priority = (int32_t)UmiArchiveReadSigned(reader, INT32_MIN, INT32_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiBootstrapProviderDescriptorArchiveValidate(const UmiBootstrapProviderDescriptor *value)
+{
+    return umi_bootstrap_provider_descriptor_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_bootstrap_provider_descriptor_archive_encode, umi_bootstrap_provider_descriptor_archive_decode,
+    UmiBootstrapProviderDescriptor, UmiBootstrapProviderDescriptorArchiveSchema, UmiBootstrapProviderDescriptorArchiveBound, UmiBootstrapProviderDescriptorArchiveWrite, UmiBootstrapProviderDescriptorArchiveRead, UmiBootstrapProviderDescriptorArchiveValidate)

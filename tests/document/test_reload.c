@@ -186,8 +186,30 @@ static int Snapshot(Fixture *f, UmiDocumentWorkingCopySnapshot *out)
 static int Prepare(Fixture *f) { CHECK(UmiDocumentCoordinatorPrepareReload(f->documents, f->id, &f->plan) == UMI_STATUS_OK); return 0; }
 static int Apply(Fixture *f, int consent) { CHECK(UmiDocumentCoordinatorApplyReload(f->documents, f->plan, consent) == UMI_STATUS_OK); return 0; }
 
+
+/* Reload replaces source through the same history owner as editing. Capture
+ * positions before the shorter incoming file forces the visible caret inward. */
+static int HistoryPositions(Fixture *f,const char *name)
+{
+    int dirty=strcmp(name,"history-dirty")==0;
+    const char *previous=dirty?DRAFT:ORIGINAL;
+    size_t selected=strcmp(name,"history-caret")==0?0U:7U;
+    if(dirty)CHECK(EditStatus(f,previous)==UMI_STATUS_OK);
+    UmiUiDocumentViewModel *views=umi_ui_workbench_documents(f->workbench);
+    UmiUiDocumentViewSnapshot view;CHECK(umi_ui_document_view_model_find(views,f->view,&view)==UMI_STATUS_OK);
+    view.cursor_offset=5U;view.selection_length=selected;CHECK(umi_ui_document_view_model_upsert(views,&view)==UMI_STATUS_OK);
+    CHECK(External(f,"X")==0 && Prepare(f)==0 && Apply(f,dirty)==0);
+    CHECK(IsText(f,"X")==0);
+    CHECK(umi_document_coordinator_undo(f->documents)==UMI_STATUS_OK && IsText(f,previous)==0);
+    CHECK(umi_ui_document_view_model_find(views,f->view,&view)==UMI_STATUS_OK && view.cursor_offset==5U && view.selection_length==selected);
+    CHECK(umi_document_coordinator_redo(f->documents)==UMI_STATUS_OK && IsText(f,"X")==0);
+    CHECK(umi_ui_document_view_model_find(views,f->view,&view)==UMI_STATUS_OK && view.cursor_offset==1U && view.selection_length==0U);
+    return 0;
+}
+
 static int Run(Fixture *f, const char *name)
 {
+    if (strcmp(name,"history-caret")==0 || strcmp(name,"history-selection")==0 || strcmp(name,"history-dirty")==0) return HistoryPositions(f,name);
     UmiDocumentWorkingCopySnapshot before, after;
     UmiDocumentSnapshot stored;
     UmiUiDocumentViewSnapshot view;
@@ -337,9 +359,24 @@ static int Run(Fixture *f, const char *name)
         CHECK(f->plan == NULL); return IsText(f, ORIGINAL);
     }
     if (strcmp(name, "oversized") == 0) {
+        /* The decoded-text limit is independent of the larger serialized
+         * encoding envelope. Write real UTF-8 source so this case reaches the
+         * decoded limit instead of becoming a sparse binary-file rejection.
+         * The previous sparse fixture is retained for engineering review. */
+#if 0
         FILE *file = fopen(f->path, "wb"); CHECK(file != NULL);
         CHECK(fseek(file, (long)UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES, SEEK_SET) == 0);
         CHECK(fputc('x', file) != EOF); CHECK(fclose(file) == 0);
+#endif
+        FILE *file = fopen(f->path, "wb"); CHECK(file != NULL);
+        char block[4096]; memset(block, 'x', sizeof(block));
+        size_t remaining = UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES + 1U;
+        while (remaining != 0U) {
+            size_t bytes = remaining < sizeof(block) ? remaining : sizeof(block);
+            CHECK(fwrite(block, 1U, bytes, file) == bytes);
+            remaining -= bytes;
+        }
+        CHECK(fclose(file) == 0);
         CHECK(UmiDocumentCoordinatorPrepareReload(f->documents, f->id, &f->plan) == UMI_STATUS_CAPACITY_EXCEEDED);
         return IsText(f, ORIGINAL);
     }

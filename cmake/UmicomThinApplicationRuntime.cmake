@@ -104,4 +104,27 @@ function(umicom_extend_thin_application_runtime)
             endif()
         endforeach()
     endif()
+
+    # A single executable per product checks publication, stale proposals,
+    # product identity and clearing through the actual module adapter.
+    if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_context_review.c")
+        set(context_review_target "${UMI_THIN_RUNTIME_TARGET}-context-review-test")
+        add_executable("${context_review_target}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_context_review.c")
+        target_link_libraries("${context_review_target}" PRIVATE "${UMI_THIN_RUNTIME_TARGET}")
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings("${context_review_target}")
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers("${context_review_target}")
+        endif()
+        foreach(context_case publication stale foreign clear divergent_ui)
+            add_test(NAME "${UMI_THIN_RUNTIME_NAME}.context_review.${context_case}"
+                COMMAND "${context_review_target}" "${context_case}")
+            set_tests_properties("${UMI_THIN_RUNTIME_NAME}.context_review.${context_case}"
+                PROPERTIES LABELS "application;context-review;${UMI_THIN_RUNTIME_NAME}")
+        endforeach()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target("${context_review_target}")
+        endif()
+    endif()
 endfunction()

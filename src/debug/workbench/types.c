@@ -18,6 +18,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug/workbench/types.h"
+#include "../../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -143,6 +144,15 @@ UmiStatus umi_debug_workbench_entry_init(UmiDebugWorkbenchEntry *entry, const ch
  */
 int umi_debug_workbench_entry_valid(const UmiDebugWorkbenchEntry *entry)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (entry == NULL) return 0;
+    if (memchr(entry->id, '\0', sizeof(entry->id)) == NULL) return 0;
+    if (memchr(entry->label, '\0', sizeof(entry->label)) == NULL) return 0;
+    if (memchr(entry->detail, '\0', sizeof(entry->detail)) == NULL) return 0;
+    if (memchr(entry->location.path, '\0', sizeof(entry->location.path)) == NULL) return 0;
+
     return entry != NULL && umi_debug_workbench_id_valid(entry->id) && entry->label[0] != '\0' && entry->revision > 0U;
 }
 
@@ -186,3 +196,70 @@ uint64_t umi_debug_workbench_command_bit(UmiDebugWorkbenchCommand command)
     shift = (unsigned int)command;
     return UINT64_C(1) << shift;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiDebugWorkbenchEntryArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x1fb6f2df609eb6f6);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDebugWorkbenchEntry *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDebugWorkbenchEntry *)0)->label)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDebugWorkbenchEntry *)0)->detail)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDebugWorkbenchEntry *)0)->location.path)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiDebugWorkbenchEntryArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiDebugWorkbenchEntry *)0)->id) - 1U +
+        8U + sizeof(((UmiDebugWorkbenchEntry *)0)->label) - 1U +
+        8U + sizeof(((UmiDebugWorkbenchEntry *)0)->detail) - 1U +
+        8U + sizeof(((UmiDebugWorkbenchEntry *)0)->location.path) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiDebugWorkbenchEntryArchiveWrite(UmiArchiveWriter *writer, const UmiDebugWorkbenchEntry *value)
+{
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->label, sizeof(value->label));
+    UmiArchiveWriteText(writer, value->detail, sizeof(value->detail));
+    UmiArchiveWriteText(writer, value->location.path, sizeof(value->location.path));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->location.range.start.line);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->location.range.start.column);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->location.range.end.line);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->location.range.end.column);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->state);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->flags);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->value);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiDebugWorkbenchEntryArchiveRead(UmiArchiveReader *reader, UmiDebugWorkbenchEntry *value)
+{
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->label, sizeof(value->label));
+    UmiArchiveReadText(reader, value->detail, sizeof(value->detail));
+    UmiArchiveReadText(reader, value->location.path, sizeof(value->location.path));
+    value->location.range.start.line = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->location.range.start.column = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->location.range.end.line = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->location.range.end.column = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->state = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->flags = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->value = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiDebugWorkbenchEntryArchiveValidate(const UmiDebugWorkbenchEntry *value)
+{
+    return umi_debug_workbench_entry_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_debug_workbench_entry_archive_encode, umi_debug_workbench_entry_archive_decode,
+    UmiDebugWorkbenchEntry, UmiDebugWorkbenchEntryArchiveSchema, UmiDebugWorkbenchEntryArchiveBound, UmiDebugWorkbenchEntryArchiveWrite, UmiDebugWorkbenchEntryArchiveRead, UmiDebugWorkbenchEntryArchiveValidate)

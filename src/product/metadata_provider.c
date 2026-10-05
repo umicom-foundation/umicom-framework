@@ -19,6 +19,8 @@
  * responsibility for higher-level threading and persistence policy.
  */
 #include "umicom/product/metadata_provider.h"
+#include "../base/value_archive_internal.h"
+#include "../base/registry_archive_internal.h"
 #include "../base/snapshot_registry_internal.h"
 
 /* Validate every bounded text member before lookup. Value-only snapshot
@@ -243,3 +245,67 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_product_metadata_provider_registry_edit_if
  * this owner's existing row order and normalized fields remain authoritative. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_product_metadata_provider_registry_read_page,
     UmiProductMetadataProviderRegistry, UmiProductMetadataProviderSnapshot, UMI_PRODUCT_METADATA_PROVIDER_CAPACITY)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xc05607bfef8bb39d);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProductMetadataProviderSnapshot *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProductMetadataProviderSnapshot *)0)->name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProductMetadataProviderSnapshot *)0)->endpoint)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProductMetadataProviderSnapshot *)0)->kind)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiProductMetadataProviderSnapshot *)0)->id) - 1U +
+        8U + sizeof(((UmiProductMetadataProviderSnapshot *)0)->name) - 1U +
+        8U + sizeof(((UmiProductMetadataProviderSnapshot *)0)->endpoint) - 1U +
+        8U + sizeof(((UmiProductMetadataProviderSnapshot *)0)->kind) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiProductMetadataProviderSnapshot *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->name, sizeof(value->name));
+    UmiArchiveWriteText(writer, value->endpoint, sizeof(value->endpoint));
+    UmiArchiveWriteText(writer, value->kind, sizeof(value->kind));
+    UmiArchiveWriteSigned(writer, (int64_t)value->enabled);
+    UmiArchiveWriteSigned(writer, (int64_t)value->trusted);
+    UmiArchiveWriteSigned(writer, (int64_t)value->priority);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiProductMetadataProviderSnapshot *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->name, sizeof(value->name));
+    UmiArchiveReadText(reader, value->endpoint, sizeof(value->endpoint));
+    UmiArchiveReadText(reader, value->kind, sizeof(value->kind));
+    value->enabled = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->trusted = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->priority = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus ArchiveValidate(const UmiProductMetadataProviderSnapshot *value)
+{
+    return umi_product_metadata_provider_snapshot_validate(value, NULL);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_product_metadata_provider_snapshot_archive_encode, umi_product_metadata_provider_snapshot_archive_decode,
+    UmiProductMetadataProviderSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Restoring this complete collection reuses its existing reviewed replacement
+ * rules. Decoding a saved value alone never changes a live registry. */
+UMI_DEFINE_REGISTRY_ARCHIVE(umi_product_metadata_provider_registry_archive_encode, umi_product_metadata_provider_registry_archive_restore,
+    UmiProductMetadataProviderRegistry, UmiProductMetadataProviderSnapshot, UMI_PRODUCT_METADATA_PROVIDER_CAPACITY, ArchiveSchema,
+    umi_product_metadata_provider_snapshot_archive_encode, umi_product_metadata_provider_snapshot_archive_decode, umi_product_metadata_provider_registry_replace_if_current)

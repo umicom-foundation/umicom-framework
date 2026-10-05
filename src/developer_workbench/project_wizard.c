@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_workbench/project_wizard.h"
+#include "../base/value_archive_internal.h"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -187,6 +188,17 @@ UmiStatus umi_developer_workbench_project_wizard_set_identity(
 UmiStatus umi_developer_workbench_project_wizard_validate(
     UmiDeveloperWorkbenchProjectWizard *wizard)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (wizard == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(wizard->application_name, '\0', sizeof(wizard->application_name)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(wizard->application_id, '\0', sizeof(wizard->application_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(wizard->repository_name, '\0', sizeof(wizard->repository_name)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(wizard->destination, '\0', sizeof(wizard->destination)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(wizard->preset_id, '\0', sizeof(wizard->preset_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(wizard->validation_message, '\0', sizeof(wizard->validation_message)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     const UmiApplicationPresetDefinition *preset;
 
     /*
@@ -260,3 +272,69 @@ umi_developer_workbench_project_wizard_preset(
     if (wizard == NULL || wizard->preset_id[0] == '\0') return NULL;
     return umi_application_preset_catalogue_find(wizard->preset_id);
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiDeveloperWorkbenchProjectWizardArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x5f79aa18eae82e9f);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDeveloperWorkbenchProjectWizard *)0)->application_name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDeveloperWorkbenchProjectWizard *)0)->application_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDeveloperWorkbenchProjectWizard *)0)->repository_name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDeveloperWorkbenchProjectWizard *)0)->destination)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDeveloperWorkbenchProjectWizard *)0)->preset_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiDeveloperWorkbenchProjectWizard *)0)->validation_message)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiDeveloperWorkbenchProjectWizardArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiDeveloperWorkbenchProjectWizard *)0)->application_name) - 1U +
+        8U + sizeof(((UmiDeveloperWorkbenchProjectWizard *)0)->application_id) - 1U +
+        8U + sizeof(((UmiDeveloperWorkbenchProjectWizard *)0)->repository_name) - 1U +
+        8U + sizeof(((UmiDeveloperWorkbenchProjectWizard *)0)->destination) - 1U +
+        8U + sizeof(((UmiDeveloperWorkbenchProjectWizard *)0)->preset_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U + sizeof(((UmiDeveloperWorkbenchProjectWizard *)0)->validation_message) - 1U +
+        8U;
+}
+static void UmiDeveloperWorkbenchProjectWizardArchiveWrite(UmiArchiveWriter *writer, const UmiDeveloperWorkbenchProjectWizard *value)
+{
+    UmiArchiveWriteText(writer, value->application_name, sizeof(value->application_name));
+    UmiArchiveWriteText(writer, value->application_id, sizeof(value->application_id));
+    UmiArchiveWriteText(writer, value->repository_name, sizeof(value->repository_name));
+    UmiArchiveWriteText(writer, value->destination, sizeof(value->destination));
+    UmiArchiveWriteText(writer, value->preset_id, sizeof(value->preset_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->frontends);
+    UmiArchiveWriteSigned(writer, (int64_t)value->initialise_git);
+    UmiArchiveWriteSigned(writer, (int64_t)value->create_initial_commit);
+    UmiArchiveWriteSigned(writer, (int64_t)value->ready);
+    UmiArchiveWriteText(writer, value->validation_message, sizeof(value->validation_message));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiDeveloperWorkbenchProjectWizardArchiveRead(UmiArchiveReader *reader, UmiDeveloperWorkbenchProjectWizard *value)
+{
+    UmiArchiveReadText(reader, value->application_name, sizeof(value->application_name));
+    UmiArchiveReadText(reader, value->application_id, sizeof(value->application_id));
+    UmiArchiveReadText(reader, value->repository_name, sizeof(value->repository_name));
+    UmiArchiveReadText(reader, value->destination, sizeof(value->destination));
+    UmiArchiveReadText(reader, value->preset_id, sizeof(value->preset_id));
+    value->frontends = (unsigned)UmiArchiveReadUnsigned(reader, UINT_MAX);
+    value->initialise_git = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->create_initial_commit = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->ready = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    UmiArchiveReadText(reader, value->validation_message, sizeof(value->validation_message));
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiDeveloperWorkbenchProjectWizardArchiveValidate(const UmiDeveloperWorkbenchProjectWizard *value)
+{
+    return umi_developer_workbench_project_wizard_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_developer_workbench_project_wizard_archive_encode, umi_developer_workbench_project_wizard_archive_decode,
+    UmiDeveloperWorkbenchProjectWizard, UmiDeveloperWorkbenchProjectWizardArchiveSchema, UmiDeveloperWorkbenchProjectWizardArchiveBound, UmiDeveloperWorkbenchProjectWizardArchiveWrite, UmiDeveloperWorkbenchProjectWizardArchiveRead, UmiDeveloperWorkbenchProjectWizardArchiveValidate)

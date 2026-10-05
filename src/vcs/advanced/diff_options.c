@@ -17,6 +17,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/vcs/advanced/diff_options.h"
+#include "../../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -77,3 +78,56 @@ uint64_t umi_vcs_advanced_diff_options_fingerprint(const UmiVcsAdvancedDiffOptio
     result = result * UINT64_C(1315423911) + (uint64_t)(value->semantic != 0);
     return result;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiVcsAdvancedDiffOptionsArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xd7ba0e37c2b1752f);
+
+    return schema;
+}
+static size_t UmiVcsAdvancedDiffOptionsArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiVcsAdvancedDiffOptionsArchiveWrite(UmiArchiveWriter *writer, const UmiVcsAdvancedDiffOptions *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteSigned(writer, (int64_t)value->whitespace);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->context_lines);
+    UmiArchiveWriteSigned(writer, (int64_t)value->ignore_case);
+    UmiArchiveWriteSigned(writer, (int64_t)value->detect_moves);
+    UmiArchiveWriteSigned(writer, (int64_t)value->semantic);
+    UmiArchiveWriteSigned(writer, (int64_t)value->word_diff);
+    UmiArchiveWriteSigned(writer, (int64_t)value->treat_crlf_as_lf);
+}
+static void UmiVcsAdvancedDiffOptionsArchiveRead(UmiArchiveReader *reader, UmiVcsAdvancedDiffOptions *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->whitespace = (UmiVcsWhitespaceMode)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->context_lines = (size_t)UmiArchiveReadUnsigned(reader, SIZE_MAX);
+    value->ignore_case = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->detect_moves = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->semantic = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->word_diff = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->treat_crlf_as_lf = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+}
+static UmiStatus UmiVcsAdvancedDiffOptionsArchiveValidate(const UmiVcsAdvancedDiffOptions *value)
+{
+    return umi_vcs_advanced_diff_options_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_vcs_advanced_diff_options_archive_encode, umi_vcs_advanced_diff_options_archive_decode,
+    UmiVcsAdvancedDiffOptions, UmiVcsAdvancedDiffOptionsArchiveSchema, UmiVcsAdvancedDiffOptionsArchiveBound, UmiVcsAdvancedDiffOptionsArchiveWrite, UmiVcsAdvancedDiffOptionsArchiveRead, UmiVcsAdvancedDiffOptionsArchiveValidate)

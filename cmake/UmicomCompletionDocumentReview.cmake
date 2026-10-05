@@ -1,0 +1,16 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-completion-document-review-test "${CMAKE_CURRENT_LIST_DIR}/../tests/document/test_completion_source_request.c")
+    target_link_libraries(umicom-completion-document-review-test PRIVATE Umicom::document Umicom::developer Umicom::editor)
+    umicom_apply_warnings(umicom-completion-document-review-test)
+    umicom_apply_sanitizers(umicom-completion-document-review-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-completion-document-review-test)
+    endif()
+    foreach(case apply cancel typing selection other-tab undo redo import invalid second-review)
+        add_test(NAME framework.document.completion_review.${case} COMMAND umicom-completion-document-review-test ${case})
+        set_tests_properties(framework.document.completion_review.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;document;language;completion;undo;regression")
+    endforeach()
+endif()

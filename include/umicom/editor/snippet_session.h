@@ -20,6 +20,7 @@
 #include <stdint.h>
 
 #include "umicom/base/status.h"
+#include "umicom/platform/cancellation.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -180,6 +181,37 @@ size_t umi_editor_snippet_session_placeholder_count(
  */
 uint64_t umi_editor_snippet_session_revision(
     const UmiEditorSnippetSession *session);
+
+/* Replace every occurrence of one numbered placeholder in an active session.
+ * expected_revision must equal the current session revision. The final cursor
+ * stop (ordinal zero) is a position, not an editable value. Unknown ordinals
+ * return NOT_FOUND. Text is literal UTF-8, not reparsed snippet syntax; embedded
+ * NUL and invalid character encodings are refused. Up to 511 replacement bytes
+ * and the existing expanded-text capacity are supported.
+ *
+ * Build complete text and all shifted placeholder ranges in private storage.
+ * Failure or cancellation leaves text, ranges, selection and revision unchanged.
+ * On success, all linked occurrences receive the value, later stops move, the
+ * active ordinal stays selected and the revision advances once. Coincident
+ * empty placeholders follow their original textual order. Choice lists remain
+ * available as suggestions; literal values need not be one of those choices.
+ * No document or text buffer is modified. Keep session access on one owner
+ * thread and recheck its revision before publishing a reviewed document edit. */
+UmiStatus UmiEditorSnippetSessionReplace(UmiEditorSnippetSession *session,uint64_t expected_revision,
+    uint32_t ordinal,const char *text,size_t bytes,const UmiCancellationToken *cancel);
+/* Borrow expanded text without allocating a second display buffer. The view
+ * expires on any session mutation or destruction. Invalid arguments leave
+ * caller outputs unchanged. Copy before invoking callbacks that can edit it. */
+UmiStatus UmiEditorSnippetSessionRead(const UmiEditorSnippetSession *session,const char **out_text,size_t *out_bytes);
+
+/* Start a replacement template atomically, using the existing session grammar.
+ * This is an ownership variant of start, not a claim of full language-server
+ * snippet syntax: existing literal fallback and supported forms remain the
+ * same. Expanded text must be valid UTF-8. On failure or cancellation the old
+ * template, text, traversal and revision remain available. A matching revision
+ * is required, and successful publication advances it once. No source is edited. */
+UmiStatus UmiEditorSnippetSessionRestart(UmiEditorSnippetSession *session,uint64_t expected_revision,
+    const UmiEditorSnippetTemplate *snippet,uint64_t insertion_byte_offset,const UmiCancellationToken *cancel);
 
 #ifdef __cplusplus
 }

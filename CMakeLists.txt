@@ -130,6 +130,7 @@ endif()
 # -----------------------------------------------------------------------------
 add_library(umicom_base STATIC
     src/base/status.c
+    src/base/arguments.c
     src/base/csv_document.c
     src/base/snapshot_validation.c
     src/base/result.c
@@ -329,6 +330,8 @@ add_library(umicom_platform STATIC
     src/platform/settings.c
     src/platform/filesystem.c
     src/platform/atomic_file.c
+    src/platform/output_file.c
+    src/platform/input_file.c
     src/platform/threading.c
     src/platform/task.c
     src/platform/task_queue.c
@@ -344,6 +347,7 @@ add_library(umicom_platform STATIC
     src/platform/workspace_files.c
     src/platform/file_index.c
     src/platform/search.c
+    src/platform/search_filter.c
     src/platform/search_session.c
     src/platform/session_store.c
     src/platform/recovery.c
@@ -380,6 +384,9 @@ umicom_apply_sanitizers(umicom_platform)
 add_library(umicom_security STATIC
     src/security/policy.c
     src/security/secrets.c
+    # Provider keys use the same native secret boundary in every application.
+    src/security/platform_secrets.c
+    src/security/profile_secrets.c
     # Local authentication is shared; applications never implement password storage.
     src/security/local_profile.c
     src/security/local_profile_platform.c
@@ -645,6 +652,7 @@ add_library(umicom_ui STATIC
     src/ui/tree_model.c
     src/ui/selection_model.c
     src/ui/sort_filter_model.c
+    src/ui/text_projection.c
     src/ui/dock_model.c
     src/ui/tab_model.c
     src/ui/panel_model.c
@@ -816,6 +824,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
         adapters/gtk4/components/navigation_gtk4.c
         adapters/gtk4/components/window_gtk4.c
         adapters/gtk4/components/views_gtk4.c
+        adapters/gtk4/filtered_choices.c
         adapters/gtk4/components/media_gtk4.c
         adapters/gtk4/components/feedback_gtk4.c
         adapters/gtk4/components/catalogue_gtk4.c
@@ -1395,6 +1404,7 @@ add_library(umicom_editor STATIC
     src/editor/type_hierarchy.c
     src/editor/navigation_insights.c
     src/editor/workspace_edit.c
+    src/editor/text_position.c
     src/editor/rename_symbol.c
     src/editor/code_lens_model.c
     src/editor/inlay_hint_model.c
@@ -1770,6 +1780,7 @@ target_include_directories(umicom_web PUBLIC
 )
 umicom_apply_warnings(umicom_web)
 umicom_apply_sanitizers(umicom_web)
+include(cmake/UmicomWebConnection.cmake)
 
 # -----------------------------------------------------------------------------
 # Embedded-browser abstraction
@@ -1811,6 +1822,8 @@ add_library(umicom_chart STATIC
     src/chart/viewport.c
     src/chart/model.c
     src/chart/indicator.c
+    src/chart/candle_study.c
+    src/chart/volume_profile.c
     src/chart/snapshot.c
     src/chart/json.c
     src/chart/pane.c
@@ -2335,6 +2348,9 @@ add_library(umicom_application STATIC
 )
 add_library(Umicom::application ALIAS umicom_application)
 set_target_properties(umicom_application PROPERTIES EXPORT_NAME application)
+# Shared launch receipts are attached after their canonical owner exists.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomApplicationLaunchReceipts.cmake")
+
 target_link_libraries(umicom_application PUBLIC
     Umicom::base
     Umicom::integration
@@ -3141,12 +3157,15 @@ add_library(umicom_media_engine STATIC
 add_library(Umicom::media_engine ALIAS umicom_media_engine)
 set_target_properties(umicom_media_engine PROPERTIES EXPORT_NAME media_engine)
 target_link_libraries(umicom_media_engine PUBLIC Umicom::base Umicom::engine)
+# Image edit cancellation uses the shared Platform token owner.
+target_link_libraries(umicom_media_engine PUBLIC Umicom::platform)
 target_include_directories(umicom_media_engine PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 umicom_apply_warnings(umicom_media_engine)
 umicom_apply_sanitizers(umicom_media_engine)
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomPngImage.cmake")
 
 # Community membership and moderation retain evidence without requiring a web
 # server, database product or application-specific presentation implementation.
@@ -3233,6 +3252,7 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::game_engine
     Umicom::render3d
     Umicom::media_engine
+    Umicom::png_image
     Umicom::social_engine
 )
 
@@ -5122,7 +5142,9 @@ include(cmake/UmicomOperationalStateQualification.cmake)
 include(cmake/UmicomTradingExecutionQualification.cmake)
 include(cmake/UmicomDocumentSaveQualification.cmake)
 include(cmake/UmicomEditorWorkflowTests.cmake)
+include(cmake/UmicomEditorTextPositions.cmake)
 include(cmake/UmicomDocumentReplacement.cmake)
+include(cmake/UmicomDocumentSourceRequests.cmake)
 
 message(STATUS "Umicom Framework version: ${PROJECT_VERSION}")
 message(STATUS "C standard: C${CMAKE_C_STANDARD}")
@@ -5521,6 +5543,8 @@ include(cmake/UmicomChartVisibility.cmake)
 include(cmake/UmicomBreakpointProperties.cmake)
 
 include(cmake/UmicomDrawingAppearance.cmake)
+include(cmake/UmicomDrawingCoordinates.cmake)
+include(cmake/UmicomDocumentBookmarks.cmake)
 
 # Bank extensions are now loaded by UmicomBankOperations.cmake after their optional owner and review helpers exist.
 # The previous composition remains for engineering review.
@@ -5544,7 +5568,31 @@ endif()
 
 
 include(cmake/UmicomVariableInspection.cmake)
+include(cmake/UmicomMemoryInspection.cmake)
 include(cmake/UmicomScopeInspection.cmake)
+include(cmake/UmicomVariableAssignment.cmake)
+include(cmake/UmicomLiveBuildOutput.cmake)
+include(cmake/UmicomBuildLogCapture.cmake)
+include(cmake/UmicomInputFile.cmake)
+include(cmake/UmicomPlatformSecrets.cmake)
+include(cmake/UmicomProviderConnections.cmake)
+include(cmake/UmicomProfileKeys.cmake)
+include(cmake/UmicomProviderConnectionChecks.cmake)
+include(cmake/UmicomProviderChat.cmake)
+include(cmake/UmicomHeyGen.cmake)
+include(cmake/UmicomSeedream.cmake)
+include(cmake/UmicomPixVerse.cmake)
+include(cmake/UmicomCandleStudyChecks.cmake)
+include(cmake/UmicomProjectPresetSelection.cmake)
+include(cmake/UmicomLaunchReview.cmake)
+include(cmake/UmicomConfiguredTargets.cmake)
+include(cmake/UmicomInstalledFiles.cmake)
+include(cmake/UmicomLocalFileReplacement.cmake)
+include(cmake/UmicomUnicodeFilesystem.cmake)
+include(cmake/UmicomRootedFileAccess.cmake)
+include(cmake/UmicomDebugAdapterPreferences.cmake)
+include(cmake/UmicomDebugSetup.cmake)
+include(cmake/UmicomCashPlanning.cmake)
 
 # Reversible drawing evidence stays with the canonical chart and workspace owners.
 include(cmake/UmicomDrawingHistory.cmake)
@@ -5556,7 +5604,31 @@ if(FALSE)
 include(cmake/UmicomBankAudit.cmake)
 endif()
 
+# Portable values share the base envelope and existing domain owners.
+include(cmake/UmicomValueArchives.cmake)
+include(cmake/UmicomWorkspaceValueArchives.cmake)
+
 # Compute implementation identities after all source-contributing modules.
 # Copied source contents then invalidate old owner objects even when their
 # modification times predate those objects. Public-header checks remain active.
+include(cmake/UmicomSnippetUpdates.cmake)
 include(cmake/UmicomValueOwnerBuildChecks.cmake)
+
+# Scope filters run through the same indexed search and owned worker session.
+if(BUILD_TESTING)
+    add_executable(umicom-search-filter-test tests/test_search_filter.c)
+    target_link_libraries(umicom-search-filter-test PRIVATE Umicom::platform)
+    umicom_apply_warnings(umicom-search-filter-test)
+    umicom_apply_sanitizers(umicom-search-filter-test)
+    foreach(case IN ITEMS patterns include-exclude path result-limit excluded-unreadable cancel changed-index invalid session)
+        add_test(NAME framework.file_search.filter.${case} COMMAND umicom-search-filter-test ${case})
+        set_tests_properties(framework.file_search.filter.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;search;filesystem;scope;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-search-filter-test)
+    endif()
+endif()
+
+# Native filtering shares the portable source-index projection.
+include(cmake/UmicomTextProjectionChecks.cmake)

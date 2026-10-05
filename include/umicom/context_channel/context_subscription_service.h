@@ -16,6 +16,7 @@
 #ifndef UMICOM_CONTEXT_CHANNEL_CONTEXT_SUBSCRIPTION_SERVICE_H
 #define UMICOM_CONTEXT_CHANNEL_CONTEXT_SUBSCRIPTION_SERVICE_H
 #include "umicom/context_channel/context_channel.h"
+#include "umicom/base/value_archive.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -72,6 +73,17 @@ UmiStatus umi_context_subscription_service_validate(const UmiContextSubscription
  * and its client applications.
  */
 bool umi_context_subscription_service_covers_sequence(const UmiContextSubscriptionService *state,uint64_t sequence);
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_context_subscription_service_archive_encode(const UmiContextSubscriptionService *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_context_subscription_service_archive_decode(const void *bytes, size_t byte_count,
+    UmiContextSubscriptionService *value);
+
 #ifdef __cplusplus
 }
 #endif

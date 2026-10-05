@@ -105,6 +105,7 @@ if(TARGET umicom_ui_gtk4)
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/dock_overlay_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/inspector_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/layout_library_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/library_exchange_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/media_canvas_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/node_graph_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/palette_gtk4.c"
@@ -130,6 +131,7 @@ if(TARGET umicom_ui_gtk4)
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/dock_overlay_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/inspector_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/layout_library_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/library_exchange_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/media_canvas_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/node_graph_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/palette_gtk4.c"
@@ -691,3 +693,45 @@ endif()
 
 message(STATUS
     "Umicom universal workstation semantics and optional GTK4 component renderers enabled")
+
+# Native imports remain inert until explicit confirmation, and close safely
+# even when an owner destroys its controls from inside a callback.
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-library-exchange-gtk4-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ui_workstation/test_library_exchange_gtk4.c")
+    target_link_libraries(umicom-library-exchange-gtk4-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-library-exchange-gtk4-test)
+    umicom_apply_sanitizers(umicom-library-exchange-gtk4-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-library-exchange-gtk4-test)
+    endif()
+    foreach(_case IN ITEMS apply stale invalid-replacement destroy-review destroy-apply)
+        add_test(NAME framework.ui.library_exchange.gtk4.${_case} COMMAND umicom-library-exchange-gtk4-test ${_case})
+        set_tests_properties(framework.ui.library_exchange.gtk4.${_case} PROPERTIES
+            SKIP_RETURN_CODE 77 TIMEOUT 30 LABELS "framework;ui;gtk4;import;ownership")
+    endforeach()
+endif()
+
+if(BUILD_TESTING AND TARGET umicom-library-exchange-gtk4-test)
+    add_test(NAME framework.ui.library_exchange.gtk4.geometry COMMAND umicom-library-exchange-gtk4-test geometry)
+    set_tests_properties(framework.ui.library_exchange.gtk4.geometry PROPERTIES
+        SKIP_RETURN_CODE 77 TIMEOUT 30 LABELS "framework;ui;gtk4;import;geometry")
+endif()
+
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-saved-library-review-gtk4-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ui_workstation/test_saved_library_review_gtk4.c")
+    target_link_libraries(umicom-saved-library-review-gtk4-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-saved-library-review-gtk4-test)
+    umicom_apply_sanitizers(umicom-saved-library-review-gtk4-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-saved-library-review-gtk4-test)
+    endif()
+    foreach(case apply stale missing unbind destroy-read destroy-apply retained)
+        add_test(NAME framework.ui.saved_library_review.gtk4.${case} COMMAND umicom-saved-library-review-gtk4-test ${case})
+        set_tests_properties(framework.ui.saved_library_review.gtk4.${case} PROPERTIES
+            SKIP_RETURN_CODE 77 TIMEOUT 30 LABELS "framework;ui;gtk4;recovery;ownership")
+    endforeach()
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSourceDiagnosticsPanel.cmake")

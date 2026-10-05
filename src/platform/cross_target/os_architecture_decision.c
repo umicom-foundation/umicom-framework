@@ -17,6 +17,7 @@
  *   MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/platform/cross_target/os_architecture_decision.h"
+#include "../../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -105,3 +106,65 @@ const char *umi_ct_os_foundation_text(UmiCtOsFoundation foundation)
         return "unknown";
     }
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiCtOsArchitectureDecisionArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x04b25193d6bc745a);
+
+    return schema;
+}
+static size_t UmiCtOsArchitectureDecisionArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiCtOsArchitectureDecisionArchiveWrite(UmiArchiveWriter *writer, const UmiCtOsArchitectureDecision *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteSigned(writer, (int64_t)value->production_foundation);
+    UmiArchiveWriteSigned(writer, (int64_t)value->portability_foundation);
+    UmiArchiveWriteSigned(writer, (int64_t)value->research_foundation);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->kernel_uses_framework);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->recovery_uses_framework);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->normal_user_space_uses_framework);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->freestanding_subset_allowed);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->separate_kernel_repository);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->separate_distribution_repository);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->research_is_product_default);
+}
+static void UmiCtOsArchitectureDecisionArchiveRead(UmiArchiveReader *reader, UmiCtOsArchitectureDecision *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->production_foundation = (UmiCtOsFoundation)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->portability_foundation = (UmiCtOsFoundation)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->research_foundation = (UmiCtOsFoundation)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->kernel_uses_framework = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->recovery_uses_framework = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->normal_user_space_uses_framework = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->freestanding_subset_allowed = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->separate_kernel_repository = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->separate_distribution_repository = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->research_is_product_default = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiCtOsArchitectureDecisionArchiveValidate(const UmiCtOsArchitectureDecision *value)
+{
+    return umi_ct_umicom_os_architecture_decision_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_ct_umicom_os_architecture_decision_archive_encode, umi_ct_umicom_os_architecture_decision_archive_decode,
+    UmiCtOsArchitectureDecision, UmiCtOsArchitectureDecisionArchiveSchema, UmiCtOsArchitectureDecisionArchiveBound, UmiCtOsArchitectureDecisionArchiveWrite, UmiCtOsArchitectureDecisionArchiveRead, UmiCtOsArchitectureDecisionArchiveValidate)

@@ -1,0 +1,109 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{font:17px/1.6 system-ui;max-width:960px;margin:36px auto;padding:0 24px;color:#193542}code{overflow-wrap:anywhere}td,th{padding:10px;border:1px solid #cbdce1;text-align:left}table{border-collapse:collapse}</style>
+<title>Navigate to definitions and references</title></head><body>
+<h1>Navigate to definitions and references</h1>
+<p>Use <a href="snippet-review.html">local snippet review</a> to compose linked values before inserting a complete reviewed change.</p>
+<p>Inspect <a href="call-hierarchy.html">callers, callees and individual call sites</a> at a captured source position.</p>
+<p>Use <a href="selection-ranges.html">syntax selection ranges</a> to select expressions and enclosing blocks from the language server.</p>
+<p>The same checked source workflow also supports <a href="type-navigation.html">type definitions and implementations</a> when the selected server provides them.</p>
+<p>Definition lookup finds where a symbol is declared or implemented. Reference
+lookup finds places where it is used. Framework separates requesting these
+locations from opening a file, so the user can inspect the destination first.</p>
+<h2>Find a definition or its references</h2><ol>
+<li>Open a source draft and place the caret before the symbol you want to explore.
+A selection uses its starting position. Read-only source documents also support lookup.</li>
+<li>Choose <strong>Definitions…</strong> or <strong>References…</strong> in Studio's
+editor command bar. Scroll the bar horizontally if necessary. Opening the form
+captures the draft and caret; it does not start a server.</li>
+<li>Enter a trusted language server's absolute executable path, arguments and
+project folder, or choose <strong>Load saved server</strong>. These ordinary
+local settings are shared with completion, formatting and source information for
+the same language. Loading settings does not launch a process. Keep credentials
+out of these unencrypted path and argument fields.</li>
+<li>For references, choose whether to <strong>Include the declaration</strong>.
+Choose <strong>Find definitions</strong> or <strong>Find references</strong>.
+The selected local program receives the captured draft and can inspect the project folder.</li>
+<li>Review the returned locations in the searchable list. Each row shows a URI,
+line and UTF-16 column; the displayed line and column start at one. A URI identifies
+a document, for example <code>file:///C:/Projects/Demo/main.c</code>.
+Fetching the list does not open a destination.</li>
+<li>Select a row and choose <strong>Open selected location</strong>. An already open
+target uses its complete current draft, including unsaved edits. An unopened local
+file is read through the document provider. The requested selection must fit the
+target text before a new tab is attached. A successful opening closes the form.</li>
+<li>Use Studio's existing navigation Back and Forward actions to revisit the
+departure and destination carets. Navigation does not change source bytes, add an
+Undo edit or save a file. It also works when the target draft is read-only.</li></ol>
+<h2>When a result cannot be used</h2><table>
+<tr><th>Situation</th><th>Recovery</th></tr>
+<tr><td>No locations</td><td>A server may legitimately return an empty list.
+Try a different symbol in a new capture. Project indexing may need a persistent
+connection, which this temporary request does not provide.</td></tr>
+<tr><td>The source changed</td><td>Close the form and reopen it after moving the
+caret, editing the draft, saving, or changing document permissions. This avoids
+using locations computed for an earlier source state.</td></tr>
+<tr><td>The server choice changed</td><td>Request again. Changing arguments,
+paths or declaration inclusion invalidates the previous result, even if a setting
+is changed back. Closing the editor cancels publication of a late worker result.</td></tr>
+<tr><td>The target range is invalid</td><td>The target may have changed since the
+server indexed it. Exact range selection refuses missing lines and positions that
+split Unicode characters. The current tab remains available; choose another row
+or request fresh locations.</td></tr>
+<tr><td>The URI is unsupported</td><td>New targets must use a local file URI.
+Remote authorities, implicit network paths, query strings, fragments and malformed
+percent escapes are refused. A document already managed under an exact URI may
+still be selected without opening that URI. Windows device aliases and alternate
+data streams are not accepted as new source files.</td></tr>
+<tr><td>Timeout or unsupported server</td><td>The selected server must advertise
+the requested capability, document open/close synchronization and UTF-16 positions.
+The form has a five-second read budget and a 65536-byte message capacity including
+the escaped draft and JSON envelope, with at most 4096 parser tokens. Synchronous
+launch and writes may finish before cancellation.</td></tr></table>
+<h2>Extend the shared services</h2>
+<p><code>UmiLanguageNavigationQueryNative</code> owns the temporary connection:
+initialize, open the copied draft, issue the chosen request, close the draft and
+shut down the server. It returns an owned <code>UmiLanguageLocationCatalogue</code>
+only after successful cleanup. A supplied-server variant requires a new server
+in its starting state; it must not interrupt an existing editor session.</p>
+<p>The catalogue accepts definitions as a location, a homogeneous location list,
+or a list of location links. Links retain their target range, selection range and
+optional origin range. Reference replies accept locations only. The decoder checks
+the response identity, URI syntax, ordered endpoints and selection containment.
+Ranges referring to the captured URI are checked against that source immediately.
+Other target content is checked only when the host opens the chosen selection.</p>
+<p>The standalone catalogue reader allows 1 MiB of JSON, 4096 locations and
+8192 bytes per URI. These limits are larger than the native form's transport
+limit. A caller must handle capacity failures instead of assuming a partial list.
+<code>At</code> returns borrowed URI text that lasts until catalogue destruction;
+copy it before invoking callbacks that may retire the catalogue.</p>
+<p><code>UmiDocumentSourceRequestCreateInspection</code> captures the source
+without granting Stage or Apply permission. The GTK host rechecks that capture
+before requesting and before opening. <code>UmiDocumentCoordinatorOpenSourceRange</code>
+copies the URI, finds an existing draft by exact URI or normalized local path,
+then resolves the exact UTF-16 selection. Otherwise it loads a local target
+through the existing provider, with a 16 MiB source limit, and validates before
+attaching. Provider I/O is synchronous on the owning thread after the user's
+explicit Open action. Keep the coordinator alive during provider callbacks.</p>
+<p>The document owner records successful jumps in its existing history. Go to Line,
+bookmarks and history share LF, CRLF and CR line-ending rules. Their existing
+one-based byte-column contract remains unchanged; only protocol selections use
+zero-based UTF-16 columns. If an older bookmarked line becomes shorter, its byte
+column clamps to the end without splitting a UTF-8 character.</p>
+<h2>Current boundaries</h2>
+<p>The local path decoder checks syntax; it does not confine access to a project
+folder, resolve symlink trust, or detect a network mount behind a local path.
+The native session owns only the direct child, not descendants started by the
+server. Server-to-client configuration requests, persistent indexing, automatic
+typing queries and server installation are outside this explicit workflow.
+Completion, formatting, information and navigation share one source-tool slot.</p>
+<p>See <a href="native-completion-review.html">completion and saved settings</a>,
+<a href="source-information.html">source information</a>,
+<a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_definition">the definition contract</a>,
+<a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_references">the references contract</a>,
+and <a href="https://learn.microsoft.com/en-us/windows/desktop/fileio/naming-a-file">Windows filename rules</a>.</p>
+<p>Explore the whole file with <a href="document-symbols.html">document symbols</a>.</p>
+<p>See <a href="manual-folding.html">Native folding ownership</a> to hide source without changing document text.</p>
+<p>Use <a href="delimiter-navigation.html">local delimiter navigation</a> to find a complete pair without a language server.</p>
+<p>See <a href="action-menus.html">searchable native action groups</a> for organizing existing controls without changing their command owners.</p>
+</body></html>

@@ -83,6 +83,104 @@ static int RoundTrip(void)
     return EXIT_SUCCESS;
 }
 
+/* Settings opened by older applications retain their literal field. Current
+ * records must contain the explicit list field, even when it is empty. */
+static int ArgumentStorage(void)
+{
+    UmiDataServer *server = NULL;
+    UmiBuildProfile profile, loaded, before;
+    uint64_t revision = 0U;
+    char field[192], schema[192];
+    CHECK(umi_data_server_create_memory(&server) == UMI_STATUS_OK);
+    Profile(&profile, "Launch arguments");
+    CHECK(UmiBuildProfileStoreSave(server, &profile, 0U, &revision) == UMI_STATUS_OK);
+    CHECK(Key("Launch arguments", "run_arguments", field) == EXIT_SUCCESS);
+    CHECK(Key("Launch arguments", "schema", schema) == EXIT_SUCCESS);
+    CHECK(umi_data_server_delete(server, field) == UMI_STATUS_OK);
+    memset(&loaded, 0x5a, sizeof(loaded)); before = loaded;
+    CHECK(UmiBuildProfileStoreLoad(server, "Launch arguments", &loaded, &revision) == UMI_STATUS_PARSE_ERROR);
+    CHECK(memcmp(&loaded, &before, sizeof(loaded)) == 0);
+    CHECK(umi_data_server_set(server, schema, "1") == UMI_STATUS_OK);
+    CHECK(UmiBuildProfileStoreLoad(server, "Launch arguments", &loaded, &revision) == UMI_STATUS_OK);
+    CHECK(loaded.run_arguments[0] == '\0' && strcmp(loaded.run_argument, profile.run_argument) == 0);
+    loaded.run_argument[0] = '\0';
+    strcpy(loaded.run_arguments, "--file \"caf\xc3\xa9 notes.txt\" \"\"");
+    CHECK(UmiBuildProfileStoreSave(server, &loaded, revision, &revision) == UMI_STATUS_OK);
+    profile = loaded;
+    CHECK(UmiBuildProfileStoreLoad(server, "Launch arguments", &loaded, &revision) == UMI_STATUS_OK);
+    CHECK(umi_build_profile_equal(&profile, &loaded));
+    before = loaded;
+    CHECK(umi_data_server_set(server, field, "\"unfinished") == UMI_STATUS_OK);
+    CHECK(UmiBuildProfileStoreLoad(server, "Launch arguments", &loaded, &revision) == UMI_STATUS_PARSE_ERROR);
+    CHECK(memcmp(&loaded, &before, sizeof(loaded)) == 0);
+    umi_data_server_destroy(server);
+    return EXIT_SUCCESS;
+}
+
+
+/* Exercise schema migration and damage through the public Data Server. Older
+ * settings may omit stages, but current settings may never lose a stage field
+ * unnoticed. Output snapshots and revision counters remain unchanged on error. */
+static int StageStorage(const char *mode)
+{
+    UmiDataServer *server = NULL;
+    UmiBuildProfile profile, loaded, before;
+    char key[192], schema[192];
+    uint64_t revision = 0U;
+    static const char *const stages[] = {"configure_preset", "build_preset", "test_preset", "run_working_directory"};
+    CHECK(umi_data_server_create_memory(&server) == UMI_STATUS_OK);
+    Profile(&profile, "Stage presets");
+    profile.preset[0] = '\0';
+    CHECK(UmiBuildProfileStoreSave(server, &profile, 0U, &revision) == UMI_STATUS_OK);
+    CHECK(Key(profile.source_directory, "schema", schema) == EXIT_SUCCESS);
+    if (strcmp(mode, "stage-migrate") == 0) {
+        for (unsigned old = 1U; old <= 2U; ++old) {
+            for (size_t i = 0U; i < sizeof(stages) / sizeof(stages[0]); ++i) {
+                CHECK(Key(profile.source_directory, stages[i], key) == EXIT_SUCCESS);
+                CHECK(umi_data_server_delete(server, key) == UMI_STATUS_OK);
+            }
+            CHECK(umi_data_server_set(server, schema, old == 1U ? "1" : "2") == UMI_STATUS_OK);
+            CHECK(UmiBuildProfileStoreLoad(server, profile.source_directory, &loaded, &revision) == UMI_STATUS_OK);
+            CHECK(loaded.configure_preset[0] == '\0' && loaded.build_preset[0] == '\0' && loaded.test_preset[0] == '\0');
+            CHECK(UmiBuildProfileStoreSave(server, &loaded, revision, &revision) == UMI_STATUS_OK);
+            char marker[8];
+            CHECK(umi_data_server_get(server, schema, marker, sizeof(marker)) == UMI_STATUS_OK && strcmp(marker, "3") == 0);
+        }
+    } else if (strcmp(mode, "stage-missing") == 0) {
+        CHECK(UmiBuildProfileStoreLoad(server, profile.source_directory, &loaded, &revision) == UMI_STATUS_OK);
+        before = loaded;
+        for (size_t i = 0U; i < sizeof(stages) / sizeof(stages[0]); ++i) {
+            CHECK(Key(profile.source_directory, stages[i], key) == EXIT_SUCCESS);
+            CHECK(umi_data_server_delete(server, key) == UMI_STATUS_OK);
+            CHECK(UmiBuildProfileStoreLoad(server, profile.source_directory, &loaded, &revision) == UMI_STATUS_PARSE_ERROR);
+            CHECK(revision == 1U && memcmp(&loaded, &before, sizeof(loaded)) == 0);
+            CHECK(UmiBuildProfileStoreSave(server, &profile, 1U, &revision) == UMI_STATUS_PARSE_ERROR);
+            CHECK(umi_data_server_set(server, key, "") == UMI_STATUS_OK);
+        }
+    } else {
+        strcpy(profile.configure_preset, "notes-configure");
+        strcpy(profile.build_preset, "notes-build");
+        strcpy(profile.test_preset, "notes-test");
+        CHECK(UmiBuildProfileStoreSave(server, &profile, 1U, &revision) == UMI_STATUS_OK);
+        CHECK(UmiBuildProfileStoreLoad(server, profile.source_directory, &loaded, &revision) == UMI_STATUS_OK);
+        strcpy(profile.source_directory, loaded.source_directory);
+        CHECK(umi_build_profile_equal(&profile, &loaded));
+        before = loaded;
+        if (strcmp(mode, "stage-downgrade") == 0) {
+            CHECK(umi_data_server_set(server, schema, "2") == UMI_STATUS_OK);
+            CHECK(UmiBuildProfileStoreLoad(server, profile.source_directory, &loaded, &revision) == UMI_STATUS_PARSE_ERROR);
+            CHECK(revision == 2U && memcmp(&loaded, &before, sizeof(loaded)) == 0);
+        } else {
+            strcpy(profile.build_preset, "changed-by-other-editor");
+            CHECK(UmiBuildProfileStoreSave(server, &profile, 1U, &revision) == UMI_STATUS_INVALID_STATE);
+            CHECK(UmiBuildProfileStoreLoad(server, profile.source_directory, &loaded, &revision) == UMI_STATUS_OK);
+            CHECK(umi_build_profile_equal(&before, &loaded) && revision == 2U);
+        }
+    }
+    umi_data_server_destroy(server);
+    return EXIT_SUCCESS;
+}
+
 static int Corrupt(void)
 {
     static const struct { const char *field; const char *value; } damage[] = {
@@ -196,13 +294,33 @@ static int Durable(void)
     CHECK(umi_data_server_create_sqlite(database, &second) == UMI_STATUS_OK);
     CHECK(UmiBuildProfileStoreLoad(first, "Umicom Notes", &loaded, &revision) == UMI_STATUS_OK && revision == 1U);
     CHECK(strcmp(loaded.run_program, original.run_program) == 0);
+    /* Exercise the list field through two real SQLite connections as well as
+     * the memory-backend migration checks. Reopening must retain empty values
+     * and spaces, without bringing back the superseded literal input. */
+    original.run_argument[0] = '\0';
+    strcpy(original.run_arguments, "--file \"saved notes.txt\" \"\"");
     original.parallel_jobs = 3U;
+    /* Reopen independent stages through SQLite as well as the memory store. */
+    original.preset[0] = '\0';
+    strcpy(original.configure_preset, "sqlite-configure");
+    strcpy(original.build_preset, "sqlite-build");
+    strcpy(original.test_preset, "sqlite-test");
+    strcpy(original.run_working_directory, "data files");
     CHECK(UmiBuildProfileStoreSave(second, &original, 1U, &revision) == UMI_STATUS_OK && revision == 2U);
     loaded.parallel_jobs = 4U;
     CHECK(UmiBuildProfileStoreSave(first, &loaded, 1U, &revision) == UMI_STATUS_INVALID_STATE);
     CHECK(revision == 2U);
     CHECK(UmiBuildProfileStoreLoad(first, "Umicom Notes", &loaded, &revision) == UMI_STATUS_OK);
     CHECK(loaded.parallel_jobs == 3U && revision == 2U);
+    CHECK(strcmp(loaded.run_arguments, original.run_arguments) == 0 && loaded.run_argument[0] == '\0');
+    umi_data_server_destroy(first); first = NULL;
+    CHECK(umi_data_server_create_sqlite(database, &first) == UMI_STATUS_OK);
+    CHECK(UmiBuildProfileStoreLoad(first, "Umicom Notes", &loaded, &revision) == UMI_STATUS_OK);
+    CHECK(strcmp(loaded.run_arguments, original.run_arguments) == 0 && loaded.run_argument[0] == '\0');
+    CHECK(strcmp(loaded.configure_preset, original.configure_preset) == 0);
+    CHECK(strcmp(loaded.build_preset, original.build_preset) == 0);
+    CHECK(strcmp(loaded.test_preset, original.test_preset) == 0);
+    CHECK(strcmp(loaded.run_working_directory, original.run_working_directory) == 0);
     CHECK(Key("Umicom Notes", "trust", trustKey) == EXIT_SUCCESS);
     CHECK(umi_data_server_get(first, trustKey, trustValue, sizeof(trustValue)) == UMI_STATUS_NOT_FOUND);
     umi_data_server_destroy(first); umi_data_server_destroy(second);
@@ -215,6 +333,10 @@ static int Durable(void)
 int main(int argc, char **argv)
 {
     if (argc != 2) return EXIT_FAILURE;
+    if (strcmp(argv[1], "stage-migrate") == 0 || strcmp(argv[1], "stage-missing") == 0 ||
+        strcmp(argv[1], "stage-downgrade") == 0 || strcmp(argv[1], "stage-roundtrip") == 0)
+        return StageStorage(argv[1]);
+    if (strcmp(argv[1], "arguments") == 0) return ArgumentStorage();
     if (strcmp(argv[1], "roundtrip") == 0) return RoundTrip();
     if (strcmp(argv[1], "corrupt") == 0) return Corrupt();
     if (strcmp(argv[1], "boundaries") == 0) return Boundaries();

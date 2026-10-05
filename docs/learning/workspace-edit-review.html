@@ -1,0 +1,26 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Review workspace text changes</title>
+<style>body{font:17px/1.6 system-ui;max-width:1000px;margin:32px auto;padding:0 24px;color:#183442}code{overflow-wrap:anywhere}li{margin:10px 0}</style></head><body>
+<h1>Review workspace text changes</h1>
+<p>A language server can propose changes to several documents when renaming a symbol or performing a refactoring. A valid reply is a proposal: it does not establish that the documents are still current or that the user has approved it. Framework keeps decoding, source preview and application separate so applications can show the complete proposal first.</p>
+<h2>Read the proposal</h2>
+<ol><li>Include <code>umicom/language_runtime/workspace_edit_catalogue.h</code>. Pass a correlated reply and its expected request ID to <code>UmiLanguageWorkspaceEditCatalogueReadResponse</code>. Use <code>UmiLanguageWorkspaceEditCatalogueCreate</code> only when you already have the result value itself.</li>
+<li>Check the returned status before using the catalogue. Failure clears its output pointer; no partially decoded edit set is published.</li>
+<li>Use <code>UmiLanguageWorkspaceEditCatalogueCount</code> and <code>UmiLanguageWorkspaceEditCatalogueDocument</code> to list document URIs, optional required protocol versions and edit counts.</li>
+<li>Use <code>UmiLanguageWorkspaceEditCatalogueEdit</code> to inspect each range and complete replacement text. Ranges are zero-based UTF-16 coordinates. An edit's annotation index is <code>SIZE_MAX</code> when absent.</li>
+<li>Read annotations using <code>UmiLanguageWorkspaceEditCatalogueAnnotation</code>. Show their labels and descriptions, and preserve each <code>needs_confirmation</code> requirement in the application's review state.</li></ol>
+<p>The reader accepts basic <code>changes</code> maps and text-only <code>documentChanges</code>. If both are present, documentChanges takes precedence. An integer version identifies the source revision requested by the server; null means the protocol supplied no required revision. This does not make a later arbitrary file read safe to edit.</p>
+<h2>Preview captured source</h2>
+<ol><li>Capture the complete current source for every affected document through its document owner. Preserve unsaved drafts. Resolve aliases before creating a transaction so two URIs cannot unknowingly modify the same document twice.</li>
+<li>Call <code>UmiLanguageWorkspaceEditCataloguePreview</code> for one document index, passing the captured UTF-8 bytes, caret and known protocol version. A required version that is missing or different returns <code>UMI_STATUS_INVALID_STATE</code>.</li>
+<li>Read the complete proposed text with <code>UmiLanguageTextEditPreviewRead</code>. The shared preview service validates exact Unicode coordinates, refuses overlapping replacements and preserves the response order of inserts at the same position. The original source remains unchanged.</li>
+<li>Display all proposed changes and annotation requirements. Keep the catalogue until review finishes. Creating a preview does not collect confirmation, edit a document or save a file.</li>
+<li>Before any separate apply operation, recheck every source capture, permission and required confirmation. Use a document transaction with a defined failure and Undo policy. Release previews and the catalogue when the review ends.</li></ol>
+<h2>Bounds and unsupported operations</h2>
+<p>The catalogue accepts up to 1 MiB of JSON, 256 distinct document URIs, 4096 total edits and 256 annotations. Each URI allows 8192 UTF-8 bytes and each replacement allows 65536 bytes. Annotation identifiers allow 4096 bytes; labels and descriptions allow 65536 bytes each. Preview currently supports at most 256 edits for one document, 1 MiB of serialized edit data, and 16 MiB each for original and proposed text.</p>
+<p>Repeated document entries return <code>UMI_STATUS_ALREADY_EXISTS</code> because their sequential interpretation would require intermediate document states. A referenced annotation that does not exist returns <code>UMI_STATUS_NOT_FOUND</code>. Unknown edit shapes and file creation, file renaming or deletion return <code>UMI_STATUS_NOT_IMPLEMENTED</code> for the entire proposal. These operations are never silently omitted.</p>
+<p>The legacy fixed-size workspace-edit reader now uses this validation and publishes only complete results. It refuses document-version requirements and annotations because its output structure cannot represent them. It also reports capacity errors instead of publishing an initial subset of changes.</p>
+<p>This module reads and previews proposals; it does not launch a server, open URIs, perform a rename, apply a multi-document transaction or save files. A syntactically valid URI may identify a nonlocal resource. Hosts must choose an authorized document provider rather than treating it as permission for network access.</p>
+<p>Related workflows: <a href="source-navigation.html">source navigation</a> and <a href="parameter-help.html">parameter help</a>.</p>
+<p><a href="symbol-rename.html">Review a symbol rename</a></p>
+<p><a href="complete-language-edits.html">Apply a complete captured proposal through document ownership and native review</a>.</p>
+</body></html>

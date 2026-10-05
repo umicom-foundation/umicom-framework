@@ -25,7 +25,19 @@ static UmiStatus ctest_command(const UmiBuildProfile *profile,
     if (phase != UMI_BUILD_PHASE_TEST) {
         return UMI_STATUS_NOT_IMPLEMENTED;
     }
+    UmiStatus validation = umi_build_profile_validate(profile, NULL, 0U);
+    if (validation != UMI_STATUS_OK) return validation;
     umi_build_command_init(out_command, "ctest");
+    /* An explicit test preset supplies its own configuration, environment,
+     * filters and execution options. Keep the established visible-failure and
+     * nonempty-suite policy without overriding the preset's configuration. */
+    if (profile->test_preset[0] != '\0') {
+        return umi_build_command_add_argument(out_command, "--preset") &&
+               umi_build_command_add_argument(out_command, profile->test_preset) &&
+               umi_build_command_add_argument(out_command, "--output-on-failure") &&
+               umi_build_command_add_argument(out_command, "--no-tests=error")
+            ? UMI_STATUS_OK : UMI_STATUS_CAPACITY_EXCEEDED;
+    }
     /* An empty test tree is not a passed test run. */
     if (!umi_build_command_add_argument(out_command, "--no-tests=error") ||
         !umi_build_command_add_argument(out_command, "--build-config") ||

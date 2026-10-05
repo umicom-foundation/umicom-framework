@@ -1,6 +1,9 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 # Review tests use the real coordinator and its existing history transaction.
 include_guard(GLOBAL)
+# The sequence uses the existing document owner; consumers link no extra store.
+target_sources(umicom_document PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/document/replacement_session.c")
 if(BUILD_TESTING)
     foreach(group capture apply stale limits)
         add_executable(umicom-document-replacement-${group}-test
@@ -77,3 +80,91 @@ if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
         umicom_register_validation_target(umicom-window-lifecycle-gtk4-test)
     endif()
 endif()
+
+# Sequence coverage uses independent drafts and the production history owner.
+if(BUILD_TESTING)
+    add_executable(umicom-document-replacement-session-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/document/test_replacement_session.c")
+    target_link_libraries(umicom-document-replacement-session-test PRIVATE Umicom::Framework)
+    umicom_apply_warnings(umicom-document-replacement-session-test)
+    umicom_apply_sanitizers(umicom-document-replacement-session-test)
+    foreach(case apply skip empty invalid owned-inputs no-match same delete late-open closed read-only pinned
+            cancel-ready invalid-decision stale skip-stale undo cancel-partial fresh-turn
+            path-before-turn path-after-capture close-question read-only-question partial-failure)
+        add_test(NAME framework.document.replacement.session.${case} COMMAND umicom-document-replacement-session-test ${case})
+        set_tests_properties(framework.document.replacement.session.${case} PROPERTIES
+            TIMEOUT 45 LABELS "document;replacement;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-document-replacement-session-test)
+    endif()
+endif()
+
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-document-replacement-session-native-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/document/test_replacement_session_gtk4.c")
+    target_link_libraries(umicom-document-replacement-session-native-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-document-replacement-session-native-test)
+    umicom_apply_sanitizers(umicom-document-replacement-session-native-test)
+    # Parent teardown and creation observers exercise native reentrancy too.
+    foreach(case apply skip stop stale destroy unbind pending-close complete-unbind busy creation-unbind parent-close)
+        add_test(NAME framework.document.replacement.session.gtk4.${case}
+            COMMAND umicom-document-replacement-session-native-test ${case})
+        set_tests_properties(framework.document.replacement.session.gtk4.${case} PROPERTIES
+            TIMEOUT 45 SKIP_RETURN_CODE 77 LABELS "gtk4;document;replacement;lifetime;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-document-replacement-session-native-test)
+    endif()
+endif()
+
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/REVIEW_OPEN_DOCUMENT_REPLACEMENTS.html"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs)
+
+# Native notifications must never redirect an immutable comparison to borrowed
+# storage changed halfway through constructing its two text panes.
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-comparison-construction-native-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_productivity/test_comparison_construction_gtk4.c")
+    target_link_libraries(umicom-comparison-construction-native-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-comparison-construction-native-test)
+    umicom_apply_sanitizers(umicom-comparison-construction-native-test)
+    add_test(NAME framework.gtk4.comparison.construction COMMAND umicom-comparison-construction-native-test)
+    set_tests_properties(framework.gtk4.comparison.construction PROPERTIES
+        TIMEOUT 45 SKIP_RETURN_CODE 77 LABELS "gtk4;comparison;lifetime;regression")
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-comparison-construction-native-test)
+    endif()
+endif()
+
+
+# Selected proposals exercise the existing document and Undo owners with local fixtures.
+if(BUILD_TESTING)
+    add_executable(umicom-document-proposal-test "${CMAKE_CURRENT_LIST_DIR}/../tests/document/test_proposal.c")
+    target_link_libraries(umicom-document-proposal-test PRIVATE Umicom::Framework)
+    umicom_apply_warnings(umicom-document-proposal-test)
+    umicom_apply_sanitizers(umicom-document-proposal-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-document-proposal-test)
+    endif()
+    foreach(case capture apply pending-typing owned delete unchanged approval revision invalid stale round-trip read-only closed other-owner other-tab caret unicode large limits arguments)
+        add_test(NAME framework.document.proposal.${case} COMMAND umicom-document-proposal-test ${case})
+        set_tests_properties(framework.document.proposal.${case} PROPERTIES TIMEOUT 45 LABELS "framework;document;proposal;review;regression")
+    endforeach()
+endif()
+
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-document-proposal-native-test "${CMAKE_CURRENT_LIST_DIR}/../tests/document/test_proposal_gtk4.c")
+    target_link_libraries(umicom-document-proposal-native-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-document-proposal-native-test)
+    umicom_apply_sanitizers(umicom-document-proposal-native-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-document-proposal-native-test)
+    endif()
+    foreach(case apply undo no-preview no-approval edit-after-preview stale cancel retained unbind parent-close creation-unbind preview-unbind preview-edit completion-unbind busy private delete)
+        add_test(NAME framework.document.proposal.gtk4.${case} COMMAND umicom-document-proposal-native-test ${case})
+        set_tests_properties(framework.document.proposal.gtk4.${case} PROPERTIES TIMEOUT 45 SKIP_RETURN_CODE 77 LABELS "framework;document;proposal;gtk4;lifetime;regression")
+    endforeach()
+endif()
+
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/review-selected-code-replacements.html" DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)

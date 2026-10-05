@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Working with Unicode project paths</title><style>body{font:17px/1.6 system-ui;max-width:920px;margin:32px auto;padding:0 24px;color:#18363f}code,pre{background:#eef3f5}pre{padding:16px;overflow:auto}</style></head><body>
+<h1>Working with Unicode project paths</h1>
+<p>Project names can contain characters from many languages. Framework uses UTF-8 for Windows path strings and converts them to the UTF-16 names used by native Windows file APIs. UTF-8 and UTF-16 are two ways of representing Unicode characters. This conversion concerns the name of a file; it does not change the bytes stored inside it.</p>
+<h2>Create and read a file</h2><ol>
+<li>Start with the absolute project folder chosen by the user. Keep that folder with the project instead of relying on the process's current directory.</li>
+<li>Join the folder and filename with <code>umi_path_join</code>. Check its result: a path that does not fit the supplied buffer is an error.</li>
+<li>Use <code>umi_fs_make_directories</code> for an owned project directory. It can create missing parent directories. On Windows, an existing ordinary file at the requested directory path is an error.</li>
+<li>Read and write through the filesystem API. Release returned buffers with <code>umi_fs_free_bytes</code> or <code>umi_fs_free_text</code>. The text writer preserves the supplied newline bytes.</li>
+<li>Use <code>umi_directory_walk</code> to list entries. Returned Windows names are UTF-8 too, so pass them directly to Framework path operations instead of converting them through the current ANSI code page.</li></ol>
+<pre><code>#include "umicom/platform/filesystem.h"
+
+UmiStatus WriteProjectNote(const char *projectDirectory)
+{
+    char path[UMI_PATH_CAPACITY];
+    UmiStatus status = umi_path_join(projectDirectory, "notes.txt", path, sizeof(path));
+    if (status != UMI_STATUS_OK) return status;
+    return umi_fs_write_text(path, "Project notes\n");
+}</code></pre>
+<p>The caller must supply an existing project directory. This small example overwrites <code>notes.txt</code>; an editor should use its document save and conflict-review service instead. For replacement of a small application-owned preferences file, see <code>UmiLocalFileReplace</code>.</p>
+<h2>Copy, rename and remove</h2><p><code>umi_fs_copy_file</code> copies bytes and can create destination parents. <code>umi_fs_rename</code> keeps the platform's existing rename policy; Windows does not replace an existing destination through this function. Neither operation establishes a reviewed document save or a conflict-free transaction.</p>
+<p>Only call <code>umi_fs_remove_tree</code> for a tree the application owns and the user has chosen to remove. On Windows it refuses drive and share roots, removes reparse points as leaves, and limits recursion to 128 directory levels. A reparse point is a filesystem redirect such as a symbolic link or junction. Refusing to follow it prevents ordinary linked folders from being emptied through the link. This does not protect against another process replacing parent directories during the operation. Failure can leave a partially removed tree.</p>
+<h2>Check the workflow in an application</h2><ol>
+<li>Create a temporary project folder with spaces and characters such as <code>café</code>, <code>ملف</code> or <code>文</code>.</li>
+<li>Create a text file, save it, close it and reopen it. Confirm that its contents and displayed name are unchanged.</li>
+<li>Refresh the project listing. Copy and rename a disposable file, then reopen the new path.</li>
+<li>Configure and build the project with the selected compiler. Framework path handling does not guarantee that every compiler, debugger or external tool supports the same path.</li></ol>
+<h2>Limits and troubleshooting</h2><p>Malformed UTF-8 Windows paths are refused. Existing public path buffers, operating-system limits and external tool restrictions still apply; this does not enable extended-length or device paths throughout the suite. On POSIX systems, paths continue to use native byte strings.</p>
+<p>The legacy whole-file reader allocates memory for the entire file and uses a long-sized seek. Use the bounded input-file service for untrusted input and streaming services for large media. Folder creation and copy are not atomic multi-file operations. Do not interpret a partial failure as a completed project installation.</p>
+<h2>Extending Framework</h2><p>Keep native encoding conversion inside platform adapters. The private <code>native_path_internal.h</code> helper rejects lossy conversion and publishes complete strings. Directory enumeration converts names before the existing sorting, cancellation and visitor logic. Add regression coverage with an independent native reader so two equally incorrect path conversions cannot make a test appear successful.</p>
+<p><a href="discover-configured-targets.html">Discover configured build targets</a></p><p><a href="native-language-processes.html">Connect a native language server</a></p></body></html>

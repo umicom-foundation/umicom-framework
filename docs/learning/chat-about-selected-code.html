@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chat about selected code</title>
+<style>body{font:17px/1.65 system-ui;max-width:900px;margin:32px auto;padding:0 22px;color:#183642}h1,h2{line-height:1.25}code{background:#edf3f5;padding:2px 5px}li{margin:10px 0}a{color:#086a79}.note{padding:16px;background:#edf3f5}</style></head>
+<body><h1>Chat about selected code</h1>
+<p>Studio can copy text you select in the editor into a new chat request. You choose a saved connection and inspect the complete request before sending it. The copied text comes from your current draft, including unsaved edits. Other open files, filenames, paths and conversation history are not added by this workflow.</p>
+<h2>Prepare a connection</h2>
+<p>Open <strong>AI Coding → Connections</strong> and save an enabled connection with a model. The current chat adapters support the official OpenAI Responses or chat-completion destination and a compatible local chat service at its configured numeric loopback address. Follow <a href="chat-with-saved-connections.html">Chat with saved connections</a> for credentials, request limits, provider policies and transport requirements. Saving a connection does not start a local model or grant provider access.</p>
+<h2>Choose exactly what to send</h2>
+<ol>
+<li>Open a source document and select the code you want to discuss. Select at most <strong>8,192 UTF-8 bytes</strong>. A byte is a unit of storage; some characters use several bytes, so the character count can be smaller.</li>
+<li>Open the <strong>AI Coding</strong> panel and choose <strong>Chat about selected code…</strong>. This action captures the active document's selection. Opening AI Coding alone does not capture text.</li>
+<li>Inspect <strong>Captured context</strong> in the Connections window. It is a copy of the selection, not a live link to the editor. Use <strong>Clear captured context</strong> if you picked the wrong text.</li>
+<li>Select the saved connection you intend to use. Save or discard any pending settings draft, then choose <strong>Chat with selected saved connection…</strong>.</li>
+<li>The new chat window contains your selection in <strong>Optional context</strong>. The Connections window clears its copy after a successful handoff. A second chat starts with empty context unless you explicitly capture or supply more text.</li>
+<li>Enter a prompt, such as “Explain the ownership of this allocation.” You can edit or remove the context before continuing.</li>
+<li>Choose <strong>Review request</strong>. Read the exact message, destination, model and output limit. For a remote connection, enter your local profile password, then approve the displayed request.</li>
+<li>Choose <strong>Send reviewed request once</strong>. The reply is displayed as text. It does not execute tools or apply edits to your document.</li>
+</ol>
+<p class="note">Changing the editor after capture does not refresh the copied context. To discuss newer code, capture a new selection. Changing the context in the chat window invalidates the previous review, approval and password. Review the changed request before sending.</p>
+<h2>Recover from common problems</h2>
+<ul>
+<li><strong>No selection:</strong> return to the active editor, highlight text and choose the action again. A caret position alone does not export the complete file.</li>
+<li><strong>Selection too large:</strong> select a smaller function or explain the surrounding behaviour in your prompt. Text is rejected rather than silently cut off.</li>
+<li><strong>Invalid text:</strong> select complete characters. Unsupported control bytes and malformed UTF-8 cannot be placed in the context field.</li>
+<li><strong>Chat did not open:</strong> the captured context remains visible in Connections. Correct the settings or clear the context before retrying.</li>
+<li><strong>Saved settings changed:</strong> reload the connection and review a new request. The existing approval cannot authorize a different saved configuration.</li>
+<li><strong>Need to stop:</strong> use Cancel. A request already transmitted may still finish remotely. The application does not retry it automatically.</li>
+</ul>
+<h2>Where the copied text lives</h2>
+<p>Captured context stays in the local window's memory. It is not stored in the connections database. The panel clears its copy on successful handoff, explicit clearing or retirement. The chat owns its own draft until you clear or close it. Clearing local text cannot erase content already received by a provider. This workflow does not save a local conversation transcript.</p>
+<p>The local selection action does not contact a provider, read the clipboard or read a saved source file. A later approved Send transmits the exact reviewed message using the selected adapter. Provider charges and retention policies described in the chat guide still apply.</p>
+<h2>Extend the shared implementation</h2>
+<p><code>UmiUiDocumentViewModelCopySelection</code> captures the selected bytes and source identity while holding the document model's lock. It checks the expected model revision, selection bounds and destination capacity before changing either output. It reads the complete draft owned by the model, so a selection beyond the short display preview remains available.</p>
+<p>Thin native applications call <code>UmiProviderConnectionsGtkPresentSelection</code> with an explicitly chosen active view on their document owner's thread. The function borrows that model only while making the copy. It does not keep the editor alive. Direct context producers can use <code>UmiProviderConnectionsGtkSetChatContext</code> or <code>UmiProviderChatGtkSetContext</code>; both validate the copied text before changing the draft. Calling the chat setter while a worker is active returns Busy.</p>
+<p>Studio binds the action through its existing weak window owner, so a retained button cannot access a retired workbench. Keep new provider work in Framework, keep source selection explicit, and keep code application behind a separate review step. The existing AI command and agent routes remain available with their existing policies.</p>
+<h2>Continue with selected earlier text</h2>
+<p>The chat window can keep up to eight completed exchanges in memory. Select an excerpt from an earlier request or reply to replace the next request's context, then review and approve it again. Follow <a href="reviewed-chat-follow-ups.html">Choose context for a chat follow-up</a> for history limits, forgetting entries and clearing local copies.</p>
+<p>Umicom Foundation · MIT</p></body></html>

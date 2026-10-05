@@ -17,6 +17,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/vcs/advanced/operation_guard.h"
+#include "../../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -82,3 +83,53 @@ int umi_vcs_advanced_operation_guard_allows(const UmiVcsAdvancedOperationGuard *
     if (!guard->allow_detached_head && detached_head) return 0;
     return 1;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiVcsAdvancedOperationGuardArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x255e0f745f99e09e);
+
+    return schema;
+}
+static size_t UmiVcsAdvancedOperationGuardArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiVcsAdvancedOperationGuardArchiveWrite(UmiArchiveWriter *writer, const UmiVcsAdvancedOperationGuard *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteSigned(writer, (int64_t)value->require_clean_worktree);
+    UmiArchiveWriteSigned(writer, (int64_t)value->require_no_conflicts);
+    UmiArchiveWriteSigned(writer, (int64_t)value->require_upstream);
+    UmiArchiveWriteSigned(writer, (int64_t)value->require_no_unpushed_commits);
+    UmiArchiveWriteSigned(writer, (int64_t)value->allow_detached_head);
+    UmiArchiveWriteSigned(writer, (int64_t)value->safety);
+}
+static void UmiVcsAdvancedOperationGuardArchiveRead(UmiArchiveReader *reader, UmiVcsAdvancedOperationGuard *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->require_clean_worktree = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->require_no_conflicts = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->require_upstream = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->require_no_unpushed_commits = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->allow_detached_head = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->safety = (UmiVcsSafetyLevel)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+}
+static UmiStatus UmiVcsAdvancedOperationGuardArchiveValidate(const UmiVcsAdvancedOperationGuard *value)
+{
+    return umi_vcs_advanced_operation_guard_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_vcs_advanced_operation_guard_archive_encode, umi_vcs_advanced_operation_guard_archive_decode,
+    UmiVcsAdvancedOperationGuard, UmiVcsAdvancedOperationGuardArchiveSchema, UmiVcsAdvancedOperationGuardArchiveBound, UmiVcsAdvancedOperationGuardArchiveWrite, UmiVcsAdvancedOperationGuardArchiveRead, UmiVcsAdvancedOperationGuardArchiveValidate)

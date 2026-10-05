@@ -29,6 +29,7 @@
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include "native_path_internal.h"
 #else
 #include <dirent.h>
 #include <unistd.h>
@@ -169,9 +170,20 @@ UmiStatus umi_directory_stat(const char *path, UmiFileInfo *out_info)
         ULARGE_INTEGER size;
         ULARGE_INTEGER time;
         /* Apply this branch only when its contract condition is satisfied. */
+        /* A metadata lookup must address the same UTF-8 name as the file
+         * reader and directory enumerator. Keep the ANSI call for review. */
+#if 0
         if (!GetFileAttributesExA(path, GetFileExInfoStandard, &data)) {
             return UMI_STATUS_NOT_FOUND;
         }
+#else
+        wchar_t *nativePath = NULL;
+        UmiStatus pathStatus = UmiNativePathWide(path, &nativePath);
+        if (pathStatus != UMI_STATUS_OK) return pathStatus;
+        BOOL found = GetFileAttributesExW(nativePath, GetFileExInfoStandard, &data);
+        free(nativePath);
+        if (!found) return UMI_STATUS_NOT_FOUND;
+#endif
         /* Apply this branch only when its contract condition is satisfied. */
         if ((data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
             out_info->kind = UMI_FILE_KIND_SYMBOLIC_LINK;
@@ -222,6 +234,9 @@ static UmiStatus collect_names(const char *directory, UmiNameList *out_list,
     const UmiCancellationToken *cancellation)
 {
 #ifdef _WIN32
+    /* The wide enumerator returns UTF-8 names to the existing sorted visitor
+     * pipeline. The ANSI implementation is retained for engineering review. */
+#if 0
     char pattern[UMI_PATH_CAPACITY];
     WIN32_FIND_DATAA data;
     HANDLE handle;
@@ -257,6 +272,35 @@ static UmiStatus collect_names(const char *directory, UmiNameList *out_list,
     DWORD enumerationError = GetLastError();
     FindClose(handle);
     return enumerationError == ERROR_NO_MORE_FILES ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
+#else
+    char pattern[UMI_PATH_CAPACITY];
+    UmiStatus status = umi_path_join(directory, "*", pattern, sizeof(pattern));
+    if (status != UMI_STATUS_OK) return status;
+    wchar_t *nativePattern = NULL;
+    status = UmiNativePathWide(pattern, &nativePattern);
+    if (status != UMI_STATUS_OK) return status;
+    WIN32_FIND_DATAW data;
+    HANDLE handle = FindFirstFileW(nativePattern, &data);
+    DWORD firstError = handle == INVALID_HANDLE_VALUE ? GetLastError() : ERROR_SUCCESS;
+    free(nativePattern);
+    if (handle == INVALID_HANDLE_VALUE)
+        return firstError == ERROR_FILE_NOT_FOUND ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
+    for (;;) {
+        if (umi_cancellation_token_is_requested(cancellation)) { status = UMI_STATUS_CANCELLED; break; }
+        if (wcscmp(data.cFileName, L".") != 0 && wcscmp(data.cFileName, L"..") != 0) {
+            char name[UMI_PATH_CAPACITY];
+            status = UmiNativePathUtf8(data.cFileName, name, sizeof(name));
+            if (status == UMI_STATUS_OK) status = name_list_add(out_list, name);
+            if (status != UMI_STATUS_OK) break;
+        }
+        if (!FindNextFileW(handle, &data)) {
+            if (GetLastError() != ERROR_NO_MORE_FILES) status = UMI_STATUS_IO_ERROR;
+            break;
+        }
+    }
+    FindClose(handle);
+    return status;
+#endif
 #else
     DIR *stream;
     struct dirent *entry;

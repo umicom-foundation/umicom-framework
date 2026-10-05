@@ -86,6 +86,12 @@ UmiStatus umi_media_image_surface_snapshot(
     const UmiMediaImageSurface *surface,
     UmiMediaImageSurfaceSnapshot *out_snapshot);
 
+/* Copy a complete row from tightly packed red, green, blue, alpha bytes. This
+ * is a decoder boundary: callers need not depend on struct padding. Validation
+ * precedes mutation and one successful row copy advances the revision once. */
+UmiStatus UmiMediaImageSurfaceWriteRgbaRow(UmiMediaImageSurface *surface,
+    size_t y, const void *rgba, size_t byte_count);
+
 #ifdef __cplusplus
 }
 #endif

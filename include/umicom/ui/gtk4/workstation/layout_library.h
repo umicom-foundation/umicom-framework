@@ -18,8 +18,10 @@
 
 #include <gtk/gtk.h>
 #include "umicom/ui/workspace_library.h"
+#include "umicom/ui/workspace_library_history.h"
 #include "umicom/ui/workspace_library_checkpoint.h"
 
+#include "umicom/ui/gtk4/workstation/library_exchange.h"
 G_BEGIN_DECLS
 
 /** Managed GTK projection; the caller retains its authoritative workspace. */
@@ -142,6 +144,36 @@ typedef UmiStatus (*UmiGtk4WorkspaceLayoutLibraryPreviewHandler)(
 UmiStatus umi_gtk4_ws_layout_library_set_preview_handler(
     UmiGtk4WorkspaceLayoutLibrary *library,
     UmiGtk4WorkspaceLayoutLibraryPreviewHandler handler, void *context);
+
+/* Add file export and immutable import review to this existing library view.
+ * The three callbacks share a borrowed owner context. Binding is one-time;
+ * destroy the library to cancel dialogs and release retained review bytes. */
+UmiStatus umi_gtk4_ws_layout_library_set_exchange_handlers(
+    UmiGtk4WorkspaceLayoutLibrary *library,
+    UmiGtk4WorkspaceLibraryExportHandler export_handler,
+    UmiGtk4WorkspaceLibraryImportHandler import_handler,
+    UmiGtk4WorkspaceLibraryImportApplyHandler apply_handler, void *context);
+
+
+/* History is supplied by the authoritative workspace owner. Reads perform no
+ * I/O. Apply receives the click-time revision and must refuse stale requests.
+ * Both callbacks may destroy this view; their context survives until return. */
+typedef UmiStatus (*UmiGtk4WorkspaceLayoutLibraryHistoryReadHandler)(
+    UmiUiWorkspaceLibraryHistoryState *out_state, void *context);
+typedef UmiStatus (*UmiGtk4WorkspaceLayoutLibraryHistoryApplyHandler)(
+    UmiUiWorkspaceLibraryHistoryDirection direction, uint64_t expected_revision, void *context);
+/* Pass both handlers or neither. Binding refreshes copied history evidence;
+ * failed reads disable history controls. Pending operations return BUSY. */
+UmiStatus umi_gtk4_ws_layout_library_set_history_handlers(UmiGtk4WorkspaceLayoutLibrary *library,
+    UmiGtk4WorkspaceLayoutLibraryHistoryReadHandler read_handler,
+    UmiGtk4WorkspaceLayoutLibraryHistoryApplyHandler apply_handler, void *context);
+
+/* Bind after set_exchange_handlers. Add a complete frozen saved-library
+ * comparison to the existing file-review controls without changing the older
+ * confirmed-reread Restore action. NULL unbinds; no storage read occurs here. */
+UmiStatus umi_gtk4_ws_layout_library_set_saved_review_handler(
+    UmiGtk4WorkspaceLayoutLibrary *library,
+    UmiGtk4WorkspaceLibrarySavedReviewHandler handler, void *context);
 
 G_END_DECLS
 #endif

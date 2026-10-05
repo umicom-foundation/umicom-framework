@@ -16,6 +16,7 @@
 #ifndef UMICOM_LANGUAGE_RUNTIME_SERVER_MANAGER_H
 #define UMICOM_LANGUAGE_RUNTIME_SERVER_MANAGER_H
 #include "umicom/language_runtime/builtin_profiles.h"
+#include "umicom/platform/cancellation.h"
 #include "umicom/language_runtime/profile_health.h"
 #include "umicom/language_runtime/decoders/initialize.h"
 #include "umicom/language_runtime/requests/initialize.h"
@@ -65,6 +66,35 @@ UmiStatus umi_language_runtime_server_manager_stop_all(UmiLanguageRuntimeServerM
  * changing their state.
  */
 size_t umi_language_runtime_server_manager_count(const UmiLanguageRuntimeServerManager*m);
+/* Initialize one STARTING server and publish capabilities only after its
+ * matching response and the initialized notification succeed. Timeout is one
+ * elapsed read budget, not a fresh interval for each notification or fragment.
+ * Cancellation is checked between reads (at most 50 ms per native read).
+ * Launch and synchronous writes are not interruptible through this token.
+ * Unrelated initialization messages are consumed as in the manager's original
+ * handshake; this does not implement server-to-client request handling.
+ * On failure after initialization begins, the server is marked FAILED and
+ * remains caller-owned. Close it rather than retrying a partially sent request. */
+UmiStatus UmiLanguageRuntimeServerInitialize(UmiLanguageRuntimeServer *server,
+    const char *rootUri, uint32_t timeoutMs, const UmiCancellationToken *cancel,
+    UmiLanguageRuntimeInitializeResult *outCapabilities);
+/* Request protocol shutdown, then close the direct child even when the reply
+ * fails or times out. The first protocol failure is returned after cleanup.
+ * timeoutMs bounds reply waits, not synchronous writes or OS termination. */
+UmiStatus UmiLanguageRuntimeServerShutdown(UmiLanguageRuntimeServer *server,
+    uint32_t timeoutMs);
+/* Explicitly start an enabled, caller-selected profile for a workspace.
+ * The manager takes ownership only after a successful handshake. Outputs are
+ * NULL on failure; the profile is borrowed until return. Existing entries are
+ * never silently replaced, because document synchronization may borrow them.
+ * ALREADY_EXISTS includes stopped entries; close their documents and recreate
+ * the manager to establish a fresh lifetime. Autostart does not authorize an
+ * implicit launch here: the application must obtain the user's selection.
+ * Use one persistent worker for all manager/server operations. */
+UmiStatus UmiLanguageRuntimeServerManagerStartProfile(UmiLanguageRuntimeServerManager *manager,
+    const char *languageId, const UmiLanguageServerProfile *profile, const char *rootUri,
+    const char *workingDirectory, uint32_t timeoutMs, const UmiCancellationToken *cancel,
+    UmiLanguageRuntimeServer **outServer);
 #ifdef __cplusplus
 }
 #endif

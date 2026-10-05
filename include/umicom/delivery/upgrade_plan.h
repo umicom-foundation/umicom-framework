@@ -16,6 +16,7 @@
 #define UMICOM_DELIVERY_UPGRADE_PLAN_H
 
 #include <stdint.h>
+#include "umicom/base/value_archive.h"
 #include "umicom/base/status.h"
 #include "umicom/delivery/types.h"
 
@@ -62,6 +63,17 @@ UmiStatus umi_upgrade_plan_validate(const UmiUpgradePlan *plan);
  * client applications.
  */
 uint64_t umi_upgrade_plan_rollback_generation(const UmiUpgradePlan *plan);
+
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_upgrade_plan_archive_encode(const UmiUpgradePlan *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_upgrade_plan_archive_decode(const void *bytes, size_t byte_count,
+    UmiUpgradePlan *value);
 
 #ifdef __cplusplus
 }

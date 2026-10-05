@@ -109,3 +109,98 @@ else()
         COMMAND "${CMAKE_COMMAND}" -E echo "Document close readiness requires GTK4 and BUILD_TESTING=ON."
         COMMAND "${CMAKE_COMMAND}" -E false VERBATIM)
 endif()
+
+# Reopening uses the same coordinator and provider as ordinary file opening.
+add_executable(umicom-document-reopening-test test_reopen.c)
+target_link_libraries(umicom-document-reopening-test PRIVATE Umicom::document)
+umicom_apply_warnings(umicom-document-reopening-test)
+umicom_apply_sanitizers(umicom-document-reopening-test)
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-document-reopening-test)
+endif()
+foreach(case IN ITEMS empty-invalid untitled capacity relative cancel discard save stale forget
+    duplicate read-failure missing current-disk already-open nested)
+    add_test(NAME framework.document_reopening.${case} COMMAND umicom-document-reopening-test ${case})
+    set_tests_properties(framework.document_reopening.${case} PROPERTIES TIMEOUT 30
+        LABELS "framework;document;reopening;regression")
+endforeach()
+if(TARGET umicom_ui_gtk4)
+    add_dependencies(umicom-document-close-readiness umicom-document-reopening-test)
+endif()
+
+if(TARGET umicom_ui_gtk4)
+    add_executable(umicom-document-reopening-gtk4-test test_reopen_gtk4.c)
+    target_link_libraries(umicom-document-reopening-gtk4-test PRIVATE Umicom::ui_gtk4 Umicom::document)
+    umicom_apply_warnings(umicom-document-reopening-gtk4-test)
+    umicom_apply_sanitizers(umicom-document-reopening-gtk4-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-document-reopening-gtk4-test)
+    endif()
+    add_test(NAME framework.document_reopening.gtk4.link COMMAND umicom-document-reopening-gtk4-test link)
+    set_tests_properties(framework.document_reopening.gtk4.link PROPERTIES TIMEOUT 30
+        LABELS "framework;document;reopening;link")
+    foreach(case IN ITEMS current-disk already-open missing forget save-busy close-busy complete-unbind read-detach unbound)
+        add_test(NAME framework.document_reopening.gtk4.${case} COMMAND umicom-document-reopening-gtk4-test ${case})
+        set_tests_properties(framework.document_reopening.gtk4.${case} PROPERTIES TIMEOUT 30
+            SKIP_RETURN_CODE 77 RUN_SERIAL TRUE LABELS "framework;document;reopening;gtk4;native")
+    endforeach()
+    add_dependencies(umicom-document-close-readiness umicom-document-reopening-gtk4-test)
+endif()
+
+# Navigation fixtures drive real histories and live document views. They do not
+# replace text editing tests or require an external language server.
+add_executable(umicom-document-navigation-history-test test_navigation_history.c)
+target_link_libraries(umicom-document-navigation-history-test PRIVATE Umicom::document)
+add_executable(umicom-editor-history-transaction-test test_editor_history_transaction.c)
+target_link_libraries(umicom-editor-history-transaction-test PRIVATE Umicom::editor)
+foreach(target IN ITEMS umicom-document-navigation-history-test umicom-editor-history-transaction-test)
+    umicom_apply_warnings(${target})
+    umicom_apply_sanitizers(${target})
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(${target})
+    endif()
+endforeach()
+foreach(case IN ITEMS empty-invalid roundtrip stale branch missing-line utf8 readonly
+    noop-failure clear capacity large cross-document closed search-open)
+    add_test(NAME framework.document_navigation.history.${case}
+        COMMAND umicom-document-navigation-history-test ${case})
+    set_tests_properties(framework.document_navigation.history.${case} PROPERTIES TIMEOUT 30
+        LABELS "framework;document;navigation;regression")
+endforeach()
+foreach(case IN ITEMS failure stale-invalid departure nested branch-capacity same-position)
+    add_test(NAME framework.editor.navigation_transaction.${case}
+        COMMAND umicom-editor-history-transaction-test ${case})
+    set_tests_properties(framework.editor.navigation_transaction.${case} PROPERTIES TIMEOUT 30
+        LABELS "framework;editor;navigation;regression")
+endforeach()
+
+if(TARGET umicom_ui_gtk4)
+    add_executable(umicom-document-navigation-history-gtk4-test test_navigation_history_gtk4.c)
+    target_link_libraries(umicom-document-navigation-history-gtk4-test PRIVATE Umicom::ui_gtk4 Umicom::document)
+    umicom_apply_warnings(umicom-document-navigation-history-gtk4-test)
+    umicom_apply_sanitizers(umicom-document-navigation-history-gtk4-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-document-navigation-history-gtk4-test)
+    endif()
+    add_test(NAME framework.document_navigation.history.gtk4.link COMMAND umicom-document-navigation-history-gtk4-test link)
+    set_tests_properties(framework.document_navigation.history.gtk4.link PROPERTIES TIMEOUT 30
+        LABELS "framework;document;navigation;link")
+    foreach(case IN ITEMS roundtrip clear save-busy close-busy complete-unbind unbound missing)
+        add_test(NAME framework.document_navigation.history.gtk4.${case}
+            COMMAND umicom-document-navigation-history-gtk4-test ${case})
+        set_tests_properties(framework.document_navigation.history.gtk4.${case} PROPERTIES
+            TIMEOUT 30 SKIP_RETURN_CODE 77 RUN_SERIAL TRUE LABELS "framework;document;navigation;gtk4;native")
+    endforeach()
+endif()
+
+add_executable(umicom-document-location-history-example ../../examples/editor_workflow/location_history.c)
+target_link_libraries(umicom-document-location-history-example PRIVATE Umicom::document)
+umicom_apply_warnings(umicom-document-location-history-example)
+umicom_apply_sanitizers(umicom-document-location-history-example)
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-document-location-history-example)
+endif()
+add_test(NAME framework.document_navigation.history.example COMMAND umicom-document-location-history-example)
+set_tests_properties(framework.document_navigation.history.example PROPERTIES
+    TIMEOUT 30 LABELS "framework;document;navigation;example")
+install(TARGETS umicom-document-location-history-example RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

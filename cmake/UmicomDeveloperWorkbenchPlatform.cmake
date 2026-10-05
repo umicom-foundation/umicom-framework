@@ -78,6 +78,7 @@ target_sources(umicom_developer PRIVATE
     "src/developer_workbench/perspectives/testing.c"
     "src/developer_workbench/project_wizard.c"
     "src/developer_workbench/quick_open.c"
+    "src/developer_workbench/quick_open_selection.c"
     "src/developer_workbench/readiness.c"
     "src/developer_workbench/recent_project_provider.c"
     "src/developer_workbench/recent_projects.c"

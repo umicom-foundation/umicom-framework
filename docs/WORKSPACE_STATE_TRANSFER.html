@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Saving and reviewing workspace values</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:940px;margin:3rem auto;padding:0 1.5rem;color:#172234}pre{background:#f1f4f8;padding:1rem;overflow:auto}code{font-family:ui-monospace,monospace}h1,h2{line-height:1.2}table{border-collapse:collapse;width:100%}th,td{text-align:left;border:1px solid #cad4df;padding:.7rem}a{color:#175dc0}</style></head><body>
+<h1>Saving and reviewing workspace values</h1>
+<p>A saved value describes state. It does not own a window, start a process or authorize a trade.
+Framework separates reading saved bytes from applying a reviewed change so applications can keep a usable workspace when data is damaged or no longer supported.</p>
+<h2>Choose the appropriate contract</h2>
+<table><tr><th>Need</th><th>Use</th></tr>
+<tr><td>A supported individual record</td><td>Its public <code>_archive_encode</code> and <code>_archive_decode</code> functions. Check the record header: records with resource pointers are not automatically serializable.</td></tr>
+<tr><td>A product's layout identity, ordered active panel IDs and lock state</td><td>The application session functions in <code>umicom/application/runtime/session_snapshot.h</code>.</td></tr>
+<tr><td>Native window placement and named layout recovery</td><td>The existing workspace checkpoint and workspace library checkpoint services. A session archive does not replace these layout stores.</td></tr>
+<tr><td>Documents, processes, debugger sessions or broker connections</td><td>The relevant live owner and its separate recovery policy. A passive archive cannot recreate these resources.</td></tr></table>
+<h2>Transfer an individual value</h2>
+<ol><li>Initialize and configure the value through its normal public API. Fixed text fields must contain a terminator within their declared capacity.</li>
+<li>Call its encoder with <code>NULL</code> bytes and zero capacity. The returned size tells you how much caller-owned storage to allocate.</li>
+<li>Encode into that buffer. A short buffer reports <code>UMI_STATUS_CAPACITY_EXCEEDED</code> and the required size without partially writing the archive.</li>
+<li>Decode into a separate candidate. Decoding checks the envelope, schema, field bounds and domain validator before replacing the candidate.</li>
+<li>Review the candidate and use the live owner's normal mutation API to apply it. A saved revision is descriptive data; it cannot grant permission to overwrite a newer owner.</li>
+<li>Release your byte buffer when the transfer is complete. The record codecs themselves do not allocate, read files or open a database.</li></ol>
+<pre><code>#include "umicom/context_channel/workspace.h"
+#include &lt;stdlib.h&gt;
+
+/* Assume current was configured through the workspace context API. */
+size_t byte_count = 0;
+UmiStatus status = umi_workspace_context_archive_encode(
+    &amp;current, NULL, 0, &amp;byte_count);
+if (status != UMI_STATUS_OK) return status;
+unsigned char *bytes = malloc(byte_count);
+if (bytes == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+status = umi_workspace_context_archive_encode(
+    &amp;current, bytes, byte_count, &amp;byte_count);
+UmiWorkspaceContext candidate;
+if (status == UMI_STATUS_OK)
+    status = umi_workspace_context_archive_decode(bytes, byte_count, &amp;candidate);
+free(bytes);
+/* Use candidate only after a successful decode and an explicit review. */</code></pre>
+<h2>Keep IDE records separate from running tools</h2>
+<p>Debugger views, editor intelligence, project profiles, test results, terminal bindings and reactive UI values expose the same record archive contract. Nested fields are written individually. Structure sizes are reconstructed for the receiving host, and unused text is omitted.</p>
+<ol><li>Capture the value supplied by its Framework owner. For example, save a breakpoint description or a test result after its normal validator accepts it.</li>
+<li>Decode it into a candidate and show its identities, source locations and recorded results. The decoder preserves the existing domain validator's rules; it does not prove that an external file or process still exists.</li>
+<li>Resolve current project paths, tools and permissions through the live service before applying any request. Restoring a breakpoint description does not install a debugger breakpoint, and reading a build profile does not run a build.</li></ol>
+<p>The reactive UI records describe bindings and state. Their archive does not start an expression evaluator or reconnect listeners. A host must decide which reviewed records belong to its current workspace.</p>
+<h2>Review an application session</h2>
+<ol><li>Capture the current session with <code>umi_application_session_archive_capture</code>. Keep the session's current revision separately as the review's observation token.</li>
+<li>Preview the bytes with <code>umi_application_session_archive_preview</code> and the intended product's immutable experience catalogue. Unknown layouts, unknown panels, duplicate panels and another product's identity are refused.</li>
+<li>Show the candidate's layout and panel IDs to the user. Keep the current session and any live windows available while review is pending.</li>
+<li>On confirmation, call <code>umi_application_session_archive_apply</code> with the observed revision. If the session changed, the call returns <code>UMI_STATUS_INVALID_STATE</code>; capture a fresh observation and review again.</li>
+<li>On success, the session receives a new local revision. The archive's counter is never installed as the authority for that update.</li></ol>
+<p>Run these calls on the owner thread or protect them with the owner's synchronization. The revision check does not make unsynchronized C memory access safe. A GUI host must prepare its presentation before publishing a session replacement; these functions change a session value only.</p>
+<p>Restored sessions borrow strings from the supplied catalogue. That catalogue must outlive the session. Archive and snapshot buffers can be released after a successful preview or restore.</p>
+<h2>Understand refusal and storage limits</h2>
+<ul><li><strong>Invalid argument:</strong> check initialization, fixed text termination, counts and the domain's required fields.</li>
+<li><strong>Parse error:</strong> keep the original bytes for diagnosis. A truncated or damaged archive does not partly change the destination.</li>
+<li><strong>Unavailable:</strong> the schema or numeric representation is unsupported. Use an explicit migration; do not bypass the schema check.</li>
+<li><strong>Permission denied:</strong> unlock the current layout explicitly before importing a session. Unlocking changes its revision, so review the current state again.</li>
+<li><strong>Not found:</strong> the product catalogue no longer contains a saved layout or panel. Ask the user to choose a supported replacement.</li>
+<li><strong>Capacity exceeded:</strong> allocate the measured byte size, or begin a new owner lifecycle if its revision counter is exhausted.</li></ul>
+<p>The envelope is limited to 16 MiB, and individual codecs enforce smaller bounds derived from their fields. A storage adapter may have a much smaller limit; the codec does not change it. Use the established storage service for durability and transactional publication.</p>
+<p>The checksum detects accidental corruption. It provides neither authentication nor encryption. Store archives with the same access controls as their contents, and continue enforcing the live owner's permission and capability rules.</p>
+<h2>Extend a record safely</h2>
+<ol><li>Add the field to its public contract without removing existing headers, comments or API declarations.</li>
+<li>Include each new fixed text array in bounded validation before any string comparison or lookup.</li>
+<li>Extend the explicit writer, reader and size bound. Never serialize an entire C struct: padding and unused text are not part of a portable format.</li>
+<li>Change the schema identity and provide a deliberate migration if previously saved data must remain readable.</li>
+<li>Extend the existing domain fixture's field comparator and malformed-field checks. Confirm that damaged later fields leave the destination unchanged.</li>
+<li>Keep the implementation in its owning Framework library and update that library's archive symbol manifest.</li></ol>
+<p>See <a href="PORTABLE_STATE_ARCHIVES.html">Portable state archives</a> for the envelope rules and the storage example.</p>
+</body></html>

@@ -91,3 +91,34 @@ add_dependencies(umicom-development-debug-session-test umicom-dap-protocol-fixtu
 install(TARGETS umicom-development-workflow-example RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../../examples/development_workflow/"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/examples/development_workflow")
+
+# Launch contracts compare the production build and debugger argument parsers.
+add_executable(umicom-launch-arguments-test "${CMAKE_CURRENT_LIST_DIR}/test_launch_arguments.c")
+target_link_libraries(umicom-launch-arguments-test PRIVATE Umicom::build Umicom::developer)
+umicom_apply_warnings(umicom-launch-arguments-test)
+umicom_apply_sanitizers(umicom-launch-arguments-test)
+foreach(case boundaries literal reversible invalid)
+    add_test(NAME framework.development_workflow.arguments.${case}
+        COMMAND umicom-launch-arguments-test ${case})
+    set_tests_properties(framework.development_workflow.arguments.${case} PROPERTIES
+        TIMEOUT 20 LABELS "framework;build;debug;arguments;regression")
+endforeach()
+
+# This scenario uses the controlled peer already shared by debugger lifecycle
+# checks. It verifies native launch serialization without a broker or debuggee.
+add_executable(umicom-argument-launch-test "${CMAKE_CURRENT_LIST_DIR}/test_argument_launch.c")
+target_link_libraries(umicom-argument-launch-test PRIVATE Umicom::Framework)
+umicom_apply_warnings(umicom-argument-launch-test)
+umicom_apply_sanitizers(umicom-argument-launch-test)
+add_test(NAME framework.development_workflow.arguments.native-launch
+    COMMAND umicom-argument-launch-test "$<TARGET_FILE:umicom-dap-protocol-fixture>")
+set_tests_properties(framework.development_workflow.arguments.native-launch PROPERTIES
+    TIMEOUT 20 RUN_SERIAL TRUE LABELS "framework;debug;arguments;protocol-fixture;regression")
+
+# Building this focused target must also produce the peer it launches. Register
+# both checks with the existing qualification target when the host provides it.
+add_dependencies(umicom-argument-launch-test umicom-dap-protocol-fixture)
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-launch-arguments-test)
+    umicom_register_validation_target(umicom-argument-launch-test)
+endif()

@@ -17,6 +17,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/vcs/advanced/diff_hunk.h"
+#include "../../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -87,3 +88,59 @@ size_t umi_vcs_advanced_diff_hunk_change_count(const UmiVcsAdvancedDiffHunk *val
     if (value == NULL) return 0U;
     return value->added_lines + value->deleted_lines + value->modified_lines;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiVcsAdvancedDiffHunkArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xd7747e22feab1381);
+
+    return schema;
+}
+static size_t UmiVcsAdvancedDiffHunkArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiVcsAdvancedDiffHunkArchiveWrite(UmiArchiveWriter *writer, const UmiVcsAdvancedDiffHunk *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->old_start);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->old_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->new_start);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->new_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->added_lines);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->deleted_lines);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->modified_lines);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->fingerprint);
+}
+static void UmiVcsAdvancedDiffHunkArchiveRead(UmiArchiveReader *reader, UmiVcsAdvancedDiffHunk *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->old_start = (size_t)UmiArchiveReadUnsigned(reader, SIZE_MAX);
+    value->old_count = (size_t)UmiArchiveReadUnsigned(reader, SIZE_MAX);
+    value->new_start = (size_t)UmiArchiveReadUnsigned(reader, SIZE_MAX);
+    value->new_count = (size_t)UmiArchiveReadUnsigned(reader, SIZE_MAX);
+    value->added_lines = (size_t)UmiArchiveReadUnsigned(reader, SIZE_MAX);
+    value->deleted_lines = (size_t)UmiArchiveReadUnsigned(reader, SIZE_MAX);
+    value->modified_lines = (size_t)UmiArchiveReadUnsigned(reader, SIZE_MAX);
+    value->fingerprint = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiVcsAdvancedDiffHunkArchiveValidate(const UmiVcsAdvancedDiffHunk *value)
+{
+    return umi_vcs_advanced_diff_hunk_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_vcs_advanced_diff_hunk_archive_encode, umi_vcs_advanced_diff_hunk_archive_decode,
+    UmiVcsAdvancedDiffHunk, UmiVcsAdvancedDiffHunkArchiveSchema, UmiVcsAdvancedDiffHunkArchiveBound, UmiVcsAdvancedDiffHunkArchiveWrite, UmiVcsAdvancedDiffHunkArchiveRead, UmiVcsAdvancedDiffHunkArchiveValidate)

@@ -1,0 +1,16 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-rename-sources-test "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/test_rename_sources.c")
+    target_link_libraries(umicom-rename-sources-test PRIVATE Umicom::developer Umicom::editor Umicom::platform)
+    umicom_apply_warnings(umicom-rename-sources-test)
+    umicom_apply_sanitizers(umicom-rename-sources-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-rename-sources-test)
+    endif()
+    foreach(case valid no-additional two-additional duplicate-primary duplicate-additional missing-array missing-uri missing-language missing-source empty-uri invalid-source embedded-zero invalid-uri source-limit escaped-limit too-many cancel-before fragmented versioned stale-version outside overlap unknown-target prepare open-failure primary-close-failure additional-close-failure query-error shutdown-error)
+        add_test(NAME framework.language_runtime.rename_sources.${case} COMMAND umicom-rename-sources-test ${case})
+        set_tests_properties(framework.language_runtime.rename_sources.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;language;rename;ownership;regression")
+    endforeach()
+endif()

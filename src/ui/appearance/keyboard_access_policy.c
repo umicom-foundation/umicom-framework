@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/keyboard_access_policy.h"
+#include "../../base/value_archive_internal.h"
 #include <string.h>
 /* Initialise bounded state without allocating renderer-specific resources. */
 UmiStatus umi_appearance_keyboard_access_policy_init(UmiAppearanceKeyboardAccessPolicy *item) {
@@ -32,6 +33,12 @@ UmiStatus umi_appearance_keyboard_access_policy_init(UmiAppearanceKeyboardAccess
 
 /* Validate semantic invariants before the record is published to a renderer. */
 int umi_appearance_keyboard_access_policy_is_valid(const UmiAppearanceKeyboardAccessPolicy *item) {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (item == NULL) return 0;
+    if (memchr(item->policy_id, '\0', sizeof(item->policy_id)) == NULL) return 0;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -39,3 +46,46 @@ int umi_appearance_keyboard_access_policy_is_valid(const UmiAppearanceKeyboardAc
     if (item == NULL) return 0;
     return (umi_appearance_id_valid(item->policy_id) && item->require_all_interactive && item->forbid_keyboard_traps);
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiAppearanceKeyboardAccessPolicyArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x11a9a495b7adaede);
+    schema = (schema ^ (uint64_t)sizeof(((UmiAppearanceKeyboardAccessPolicy *)0)->policy_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiAppearanceKeyboardAccessPolicyArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiAppearanceKeyboardAccessPolicy *)0)->policy_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiAppearanceKeyboardAccessPolicyArchiveWrite(UmiArchiveWriter *writer, const UmiAppearanceKeyboardAccessPolicy *value)
+{
+    UmiArchiveWriteText(writer, value->policy_id, sizeof(value->policy_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->require_all_interactive);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->require_escape_transients);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->require_arrow_navigation);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->forbid_keyboard_traps);
+}
+static void UmiAppearanceKeyboardAccessPolicyArchiveRead(UmiArchiveReader *reader, UmiAppearanceKeyboardAccessPolicy *value)
+{
+    UmiArchiveReadText(reader, value->policy_id, sizeof(value->policy_id));
+    value->require_all_interactive = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->require_escape_transients = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->require_arrow_navigation = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->forbid_keyboard_traps = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiAppearanceKeyboardAccessPolicyArchiveValidate(const UmiAppearanceKeyboardAccessPolicy *value)
+{
+    return umi_appearance_keyboard_access_policy_is_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_appearance_keyboard_access_policy_archive_encode, umi_appearance_keyboard_access_policy_archive_decode,
+    UmiAppearanceKeyboardAccessPolicy, UmiAppearanceKeyboardAccessPolicyArchiveSchema, UmiAppearanceKeyboardAccessPolicyArchiveBound, UmiAppearanceKeyboardAccessPolicyArchiveWrite, UmiAppearanceKeyboardAccessPolicyArchiveRead, UmiAppearanceKeyboardAccessPolicyArchiveValidate)

@@ -175,3 +175,62 @@ captures, expensive scopes and recovery when the stopped context changes.
 [Review and publish state safely](docs/REVIEWED_STATE_UPDATES.html) explains
 independent captures, stale-edit refusal, complete collection replacement and
 text edits that preserve the previous value when an update cannot be accepted.
+
+[Review linked context changes](docs/guides/REVIEWING_LINKED_CONTEXTS.html) explains
+copied proposals, stale-state checks and atomic publication across application
+and UI context stores, with product adapter names and recovery guidance.
+
+Workspace recovery: [Review and restore saved workspaces](docs/learning/restore-saved-workspaces.html). The guide explains the complete comparison, explicit confirmation and recovery limits.
+
+For an explicit runtime edit while debugging, see [assigning captured variables](docs/learning/assigning-debugger-variables.html). The guide explains confirmation, adapter support and recovery after an uncertain reply.
+
+[Read live build output](docs/learning/live-build-output.html) explains progress, paused inspection, retained history and output limits.
+
+[Save complete emitted build output](docs/learning/saving-build-logs.html) explains file selection, capture status, retention and recovery.
+
+## Keep provider credentials local
+
+[Store provider keys on this computer](docs/learning/storing-provider-keys.html)
+explains the shared native secret provider, local database references, ownership,
+failure recovery and the distinction between saved credentials and remote requests.
+
+[Save provider connection settings](docs/learning/saving-provider-connections.html)
+explains durable metadata, conflict review and explicit credential acquisition.
+
+[Edit provider connections in the native settings window](docs/learning/editing-provider-connections.html)
+explains draft preservation, conflict review and the shared Studio entry point.
+
+[Manage local provider keys](docs/learning/managing-local-provider-keys.html)
+explains the profile password check, native key panel, local availability checks
+and the separate steps for storing a key and saving its connection reference.
+
+[Check a saved provider connection](docs/learning/checking-provider-connections.html)
+explains the separate **Check saved connection** action in Connections. After
+review and approval, it requests a model catalogue from the official OpenAI
+endpoint or a supported local loopback server. Remote checks freshly verify
+the local profile password before reading the stored key. A listed model does
+not prove that chat or inference works, and this action does not change the
+active AI provider. Editing and saving metadata still performs no sign-in.
+
+[Chat with a saved connection](docs/learning/chat-with-saved-connections.html)
+explains **Connections → Chat with selected saved connection…**. Enter a prompt
+and optional context, review the exact outgoing message, then approve one send.
+The shared Framework workflow uses the selected OpenAI or local connection and
+displays plain text. It does not change the provider used by the existing chat,
+agent or patch controls, and it cannot run tools or apply code changes.
+
+For explicit editor context, see [Chat about selected code](docs/learning/chat-about-selected-code.html). Framework captures only the selected draft bytes and hands them to a reviewed request without retaining the editor.
+
+For a longer discussion, see [Choose context for a chat follow-up](docs/learning/reviewed-chat-follow-ups.html). The shared window keeps up to eight exchanges locally in memory and copies only the excerpt you explicitly select into a newly reviewed request.
+
+To turn a suggestion into a deliberate source edit, follow [Review a replacement for selected code](docs/learning/review-selected-code-replacements.html). The shared review captures the target, previews complete drafts and applies approved text through the document Undo owner; saving remains separate.
+
+[Import a document for local source retrieval](docs/learning/import-searchable-documents.html) explains the shared UTF-8 file/text import, complete passage preview, atomic save and grounded-question workflow. Imports remain local until you separately approve a model request.
+
+[Review changes to your source library](docs/learning/review-source-library-changes.html) explains explicit passage selection, complete replacement/removal previews, atomic application and retained evidence for earlier answers. RAG, LLM and Creator share this native workspace page.
+
+[Choose project presets and a program working folder](docs/learning/project-stage-presets.html) explains separate configure, build and test selections, saved launch folders shared by Run and native Debug, and recovery from conflicting settings.
+
+[Choose and review a program launch](docs/learning/review-launch-settings.html) explains selecting a local executable and working folder, reviewing exact argument values, preserving manual edits during a chooser, and making Run and native Debug executable lookup explicit. Review does not start a process or save settings.
+
+[Discover configured build targets](docs/learning/discover-configured-targets.html) explains requesting CMake target metadata, reading the configured target list, selecting a build target or executable, and recovering from stale or mismatched build folders. Selection edits the form; applying settings and execution remain separate.

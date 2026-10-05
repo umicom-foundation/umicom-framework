@@ -1,2 +1,6 @@
 # Umicom Framework: selection cleanup remains with its workbench owner.
 UmiUiWorkbenchClearClosedDocument
+
+# Atomic context changes are defined by the canonical UI store.
+UmiUiContextApplyChanges
+UmiUiContextReadKeys

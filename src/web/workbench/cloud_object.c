@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/web/workbench/cloud_object.h"
+#include "../../base/value_archive_internal.h"
 
 #include <ctype.h>
 #include <string.h>
@@ -100,6 +101,16 @@ void umi_web_workbench_cloud_profile_init(
 UmiStatus umi_web_workbench_cloud_profile_validate(
     const UmiWebWorkbenchCloudProfile *profile)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (profile == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(profile->profile_id, '\0', sizeof(profile->profile_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(profile->name, '\0', sizeof(profile->name)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(profile->region, '\0', sizeof(profile->region)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(profile->endpoint, '\0', sizeof(profile->endpoint)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(profile->secret_reference, '\0', sizeof(profile->secret_reference)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -233,3 +244,59 @@ size_t umi_web_workbench_cloud_object_query(
     }
     return count;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiWebWorkbenchCloudProfileArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xd672f8b3bf7c2998);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWebWorkbenchCloudProfile *)0)->profile_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWebWorkbenchCloudProfile *)0)->name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWebWorkbenchCloudProfile *)0)->region)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWebWorkbenchCloudProfile *)0)->endpoint)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWebWorkbenchCloudProfile *)0)->secret_reference)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiWebWorkbenchCloudProfileArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiWebWorkbenchCloudProfile *)0)->profile_id) - 1U +
+        8U + sizeof(((UmiWebWorkbenchCloudProfile *)0)->name) - 1U +
+        8U +
+        8U + sizeof(((UmiWebWorkbenchCloudProfile *)0)->region) - 1U +
+        8U + sizeof(((UmiWebWorkbenchCloudProfile *)0)->endpoint) - 1U +
+        8U + sizeof(((UmiWebWorkbenchCloudProfile *)0)->secret_reference) - 1U +
+        8U +
+        8U;
+}
+static void UmiWebWorkbenchCloudProfileArchiveWrite(UmiArchiveWriter *writer, const UmiWebWorkbenchCloudProfile *value)
+{
+    UmiArchiveWriteText(writer, value->profile_id, sizeof(value->profile_id));
+    UmiArchiveWriteText(writer, value->name, sizeof(value->name));
+    UmiArchiveWriteSigned(writer, (int64_t)value->provider);
+    UmiArchiveWriteText(writer, value->region, sizeof(value->region));
+    UmiArchiveWriteText(writer, value->endpoint, sizeof(value->endpoint));
+    UmiArchiveWriteText(writer, value->secret_reference, sizeof(value->secret_reference));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->verify_tls);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+}
+static void UmiWebWorkbenchCloudProfileArchiveRead(UmiArchiveReader *reader, UmiWebWorkbenchCloudProfile *value)
+{
+    UmiArchiveReadText(reader, value->profile_id, sizeof(value->profile_id));
+    UmiArchiveReadText(reader, value->name, sizeof(value->name));
+    value->provider = (UmiWebWorkbenchCloudProvider)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    UmiArchiveReadText(reader, value->region, sizeof(value->region));
+    UmiArchiveReadText(reader, value->endpoint, sizeof(value->endpoint));
+    UmiArchiveReadText(reader, value->secret_reference, sizeof(value->secret_reference));
+    value->verify_tls = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiWebWorkbenchCloudProfileArchiveValidate(const UmiWebWorkbenchCloudProfile *value)
+{
+    return umi_web_workbench_cloud_profile_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_web_workbench_cloud_profile_archive_encode, umi_web_workbench_cloud_profile_archive_decode,
+    UmiWebWorkbenchCloudProfile, UmiWebWorkbenchCloudProfileArchiveSchema, UmiWebWorkbenchCloudProfileArchiveBound, UmiWebWorkbenchCloudProfileArchiveWrite, UmiWebWorkbenchCloudProfileArchiveRead, UmiWebWorkbenchCloudProfileArchiveValidate)

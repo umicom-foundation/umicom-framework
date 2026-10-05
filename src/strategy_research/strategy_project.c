@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/strategy_research/strategy_project.h"
+#include "../base/value_archive_internal.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -38,6 +39,15 @@ void umi_strategy_project_config_init(
 UmiStatus umi_strategy_project_config_validate(
     const UmiStrategyProjectConfig *config)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (config == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(config->projectName, '\0', sizeof(config->projectName)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(config->strategyName, '\0', sizeof(config->strategyName)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(config->instrument, '\0', sizeof(config->instrument)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(config->timeframe, '\0', sizeof(config->timeframe)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     if (config == NULL ||
         config->projectName[0] == '\0' ||
         config->strategyName[0] == '\0' ||
@@ -111,3 +121,52 @@ UmiStatus umi_strategy_project_render_c23(
         config->strategyName);
     return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiStrategyProjectConfigArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xbc9fec6d9a91d444);
+    schema = (schema ^ (uint64_t)sizeof(((UmiStrategyProjectConfig *)0)->projectName)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiStrategyProjectConfig *)0)->strategyName)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiStrategyProjectConfig *)0)->instrument)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiStrategyProjectConfig *)0)->timeframe)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiStrategyProjectConfigArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiStrategyProjectConfig *)0)->projectName) - 1U +
+        8U + sizeof(((UmiStrategyProjectConfig *)0)->strategyName) - 1U +
+        8U + sizeof(((UmiStrategyProjectConfig *)0)->instrument) - 1U +
+        8U + sizeof(((UmiStrategyProjectConfig *)0)->timeframe) - 1U +
+        8U +
+        8U;
+}
+static void UmiStrategyProjectConfigArchiveWrite(UmiArchiveWriter *writer, const UmiStrategyProjectConfig *value)
+{
+    UmiArchiveWriteText(writer, value->projectName, sizeof(value->projectName));
+    UmiArchiveWriteText(writer, value->strategyName, sizeof(value->strategyName));
+    UmiArchiveWriteText(writer, value->instrument, sizeof(value->instrument));
+    UmiArchiveWriteText(writer, value->timeframe, sizeof(value->timeframe));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->warmupBars);
+    UmiArchiveWriteSigned(writer, (int64_t)value->simulationOnly);
+}
+static void UmiStrategyProjectConfigArchiveRead(UmiArchiveReader *reader, UmiStrategyProjectConfig *value)
+{
+    UmiArchiveReadText(reader, value->projectName, sizeof(value->projectName));
+    UmiArchiveReadText(reader, value->strategyName, sizeof(value->strategyName));
+    UmiArchiveReadText(reader, value->instrument, sizeof(value->instrument));
+    UmiArchiveReadText(reader, value->timeframe, sizeof(value->timeframe));
+    value->warmupBars = (size_t)UmiArchiveReadUnsigned(reader, SIZE_MAX);
+    value->simulationOnly = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+}
+static UmiStatus UmiStrategyProjectConfigArchiveValidate(const UmiStrategyProjectConfig *value)
+{
+    return umi_strategy_project_config_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_strategy_project_config_archive_encode, umi_strategy_project_config_archive_decode,
+    UmiStrategyProjectConfig, UmiStrategyProjectConfigArchiveSchema, UmiStrategyProjectConfigArchiveBound, UmiStrategyProjectConfigArchiveWrite, UmiStrategyProjectConfigArchiveRead, UmiStrategyProjectConfigArchiveValidate)

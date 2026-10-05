@@ -74,6 +74,9 @@ UmiDirectoryWalkOptions umi_directory_walk_options_default(void);
 /**
  * Provide the directory stat operation used by this module and its client applications.
  */
+/* Windows paths and returned names are UTF-8. Reparse points retain their
+ * symbolic-link classification and are not followed during directory recursion.
+ * Malformed native text is refused instead of publishing a lossy filename. */
 UmiStatus umi_directory_stat(const char *path, UmiFileInfo *out_info);
 /**
  * Provide the directory walk operation used by this module and its client applications.

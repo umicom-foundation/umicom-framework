@@ -101,8 +101,40 @@ static int RecordMutationCases(void)
     return 0;
 }
 
+/* Use nonzero domain fields to expose a codec that accidentally drops
+ * values. The existing initializer supplies required compatibility metadata. */
+static UmiTestRuntimeExecutionOrder ArchiveSample(void)
+{
+    UmiTestRuntimeExecutionOrder value;
+    umi_test_runtime_execution_order_init(&value, "archive-record");
+    value.detail[0] = 'a';
+    value.position = (uint64_t)5U;
+    value.total = (uint64_t)6U;
+    value.revision = (uint64_t)7U;
+    value.enabled = true;
+    return value;
+}
+/* Unused tails are not part of a C string and must not enter saved bytes. */
+static void ArchiveFillUnusedText(UmiTestRuntimeExecutionOrder *value)
+{
+    {
+        size_t used = strlen(value->id) + 1U;
+        memset(value->id + used, 0xa5, sizeof(value->id) - used);
+    }
+    {
+        size_t used = strlen(value->detail) + 1U;
+        memset(value->detail + used, 0xa5, sizeof(value->detail) - used);
+    }
+}
+#define ARCHIVE_TYPE UmiTestRuntimeExecutionOrder
+#define ARCHIVE_ENCODE umi_test_runtime_execution_order_archive_encode
+#define ARCHIVE_DECODE umi_test_runtime_execution_order_archive_decode
+#define ARCHIVE_EQUAL RecordDefaultsEqual
+#include "../value_archive/record_cases.h"
+
 int main(void)
 {
+    if (ArchiveRecordCases() != 0) return 1;
     if (RecordMutationCases() != 0) return 1;
     if (RecordConstructionCases() != 0) return 1;
     UmiTestRuntimeExecutionOrder v,s;

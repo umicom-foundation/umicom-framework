@@ -1,0 +1,46 @@
+<!doctype html>
+<!-- Umicom Framework | Sammy Hegab, Umicom Foundation | MIT -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Plan dated cash movements</title>
+<style>body{font:17px/1.65 system-ui,sans-serif;max-width:960px;margin:2rem auto;padding:0 1rem;color:#203340}h1,h2{line-height:1.25}pre{padding:1rem;background:#eef3f5;overflow:auto}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bfd0d7;padding:.6rem;text-align:left}aside{border-left:4px solid #247080;padding:1rem;background:#f0f6f7}code{overflow-wrap:anywhere}</style></head><body>
+<h1>Plan dated cash movements</h1>
+<p>A cash plan records amounts you expect to receive or pay on particular dates. Framework calculates a projected closing balance for each date with activity and shows when the balance first falls below your chosen buffer. TMS, Bank and Trader open the same planner through the <strong>Cash planning</strong> button.</p>
+<aside>This is a local planning workspace. Values are entered by you; they are not downloaded balances, broker buying power or permission to make a payment. The planner does not submit payments or trades. No network connection or API key is needed.</aside>
+<h2>Create a plan</h2><ol>
+<li>Open <strong>Cash planning</strong>. Each window starts with an independent, empty plan.</li>
+<li>Enter a title, currency, opening amount, minimum buffer, start date and end date. Dates use <code>YYYY-MM-DD</code>. Both range endpoints are included.</li>
+<li>Choose decimal places explicitly. For GBP amounts such as <code>125.50</code>, choose <code>2</code>. Currency codes do not automatically choose a scale. The opening amount may be negative; the buffer must be nonnegative.</li>
+<li>Click <strong>Apply settings</strong> before editing an entry. If you have already changed entry fields, first add/update that entry or use <strong>Reset fields</strong> to discard unapplied fields.</li>
+<li>Give the entry a unique ID and a readable label. Enter its date and nonnegative amount. Check <strong>Inflow</strong> for money received, or uncheck it for an outflow.</li>
+<li>Leave <strong>Include entry</strong> checked and click <strong>Add entry</strong>. The report immediately reflects stored assumptions.</li>
+</ol>
+<p>To edit an existing entry, choose it in the list, change its fields, and click <strong>Update selected</strong>. Selecting an entry loads its stored fields, replacing unapplied entry fields. To create another entry from it, change the ID and use Add. Uncheck Include and update to keep an entry without including it in the projection. Remove selected removes it from this plan. <strong>Undo last change</strong> restores one previous stored plan; this history lasts only while the window remains open.</p>
+<h2>Understand a shortfall</h2>
+<p>Try an opening balance of GBP 1,000.00, a buffer of 200.00, an outflow of 850.00 on the third day, and an inflow of 500.00 on the twentieth day.</p>
+<table><thead><tr><th>Observation</th><th>Balance</th><th>Headroom above buffer</th></tr></thead><tbody><tr><td>Opening</td><td>1,000.00</td><td>800.00</td></tr><tr><td>After the outflow</td><td>150.00</td><td>-50.00</td></tr><tr><td>After the inflow</td><td>650.00</td><td>450.00</td></tr></tbody></table>
+<p>The first projected shortfall is the third day, even though the final balance is above the buffer. Opening is included when finding the minimum and first shortfall. Equal minimum balances retain the earliest date.</p>
+<p>All movements on a date are grouped into one end-of-day result. Receiving money later on the same day can therefore offset an earlier payment in the report. This does not establish that funds would have been available earlier that day. There is no intraday sequencing, interest, exchange-rate conversion or holiday adjustment.</p>
+<p>Enabled entries before the start or after the end are retained and counted separately. They do not alter opening or closing balances. An overdue payment is not automatically moved to today. Disabled entries are counted as disabled, regardless of their date.</p>
+<h2>Save, review and export</h2><ol>
+<li>Apply or reset all edited fields. Reports and file operations use the stored plan, not unfinished fields.</li>
+<li>Enter an absolute path in an existing folder you control, such as <code>C:\Users\YourName\Documents\cash-plan.json</code> on Windows or <code>/home/yourname/Documents/cash-plan.json</code> on Linux.</li>
+<li>Choose <strong>Save new JSON</strong>. Use a new filename for each saved revision. Existing files are never overwritten.</li>
+<li>To restore, enter the saved file path and choose <strong>Load for review</strong>. The report area shows the complete current and loaded assumptions. Loading alone does not replace your plan.</li>
+<li>Read both documents, check the review confirmation, then choose <strong>Apply reviewed plan</strong>. Editing fields or changing the selected entry invalidates that review. Undo can restore the previous plan after a successful apply.</li>
+<li>For a spreadsheet report, choose a new path ending in <code>.csv</code> and select <strong>Export new CSV</strong>.</li>
+</ol>
+<p>CSV amounts are exact integer <em>minor units</em>, accompanied by currency and scale columns. An amount of <code>15000</code> at scale <code>2</code> represents <code>150.00</code>. The file contains an opening row, activity rows, and a closing row. It is an export report, not a plan import format; use JSON to preserve entry IDs, labels and enabled states.</p>
+<p>Files are ordinary local documents, not encrypted storage. Choose the folder and its access permissions accordingly. Closing a window discards its unsaved in-memory plan. A save already dispatched to a worker can finish after closing, but a load never applies itself.</p>
+<h2>Recover from a refused operation</h2><ul>
+<li><strong>Invalid argument:</strong> check real calendar dates, nonnegative entry/buffer amounts, decimal places and currency. Decimal text does not accept thousands separators, exponents or excess decimal places.</li>
+<li><strong>Already exists:</strong> choose a unique entry ID, or a new filename when saving.</li>
+<li><strong>Invalid state:</strong> finish or reset entry edits before changing plan settings, and apply settings before editing an entry. File operations require all edited fields to be applied or reset.</li>
+<li><strong>Capacity exceeded:</strong> plans hold at most 128 entries. A calculation can also refuse an integer overflow. Correct the amount; values are never wrapped, rounded or silently saturated.</li>
+<li><strong>Changed while loading:</strong> load again after settling your edits. The earlier result was not applied.</li>
+<li><strong>File failure:</strong> check the absolute path and folder permissions. A failed write may leave a partial new file; inspect it and select another filename. The application does not delete it.</li>
+</ul>
+<p>A currency or decimal-scale change is refused while any existing entry uses the old unit, including disabled entries. Open a new planner for another unit. The application does not relabel amounts as a different currency.</p>
+<h2>Reuse the Framework owner</h2>
+<p>Link <code>Umicom::cash_planning</code> and include <code>umicom/cash_planning/plan.h</code>. Create an opaque plan, add copied entries, and call <code>UmiCashPlanProject</code>. Use <code>document.h</code> for strict JSON, CSV and new-file operations. Keep each plan on one owning thread; copy it before handing it to a file worker.</p>
+<p>The JSON reader validates every entry and publishes the complete new owner only after success. It refuses unknown or duplicate members, invalid dates, fractional integer amounts and inconsistent input. A syntactically valid plan can still contain assumptions whose aggregate arithmetic overflows; projection and CSV export then refuse without publishing a partial result. A JSON save remains available so those assumptions can be inspected and corrected.</p>
+<p>The example in <code>examples/cash_planning/main.c</code> demonstrates one complete projection. Native applications link <code>Umicom::ui_gtk4</code> and can add <code>UmiGtk4CashPlanLauncherCreate()</code> without copying the model, arithmetic, editor or file logic. Web and mobile hosts can use the portable C owner, but this feature supplies no browser or mobile screen.</p>
+</body></html>

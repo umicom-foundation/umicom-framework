@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/color_vision_assistance.h"
+#include "../../base/value_archive_internal.h"
 #include <string.h>
 /* Initialise bounded state without allocating renderer-specific resources. */
 UmiStatus umi_appearance_color_vision_assistance_init(UmiAppearanceColorVisionAssistance *item) {
@@ -31,6 +32,12 @@ UmiStatus umi_appearance_color_vision_assistance_init(UmiAppearanceColorVisionAs
 
 /* Validate semantic invariants before the record is published to a renderer. */
 int umi_appearance_color_vision_assistance_is_valid(const UmiAppearanceColorVisionAssistance *item) {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (item == NULL) return 0;
+    if (memchr(item->profile_id, '\0', sizeof(item->profile_id)) == NULL) return 0;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -38,3 +45,46 @@ int umi_appearance_color_vision_assistance_is_valid(const UmiAppearanceColorVisi
     if (item == NULL) return 0;
     return (umi_appearance_id_valid(item->profile_id) && (item->require_icons || item->require_text_labels || item->require_patterns));
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiAppearanceColorVisionAssistanceArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xa572bae715bd26a9);
+    schema = (schema ^ (uint64_t)sizeof(((UmiAppearanceColorVisionAssistance *)0)->profile_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiAppearanceColorVisionAssistanceArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiAppearanceColorVisionAssistance *)0)->profile_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiAppearanceColorVisionAssistanceArchiveWrite(UmiArchiveWriter *writer, const UmiAppearanceColorVisionAssistance *value)
+{
+    UmiArchiveWriteText(writer, value->profile_id, sizeof(value->profile_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->require_icons);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->require_text_labels);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->require_patterns);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->avoid_red_green_only);
+}
+static void UmiAppearanceColorVisionAssistanceArchiveRead(UmiArchiveReader *reader, UmiAppearanceColorVisionAssistance *value)
+{
+    UmiArchiveReadText(reader, value->profile_id, sizeof(value->profile_id));
+    value->require_icons = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->require_text_labels = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->require_patterns = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->avoid_red_green_only = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiAppearanceColorVisionAssistanceArchiveValidate(const UmiAppearanceColorVisionAssistance *value)
+{
+    return umi_appearance_color_vision_assistance_is_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_appearance_color_vision_assistance_archive_encode, umi_appearance_color_vision_assistance_archive_decode,
+    UmiAppearanceColorVisionAssistance, UmiAppearanceColorVisionAssistanceArchiveSchema, UmiAppearanceColorVisionAssistanceArchiveBound, UmiAppearanceColorVisionAssistanceArchiveWrite, UmiAppearanceColorVisionAssistanceArchiveRead, UmiAppearanceColorVisionAssistanceArchiveValidate)

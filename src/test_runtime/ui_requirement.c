@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/test_runtime/ui_requirement.h"
+#include "../base/value_archive_internal.h"
 #include "umicom/base/text.h"
 #include "../base/record_update_internal.h"
 #include <string.h>
@@ -179,3 +180,50 @@ bool umi_test_runtime_ui_requirement_same_identity(const UmiTestRuntimeUiRequire
  * with this owner; Framework supplies the common staged publication boundary. */
 UMI_DEFINE_CHECKED_RECORD_INIT(umi_test_runtime_ui_requirement_init_checked,
     UmiTestRuntimeUiRequirement, umi_test_runtime_ui_requirement_init, umi_test_runtime_ui_requirement_validate)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x1b61b07171da64fa);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTestRuntimeUiRequirement *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTestRuntimeUiRequirement *)0)->detail)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiTestRuntimeUiRequirement *)0)->id) - 1U +
+        8U + sizeof(((UmiTestRuntimeUiRequirement *)0)->detail) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiTestRuntimeUiRequirement *value)
+{
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->detail, sizeof(value->detail));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->required);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->display_available);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiTestRuntimeUiRequirement *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->detail, sizeof(value->detail));
+    value->required = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->display_available = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus ArchiveValidate(const UmiTestRuntimeUiRequirement *value)
+{
+    return umi_test_runtime_ui_requirement_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_test_runtime_ui_requirement_archive_encode, umi_test_runtime_ui_requirement_archive_decode,
+    UmiTestRuntimeUiRequirement, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)

@@ -17,6 +17,7 @@
 #define UMICOM_OBSERVABILITY_PERFORMANCE_ALLOCATION_SUMMARY_H
 
 #include <stdbool.h>
+#include "umicom/base/value_archive.h"
 #include <stddef.h>
 #include <stdint.h>
 #include "umicom/observability/performance/types.h"
@@ -54,6 +55,17 @@ UmiStatus umi_performance_allocation_summary_observe(UmiPerformanceAllocationSum
 bool umi_performance_allocation_summary_same_identity(const UmiPerformanceAllocationSummary *left, const UmiPerformanceAllocationSummary *right);
 /* Domain-specific policy helper for allocation summary. */
 double umi_performance_allocation_summary_mean(double sum, uint64_t count);
+
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_performance_allocation_summary_archive_encode(const UmiPerformanceAllocationSummary *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_performance_allocation_summary_archive_decode(const void *bytes, size_t byte_count,
+    UmiPerformanceAllocationSummary *value);
 
 #ifdef __cplusplus
 }

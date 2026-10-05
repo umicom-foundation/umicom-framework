@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reopen a closed document · Umicom Framework</title>
+<style>body{font:17px/1.65 system-ui,sans-serif;max-width:960px;margin:40px auto;padding:0 24px;color:#203341}h1,h2{line-height:1.25}code,pre{font-family:Consolas,monospace}pre{background:#eff4f6;padding:20px;overflow:auto}table{border-collapse:collapse;width:100%}td,th{padding:12px;border:1px solid #cbd7de;text-align:left}a{color:#086879}</style></head><body>
+<header><p>Umicom Framework · Document services</p><h1>Reopen a closed document</h1></header><main>
+<p>Closing a saved source tab does not delete its file. The document coordinator remembers its path so that a host can offer <strong>Reopen Closed Document</strong>. This history is shared by the document service and native adapter; an application does not need a second list of paths.</p>
+<h2>Try it in Studio</h2>
+<ol><li>Open a saved source file, such as <code>notes.c</code>, then close its tab.</li>
+<li>Choose <strong>File → Reopen Closed Document</strong>, search for that command, or press <strong>Ctrl+Shift+T</strong>. The saved source should become the active document again.</li>
+<li>Close two different saved files and repeat the command. The most recently closed file returns first.</li>
+<li>For a disposable practice file, change the text without saving and choose <strong>Discard and Close</strong>. Reopen it and compare the result with the saved file. Discarded text is not retained by this history.</li></ol>
+<p>If the same path is already open, Reopen selects that working copy. It preserves the current draft rather than reading over it. If it is closed, Reopen reads the provider's current content, including changes made by another program since the tab closed.</p>
+<h2>Understand the limits</h2>
+<p>The coordinator remembers up to 16 distinct absolute saved paths in memory. Closing the same path again moves it to the front of the reopening order. The oldest entry is evicted when a new path exceeds the limit. Untitled documents and relative paths are excluded. This avoids keeping discarded drafts and prevents a changed current folder from redirecting a reopen request.</p>
+<p>History ends when its coordinator is destroyed. It is not a backup, session restore, recovery journal or durable recent-files list. Text, undo stacks, caret positions, pin settings and tab groups are not recorded. A new open follows the ordinary document loader's encoding and size limits.</p>
+<h2>Handle a missing file</h2>
+<ol><li>Read the failure message. A missing or unreadable file stays on the list, and no empty replacement document is created.</li>
+<li>Restore the file or its access permissions, then retry <strong>Reopen Closed Document</strong>.</li>
+<li>If you do not want to retry that path, choose <strong>File → Forget Last Closed Document</strong>. This removes only the newest history entry; it does not delete, rename or save a file. You can then reopen the next older entry.</li></ol>
+<p>Reopen and Forget are unavailable while the native binding is pasting asynchronously, saving all documents or waiting for a reviewed close decision. Finish or cancel that action before trying again.</p>
+<h2>Use the coordinator API</h2>
+<p>Include <code>umicom/document/reopen.h</code> and link <code>Umicom::document</code>. Use the coordinator that already owns the application's working copies. The following helper can be called from that coordinator's owner thread:</p>
+<pre><code>#include "umicom/document/reopen.h"
+
+/* Read a history snapshot, then use its revision for this explicit request. */
+UmiStatus ReopenSavedSource(UmiDocumentCoordinator *documents,
+    UmiDocumentId *opened_document)
+{
+    UmiDocumentReopenSnapshot history;
+    UmiStatus status = UmiDocumentCoordinatorReopenSnapshot(documents, &amp;history);
+    if (status != UMI_STATUS_OK) return status;
+    if (history.busy) return UMI_STATUS_BUSY;
+    return UmiDocumentCoordinatorReopenLast(documents,
+        history.revision, opened_document);
+}</code></pre>
+<p>A revision is a counter describing which history you observed. A later close, successful reopen or Forget changes it. A request using an older counter is rejected instead of acting on a different path. The output document ID remains unchanged on failure. The snapshot copies the next display name and count, without exposing paths or performing provider reads.</p>
+<table><thead><tr><th>Result</th><th>Host response</th></tr></thead><tbody>
+<tr><td><code>OK</code></td><td>Use the returned live document ID. The history entry has been consumed.</td></tr>
+<tr><td><code>NOT_FOUND</code></td><td>Inspect the history count to distinguish an empty list from a provider that could not find the file.</td></tr>
+<tr><td><code>INVALID_STATE</code></td><td>The observed history changed. Refresh the command state before making a new request.</td></tr>
+<tr><td><code>BUSY</code></td><td>Wait for the current operation to finish; do not force a second close or reopen from its provider callback.</td></tr>
+<tr><td>Provider or capacity error</td><td>Keep the entry and explain the failure. Retry after correcting its cause, or let the user explicitly Forget it.</td></tr>
+</tbody></table>
+<h2>Connect a native host</h2>
+<ol><li>Bind the existing coordinator with <code>UmiGtk4AdapterBindDocumentEditing</code>.</li>
+<li>Use <code>UmiGtk4AdapterReopenDocumentEnabled</code> when refreshing Reopen and Forget controls. The same predicate applies to both.</li>
+<li>Dispatch user actions through <code>UmiGtk4AdapterReopenDocument</code> or <code>UmiGtk4AdapterForgetClosedDocument</code>. Framework refreshes the views and delivers one editing completion for a live binding.</li>
+<li>Detach the binding before destroying its coordinator or callback context. A completion callback may detach the host because notification is the final step. A provider callback may detach the UI binding, but must keep the coordinator alive and must not mutate its documents.</li></ol>
+<p>Extend the policy in Framework if another application needs it. Keep the bounded metadata history separate from unsaved-work recovery. Add a scenario to <code>tests/document_closing/test_reopen.c</code> for service behavior and <code>test_reopen_gtk4.c</code> for native lifetime or busy-state behavior. A new workflow should verify the document text and identity, not only that its command is present.</p>
+<p>Continue with <a href="WORKING_WITH_DOCUMENTS.html">working copies and safe document changes</a>.</p>
+</main><footer><p>Sammy Hegab · Umicom Foundation · MIT</p></footer></body></html>

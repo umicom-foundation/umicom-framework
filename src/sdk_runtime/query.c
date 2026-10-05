@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/sdk_runtime/query.h"
+#include "../base/value_archive_internal.h"
 #include "../base/record_update_internal.h"
 #include "umicom/base/text.h"
 #include <string.h>
@@ -192,3 +193,57 @@ UMI_DEFINE_REVIEWED_RECORD_EDIT(umi_sdk_runtime_query_replace_if_current,
  * with this owner; Framework supplies the common staged publication boundary. */
 UMI_DEFINE_CHECKED_RECORD_INIT(umi_sdk_runtime_query_init_checked,
     UmiSdkRuntimeQuery, umi_sdk_runtime_query_init, umi_sdk_runtime_query_validate)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x89598d1f0b84bd9b);
+    schema = (schema ^ (uint64_t)sizeof(((UmiSdkRuntimeQuery *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiSdkRuntimeQuery *)0)->path)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiSdkRuntimeQuery *)0)->detail)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiSdkRuntimeQuery *)0)->id) - 1U +
+        8U + sizeof(((UmiSdkRuntimeQuery *)0)->path) - 1U +
+        8U + sizeof(((UmiSdkRuntimeQuery *)0)->detail) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiSdkRuntimeQuery *value)
+{
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->path, sizeof(value->path));
+    UmiArchiveWriteText(writer, value->detail, sizeof(value->detail));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->offset);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->limit);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+    UmiArchiveWriteSigned(writer, (int64_t)value->state);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiSdkRuntimeQuery *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->path, sizeof(value->path));
+    UmiArchiveReadText(reader, value->detail, sizeof(value->detail));
+    value->offset = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->limit = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->state = (UmiSdkRuntimeState)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus ArchiveValidate(const UmiSdkRuntimeQuery *value)
+{
+    return umi_sdk_runtime_query_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_sdk_runtime_query_archive_encode, umi_sdk_runtime_query_archive_decode,
+    UmiSdkRuntimeQuery, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)

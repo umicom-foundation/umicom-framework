@@ -1,0 +1,16 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-pull-diagnostic-query-test "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/test_pull_diagnostic_query.c")
+    target_link_libraries(umicom-pull-diagnostic-query-test PRIVATE Umicom::developer Umicom::editor Umicom::platform)
+    umicom_apply_warnings(umicom-pull-diagnostic-query-test)
+    umicom_apply_sanitizers(umicom-pull-diagnostic-query-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-pull-diagnostic-query-test)
+    endif()
+    foreach(case valid identifier no-identifier empty fragmented notification-noise wrong-reply missing-provider provider-type missing-flags flag-type identifier-type encoding sync unchanged related invalid-items outside surrogate query-error shutdown-error close-error cancel-before cancel-during invalid-source state server-request timeout read-error write-error)
+        add_test(NAME framework.language_runtime.pull_diagnostic_query.${case} COMMAND umicom-pull-diagnostic-query-test ${case})
+        set_tests_properties(framework.language_runtime.pull_diagnostic_query.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;language;diagnostic;ownership;regression")
+    endforeach()
+endif()

@@ -19,6 +19,8 @@
  * responsibility for higher-level threading and persistence policy.
  */
 #include "umicom/chart/extension.h"
+#include "../base/value_archive_internal.h"
+#include "../base/registry_archive_internal.h"
 #include "../base/snapshot_registry_internal.h"
 
 /* Validate every bounded text member before lookup. Value-only snapshot
@@ -244,3 +246,71 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_chart_extension_registry_edit_if_current,
  * this owner's existing row order and normalized fields remain authoritative. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_chart_extension_registry_read_page,
     UmiChartExtensionRegistry, UmiChartExtensionSnapshot, UMI_CHART_EXTENSION_CAPACITY)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x3862958c5bbbb7b9);
+    schema = (schema ^ (uint64_t)sizeof(((UmiChartExtensionSnapshot *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiChartExtensionSnapshot *)0)->name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiChartExtensionSnapshot *)0)->kind)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiChartExtensionSnapshot *)0)->provider_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiChartExtensionSnapshot *)0)->entry_point)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiChartExtensionSnapshot *)0)->id) - 1U +
+        8U + sizeof(((UmiChartExtensionSnapshot *)0)->name) - 1U +
+        8U + sizeof(((UmiChartExtensionSnapshot *)0)->kind) - 1U +
+        8U + sizeof(((UmiChartExtensionSnapshot *)0)->provider_id) - 1U +
+        8U + sizeof(((UmiChartExtensionSnapshot *)0)->entry_point) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiChartExtensionSnapshot *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->name, sizeof(value->name));
+    UmiArchiveWriteText(writer, value->kind, sizeof(value->kind));
+    UmiArchiveWriteText(writer, value->provider_id, sizeof(value->provider_id));
+    UmiArchiveWriteText(writer, value->entry_point, sizeof(value->entry_point));
+    UmiArchiveWriteSigned(writer, (int64_t)value->enabled);
+    UmiArchiveWriteSigned(writer, (int64_t)value->trusted);
+    UmiArchiveWriteSigned(writer, (int64_t)value->order);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiChartExtensionSnapshot *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->name, sizeof(value->name));
+    UmiArchiveReadText(reader, value->kind, sizeof(value->kind));
+    UmiArchiveReadText(reader, value->provider_id, sizeof(value->provider_id));
+    UmiArchiveReadText(reader, value->entry_point, sizeof(value->entry_point));
+    value->enabled = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->trusted = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->order = (int32_t)UmiArchiveReadSigned(reader, INT32_MIN, INT32_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus ArchiveValidate(const UmiChartExtensionSnapshot *value)
+{
+    return umi_chart_extension_snapshot_validate(value, NULL);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_chart_extension_snapshot_archive_encode, umi_chart_extension_snapshot_archive_decode,
+    UmiChartExtensionSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Restoring this complete collection reuses its existing reviewed replacement
+ * rules. Decoding a saved value alone never changes a live registry. */
+UMI_DEFINE_REGISTRY_ARCHIVE(umi_chart_extension_registry_archive_encode, umi_chart_extension_registry_archive_restore,
+    UmiChartExtensionRegistry, UmiChartExtensionSnapshot, UMI_CHART_EXTENSION_CAPACITY, ArchiveSchema,
+    umi_chart_extension_snapshot_archive_encode, umi_chart_extension_snapshot_archive_decode, umi_chart_extension_registry_replace_if_current)

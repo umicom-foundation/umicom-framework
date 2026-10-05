@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Function signatures and parameter help</title>
+<style>body{font:17px/1.6 system-ui;max-width:1000px;margin:32px auto;padding:0 24px;color:#183442}code{overflow-wrap:anywhere}pre{padding:18px;background:#eef3f5;overflow:auto}li{margin:10px 0}</style></head><body>
+<h1>Function signatures and parameter help</h1>
+<p>A function signature describes the arguments a function accepts. Some languages allow several functions with the same name and different arguments; these alternatives are called overloads. Framework can ask a chosen local language server for the overloads available at the current caret, then show their parameter descriptions without changing the source document.</p>
+<h2>Read help in Studio</h2>
+<ol><li>Open a source document and place the caret inside a function call. The document may contain unsaved changes or be read-only.</li>
+<li>Choose <strong>Parameters…</strong> in the editor toolbar. This captures the document text and caret. Opening the form does not launch a language server.</li>
+<li>Enter an absolute path to a language-server executable that you have installed, its ordinary command-line arguments, and the absolute project folder. You can use <strong>Load saved server</strong> to reuse settings previously saved for this language. Loading settings also does not launch the server.</li>
+<li>Choose <strong>Request parameter help</strong>. The selected program receives the captured draft and project location. It may inspect other files in that project. The temporary connection initializes, requests help, closes the document and shuts down before a result is published.</li>
+<li>Choose an overload from the searchable selector. The form shows its complete signature, documentation and numbered parameters. The active parameter is marked in the list and, when the server supplied an exact label span, highlighted in the signature.</li>
+<li>Choose <strong>Close</strong> when finished. This workflow does not edit or save the document. If you change the document or caret, close the form and open it again to capture the new location.</li></ol>
+<h2>Documentation and highlighting</h2>
+<p>Descriptions are displayed as literal text. Markdown markers and HTML remain visible text; they do not execute code or open links. A parameter may be described by a substring or by offsets into the signature. Protocol offsets count UTF-16 code units; Framework converts them to UTF-8 byte spans before GTK highlights characters. A supplementary character such as an emoji occupies two UTF-16 units but four UTF-8 bytes, so a span that splits its surrogate pair is rejected.</p>
+<p>When a string label occurs more than once, Framework lists the parameter without guessing which occurrence to highlight. The signature's own active-parameter value takes precedence over a top-level value. An omitted or out-of-range active index defaults to the first available choice. Empty results mean the server supplied no help at that location.</p>
+<h2>Use the shared service</h2>
+<ol><li>Include <code>umicom/language_runtime/signature_query.h</code> and link the Framework developer target.</li>
+<li>Fill <code>UmiLanguageSignatureRequest</code> with the root URI, source URI, language identifier, complete UTF-8 source, its byte count, a caret byte offset and a read timeout. Keep these inputs alive until the call returns.</li>
+<li>Run <code>UmiLanguageSignatureQueryNative</code> on a worker. The profile and working directory identify an explicitly chosen local program. Do not pass widget pointers or a mutable editor buffer to that worker.</li>
+<li>On success, use <code>UmiLanguageSignatureCatalogueCount</code>, <code>UmiLanguageSignatureCatalogueActive</code>, <code>UmiLanguageSignatureCatalogueAt</code> and <code>UmiLanguageSignatureCatalogueParameter</code> to inspect borrowed views. The strings belong to the catalogue.</li>
+<li>Before presenting the result, verify that its captured document is still current. Release the catalogue with <code>UmiLanguageSignatureCatalogueDestroy</code>, including when its result is no longer needed.</li></ol>
+<p>Applications that already receive protocol replies can use <code>UmiLanguageSignatureCatalogueReadResponse</code> with the expected request ID. The standalone reader accepts up to 1 MiB of JSON, 256 overloads, 256 parameters per overload and 4096 parameters overall. Labels allow 65536 UTF-8 bytes, each description allows 262144 bytes, and all retained labels and descriptions together allow 4 MiB. A failure returns no partial catalogue.</p>
+<h2>Limits and recovery</h2>
+<ul><li><strong>No provider:</strong> the server must advertise signature-help options, document open/close synchronization and UTF-16 source positions. Check that it supports the document language.</li>
+<li><strong>No useful result:</strong> check the caret location and the project's language-server configuration. Framework does not install servers, generate compilation databases or add initialization options in this form.</li>
+<li><strong>Timeout:</strong> Studio allows five seconds for initialization and reply reads. Cleanup has a separate 250 ms budget. A large project may require more startup time than this temporary workflow provides.</li>
+<li><strong>Capacity error:</strong> the native message limit is 65536 bytes including JSON escaping and its envelope, with the existing native parser's token limit. These limits can be smaller than the standalone catalogue limits; shorten the draft or use a different supported workflow.</li>
+<li><strong>Stale result:</strong> changing settings clears the displayed result. Editing the document or caret invalidates its captured identity. Reopen the form and request again.</li>
+<li><strong>Cancellation:</strong> closing the form retires it and requests cooperative cancellation. Native launch and synchronous writes are not interruptible by that token. The process owner manages the direct child, not descendants started by the server.</li></ul>
+<p>This is an explicit temporary query. It does not provide automatic typing popups, a persistent editor language session or trigger-character handling. Server settings are local preferences, not encrypted credential storage; do not put credentials in executable arguments.</p>
+<p>Related workflows: <a href="source-information.html">source information</a>, <a href="document-symbols.html">document symbols</a> and <a href="source-navigation.html">definitions and references</a>.</p>
+</body></html>

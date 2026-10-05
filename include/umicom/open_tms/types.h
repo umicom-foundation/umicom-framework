@@ -17,6 +17,7 @@
 #define UMICOM_OPEN_TMS_TYPES_H
 
 #include <stdint.h>
+#include "umicom/base/value_archive.h"
 #include "umicom/base/status.h"
 
 #ifdef __cplusplus
@@ -108,6 +109,17 @@ typedef UmiStatus (*UmiOpenTmsEvaluator)(
 void umi_open_tms_input_init(UmiOpenTmsInput *input);
 void umi_open_tms_snapshot_init(UmiOpenTmsSnapshot *snapshot);
 UmiStatus umi_open_tms_snapshot_validate(const UmiOpenTmsSnapshot *snapshot);
+
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_open_tms_snapshot_archive_encode(const UmiOpenTmsSnapshot *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_open_tms_snapshot_archive_decode(const void *bytes, size_t byte_count,
+    UmiOpenTmsSnapshot *value);
 
 #ifdef __cplusplus
 }

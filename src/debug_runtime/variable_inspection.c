@@ -7,6 +7,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "variable_inspection_private.h"
+#include "umicom/debug_runtime/variable_assignment.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
@@ -39,6 +40,17 @@ UmiStatus UmiDebugVariableTargetCapture(UmiDebugWorkspace *workspace, size_t ind
     memcpy(value.value.type, variable.type, sizeof variable.type);
     memcpy(value.value.evaluate_name, variable.evaluate_name, sizeof variable.evaluate_name);
     value.value.variables_reference = variable.variables_reference;
+    /* DAP identifies assignments by parent reference and exact name. Refuse
+     * duplicate names rather than choosing whichever registry row came first. */
+    value.containerReference = scope.variables_reference;
+    UmiDebugVariableRegistry *registry = umi_debug_service_variable(service);
+    for (size_t i = 0U; i < umi_debug_variable_registry_count(registry); ++i) {
+        UmiDebugVariableSnapshot sibling;
+        status = umi_debug_variable_registry_at(registry, i, &sibling);
+        if (status != UMI_STATUS_OK) return status;
+        if (strcmp(sibling.id, variable.id) != 0 && strcmp(sibling.scope_id, variable.scope_id) == 0 &&
+            strcmp(sibling.name, variable.name) == 0) value.ambiguousName = 1;
+    }
     UmiDebugVariableTarget *target = malloc(sizeof *target);
     if (target == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     *target = value; *out = target; return UMI_STATUS_OK;
@@ -110,5 +122,21 @@ UmiStatus UmiDebugVariablePageTarget(const UmiDebugVariablePage *page, size_t in
     if (target == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     *target = page->parent;
     target->ancestors[target->ancestorCount++] = page->parent.value.variables_reference;
+    /* Each nested row belongs to the expanded parent's container. Duplicate
+     * display names remain inspectable but cannot become ambiguous edits. */
+    target->containerReference = page->parent.value.variables_reference;
+    target->ambiguousName = 0;
+    for (size_t i = 0U; i < page->count; ++i)
+        if (i != index && strcmp(page->items[i].name, page->items[index].name) == 0)
+            target->ambiguousName = 1;
     target->value = page->items[index]; *out = target; return UMI_STATUS_OK;
+}
+
+UmiStatus UmiDebugVariableTargetAssignable(const UmiDebugVariableTarget *target)
+{
+    if (target == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (target->containerReference == 0U || target->value.name[0] == '\0') return UMI_STATUS_INVALID_STATE;
+    if (target->containerReference > INT32_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (target->ambiguousName) return UMI_STATUS_ALREADY_EXISTS;
+    return UMI_STATUS_OK;
 }

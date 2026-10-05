@@ -75,4 +75,63 @@ static void ContractPayload(UmiTestPlatformAttachmentSnapshot *item)
 #define CONTRACT_EDIT_CURRENT umi_test_platform_attachment_registry_edit_if_current
 /* Page checks use this domain's real owner and complete payload comparator. */
 #define CONTRACT_READ_PAGE umi_test_platform_attachment_registry_read_page
+/* Build a complete public snapshot; registry normalization is checked
+ * separately by the collection restore cases. */
+static UmiTestPlatformAttachmentSnapshot ArchiveSample(void)
+{
+    UmiTestPlatformAttachmentSnapshot value = {0};
+    ContractPayload(&value);
+    memcpy(value.id, "archive-record", sizeof("archive-record"));
+    value.struct_size = (uint32_t)sizeof(value);
+    value.revision = 17U;
+    return value;
+}
+/* Unused tails are not part of a C string and must not enter saved bytes. */
+static void ArchiveFillUnusedText(UmiTestPlatformAttachmentSnapshot *value)
+{
+    {
+        size_t used = strlen(value->id) + 1U;
+        memset(value->id + used, 0xa5, sizeof(value->id) - used);
+    }
+    {
+        size_t used = strlen(value->result_id) + 1U;
+        memset(value->result_id + used, 0xa5, sizeof(value->result_id) - used);
+    }
+    {
+        size_t used = strlen(value->name) + 1U;
+        memset(value->name + used, 0xa5, sizeof(value->name) - used);
+    }
+    {
+        size_t used = strlen(value->kind) + 1U;
+        memset(value->kind + used, 0xa5, sizeof(value->kind) - used);
+    }
+    {
+        size_t used = strlen(value->producer) + 1U;
+        memset(value->producer + used, 0xa5, sizeof(value->producer) - used);
+    }
+    {
+        size_t used = strlen(value->uri) + 1U;
+        memset(value->uri + used, 0xa5, sizeof(value->uri) - used);
+    }
+    {
+        size_t used = strlen(value->mime_type) + 1U;
+        memset(value->mime_type + used, 0xa5, sizeof(value->mime_type) - used);
+    }
+    {
+        size_t used = strlen(value->schema_uri) + 1U;
+        memset(value->schema_uri + used, 0xa5, sizeof(value->schema_uri) - used);
+    }
+    {
+        size_t used = strlen(value->checksum) + 1U;
+        memset(value->checksum + used, 0xa5, sizeof(value->checksum) - used);
+    }
+}
+#define ARCHIVE_TYPE UmiTestPlatformAttachmentSnapshot
+#define ARCHIVE_ENCODE umi_test_platform_attachment_snapshot_archive_encode
+#define ARCHIVE_DECODE umi_test_platform_attachment_snapshot_archive_decode
+#define ARCHIVE_EQUAL ContractSnapshotEqual
+#include "../value_archive/record_cases.h"
+
+#define CONTRACT_ARCHIVE_ENCODE umi_test_platform_attachment_registry_archive_encode
+#define CONTRACT_ARCHIVE_RESTORE umi_test_platform_attachment_registry_archive_restore
 #include "snapshot_contract_cases.h"

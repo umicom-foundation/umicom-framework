@@ -7,6 +7,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/application/suite_layout/gtk4_workstation.h"
 #include "umicom/data/data_server.h"
+#include "umicom/application/experience_catalogue.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -296,6 +297,58 @@ cleanup:
     return failed;
 }
 
+/* Every canonical application reaches the same native recovery controls.
+ * Use its real catalogue and a private server, then restore and undo a change.
+ * Dummy panel widgets deliberately avoid starting product business services. */
+static int check_saved_review_products(void)
+{
+    UmiApplicationSuiteGtk4Workstation *workstation = NULL;
+    UmiDataServer *server = NULL;
+    int failed = 0;
+    for (size_t product = 0U; product < umi_application_experience_catalogue_count(); ++product) {
+        const UmiApplicationExperienceDefinition *experience = umi_application_experience_catalogue_at(product);
+        CHECK(experience != NULL);
+        UmiApplicationSuiteGtk4WorkstationConfig config = {
+            experience->application_id, "Recovery fixture", "Test", create_panel, NULL
+        };
+        CHECK(umi_data_server_create_memory(&server) == UMI_STATUS_OK);
+        CHECK(umi_application_suite_gtk4_workstation_create(&config, &workstation) == UMI_STATUS_OK);
+        CHECK(umi_application_suite_gtk4_workstation_bind_checkpoint_storage(workstation, server) == UMI_STATUS_OK);
+        GtkWidget *popover = library_popover(workstation); CHECK(popover != NULL);
+        GtkWidget *save = find_tag(popover, "workstation.layout-library.save-library");
+        GtkWidget *review = find_tag(popover, "workstation.layout-library.review-saved");
+        GtkWidget *apply = find_tag(popover, "workstation.layout-library.apply-import");
+        GtkWidget *confirm = find_tag(popover, "workstation.layout-library.confirm-import");
+        CHECK(save && review && apply && confirm);
+        const UmiApplicationSuiteGtk4WorkstationSnapshot saved = umi_application_suite_gtk4_workstation_snapshot(workstation);
+        g_signal_emit_by_name(save, "clicked"); drain_library_actions();
+        char id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+        int written = snprintf(id, sizeof id, "%s.recovery-fixture", experience->application_id);
+        CHECK(written > 0 && (size_t)written < sizeof id);
+        CHECK(umi_application_suite_gtk4_workstation_create_blank_layout(workstation, id, "Unsaved arrangement") == UMI_STATUS_OK);
+        const UmiApplicationSuiteGtk4WorkstationSnapshot changed = umi_application_suite_gtk4_workstation_snapshot(workstation);
+        g_signal_emit_by_name(review, "clicked");
+        CHECK(find_tag(popover, "umicom.comparison.left") && find_tag(popover, "umicom.comparison.right"));
+        CHECK(!gtk_widget_get_sensitive(apply));
+        gtk_check_button_set_active(GTK_CHECK_BUTTON(confirm), TRUE); CHECK(gtk_widget_get_sensitive(apply));
+        g_signal_emit_by_name(apply, "clicked"); drain_library_actions();
+        UmiApplicationSuiteGtk4WorkstationSnapshot restored = umi_application_suite_gtk4_workstation_snapshot(workstation);
+        CHECK(restored.layout_count == saved.layout_count && !strcmp(restored.active_layout_id, saved.active_layout_id));
+        UmiUiWorkspaceLibraryHistoryState history;
+        CHECK(umi_application_suite_gtk4_workstation_library_history_read(workstation, &history) == UMI_STATUS_OK);
+        CHECK(!history.stale && history.undo_count != 0U);
+        CHECK(umi_application_suite_gtk4_workstation_library_history_navigate(workstation,
+            UMI_UI_WORKSPACE_LIBRARY_HISTORY_UNDO, history.expected_revision) == UMI_STATUS_OK);
+        restored = umi_application_suite_gtk4_workstation_snapshot(workstation);
+        CHECK(restored.layout_count == changed.layout_count && !strcmp(restored.active_layout_id, changed.active_layout_id));
+        CHECK(all_windows_unpresented());
+        umi_application_suite_gtk4_workstation_destroy(workstation); workstation = NULL;
+        umi_data_server_destroy(server); server = NULL;
+    }
+cleanup:
+    umi_application_suite_gtk4_workstation_destroy(workstation); umi_data_server_destroy(server); return failed;
+}
+
 /* No windows are presented. The SQLite case uses only a fixture-owned temporary
  * directory, never user configuration or any product's real Data Server. */
 int main(void)
@@ -309,6 +362,7 @@ int main(void)
     (void)g_setenv("GTK_A11Y", "test", TRUE);
     if (!gtk_init_check()) return 77;
     CHECK(check_product_scopes() == 0);
+    CHECK(check_saved_review_products() == 0);
     CHECK(umi_data_server_create_memory(&server) == UMI_STATUS_OK);
     CHECK(check_restart(&server, NULL, 0) == 0);
     CHECK(check_library_restart(&server, NULL) == 0);

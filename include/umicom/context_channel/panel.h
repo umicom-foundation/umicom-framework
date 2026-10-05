@@ -16,6 +16,7 @@
 #ifndef UMICOM_CONTEXT_CHANNEL_PANEL_H
 #define UMICOM_CONTEXT_CHANNEL_PANEL_H
 #include "umicom/context_channel/payload.h"
+#include "umicom/base/value_archive.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -88,6 +89,17 @@ size_t umi_context_panel_store_count(const UmiCrossApplicationPanelStore *store)
  * applications.
  */
 UmiStatus umi_context_panel_store_snapshot(const UmiCrossApplicationPanelStore *store,UmiCrossApplicationPanel *out_records,size_t capacity,size_t *out_count);
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_context_panel_archive_encode(const UmiCrossApplicationPanel *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_context_panel_archive_decode(const void *bytes, size_t byte_count,
+    UmiCrossApplicationPanel *value);
+
 #ifdef __cplusplus
 }
 #endif

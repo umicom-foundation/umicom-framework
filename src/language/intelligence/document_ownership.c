@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language/intelligence/document_ownership.h"
+#include "../../base/value_archive_internal.h"
 #include <string.h>
 
 /*
@@ -82,6 +83,14 @@ UmiStatus umi_language_intelligence_document_ownership_set(
 UmiStatus umi_language_intelligence_document_ownership_validate(
     const UmiLanguageIntelligenceDocumentOwnership *mapping)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (mapping == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(mapping->source_id, '\0', sizeof(mapping->source_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(mapping->target_id, '\0', sizeof(mapping->target_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(mapping->scope_id, '\0', sizeof(mapping->scope_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -111,3 +120,55 @@ int umi_language_intelligence_document_ownership_matches(
     if (mapping->scope_id[0] == '\0') return 1;
     return scope_id != NULL && strcmp(mapping->scope_id, scope_id) == 0;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiLanguageIntelligenceDocumentOwnershipArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xe14240b59c77e843);
+    schema = (schema ^ (uint64_t)sizeof(((UmiLanguageIntelligenceDocumentOwnership *)0)->source_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiLanguageIntelligenceDocumentOwnership *)0)->target_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiLanguageIntelligenceDocumentOwnership *)0)->scope_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiLanguageIntelligenceDocumentOwnershipArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiLanguageIntelligenceDocumentOwnership *)0)->source_id) - 1U +
+        8U + sizeof(((UmiLanguageIntelligenceDocumentOwnership *)0)->target_id) - 1U +
+        8U + sizeof(((UmiLanguageIntelligenceDocumentOwnership *)0)->scope_id) - 1U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiLanguageIntelligenceDocumentOwnershipArchiveWrite(UmiArchiveWriter *writer, const UmiLanguageIntelligenceDocumentOwnership *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->source_id, sizeof(value->source_id));
+    UmiArchiveWriteText(writer, value->target_id, sizeof(value->target_id));
+    UmiArchiveWriteText(writer, value->scope_id, sizeof(value->scope_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->priority);
+    UmiArchiveWriteSigned(writer, (int64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiLanguageIntelligenceDocumentOwnershipArchiveRead(UmiArchiveReader *reader, UmiLanguageIntelligenceDocumentOwnership *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->source_id, sizeof(value->source_id));
+    UmiArchiveReadText(reader, value->target_id, sizeof(value->target_id));
+    UmiArchiveReadText(reader, value->scope_id, sizeof(value->scope_id));
+    value->priority = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->enabled = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiLanguageIntelligenceDocumentOwnershipArchiveValidate(const UmiLanguageIntelligenceDocumentOwnership *value)
+{
+    return umi_language_intelligence_document_ownership_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_language_intelligence_document_ownership_archive_encode, umi_language_intelligence_document_ownership_archive_decode,
+    UmiLanguageIntelligenceDocumentOwnership, UmiLanguageIntelligenceDocumentOwnershipArchiveSchema, UmiLanguageIntelligenceDocumentOwnershipArchiveBound, UmiLanguageIntelligenceDocumentOwnershipArchiveWrite, UmiLanguageIntelligenceDocumentOwnershipArchiveRead, UmiLanguageIntelligenceDocumentOwnershipArchiveValidate)

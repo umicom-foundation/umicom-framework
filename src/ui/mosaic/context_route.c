@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/mosaic/context_route.h"
+#include "../../base/value_archive_internal.h"
 #include <string.h>
 
 /*
@@ -54,6 +55,14 @@ UmiStatus umi_ui_mosaic_context_route_set(UmiUiMosaicContextRoute *value, const 
  * on it.
  */
 UmiStatus umi_ui_mosaic_context_route_validate(const UmiUiMosaicContextRoute *value) {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(value->group_id, '\0', sizeof(value->group_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(value->context_type, '\0', sizeof(value->context_type)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(value->member_id, '\0', sizeof(value->member_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -65,3 +74,48 @@ UmiStatus umi_ui_mosaic_context_route_validate(const UmiUiMosaicContextRoute *va
     if (value->colour_index >= 16U) return UMI_STATUS_INVALID_STATE;
     return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiUiMosaicContextRouteArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xc0cafdd778656f00);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiMosaicContextRoute *)0)->group_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiMosaicContextRoute *)0)->context_type)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiMosaicContextRoute *)0)->member_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiUiMosaicContextRouteArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiUiMosaicContextRoute *)0)->group_id) - 1U +
+        8U + sizeof(((UmiUiMosaicContextRoute *)0)->context_type) - 1U +
+        8U + sizeof(((UmiUiMosaicContextRoute *)0)->member_id) - 1U +
+        8U +
+        8U;
+}
+static void UmiUiMosaicContextRouteArchiveWrite(UmiArchiveWriter *writer, const UmiUiMosaicContextRoute *value)
+{
+    UmiArchiveWriteText(writer, value->group_id, sizeof(value->group_id));
+    UmiArchiveWriteText(writer, value->context_type, sizeof(value->context_type));
+    UmiArchiveWriteText(writer, value->member_id, sizeof(value->member_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->colour_index);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->bidirectional);
+}
+static void UmiUiMosaicContextRouteArchiveRead(UmiArchiveReader *reader, UmiUiMosaicContextRoute *value)
+{
+    UmiArchiveReadText(reader, value->group_id, sizeof(value->group_id));
+    UmiArchiveReadText(reader, value->context_type, sizeof(value->context_type));
+    UmiArchiveReadText(reader, value->member_id, sizeof(value->member_id));
+    value->colour_index = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->bidirectional = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiUiMosaicContextRouteArchiveValidate(const UmiUiMosaicContextRoute *value)
+{
+    return umi_ui_mosaic_context_route_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_ui_mosaic_context_route_archive_encode, umi_ui_mosaic_context_route_archive_decode,
+    UmiUiMosaicContextRoute, UmiUiMosaicContextRouteArchiveSchema, UmiUiMosaicContextRouteArchiveBound, UmiUiMosaicContextRouteArchiveWrite, UmiUiMosaicContextRouteArchiveRead, UmiUiMosaicContextRouteArchiveValidate)

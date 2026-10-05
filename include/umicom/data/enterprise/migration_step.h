@@ -16,6 +16,7 @@
 #define UMICOM_DATA_ENTERPRISE_MIGRATION_STEP_H
 
 #include <stddef.h>
+#include "umicom/base/value_archive.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include "umicom/base/status.h"
@@ -40,6 +41,17 @@ typedef struct UmiDataMigrationStep {
 UmiStatus umi_data_migration_step_init(UmiDataMigrationStep *item, const char *step_id, const char *description, uint32_t ordinal, bool reversible, bool destructive);
 /* Validate invariants before the descriptor is admitted to a catalogue or plan. */
 UmiStatus umi_data_migration_step_validate(const UmiDataMigrationStep *item);
+
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_data_migration_step_archive_encode(const UmiDataMigrationStep *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_data_migration_step_archive_decode(const void *bytes, size_t byte_count,
+    UmiDataMigrationStep *value);
 
 #ifdef __cplusplus
 }

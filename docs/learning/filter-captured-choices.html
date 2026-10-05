@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Find a configured target or captured position</title>
+<style>body{max-width:850px;margin:3rem auto;padding:0 1.5rem;font:18px/1.6 system-ui;color:#172532}code{background:#eef2f5;padding:.1em .3em}h1,h2{line-height:1.2}</style></head>
+<body><h1>Find a configured target or captured position</h1>
+<p>A filtered list shows part of a captured collection. It keeps the identity of each original item, even when two items have the same label or the visible order changes. Filtering does not change build settings or request market data.</p>
+<h2>Choose a build target in Studio</h2><ol>
+<li>Open Build Settings and choose the project, build folder and configuration. If target metadata is missing, use <strong>Request target data in this build folder</strong>, apply settings, complete Configure, then reopen the form.</li>
+<li>Choose <strong>Read configured targets</strong>. The list comes from that folder's CMake reply.</li>
+<li>Type part of a target name or type, such as <code>EXECUTABLE</code>. Choose Original order, Text A-Z or Text Z-A, and optionally Match case.</li>
+<li>Choose <strong>Apply filter and order</strong>. The count describes the applied query. Typing another query does not change the active list until you apply it.</li>
+<li>Select a visible target. Inspect its program path, then choose <strong>Use selected build target</strong> or <strong>Use selected program</strong>. Review the resulting field and apply settings separately.</li>
+</ol><p>If filtering hides the selected item, selection is cleared. No other target takes its place automatically. Clear the query and apply it to restore the whole list. Changing build inputs invalidates the captured metadata; read the targets again before copying a value.</p>
+<h2>Inspect received positions in Trader</h2><ol>
+<li>Open Paper / Live broker connections. Confirm the actual login in TWS or IB Gateway and connect using the read-only controls.</li>
+<li>Select an authorised account and choose <strong>Read selected account once</strong>. The account and position responses arrive separately.</li>
+<li>Choose <strong>Capture received positions for review</strong>. This copies observations already received; it sends no broker request. An incomplete or disconnected capture is explicitly labelled.</li>
+<li>Filter by symbol, security type, currency, exchange, local symbol, contract ID or expiry. Apply the filter, select a row and read its contract details, quantity and average cost.</li>
+<li>For a complete capture that still agrees with the same ready connection, choose <strong>Copy selected contract to quote inspector</strong>. Check its ID and exchange against TWS Contract Description, then choose Subscribe to quote separately.</li>
+</ol><p>Some position responses do not include an exchange. In that case, use TWS Contract Description to fill the quote inspector manually. Combination contracts cannot be copied by this chooser. Copying fields does not validate market-data permissions or place an order. Reconnecting retires the old position review; capture again on the new connection.</p>
+<h2>What the list means</h2><p>Matching is literal, not a regular expression. Ignoring case folds ASCII letters only; accented characters are matched by their exact UTF-8 spelling. Sorting compares text rather than financial values. Duplicate labels retain their source order. The filter is limited to 255 UTF-8 bytes, and the shared model accepts up to 32,768 rows, 8,192 bytes per row including its terminator and 16 MiB of text in total.</p>
+<p>Provider quantity and cost text is preserved without conversion to floating-point numbers. Captures are historical observations, not a continuously refreshed portfolio. Times are local monotonic milliseconds used to compare observations, not calendar times. Filtering the chooser does not filter the full account report or CSV export.</p>
+<h2>Recovery and availability</h2><p>If no rows match, clear the query and apply it. An invalid or oversized input leaves the previous capture active. A failed contract copy leaves quote fields unchanged. If a connection, account or position changes, capture the received positions again. Position controls require Framework's GTK frontend; the smaller standalone broker inspector remains available without them.</p>
+<h2>Extend the shared component</h2><p><code>UmiUiTextProjection</code> owns copied labels and a mapping to original source indices. <code>UmiGtk4FilteredChoicesSelectedSource</code> resolves a visible selection before the application asks its catalogue for data. A source index belongs only to that capture. Keep domain freshness checks in the service that owns the original data, and keep all GTK operations on the UI thread.</p>
+</body></html>

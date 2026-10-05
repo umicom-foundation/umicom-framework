@@ -889,3 +889,45 @@ static UmiStatus TradingSuiteEnableStorage(UmiGtk4TradingSuiteWorkstation *works
     }
     return status;
 }
+
+/* Keep archive ownership and native publication in the shared layout host. */
+UmiStatus umi_gtk4_trading_suite_workstation_library_export(
+    UmiGtk4TradingSuiteWorkstation *workstation, char *bytes, size_t capacity, size_t *out_size)
+{
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_application_suite_gtk4_workstation_library_export(workstation->suite, bytes, capacity, out_size);
+}
+
+/* Keep archive ownership and native publication in the shared layout host. */
+UmiStatus umi_gtk4_trading_suite_workstation_library_import_review(
+    UmiGtk4TradingSuiteWorkstation *workstation, const void *bytes, size_t size, UmiUiWorkspaceLibraryImport **out_review)
+{
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_application_suite_gtk4_workstation_library_import_review(workstation->suite, bytes, size, out_review);
+}
+
+/* Keep archive ownership and native publication in the shared layout host. */
+UmiStatus umi_gtk4_trading_suite_workstation_library_import_apply(
+    UmiGtk4TradingSuiteWorkstation *workstation, const UmiUiWorkspaceLibraryImport *review)
+{
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_application_suite_gtk4_workstation_library_import_apply(workstation->suite, review);
+}
+
+/* Layout recovery stays with Framework. This owner-thread call neither
+ * saves product data nor runs a trade, payment or project command. */
+UmiStatus umi_gtk4_trading_suite_workstation_library_history_read(UmiGtk4TradingSuiteWorkstation *workstation,
+    UmiUiWorkspaceLibraryHistoryState *out_state)
+{
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_application_suite_gtk4_workstation_library_history_read(workstation->suite, out_state);
+}
+
+/* Layout recovery stays with Framework. This owner-thread call neither
+ * saves product data nor runs a trade, payment or project command. */
+UmiStatus umi_gtk4_trading_suite_workstation_library_history_navigate(UmiGtk4TradingSuiteWorkstation *workstation,
+    UmiUiWorkspaceLibraryHistoryDirection direction, uint64_t expected_revision)
+{
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_application_suite_gtk4_workstation_library_history_navigate(workstation->suite, direction, expected_revision);
+}

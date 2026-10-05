@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/context_migration.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context migration from caller-provided values so later operations receive a
@@ -131,6 +132,15 @@ UmiStatus umi_context_migration_record_failure(UmiContextMigration *state,UmiSta
 /* Check that context migration satisfies its contract before another service relies on it. */
 UmiStatus umi_context_migration_validate(const UmiContextMigration *state)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (state == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->migration_id, '\0', sizeof(state->migration_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->schema_id, '\0', sizeof(state->schema_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->from_version, '\0', sizeof(state->from_version)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->to_version, '\0', sizeof(state->to_version)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -158,3 +168,68 @@ bool umi_context_migration_covers_sequence(const UmiContextMigration *state,uint
 {
     return state!=NULL&&state->item_count!=0U&&sequence>=state->first_sequence&&sequence<=state->last_sequence;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextMigrationArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x7f436161dc654394);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextMigration *)0)->migration_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextMigration *)0)->schema_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextMigration *)0)->from_version)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextMigration *)0)->to_version)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextMigrationArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextMigration *)0)->migration_id) - 1U +
+        8U + sizeof(((UmiContextMigration *)0)->schema_id) - 1U +
+        8U + sizeof(((UmiContextMigration *)0)->from_version) - 1U +
+        8U + sizeof(((UmiContextMigration *)0)->to_version) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextMigrationArchiveWrite(UmiArchiveWriter *writer, const UmiContextMigration *value)
+{
+    UmiArchiveWriteText(writer, value->migration_id, sizeof(value->migration_id));
+    UmiArchiveWriteText(writer, value->schema_id, sizeof(value->schema_id));
+    UmiArchiveWriteText(writer, value->from_version, sizeof(value->from_version));
+    UmiArchiveWriteText(writer, value->to_version, sizeof(value->to_version));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->first_sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->last_sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->item_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->failure_count);
+    UmiArchiveWriteSigned(writer, (int64_t)value->status);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextMigrationArchiveRead(UmiArchiveReader *reader, UmiContextMigration *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->migration_id, sizeof(value->migration_id));
+    UmiArchiveReadText(reader, value->schema_id, sizeof(value->schema_id));
+    UmiArchiveReadText(reader, value->from_version, sizeof(value->from_version));
+    UmiArchiveReadText(reader, value->to_version, sizeof(value->to_version));
+    value->first_sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->last_sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->item_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->failure_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->status = (UmiStatus)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextMigrationArchiveValidate(const UmiContextMigration *value)
+{
+    return umi_context_migration_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_migration_archive_encode, umi_context_migration_archive_decode,
+    UmiContextMigration, UmiContextMigrationArchiveSchema, UmiContextMigrationArchiveBound, UmiContextMigrationArchiveWrite, UmiContextMigrationArchiveRead, UmiContextMigrationArchiveValidate)

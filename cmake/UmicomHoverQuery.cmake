@@ -1,0 +1,16 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-hover-query-test "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/test_hover_query.c")
+    target_link_libraries(umicom-hover-query-test PRIVATE Umicom::developer Umicom::editor Umicom::platform)
+    umicom_apply_warnings(umicom-hover-query-test)
+    umicom_apply_sanitizers(umicom-hover-query-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-hover-query-test)
+    endif()
+    foreach(case valid object missing disabled encoding sync fragmented notification error invalid-content range-outside range-surrogate shutdown-error close-error timeout cancel-before cancel-during invalid-source invalid-caret state empty unicode native-invalid read-error write-error escaped-limit blocks markup wrong-id range)
+        add_test(NAME framework.language_runtime.hover_query.${case} COMMAND umicom-hover-query-test ${case})
+        set_tests_properties(framework.language_runtime.hover_query.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;language;hover;ownership;regression")
+    endforeach()
+endif()

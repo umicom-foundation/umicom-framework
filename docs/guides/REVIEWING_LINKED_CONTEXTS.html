@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Review linked context changes — Umicom Framework</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:1050px;margin:3rem auto;padding:0 24px;color:#17212b}pre{padding:18px;background:#f2f5f8;overflow:auto}code{font-size:.9em}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccd5df;padding:10px;text-align:left}aside{padding:14px;border-left:4px solid #2766a5;background:#eef5fc}h1,h2{line-height:1.2}</style>
+</head><body>
+<h1>Review linked context changes</h1>
+<p>A context group is a named value that related panels can share. For example,
+two trading panels might follow the same selected instrument, while two education
+panels follow the same course. Framework owns the values and the rules for changing
+them. Application modules supply their own identity and presentation.</p>
+<p>The context review API lets a host prepare several edits, display the proposal,
+and accept it later. Preparation copies the input and leaves the live workspace
+alone. Acceptance checks that the workspace still matches what was reviewed.</p>
+<aside>This is a C API for application hosts. It does not add a graphical review
+dialog, connect a provider, save a workspace, load a project, or execute an order,
+payment or command. A context value describes presentation state; it is not an
+authority to perform an operation.</aside>
+
+<h2>1. Choose the correct owner</h2>
+<p>Use <code>umicom/application/runtime/context_review.h</code> and link the existing
+<code>Umicom::application</code> target. A product host includes its own
+<code>workspace_commands.h</code> and uses that product's review and apply wrappers.
+They refuse a runtime belonging to another product. Keep the experience catalogue
+immutable for the runtime's lifetime.</p>
+<p>Operate on the runtime's owning thread. Keep the runtime and any bound workbench
+alive, and do not reinitialise either while reviews exist. A workbench is borrowed:
+destroying a review never destroys the workbench. Coordinate related host writes
+on the same thread; the underlying typed UI store also has its own mutex.</p>
+
+<h2>2. Describe the edit</h2>
+<p>Use a zero-initialised array of <code>UmiApplicationContextChange</code> values.
+Each name may occur once. Text must end with a null character inside its fixed
+array. Names must be nonempty; a SET value may be empty. The example names below
+are illustrative; choose names understood by your own panel consumers.</p>
+<pre><code>UmiApplicationContextChange changes[] = {
+    { UMI_APPLICATION_CONTEXT_SET, "linked.primary", "sample-project" },
+    { UMI_APPLICATION_CONTEXT_SET, "linked.secondary", "sample-document" }
+};
+UmiApplicationContextReview *review = NULL;
+UmiStatus status = umi_application_context_review_prepare(
+    runtime, changes, sizeof(changes) / sizeof(changes[0]), &amp;review);</code></pre>
+<p>Proceed only if <code>status == UMI_STATUS_OK</code>. A failed preparation leaves
+the output pointer unchanged. A successful review owns its input text, so the host
+may reuse the original input array. Never overwrite an existing owned review
+pointer with a second preparation; destroy the old review first.</p>
+
+<h2>3. Display copied review rows</h2>
+<p>Read <code>umi_application_context_review_summary</code> to obtain the number of
+added, updated and removed groups. Read each row with
+<code>umi_application_context_review_row</code>. The row includes the proposal,
+whether the group existed, and its previous application-cache value. This value
+is not an independently captured view of UI state. An empty prior value is distinct
+from an absent group; inspect <code>existed</code> to tell them apart.</p>
+<p>When a workbench is bound, each row also contains a copied typed UI value.
+The summary's <code>ui_difference_count</code> reports affected groups whose UI
+value differs from the application cache, including a missing value or another
+type. Show both values before acceptance. Applying the reviewed edit deliberately
+replaces the affected UI value; it does not silently treat the cache as current UI
+evidence. Choose application-owned key names to avoid unrelated services.</p>
+<p>Rows and summaries are copies. Editing a returned row cannot change the review.
+Treat the summary as a display model, not an instruction to execute a command.
+The group names in a removal are meaningful; its unused value is returned empty.</p>
+
+<h2>4. Accept or cancel</h2>
+<pre><code>/* Run after the host has obtained the user's choice. */
+if (accepted) {
+    status = umi_application_context_review_apply(runtime, review);
+}
+umi_application_context_review_destroy(review);
+review = NULL;</code></pre>
+<p>Acceptance requires the original runtime, the same session and workbench,
+unchanged context entries, and the observed UI revision. A successful nonempty
+edit advances the application context revision once. The bound UI store also
+publishes the complete change under one lock and advances once. The application
+cache is assigned only after that publication succeeds. A failed acceptance
+leaves both context stores unchanged. An accepted review cannot be applied again.</p>
+<p>On <code>UMI_STATUS_INVALID_STATE</code>, discard the review, refresh the displayed
+state and prepare a new proposal. Do not retry with an invented revision. Another
+UI context change, including one to an unrelated key, can invalidate a review.
+Cancelling simply destroys the review and leaves live context values alone.</p>
+
+<h2>5. Clear a group or replace one at capacity</h2>
+<p>Use <code>UMI_APPLICATION_CONTEXT_REMOVE</code> and the existing group name.
+A removal needs no value. The group must exist in the application store; if a
+workbench is bound, it must still exist there when accepted. Missing groups return
+<code>UMI_STATUS_NOT_FOUND</code>. The convenience function
+<code>umi_application_workspace_runtime_clear_context</code> uses the same transaction.</p>
+<p>A transaction may contain up to
+<code>UMI_APPLICATION_RUNTIME_MAX_CONTEXT_BINDINGS</code> distinct changes. All
+removals free capacity before additions, regardless of their order in the input.
+This allows a full workspace to replace one group with another. Keys outside the
+proposal remain untouched. Context revisions and per-entry revisions never wrap;
+counter exhaustion refuses the edit.</p>
+
+<h2>Typed UI context transactions</h2>
+<p>Services that own typed UI keys can use <code>UmiUiContextApplyChanges</code> from
+<code>umicom/ui/context_changes.h</code>, linked through <code>Umicom::ui</code>.
+It accepts Boolean, integer and string SET operations and key-only removals.
+Boolean inputs are exactly zero or one. The complete candidate is held on the heap
+and published only if every operation succeeds. It invokes no callbacks.</p>
+<p>Use <code>UmiUiContextReadKeys</code> to capture selected typed values and one
+revision under the same lock. Missing keys are explicit, repeated requested keys
+are allowed, and returned values are independent copies. This read supports
+coherent confirmation views without exposing pointers into the live store.</p>
+<p>Read the current UI revision, then submit that value as
+<code>expected_revision</code>. A zero-length request only checks the revision;
+it does not advance it. This transaction does not make several independent getter
+calls into a single read snapshot. Coordinate the surrounding host workflow when
+a reader needs a consistent multi-key view.</p>
+
+<h2>Product adapters</h2>
+<p>The following modules expose the shared review operation. Each also provides
+the matching <code>_workspace_context_apply</code> and
+<code>_workspace_clear_context</code> functions. Example keys are suggestions for
+host integration, not predefined channels or automatic panel wiring.</p>
+<table><thead><tr><th>Product</th><th>Review function</th><th>Example group</th></tr></thead><tbody><tr><td>Trader</td><td><code>umi_trader_workspace_context_review</code></td><td><code>trading.red</code></td></tr><tr><td>Bank</td><td><code>umi_bank_workspace_context_review</code></td><td><code>accounts.primary</code></td></tr><tr><td>Accountant</td><td><code>umi_accountant_workspace_context_review</code></td><td><code>ledger.company</code></td></tr><tr><td>CAD</td><td><code>umi_cad_workspace_context_review</code></td><td><code>design.document</code></td></tr><tr><td>AI Creator</td><td><code>umi_ai_creator_workspace_context_review</code></td><td><code>creation.project</code></td></tr><tr><td>Database Studio</td><td><code>umi_database_studio_workspace_context_review</code></td><td><code>database.selection</code></td></tr><tr><td>Education Studio</td><td><code>umi_education_workspace_context_review</code></td><td><code>learning.course</code></td></tr><tr><td>Exchange</td><td><code>umi_exchange_workspace_context_review</code></td><td><code>market.selection</code></td></tr><tr><td>Games</td><td><code>umi_games_workspace_context_review</code></td><td><code>game.project</code></td></tr><tr><td>Integration Studio</td><td><code>umi_integration_studio_workspace_context_review</code></td><td><code>integration.project</code></td></tr><tr><td>Kitchen Designer</td><td><code>umi_kitchen_designer_workspace_context_review</code></td><td><code>design.room</code></td></tr><tr><td>LLM Studio</td><td><code>umi_llm_workspace_context_review</code></td><td><code>models.selection</code></td></tr><tr><td>Marketplace</td><td><code>umi_marketplace_workspace_context_review</code></td><td><code>catalogue.selection</code></td></tr><tr><td>Media Studio</td><td><code>umi_media_studio_workspace_context_review</code></td><td><code>media.project</code></td></tr><tr><td>Mobile Studio</td><td><code>umi_mobile_studio_workspace_context_review</code></td><td><code>mobile.project</code></td></tr><tr><td>Music Studio</td><td><code>umi_music_studio_workspace_context_review</code></td><td><code>music.project</code></td></tr><tr><td>Operations Studio</td><td><code>umi_operations_workspace_context_review</code></td><td><code>operations.workspace</code></td></tr><tr><td>RAG Studio</td><td><code>umi_rag_workspace_context_review</code></td><td><code>retrieval.collection</code></td></tr><tr><td>Security Centre</td><td><code>umi_security_centre_workspace_context_review</code></td><td><code>security.workspace</code></td></tr><tr><td>Treasury Management</td><td><code>umi_tms_workspace_context_review</code></td><td><code>treasury.account</code></td></tr><tr><td>Web Studio</td><td><code>umi_web_studio_workspace_context_review</code></td><td><code>web.project</code></td></tr><tr><td>Studio IDE</td><td><code>umi_studio_workspace_context_review</code></td><td><code>workspace.project</code></td></tr></tbody></table>
+
+<h2>Recover from a refused edit</h2>
+<table><thead><tr><th>Status</th><th>What to check</th></tr></thead><tbody>
+<tr><td>INVALID_ARGUMENT</td><td>Check runtime identity, structure size, string terminators and operation kinds. Do not shorten a group name silently.</td></tr>
+<tr><td>ALREADY_EXISTS</td><td>Each proposal may mention a group only once. Combine repeated edits into one intended result before preparation.</td></tr>
+<tr><td>INVALID_STATE</td><td>The review is stale, already applied, or belongs to another runtime. Capture a fresh proposal.</td></tr>
+<tr><td>CAPACITY_EXCEEDED</td><td>Check application and UI capacity, text length and exhausted revisions. A capacity failure does not partially update earlier groups.</td></tr>
+<tr><td>NOT_FOUND</td><td>The removed group is absent. Refresh the presentation before deciding whether a new removal is needed.</td></tr>
+<tr><td>OUT_OF_MEMORY</td><td>No candidate was published. Keep existing state and let the caller retry when resources are available.</td></tr>
+</tbody></table>
+<p>The operation log records a durable <code>context-links</code> scope label.
+Individual before/after values are available in review rows. The bounded log is
+diagnostic information, not durable audit storage, and a full log does not undo a
+successful context edit. Use a separate persistence service when durable evidence
+is required.</p>
+<p>Future frontend contributors can render the copied rows in a native view and
+pass the accepted review to Framework. Keep validation and state publication here;
+avoid adding another application-owned context store.</p>
+<footer><p>Sammy Hegab · Umicom Foundation · MIT</p></footer>
+</body></html>

@@ -20,6 +20,7 @@
 #define INCLUDE_UMICOM_FINANCE_COMMODITY_COMMODITY_SNAPSHOT_H
 
 #include <stddef.h>
+#include "umicom/base/value_archive.h"
 #include <stdint.h>
 #include "umicom/finance/commodity/types.h"
 
@@ -45,6 +46,17 @@ void umi_commodity_commodity_snapshot_init(UmiCommoditySnapshot *value, int64_t 
 
 /* Return true when the snapshot has a valid timestamp and revision. */
 bool umi_commodity_commodity_snapshot_valid(const UmiCommoditySnapshot *value);
+
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_commodity_commodity_snapshot_archive_encode(const UmiCommoditySnapshot *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_commodity_commodity_snapshot_archive_decode(const void *bytes, size_t byte_count,
+    UmiCommoditySnapshot *value);
 
 #ifdef __cplusplus
 }

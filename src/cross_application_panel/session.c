@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/cross_application_panel/session.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise panel session from caller-provided values so later operations receive a known
@@ -33,6 +34,15 @@ record->revision=1U;
 /* Check that panel session satisfies its contract before another service relies on it. */
 UmiStatus umi_panel_session_validate(const UmiPanelSession *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->session_id, '\0', sizeof(record->session_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->workspace_id, '\0', sizeof(record->workspace_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->active_instance_id, '\0', sizeof(record->active_instance_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->layout_id, '\0', sizeof(record->layout_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
 /*
  * Protect caller-owned memory by checking that required state is available before it is
  * used.
@@ -169,3 +179,56 @@ if(store->count!=0U)memcpy(records,store->items,store->count*sizeof(store->items
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiPanelSessionArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xe5e668e989ba5347);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelSession *)0)->session_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelSession *)0)->workspace_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelSession *)0)->active_instance_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelSession *)0)->layout_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiPanelSessionArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiPanelSession *)0)->session_id) - 1U +
+        8U + sizeof(((UmiPanelSession *)0)->workspace_id) - 1U +
+        8U + sizeof(((UmiPanelSession *)0)->active_instance_id) - 1U +
+        8U + sizeof(((UmiPanelSession *)0)->layout_id) - 1U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiPanelSessionArchiveWrite(UmiArchiveWriter *writer, const UmiPanelSession *value)
+{
+    UmiArchiveWriteText(writer, value->session_id, sizeof(value->session_id));
+    UmiArchiveWriteText(writer, value->workspace_id, sizeof(value->workspace_id));
+    UmiArchiveWriteText(writer, value->active_instance_id, sizeof(value->active_instance_id));
+    UmiArchiveWriteText(writer, value->layout_id, sizeof(value->layout_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->panel_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->clean_shutdown);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiPanelSessionArchiveRead(UmiArchiveReader *reader, UmiPanelSession *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->session_id, sizeof(value->session_id));
+    UmiArchiveReadText(reader, value->workspace_id, sizeof(value->workspace_id));
+    UmiArchiveReadText(reader, value->active_instance_id, sizeof(value->active_instance_id));
+    UmiArchiveReadText(reader, value->layout_id, sizeof(value->layout_id));
+    value->panel_count = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->clean_shutdown = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiPanelSessionArchiveValidate(const UmiPanelSession *value)
+{
+    return umi_panel_session_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_panel_session_archive_encode, umi_panel_session_archive_decode,
+    UmiPanelSession, UmiPanelSessionArchiveSchema, UmiPanelSessionArchiveBound, UmiPanelSessionArchiveWrite, UmiPanelSessionArchiveRead, UmiPanelSessionArchiveValidate)

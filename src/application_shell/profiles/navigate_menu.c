@@ -49,7 +49,13 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
         .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
         .order = 100,
+        /* The document host must confirm a reachable history direction.
+         * Previous unconditional availability is retained for review. */
+#if 0
         .flags = UMI_APPLICATION_SHELL_VISIBLE | UMI_APPLICATION_SHELL_ENABLED,
+#else
+        .flags = UMI_APPLICATION_SHELL_VISIBLE,
+#endif
         .badge_count = 0U,
         .revision = 1U
     },
@@ -67,7 +73,13 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
         .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
         .order = 110,
+        /* The document host must confirm a reachable history direction.
+         * Previous unconditional availability is retained for review. */
+#if 0
         .flags = UMI_APPLICATION_SHELL_VISIBLE | UMI_APPLICATION_SHELL_ENABLED,
+#else
+        .flags = UMI_APPLICATION_SHELL_VISIBLE,
+#endif
         .badge_count = 0U,
         .revision = 1U
     },

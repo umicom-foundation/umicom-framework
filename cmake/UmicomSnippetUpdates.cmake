@@ -1,0 +1,16 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-snippet-updates-test "${CMAKE_CURRENT_LIST_DIR}/../tests/editor/test_snippet_updates.c")
+    target_link_libraries(umicom-snippet-updates-test PRIVATE Umicom::editor Umicom::platform)
+    umicom_apply_warnings(umicom-snippet-updates-test)
+    umicom_apply_sanitizers(umicom-snippet-updates-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-snippet-updates-test)
+    endif()
+    foreach(case grow shrink empty same unicode multiline literal-syntax choice-value later-ordinal final-active traversal repeated-update coincident zero-before adjacent mirrors-after base-offset borrowed-input value-limit value-over expanded-over offset-over unknown final-stop stale cancelled cancel-reset embedded-nul invalid-utf8 cancelled-session completed-session idle-session null-session null-text read-invalid restart restart-cancel restart-stale restart-invalid restart-invalid-text restart-offset restart-completed)
+        add_test(NAME framework.editor.snippet_updates.${case} COMMAND umicom-snippet-updates-test ${case})
+        set_tests_properties(framework.editor.snippet_updates.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;editor;snippet;ownership;regression")
+    endforeach()
+endif()

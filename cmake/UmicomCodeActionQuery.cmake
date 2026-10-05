@@ -1,0 +1,16 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-code-action-query-test "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/test_code_action_query.c")
+    target_link_libraries(umicom-code-action-query-test PRIVATE Umicom::developer Umicom::editor Umicom::platform)
+    umicom_apply_warnings(umicom-code-action-query-test)
+    umicom_apply_sanitizers(umicom-code-action-query-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-code-action-query-test)
+    endif()
+    foreach(case valid object missing disabled encoding sync fragmented notification error invalid-content range-outside range-surrogate shutdown-error close-error timeout cancel-before cancel-during invalid-source invalid-caret state empty unicode native-invalid read-error write-error escaped-limit choices disabled-action wrong-id command edit-and-command deferred annotations range-reversed range-multiline empty-range)
+        add_test(NAME framework.language_runtime.code_action_query.${case} COMMAND umicom-code-action-query-test ${case})
+        set_tests_properties(framework.language_runtime.code_action_query.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;language;code-actions;ownership;regression")
+    endforeach()
+endif()

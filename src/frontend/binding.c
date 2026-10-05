@@ -19,6 +19,8 @@
  * responsibility for higher-level threading and persistence policy.
  */
 #include "umicom/frontend/binding.h"
+#include "../base/value_archive_internal.h"
+#include "../base/registry_archive_internal.h"
 #include "../base/snapshot_registry_internal.h"
 /* Every field is described with its actual C member size; no string scan can
  * escape a supplied array. Domain values and legacy size/version normalisation
@@ -245,3 +247,68 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_frontend_binding_registry_edit_if_current,
  * this owner's existing row order and normalized fields remain authoritative. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_frontend_binding_registry_read_page,
     UmiFrontendBindingRegistry, UmiFrontendBindingSnapshot, UMI_FRONTEND_BINDING_CAPACITY)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xd3352cc7bd9eb0b7);
+    schema = (schema ^ (uint64_t)sizeof(((UmiFrontendBindingSnapshot *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiFrontendBindingSnapshot *)0)->source_path)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiFrontendBindingSnapshot *)0)->target_widget_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiFrontendBindingSnapshot *)0)->target_property)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiFrontendBindingSnapshot *)0)->converter)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiFrontendBindingSnapshot *)0)->id) - 1U +
+        8U + sizeof(((UmiFrontendBindingSnapshot *)0)->source_path) - 1U +
+        8U + sizeof(((UmiFrontendBindingSnapshot *)0)->target_widget_id) - 1U +
+        8U + sizeof(((UmiFrontendBindingSnapshot *)0)->target_property) - 1U +
+        8U + sizeof(((UmiFrontendBindingSnapshot *)0)->converter) - 1U +
+        8U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiFrontendBindingSnapshot *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->source_path, sizeof(value->source_path));
+    UmiArchiveWriteText(writer, value->target_widget_id, sizeof(value->target_widget_id));
+    UmiArchiveWriteText(writer, value->target_property, sizeof(value->target_property));
+    UmiArchiveWriteText(writer, value->converter, sizeof(value->converter));
+    UmiArchiveWriteSigned(writer, (int64_t)value->two_way);
+    UmiArchiveWriteSigned(writer, (int64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiFrontendBindingSnapshot *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->source_path, sizeof(value->source_path));
+    UmiArchiveReadText(reader, value->target_widget_id, sizeof(value->target_widget_id));
+    UmiArchiveReadText(reader, value->target_property, sizeof(value->target_property));
+    UmiArchiveReadText(reader, value->converter, sizeof(value->converter));
+    value->two_way = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->enabled = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus ArchiveValidate(const UmiFrontendBindingSnapshot *value)
+{
+    return umi_frontend_binding_snapshot_validate(value, NULL);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_frontend_binding_snapshot_archive_encode, umi_frontend_binding_snapshot_archive_decode,
+    UmiFrontendBindingSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Restoring this complete collection reuses its existing reviewed replacement
+ * rules. Decoding a saved value alone never changes a live registry. */
+UMI_DEFINE_REGISTRY_ARCHIVE(umi_frontend_binding_registry_archive_encode, umi_frontend_binding_registry_archive_restore,
+    UmiFrontendBindingRegistry, UmiFrontendBindingSnapshot, UMI_FRONTEND_BINDING_CAPACITY, ArchiveSchema,
+    umi_frontend_binding_snapshot_archive_encode, umi_frontend_binding_snapshot_archive_decode, umi_frontend_binding_registry_replace_if_current)

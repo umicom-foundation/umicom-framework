@@ -17,6 +17,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/developer_platform/commit_context.h"
+#include "../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -79,6 +80,13 @@ UmiStatus umi_ai_dev_commit_context_configure(UmiAiDevCommitContext *value, cons
  * it.
  */
 UmiStatus umi_ai_dev_commit_context_validate(const UmiAiDevCommitContext *value) {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(value->id, '\0', sizeof(value->id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(value->label, '\0', sizeof(value->label)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -101,3 +109,50 @@ uint32_t umi_ai_dev_commit_context_evidence_score(const UmiAiDevCommitContext *v
     relevance = relevance > 80U ? 80U : relevance;
     return relevance + bonus;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiAiDevCommitContextArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xad4511b6aca0fae5);
+    schema = (schema ^ (uint64_t)sizeof(((UmiAiDevCommitContext *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiAiDevCommitContext *)0)->label)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiAiDevCommitContextArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiAiDevCommitContext *)0)->id) - 1U +
+        8U + sizeof(((UmiAiDevCommitContext *)0)->label) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiAiDevCommitContextArchiveWrite(UmiArchiveWriter *writer, const UmiAiDevCommitContext *value)
+{
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->label, sizeof(value->label));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->flags);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->priority);
+    UmiArchiveWriteSigned(writer, (int64_t)value->enabled);
+}
+static void UmiAiDevCommitContextArchiveRead(UmiArchiveReader *reader, UmiAiDevCommitContext *value)
+{
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->label, sizeof(value->label));
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->flags = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->priority = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->enabled = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+}
+static UmiStatus UmiAiDevCommitContextArchiveValidate(const UmiAiDevCommitContext *value)
+{
+    return umi_ai_dev_commit_context_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_ai_dev_commit_context_archive_encode, umi_ai_dev_commit_context_archive_decode,
+    UmiAiDevCommitContext, UmiAiDevCommitContextArchiveSchema, UmiAiDevCommitContextArchiveBound, UmiAiDevCommitContextArchiveWrite, UmiAiDevCommitContextArchiveRead, UmiAiDevCommitContextArchiveValidate)

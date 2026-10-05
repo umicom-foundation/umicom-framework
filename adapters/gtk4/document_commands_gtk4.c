@@ -77,6 +77,16 @@ static UmiStatus EditFinished(UmiGtk4Adapter *adapter, UmiStatus status)
 /* The close form shares this existing editing lifetime token. */
 static void ClosePromptClose(GtkWidget *window);
 static void CloseRunDetach(GObject *lifetime);
+static void ReplacementReviewDetach(GObject *lifetime);
+static void ReplacementSetDetach(GObject *lifetime);
+static void WorkspacePanelDetach(GObject *lifetime);
+static void DocumentProposalDetach(GObject *lifetime);
+static void CompletionReviewDetach(GObject *lifetime);
+static void SnippetReviewDetach(GObject *lifetime);
+static void RecoveryReviewDetach(GObject *lifetime);
+static void RecoveryMonitorDetach(GObject *lifetime);
+static void RecoveryReviewClose(GtkWidget *window);
+static void SnippetReviewClose(GtkWidget *window,int notify,UmiStatus status);
 
 static void EditWindowDestroyed(GtkWidget *window, gpointer data)
 {
@@ -84,6 +94,9 @@ static void EditWindowDestroyed(GtkWidget *window, gpointer data)
     (void)UmiGtk4AdapterBindDocumentEditing(data, NULL, NULL, NULL);
 }
 
+/* Recovery uses the existing invalidatable editing lifetime so retained controls cannot restore into a retired coordinator.
+ * The former implementation is retained for engineering review. */
+#if 0
 UmiStatus UmiGtk4AdapterBindDocumentEditing(UmiGtk4Adapter *adapter,
     UmiDocumentCoordinator *coordinator, UmiGtk4DocumentEditResultFn completed,
     void *context)
@@ -107,6 +120,121 @@ UmiStatus UmiGtk4AdapterBindDocumentEditing(UmiGtk4Adapter *adapter,
         if (closeDialog != NULL) ClosePromptClose(closeDialog);
         /* Cancel the captured sequence before its borrowed coordinator ends. */
         CloseRunDetach(adapter->edit_lifetime);
+        /* The same binding owns replacement questions and their idle work. */
+        ReplacementReviewDetach(adapter->edit_lifetime);
+        /* Proposed edits own captured source until this editing binding retires. */
+        DocumentProposalDetach(adapter->edit_lifetime);
+        /* Cancel language workers before this document binding retires. */
+        CompletionReviewDetach(adapter->edit_lifetime);
+    }
+    UmiGtk4DocumentSaveAllDetach(adapter);
+    if (adapter->edit_cancel != NULL) g_cancellable_cancel(adapter->edit_cancel);
+    g_clear_object(&adapter->edit_cancel);
+    g_clear_object(&adapter->edit_lifetime);
+    if (adapter->edit_window_destroy_handler != 0UL && adapter->window != NULL &&
+        g_signal_handler_is_connected(adapter->window, adapter->edit_window_destroy_handler))
+        g_signal_handler_disconnect(adapter->window, adapter->edit_window_destroy_handler);
+    adapter->edit_window_destroy_handler = 0UL;
+    adapter->edit_coordinator = coordinator;
+    adapter->edit_completed = completed;
+    adapter->edit_context = context;
+    if (coordinator != NULL) {
+        adapter->edit_lifetime = g_object_new(G_TYPE_OBJECT, NULL);
+        g_object_set_data(adapter->edit_lifetime, "adapter", adapter);
+        adapter->edit_window_destroy_handler = g_signal_connect(adapter->window,
+            "destroy", G_CALLBACK(EditWindowDestroyed), adapter);
+    }
+    return UMI_STATUS_OK;
+}
+#endif
+/* Periodic recovery shares document binding invalidation, including timer and worker cancellation; the earlier form-only invalidation remains below for review.
+ * The former implementation is retained for engineering review. */
+#if 0
+UmiStatus UmiGtk4AdapterBindDocumentEditing(UmiGtk4Adapter *adapter,
+    UmiDocumentCoordinator *coordinator, UmiGtk4DocumentEditResultFn completed,
+    void *context)
+{
+    if (adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (coordinator != NULL && (adapter->window == NULL || adapter->shell == NULL))
+        return UMI_STATUS_INVALID_STATE;
+    /* The former invalidation is retained: the same token now also owns a
+     * location form, which must be closed before releasing the binding.
+     * if (adapter->edit_lifetime != NULL)
+     *     g_object_set_data(adapter->edit_lifetime, "adapter", NULL);
+     */
+    if (adapter->edit_lifetime != NULL) {
+        GtkWidget *dialog = g_object_get_data(adapter->edit_lifetime, "location-dialog");
+        g_object_set_data(adapter->edit_lifetime, "adapter", NULL);
+        g_object_set_data(adapter->edit_lifetime, "location-dialog", NULL);
+        if (dialog != NULL) gtk_window_destroy(GTK_WINDOW(dialog));
+        /* Invalidate before cancelling a native chooser: its late reply must
+         * not dereference the coordinator or a replaced Studio context. */
+        GtkWidget *closeDialog = g_object_get_data(adapter->edit_lifetime, "close-dialog");
+        if (closeDialog != NULL) ClosePromptClose(closeDialog);
+        /* Cancel the captured sequence before its borrowed coordinator ends. */
+        CloseRunDetach(adapter->edit_lifetime);
+        /* The same binding owns replacement questions and their idle work. */
+        ReplacementReviewDetach(adapter->edit_lifetime);
+        /* Proposed edits own captured source until this editing binding retires. */
+        DocumentProposalDetach(adapter->edit_lifetime);
+        /* Cancel language workers before this document binding retires. */
+        CompletionReviewDetach(adapter->edit_lifetime);
+        /* Local recovery workers lose document authority with the same binding. */
+        RecoveryReviewDetach(adapter->edit_lifetime);
+    }
+    UmiGtk4DocumentSaveAllDetach(adapter);
+    if (adapter->edit_cancel != NULL) g_cancellable_cancel(adapter->edit_cancel);
+    g_clear_object(&adapter->edit_cancel);
+    g_clear_object(&adapter->edit_lifetime);
+    if (adapter->edit_window_destroy_handler != 0UL && adapter->window != NULL &&
+        g_signal_handler_is_connected(adapter->window, adapter->edit_window_destroy_handler))
+        g_signal_handler_disconnect(adapter->window, adapter->edit_window_destroy_handler);
+    adapter->edit_window_destroy_handler = 0UL;
+    adapter->edit_coordinator = coordinator;
+    adapter->edit_completed = completed;
+    adapter->edit_context = context;
+    if (coordinator != NULL) {
+        adapter->edit_lifetime = g_object_new(G_TYPE_OBJECT, NULL);
+        g_object_set_data(adapter->edit_lifetime, "adapter", adapter);
+        adapter->edit_window_destroy_handler = g_signal_connect(adapter->window,
+            "destroy", G_CALLBACK(EditWindowDestroyed), adapter);
+    }
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus UmiGtk4AdapterBindDocumentEditing(UmiGtk4Adapter *adapter,
+    UmiDocumentCoordinator *coordinator, UmiGtk4DocumentEditResultFn completed,
+    void *context)
+{
+    if (adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (coordinator != NULL && (adapter->window == NULL || adapter->shell == NULL))
+        return UMI_STATUS_INVALID_STATE;
+    /* The former invalidation is retained: the same token now also owns a
+     * location form, which must be closed before releasing the binding.
+     * if (adapter->edit_lifetime != NULL)
+     *     g_object_set_data(adapter->edit_lifetime, "adapter", NULL);
+     */
+    if (adapter->edit_lifetime != NULL) {
+        GtkWidget *dialog = g_object_get_data(adapter->edit_lifetime, "location-dialog");
+        g_object_set_data(adapter->edit_lifetime, "adapter", NULL);
+        g_object_set_data(adapter->edit_lifetime, "location-dialog", NULL);
+        if (dialog != NULL) gtk_window_destroy(GTK_WINDOW(dialog));
+        /* Invalidate before cancelling a native chooser: its late reply must
+         * not dereference the coordinator or a replaced Studio context. */
+        GtkWidget *closeDialog = g_object_get_data(adapter->edit_lifetime, "close-dialog");
+        if (closeDialog != NULL) ClosePromptClose(closeDialog);
+        /* Cancel the captured sequence before its borrowed coordinator ends. */
+        CloseRunDetach(adapter->edit_lifetime);
+        /* The same binding owns replacement questions and their idle work. */
+        ReplacementReviewDetach(adapter->edit_lifetime);
+        /* Proposed edits own captured source until this editing binding retires. */
+        DocumentProposalDetach(adapter->edit_lifetime);
+        /* Cancel language workers before this document binding retires. */
+        CompletionReviewDetach(adapter->edit_lifetime);
+        /* Local recovery workers lose document authority with the same binding. */
+        RecoveryReviewDetach(adapter->edit_lifetime);
+        /* Periodic snapshots must retire before the borrowed coordinator ends. */
+        RecoveryMonitorDetach(adapter->edit_lifetime);
     }
     UmiGtk4DocumentSaveAllDetach(adapter);
     if (adapter->edit_cancel != NULL) g_cancellable_cancel(adapter->edit_cancel);
@@ -159,6 +287,8 @@ int UmiGtk4AdapterDocumentCommandEnabled(UmiGtk4Adapter *adapter, const char *co
         EditFindDocument(adapter, NULL, &id) != UMI_STATUS_OK ||
         UmiDocumentCoordinatorGetEditState(adapter->edit_coordinator, id, &state) != UMI_STATUS_OK)
         return 0;
+    /* Disable delayed paste while a reviewed multi-document edit is open. */
+    if (command == UMI_DOCUMENT_EDIT_PASTE && UmiGtk4AdapterReplacementReviewBusy(adapter)) return 0;
     switch (command) {
     case UMI_DOCUMENT_EDIT_COPY: return state.selection_bytes != 0U;
     case UMI_DOCUMENT_EDIT_SELECT_ALL: return state.text_bytes != 0U;
@@ -226,6 +356,9 @@ UmiStatus UmiGtk4EditorCommandForView(UmiGtk4Adapter *adapter,
      * if (command == UMI_DOCUMENT_EDIT_PASTE && adapter->edit_cancel != NULL)
      *     return EditFinished(adapter, UMI_STATUS_BUSY);
      * Recheck at invocation, not only when the menu was last painted. */
+    /* A queued clipboard write cannot share a replacement review's question. */
+    if (command == UMI_DOCUMENT_EDIT_PASTE && UmiGtk4AdapterReplacementReviewBusy(adapter))
+        return EditFinished(adapter, UMI_STATUS_BUSY);
     if (command == UMI_DOCUMENT_EDIT_PASTE && (adapter->edit_cancel != NULL ||
         /* Previous final condition: UmiGtk4AdapterDocumentSaveAllBusy(adapter))).
          * Close questions now exclude delayed clipboard mutation too. */
@@ -374,6 +507,8 @@ static void LocationPromptAccept(GtkWidget *source, gpointer data)
 
 UmiStatus UmiGtk4AdapterPromptDocumentLocation(UmiGtk4Adapter *adapter)
 {
+    /* A modal replacement question owns the next document decision. */
+    if (UmiGtk4AdapterReplacementReviewBusy(adapter)) return EditFinished(adapter, UMI_STATUS_BUSY);
     UmiDocumentId id = 0U;
     if (adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     UmiStatus status = EditFindDocument(adapter, NULL, &id);
@@ -893,6 +1028,8 @@ static UmiStatus ClosePromptShow(UmiGtk4Adapter *adapter,
 UmiStatus UmiGtk4AdapterRequestDocumentClose(UmiGtk4Adapter *adapter,
     const char *viewId)
 {
+    /* A modal replacement question owns the next document decision. */
+    if (UmiGtk4AdapterReplacementReviewBusy(adapter)) return EditFinished(adapter, UMI_STATUS_BUSY);
     if (adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     if (adapter->edit_lifetime == NULL || adapter->edit_coordinator == NULL ||
         adapter->window == NULL || adapter->shell == NULL) return UMI_STATUS_UNAVAILABLE;
@@ -956,6 +1093,8 @@ int UmiGtk4AdapterDocumentCloseBusy(const UmiGtk4Adapter *adapter)
 UmiStatus UmiGtk4AdapterCloseDocuments(UmiGtk4Adapter *adapter,
     UmiDocumentCloseScope scope, UmiGtk4DocumentCloseResultFn completed, void *context)
 {
+    /* Do not overlap a captured replacement decision with another document flow. */
+    if (UmiGtk4AdapterReplacementReviewBusy(adapter)) return UMI_STATUS_BUSY;
     if (adapter == NULL || (scope != UMI_DOCUMENT_CLOSE_ALL && scope != UMI_DOCUMENT_CLOSE_OTHERS))
         return UMI_STATUS_INVALID_ARGUMENT;
     if (adapter->edit_lifetime == NULL || adapter->edit_coordinator == NULL ||
@@ -1013,3 +1152,131 @@ UmiStatus UmiGtk4AdapterCloseDocumentsProgress(const UmiGtk4Adapter *adapter,
     if (status == UMI_STATUS_OK) *outProgress = progress;
     return status;
 }
+
+/* Keep history and its availability in Framework. Applications present these
+ * actions without retaining paths or copying the coordinator's ownership. */
+static UmiStatus ClosedDocumentReady(UmiGtk4Adapter *adapter,
+    UmiDocumentReopenSnapshot *snapshot)
+{
+    /* Do not overlap a captured replacement decision with another document flow. */
+    if (UmiGtk4AdapterReplacementReviewBusy(adapter)) return UMI_STATUS_BUSY;
+    if (adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (adapter->edit_coordinator == NULL || adapter->edit_lifetime == NULL)
+        return UMI_STATUS_UNAVAILABLE;
+    if (adapter->edit_cancel != NULL || UmiGtk4AdapterDocumentSaveAllBusy(adapter) ||
+        UmiGtk4AdapterDocumentCloseBusy(adapter)) return UMI_STATUS_BUSY;
+    UmiStatus status = UmiDocumentCoordinatorReopenSnapshot(adapter->edit_coordinator, snapshot);
+    if (status != UMI_STATUS_OK) return status;
+    if (snapshot->busy) return UMI_STATUS_BUSY;
+    if (snapshot->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    return snapshot->count != 0U ? UMI_STATUS_OK : UMI_STATUS_NOT_FOUND;
+}
+
+int UmiGtk4AdapterReopenDocumentEnabled(UmiGtk4Adapter *adapter)
+{
+    UmiDocumentReopenSnapshot snapshot;
+    return ClosedDocumentReady(adapter, &snapshot) == UMI_STATUS_OK;
+}
+
+/* Provider callbacks may detach an editing binding. Retain its token across
+ * the read, and notify only that same binding if it remains alive afterwards. */
+static UmiStatus ClosedDocumentAction(UmiGtk4Adapter *adapter, int forget)
+{
+    UmiDocumentReopenSnapshot snapshot;
+    UmiStatus status = ClosedDocumentReady(adapter, &snapshot);
+    if (status != UMI_STATUS_OK) return EditFinished(adapter, status);
+    GObject *lifetime = g_object_ref(adapter->edit_lifetime);
+    UmiDocumentId document = 0U;
+    status = forget
+        ? UmiDocumentCoordinatorForgetClosed(adapter->edit_coordinator, snapshot.revision)
+        : UmiDocumentCoordinatorReopenLast(adapter->edit_coordinator, snapshot.revision, &document);
+    adapter = g_object_get_data(lifetime, "adapter");
+    g_object_unref(lifetime);
+    return adapter != NULL ? EditFinished(adapter, status) : status;
+}
+
+UmiStatus UmiGtk4AdapterReopenDocument(UmiGtk4Adapter *adapter)
+{
+    return ClosedDocumentAction(adapter, 0);
+}
+
+UmiStatus UmiGtk4AdapterForgetClosedDocument(UmiGtk4Adapter *adapter)
+{
+    return ClosedDocumentAction(adapter, 1);
+}
+
+
+/* Navigation has the same user-decision boundary as other source commands.
+ * The coordinator owns history, and the binding only controls availability. */
+static UmiStatus NavigationHistoryReady(UmiGtk4Adapter *adapter, int direction,
+    UmiDocumentNavigationHistorySnapshot *snapshot)
+{
+    /* Do not overlap a captured replacement decision with another document flow. */
+    if (UmiGtk4AdapterReplacementReviewBusy(adapter)) return UMI_STATUS_BUSY;
+    if (adapter == NULL || direction < -1 || direction > 1) return UMI_STATUS_INVALID_ARGUMENT;
+    if (adapter->edit_coordinator == NULL || adapter->edit_lifetime == NULL) return UMI_STATUS_UNAVAILABLE;
+    if (adapter->edit_cancel != NULL || UmiGtk4AdapterDocumentSaveAllBusy(adapter) ||
+        UmiGtk4AdapterDocumentCloseBusy(adapter)) return UMI_STATUS_BUSY;
+    UmiStatus status = UmiDocumentCoordinatorNavigationSnapshot(adapter->edit_coordinator, snapshot);
+    if (status != UMI_STATUS_OK) return status;
+    if (snapshot->busy) return UMI_STATUS_BUSY;
+    if (snapshot->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    int available = direction < 0 ? snapshot->can_go_back :
+        direction > 0 ? snapshot->can_go_forward : snapshot->count != 0U;
+    return available ? UMI_STATUS_OK : UMI_STATUS_NOT_FOUND;
+}
+
+int UmiGtk4AdapterNavigationHistoryEnabled(UmiGtk4Adapter *adapter, int direction)
+{
+    UmiDocumentNavigationHistorySnapshot snapshot;
+    return NavigationHistoryReady(adapter, direction, &snapshot) == UMI_STATUS_OK;
+}
+
+static UmiStatus NavigationHistoryAction(UmiGtk4Adapter *adapter, int direction)
+{
+    UmiDocumentNavigationHistorySnapshot snapshot;
+    UmiStatus status = NavigationHistoryReady(adapter, direction, &snapshot);
+    if (status == UMI_STATUS_OK) status = direction == 0
+        ? UmiDocumentCoordinatorClearNavigation(adapter->edit_coordinator, snapshot.revision)
+        : UmiDocumentCoordinatorTravel(adapter->edit_coordinator, direction, snapshot.revision, NULL);
+    /* No provider or host callback runs during travel. Refresh and completion
+     * are last because either can detach the native editing binding. */
+    return EditFinished(adapter, status);
+}
+
+UmiStatus UmiGtk4AdapterTravelDocument(UmiGtk4Adapter *adapter, int direction)
+{
+    if (direction != -1 && direction != 1) return EditFinished(adapter, UMI_STATUS_INVALID_ARGUMENT);
+    return NavigationHistoryAction(adapter, direction);
+}
+
+UmiStatus UmiGtk4AdapterClearNavigationHistory(UmiGtk4Adapter *adapter)
+{
+    return NavigationHistoryAction(adapter, 0);
+}
+
+/* Native sequencing shares this translation unit's editing lifetime and completion owner. */
+#include "document_replacement_run.inc"
+#include "document_replacement_set.inc"
+#include "document_workspace_edit_review.inc"
+
+#include "document_bookmarks.inc"
+
+/* Selected-code review uses the same invalidatable document owner token. */
+#include "document_proposal_review.inc"
+
+/* Native completion uses the same document owner and invalidation boundary. */
+#include "document_completion_review.inc"
+#include "document_snippet_review.inc"
+
+/* Keep source range discovery and navigation in the shared document owner. */
+#include "document_delimiter_navigation.inc"
+
+#include "document_line_edit.inc"
+
+#include "document_typing_history.inc"
+
+#include "document_recovery_monitor.inc"
+#include "document_recovery.inc"
+
+#include "document_format.inc"

@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/context_search.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context search from caller-provided values so later operations receive a
@@ -131,6 +132,15 @@ UmiStatus umi_context_search_record_failure(UmiContextSearch *state,UmiStatus st
 /* Check that context search satisfies its contract before another service relies on it. */
 UmiStatus umi_context_search_validate(const UmiContextSearch *state)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (state == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->query, '\0', sizeof(state->query)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->schema_id, '\0', sizeof(state->schema_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->application_id, '\0', sizeof(state->application_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->panel_id, '\0', sizeof(state->panel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -158,3 +168,68 @@ bool umi_context_search_covers_sequence(const UmiContextSearch *state,uint64_t s
 {
     return state!=NULL&&state->item_count!=0U&&sequence>=state->first_sequence&&sequence<=state->last_sequence;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextSearchArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x7d44b6cce83e6367);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextSearch *)0)->query)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextSearch *)0)->schema_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextSearch *)0)->application_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextSearch *)0)->panel_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextSearchArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextSearch *)0)->query) - 1U +
+        8U + sizeof(((UmiContextSearch *)0)->schema_id) - 1U +
+        8U + sizeof(((UmiContextSearch *)0)->application_id) - 1U +
+        8U + sizeof(((UmiContextSearch *)0)->panel_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextSearchArchiveWrite(UmiArchiveWriter *writer, const UmiContextSearch *value)
+{
+    UmiArchiveWriteText(writer, value->query, sizeof(value->query));
+    UmiArchiveWriteText(writer, value->schema_id, sizeof(value->schema_id));
+    UmiArchiveWriteText(writer, value->application_id, sizeof(value->application_id));
+    UmiArchiveWriteText(writer, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->first_sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->last_sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->item_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->failure_count);
+    UmiArchiveWriteSigned(writer, (int64_t)value->status);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextSearchArchiveRead(UmiArchiveReader *reader, UmiContextSearch *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->query, sizeof(value->query));
+    UmiArchiveReadText(reader, value->schema_id, sizeof(value->schema_id));
+    UmiArchiveReadText(reader, value->application_id, sizeof(value->application_id));
+    UmiArchiveReadText(reader, value->panel_id, sizeof(value->panel_id));
+    value->first_sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->last_sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->item_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->failure_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->status = (UmiStatus)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextSearchArchiveValidate(const UmiContextSearch *value)
+{
+    return umi_context_search_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_search_archive_encode, umi_context_search_archive_decode,
+    UmiContextSearch, UmiContextSearchArchiveSchema, UmiContextSearchArchiveBound, UmiContextSearchArchiveWrite, UmiContextSearchArchiveRead, UmiContextSearchArchiveValidate)

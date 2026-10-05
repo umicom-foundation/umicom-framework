@@ -16,6 +16,7 @@
 #ifndef UMICOM_CONTEXT_CHANNEL_TRANSFORMER_RULE_H
 #define UMICOM_CONTEXT_CHANNEL_TRANSFORMER_RULE_H
 #include "umicom/context_channel/payload.h"
+#include "umicom/base/value_archive.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -87,6 +88,17 @@ size_t umi_context_transformer_rule_store_count(const UmiContextTransformerRuleS
  * its client applications.
  */
 UmiStatus umi_context_transformer_rule_store_snapshot(const UmiContextTransformerRuleStore *store,UmiContextTransformerRule *out_records,size_t capacity,size_t *out_count);
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_context_transformer_rule_archive_encode(const UmiContextTransformerRule *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_context_transformer_rule_archive_decode(const void *bytes, size_t byte_count,
+    UmiContextTransformerRule *value);
+
 #ifdef __cplusplus
 }
 #endif

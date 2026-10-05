@@ -18,6 +18,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/design/tab_spec.h"
+#include "../../base/value_archive_internal.h"
 
 #include <string.h>
 /* Check that design tab spec satisfies its contract before another service relies on it. */
@@ -37,3 +38,46 @@ UmiStatus umi_design_tab_spec_init(UmiDesignTabSpec *spec, int closable, int pin
     spec->closable=closable?1:0;spec->pinnable=pinnable?1:0;spec->dirty=dirty?1:0;spec->attention=attention?1:0;spec->accent_role=accent_role;
     return umi_design_tab_spec_valid(spec) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiDesignTabSpecArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x049d5e129a0a9ea3);
+
+    return schema;
+}
+static size_t UmiDesignTabSpecArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiDesignTabSpecArchiveWrite(UmiArchiveWriter *writer, const UmiDesignTabSpec *value)
+{
+    UmiArchiveWriteSigned(writer, (int64_t)value->closable);
+    UmiArchiveWriteSigned(writer, (int64_t)value->pinnable);
+    UmiArchiveWriteSigned(writer, (int64_t)value->dirty);
+    UmiArchiveWriteSigned(writer, (int64_t)value->attention);
+    UmiArchiveWriteSigned(writer, (int64_t)value->accent_role);
+}
+static void UmiDesignTabSpecArchiveRead(UmiArchiveReader *reader, UmiDesignTabSpec *value)
+{
+    value->closable = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->pinnable = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->dirty = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->attention = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->accent_role = (UmiDesignSemanticRole)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+}
+static UmiStatus UmiDesignTabSpecArchiveValidate(const UmiDesignTabSpec *value)
+{
+    return umi_design_tab_spec_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_design_tab_spec_archive_encode, umi_design_tab_spec_archive_decode,
+    UmiDesignTabSpec, UmiDesignTabSpecArchiveSchema, UmiDesignTabSpecArchiveBound, UmiDesignTabSpecArchiveWrite, UmiDesignTabSpecArchiveRead, UmiDesignTabSpecArchiveValidate)

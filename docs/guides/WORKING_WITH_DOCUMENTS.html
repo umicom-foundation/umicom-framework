@@ -238,6 +238,11 @@ cleanup:
 <h2 id="check-before-closing-a-window">Check before closing a window</h2>
 <p><code>umi_studio_close_guard_evaluate</code> checks documents and the existing Test, Debug and AI activity snapshots. A host with an additional background operation can use <code>UmiStudioCloseGuardEvaluateWithActivity</code>. A running build is then included in the decision without being misreported as a running test or changing existing public structure layouts.</p>
 <p>A failed state query is not evidence that there is no unsaved work. The graphical host should leave the window open, explain the problem and let the user return to their work. Only an explicit, successful close decision should proceed.</p>
+<h2 id="reopen-a-closed-document">Reopen a closed document</h2>
+<p>The coordinator can remember the latest 16 distinct absolute saved paths without retaining discarded text. A reopened file uses the provider's current content, or selects its existing working copy without replacing its draft. Read <a href="REOPENING_DOCUMENTS.html">Reopen a closed document</a> for the API, native controls, retry behavior and session limits.</p>
 <h2 id="continue-learning">Continue learning</h2>
 <p>The <a href="../learning/application-development.html">application-development lessons</a> develop the Notes model, memory ownership, session handling and a window using Framework services. The <a href="../WRITING_DOCUMENTATION.md">documentation contributor guide</a> explains how to add clear examples and instructions for future readers.</p>
-</main></div><footer>Umicom Foundation · Learning through practical applications</footer></body></html>
+</main></div><footer>Umicom Foundation · Learning through practical applications</footer><section><h2>Return to a visited location</h2>
+<p>Studio's Navigate Back and Forward commands use Framework location history. Use Alt+Left or Alt+Right after Go to Line, opening a source or following a Find in Files result. These actions leave source text and text undo unchanged. Clear Navigation History is available in command search.</p>
+<p>History is limited to live documents in the current session. Closed tabs and removed lines can make a destination unavailable. Read the <a href="NAVIGATING_SOURCE_HISTORY.html">source navigation guide</a> for the workflow, failure recovery and host APIs.</p></section>
+</body></html>

@@ -19,6 +19,8 @@
  * responsibility for higher-level threading and persistence policy.
  */
 #include "umicom/chart/marker.h"
+#include "../base/value_archive_internal.h"
+#include "../base/registry_archive_internal.h"
 #include "../base/snapshot_registry_internal.h"
 
 /* Validate every bounded text member before lookup. Value-only snapshot
@@ -244,3 +246,71 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_chart_marker_registry_edit_if_current,
  * this owner's existing row order and normalized fields remain authoritative. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_chart_marker_registry_read_page,
     UmiChartMarkerRegistry, UmiChartMarkerSnapshot, UMI_CHART_MARKER_CAPACITY)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x561af8744ec82b60);
+    schema = (schema ^ (uint64_t)sizeof(((UmiChartMarkerSnapshot *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiChartMarkerSnapshot *)0)->series_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiChartMarkerSnapshot *)0)->text)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiChartMarkerSnapshot *)0)->shape)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiChartMarkerSnapshot *)0)->position)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiChartMarkerSnapshot *)0)->id) - 1U +
+        8U + sizeof(((UmiChartMarkerSnapshot *)0)->series_id) - 1U +
+        8U +
+        8U +
+        8U + sizeof(((UmiChartMarkerSnapshot *)0)->text) - 1U +
+        8U + sizeof(((UmiChartMarkerSnapshot *)0)->shape) - 1U +
+        8U + sizeof(((UmiChartMarkerSnapshot *)0)->position) - 1U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiChartMarkerSnapshot *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->series_id, sizeof(value->series_id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->time);
+    UmiArchiveWriteDouble(writer, value->value);
+    UmiArchiveWriteText(writer, value->text, sizeof(value->text));
+    UmiArchiveWriteText(writer, value->shape, sizeof(value->shape));
+    UmiArchiveWriteText(writer, value->position, sizeof(value->position));
+    UmiArchiveWriteSigned(writer, (int64_t)value->order);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiChartMarkerSnapshot *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->series_id, sizeof(value->series_id));
+    value->time = (int64_t)UmiArchiveReadSigned(reader, INT64_MIN, INT64_MAX);
+    value->value = UmiArchiveReadDouble(reader);
+    UmiArchiveReadText(reader, value->text, sizeof(value->text));
+    UmiArchiveReadText(reader, value->shape, sizeof(value->shape));
+    UmiArchiveReadText(reader, value->position, sizeof(value->position));
+    value->order = (int32_t)UmiArchiveReadSigned(reader, INT32_MIN, INT32_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus ArchiveValidate(const UmiChartMarkerSnapshot *value)
+{
+    return umi_chart_marker_snapshot_validate(value, NULL);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_chart_marker_snapshot_archive_encode, umi_chart_marker_snapshot_archive_decode,
+    UmiChartMarkerSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Restoring this complete collection reuses its existing reviewed replacement
+ * rules. Decoding a saved value alone never changes a live registry. */
+UMI_DEFINE_REGISTRY_ARCHIVE(umi_chart_marker_registry_archive_encode, umi_chart_marker_registry_archive_restore,
+    UmiChartMarkerRegistry, UmiChartMarkerSnapshot, UMI_CHART_MARKER_CAPACITY, ArchiveSchema,
+    umi_chart_marker_snapshot_archive_encode, umi_chart_marker_snapshot_archive_decode, umi_chart_marker_registry_replace_if_current)

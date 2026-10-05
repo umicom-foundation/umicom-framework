@@ -20,6 +20,7 @@
 #define UMICOM_EDITOR_INTELLIGENCE_WORKBENCH_REFACTOR_TRANSACTION_H
 
 #include "umicom/editor/intelligence_workbench/types.h"
+#include "umicom/base/value_archive.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -54,6 +55,17 @@ UmiStatus umi_editor_intel_refactor_transaction_rollback(UmiEditorIntelRefactorT
  * service relies on it.
  */
 int umi_editor_intel_refactor_transaction_valid(const UmiEditorIntelRefactorTransaction *transaction);
+
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_editor_intel_refactor_transaction_archive_encode(const UmiEditorIntelRefactorTransaction *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_editor_intel_refactor_transaction_archive_decode(const void *bytes, size_t byte_count,
+    UmiEditorIntelRefactorTransaction *value);
 
 #ifdef __cplusplus
 }

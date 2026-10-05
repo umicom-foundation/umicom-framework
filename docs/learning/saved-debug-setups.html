@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Save and review a debugger setup</title><style>body{max-width:900px;margin:32px auto;padding:0 20px;font:17px/1.6 system-ui,sans-serif;color:#203744}code,pre{background:#eef3f5}pre{padding:16px;overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #bccbd1;padding:10px;text-align:left}h1,h2{line-height:1.2}</style></head>
+<body><p>Umicom Framework · Sammy Hegab, Umicom Foundation · MIT</p><h1>Save and review a debugger setup</h1>
+<p>A breakpoint tells the debugger where to pause. A watch is an expression whose value you can inspect while a program is paused. A saved setup keeps these choices so you can restore them during a later Studio session.</p>
+<p>The setup stores source locations, enabled flags, conditions, log messages and watch expressions. It does not store a running process, adapter executable, evaluated values or credentials. Conditions and expressions may reveal private project details, so choose a local folder you control.</p>
+<h2>Save your current settings</h2><ol>
+<li>Open Studio's <strong>Run and Debug</strong> surface. Add or edit the breakpoints and watches you want to keep.</li>
+<li>In <strong>Saved breakpoint and watch setups</strong>, enter a descriptive title.</li>
+<li>Enter a complete file path in an existing private folder, such as <code>C:\Users\YourName\Documents\debug-parser.json</code> on Windows or <code>/home/yourname/Documents/debug-parser.json</code> on Linux. Replace the example user name with your own. The file must not already exist.</li>
+<li>Choose <strong>Save new setup</strong>. Wait for the result and check the displayed destination. The saved settings were captured when you clicked; edits made later need a new save.</li></ol>
+<p>Saving can finish after the window closes. This action creates a new file and never replaces an existing file. If a write fails, a partial new file may remain. Inspect that file and use a new name for the next attempt.</p>
+<h2>Load, compare and apply</h2><ol>
+<li>Stop any running or pending debug launch. A setup replaces desired settings for the next session.</li>
+<li>Enter the absolute path of your saved file and choose <strong>Load and review</strong>.</li>
+<li>Read the complete <strong>Current settings</strong> and <strong>Proposed settings</strong> JSON documents. JSON is structured text: <code>breakpoints</code> and <code>watches</code> are ordered lists. A line is one-based; column zero means no specific column. <code>enabled: false</code> retains a disabled item.</li>
+<li>Check every source location, condition, log message and expression. Loading does not check whether a source file exists or whether an expression is safe to evaluate. Keep source paths appropriate for the project and machine you will debug.</li>
+<li>Check <strong>Replace current breakpoints and watches with the reviewed settings</strong>, then choose <strong>Apply reviewed setup</strong>. Both lists are replaced together. Empty lists deliberately clear the corresponding current settings.</li>
+<li>Inspect the refreshed Breakpoints and Watches lists. Restored breakpoints begin unverified, and watches have no previous evaluation result. Starting a later debug session and evaluating expressions remain separate actions.</li></ol>
+<p>If a breakpoint, watch, debug session or configuration changed after the review, Studio refuses the old review. Load again and inspect the new comparison. Changing the title or path also discards the displayed approval. Clicking Apply without approval makes no change and requires another review.</p>
+<h2>Review a reversal</h2><ol><li>After a successful application, choose <strong>Review previous settings</strong> in the same panel.</li><li>Inspect the comparison with the settings replaced by the last successful application.</li><li>Confirm replacement and choose <strong>Apply reviewed setup</strong> again.</li></ol>
+<p>The previous-settings copy lasts only while that panel is open. It restores desired settings, not old process values or adapter confirmation. A later successful application replaces this single retained copy; it is not a permanent history.</p>
+<h2>Limits and recovery</h2><table><tr><th>Situation</th><th>What to do</th></tr>
+<tr><td>More than 64 breakpoints or 64 watches</td><td>This setup format refuses the entire capture. It does not silently omit entries. Keep the current settings and reduce them explicitly before saving if appropriate.</td></tr>
+<tr><td>File already exists</td><td>Choose a new name. Save new setup does not overwrite.</td></tr>
+<tr><td>Missing, malformed or incompatible JSON</td><td>Current settings stay intact. Select the intended file or save a fresh setup from a known working session.</td></tr>
+<tr><td>Path or title edited while loading</td><td>The loaded result is discarded. Choose Load and review again.</td></tr>
+<tr><td>Two breakpoints on the same source line with different columns</td><td>The Framework format represents them, but Studio's legacy protocol projection accepts one per source line. Studio refuses such a replacement without changing either current list.</td></tr>
+<tr><td>Project moved to a different path</td><td>Saved source locations are unchanged. This feature does not remap paths or move source files. Review and adjust a copy of the JSON or recreate the breakpoints before using it.</td></tr>
+<tr><td>Window closed while loading</td><td>No loaded settings are applied after close. Reopen the panel and load explicitly.</td></tr></table>
+<h2>Use the shared API in another application</h2>
+<p>Link the Debug owner for in-memory setup and review operations. Link Developer for JSON and native files. The public headers are <code>umicom/debug/setup.h</code> and <code>umicom/debug/setup_document.h</code>.</p>
+<ol><li>Capture on the workspace owner thread with <code>UmiDebugSetupCapture</code>, or construct a setup with the typed append operations.</li><li>Transfer an independent copy to a worker for <code>UmiDebugSetupSaveNew</code> or load a new owner using <code>UmiDebugSetupLoad</code>. Release it with <code>UmiDebugSetupDestroy</code>.</li><li>Back on the owner thread, create a review with <code>UmiDebugSetupReviewCreate</code> and present its Before and After copies.</li><li>Immediately before applying, exclude any active or pending native runtime owned by your host. Framework's controller model cannot infer another process owner's liveness.</li><li>Call <code>UmiDebugSetupReviewApply</code> after explicit acceptance. Serialize all access. Do not run callbacks or concurrent registry writes during publication.</li></ol>
+<p>New fields should be added to the typed settings, validation, strict JSON codec and review presentation together. Keep live process results separate from desired settings. A saved document supplies data; it does not supply authority to execute it.</p>
+</body></html>

@@ -123,8 +123,46 @@ static int RecordMutationCases(void)
     return 0;
 }
 
+/* Use nonzero domain fields to expose a codec that accidentally drops
+ * values. The existing initializer supplies required compatibility metadata. */
+static UmiLanguageIntelligenceFileWatchRegistration ArchiveSample(void)
+{
+    UmiLanguageIntelligenceFileWatchRegistration value;
+    umi_language_intelligence_file_watch_registration_init(&value, "archive-record");
+    value.subject_id[0] = 'a';
+    value.detail[0] = 'a';
+    value.range = (UmiLanguageIntelligenceRange){{2U, 3U}, {4U, 5U}};
+    value.revision = (uint64_t)8U;
+    value.priority = (uint32_t)9U;
+    value.flags = (uint32_t)10U;
+    value.enabled = (int)11U;
+    return value;
+}
+/* Unused tails are not part of a C string and must not enter saved bytes. */
+static void ArchiveFillUnusedText(UmiLanguageIntelligenceFileWatchRegistration *value)
+{
+    {
+        size_t used = strlen(value->id) + 1U;
+        memset(value->id + used, 0xa5, sizeof(value->id) - used);
+    }
+    {
+        size_t used = strlen(value->subject_id) + 1U;
+        memset(value->subject_id + used, 0xa5, sizeof(value->subject_id) - used);
+    }
+    {
+        size_t used = strlen(value->detail) + 1U;
+        memset(value->detail + used, 0xa5, sizeof(value->detail) - used);
+    }
+}
+#define ARCHIVE_TYPE UmiLanguageIntelligenceFileWatchRegistration
+#define ARCHIVE_ENCODE umi_language_intelligence_file_watch_registration_archive_encode
+#define ARCHIVE_DECODE umi_language_intelligence_file_watch_registration_archive_decode
+#define ARCHIVE_EQUAL RecordDefaultsEqual
+#include "../value_archive/record_cases.h"
+
 int main(void)
 {
+    if (ArchiveRecordCases() != 0) return 1;
     if (RecordMutationCases() != 0) return 1;
     if (RecordConstructionCases() != 0) return 1;
     UmiLanguageIntelligenceFileWatchRegistration value;

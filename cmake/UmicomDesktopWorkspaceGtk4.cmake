@@ -47,3 +47,34 @@ endif()
 # The reusable viewport and its component gallery supplement existing Desk UI.
 # No prior widget, workspace entry point or saved-layout implementation is removed.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkbenchViewportGtk4.cmake")
+
+# Exercise the actual review dialog against a private database, including
+# controls retained after their parent window has been destroyed.
+if(BUILD_TESTING)
+    add_executable(umicom-desktop-workspace-restore-gtk4-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/desktop_workspace/test_restore_review_gtk4.c")
+    target_link_libraries(umicom-desktop-workspace-restore-gtk4-test PRIVATE Umicom::desktop_workspace_gtk4)
+    set_target_properties(umicom-desktop-workspace-restore-gtk4-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-desktop-workspace-restore-gtk4-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-desktop-workspace-restore-gtk4-test)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-desktop-workspace-restore-gtk4-test)
+    endif()
+    foreach(case evidence apply cancel retained-control parent-close dirty-draft detached-review)
+        add_test(NAME framework.desktop_workspace.restore_review.gtk4.${case} COMMAND umicom-desktop-workspace-restore-gtk4-test ${case})
+        set_tests_properties(framework.desktop_workspace.restore_review.gtk4.${case} PROPERTIES
+            SKIP_RETURN_CODE 77 TIMEOUT 30 LABELS "framework;desktop;workspace;restore;gtk4;ownership")
+    endforeach()
+endif()
+
+if(BUILD_TESTING AND TARGET umicom-desktop-workspace-restore-gtk4-test)
+    foreach(case history-selection history-draft history-close)
+        add_test(NAME framework.desktop_workspace.restore_review.gtk4.${case} COMMAND umicom-desktop-workspace-restore-gtk4-test ${case})
+        set_tests_properties(framework.desktop_workspace.restore_review.gtk4.${case} PROPERTIES
+            SKIP_RETURN_CODE 77 TIMEOUT 30 LABELS "framework;desktop;workspace;history;gtk4;ownership")
+    endforeach()
+endif()

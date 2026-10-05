@@ -17,6 +17,7 @@
 #define UMICOM_OBSERVABILITY_PERFORMANCE_BENCHMARK_STATISTICS_H
 
 #include <stdbool.h>
+#include "umicom/base/value_archive.h"
 #include <stddef.h>
 #include <stdint.h>
 #include "umicom/observability/performance/types.h"
@@ -54,6 +55,17 @@ UmiStatus umi_performance_benchmark_statistics_observe(UmiPerformanceBenchmarkSt
 bool umi_performance_benchmark_statistics_same_identity(const UmiPerformanceBenchmarkStatistics *left, const UmiPerformanceBenchmarkStatistics *right);
 /* Domain-specific policy helper for benchmark statistics. */
 double umi_performance_benchmark_statistics_mean(double sum, uint64_t count);
+
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_performance_benchmark_statistics_archive_encode(const UmiPerformanceBenchmarkStatistics *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_performance_benchmark_statistics_archive_decode(const void *bytes, size_t byte_count,
+    UmiPerformanceBenchmarkStatistics *value);
 
 #ifdef __cplusplus
 }

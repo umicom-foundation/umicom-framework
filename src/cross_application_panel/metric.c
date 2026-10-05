@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/cross_application_panel/metric.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise panel metric from caller-provided values so later operations receive a known
@@ -33,6 +34,12 @@ record->revision=1U;
 /* Check that panel metric satisfies its contract before another service relies on it. */
 UmiStatus umi_panel_metric_validate(const UmiPanelMetric *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->panel_id, '\0', sizeof(record->panel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
 /*
  * Protect caller-owned memory by checking that required state is available before it is
  * used.
@@ -163,3 +170,56 @@ if(store->count!=0U)memcpy(records,store->items,store->count*sizeof(store->items
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiPanelMetricArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xcba7ed6b63ffc34f);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelMetric *)0)->panel_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiPanelMetricArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiPanelMetric *)0)->panel_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiPanelMetricArchiveWrite(UmiArchiveWriter *writer, const UmiPanelMetric *value)
+{
+    UmiArchiveWriteText(writer, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->open_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->close_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->activation_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->context_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->failure_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->last_active_ms);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiPanelMetricArchiveRead(UmiArchiveReader *reader, UmiPanelMetric *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->panel_id, sizeof(value->panel_id));
+    value->open_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->close_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->activation_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->context_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->failure_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->last_active_ms = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiPanelMetricArchiveValidate(const UmiPanelMetric *value)
+{
+    return umi_panel_metric_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_panel_metric_archive_encode, umi_panel_metric_archive_decode,
+    UmiPanelMetric, UmiPanelMetricArchiveSchema, UmiPanelMetricArchiveBound, UmiPanelMetricArchiveWrite, UmiPanelMetricArchiveRead, UmiPanelMetricArchiveValidate)

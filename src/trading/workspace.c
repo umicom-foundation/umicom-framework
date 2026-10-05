@@ -914,10 +914,25 @@ UmiStatus umi_trading_workspace_set_chart_study(
     UmiTradingChartStudy study,
     size_t period)
 {
+/* The workspace now accepts Framework candle studies alongside the existing averages.
+ * The previous implementation is retained for engineering review. */
+#if 0
     if (workspace == NULL ||
         (study != UMI_TRADING_CHART_STUDY_NONE &&
          study != UMI_TRADING_CHART_STUDY_SIMPLE_AVERAGE &&
          study != UMI_TRADING_CHART_STUDY_EXPONENTIAL_AVERAGE) ||
+        period < 2U || period > 200U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+#endif
+    if (workspace == NULL ||
+        (study != UMI_TRADING_CHART_STUDY_NONE &&
+         study != UMI_TRADING_CHART_STUDY_SIMPLE_AVERAGE &&
+         study != UMI_TRADING_CHART_STUDY_EXPONENTIAL_AVERAGE &&
+         study != UMI_TRADING_CHART_STUDY_VOLUME_WEIGHTED &&
+         study != UMI_TRADING_CHART_STUDY_BOLLINGER &&
+         study != UMI_TRADING_CHART_STUDY_DONCHIAN &&
+         study != UMI_TRADING_CHART_STUDY_VOLUME_PROFILE) ||
         period < 2U || period > 200U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

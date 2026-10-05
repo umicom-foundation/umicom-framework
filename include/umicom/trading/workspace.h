@@ -63,7 +63,13 @@ typedef enum UmiTradingWorkspaceOrderFilter {
 typedef enum UmiTradingChartStudy {
     UMI_TRADING_CHART_STUDY_NONE = 0,
     UMI_TRADING_CHART_STUDY_SIMPLE_AVERAGE = 1,
-    UMI_TRADING_CHART_STUDY_EXPONENTIAL_AVERAGE = 2
+    UMI_TRADING_CHART_STUDY_EXPONENTIAL_AVERAGE = 2,
+    /* New choices append to the public enum so existing saved values keep
+     * their meaning. Frontends share the same candle-based study owner. */
+    UMI_TRADING_CHART_STUDY_VOLUME_WEIGHTED = 3,
+    UMI_TRADING_CHART_STUDY_BOLLINGER = 4,
+    UMI_TRADING_CHART_STUDY_DONCHIAN = 5,
+    UMI_TRADING_CHART_STUDY_VOLUME_PROFILE = 6
 } UmiTradingChartStudy;
 
 /**

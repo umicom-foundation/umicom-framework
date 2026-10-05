@@ -1,0 +1,16 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-hover-document-test "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/test_hover_document.c")
+    target_link_libraries(umicom-hover-document-test PRIVATE Umicom::developer)
+    umicom_apply_warnings(umicom-hover-document-test)
+    umicom_apply_sanitizers(umicom-hover-document-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-hover-document-test)
+    endif()
+    foreach(case string plain markdown literal-html code array legacy-array empty-array empty-text null unicode range legacy-range reversed negative null-range missing duplicate kind ambiguous nested-array markup-array wrong-id error response ownership block-limit legacy-capacity language-limit cancelled)
+        add_test(NAME framework.language_runtime.hover_document.${case} COMMAND umicom-hover-document-test ${case})
+        set_tests_properties(framework.language_runtime.hover_document.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;language;hover;ownership;regression")
+    endforeach()
+endif()

@@ -6,6 +6,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/creative_audio.h"
+#include "umicom/ui/gtk4/creative_audition.h"
 #include <inttypes.h>
 #include <math.h>
 #include <stdlib.h>
@@ -17,6 +18,7 @@ typedef struct AudioPanel {
     UmiCreativeAudioInfo info;
     GtkWidget *source, *destination, *begin, *end, *gain, *fadeIn, *fadeOut;
     GtkWidget *drawing, *status, *description, *write;
+    GtkWidget *audition; /* The shared player owns its own immutable preview. */
 } AudioPanel;
 static void Tag(GtkWidget *widget, const char *id)
 { g_object_set_data_full(G_OBJECT(widget), "umicom-automation-id", g_strdup(id), g_free); }
@@ -60,6 +62,7 @@ static void Invalidate(GtkWidget *changed, gpointer root)
     (void)changed;
     AudioPanel *p = State(GTK_WIDGET(root));
     UmiCreativeExportFree(&p->preview);
+    UmiCreativeAuditionGtkClear(p->audition);
     gtk_widget_set_sensitive(p->write, FALSE);
     gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(p->drawing), NULL, NULL, NULL);
     gtk_label_set_text(GTK_LABEL(p->status), "Selection changed. Preview the range before exporting.");
@@ -69,6 +72,7 @@ static void Adopt(AudioPanel *p, UmiCreativeAudioClip *clip, const char *label)
     UmiCreativeAudioDestroy(p->clip); p->clip = clip;
     (void)UmiCreativeAudioGetInfo(clip, &p->info);
     UmiCreativeExportFree(&p->preview);
+    UmiCreativeAuditionGtkClear(p->audition);
     gtk_spin_button_set_range(GTK_SPIN_BUTTON(p->begin), 0.0, (double)p->info.frames);
     gtk_spin_button_set_range(GTK_SPIN_BUTTON(p->end), 0.0, (double)p->info.frames);
     gtk_spin_button_set_range(GTK_SPIN_BUTTON(p->fadeIn), 0.0, (double)p->info.frames);
@@ -108,6 +112,7 @@ static void Preview(GtkButton *button, gpointer root)
 {
     (void)button;
     AudioPanel *p = State(GTK_WIDGET(root));
+    UmiCreativeAuditionGtkClear(p->audition);
     UmiCreativeExport rendered = {0};
     UmiCreativeAudioClip *clip = NULL;
     UmiCreativeAudioOverview *peaks = g_new0(UmiCreativeAudioOverview, 1);
@@ -144,6 +149,7 @@ static void Preview(GtkButton *button, gpointer root)
     } else {
         UmiCreativeExportFree(&p->preview); gtk_widget_set_sensitive(p->write, FALSE);
         gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(p->drawing), NULL, NULL, NULL);
+        UmiCreativeAuditionGtkClear(p->audition);
         Status(p, "Preview unavailable", status);
     }
     g_free(peaks); UmiCreativeAudioDestroy(clip); UmiCreativeExportFree(&rendered);
@@ -157,6 +163,20 @@ static void Write(GtkButton *button, gpointer root)
     if (status == UMI_STATUS_OK) gtk_label_set_text(GTK_LABEL(p->status),
         "New WAVE written. Play it in your chosen audio player at a low volume. Source unchanged.");
     else Status(p, "Export failed; no overwrite or deletion; inspect any partial new file", status);
+}
+/* Listening is an explicit action separate from rendering and export. The
+ * Framework player copies the preview so changing its edit fields can retire
+ * playback without lending mutable sample storage to a backend. */
+static void Listen(GtkButton *button, gpointer root)
+{
+    (void)button;
+    GtkWidget *owner = g_object_ref(GTK_WIDGET(root));
+    AudioPanel *p = State(owner);
+    GtkWidget *player = g_object_ref(p->audition);
+    UmiStatus status = UmiCreativeAuditionGtkLoadWave(player, p->preview.bytes, p->preview.size);
+    if (status != UMI_STATUS_OK) Status(p, "Create a valid range preview before listening", status);
+    g_object_unref(player);
+    g_object_unref(owner);
 }
 static GtkWidget *Text(GtkWidget *box, const char *text)
 {
@@ -211,6 +231,9 @@ GtkWidget *UmiCreativeAudioGtkCreate(void)
     p->fadeIn = Number(root, "Fade-in length in frames", "creative.audio.fade_in", 2097152.0, 0.0);
     p->fadeOut = Number(root, "Fade-out length in frames", "creative.audio.fade_out", 2097152.0, 0.0);
     Button(root, "Preview range", "creative.audio.preview", G_CALLBACK(Preview));
+    p->audition = UmiCreativeAuditionGtkCreate();
+    Button(root, "Load preview for listening", "creative.audio.listen", G_CALLBACK(Listen));
+    gtk_box_append(GTK_BOX(root), p->audition);
     gtk_box_append(GTK_BOX(root), p->drawing);
     p->destination = Entry(root, "New absolute destination WAVE path", "creative.audio.destination");
     gtk_box_append(GTK_BOX(root), p->write); gtk_box_append(GTK_BOX(root), p->status);

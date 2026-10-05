@@ -20,6 +20,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workspace_edit.h"
+#include "umicom/editor/text_position.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -425,6 +426,9 @@ UmiStatus umi_editor_workspace_edit_set_finalize(
  * Decode one UTF-8 scalar and report the number of LSP UTF-16 code units it
  * occupies. Four-byte Unicode scalars consume a surrogate pair (two units).
  */
+/* Text-position conversion now shares the editor's UTF-8 scanner and line-ending
+ * policy. This former local decoder remains available for engineering review. */
+#if 0
 static UmiStatus utf8_measure_scalar(
     const unsigned char *bytes,
     size_t remaining,
@@ -492,11 +496,16 @@ static UmiStatus utf8_measure_scalar(
     *out_utf16_units = scalar > 0xFFFFU ? 2U : 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
 
 /*
  * Provide the resolve lsp position operation used by this module and its client
  * applications.
  */
+/* Coordinate resolution now uses the shared Editor text-position service, including standalone CR and exact Unicode boundaries.
+ * The former implementation is retained for engineering review. */
+#if 0
 static UmiStatus resolve_lsp_position(
     const UmiEditorTextBufferView *view,
     uint64_t target_line,
@@ -570,6 +579,14 @@ static UmiStatus resolve_lsp_position(
 
     *out_offset = offset;
     return UMI_STATUS_OK;
+}
+#endif
+static UmiStatus resolve_lsp_position(
+    const UmiEditorTextBufferView *view, uint64_t line, uint64_t column, size_t *out_offset)
+{
+    /* Editor navigation and protocol edits must agree on CR, LF, CRLF and
+     * supplementary characters before capturing expected text for an edit. */
+    return UmiEditorTextViewResolvePosition(view, (UmiEditorTextPosition){line, column}, out_offset);
 }
 
 /*

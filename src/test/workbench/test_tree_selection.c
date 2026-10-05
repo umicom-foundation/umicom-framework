@@ -17,6 +17,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/test/workbench/test_tree_selection.h"
+#include "../../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise test tree selection from caller-provided values so later operations receive a
@@ -42,4 +43,75 @@ UmiStatus umi_test_tree_selection_set_state(UmiTestTreeSelection *model,UmiTestW
  * Check that test tree selection satisfies its contract before another service relies on
  * it.
  */
-int umi_test_tree_selection_valid(const UmiTestTreeSelection *model){return model!=NULL&&umi_test_workbench_entry_valid(&model->value)&&model->item_count<=UMI_TEST_WORKBENCH_MAX_ITEMS&&model->generation>0U;}
+int umi_test_tree_selection_valid(const UmiTestTreeSelection *model){
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (model == NULL) return 0;
+    if (memchr(model->value.id, '\0', sizeof(model->value.id)) == NULL) return 0;
+    if (memchr(model->value.label, '\0', sizeof(model->value.label)) == NULL) return 0;
+    if (memchr(model->value.detail, '\0', sizeof(model->value.detail)) == NULL) return 0;
+return model!=NULL&&umi_test_workbench_entry_valid(&model->value)&&model->item_count<=UMI_TEST_WORKBENCH_MAX_ITEMS&&model->generation>0U;}
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiTestTreeSelectionArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x0068513c7e5ba5d4);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTestTreeSelection *)0)->value.id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTestTreeSelection *)0)->value.label)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTestTreeSelection *)0)->value.detail)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiTestTreeSelectionArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiTestTreeSelection *)0)->value.id) - 1U +
+        8U + sizeof(((UmiTestTreeSelection *)0)->value.label) - 1U +
+        8U + sizeof(((UmiTestTreeSelection *)0)->value.detail) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiTestTreeSelectionArchiveWrite(UmiArchiveWriter *writer, const UmiTestTreeSelection *value)
+{
+    UmiArchiveWriteText(writer, value->value.id, sizeof(value->value.id));
+    UmiArchiveWriteText(writer, value->value.label, sizeof(value->value.label));
+    UmiArchiveWriteText(writer, value->value.detail, sizeof(value->value.detail));
+    UmiArchiveWriteSigned(writer, (int64_t)value->value.state);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->value.flags);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->value.score);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->value.duration_us);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->value.revision);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->generation);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->item_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->active);
+}
+static void UmiTestTreeSelectionArchiveRead(UmiArchiveReader *reader, UmiTestTreeSelection *value)
+{
+    UmiArchiveReadText(reader, value->value.id, sizeof(value->value.id));
+    UmiArchiveReadText(reader, value->value.label, sizeof(value->value.label));
+    UmiArchiveReadText(reader, value->value.detail, sizeof(value->value.detail));
+    value->value.state = (UmiTestWorkbenchState)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->value.flags = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->value.score = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->value.duration_us = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->value.revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->generation = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->item_count = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->active = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiTestTreeSelectionArchiveValidate(const UmiTestTreeSelection *value)
+{
+    return umi_test_tree_selection_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_test_tree_selection_archive_encode, umi_test_tree_selection_archive_decode,
+    UmiTestTreeSelection, UmiTestTreeSelectionArchiveSchema, UmiTestTreeSelectionArchiveBound, UmiTestTreeSelectionArchiveWrite, UmiTestTreeSelectionArchiveRead, UmiTestTreeSelectionArchiveValidate)

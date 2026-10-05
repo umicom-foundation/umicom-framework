@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/route_trace.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context route trace from caller-provided values so later operations receive a
@@ -36,6 +37,16 @@ record->revision=1U;
  */
 UmiStatus umi_context_route_trace_validate(const UmiContextRouteTrace *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->trace_id, '\0', sizeof(record->trace_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->context_id, '\0', sizeof(record->context_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->source_channel_id, '\0', sizeof(record->source_channel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->target_channel_id, '\0', sizeof(record->target_channel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->route_id, '\0', sizeof(record->route_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -190,3 +201,60 @@ if(store->count!=0U)memcpy(out_records,store->items,store->count*sizeof(store->i
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextRouteTraceArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x0413e88cbb74dc41);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextRouteTrace *)0)->trace_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextRouteTrace *)0)->context_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextRouteTrace *)0)->source_channel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextRouteTrace *)0)->target_channel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextRouteTrace *)0)->route_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextRouteTraceArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextRouteTrace *)0)->trace_id) - 1U +
+        8U + sizeof(((UmiContextRouteTrace *)0)->context_id) - 1U +
+        8U + sizeof(((UmiContextRouteTrace *)0)->source_channel_id) - 1U +
+        8U + sizeof(((UmiContextRouteTrace *)0)->target_channel_id) - 1U +
+        8U + sizeof(((UmiContextRouteTrace *)0)->route_id) - 1U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextRouteTraceArchiveWrite(UmiArchiveWriter *writer, const UmiContextRouteTrace *value)
+{
+    UmiArchiveWriteText(writer, value->trace_id, sizeof(value->trace_id));
+    UmiArchiveWriteText(writer, value->context_id, sizeof(value->context_id));
+    UmiArchiveWriteText(writer, value->source_channel_id, sizeof(value->source_channel_id));
+    UmiArchiveWriteText(writer, value->target_channel_id, sizeof(value->target_channel_id));
+    UmiArchiveWriteText(writer, value->route_id, sizeof(value->route_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->hop);
+    UmiArchiveWriteSigned(writer, (int64_t)value->status);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextRouteTraceArchiveRead(UmiArchiveReader *reader, UmiContextRouteTrace *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->trace_id, sizeof(value->trace_id));
+    UmiArchiveReadText(reader, value->context_id, sizeof(value->context_id));
+    UmiArchiveReadText(reader, value->source_channel_id, sizeof(value->source_channel_id));
+    UmiArchiveReadText(reader, value->target_channel_id, sizeof(value->target_channel_id));
+    UmiArchiveReadText(reader, value->route_id, sizeof(value->route_id));
+    value->hop = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->status = (UmiStatus)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextRouteTraceArchiveValidate(const UmiContextRouteTrace *value)
+{
+    return umi_context_route_trace_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_route_trace_archive_encode, umi_context_route_trace_archive_decode,
+    UmiContextRouteTrace, UmiContextRouteTraceArchiveSchema, UmiContextRouteTraceArchiveBound, UmiContextRouteTraceArchiveWrite, UmiContextRouteTraceArchiveRead, UmiContextRouteTraceArchiveValidate)

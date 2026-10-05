@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Review source-tool results in an open document</title>
+<style>body{max-width:960px;margin:36px auto;padding:0 24px;font:17px/1.6 system-ui;color:#193542}code{overflow-wrap:anywhere}pre{padding:16px;background:#eef4f6;overflow:auto}</style></head>
+<body><h1>Review source-tool results in an open document</h1>
+<p>A formatter or language server can finish after the user has typed more text.
+Framework's document source request keeps the original draft, identity and caret
+together. It stages a complete replacement for review and commits it through the
+same document history as ordinary editing.</p>
+<h2>Capture, work, review and apply</h2><ol>
+<li>On the document coordinator's owning thread, call
+<code>UmiDocumentSourceRequestCreate</code> with the intended document ID. An
+empty draft is allowed. A read-only draft is refused. Creation changes neither
+the live draft nor its saved file.</li>
+<li>Read the metadata with <code>UmiDocumentSourceRequestInspect</code> and the
+complete UTF-8 source with <code>UmiDocumentSourceRequestRead</code>. Copy both
+before starting a worker. Keep the request on its owning thread; a worker must
+not access the coordinator, workbench or GTK text buffer.</li>
+<li>Perform the source operation against the worker's copy. Convert byte offsets
+to language-server positions using <code>UmiEditorTextViewPositionAt</code>.
+Language-server columns count UTF-16 units, which can differ from UTF-8 bytes.
+The shared conversion rejects a position inside a character or CRLF line ending.</li>
+<li>Return a complete UTF-8 result and its proposed caret byte offset to the
+owning thread. Call <code>UmiDocumentSourceRequestCheck</code> before presenting it.
+Call <code>UmiDocumentSourceRequestStage</code> with the request's current review
+revision. Staging owns a copy and advances that revision; it does not edit the
+document. Empty text explicitly proposes deleting the entire draft.</li>
+<li>Read the exact staged text with <code>UmiDocumentSourceRequestProposed</code>
+and display it alongside the captured source. Give the user separate accept and
+cancel actions. Record the review revision being displayed.</li>
+<li>Only after acceptance, call <code>UmiDocumentSourceRequestApply</code> with
+that displayed revision and approval set. Framework repeats the identity,
+revision, conflict, text and caret checks. A changed active tab never redirects
+the edit to a different document.</li>
+<li>Destroy the request when the review ends. Destroying a request never applies
+its proposal. Keep its original coordinator, store and workbench alive until
+all checks and application attempts have finished.</li></ol>
+<h2>Expected result and recovery</h2>
+<p>A successful text change is one Undo action. Typing that was already visible
+but not synchronized to the document store keeps its earlier Undo action.
+An unchanged result may move the caret without adding a text-history entry.
+Applying a result does not save the file or contact a provider.</p>
+<p>If Check or Apply reports a changed state, discard the old answer and make a
+new request. Do not copy the old proposal into the widget as a fallback.
+If the review revision is old, show the newly staged result and ask for a new
+acceptance. Failed staging leaves the earlier proposal and its revision intact.</p>
+<h2>Limits and extension points</h2>
+<p>This service accepts complete text up to the document model's byte limit.
+It rejects embedded NUL, invalid UTF-8 and invalid caret boundaries. It does not
+execute tools, resolve language-server responses, persist credentials or create
+an automatic-save policy. Use a language-specific planner on the worker's copy
+before staging its result.</p>
+<p>Current caret and selection values must match the capture. The service does
+not record every intermediate navigation event. A UI that treats moving away
+and back as invalidation should cancel its request when navigation occurs.
+Draft and saved-text revisions do detect intervening text changes even when
+the final bytes return to their earlier spelling.</p>
+<p>See <a href="reviewing-language-completions.html">reviewing language completions</a>
+for planning primary replacements and additional imports together.</p>
+</body></html>

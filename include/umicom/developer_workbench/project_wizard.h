@@ -17,6 +17,7 @@
 #define UMICOM_DEVELOPER_WORKBENCH_PROJECT_WIZARD_H
 
 #include "umicom/application/preset.h"
+#include "umicom/base/value_archive.h"
 #include "umicom/developer_workbench/types.h"
 
 #ifdef __cplusplus
@@ -81,6 +82,17 @@ UmiStatus umi_developer_workbench_project_wizard_validate(
 const UmiApplicationPresetDefinition *
 umi_developer_workbench_project_wizard_preset(
     const UmiDeveloperWorkbenchProjectWizard *wizard);
+
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_developer_workbench_project_wizard_archive_encode(const UmiDeveloperWorkbenchProjectWizard *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_developer_workbench_project_wizard_archive_decode(const void *bytes, size_t byte_count,
+    UmiDeveloperWorkbenchProjectWizard *value);
 
 #ifdef __cplusplus
 }

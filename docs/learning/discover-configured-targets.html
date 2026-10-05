@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Discover configured build targets</title>
+<style>body{font:17px/1.6 system-ui;max-width:900px;margin:40px auto;padding:0 24px;color:#183640}code{background:#eef4f5;padding:2px 4px;overflow-wrap:anywhere}li{margin:12px 0}th,td{border:1px solid #cad9de;padding:10px;text-align:left}table{border-collapse:collapse;width:100%}a{color:#006578}</style></head>
+<body><h1>Discover configured build targets</h1>
+<p>A build target is a named result that CMake knows how to produce, such as an application or a library.
+An artifact is a file produced for that target. Studio can read CMake’s description of those results so
+you can choose a build target and an executable without guessing the output filename.</p>
+<p>The description comes from CMake’s file API: a small request file asks CMake to write JSON metadata
+when Configure next succeeds. This metadata describes the configuration; it does not prove that a build
+finished or that a program can run on your machine.</p>
+<h2>Inspect an existing build folder</h2>
+<ol><li>Enter the build folder in Project Settings and choose <strong>Inspect build folder</strong>.
+This reads <code>CMakeCache.txt</code> on a worker without invoking CMake. It clears any previous target list.</li>
+<li>Compare the recorded project and build paths with the folders you intended to use. A project mismatch
+means the cache belongs to a different source checkout. A build-folder mismatch can mean the cache was copied.
+Select the matching folder or configure a fresh build directory; this inspection never rewrites the cache.</li>
+<li>Review the recorded generator, C compiler, build type, available configurations, install prefix and
+toolchain file. Missing optional entries are shown as unrecorded. In particular, presets can select options
+different from the form's manual fields. Inspection does not resolve preset inheritance or change those fields.</li>
+<li>Apply any deliberate settings edits separately, run Configure, and inspect again when needed.
+A readable cache can remain after a failed Configure. Matching paths alone do not mean that the build is ready.</li></ol>
+<p>The reader accepts UTF-8 caches up to 8 MiB, rejects duplicate selected keys and leaves unknown entries alone.
+It reads a local snapshot and compares path spelling; filesystem aliases and later edits can change what a path
+refers to. Closing the form discards a pending result. Changing build inputs makes that result stale.</p>
+<h2>Request and read target data</h2><ol>
+<li>Open your project and its <strong>Project Settings</strong>. Check the Project folder,
+<strong>Build folder</strong> and <strong>Configuration</strong>. A relative build folder starts at the
+project folder. When using presets, enter the preset’s actual binary directory here; Studio does not
+resolve inherited preset directories. The build folder must already exist for the request step.</li>
+<li>Choose <strong>Request target data in this build folder</strong>. This immediately creates the
+empty file <code>.cmake/api/v1/query/client-umicom-studio/codemodel-v2</code> under that build folder,
+creating its query directories as needed. It does not apply other settings or start a process.
+An existing empty regular file is reused. Other existing content is never overwritten.</li>
+<li>Review your settings and use <strong>Apply Settings</strong>. Use Studio’s Configure action for
+this project. Configure executes project build scripts, so use the existing project-trust review and
+read its output. Wait for success before continuing.</li>
+<li>Reopen Project Settings and choose <strong>Read configured targets</strong>. The read runs in a
+worker so the form remains responsive. A successful result shows a searchable target list and the
+build folder used. Failure clears the previous list instead of keeping old choices available.</li>
+<li>Select a row. The detail shows its target type and, when unambiguous, its executable path.
+Use <strong>Use selected build target</strong> to change the Build target field, or
+<strong>Use selected program</strong> to change Program to run. These are separate actions and each
+changes just one field. Neither action saves settings, grants trust, starts a build or launches code.</li>
+<li>Check the target, program, arguments and working folder. Choose
+<strong>Review launch settings</strong>, then <strong>Apply Settings</strong> when satisfied.
+Build the chosen target before using Run or native Debug. Debugging also requires suitable debug
+symbols and a configured debugger.</li></ol>
+<h2>Recover from a problem</h2><table><tr><th>What happened</th><th>What to check</th></tr>
+<tr><td>Request reports not found</td><td>Select an existing build folder you control. If Configure has
+never run, configure once to create the folder, request data, then configure again.</td></tr>
+<tr><td>No codemodel reply</td><td>The query may have been added after the last Configure, or the preset
+may configure another folder. Configure the same folder successfully and read again.</td></tr>
+<tr><td>Invalid state or wrong configuration</td><td>Confirm the project root, build folder and configuration.
+A copied build directory can still name its original checkout. A newer CMake error index also blocks
+an older success reply. Correct the Configure failure and refresh.</td></tr>
+<tr><td>Build preset prevents target selection</td><td>A build preset owns its target list. Edit that preset,
+or explicitly clear Build preset, read again, and use the manual target field. Studio does not silently
+override preset targets.</td></tr>
+<tr><td>No executable output</td><td>A library is not a runnable program. An executable may also lack
+an unambiguous primary artifact, or require a launcher such as an emulator. Select a supported target
+or configure the launch manually; Studio does not guess.</td></tr>
+<tr><td>Inputs changed</td><td>Read again after changing the folder, compiler, generator, configuration
+or relevant presets. A pending result cannot authorize selection for the previous inputs.</td></tr>
+<!-- The allocated JSON tree replaces these fixed document and catalogue limits.
+The previous guidance is retained for engineering review.
+<tr><td>Capacity exceeded or parse error</td><td>Each JSON file is limited to 65,535 bytes, 4,096 tokens
+and 128 nesting levels. There are at most 256 targets in the chosen configuration, 32 configurations
+and 32 executable artifact entries. Large valid projects may exceed these limits. Manual target and
+program fields remain available. Malformed replies must be regenerated by CMake, not edited by Studio.</td></tr>
+-->
+<tr><td>Capacity exceeded or parse error</td><td>Each JSON file is limited to 16 MiB,
+1,048,576 nodes and 128 nested containers. A node represents one value or object key.
+The chosen configuration can contain up to 32,768 targets. There are still at most 32
+configurations and 32 executable artifact entries per target. These are memory bounds,
+not a guarantee of performance at the maximum size. Manual target and program fields
+remain available. Regenerate malformed replies with CMake instead of editing them in Studio.</td></tr></table>
+<h2>Understand what is being selected</h2>
+<p>Studio reads the newest successful index, follows its codemodel reference and reads only target
+files referenced by the chosen configuration. A newer error index blocks discovery. Roots and target
+identities must agree. A single unnamed configuration is accepted without rewriting your profile.</p>
+<p>An executable path is offered only when exactly one artifact’s filename matches CMake’s
+<code>nameOnDisk</code>. Other artifacts, such as debug databases, are not mistaken for the program.
+Imported and abstract targets are not accepted as buildable targets. Nonempty launcher lists prevent
+automatic program selection. Interface targets and utility targets can still be build choices when
+CMake includes them in its ordinary target list.</p>
+<p>Read and selection are snapshots. Files can change after the read, and older CMake releases may
+leave no error index after a failed Configure. Refresh after configuring or editing the project.
+The reader performs lexical path comparisons, not proof of filesystem identity. Parent directory
+aliases can be followed; this is not a sandbox. Query creation may finish after closing the form and
+does not roll back newly created directories if it fails.</p>
+<p>Closing the form or changing its build inputs requests cancellation of a target read.
+Directory traversal and JSON parsing check that request, and no partial target list is published.
+An operating-system read or an in-progress sort can still finish first. Cache inspection and query
+creation may finish their current operation; closing the form discards their displayed result.</p>
+<h2>Extend the implementation</h2>
+<p>The shared developer service owns the catalogue and copies selected values into a profile. The GTK
+presenter owns controls and asynchronous request lifetimes. Application code keeps its existing
+settings callback. New readers should preserve this separation, reject partial results and avoid
+turning discovery into implicit execution. Existing generic workspace catalogues and manual profile
+fields remain available; no previous implementation is removed.</p>
+<p>See <a href="review-launch-settings.html">reviewing launch settings</a>,
+<a href="project-stage-presets.html">choosing presets</a> and the
+<a href="https://cmake.org/cmake/help/latest/manual/cmake-file-api.7.html">CMake file API reference</a>.</p>
+<footer>Umicom Foundation · Sammy Hegab · MIT</footer></body></html>

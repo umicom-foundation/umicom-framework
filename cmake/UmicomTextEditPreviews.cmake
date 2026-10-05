@@ -1,0 +1,16 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-text-edit-preview-test "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/test_text_edit_preview.c")
+    target_link_libraries(umicom-text-edit-preview-test PRIVATE Umicom::developer Umicom::editor)
+    umicom_apply_warnings(umicom-text-edit-preview-test)
+    umicom_apply_sanitizers(umicom-text-edit-preview-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-text-edit-preview-test)
+    endif()
+    foreach(case replace delete insert empty-source unsorted same-position insert-replace overlap insert-after-replace adjacent caret-before caret-after unicode surrogate crlf crlf-caret reversed line column empty null invalid-source source-nul caret-byte annotation duplicate missing type text-nul edit-limit result-limit source-limit cancelled ownership response wrong-id error mixed malformed-error response-duplicate)
+        add_test(NAME framework.language_runtime.text_edit_preview.${case} COMMAND umicom-text-edit-preview-test ${case})
+        set_tests_properties(framework.language_runtime.text_edit_preview.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;language;formatting;ownership;regression")
+    endforeach()
+endif()

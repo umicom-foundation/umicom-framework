@@ -67,4 +67,51 @@ static void ContractPayload(UmiProjectConfigurationSnapshot *item)
 #define CONTRACT_EDIT_CURRENT umi_project_configuration_registry_edit_if_current
 /* Page checks use this domain's real owner and complete payload comparator. */
 #define CONTRACT_READ_PAGE umi_project_configuration_registry_read_page
+/* Build a complete public snapshot; registry normalization is checked
+ * separately by the collection restore cases. */
+static UmiProjectConfigurationSnapshot ArchiveSample(void)
+{
+    UmiProjectConfigurationSnapshot value = {0};
+    ContractPayload(&value);
+    memcpy(value.id, "archive-record", sizeof("archive-record"));
+    value.struct_size = (uint32_t)sizeof(value);
+    value.revision = 17U;
+    return value;
+}
+/* Unused tails are not part of a C string and must not enter saved bytes. */
+static void ArchiveFillUnusedText(UmiProjectConfigurationSnapshot *value)
+{
+    {
+        size_t used = strlen(value->id) + 1U;
+        memset(value->id + used, 0xa5, sizeof(value->id) - used);
+    }
+    {
+        size_t used = strlen(value->project_id) + 1U;
+        memset(value->project_id + used, 0xa5, sizeof(value->project_id) - used);
+    }
+    {
+        size_t used = strlen(value->name) + 1U;
+        memset(value->name + used, 0xa5, sizeof(value->name) - used);
+    }
+    {
+        size_t used = strlen(value->build_type) + 1U;
+        memset(value->build_type + used, 0xa5, sizeof(value->build_type) - used);
+    }
+    {
+        size_t used = strlen(value->toolchain_id) + 1U;
+        memset(value->toolchain_id + used, 0xa5, sizeof(value->toolchain_id) - used);
+    }
+    {
+        size_t used = strlen(value->platform) + 1U;
+        memset(value->platform + used, 0xa5, sizeof(value->platform) - used);
+    }
+}
+#define ARCHIVE_TYPE UmiProjectConfigurationSnapshot
+#define ARCHIVE_ENCODE umi_project_configuration_snapshot_archive_encode
+#define ARCHIVE_DECODE umi_project_configuration_snapshot_archive_decode
+#define ARCHIVE_EQUAL ContractSnapshotEqual
+#include "../value_archive/record_cases.h"
+
+#define CONTRACT_ARCHIVE_ENCODE umi_project_configuration_registry_archive_encode
+#define CONTRACT_ARCHIVE_RESTORE umi_project_configuration_registry_archive_restore
 #include "snapshot_contract_cases.h"

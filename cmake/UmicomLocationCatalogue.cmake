@@ -1,0 +1,16 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-location-catalogue-test "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/test_location_catalogue.c")
+    target_link_libraries(umicom-location-catalogue-test PRIVATE Umicom::developer)
+    umicom_apply_warnings(umicom-location-catalogue-test)
+    umicom_apply_sanitizers(umicom-location-catalogue-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-location-catalogue-test)
+    endif()
+    foreach(case single array null empty link origin selection-outside missing-target reversed negative fraction limit-position duplicate ambiguous mixed invalid-item uri-space uri-scheme uri-percent uri-unicode uri-limit capacity large ownership response wrong-id error cancelled arguments legacy legacy-link legacy-capacity legacy-invalid legacy-uri-capacity)
+        add_test(NAME framework.language_runtime.location_catalogue.${case} COMMAND umicom-location-catalogue-test ${case})
+        set_tests_properties(framework.language_runtime.location_catalogue.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;language;locations;ownership;regression")
+    endforeach()
+endif()

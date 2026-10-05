@@ -229,3 +229,55 @@ UmiDebugAdapterProfileRegistry *umi_debug_service_adapter_profiles(UmiDebugServi
  * applications.
  */
 UmiDebugTimeline *umi_debug_service_timeline(UmiDebugService *owner) { return owner != NULL ? owner->timeline : NULL; }
+
+
+/* Complete staged registries make setup replacement a single owner-thread
+ * publication. No fallible work or external callback occurs between the two
+ * copies. Keep process execution and adapter synchronization with the host. */
+#include "setup_private.h"
+#include <stdio.h>
+UmiStatus UmiDebugServiceCommitSetup(UmiDebugService *service, const UmiDebugSetup *setup)
+{
+    if (service == NULL || setup == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (service->revision == UINT64_MAX ||
+        umi_debug_breakpoint_registry_revision(service->breakpoint) == UINT64_MAX ||
+        umi_debug_watch_registry_revision(service->watch) == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiDebugBreakpointRegistry *breakpoints = NULL;
+    UmiDebugWatchRegistry *watches = NULL;
+    UmiStatus status = umi_debug_breakpoint_registry_create(&breakpoints);
+    if (status == UMI_STATUS_OK)
+        status = umi_debug_watch_registry_create(&watches);
+    for (size_t i = 0U; status == UMI_STATUS_OK && i < setup->summary.breakpoints; ++i)
+    {
+        const UmiDebugSetupBreakpoint *value = &setup->breakpoints[i];
+        UmiDebugBreakpointSnapshot item = {0};
+        (void)snprintf(item.id, sizeof item.id, "setup-breakpoint-%zu", i);
+        memcpy(item.uri, value->source, sizeof item.uri);
+        memcpy(item.condition, value->condition, sizeof item.condition);
+        memcpy(item.log_message, value->logMessage, sizeof item.log_message);
+        item.line = value->line;
+        item.column = value->column;
+        item.enabled = value->enabled;
+        status = umi_debug_breakpoint_registry_upsert(breakpoints, &item);
+    }
+    for (size_t i = 0U; status == UMI_STATUS_OK && i < setup->summary.watches; ++i)
+    {
+        const UmiDebugSetupWatch *value = &setup->watches[i];
+        UmiDebugWatchSnapshot item = {0};
+        (void)snprintf(item.id, sizeof item.id, "setup-watch-%zu", i);
+        memcpy(item.expression, value->expression, sizeof item.expression);
+        item.enabled = value->enabled;
+        status = umi_debug_watch_registry_upsert(watches, &item);
+    }
+    if (status == UMI_STATUS_OK)
+    {
+        UmiDebugBreakpointPublishSetup(service->breakpoint, breakpoints);
+        UmiDebugWatchPublishSetup(service->watch, watches);
+        ++service->revision;
+    }
+    umi_debug_breakpoint_registry_destroy(breakpoints);
+    umi_debug_watch_registry_destroy(watches);
+    return status;
+}

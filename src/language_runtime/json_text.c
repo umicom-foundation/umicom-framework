@@ -84,6 +84,10 @@ static size_t Encode(uint32_t cp, char *out)
     if (out != NULL) for (size_t i = 0; i < n; ++i) out[i] = (char)bytes[i];
     return n;
 }
+/* The shared span decoder below replaces the token-specific copying loop so
+ * large and small documents use the same Unicode rules. The previous
+ * implementation is retained for engineering review. */
+#if 0
 UmiStatus UmiLanguageRuntimeJsonText(const UmiLanguageRuntimeJsonDocument *document, int token, char *out, size_t capacity)
 {
     if (document == NULL || document->json == NULL || out == NULL || capacity == 0U || token < 0 ||
@@ -107,4 +111,52 @@ UmiStatus UmiLanguageRuntimeJsonText(const UmiLanguageRuntimeJsonDocument *docum
         uint32_t cp = 0U; (void)Next(text, size, &at, &cp); used += Encode(cp, out + used);
     }
     out[used] = '\0'; return UMI_STATUS_OK;
+}
+
+#endif
+
+/* Length-delimited decoding removes the fixed document dependency for large
+ * metadata readers. Both APIs share the established scalar/UTF-8 decoder.
+ * The previous token wrapper is retained above for engineering review. */
+UmiStatus UmiLanguageRuntimeJsonTextSpan(const void *encoded, size_t length,
+    char *out, size_t capacity, size_t *outSize)
+{
+    if ((encoded == NULL && length != 0U) || outSize == NULL ||
+        (out == NULL && capacity != 0U) || (out != NULL && capacity == 0U))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    const unsigned char *text = encoded;
+    size_t at = 0U, used = 0U;
+    while (at < length) {
+        uint32_t cp;
+        UmiStatus status = Next(text, length, &at, &cp);
+        if (status != UMI_STATUS_OK) return status;
+        size_t bytes = Encode(cp, NULL);
+        if (bytes > SIZE_MAX - used) return UMI_STATUS_CAPACITY_EXCEEDED;
+        used += bytes;
+    }
+    if (out != NULL) {
+        if (used >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+        at = 0U; size_t offset = 0U;
+        while (at < length) {
+            uint32_t cp = 0U;
+            (void)Next(text, length, &at, &cp);
+            offset += Encode(cp, out + offset);
+        }
+        out[used] = '\0';
+    }
+    *outSize = used;
+    return UMI_STATUS_OK;
+}
+UmiStatus UmiLanguageRuntimeJsonText(const UmiLanguageRuntimeJsonDocument *document,
+    int token, char *out, size_t capacity)
+{
+    if (document == NULL || document->json == NULL || out == NULL || capacity == 0U || token < 0 ||
+        (size_t)token >= document->token_count || document->token_count > UMI_LANGUAGE_RUNTIME_MAX_TOKENS ||
+        document->tokens[token].type != UMI_LANGUAGE_RUNTIME_JSON_STRING) return UMI_STATUS_INVALID_ARGUMENT;
+    const UmiLanguageRuntimeJsonToken *value = &document->tokens[token];
+    if (value->start < 0 || value->end < value->start || (size_t)value->end > strlen(document->json))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    size_t decoded;
+    return UmiLanguageRuntimeJsonTextSpan(document->json + value->start,
+        (size_t)(value->end - value->start), out, capacity, &decoded);
 }

@@ -16,6 +16,8 @@
 #ifndef UMICOM_APPLICATION_SUITE_LAYOUT_GTK4_WORKSTATION_H
 #define UMICOM_APPLICATION_SUITE_LAYOUT_GTK4_WORKSTATION_H
 
+#include "umicom/ui/workspace_library_history.h"
+#include "umicom/ui/workspace_library_exchange.h"
 #include "umicom/ui/workspace_library.h"
 #include "umicom/ui/workspace_library_checkpoint.h"
 #include <gtk/gtk.h>
@@ -481,6 +483,25 @@ UmiStatus umi_application_suite_gtk4_workstation_library_apply(
  * store; this preview is not a reservation. The connected server is borrowed. */
 UmiStatus umi_application_suite_gtk4_workstation_library_preview(
     UmiApplicationSuiteGtk4Workstation *workstation, UmiUiWorkspaceLibraryPreview *out_preview);
+
+/* Portable library exchange uses the same owner and scope as the native
+ * Layout Library. Review owns copied bytes; apply refuses a stale workspace.
+ * Calls run on the GTK owner thread. They never save storage or place orders.
+ * The caller destroys the review after apply or cancellation. */
+UmiStatus umi_application_suite_gtk4_workstation_library_export(
+    UmiApplicationSuiteGtk4Workstation *workstation, char *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_application_suite_gtk4_workstation_library_import_review(
+    UmiApplicationSuiteGtk4Workstation *workstation, const void *bytes, size_t size, UmiUiWorkspaceLibraryImport **out_review);
+UmiStatus umi_application_suite_gtk4_workstation_library_import_apply(
+    UmiApplicationSuiteGtk4Workstation *workstation, const UmiUiWorkspaceLibraryImport *review);
+
+/* Session history owns only named layout arrangements. Navigation checks the
+ * displayed model revision and never saves storage or runs product commands. */
+UmiStatus umi_application_suite_gtk4_workstation_library_history_read(
+    UmiApplicationSuiteGtk4Workstation *workstation, UmiUiWorkspaceLibraryHistoryState *out_state);
+UmiStatus umi_application_suite_gtk4_workstation_library_history_navigate(
+    UmiApplicationSuiteGtk4Workstation *workstation, UmiUiWorkspaceLibraryHistoryDirection direction,
+    uint64_t expected_revision);
 
 #ifdef __cplusplus
 }

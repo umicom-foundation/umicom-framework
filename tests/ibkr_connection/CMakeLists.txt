@@ -134,3 +134,43 @@ endif()
 umicom_ibkr_target(umicom-ibkr-native-adapter-test)
 add_test(NAME framework.ibkr_connection.native_nonblocking_adapter COMMAND umicom-ibkr-native-adapter-test)
 set_tests_properties(framework.ibkr_connection.native_nonblocking_adapter PROPERTIES TIMEOUT 10)
+
+# The fixture drives the production socket framing and quote decoder without
+# contacting a broker or asserting that external data permissions are present.
+add_executable(umicom-ibkr-quote-test "${CMAKE_CURRENT_LIST_DIR}/test_quotes.c")
+target_include_directories(umicom-ibkr-quote-test PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../../src/ibkr_connection")
+target_link_libraries(umicom-ibkr-quote-test PRIVATE Umicom::ibkr_connection)
+umicom_ibkr_target(umicom-ibkr-quote-test)
+foreach(_case IN ITEMS wire values freshness sentinels frozen delayed unknown-type malformed capacity queue-failure cancel-reuse refusal invalid field-versions)
+    add_test(NAME framework.ibkr_connection.quote.${_case} COMMAND umicom-ibkr-quote-test ${_case})
+    set_tests_properties(framework.ibkr_connection.quote.${_case} PROPERTIES
+        TIMEOUT 20 LABELS "framework;ibkr;market-data;read-only;regression")
+endforeach()
+
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-ibkr-quote-test)
+endif()
+
+# Reports use invented snapshots and owned temporary files; no socket opens.
+add_executable(umicom-ibkr-observation-export-test "${CMAKE_CURRENT_LIST_DIR}/test_observation_export.c")
+target_link_libraries(umicom-ibkr-observation-export-test PRIVATE Umicom::ibkr_connection Umicom::platform)
+umicom_ibkr_target(umicom-ibkr-observation-export-test)
+foreach(case account-limit attested backwards-capture disconnected duplicate-account early-position empty formula future-summary independent invalid-utf8 live-label maximum no-request not-ready partial position-limit quoted simulation unicode unlisted unterminated valid value-limit writable write-cancel write-existing write-new)
+    add_test(NAME framework.ibkr_observations.${case} COMMAND umicom-ibkr-observation-export-test ${case})
+    set_tests_properties(framework.ibkr_observations.${case} PROPERTIES TIMEOUT 30 LABELS "framework;broker;csv;regression")
+endforeach()
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-ibkr-observation-export-test)
+endif()
+
+# Position choice tests use only invented snapshots, without sockets or orders.
+add_executable(umicom-ibkr-position-review-test "${CMAKE_CURRENT_LIST_DIR}/test_position_review.c")
+target_link_libraries(umicom-ibkr-position-review-test PRIVATE Umicom::ibkr_connection)
+umicom_ibkr_target(umicom-ibkr-position-review-test)
+foreach(case valid no-request unlisted duplicate-account unterminated too-many partial disconnected attested writable empty bad-id id-overflow no-exchange combination exchange-control changed-row owned changed-request changed-completion changed-account changed-environment stale)
+    add_test(NAME framework.ibkr_positions.review.${case} COMMAND umicom-ibkr-position-review-test ${case})
+    set_tests_properties(framework.ibkr_positions.review.${case} PROPERTIES TIMEOUT 20 LABELS "framework;broker;positions;regression")
+endforeach()
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-ibkr-position-review-test)
+endif()

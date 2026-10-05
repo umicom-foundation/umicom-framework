@@ -19,6 +19,8 @@
  * responsibility for higher-level threading and persistence policy.
  */
 #include "umicom/ui/sort_filter_model.h"
+#include "../base/value_archive_internal.h"
+#include "../base/registry_archive_internal.h"
 #include "../base/snapshot_registry_internal.h"
 /* Every field is described with its actual C member size; no string scan can
  * escape a supplied array. Domain values and legacy size/version normalisation
@@ -357,3 +359,66 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_ui_sort_filter_model_registry_edit_if_curr
  * this owner's existing row order and normalized fields remain authoritative. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_ui_sort_filter_model_registry_read_page,
     UmiUiSortFilterRegistry, UmiUiSortFilterSnapshot, UMI_UI_SORT_FILTER_MODEL_CAPACITY)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x4260a29e8bba7583);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiSortFilterSnapshot *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiSortFilterSnapshot *)0)->query)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiSortFilterSnapshot *)0)->sort_key)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiUiSortFilterSnapshot *)0)->id) - 1U +
+        8U + sizeof(((UmiUiSortFilterSnapshot *)0)->query) - 1U +
+        8U + sizeof(((UmiUiSortFilterSnapshot *)0)->sort_key) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiUiSortFilterSnapshot *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->query, sizeof(value->query));
+    UmiArchiveWriteText(writer, value->sort_key, sizeof(value->sort_key));
+    UmiArchiveWriteSigned(writer, (int64_t)value->ascending);
+    UmiArchiveWriteSigned(writer, (int64_t)value->case_sensitive);
+    UmiArchiveWriteSigned(writer, (int64_t)value->enabled);
+    UmiArchiveWriteSigned(writer, (int64_t)value->priority);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiUiSortFilterSnapshot *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->query, sizeof(value->query));
+    UmiArchiveReadText(reader, value->sort_key, sizeof(value->sort_key));
+    value->ascending = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->case_sensitive = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->enabled = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->priority = (int32_t)UmiArchiveReadSigned(reader, INT32_MIN, INT32_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus ArchiveValidate(const UmiUiSortFilterSnapshot *value)
+{
+    return umi_ui_sort_filter_model_snapshot_validate(value, NULL);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_ui_sort_filter_model_snapshot_archive_encode, umi_ui_sort_filter_model_snapshot_archive_decode,
+    UmiUiSortFilterSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Restoring this complete collection reuses its existing reviewed replacement
+ * rules. Decoding a saved value alone never changes a live registry. */
+UMI_DEFINE_REGISTRY_ARCHIVE(umi_ui_sort_filter_model_registry_archive_encode, umi_ui_sort_filter_model_registry_archive_restore,
+    UmiUiSortFilterRegistry, UmiUiSortFilterSnapshot, UMI_UI_SORT_FILTER_MODEL_CAPACITY, ArchiveSchema,
+    umi_ui_sort_filter_model_snapshot_archive_encode, umi_ui_sort_filter_model_snapshot_archive_decode, umi_ui_sort_filter_model_registry_replace_if_current)

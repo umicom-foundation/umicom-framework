@@ -1,0 +1,16 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-selection-query-test "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/test_selection_query.c")
+    target_link_libraries(umicom-selection-query-test PRIVATE Umicom::developer Umicom::editor Umicom::platform)
+    umicom_apply_warnings(umicom-selection-query-test)
+    umicom_apply_sanitizers(umicom-selection-query-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-selection-query-test)
+    endif()
+    foreach(case valid object missing disabled wrong-provider encoding sync fragmented notification error invalid-result shutdown-error close-error timeout cancel-before cancel-during invalid-source invalid-caret invalid-kind invalid-declaration state empty unicode surrogate outside outer-outside caret-outside parent-shrinks empty-array multiple multiline native-invalid read-error write-error wrong-id)
+        add_test(NAME framework.language_runtime.selection_query.${case} COMMAND umicom-selection-query-test ${case})
+        set_tests_properties(framework.language_runtime.selection_query.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;language;navigation;ownership;regression")
+    endforeach()
+endif()

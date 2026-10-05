@@ -21,6 +21,7 @@
 #define INCLUDE_UMICOM_AI_AUTHORENGINE_H
 
 #include <stdint.h>
+#include "umicom/base/value_archive.h"
 #include "umicom/ai/types.h"
 #include "umicom/base/status.h"
 
@@ -99,6 +100,17 @@ UmiStatus umi_ai_authorengine_plan_publication_invocation(
     UmiAiAuthorEngineCommand command,
     const char *site_path,
     UmiAiAuthorEngineInvocation *out_invocation);
+
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_ai_authorengine_archive_encode(const UmiAiAuthorEngineConfig *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_ai_authorengine_archive_decode(const void *bytes, size_t byte_count,
+    UmiAiAuthorEngineConfig *value);
 
 #ifdef __cplusplus
 }

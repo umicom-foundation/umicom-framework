@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/snippet_session.h"
+#include "umicom/editor/text_position.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -823,3 +824,5 @@ uint64_t umi_editor_snippet_session_revision(
 {
     return session != NULL ? session->revision : 0U;
 }
+
+#include "snippet_updates.inc"

@@ -23,6 +23,7 @@
 #define UMICOM_AI_CODING_TYPES_H
 
 #include "umicom/ai/privacy_policy.h"
+#include "umicom/base/value_archive.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -126,6 +127,17 @@ const char *umi_ai_coding_patch_operation_text(
  * applications.
  */
 const char *umi_ai_coding_patch_state_text(UmiAiCodingPatchState state);
+
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_ai_coding_request_archive_encode(const UmiAiCodingRequest *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_ai_coding_request_archive_decode(const void *bytes, size_t byte_count,
+    UmiAiCodingRequest *value);
 
 #ifdef __cplusplus
 }

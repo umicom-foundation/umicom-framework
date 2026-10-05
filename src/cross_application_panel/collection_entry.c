@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/cross_application_panel/collection_entry.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise panel collection entry from caller-provided values so later operations
@@ -36,6 +37,15 @@ record->revision=1U;
  */
 UmiStatus umi_panel_collection_entry_validate(const UmiPanelCollectionEntry *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->entry_id, '\0', sizeof(record->entry_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->panel_id, '\0', sizeof(record->panel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->instance_id, '\0', sizeof(record->instance_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->group_id, '\0', sizeof(record->group_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
 /*
  * Protect caller-owned memory by checking that required state is available before it is
  * used.
@@ -172,3 +182,56 @@ if(store->count!=0U)memcpy(records,store->items,store->count*sizeof(store->items
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiPanelCollectionEntryArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xeafdb6832830117f);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelCollectionEntry *)0)->entry_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelCollectionEntry *)0)->panel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelCollectionEntry *)0)->instance_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelCollectionEntry *)0)->group_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiPanelCollectionEntryArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiPanelCollectionEntry *)0)->entry_id) - 1U +
+        8U + sizeof(((UmiPanelCollectionEntry *)0)->panel_id) - 1U +
+        8U + sizeof(((UmiPanelCollectionEntry *)0)->instance_id) - 1U +
+        8U + sizeof(((UmiPanelCollectionEntry *)0)->group_id) - 1U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiPanelCollectionEntryArchiveWrite(UmiArchiveWriter *writer, const UmiPanelCollectionEntry *value)
+{
+    UmiArchiveWriteText(writer, value->entry_id, sizeof(value->entry_id));
+    UmiArchiveWriteText(writer, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveWriteText(writer, value->instance_id, sizeof(value->instance_id));
+    UmiArchiveWriteText(writer, value->group_id, sizeof(value->group_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->order);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->selected);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiPanelCollectionEntryArchiveRead(UmiArchiveReader *reader, UmiPanelCollectionEntry *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->entry_id, sizeof(value->entry_id));
+    UmiArchiveReadText(reader, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveReadText(reader, value->instance_id, sizeof(value->instance_id));
+    UmiArchiveReadText(reader, value->group_id, sizeof(value->group_id));
+    value->order = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->selected = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiPanelCollectionEntryArchiveValidate(const UmiPanelCollectionEntry *value)
+{
+    return umi_panel_collection_entry_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_panel_collection_entry_archive_encode, umi_panel_collection_entry_archive_decode,
+    UmiPanelCollectionEntry, UmiPanelCollectionEntryArchiveSchema, UmiPanelCollectionEntryArchiveBound, UmiPanelCollectionEntryArchiveWrite, UmiPanelCollectionEntryArchiveRead, UmiPanelCollectionEntryArchiveValidate)

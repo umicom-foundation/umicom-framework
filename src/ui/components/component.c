@@ -19,6 +19,7 @@
  * the matching source file.
  */
 #include "umicom/ui/components/component.h"
+#include "../../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -85,6 +86,16 @@ UmiStatus umi_ui_component_spec_set_text(UmiUiComponentSpec *spec,
 /* Check that ui component spec satisfies its contract before another service relies on it. */
 UmiStatus umi_ui_component_spec_validate(const UmiUiComponentSpec *spec)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (spec == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(spec->id, '\0', sizeof(spec->id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(spec->text, '\0', sizeof(spec->text)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(spec->css_class, '\0', sizeof(spec->css_class)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(spec->tooltip, '\0', sizeof(spec->tooltip)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(spec->accessible_name, '\0', sizeof(spec->accessible_name)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -142,3 +153,81 @@ const char *umi_ui_component_kind_name(UmiUiComponentKind kind)
         default: return "unknown";
     }
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiUiComponentSpecArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x7e46e0bbafe2a263);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiComponentSpec *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiComponentSpec *)0)->text)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiComponentSpec *)0)->css_class)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiComponentSpec *)0)->tooltip)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiComponentSpec *)0)->accessible_name)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiUiComponentSpecArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiUiComponentSpec *)0)->id) - 1U +
+        8U + sizeof(((UmiUiComponentSpec *)0)->text) - 1U +
+        8U + sizeof(((UmiUiComponentSpec *)0)->css_class) - 1U +
+        8U + sizeof(((UmiUiComponentSpec *)0)->tooltip) - 1U +
+        8U + sizeof(((UmiUiComponentSpec *)0)->accessible_name) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiUiComponentSpecArchiveWrite(UmiArchiveWriter *writer, const UmiUiComponentSpec *value)
+{
+    UmiArchiveWriteSigned(writer, (int64_t)value->kind);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->text, sizeof(value->text));
+    UmiArchiveWriteText(writer, value->css_class, sizeof(value->css_class));
+    UmiArchiveWriteText(writer, value->tooltip, sizeof(value->tooltip));
+    UmiArchiveWriteText(writer, value->accessible_name, sizeof(value->accessible_name));
+    UmiArchiveWriteSigned(writer, (int64_t)value->orientation);
+    UmiArchiveWriteSigned(writer, (int64_t)value->width);
+    UmiArchiveWriteSigned(writer, (int64_t)value->height);
+    UmiArchiveWriteSigned(writer, (int64_t)value->spacing);
+    UmiArchiveWriteDouble(writer, value->numeric_value);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->visible);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->sensitive);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->hexpand);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->vexpand);
+}
+static void UmiUiComponentSpecArchiveRead(UmiArchiveReader *reader, UmiUiComponentSpec *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    value->kind = (UmiUiComponentKind)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->text, sizeof(value->text));
+    UmiArchiveReadText(reader, value->css_class, sizeof(value->css_class));
+    UmiArchiveReadText(reader, value->tooltip, sizeof(value->tooltip));
+    UmiArchiveReadText(reader, value->accessible_name, sizeof(value->accessible_name));
+    value->orientation = (UmiUiOrientation)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->width = (int32_t)UmiArchiveReadSigned(reader, INT32_MIN, INT32_MAX);
+    value->height = (int32_t)UmiArchiveReadSigned(reader, INT32_MIN, INT32_MAX);
+    value->spacing = (int32_t)UmiArchiveReadSigned(reader, INT32_MIN, INT32_MAX);
+    value->numeric_value = UmiArchiveReadDouble(reader);
+    value->visible = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->sensitive = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->hexpand = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->vexpand = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiUiComponentSpecArchiveValidate(const UmiUiComponentSpec *value)
+{
+    return umi_ui_component_spec_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_ui_component_spec_archive_encode, umi_ui_component_spec_archive_decode,
+    UmiUiComponentSpec, UmiUiComponentSpecArchiveSchema, UmiUiComponentSpecArchiveBound, UmiUiComponentSpecArchiveWrite, UmiUiComponentSpecArchiveRead, UmiUiComponentSpecArchiveValidate)

@@ -44,3 +44,18 @@ if(TARGET Umicom::creative_workspace_gtk4)
         umicom_register_validation_target(umicom-creative-audio-gtk-test)
     endif()
 endif()
+
+# Audition checks inspect ownership and paused state; they never press Play.
+if(TARGET Umicom::creative_workspace_gtk4)
+    add_executable(umicom-creative-audition-gtk-test "${CMAKE_CURRENT_LIST_DIR}/test_audition_gtk4.c")
+    target_link_libraries(umicom-creative-audition-gtk-test PRIVATE Umicom::creative_workspace_gtk4)
+    umicom_creative_configure_target(umicom-creative-audition-gtk-test)
+    foreach(case clear clip-bad-load clip-invalidate clip-repreview empty hide-show independent invalid-keeps-preview reentrant-clear reentrant-load retained-controls load)
+        add_test(NAME framework.creative_audition.gtk.${case} COMMAND umicom-creative-audition-gtk-test ${case})
+        set_tests_properties(framework.creative_audition.gtk.${case} PROPERTIES TIMEOUT 30 SKIP_RETURN_CODE 77
+            LABELS "framework;creative-audio;gtk4;ownership;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-creative-audition-gtk-test)
+    endif()
+endif()

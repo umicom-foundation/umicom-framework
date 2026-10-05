@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/cross_application_panel/capability.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise panel capability from caller-provided values so later operations receive a
@@ -33,6 +34,15 @@ record->revision=1U;
 /* Check that panel capability satisfies its contract before another service relies on it. */
 UmiStatus umi_panel_capability_validate(const UmiPanelCapability *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->capability_id, '\0', sizeof(record->capability_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->panel_id, '\0', sizeof(record->panel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->required_capability, '\0', sizeof(record->required_capability)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->optional_capability, '\0', sizeof(record->optional_capability)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
 /*
  * Protect caller-owned memory by checking that required state is available before it is
  * used.
@@ -169,3 +179,56 @@ if(store->count!=0U)memcpy(records,store->items,store->count*sizeof(store->items
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiPanelCapabilityArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x01b6f2c26247b5dd);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelCapability *)0)->capability_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelCapability *)0)->panel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelCapability *)0)->required_capability)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelCapability *)0)->optional_capability)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiPanelCapabilityArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiPanelCapability *)0)->capability_id) - 1U +
+        8U + sizeof(((UmiPanelCapability *)0)->panel_id) - 1U +
+        8U + sizeof(((UmiPanelCapability *)0)->required_capability) - 1U +
+        8U + sizeof(((UmiPanelCapability *)0)->optional_capability) - 1U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiPanelCapabilityArchiveWrite(UmiArchiveWriter *writer, const UmiPanelCapability *value)
+{
+    UmiArchiveWriteText(writer, value->capability_id, sizeof(value->capability_id));
+    UmiArchiveWriteText(writer, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveWriteText(writer, value->required_capability, sizeof(value->required_capability));
+    UmiArchiveWriteText(writer, value->optional_capability, sizeof(value->optional_capability));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->available);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->degraded);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiPanelCapabilityArchiveRead(UmiArchiveReader *reader, UmiPanelCapability *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->capability_id, sizeof(value->capability_id));
+    UmiArchiveReadText(reader, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveReadText(reader, value->required_capability, sizeof(value->required_capability));
+    UmiArchiveReadText(reader, value->optional_capability, sizeof(value->optional_capability));
+    value->available = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->degraded = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiPanelCapabilityArchiveValidate(const UmiPanelCapability *value)
+{
+    return umi_panel_capability_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_panel_capability_archive_encode, umi_panel_capability_archive_decode,
+    UmiPanelCapability, UmiPanelCapabilityArchiveSchema, UmiPanelCapabilityArchiveBound, UmiPanelCapabilityArchiveWrite, UmiPanelCapabilityArchiveRead, UmiPanelCapabilityArchiveValidate)

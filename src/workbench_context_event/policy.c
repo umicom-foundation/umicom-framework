@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_context_event/policy.h"
+#include "../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -54,6 +55,16 @@ void umi_workbench_context_event_policy_init(
 UmiStatus umi_workbench_context_event_policy_validate(
     const UmiWorkbenchContextEventPolicy *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->record_id, '\0', sizeof(record->record_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->source_id, '\0', sizeof(record->source_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->subject_id, '\0', sizeof(record->subject_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->group_id, '\0', sizeof(record->group_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->label, '\0', sizeof(record->label)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -201,3 +212,75 @@ void umi_workbench_context_event_policy_touch(
     record->timestamp_ms = timestamp_ms;
     ++record->revision;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiWorkbenchContextEventPolicyArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x2fff04a4c1e206dd);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWorkbenchContextEventPolicy *)0)->record_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWorkbenchContextEventPolicy *)0)->source_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWorkbenchContextEventPolicy *)0)->subject_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWorkbenchContextEventPolicy *)0)->group_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWorkbenchContextEventPolicy *)0)->label)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiWorkbenchContextEventPolicyArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiWorkbenchContextEventPolicy *)0)->record_id) - 1U +
+        8U + sizeof(((UmiWorkbenchContextEventPolicy *)0)->source_id) - 1U +
+        8U + sizeof(((UmiWorkbenchContextEventPolicy *)0)->subject_id) - 1U +
+        8U + sizeof(((UmiWorkbenchContextEventPolicy *)0)->group_id) - 1U +
+        8U + sizeof(((UmiWorkbenchContextEventPolicy *)0)->label) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiWorkbenchContextEventPolicyArchiveWrite(UmiArchiveWriter *writer, const UmiWorkbenchContextEventPolicy *value)
+{
+    UmiArchiveWriteText(writer, value->record_id, sizeof(value->record_id));
+    UmiArchiveWriteText(writer, value->source_id, sizeof(value->source_id));
+    UmiArchiveWriteText(writer, value->subject_id, sizeof(value->subject_id));
+    UmiArchiveWriteText(writer, value->group_id, sizeof(value->group_id));
+    UmiArchiveWriteText(writer, value->label, sizeof(value->label));
+    UmiArchiveWriteSigned(writer, (int64_t)value->event_kind);
+    UmiArchiveWriteSigned(writer, (int64_t)value->context_kind);
+    UmiArchiveWriteSigned(writer, (int64_t)value->priority);
+    UmiArchiveWriteSigned(writer, (int64_t)value->state);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->flags);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->timestamp_ms);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiWorkbenchContextEventPolicyArchiveRead(UmiArchiveReader *reader, UmiWorkbenchContextEventPolicy *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->record_id, sizeof(value->record_id));
+    UmiArchiveReadText(reader, value->source_id, sizeof(value->source_id));
+    UmiArchiveReadText(reader, value->subject_id, sizeof(value->subject_id));
+    UmiArchiveReadText(reader, value->group_id, sizeof(value->group_id));
+    UmiArchiveReadText(reader, value->label, sizeof(value->label));
+    value->event_kind = (UmiWorkbenchContextEventKind)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->context_kind = (UmiContextKind)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->priority = (UmiWorkbenchContextEventPriority)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->state = (UmiWorkbenchContextEventState)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->flags = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->timestamp_ms = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiWorkbenchContextEventPolicyArchiveValidate(const UmiWorkbenchContextEventPolicy *value)
+{
+    return umi_workbench_context_event_policy_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_context_event_policy_archive_encode, umi_workbench_context_event_policy_archive_decode,
+    UmiWorkbenchContextEventPolicy, UmiWorkbenchContextEventPolicyArchiveSchema, UmiWorkbenchContextEventPolicyArchiveBound, UmiWorkbenchContextEventPolicyArchiveWrite, UmiWorkbenchContextEventPolicyArchiveRead, UmiWorkbenchContextEventPolicyArchiveValidate)

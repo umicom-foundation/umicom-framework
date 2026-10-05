@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Review suggestions from a local language server</title>
+<style>body{max-width:980px;margin:36px auto;padding:0 24px;font:17px/1.6 system-ui;color:#193542}code{overflow-wrap:anywhere}th,td{padding:10px;border:1px solid #cedce0;text-align:left}table{border-collapse:collapse}</style></head>
+<body><h1>Review suggestions from a local language server</h1>
+<p>A language server is a separate program that understands a programming language.
+Framework can send it a captured source draft, request completion suggestions and
+prepare a complete replacement for review. Umicom Studio exposes this workflow
+through the editor's <strong>Complete…</strong> action.</p>
+<h2>Use the native review</h2><ol>
+<li>Open a writable source document. To replace a typed word, select that word
+within one line. With no selection, the fallback inserts at the caret. A server
+may return its own replacement range, which takes precedence.</li>
+<li>Select <strong>Complete…</strong> in Studio's editor command bar. Scroll the
+bar horizontally if necessary. The form captures the current draft and selection.
+Opening it does not launch a program or send source.</li>
+<li>Enter the absolute path to a trusted language-server executable, its arguments
+and the absolute project folder. These fields are drafts for this review; they
+are not saved automatically. The selected program can inspect that folder.</li>
+<li>Select <strong>Request suggestions</strong>. A worker starts a temporary
+connection, initializes it, sends the captured draft and asks for completion at
+the end of the selection, or at the caret. The connection closes before the
+suggestions become available. Closing the form requests cancellation.</li>
+<li>Select a suggestion from the searchable list, then select <strong>Preview
+complete draft</strong>. Review both texts, including any imports added by the
+server. A different suggestion or changed connection field invalidates the preview.</li>
+<li>Select <strong>I approve the displayed result</strong>, then <strong>Apply to
+captured draft</strong>. Framework rechecks the document and applies the reviewed
+result through its existing history. Undo restores the earlier draft. Save is a
+separate action. Cancel leaves the document unchanged.</li></ol>
+<h2>Remember a server for each language</h2>
+<ol><li>Enter the server path and ordinary command-line arguments, then select
+<strong>Save server for this language</strong>. The form reports the local file
+location. Saving creates the application settings folder if needed.</li>
+<li>On a later visit, select <strong>Load saved server</strong>. The saved path
+and arguments fill the form. The project folder still comes from this workspace;
+it is not stored with the language settings.</li>
+<li>Review the loaded values before selecting <strong>Request suggestions</strong>.
+Neither saving nor loading starts a process or changes the document.</li></ol>
+<p>These are user-local JSON preferences, not an encrypted secret store. Keep API
+keys and passwords out of server arguments. Files are separate for each language,
+and the reader rejects a file labelled for a different language. A missing or
+invalid file leaves the current fields in place. If you edit while a load is
+pending, its result is discarded. A synchronous control observer interrupting
+publication stops further updates; review any field already loaded.</p>
+<p>An explicit save writes the values captured when Save was selected. It may
+finish after the form closes. If you edit during a save, save again to keep the
+newer values. Saving uses atomic file replacement but does not promise a
+cross-process settings lock or power-loss durability on every filesystem.</p>
+<h2>What the review supports</h2>
+<p>Plain-text completions can supply a primary replacement, insert/replace ranges,
+list-level defaults and additional non-overlapping edits such as imports.
+The preview adjusts the caret for edits before the primary replacement. It does
+not execute server commands or treat snippets as ordinary text. Unsupported
+choices report a reason and leave the draft unchanged.</p>
+<p>This is an explicit temporary request. It does not provide an automatic popup
+on every keystroke, a persistent indexing session, background diagnostics, tool
+installation or completion-item resolution. The Outline connection check remains
+a separate handshake that sends no source text.</p>
+<h2>Limits and recovery</h2><table><tr><th>Situation</th><th>Next step</th></tr>
+<tr><td>The source, caret, selection or saved state changed</td><td>Close the
+review and capture the current source again. Do not reuse the old approval.</td></tr>
+<tr><td>The server path or project folder is invalid</td><td>Use absolute paths
+and check the server's required arguments. Request suggestions again.</td></tr>
+<tr><td>No suggestions</td><td>Check the source language and project setup.
+An empty list is a valid server response. An incomplete list is labelled.</td></tr>
+<tr><td>A choice cannot be previewed</td><td>Try another choice. Snippets,
+indentation adjustment, commands, intersecting edits and edits beyond the
+planner's limits are refused.</td></tr>
+<tr><td>The response exceeds capacity</td><td>The native transport accepts less
+than 65536 bytes per JSON message and at most 4096 parser tokens. JSON escaping
+can make a draft larger on the wire. This form refuses drafts of 65536 bytes or
+more before launching. It never truncates the draft or a choice.</td></tr>
+<tr><td>The query times out or cannot initialize</td><td>Check the server's
+diagnostics and project setup. The form uses a five-second read budget; a large
+project may require a future persistent-session workflow. Servers must support
+UTF-16 positions, completion and document open/close synchronization.</td></tr></table>
+<p>Each planned replacement and expected span is limited to 511 UTF-8 bytes,
+with at most 64 additional edits. The reusable preview service separately permits
+complete source and result text up to 16 MiB; the native form has the smaller
+transport limit above. A server-to-client request that this isolated workflow
+cannot service stops the query explicitly.</p>
+<p>Cancellation is checked between native reads. Starting the child and writing
+to its input are synchronous and may finish first. Cleanup owns the direct
+child, not every descendant it might start. The form reports query, document
+close and shutdown outcomes separately.</p>
+<h2>Extend the integration</h2>
+<p>Keep reusable protocol work in <code>UmiLanguageCompletionQueryNative</code>,
+result construction in <code>UmiLanguageCompletionPreviewCreate</code>, and live
+editing in <code>UmiDocumentSourceRequestApply</code>. The worker receives copied
+source and settings. Only the GTK thread follows the editing lifetime token and
+accesses the document coordinator. A retired binding makes retained controls
+inert and suppresses worker publication.</p>
+<p>Hosts that want settings controls use
+<code>UmiGtk4AdapterReviewCompletionWithSettings</code> with their application
+namespace. The original <code>UmiGtk4AdapterReviewCompletion</code> remains a
+transient form. Portable hosts and tests can supply an absolute settings root.
+No settings file is stored in the project checkout by default.</p>
+<p>For a persistent editor session, use one owning worker, synchronize each
+document revision, negotiate only implemented capabilities and handle server
+requests. Preserve the explicit review and document-history boundary when adding
+those services.</p>
+<p>See <a href="reviewing-language-completions.html">completion planning</a>,
+<a href="reviewing-source-tool-results.html">document source requests</a> and
+<a href="native-language-processes.html">native language processes</a>.</p>
+<p>To read symbol documentation without editing the draft, see <a href="source-information.html">source information</a>.</p><p>Continue with <a href="source-navigation.html">definition and reference navigation</a>.</p>
+</body></html>

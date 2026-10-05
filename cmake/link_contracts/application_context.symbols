@@ -1,0 +1,9 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# These exports belong to the existing application runtime owner.
+umi_application_context_binding_validate
+umi_application_context_review_prepare
+umi_application_context_review_summary
+umi_application_context_review_row
+umi_application_context_review_apply
+umi_application_context_review_destroy
+umi_application_workspace_runtime_clear_context

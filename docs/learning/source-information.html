@@ -1,0 +1,67 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Read source information</title>
+<style>body{font:17px/1.6 system-ui;max-width:960px;margin:36px auto;padding:0 24px;color:#193542}code{overflow-wrap:anywhere}td,th{padding:10px;border:1px solid #cbdce1;text-align:left}table{border-collapse:collapse}</style></head>
+<body><h1>Read source information</h1>
+<p>A language server can explain a symbol under the caret, such as a function's
+type or documentation. Framework captures the current draft and requests this
+information on a worker. The result is read-only and does not change the document.</p>
+<h2>Use Source info in Studio</h2><ol>
+<li>Open a source document and place the caret immediately before the symbol you
+want to inspect. Writable and read-only drafts are supported. A selection
+does not change the request position: it uses the start of the selection.</li>
+<li>Choose <strong>Source info…</strong> in the editor command bar. Scroll the
+bar horizontally if the control is outside the visible area. The form captures
+the draft at this point. Opening it does not launch a program.</li>
+<li>Enter a trusted language server's absolute executable path, arguments and
+project folder, or choose <strong>Load saved server</strong>. Settings are
+shared with completion and formatting for this document's language.
+Loading fills the form without launching the server.</li>
+<li>Choose <strong>Request source information</strong>. The selected local
+program receives the captured source and can inspect the project folder.
+Framework closes the document and temporary connection before showing a result.</li>
+<li>Read or select the returned text. Markdown, HTML and code examples are
+displayed literally. No link or script is executed and no edit is staged.
+Choose <strong>Close</strong> when finished.</li></ol>
+<h2>If information is unavailable</h2>
+<table><tr><th>Situation</th><th>What to do</th></tr>
+<tr><td>No information at this caret</td><td>Move the caret before another symbol
+and open a new form. A null reply is valid and means the server provided no content.</td></tr>
+<tr><td>The capture became stale</td><td>Close the form and capture again after
+changing the document, caret, selection, permissions or saved state. Changing
+server settings clears the displayed result and cancels a pending request.</td></tr>
+<tr><td>The server is unsupported</td><td>The server must advertise hover support,
+document open/close synchronization and UTF-16 positions. A temporary connection
+may not have the indexing state a persistent editor connection would provide.</td></tr>
+<tr><td>Timeout or capacity exceeded</td><td>The native form uses a five-second
+read budget. Each message must fit 65536 bytes, including escaped source and the
+JSON envelope, and 4096 parser tokens. Use a smaller draft or a supported server
+configuration. Synchronous launch and writes may finish before cancellation.</td></tr></table>
+<h2>How the pieces fit together</h2>
+<p><code>UmiDocumentSourceRequestCreateInspection</code> owns captured UTF-8
+bytes and metadata without granting editing permission. Stage and Apply are
+always refused for an inspection request, even when its document is writable.
+Check compares source bytes, revisions, paths, permissions and caret against
+the original capture. No file is read or saved by this capture.</p>
+<p><code>UmiLanguageHoverQueryNative</code> owns initialization, document
+open/close, request correlation and child-process cleanup. Its optional returned
+range is checked against the captured source so UTF-16 coordinates cannot point
+outside the draft or split a Unicode character. Only the direct child is owned;
+programs that start their own descendants need additional supervision.</p>
+<p><code>UmiLanguageHoverDocument</code> independently reads up to 1 MiB of JSON,
+with at most 256 text/code blocks and 127 UTF-8 bytes in a code-language label.
+It owns all decoded text, supports plain text, markdown and legacy code-block
+arrays, and exposes a joined literal text representation. The native transport
+has the smaller limits described above. Rich rendering would require a separate
+sanitized renderer and explicit actions for opening links; this reader never
+evaluates returned content.</p>
+<p>The GTK form keeps document access on its owning thread and gives workers
+copied source and settings. Closing or unbinding the editor cancels publication.
+Completion, formatting and source information share one source-review slot.
+This workflow does not provide automatic mouse hover, persistent indexing,
+server installation or arbitrary server-to-client configuration callbacks.</p>
+<p>See <a href="native-completion-review.html">completion and saved settings</a>,
+<a href="reviewing-document-formatting.html">document formatting</a> and
+<a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_hover">the language protocol's hover contract</a>.</p>
+<p>Continue with <a href="source-navigation.html">definition and reference navigation</a>.</p>
+<p>Explore the whole file with <a href="document-symbols.html">document symbols</a>.</p>
+</body></html>

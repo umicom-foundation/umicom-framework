@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/policy_rule.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context policy rule from caller-provided values so later operations receive a
@@ -36,6 +37,15 @@ record->revision=1U;
  */
 UmiStatus umi_context_policy_rule_validate(const UmiContextPolicyRule *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->rule_id, '\0', sizeof(record->rule_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->schema_id, '\0', sizeof(record->schema_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->source_application_id, '\0', sizeof(record->source_application_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->target_application_id, '\0', sizeof(record->target_application_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -188,3 +198,59 @@ if(store->count!=0U)memcpy(out_records,store->items,store->count*sizeof(store->i
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextPolicyRuleArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x7baff9f2ddb19dca);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextPolicyRule *)0)->rule_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextPolicyRule *)0)->schema_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextPolicyRule *)0)->source_application_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextPolicyRule *)0)->target_application_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextPolicyRuleArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextPolicyRule *)0)->rule_id) - 1U +
+        8U + sizeof(((UmiContextPolicyRule *)0)->schema_id) - 1U +
+        8U + sizeof(((UmiContextPolicyRule *)0)->source_application_id) - 1U +
+        8U + sizeof(((UmiContextPolicyRule *)0)->target_application_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextPolicyRuleArchiveWrite(UmiArchiveWriter *writer, const UmiContextPolicyRule *value)
+{
+    UmiArchiveWriteText(writer, value->rule_id, sizeof(value->rule_id));
+    UmiArchiveWriteText(writer, value->schema_id, sizeof(value->schema_id));
+    UmiArchiveWriteText(writer, value->source_application_id, sizeof(value->source_application_id));
+    UmiArchiveWriteText(writer, value->target_application_id, sizeof(value->target_application_id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->decision);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->priority);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextPolicyRuleArchiveRead(UmiArchiveReader *reader, UmiContextPolicyRule *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->rule_id, sizeof(value->rule_id));
+    UmiArchiveReadText(reader, value->schema_id, sizeof(value->schema_id));
+    UmiArchiveReadText(reader, value->source_application_id, sizeof(value->source_application_id));
+    UmiArchiveReadText(reader, value->target_application_id, sizeof(value->target_application_id));
+    value->decision = (UmiContextPolicyDecision)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->priority = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextPolicyRuleArchiveValidate(const UmiContextPolicyRule *value)
+{
+    return umi_context_policy_rule_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_policy_rule_archive_encode, umi_context_policy_rule_archive_decode,
+    UmiContextPolicyRule, UmiContextPolicyRuleArchiveSchema, UmiContextPolicyRuleArchiveBound, UmiContextPolicyRuleArchiveWrite, UmiContextPolicyRuleArchiveRead, UmiContextPolicyRuleArchiveValidate)

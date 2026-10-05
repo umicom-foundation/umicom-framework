@@ -34,6 +34,9 @@ typedef struct UmiDocumentLocation {
 UmiStatus UmiDocumentLocationParse(const char *text, size_t byteCount,
     UmiDocumentLocation *outLocation);
 
+/* The earlier navigation contract described a position-only operation. The
+ * coordinator now records successful jumps; retain the prior wording for review. */
+#if 0
 /** Navigate only while expectedDocument is still the active document.
  * Capture its nonzero ID before showing an input form. A changed active tab
  * returns INVALID_STATE; no active document returns NOT_FOUND. This is a guard
@@ -46,14 +49,37 @@ UmiStatus UmiDocumentLocationParse(const char *text, size_t byteCount,
  * All calls use the coordinator's owning thread. outOffset is optional and
  * remains unchanged on failure. A form must also protect its owner's lifetime.
  * Example: capture active.document_id, then pass "12:5" with byteCount 4. */
+#endif
+/** Navigate only while expectedDocument is still the active document.
+ * Capture its nonzero ID before showing an input form. A changed active tab
+ * returns INVALID_STATE; no active document returns NOT_FOUND. This is a guard
+ * for delayed UI input, not a document store or a history implementation.
+ * After parsing, this delegates to UmiDocumentCoordinatorGoToPosition. The
+ * position is resolved against the current visible draft: missing lines fail,
+ * long columns clamp to the line end, and a byte inside a UTF-8 character moves
+ * to that character's first byte. Selection clears only on success. Read-only
+ * documents permit navigation. A successful jump records location history; no save, text undo or text edit occurs.
+ * All calls use the coordinator's owning thread. outOffset is optional and
+ * remains unchanged on failure. A form must also protect its owner's lifetime.
+ * Example: capture active.document_id, then pass "12:5" with byteCount 4. */
 UmiStatus UmiDocumentCoordinatorNavigate(UmiDocumentCoordinator *coordinator,
     UmiDocumentId expectedDocument, const char *text, size_t byteCount,
     size_t *outOffset);
 
+/* Earlier wording retained to distinguish text undo from location history. */
+#if 0
 /** Select the next (+1) or previous (-1) managed source document in opening
  * order, wrapping at the ends. Not a most-recently-used or visual-tab-order list.
  * Dirty/read-only/pinned documents remain open; text, selection, history and
  * saved files are unchanged. A single source is a successful no-op.
+ * No active managed source or an empty set returns NOT_FOUND. Invalid direction
+ * returns INVALID_ARGUMENT. outDocument is optional, unchanged on failure.
+ * Owner-thread only. Example: Cycle(coordinator, +1, NULL) switches Notes tabs. */
+#endif
+/** Select the next (+1) or previous (-1) managed source document in opening
+ * order, wrapping at the ends. Not a most-recently-used or visual-tab-order list.
+ * Dirty/read-only/pinned documents remain open; text, selection, text undo and
+ * saved files are unchanged. A successful tab change records location history. A single source is a successful no-op.
  * No active managed source or an empty set returns NOT_FOUND. Invalid direction
  * returns INVALID_ARGUMENT. outDocument is optional, unchanged on failure.
  * Owner-thread only. Example: Cycle(coordinator, +1, NULL) switches Notes tabs. */

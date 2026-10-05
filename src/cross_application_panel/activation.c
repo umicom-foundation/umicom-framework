@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/cross_application_panel/activation.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise panel activation from caller-provided values so later operations receive a
@@ -33,6 +34,14 @@ record->revision=1U;
 /* Check that panel activation satisfies its contract before another service relies on it. */
 UmiStatus umi_panel_activation_validate(const UmiPanelActivation *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->activation_id, '\0', sizeof(record->activation_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->instance_id, '\0', sizeof(record->instance_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->source_id, '\0', sizeof(record->source_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
 /*
  * Protect caller-owned memory by checking that required state is available before it is
  * used.
@@ -167,3 +176,55 @@ if(store->count!=0U)memcpy(records,store->items,store->count*sizeof(store->items
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiPanelActivationArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xa106d0cbe3491548);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelActivation *)0)->activation_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelActivation *)0)->instance_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiPanelActivation *)0)->source_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiPanelActivationArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiPanelActivation *)0)->activation_id) - 1U +
+        8U + sizeof(((UmiPanelActivation *)0)->instance_id) - 1U +
+        8U +
+        8U + sizeof(((UmiPanelActivation *)0)->source_id) - 1U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiPanelActivationArchiveWrite(UmiArchiveWriter *writer, const UmiPanelActivation *value)
+{
+    UmiArchiveWriteText(writer, value->activation_id, sizeof(value->activation_id));
+    UmiArchiveWriteText(writer, value->instance_id, sizeof(value->instance_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->reason);
+    UmiArchiveWriteText(writer, value->source_id, sizeof(value->source_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->timestamp_ms);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->successful);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiPanelActivationArchiveRead(UmiArchiveReader *reader, UmiPanelActivation *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->activation_id, sizeof(value->activation_id));
+    UmiArchiveReadText(reader, value->instance_id, sizeof(value->instance_id));
+    value->reason = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->source_id, sizeof(value->source_id));
+    value->timestamp_ms = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->successful = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiPanelActivationArchiveValidate(const UmiPanelActivation *value)
+{
+    return umi_panel_activation_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_panel_activation_archive_encode, umi_panel_activation_archive_decode,
+    UmiPanelActivation, UmiPanelActivationArchiveSchema, UmiPanelActivationArchiveBound, UmiPanelActivationArchiveWrite, UmiPanelActivationArchiveRead, UmiPanelActivationArchiveValidate)

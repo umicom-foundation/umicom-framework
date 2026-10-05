@@ -32,7 +32,21 @@ typedef struct UmiGtk4EditorBinding {
 
 /* One bounded outer user action can delete selected text before pasting.
  * Keep its accepted starting state until the whole action has completed. */
+/* Each outer GTK action now retains the Framework departure capture;
+ * the earlier rollback-only layout is kept for engineering review. */
+#if 0
 typedef struct UmiGtk4EditorAction {
+    UmiUiDocumentViewSnapshot document;
+    char *text;
+    int insert_offset;
+    int bound_offset;
+    bool rejected;
+    /* Distinguish a history allocation failure from an oversized paste. */
+    UmiStatus history_status;
+} UmiGtk4EditorAction;
+#endif
+typedef struct UmiGtk4EditorAction {
+    UmiDocumentEditPlan *history_capture;
     UmiUiDocumentViewSnapshot document;
     char *text;
     int insert_offset;
@@ -295,10 +309,19 @@ void umi_gtk4_release_document_bindings(UmiGtk4Adapter *adapter)
 }
 
 /* Release the temporary draft owned by a single native user action. */
+/* Action cleanup releases the shared history capture even when its window or binding has gone away; destroying a capture does not access its former coordinator.
+ * The former implementation is retained for engineering review. */
+#if 0
 static void editor_action_free(gpointer data)
 {
     UmiGtk4EditorAction *action = data;
     if (action != NULL) { g_free(action->text); g_free(action); }
+}
+#endif
+static void editor_action_free(gpointer data)
+{
+    UmiGtk4EditorAction *action = data;
+    if (action != NULL) { UmiDocumentEditPlanDestroy(action->history_capture); g_free(action->text); g_free(action); }
 }
 
 /* A text revision avoids copying large drafts during unrelated status ticks.
@@ -336,6 +359,9 @@ static void report_editor_capacity(UmiGtk4Adapter *adapter)
 
 /* Capture the pre-paste selection and draft before GTK can delete anything.
  * GTK emits this signal only for the outermost grouped user action. */
+/* Capture the exact departure draft and selection after synchronizing earlier work and before native typing changes either; history remains owned by Framework.
+ * The former implementation is retained for engineering review. */
+#if 0
 static void on_editor_begin_user_action(GtkTextBuffer *buffer, gpointer user_data)
 {
     UmiGtk4EditorBinding *binding = user_data;
@@ -369,10 +395,49 @@ static void on_editor_begin_user_action(GtkTextBuffer *buffer, gpointer user_dat
     }
     g_object_set_data_full(G_OBJECT(buffer), "umicom-editor-action", action, editor_action_free);
 }
+#endif
+static void on_editor_begin_user_action(GtkTextBuffer *buffer, gpointer user_data)
+{
+    UmiGtk4EditorBinding *binding = user_data;
+    UmiGtk4EditorAction *action;
+    UmiUiWorkbench *workbench;
+    GtkTextIter start, end;
+    if (binding == NULL || binding->adapter == NULL || binding->adapter->shell == NULL ||
+        binding->adapter->applying_document_state) return;
+    workbench = umi_ui_application_shell_workbench(binding->adapter->shell);
+    action = g_new0(UmiGtk4EditorAction, 1);
+    if (umi_ui_document_view_model_find(umi_ui_workbench_documents(workbench),
+        binding->view_id, &action->document) != UMI_STATUS_OK) {
+        editor_action_free(action);
+        return;
+    }
+    gtk_text_buffer_get_bounds(buffer, &start, &end);
+    action->text = gtk_text_buffer_get_text(buffer, &start, &end, TRUE);
+    gtk_text_buffer_get_iter_at_mark(buffer, &start, gtk_text_buffer_get_insert(buffer));
+    gtk_text_buffer_get_iter_at_mark(buffer, &end, gtk_text_buffer_get_selection_bound(buffer));
+    action->insert_offset = gtk_text_iter_get_offset(&start);
+    action->bound_offset = gtk_text_iter_get_offset(&end);
+    /* External producers can update the visible draft before the coordinator
+     * has observed it. Commit that starting draft before native typing changes
+     * the view model; otherwise one Undo also discards the external update.
+     * The outer GTK action still becomes one history entry at its end. New
+     * editor integrations should use this shared boundary, not a second stack. */
+    action->history_status = UMI_STATUS_OK;
+    if (UmiGtk4EditorHasDocument(binding->adapter, binding->view_id)) {
+        action->history_status = UmiGtk4EditorSynchronise(binding->adapter, binding->view_id);
+        if (action->history_status == UMI_STATUS_OK)
+            action->history_status = UmiGtk4EditorCaptureTyping(binding->adapter, binding->view_id, &action->history_capture);
+        action->rejected = action->history_status != UMI_STATUS_OK;
+    }
+    g_object_set_data_full(G_OBJECT(buffer), "umicom-editor-action", action, editor_action_free);
+}
 
 /* Roll back a rejected grouped paste, including any preceding deletion.
  * This restores accepted content and native selection; the model revision
  * still advances because provisional edits and their rollback were observed. */
+/* Commit accepted typing through its departure capture so Undo restores native selection. Older non-document integrations retain their synchronization fallback, and failure leaves the typed draft open.
+ * The former implementation is retained for engineering review. */
+#if 0
 static void on_editor_end_user_action(GtkTextBuffer *buffer, gpointer user_data)
 {
     UmiGtk4EditorBinding *binding = user_data;
@@ -383,6 +448,72 @@ static void on_editor_end_user_action(GtkTextBuffer *buffer, gpointer user_data)
     if (!action->rejected && binding != NULL && binding->adapter != NULL &&
         UmiGtk4EditorHasDocument(binding->adapter, binding->view_id) && !binding->adapter->applying_document_state) {
         UmiStatus syncStatus = UmiGtk4EditorSynchronise(binding->adapter, binding->view_id);
+        if (syncStatus != UMI_STATUS_OK && binding->adapter->status_label != NULL)
+            gtk_label_set_text(GTK_LABEL(binding->adapter->status_label),
+                "The draft is open, but its history group could not be recorded.");
+    }
+    if (!action->rejected || binding == NULL || binding->adapter == NULL ||
+        binding->adapter->shell == NULL || action->text == NULL) {
+        editor_action_free(action);
+        return;
+    }
+    workbench = umi_ui_application_shell_workbench(binding->adapter->shell);
+    if (umi_ui_document_view_model_find(umi_ui_workbench_documents(workbench),
+        binding->view_id, &current) == UMI_STATUS_OK &&
+        strcmp(current.document_id, action->document.document_id) == 0 &&
+        strcmp(current.uri, action->document.uri) == 0) {
+        GtkTextIter insert, bound;
+        UmiUiDocumentViewSnapshot *cached;
+        const int was_applying = binding->adapter->applying_document_state;
+        binding->adapter->applying_document_state = 1;
+        EditorReplaceTextReversibly(buffer, action->text, -1);
+        gtk_text_buffer_get_iter_at_offset(buffer, &insert, action->insert_offset);
+        gtk_text_buffer_get_iter_at_offset(buffer, &bound, action->bound_offset);
+        gtk_text_buffer_select_range(buffer, &insert, &bound);
+        current.dirty = action->document.dirty;
+        current.preview = action->document.preview;
+        current.cursor_offset = action->document.cursor_offset;
+        current.selection_length = action->document.selection_length;
+        (void)UmiUiDocumentViewModelUpsertText(umi_ui_workbench_documents(workbench),
+            &current, action->text, strlen(action->text));
+        (void)umi_ui_document_view_model_find(umi_ui_workbench_documents(workbench),
+            current.view_id, &current);
+        EditorRememberRevision(buffer, umi_ui_workbench_documents(workbench), current.view_id);
+        cached = g_object_get_data(G_OBJECT(buffer), "umicom-editor-snapshot");
+        if (cached != NULL) {
+            (void)g_strlcpy(cached->source_text, current.source_text, sizeof(cached->source_text));
+            cached->cursor_offset = current.cursor_offset;
+            cached->selection_length = current.selection_length;
+        }
+        binding->adapter->applying_document_state = was_applying;
+        /* A rejected action restores its starting text and selection. Keep
+         * the reason accurate so allocation failures are not reported as a
+         * document size limit. The capacity-only report remains for review. */
+#if 0
+        report_editor_capacity(binding->adapter);
+#endif
+        if (action->history_status == UMI_STATUS_OK) {
+            report_editor_capacity(binding->adapter);
+        } else if (binding->adapter->status_label != NULL) {
+            gtk_label_set_text(GTK_LABEL(binding->adapter->status_label),
+                "Edit not applied: the starting draft could not be recorded in history.");
+        }
+    }
+    editor_action_free(action);
+}
+#endif
+static void on_editor_end_user_action(GtkTextBuffer *buffer, gpointer user_data)
+{
+    UmiGtk4EditorBinding *binding = user_data;
+    UmiGtk4EditorAction *action = g_object_steal_data(G_OBJECT(buffer), "umicom-editor-action");
+    UmiUiDocumentViewSnapshot current;
+    UmiUiWorkbench *workbench;
+    if (action == NULL) return;
+    if (!action->rejected && binding != NULL && binding->adapter != NULL &&
+        UmiGtk4EditorHasDocument(binding->adapter, binding->view_id) && !binding->adapter->applying_document_state) {
+        UmiStatus syncStatus = action->history_capture != NULL
+            ? UmiGtk4EditorCommitTyping(binding->adapter, action->history_capture)
+            : UmiGtk4EditorSynchronise(binding->adapter, binding->view_id);
         if (syncStatus != UMI_STATUS_OK && binding->adapter->status_label != NULL)
             gtk_label_set_text(GTK_LABEL(binding->adapter->status_label),
                 "The draft is open, but its history group could not be recorded.");
@@ -1235,3 +1366,6 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
     adapter->applying_document_state = 0;
     return UMI_STATUS_OK;
 }
+
+/* Folding changes presentation only; all source-reading paths above include hidden bytes. */
+#include "editor_folding_controls.inc"

@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/context_security.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context security from caller-provided values so later operations receive a
@@ -131,6 +132,15 @@ UmiStatus umi_context_security_record_failure(UmiContextSecurity *state,UmiStatu
 /* Check that context security satisfies its contract before another service relies on it. */
 UmiStatus umi_context_security_validate(const UmiContextSecurity *state)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (state == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->decision_id, '\0', sizeof(state->decision_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->subject_id, '\0', sizeof(state->subject_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->channel_id, '\0', sizeof(state->channel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->schema_id, '\0', sizeof(state->schema_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -158,3 +168,68 @@ bool umi_context_security_covers_sequence(const UmiContextSecurity *state,uint64
 {
     return state!=NULL&&state->item_count!=0U&&sequence>=state->first_sequence&&sequence<=state->last_sequence;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextSecurityArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xe32992f8b9e0b5ce);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextSecurity *)0)->decision_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextSecurity *)0)->subject_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextSecurity *)0)->channel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextSecurity *)0)->schema_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextSecurityArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextSecurity *)0)->decision_id) - 1U +
+        8U + sizeof(((UmiContextSecurity *)0)->subject_id) - 1U +
+        8U + sizeof(((UmiContextSecurity *)0)->channel_id) - 1U +
+        8U + sizeof(((UmiContextSecurity *)0)->schema_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextSecurityArchiveWrite(UmiArchiveWriter *writer, const UmiContextSecurity *value)
+{
+    UmiArchiveWriteText(writer, value->decision_id, sizeof(value->decision_id));
+    UmiArchiveWriteText(writer, value->subject_id, sizeof(value->subject_id));
+    UmiArchiveWriteText(writer, value->channel_id, sizeof(value->channel_id));
+    UmiArchiveWriteText(writer, value->schema_id, sizeof(value->schema_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->first_sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->last_sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->item_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->failure_count);
+    UmiArchiveWriteSigned(writer, (int64_t)value->status);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextSecurityArchiveRead(UmiArchiveReader *reader, UmiContextSecurity *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->decision_id, sizeof(value->decision_id));
+    UmiArchiveReadText(reader, value->subject_id, sizeof(value->subject_id));
+    UmiArchiveReadText(reader, value->channel_id, sizeof(value->channel_id));
+    UmiArchiveReadText(reader, value->schema_id, sizeof(value->schema_id));
+    value->first_sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->last_sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->item_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->failure_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->status = (UmiStatus)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextSecurityArchiveValidate(const UmiContextSecurity *value)
+{
+    return umi_context_security_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_security_archive_encode, umi_context_security_archive_decode,
+    UmiContextSecurity, UmiContextSecurityArchiveSchema, UmiContextSecurityArchiveBound, UmiContextSecurityArchiveWrite, UmiContextSecurityArchiveRead, UmiContextSecurityArchiveValidate)

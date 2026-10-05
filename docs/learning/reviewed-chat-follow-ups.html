@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Choose context for a chat follow-up</title>
+<style>body{font:17px/1.65 system-ui;max-width:900px;margin:32px auto;padding:0 22px;color:#183642}h1,h2{line-height:1.25}code{background:#edf3f5;padding:2px 5px}li{margin:10px 0}a{color:#086a79}.note{padding:16px;background:#edf3f5}</style></head>
+<body><h1>Choose context for a chat follow-up</h1>
+<p>A coding discussion often needs part of an earlier explanation. The shared chat window keeps up to eight completed exchanges in memory, so you can inspect them and choose an excerpt for your next question. An exchange contains the exact reviewed request and its text reply. Earlier conversation text is never added to a new request automatically.</p>
+<h2>Start a discussion</h2>
+<p>In Studio, open <strong>AI Coding → Connections</strong> and choose an enabled saved connection, or use <strong>Chat about selected code…</strong> after highlighting code in the active editor. Follow <a href="chat-with-saved-connections.html">Chat with saved connections</a> for setup, credentials and sending. The <a href="chat-about-selected-code.html">selected-code guide</a> explains how editor text is captured.</p>
+<p>After a successful send, the request and reply appear in <strong>This window's conversation</strong>. The entry shows the requested and reported model and whether the provider refused the request or returned an incomplete reply. Failed, timed-out and cancelled requests do not become completed exchanges. A review alone does not create an entry.</p>
+<h2>Ask about an earlier answer</h2>
+<ol>
+<li>Wait for the current operation to finish. Scroll to <strong>This window's conversation</strong>.</li>
+<li>Choose the exchange, then choose <strong>Earlier request</strong> or <strong>Earlier reply</strong>. Inspect the displayed text and connection details.</li>
+<li>Highlight exactly the words you want to include. For example, select an explanation of who owns an allocation. Leaving the selection empty does not copy the entire answer.</li>
+<li>Choose <strong>Replace context with selected excerpt</strong>. This replaces the entire Optional context field with the selected text and a short label identifying it as quoted earlier text. If that field already contains code or another excerpt, keep any text you still need before replacing it.</li>
+<li>Enter the next prompt, such as “Show how that ownership rule applies to this function.” You may edit the copied context before reviewing.</li>
+<li>Choose <strong>Review request</strong> and inspect the complete message, destination, model and output limit. Copying an excerpt clears the previous review, approval, local password and displayed current reply. It does not send anything.</li>
+<li>Enter your local profile password if this is a remote connection, approve the displayed request and choose <strong>Send reviewed request once</strong>.</li>
+</ol>
+<p class="note">This is a new request containing the context you chose. It does not resume a provider-managed conversation or grant earlier model text permission to execute tools. A label such as “Earlier assistant text” describes the source of a quotation; the adapter still sends an ordinary user message. Read both your prompt and copied context before approving.</p>
+<h2>Limits and recovery</h2>
+<ul>
+<li><strong>Context is too large:</strong> select a shorter excerpt. The context field holds at most 8,192 UTF-8 bytes, including the quotation label. Some characters use several bytes. An oversized excerpt is rejected without replacing the existing context or its review; text is never silently cut off.</li>
+<li><strong>History is full:</strong> use Forget selected exchange or Clear conversation. The first eight entries are retained. A later successful reply still appears in the current reply field, with a notice that it was not added to history. Do not resend a paid or otherwise completed request merely to record it.</li>
+<li><strong>The selection changed:</strong> select the exchange and highlight the intended text again. The owner checks a history revision and stable exchange identity before using the selection.</li>
+<li><strong>A reply is incomplete or a refusal:</strong> the history keeps that status and includes it in a copied reply's label. Ask a new question deliberately; the application does not automatically retry or continue it.</li>
+<li><strong>The connection changed:</strong> an old history entry records the destination used for that exchange. It does not approve a new destination. Reload the saved connection and review a new request using the ordinary connection workflow.</li>
+</ul>
+<h2>Clear the right copies</h2>
+<p><strong>Forget selected exchange</strong> removes that owned history entry. <strong>Clear conversation</strong> removes all history entries. Text already copied into Optional context, the prompt or the current reply remains visible. This lets you finish a draft while removing earlier exchanges.</p>
+<p><strong>Clear local text</strong> clears the draft, current reply and this window's conversation together. Closing the window also retires its history. Use the existing discard control if the window asks you to confirm losing unsaved text. History is not saved to the connections database, a transcript file or a remote database by this workflow, and reopening the window starts empty.</p>
+<p>Authentication passwords, API keys obtained from the credential store and raw transport bodies are not copied into history. The prompt and reply are kept as supplied, so do not include secrets in text you intend to send. Local clearing cannot retract content already sent to a provider. Nor does it promise erasure of copies held internally by the operating system, clipboard or third-party libraries.</p>
+<h2>Extend the shared owner</h2>
+<p><code>UmiProviderChatHistory</code> belongs to one owner thread. Create it for the chat window and destroy it when the window retires. Append only a successfully validated request/result pair. The owner copies complete text and non-secret connection metadata, checks bounds and UTF-8, and returns a stable ID. It never evicts an older entry automatically.</p>
+<p>Use <code>UmiProviderChatHistoryCompose</code> to build context from explicitly selected byte ranges. Each range must cover complete UTF-8 characters. The native view converts character selections into byte ranges only after comparing the displayed text with the owned entry. Composition checks the expected history revision and publishes output only when every excerpt fits. New consumers should preserve that all-or-nothing behaviour.</p>
+<p>The generic API supports several selected excerpts in caller order; the native action copies one highlighted range at a time and replaces the context field. Neither route automatically includes an entire exchange, its metadata or the rest of the conversation. Review the final combined request in the ordinary chat owner before any send.</p>
+<p>The existing small-message conversation and archive APIs remain available with their original limits. This owner supports the larger reviewed-chat request and reply limits without changing those older data structures or silently truncating messages. It keeps history on the heap and leaves worker threads responsible only for their own request and result. A worker completion records an exchange on the UI thread only while the window is still open.</p>
+<p>When you decide to use suggested code, follow <a href="review-selected-code-replacements.html">Review a replacement for selected code</a>. Source editing has its own target capture, complete-draft preview and explicit approval; a chat send never approves an edit.</p>
+<p>Umicom Foundation · MIT</p></body></html>

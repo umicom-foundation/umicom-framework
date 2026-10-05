@@ -16,6 +16,7 @@
 #define UMICOM_UI_ENTERPRISE_INSPECTOR_PROPERTY_H
 
 #include <stddef.h>
+#include "umicom/base/value_archive.h"
 #include <stdint.h>
 #include "umicom/ui/enterprise/types.h"
 #ifdef __cplusplus
@@ -44,6 +45,17 @@ UmiStatus umi_ui_ent_inspector_property_init(UmiUiEntInspectorProperty *value);
  * relies on it.
  */
 int umi_ui_ent_inspector_property_validate(const UmiUiEntInspectorProperty *value);
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_ui_ent_inspector_property_archive_encode(const UmiUiEntInspectorProperty *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_ui_ent_inspector_property_archive_decode(const void *bytes, size_t byte_count,
+    UmiUiEntInspectorProperty *value);
+
 #ifdef __cplusplus
 }
 #endif

@@ -18,6 +18,8 @@
  * contract does not expose toolkit objects, C++ types, or private structures.
  */
 #include "umicom/project/template.h"
+#include "../base/value_archive_internal.h"
+#include "../base/registry_archive_internal.h"
 #include "../base/snapshot_registry_internal.h"
 /* Every field is described with its actual C member size; no string scan can
  * escape a supplied array. Domain values and legacy size/version normalisation
@@ -253,3 +255,73 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_project_template_registry_edit_if_current,
  * this owner's existing row order and normalized fields remain authoritative. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_project_template_registry_read_page,
     UmiProjectTemplateRegistry, UmiProjectTemplateSnapshot, UMI_PROJECT_TEMPLATE_CAPACITY)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x2346bbcdf49a1bcf);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProjectTemplateSnapshot *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProjectTemplateSnapshot *)0)->name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProjectTemplateSnapshot *)0)->category)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProjectTemplateSnapshot *)0)->description)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProjectTemplateSnapshot *)0)->source_uri)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProjectTemplateSnapshot *)0)->language)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProjectTemplateSnapshot *)0)->frontends)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiProjectTemplateSnapshot *)0)->id) - 1U +
+        8U + sizeof(((UmiProjectTemplateSnapshot *)0)->name) - 1U +
+        8U + sizeof(((UmiProjectTemplateSnapshot *)0)->category) - 1U +
+        8U + sizeof(((UmiProjectTemplateSnapshot *)0)->description) - 1U +
+        8U + sizeof(((UmiProjectTemplateSnapshot *)0)->source_uri) - 1U +
+        8U + sizeof(((UmiProjectTemplateSnapshot *)0)->language) - 1U +
+        8U + sizeof(((UmiProjectTemplateSnapshot *)0)->frontends) - 1U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiProjectTemplateSnapshot *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->name, sizeof(value->name));
+    UmiArchiveWriteText(writer, value->category, sizeof(value->category));
+    UmiArchiveWriteText(writer, value->description, sizeof(value->description));
+    UmiArchiveWriteText(writer, value->source_uri, sizeof(value->source_uri));
+    UmiArchiveWriteText(writer, value->language, sizeof(value->language));
+    UmiArchiveWriteText(writer, value->frontends, sizeof(value->frontends));
+    UmiArchiveWriteSigned(writer, (int64_t)value->trusted);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiProjectTemplateSnapshot *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->name, sizeof(value->name));
+    UmiArchiveReadText(reader, value->category, sizeof(value->category));
+    UmiArchiveReadText(reader, value->description, sizeof(value->description));
+    UmiArchiveReadText(reader, value->source_uri, sizeof(value->source_uri));
+    UmiArchiveReadText(reader, value->language, sizeof(value->language));
+    UmiArchiveReadText(reader, value->frontends, sizeof(value->frontends));
+    value->trusted = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus ArchiveValidate(const UmiProjectTemplateSnapshot *value)
+{
+    return umi_project_template_snapshot_validate(value, NULL);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_project_template_snapshot_archive_encode, umi_project_template_snapshot_archive_decode,
+    UmiProjectTemplateSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Restoring this complete collection reuses its existing reviewed replacement
+ * rules. Decoding a saved value alone never changes a live registry. */
+UMI_DEFINE_REGISTRY_ARCHIVE(umi_project_template_registry_archive_encode, umi_project_template_registry_archive_restore,
+    UmiProjectTemplateRegistry, UmiProjectTemplateSnapshot, UMI_PROJECT_TEMPLATE_CAPACITY, ArchiveSchema,
+    umi_project_template_snapshot_archive_encode, umi_project_template_snapshot_archive_decode, umi_project_template_registry_replace_if_current)

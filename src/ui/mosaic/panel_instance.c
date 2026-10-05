@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/mosaic/panel_instance.h"
+#include "../../base/value_archive_internal.h"
 #include <string.h>
 
 /*
@@ -52,6 +53,13 @@ UmiStatus umi_ui_mosaic_panel_instance_set(UmiUiMosaicPanelInstance *value, cons
  * on it.
  */
 UmiStatus umi_ui_mosaic_panel_instance_validate(const UmiUiMosaicPanelInstance *value) {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(value->id, '\0', sizeof(value->id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(value->title, '\0', sizeof(value->title)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -76,3 +84,47 @@ uint32_t umi_ui_mosaic_panel_instance_rank(const UmiUiMosaicPanelInstance *value
     if (value == NULL || !value->enabled) return 0U;
     return value->priority + context_boost + 1U;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiUiMosaicPanelInstanceArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xee03efd66bf1d3c2);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiMosaicPanelInstance *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiUiMosaicPanelInstance *)0)->title)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiUiMosaicPanelInstanceArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiUiMosaicPanelInstance *)0)->id) - 1U +
+        8U + sizeof(((UmiUiMosaicPanelInstance *)0)->title) - 1U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiUiMosaicPanelInstanceArchiveWrite(UmiArchiveWriter *writer, const UmiUiMosaicPanelInstance *value)
+{
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->title, sizeof(value->title));
+    UmiArchiveWriteSigned(writer, (int64_t)value->application);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->priority);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+}
+static void UmiUiMosaicPanelInstanceArchiveRead(UmiArchiveReader *reader, UmiUiMosaicPanelInstance *value)
+{
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->title, sizeof(value->title));
+    value->application = (UmiUiMosaicApplication)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->priority = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiUiMosaicPanelInstanceArchiveValidate(const UmiUiMosaicPanelInstance *value)
+{
+    return umi_ui_mosaic_panel_instance_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_ui_mosaic_panel_instance_archive_encode, umi_ui_mosaic_panel_instance_archive_decode,
+    UmiUiMosaicPanelInstance, UmiUiMosaicPanelInstanceArchiveSchema, UmiUiMosaicPanelInstanceArchiveBound, UmiUiMosaicPanelInstanceArchiveWrite, UmiUiMosaicPanelInstanceArchiveRead, UmiUiMosaicPanelInstanceArchiveValidate)

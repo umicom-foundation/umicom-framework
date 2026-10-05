@@ -63,6 +63,26 @@ UmiStatus umi_ai_coding_local_workspace_adapter(
 const char *umi_ai_coding_local_workspace_root(
     const UmiAiCodingLocalWorkspace *workspace);
 
+/* Capture an absolute root once when an adapter is initialized. Relative
+ * roots use the current directory at that moment, not during later edits.
+ * This resolves spelling only; it creates no files and grants no approval.
+ * Failure leaves outRoot unchanged. */
+UmiStatus UmiAiCodingWorkspaceRootResolve(const char *root, char *outRoot, size_t capacity);
+
+/* Shared synchronous file callbacks for coding integrations. Framework owns
+ * path validation, Unicode conversion and single-file publication. The root
+ * must be absolute, parents must exist, and links/non-file entries are refused
+ * under the policy in platform/rooted_files.h. A worker should call these APIs.
+ * Read clears both outputs on failure and refuses embedded NUL bytes because
+ * patch comparisons use complete text. Capacity includes the terminator.
+ * None of these calls approves a patch or replaces its conflict checks. */
+UmiStatus UmiAiCodingWorkspaceReadFile(const char *root, const char *relativePath,
+    char *outText, size_t capacity, size_t *outLength);
+UmiStatus UmiAiCodingWorkspaceWriteFile(const char *root, const char *relativePath,
+    const char *text, size_t length);
+UmiStatus UmiAiCodingWorkspaceRemoveFile(const char *root, const char *relativePath);
+UmiStatus UmiAiCodingWorkspaceFileExists(const char *root, const char *relativePath, int *outExists);
+
 #ifdef __cplusplus
 }
 #endif

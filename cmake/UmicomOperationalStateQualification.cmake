@@ -36,7 +36,11 @@ function(umicom_add_operational_state_check suffix library source)
 endfunction()
 
 umicom_add_operational_state_check(profile-store Umicom::build test_profile_store.c
-    roundtrip corrupt boundaries atomicity durable)
+    roundtrip corrupt boundaries atomicity durable arguments
+    stage-migrate stage-missing stage-downgrade stage-roundtrip)
+# These checks only construct argument vectors; they never launch CMake or CTest.
+umicom_add_operational_state_check(stage-presets Umicom::build test_stage_presets.c
+    configure build clean test fallback legacy invalid equal install run names boundary)
 umicom_add_operational_state_check(process-retention Umicom::platform test_process_retention.c
     reuse concurrency shutdown)
 umicom_add_operational_state_check(desk-exit Umicom::desktop test_desk_exit.c)
@@ -44,3 +48,8 @@ umicom_add_operational_state_check(financial-records Umicom::finance test_financ
     identifiers accounts book movements)
 umicom_add_operational_state_check(trading-drafts Umicom::trading test_trading_drafts.c)
 umicom_add_operational_state_check(directory-empty Umicom::platform test_directory_empty.c)
+
+# Launch-folder selection is shared by Run and native Debug. These cases inspect
+# resolved paths and command values without needing either tool installed.
+umicom_add_operational_state_check(launch-directory Umicom::build test_launch_directory.c
+    default relative absolute invalid provider phases equal drive-relative)

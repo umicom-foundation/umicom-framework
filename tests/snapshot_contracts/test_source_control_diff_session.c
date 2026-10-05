@@ -66,4 +66,47 @@ static void ContractPayload(UmiSourceControlDiffSessionSnapshot *item)
 #define CONTRACT_EDIT_CURRENT umi_source_control_diff_session_registry_edit_if_current
 /* Page checks use this domain's real owner and complete payload comparator. */
 #define CONTRACT_READ_PAGE umi_source_control_diff_session_registry_read_page
+/* Build a complete public snapshot; registry normalization is checked
+ * separately by the collection restore cases. */
+static UmiSourceControlDiffSessionSnapshot ArchiveSample(void)
+{
+    UmiSourceControlDiffSessionSnapshot value = {0};
+    ContractPayload(&value);
+    memcpy(value.id, "archive-record", sizeof("archive-record"));
+    value.struct_size = (uint32_t)sizeof(value);
+    value.revision = 17U;
+    return value;
+}
+/* Unused tails are not part of a C string and must not enter saved bytes. */
+static void ArchiveFillUnusedText(UmiSourceControlDiffSessionSnapshot *value)
+{
+    {
+        size_t used = strlen(value->id) + 1U;
+        memset(value->id + used, 0xa5, sizeof(value->id) - used);
+    }
+    {
+        size_t used = strlen(value->repository_id) + 1U;
+        memset(value->repository_id + used, 0xa5, sizeof(value->repository_id) - used);
+    }
+    {
+        size_t used = strlen(value->left_revision) + 1U;
+        memset(value->left_revision + used, 0xa5, sizeof(value->left_revision) - used);
+    }
+    {
+        size_t used = strlen(value->right_revision) + 1U;
+        memset(value->right_revision + used, 0xa5, sizeof(value->right_revision) - used);
+    }
+    {
+        size_t used = strlen(value->path) + 1U;
+        memset(value->path + used, 0xa5, sizeof(value->path) - used);
+    }
+}
+#define ARCHIVE_TYPE UmiSourceControlDiffSessionSnapshot
+#define ARCHIVE_ENCODE umi_source_control_diff_session_snapshot_archive_encode
+#define ARCHIVE_DECODE umi_source_control_diff_session_snapshot_archive_decode
+#define ARCHIVE_EQUAL ContractSnapshotEqual
+#include "../value_archive/record_cases.h"
+
+#define CONTRACT_ARCHIVE_ENCODE umi_source_control_diff_session_registry_archive_encode
+#define CONTRACT_ARCHIVE_RESTORE umi_source_control_diff_session_registry_archive_restore
 #include "snapshot_contract_cases.h"

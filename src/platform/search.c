@@ -14,6 +14,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/platform/search.h"
+#include "umicom/platform/search_filter.h"
+#include "umicom/platform/search_reader.h"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -136,6 +138,10 @@ UmiStatus umi_search_file_index(const UmiFileIndex *index,
         user_data, out_stats);
 }
 
+/* Search filtering belongs beside indexed reads, not in the UI result list.
+ * The former unfiltered implementation is retained for review; the shared
+ * engine below preserves its limits, cancellation and coherent-index checks. */
+#if 0
 UmiStatus UmiSearchFileIndexWithOptions(const UmiFileIndex *index,
     const UmiSearchRequest *request, const UmiSearchOptions *options,
     UmiSearchMatchSink sink, void *userData, UmiSearchStats *outStats)
@@ -256,6 +262,358 @@ finished:
     free(entries);
     return status;
 }
+#endif
+
+/* Indexed search now accepts an owned text reader so document decoding can
+ * remain above Platform. Raw-byte callers retain their original behaviour.
+ * The earlier engine body remains available for engineering review. */
+#if 0
+static UmiStatus SearchFileIndexFiltered(const UmiFileIndex *index,
+    const UmiSearchRequest *request, const UmiSearchOptions *options,
+    const UmiSearchPathFilter *filter,
+    UmiSearchMatchSink sink, void *userData, UmiSearchStats *outStats)
+{
+    UmiSearchStats stats = {0};
+    UmiFileIndexPage page;
+    UmiFileIndexEntry *entries;
+    UmiStatus status;
+    size_t queryLength, position = 0U;
+    uint64_t revision = options != NULL ? options->expectedRevision : 0U;
+    if (outStats != NULL) *outStats = stats;
+    if (index == NULL || request == NULL || request->query == NULL ||
+        request->query[0] == '\0' || sink == NULL ||
+        request->maximum_results == 0U || request->maximum_file_size == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (umi_cancellation_token_is_requested(request->cancellation)) {
+        stats.cancelled = 1;
+        if (outStats != NULL) *outStats = stats;
+        return UMI_STATUS_CANCELLED;
+    }
+    queryLength = strlen(request->query);
+    status = UmiFileIndexReadPage(index, "", 1, 0U, revision, NULL, 0U, &page);
+    if (status != UMI_STATUS_OK) return status;
+    revision = page.stats.revision;
+    entries = calloc(16U, sizeof(*entries));
+    if (entries == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    if (options != NULL && options->progress != NULL)
+        options->progress(&stats, options->progressUserData);
+    for (;;) {
+        if (umi_cancellation_token_is_requested(request->cancellation)) {
+            status = UMI_STATUS_CANCELLED; break;
+        }
+        status = UmiFileIndexReadPage(index, "", 1, position, revision,
+            entries, 16U, &page);
+        if (status != UMI_STATUS_OK || page.count == 0U) break;
+        for (size_t i = 0U; i < page.count; ++i) {
+            unsigned char *bytes = NULL;
+            size_t length = 0U, line = 1U, lineStart = 0U;
+            ++stats.files_considered;
+            /* Decide scope before opening a file. Excluded stale/unreadable
+             * paths cannot fail a search that never asked to read them. */
+            if (filter != NULL) {
+                int accepted = 0;
+                status = UmiSearchPathFilterMatch(filter, entries[i].relative_path, &accepted);
+                if (status != UMI_STATUS_OK) goto finished;
+                if (!accepted) continue;
+            }
+            if (entries[i].size > request->maximum_file_size) {
+                ++stats.oversized_files_skipped; continue;
+            }
+            status = ReadSearchFile(entries[i].path, request->maximum_file_size,
+                request->cancellation, &bytes, &length);
+            if (status == UMI_STATUS_CAPACITY_EXCEEDED) {
+                ++stats.oversized_files_skipped; status = UMI_STATUS_OK; continue;
+            }
+            if (status != UMI_STATUS_OK) goto finished;
+            if (is_binary(bytes, length)) {
+                ++stats.binary_files_skipped; free(bytes); continue;
+            }
+            ++stats.files_searched;
+            /* Document loading removes the UTF-8 BOM, so source columns begin
+             * after it on the first line. UTF-16 remains a binary skip here. */
+            size_t start = length >= 3U && bytes[0] == 0xefU && bytes[1] == 0xbbU &&
+                bytes[2] == 0xbfU ? 3U : 0U;
+            lineStart = start;
+            /* Subtraction avoids overflow in offset + queryLength. */
+            for (size_t offset = start; queryLength <= length &&
+                    offset <= length - queryLength; ++offset) {
+                if ((offset % 1024U) == 0U &&
+                    umi_cancellation_token_is_requested(request->cancellation)) {
+                    status = UMI_STATUS_CANCELLED; break;
+                }
+                size_t matched = 0U;
+                while (matched < queryLength && bytes_equal(bytes[offset + matched],
+                    (unsigned char)request->query[matched], request->case_sensitive)) {
+                    ++matched;
+                    if ((matched % 1024U) == 0U &&
+                        umi_cancellation_token_is_requested(request->cancellation)) {
+                        status = UMI_STATUS_CANCELLED; break;
+                    }
+                }
+                if (status != UMI_STATUS_OK) break;
+                if (matched == queryLength) {
+                    /* Look for one further match before claiming truncation. */
+                    if (stats.matches == request->maximum_results) {
+                        stats.truncated = 1; break;
+                    }
+                    UmiSearchMatch match;
+                    size_t lineEnd = offset;
+                    while (lineEnd < length && bytes[lineEnd] != '\n' &&
+                        bytes[lineEnd] != '\r') ++lineEnd;
+                    memset(&match, 0, sizeof match);
+                    memcpy(match.path, entries[i].path, sizeof match.path);
+                    match.line = line; match.column = offset - lineStart + 1U;
+                    make_preview(bytes + lineStart, lineEnd - lineStart,
+                        match.preview, sizeof match.preview);
+                    status = sink(&match, userData);
+                    if (status != UMI_STATUS_OK) break;
+                    ++stats.matches;
+                }
+                /* Count a newline after matching at it, never before: this also
+                 * gives a literal newline query a valid byte column. */
+                if (bytes[offset] == '\n') { ++line; lineStart = offset + 1U; }
+            }
+            free(bytes);
+            if (options != NULL && options->progress != NULL)
+                options->progress(&stats, options->progressUserData);
+            if (status != UMI_STATUS_OK || stats.truncated) goto finished;
+        }
+        position += page.count;
+        if (!page.has_more) break;
+    }
+finished:
+    if (status == UMI_STATUS_OK &&
+        umi_cancellation_token_is_requested(request->cancellation))
+        status = UMI_STATUS_CANCELLED;
+    if (status == UMI_STATUS_OK) {
+        UmiFileIndexPage finalPage;
+        status = UmiFileIndexReadPage(index, "", 1, 0U, revision,
+            NULL, 0U, &finalPage);
+    }
+    stats.cancelled = status == UMI_STATUS_CANCELLED;
+    if (options != NULL && options->progress != NULL)
+        options->progress(&stats, options->progressUserData);
+    if (outStats != NULL) *outStats = stats;
+    free(entries);
+    return status;
+}
+#endif
+static void SearchReleaseBytes(const UmiSearchFileReader *reader, void *bytes)
+{
+    if (bytes == NULL) return;
+    if (reader != NULL) reader->release(reader->context, bytes);
+    else free(bytes);
+}
+static UmiStatus SearchFileIndexFiltered(const UmiFileIndex *index,
+    const UmiSearchRequest *request, const UmiSearchOptions *options,
+    const UmiSearchPathFilter *filter, const UmiSearchFileReader *reader,
+    UmiSearchMatchSink sink, void *userData, UmiSearchStats *outStats)
+{
+    UmiSearchStats stats = {0};
+    UmiFileIndexPage page;
+    UmiFileIndexEntry *entries;
+    UmiStatus status;
+    size_t queryLength, position = 0U;
+    uint64_t revision = options != NULL ? options->expectedRevision : 0U;
+    if (outStats != NULL) *outStats = stats;
+    if (index == NULL || request == NULL || request->query == NULL ||
+        request->query[0] == '\0' || sink == NULL ||
+        request->maximum_results == 0U || request->maximum_file_size == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (umi_cancellation_token_is_requested(request->cancellation)) {
+        stats.cancelled = 1;
+        if (outStats != NULL) *outStats = stats;
+        return UMI_STATUS_CANCELLED;
+    }
+    if (reader != NULL && (reader->read == NULL || reader->release == NULL || reader->maximum_serialized_bytes == 0U))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    size_t serializedLimit = reader != NULL ? reader->maximum_serialized_bytes : request->maximum_file_size;
+    queryLength = strlen(request->query);
+    status = UmiFileIndexReadPage(index, "", 1, 0U, revision, NULL, 0U, &page);
+    if (status != UMI_STATUS_OK) return status;
+    revision = page.stats.revision;
+    entries = calloc(16U, sizeof(*entries));
+    if (entries == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    if (options != NULL && options->progress != NULL)
+        options->progress(&stats, options->progressUserData);
+    for (;;) {
+        if (umi_cancellation_token_is_requested(request->cancellation)) {
+            status = UMI_STATUS_CANCELLED; break;
+        }
+        status = UmiFileIndexReadPage(index, "", 1, position, revision,
+            entries, 16U, &page);
+        if (status != UMI_STATUS_OK || page.count == 0U) break;
+        for (size_t i = 0U; i < page.count; ++i) {
+            unsigned char *bytes = NULL;
+            size_t length = 0U, line = 1U, lineStart = 0U;
+            ++stats.files_considered;
+            /* Decide scope before opening a file. Excluded stale/unreadable
+             * paths cannot fail a search that never asked to read them. */
+            if (filter != NULL) {
+                int accepted = 0;
+                status = UmiSearchPathFilterMatch(filter, entries[i].relative_path, &accepted);
+                if (status != UMI_STATUS_OK) goto finished;
+                if (!accepted) continue;
+            }
+            if (entries[i].size > serializedLimit) {
+                ++stats.oversized_files_skipped; continue;
+            }
+            status = reader != NULL ? reader->read(reader->context, entries[i].path,
+                request->maximum_file_size, request->cancellation, &bytes, &length)
+                : ReadSearchFile(entries[i].path, request->maximum_file_size,
+                    request->cancellation, &bytes, &length);
+            /* Keep allocation ownership with its reader on every exit. A
+             * failed or oversized decode must never publish partial matches. */
+            if (status == UMI_STATUS_OK && length != 0U && bytes == NULL)
+                status = UMI_STATUS_INVALID_STATE;
+            if (status == UMI_STATUS_OK && length > request->maximum_file_size)
+                status = UMI_STATUS_CAPACITY_EXCEEDED;
+            if (status != UMI_STATUS_OK) {
+                SearchReleaseBytes(reader, bytes); bytes = NULL;
+                if (reader != NULL && status == UMI_STATUS_NOT_IMPLEMENTED) {
+                    ++stats.binary_files_skipped; status = UMI_STATUS_OK; continue;
+                }
+            }
+            if (status == UMI_STATUS_CAPACITY_EXCEEDED) {
+                ++stats.oversized_files_skipped; status = UMI_STATUS_OK; continue;
+            }
+            if (status != UMI_STATUS_OK) goto finished;
+            if (is_binary(bytes, length)) {
+                ++stats.binary_files_skipped; SearchReleaseBytes(reader, bytes); continue;
+            }
+            ++stats.files_searched;
+            /* Raw-byte search skips a file marker. A document reader has
+             * already handled encoding: do not strip a literal leading U+FEFF
+             * from its decoded text or shift the reported editor columns. */
+            size_t start = reader == NULL && length >= 3U && bytes[0] == 0xefU && bytes[1] == 0xbbU &&
+                bytes[2] == 0xbfU ? 3U : 0U;
+            lineStart = start;
+            /* Subtraction avoids overflow in offset + queryLength. */
+            for (size_t offset = start; queryLength <= length &&
+                    offset <= length - queryLength; ++offset) {
+                if ((offset % 1024U) == 0U &&
+                    umi_cancellation_token_is_requested(request->cancellation)) {
+                    status = UMI_STATUS_CANCELLED; break;
+                }
+                size_t matched = 0U;
+                while (matched < queryLength && bytes_equal(bytes[offset + matched],
+                    (unsigned char)request->query[matched], request->case_sensitive)) {
+                    ++matched;
+                    if ((matched % 1024U) == 0U &&
+                        umi_cancellation_token_is_requested(request->cancellation)) {
+                        status = UMI_STATUS_CANCELLED; break;
+                    }
+                }
+                if (status != UMI_STATUS_OK) break;
+                if (matched == queryLength) {
+                    /* Look for one further match before claiming truncation. */
+                    if (stats.matches == request->maximum_results) {
+                        stats.truncated = 1; break;
+                    }
+                    UmiSearchMatch match;
+                    size_t lineEnd = offset;
+                    while (lineEnd < length && bytes[lineEnd] != '\n' &&
+                        bytes[lineEnd] != '\r') ++lineEnd;
+                    memset(&match, 0, sizeof match);
+                    memcpy(match.path, entries[i].path, sizeof match.path);
+                    match.line = line; match.column = offset - lineStart + 1U;
+                    size_t previewBytes = lineEnd - lineStart;
+                    if (reader != NULL && previewBytes >= sizeof(match.preview)) {
+                        previewBytes = sizeof(match.preview) - 1U;
+                        /* Decoded readers return UTF-8. A short preview must
+                         * stop before a character, never within its bytes. */
+                        while (previewBytes != 0U && (bytes[lineStart + previewBytes] & 0xc0U) == 0x80U)
+                            --previewBytes;
+                    }
+                    make_preview(bytes + lineStart, previewBytes,
+                        match.preview, sizeof match.preview);
+                    status = sink(&match, userData);
+                    if (status != UMI_STATUS_OK) break;
+                    ++stats.matches;
+                }
+                /* Count a newline after matching at it, never before: this also
+                 * gives a literal newline query a valid byte column. */
+                if (bytes[offset] == '\n') { ++line; lineStart = offset + 1U; }
+            }
+            SearchReleaseBytes(reader, bytes);
+            if (options != NULL && options->progress != NULL)
+                options->progress(&stats, options->progressUserData);
+            if (status != UMI_STATUS_OK || stats.truncated) goto finished;
+        }
+        position += page.count;
+        if (!page.has_more) break;
+    }
+finished:
+    if (status == UMI_STATUS_OK &&
+        umi_cancellation_token_is_requested(request->cancellation))
+        status = UMI_STATUS_CANCELLED;
+    if (status == UMI_STATUS_OK) {
+        UmiFileIndexPage finalPage;
+        status = UmiFileIndexReadPage(index, "", 1, 0U, revision,
+            NULL, 0U, &finalPage);
+    }
+    stats.cancelled = status == UMI_STATUS_CANCELLED;
+    if (options != NULL && options->progress != NULL)
+        options->progress(&stats, options->progressUserData);
+    if (outStats != NULL) *outStats = stats;
+    free(entries);
+    return status;
+}
+
+/* The compatibility entry point selects the original raw-byte reader while sharing the reader-aware engine.
+ * The former implementation is retained for engineering review. */
+#if 0
+UmiStatus UmiSearchFileIndexWithOptions(const UmiFileIndex *index,
+    const UmiSearchRequest *request, const UmiSearchOptions *options,
+    UmiSearchMatchSink sink, void *userData, UmiSearchStats *outStats)
+{
+    return SearchFileIndexFiltered(index, request, options, NULL, sink, userData, outStats);
+}
+#endif
+UmiStatus UmiSearchFileIndexWithOptions(const UmiFileIndex *index,
+    const UmiSearchRequest *request, const UmiSearchOptions *options,
+    UmiSearchMatchSink sink, void *userData, UmiSearchStats *outStats)
+{
+    return SearchFileIndexFiltered(index, request, options, NULL, NULL, sink, userData, outStats);
+}
+
+/* The compatibility entry point selects the original raw-byte reader while sharing the reader-aware engine.
+ * The former implementation is retained for engineering review. */
+#if 0
+UmiStatus UmiSearchFileIndexScoped(const UmiFileIndex *index,
+    const UmiSearchRequest *request, const UmiSearchOptions *options,
+    const UmiSearchPathFilter *filter, UmiSearchMatchSink sink,
+    void *user_data, UmiSearchStats *out_stats)
+{
+    UmiSearchPathFilter copied;
+    if (filter != NULL) {
+        UmiStatus status = UmiSearchPathFilterInit(filter->include_patterns, filter->exclude_patterns, &copied);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    /* Empty scope is exactly the compatibility path, including path spellings
+     * previously accepted by the index on the current platform. */
+    int scoped = filter != NULL && (copied.include_patterns[0] != '\0' || copied.exclude_patterns[0] != '\0');
+    return SearchFileIndexFiltered(index, request, options, scoped ? &copied : NULL,
+        sink, user_data, out_stats);
+}
+#endif
+UmiStatus UmiSearchFileIndexScoped(const UmiFileIndex *index,
+    const UmiSearchRequest *request, const UmiSearchOptions *options,
+    const UmiSearchPathFilter *filter, UmiSearchMatchSink sink,
+    void *user_data, UmiSearchStats *out_stats)
+{
+    UmiSearchPathFilter copied;
+    if (filter != NULL) {
+        UmiStatus status = UmiSearchPathFilterInit(filter->include_patterns, filter->exclude_patterns, &copied);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    /* Empty scope is exactly the compatibility path, including path spellings
+     * previously accepted by the index on the current platform. */
+    int scoped = filter != NULL && (copied.include_patterns[0] != '\0' || copied.exclude_patterns[0] != '\0');
+    return SearchFileIndexFiltered(index, request, options, scoped ? &copied : NULL, NULL,
+        sink, user_data, out_stats);
+}
+
 
 /* Shared location checking keeps stale saved-file coordinates from moving an
  * editor cursor to unrelated text after an unsaved edit. */
@@ -281,4 +639,21 @@ UmiStatus UmiSearchMatchLocate(const UmiSearchMatch *match, const char *query,
                 (unsigned char)query[i], caseSensitive)) return UMI_STATUS_NOT_FOUND;
     *outOffset = offset;
     return UMI_STATUS_OK;
+}
+
+UmiStatus UmiSearchFileIndexWithReader(const UmiFileIndex *index,const UmiSearchRequest *request,
+    const UmiSearchOptions *options,const UmiSearchPathFilter *filter,const UmiSearchFileReader *reader,
+    UmiSearchMatchSink sink,void *user_data,UmiSearchStats *out_stats)
+{
+    if (out_stats != NULL) memset(out_stats, 0, sizeof(*out_stats));
+    UmiSearchPathFilter copied;
+    if (filter != NULL) {
+        UmiStatus status = UmiSearchPathFilterInit(filter->include_patterns, filter->exclude_patterns, &copied);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    UmiSearchFileReader selected;
+    if (reader != NULL) selected = *reader;
+    int scoped = filter != NULL && (copied.include_patterns[0] != '\0' || copied.exclude_patterns[0] != '\0');
+    return SearchFileIndexFiltered(index, request, options, scoped ? &copied : NULL,
+        reader != NULL ? &selected : NULL, sink, user_data, out_stats);
 }

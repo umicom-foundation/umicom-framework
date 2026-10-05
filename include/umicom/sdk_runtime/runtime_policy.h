@@ -16,6 +16,7 @@
 #ifndef UMICOM_SDK_RUNTIME_RUNTIME_POLICY
 #define UMICOM_SDK_RUNTIME_RUNTIME_POLICY
 #include "umicom/sdk_runtime/types.h"
+#include "umicom/base/value_archive.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -99,6 +100,17 @@ UmiStatus umi_sdk_runtime_runtime_policy_replace_if_current(UmiSdkRuntimeRuntime
  * that identity. It owns no resources, allocates nothing and performs no I/O.
  * Existing void initialization remains available for compatibility. */
 UmiStatus umi_sdk_runtime_runtime_policy_init_checked(UmiSdkRuntimeRuntimePolicy *value, const char *id);
+
+/** Encode this value using Framework's portable archive ownership rules in
+ * value_archive.h. NULL bytes with zero capacity measures the exact size.
+ * Decoding checks the complete schema, checksum, text bounds and domain
+ * validator before publishing. Structure size is rebuilt for the local host;
+ * a saved revision is evidence, not authority to replace a live owner.
+ * Keep source and destination storage separate. Neither call performs I/O. */
+UmiStatus umi_sdk_runtime_runtime_policy_archive_encode(const UmiSdkRuntimeRuntimePolicy *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_sdk_runtime_runtime_policy_archive_decode(const void *bytes, size_t byte_count,
+    UmiSdkRuntimeRuntimePolicy *value);
 
 #ifdef __cplusplus
 }

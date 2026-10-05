@@ -41,8 +41,16 @@ Bring a notebook and leave time for questions.</pre>
 <div class="note"><strong>Saving is explicit.</strong> A changed control creates a draft. The last committed checkpoint is unchanged until Save succeeds. A validation error or storage failure is not silently treated as a saved change.</div></section>
 <section id="restore"><h2>5. Preview and restore an earlier checkpoint</h2>
 <p>Change the first line of the note to “Prepare the Notes and debugging exercises.” Save again. Following the lesson exactly, you now have revision 4.</p>
+<!-- Copied full snapshots replace the count-only confirmation. The previous explanation is retained for engineering review.
 <p>Enter <strong>2</strong> in the checkpoint-number field and choose <strong>Preview checkpoint</strong>. The confirmation describes the number of notes and the workspace font in that saved checkpoint. Preview does not replace your current checkpoint.</p>
+-->
+<p>Enter <strong>2</strong> in the checkpoint-number field and choose <strong>Preview checkpoint</strong>. A review window shows the current saved workspace on the left and the selected checkpoint on the right. Read the complete note titles and bodies, selected note, theme, font size and note-list visibility. Preview does not replace your current checkpoint.</p>
+<p>Both panes are read-only. You can select and copy text. Choose <strong>Next difference</strong> to visit a changed line, or scroll either pane. If the notes exceed the line-alignment limits, the view explains why difference navigation is unavailable and still displays both full texts.</p>
+<!-- The restore action now commits the immutable snapshot shown to the user. The previous explanation is retained for engineering review.
 <p>Choose <strong>Cancel</strong> first. Check that revision 4 and its note remain in place. Preview checkpoint 2 again, then choose <strong>Restore as new checkpoint</strong>. The result is revision 5, containing the earlier note and its earlier preferences.</p>
+-->
+<p>Choose <strong>Cancel</strong> first. Check that revision 4 and its note remain in place. Preview checkpoint 2 again, then choose <strong>Restore reviewed checkpoint</strong>. The result is revision 5, containing exactly the reviewed notes and preferences. The review window closes after submission, and the main window reports the save result.</p>
+<p>The review owns copies of both snapshots. Applying uses the reviewed copy through the normal save transaction. A changed saved revision, closed session or new unsaved draft prevents the old review from applying. Dismiss it, resolve the draft, then preview again. A failed transaction does not advance the saved revision.</p>
 <div class="table"><table><thead><tr><th>Revision</th><th>What this lesson saved</th></tr></thead><tbody>
 <tr><td>1</td><td>The new empty workspace.</td></tr><tr><td>2</td><td>The first workshop note and default preferences.</td></tr><tr><td>3</td><td>The same note with a 16-point dark workspace.</td></tr><tr><td>4</td><td>The revised note that also mentions debugging.</td></tr><tr><td>5</td><td>A new saved copy of revision 2.</td></tr>
 </tbody></table></div>
@@ -124,6 +132,13 @@ int main(void)
 Prepare the Notes exercise.
 Practice complete. The workspace stayed in memory; no application, guest or network was started.</pre>
 <p>There is no need for Assembly in this example: it performs validation and storage orchestration rather than an architecture-specific instruction sequence. The public service and tools remain C23.</p></section>
+<section id="restore-api"><h2>Use the restore review from C</h2>
+<p>The complete example <code>examples/desktop_workspace/review_restore.c</code> creates a memory workspace, saves two different notes, reviews the earlier checkpoint and explicitly restores it. Its expected final message contains saved revision 4 and <code>Prepare the first exercise.</code></p>
+<ol><li>Call <code>UmiDesktopWorkspacePrepareRestore</code> with the retained checkpoint number. A successful call returns an owned review; failure leaves your output pointer unchanged.</li>
+<li>Read <code>UmiDesktopWorkspaceRestoreCurrent</code> and <code>UmiDesktopWorkspaceRestoreCheckpoint</code>. They return borrowed, immutable snapshots. Keep the review alive while reading them; do not change or free those pointers.</li>
+<li>After confirmation, call <code>UmiDesktopWorkspaceApplyRestore</code> on the same live workspace. It checks the saved revision and commits the exact reviewed content. A successful review cannot be applied twice.</li>
+<li>Call <code>UmiDesktopWorkspaceDestroyRestoreReview</code> on every exit path. Cancelling needs only this destruction; it performs no save.</li></ol>
+<p>Keep all workspace operations serialised on one owner or one worker. A review holds copied evidence, not a reference that keeps its workspace alive. New frontends should use this contract instead of rereading the checkpoint when the confirmation button is pressed. The original direct <code>UmiDesktopWorkspaceRestore</code> API remains available for callers that do not offer a review step.</p></section>
 <section id="storage"><h2>9. Understand what is kept</h2>
 <p>The directory contains a SQLite database and a lifetime lock file. SQLite may also use its own temporary journal files. The component never interprets a note as a command, file path or URL.</p>
 <div class="table"><table><thead><tr><th>Boundary</th><th>Meaning</th></tr></thead><tbody>

@@ -26,6 +26,13 @@ foreach(_contract IN LISTS _contracts)
     if(COMMAND umicom_register_validation_target)
         umicom_register_validation_target("${_target}")
     endif()
+    # Archive checks call each actual public owner and compare complete fields.
+    foreach(_case archive-value archive-collection archive-refused archive-empty)
+        set(_test "framework.snapshot_contracts.${_group}.${_name}.${_case}")
+        add_test(NAME "${_test}" COMMAND "${_target}" "${_case}")
+        set_tests_properties("${_test}" PROPERTIES TIMEOUT 60
+            LABELS "framework;snapshot-contracts;value-archive;${_group};regression")
+    endforeach()
     # Each real owner proves the same paging rules using its public payload.
     foreach(_case page-read page-refused page-metadata)
         set(_test "framework.snapshot_contracts.${_group}.${_name}.${_case}")

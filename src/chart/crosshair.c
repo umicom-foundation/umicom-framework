@@ -19,6 +19,8 @@
  * responsibility for higher-level threading and persistence policy.
  */
 #include "umicom/chart/crosshair.h"
+#include "../base/value_archive_internal.h"
+#include "../base/registry_archive_internal.h"
 #include "../base/snapshot_registry_internal.h"
 
 /* Validate every bounded text member before lookup. Value-only snapshot
@@ -241,3 +243,65 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_chart_crosshair_registry_edit_if_current,
  * this owner's existing row order and normalized fields remain authoritative. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_chart_crosshair_registry_read_page,
     UmiChartCrosshairRegistry, UmiChartCrosshairSnapshot, UMI_CHART_CROSSHAIR_CAPACITY)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xf23194c32961f448);
+    schema = (schema ^ (uint64_t)sizeof(((UmiChartCrosshairSnapshot *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiChartCrosshairSnapshot *)0)->pane_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiChartCrosshairSnapshot *)0)->id) - 1U +
+        8U + sizeof(((UmiChartCrosshairSnapshot *)0)->pane_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiChartCrosshairSnapshot *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->pane_id, sizeof(value->pane_id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->time);
+    UmiArchiveWriteDouble(writer, value->value);
+    UmiArchiveWriteSigned(writer, (int64_t)value->visible);
+    UmiArchiveWriteSigned(writer, (int64_t)value->magnet);
+    UmiArchiveWriteSigned(writer, (int64_t)value->show_labels);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiChartCrosshairSnapshot *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->pane_id, sizeof(value->pane_id));
+    value->time = (int64_t)UmiArchiveReadSigned(reader, INT64_MIN, INT64_MAX);
+    value->value = UmiArchiveReadDouble(reader);
+    value->visible = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->magnet = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->show_labels = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus ArchiveValidate(const UmiChartCrosshairSnapshot *value)
+{
+    return umi_chart_crosshair_snapshot_validate(value, NULL);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_chart_crosshair_snapshot_archive_encode, umi_chart_crosshair_snapshot_archive_decode,
+    UmiChartCrosshairSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Restoring this complete collection reuses its existing reviewed replacement
+ * rules. Decoding a saved value alone never changes a live registry. */
+UMI_DEFINE_REGISTRY_ARCHIVE(umi_chart_crosshair_registry_archive_encode, umi_chart_crosshair_registry_archive_restore,
+    UmiChartCrosshairRegistry, UmiChartCrosshairSnapshot, UMI_CHART_CROSSHAIR_CAPACITY, ArchiveSchema,
+    umi_chart_crosshair_snapshot_archive_encode, umi_chart_crosshair_snapshot_archive_decode, umi_chart_crosshair_registry_replace_if_current)

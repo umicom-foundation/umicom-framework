@@ -114,6 +114,14 @@ static int Creation(const char *test)
             CHECK(UmiWorkspaceCreateEntry(graph, 0U, invalid[i], UMI_WORKSPACE_ENTRY_FILE, &result) == UMI_STATUS_INVALID_ARGUMENT);
             CHECK(!result.created);
         }
+        /* Device aliases also include console handles and superscript serial
+         * ports. Creation and later coding edits must reject the same names. */
+        const char *aliases[] = {"CONIN$", "CONOUT$.txt", "COM0.c", "LPT0.c", "CON .txt",
+            "COM\xc2\xb9.c", "LPT\xc2\xb2.c", "COM\xc2\xb3.c"};
+        for (size_t i = 0U; i < sizeof(aliases) / sizeof(aliases[0]); ++i) {
+            CHECK(UmiWorkspaceCreateEntry(graph, 0U, aliases[i], UMI_WORKSPACE_ENTRY_FILE, &result) == UMI_STATUS_INVALID_ARGUMENT);
+            CHECK(!result.created);
+        }
     } else if (strcmp(test, "metadata") == 0) {
         CHECK(UmiWorkspaceCreateEntry(graph, 0U, ".git", UMI_WORKSPACE_ENTRY_DIRECTORY, &result) == UMI_STATUS_PERMISSION_DENIED);
         CHECK(UmiWorkspaceCreateEntry(graph, 0U, ".GIT/config", UMI_WORKSPACE_ENTRY_FILE, &result) == UMI_STATUS_PERMISSION_DENIED);

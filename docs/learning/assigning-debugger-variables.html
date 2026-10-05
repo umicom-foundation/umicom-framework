@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assigning debugger variables — Umicom Framework</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:900px;margin:3rem auto;padding:0 1.3rem;color:#18232d;background:#f8fafb}code,pre{font-family:Consolas,monospace}pre{overflow:auto;background:#eaf0f4;padding:1rem}h1,h2{line-height:1.2}a{color:#085f83}</style></head><body>
+<!-- Umicom Framework | Sammy Hegab, Umicom Foundation | MIT -->
+<h1>Assigning debugger variables</h1>
+<p>A debugger can change a variable in a paused program without editing its source file.
+The adapter, which connects the debugger to the running program, must advertise support for this operation.
+Framework provides an explicit assignment API for captured root variables and children.</p>
+<h2>Use a current captured row</h2>
+<ol><li>Start the native debugger, pause it and inspect its stopped frame. Keep the platform and its workspace on one owner thread.</li>
+<li>Capture a root with <code>UmiDebugVariableTargetCapture</code>, or capture a child from an inspected page with <code>UmiDebugVariablePageTarget</code>.</li>
+<li>Display the captured name and value. Let the user enter a replacement and deliberately confirm the change.</li>
+<li>Call <code>UmiDebugRuntimeCheckVariableAssignment</code> for presentation, then <code>UmiDebugRuntimeAssignVariable</code> for the actual action. The assignment repeats all state checks.</li>
+<li>Check both the returned status and <code>attempted</code>. If an attempt occurred, all earlier variable captures are stale. Read the current scope again before offering another edit.</li></ol>
+<pre><code>#include "umicom/debug_runtime/variable_assignment.h"
+
+/* platform, workspace and target belong to the current inspected stop.
+ * replacement comes from the user's reviewed draft. */
+UmiDebugVariableAssignment result;
+UmiStatus status = UmiDebugRuntimeAssignVariable(
+    platform, workspace, target, replacement, 1500U, &amp;result);
+if (result.attempted) {
+    /* Discard interactive rows made from earlier captures. Do not retry here.
+     * Offer a separate inspection action to obtain current values. */
+}
+if (status == UMI_STATUS_OK &amp;&amp; result.confirmed) {
+    /* result.value.result is the adapter's reply, not an independent readback. */
+}</code></pre>
+<h2>Understand the result</h2>
+<p><code>attempted == 0</code> means this call did not submit an assignment. A stale capture returns
+<code>BUSY</code>; an unsupported adapter returns <code>NOT_IMPLEMENTED</code>. Duplicate sibling names return
+<code>ALREADY_EXISTS</code> because the protocol identifies a variable by its parent container and name, not its visual row index.</p>
+<p><code>attempted == 1</code> means transport submission began. The program may have changed even if the reply timed out,
+was rejected or could not be decoded. Framework clears retained variable registry rows and invalidates captured targets before submission.
+Owned target text remains readable for an explanation, but it cannot authorize another assignment.</p>
+<p><code>confirmed == 1</code> means a complete successful reply arrived with no buffered debugger events.
+It does not guarantee that every related value stayed unchanged. Assignment can run target-language code, and automatic retries are inappropriate.</p>
+<h2>Limits and recovery</h2>
+<ul><li>Replacement text must be valid UTF-8, at most 1023 bytes. The adapter interprets it in the target language; Framework does not evaluate or rewrite it. An empty replacement is allowed.</li>
+<li>The native session must still be paused in the captured frame. Queued events are retained for normal processing and cause a refusal or an unconfirmed outcome.</li>
+<li>A scope is a container, not an assignable variable. Expand it to select an actual child. Scalar variables can be assigned even though they have no expandable child reference.</li>
+<li>After any attempt, process pending debugger events and inspect the current scope before deciding whether another change is needed. If execution resumed, pause and inspect again.</li>
+<li>There is no automatic undo, retry, watch evaluation or source-file edit. This workflow uses <code>setVariable</code>; expression-only adapters do not gain assignment support through it.</li>
+<li>The older low-level setters remain available. Their strict decoder now reads assignment replies correctly, and they invalidate prior variable captures before a request attempt. They do not provide the captured-workspace policy of <code>UmiDebugRuntimeAssignVariable</code>.</li></ul>
+<h2>Extend the implementation</h2>
+<p>The shared target retains the parent reference separately from the child's expansion reference. Keep these identities separate when adding new variable views.
+Protocol decoding lives beside the child-list decoder, while the native platform owns capability checks and transport.
+Add a focused regression for any new response field or adapter behavior before exposing it in another application.</p>
+<p>The <a href="https://microsoft.github.io/debug-adapter-protocol/specification#Requests_SetVariable">Debug Adapter Protocol specification</a>
+defines the container/name request and the response's <code>value</code> field. This differs from an evaluate response's <code>result</code> field.</p>
+</body></html>

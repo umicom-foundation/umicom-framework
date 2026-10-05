@@ -18,6 +18,8 @@
  * contract does not expose toolkit objects, C++ types, or private structures.
  */
 #include "umicom/source_control/tag.h"
+#include "../base/value_archive_internal.h"
+#include "../base/registry_archive_internal.h"
 #include "../base/snapshot_registry_internal.h"
 /* Every field is described with its actual C member size; no string scan can
  * escape a supplied array. Domain values and legacy size/version normalisation
@@ -249,3 +251,65 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_source_control_tag_registry_edit_if_curren
  * this owner's existing row order and normalized fields remain authoritative. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_source_control_tag_registry_read_page,
     UmiSourceControlTagRegistry, UmiSourceControlTagSnapshot, UMI_SOURCE_CONTROL_TAG_CAPACITY)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x3e8e9bf6c889e7f9);
+    schema = (schema ^ (uint64_t)sizeof(((UmiSourceControlTagSnapshot *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiSourceControlTagSnapshot *)0)->repository_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiSourceControlTagSnapshot *)0)->name)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiSourceControlTagSnapshot *)0)->target)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiSourceControlTagSnapshot *)0)->message)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiSourceControlTagSnapshot *)0)->id) - 1U +
+        8U + sizeof(((UmiSourceControlTagSnapshot *)0)->repository_id) - 1U +
+        8U + sizeof(((UmiSourceControlTagSnapshot *)0)->name) - 1U +
+        8U + sizeof(((UmiSourceControlTagSnapshot *)0)->target) - 1U +
+        8U + sizeof(((UmiSourceControlTagSnapshot *)0)->message) - 1U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiSourceControlTagSnapshot *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->repository_id, sizeof(value->repository_id));
+    UmiArchiveWriteText(writer, value->name, sizeof(value->name));
+    UmiArchiveWriteText(writer, value->target, sizeof(value->target));
+    UmiArchiveWriteText(writer, value->message, sizeof(value->message));
+    UmiArchiveWriteSigned(writer, (int64_t)value->annotated);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiSourceControlTagSnapshot *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->repository_id, sizeof(value->repository_id));
+    UmiArchiveReadText(reader, value->name, sizeof(value->name));
+    UmiArchiveReadText(reader, value->target, sizeof(value->target));
+    UmiArchiveReadText(reader, value->message, sizeof(value->message));
+    value->annotated = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus ArchiveValidate(const UmiSourceControlTagSnapshot *value)
+{
+    return umi_source_control_tag_snapshot_validate(value, NULL);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_source_control_tag_snapshot_archive_encode, umi_source_control_tag_snapshot_archive_decode,
+    UmiSourceControlTagSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Restoring this complete collection reuses its existing reviewed replacement
+ * rules. Decoding a saved value alone never changes a live registry. */
+UMI_DEFINE_REGISTRY_ARCHIVE(umi_source_control_tag_registry_archive_encode, umi_source_control_tag_registry_archive_restore,
+    UmiSourceControlTagRegistry, UmiSourceControlTagSnapshot, UMI_SOURCE_CONTROL_TAG_CAPACITY, ArchiveSchema,
+    umi_source_control_tag_snapshot_archive_encode, umi_source_control_tag_snapshot_archive_decode, umi_source_control_tag_registry_replace_if_current)

@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/typography_policy.h"
+#include "../../base/value_archive_internal.h"
 #include <string.h>
 /* Initialise bounded state without allocating renderer-specific resources. */
 UmiStatus umi_appearance_typography_policy_init(UmiAppearanceTypographyPolicy *item) {
@@ -32,6 +33,12 @@ UmiStatus umi_appearance_typography_policy_init(UmiAppearanceTypographyPolicy *i
 
 /* Validate semantic invariants before the record is published to a renderer. */
 int umi_appearance_typography_policy_is_valid(const UmiAppearanceTypographyPolicy *item) {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (item == NULL) return 0;
+    if (memchr(item->policy_id, '\0', sizeof(item->policy_id)) == NULL) return 0;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -39,3 +46,46 @@ int umi_appearance_typography_policy_is_valid(const UmiAppearanceTypographyPolic
     if (item == NULL) return 0;
     return (umi_appearance_id_valid(item->policy_id) && item->base_text_scale > 0.0 && item->minimum_text_dp > 0.0 && item->maximum_text_scale >= item->base_text_scale);
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiAppearanceTypographyPolicyArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xf60a0ded76817098);
+    schema = (schema ^ (uint64_t)sizeof(((UmiAppearanceTypographyPolicy *)0)->policy_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiAppearanceTypographyPolicyArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiAppearanceTypographyPolicy *)0)->policy_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiAppearanceTypographyPolicyArchiveWrite(UmiArchiveWriter *writer, const UmiAppearanceTypographyPolicy *value)
+{
+    UmiArchiveWriteText(writer, value->policy_id, sizeof(value->policy_id));
+    UmiArchiveWriteDouble(writer, value->base_text_scale);
+    UmiArchiveWriteDouble(writer, value->minimum_text_dp);
+    UmiArchiveWriteDouble(writer, value->maximum_text_scale);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->respect_user_scale);
+}
+static void UmiAppearanceTypographyPolicyArchiveRead(UmiArchiveReader *reader, UmiAppearanceTypographyPolicy *value)
+{
+    UmiArchiveReadText(reader, value->policy_id, sizeof(value->policy_id));
+    value->base_text_scale = UmiArchiveReadDouble(reader);
+    value->minimum_text_dp = UmiArchiveReadDouble(reader);
+    value->maximum_text_scale = UmiArchiveReadDouble(reader);
+    value->respect_user_scale = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiAppearanceTypographyPolicyArchiveValidate(const UmiAppearanceTypographyPolicy *value)
+{
+    return umi_appearance_typography_policy_is_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_appearance_typography_policy_archive_encode, umi_appearance_typography_policy_archive_decode,
+    UmiAppearanceTypographyPolicy, UmiAppearanceTypographyPolicyArchiveSchema, UmiAppearanceTypographyPolicyArchiveBound, UmiAppearanceTypographyPolicyArchiveWrite, UmiAppearanceTypographyPolicyArchiveRead, UmiAppearanceTypographyPolicyArchiveValidate)

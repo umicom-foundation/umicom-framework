@@ -1050,3 +1050,19 @@ UmiDebugService *UmiDebugWorkspaceVariableService(UmiDebugWorkspace *workspace)
 {
     return workspace != NULL ? workspace->service : NULL;
 }
+
+
+/* A restored setup changes desired settings only. Retained property rows must
+ * observe new collection generations even when their saved text is identical. */
+#include "setup_private.h"
+UmiStatus UmiDebugWorkspaceCommitSetup(UmiDebugWorkspace *workspace, const UmiDebugSetup *setup)
+{
+    if (workspace == NULL || setup == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (workspace->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiStatus status = UmiDebugServiceCommitSetup(workspace->service, setup);
+    if (status == UMI_STATUS_OK)
+        ++workspace->revision;
+    return status;
+}

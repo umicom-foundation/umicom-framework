@@ -17,6 +17,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/types.h"
+#include "../../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Provide the terminal remote copy text operation used by this module and its client
@@ -69,6 +70,13 @@ void umi_terminal_remote_named_entry_init(UmiTerminalRemoteNamedEntry *entry, co
  */
 bool umi_terminal_remote_named_entry_valid(const UmiTerminalRemoteNamedEntry *entry)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (entry == NULL) return 0;
+    if (memchr(entry->id, '\0', sizeof(entry->id)) == NULL) return 0;
+    if (memchr(entry->label, '\0', sizeof(entry->label)) == NULL) return 0;
+
     return entry != NULL && entry->id[0] != '\0' && entry->revision > 0U;
 }
 /*
@@ -117,3 +125,44 @@ const char *umi_terminal_remote_health_text(UmiTerminalRemoteHealth health)
         default: return "unknown";
     }
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiTerminalRemoteNamedEntryArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x329ef7f1cfd0369f);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTerminalRemoteNamedEntry *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiTerminalRemoteNamedEntry *)0)->label)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiTerminalRemoteNamedEntryArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiTerminalRemoteNamedEntry *)0)->id) - 1U +
+        8U + sizeof(((UmiTerminalRemoteNamedEntry *)0)->label) - 1U +
+        8U +
+        8U;
+}
+static void UmiTerminalRemoteNamedEntryArchiveWrite(UmiArchiveWriter *writer, const UmiTerminalRemoteNamedEntry *value)
+{
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->label, sizeof(value->label));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+}
+static void UmiTerminalRemoteNamedEntryArchiveRead(UmiArchiveReader *reader, UmiTerminalRemoteNamedEntry *value)
+{
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->label, sizeof(value->label));
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+}
+static UmiStatus UmiTerminalRemoteNamedEntryArchiveValidate(const UmiTerminalRemoteNamedEntry *value)
+{
+    return umi_terminal_remote_named_entry_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_terminal_remote_named_entry_archive_encode, umi_terminal_remote_named_entry_archive_decode,
+    UmiTerminalRemoteNamedEntry, UmiTerminalRemoteNamedEntryArchiveSchema, UmiTerminalRemoteNamedEntryArchiveBound, UmiTerminalRemoteNamedEntryArchiveWrite, UmiTerminalRemoteNamedEntryArchiveRead, UmiTerminalRemoteNamedEntryArchiveValidate)

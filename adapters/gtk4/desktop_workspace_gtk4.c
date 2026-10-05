@@ -17,6 +17,9 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop_workspace/gtk4.h"
 #include "umicom/desktop_workspace/workspace.h"
+#include "umicom/desktop_workspace/restore_review.h"
+#include "umicom/desktop_workspace/history.h"
+#include "umicom/ui/gtk4/text_comparison.h"
 #include "umicom/ui/gtk4/drop_down.h"
 #include <inttypes.h>
 #include <stdio.h>
@@ -32,6 +35,10 @@ typedef struct WorkspaceUi {
         *font, *visible, *save, *discard, *add, *remove, *checkpoint, *preview,
         *status, *revision;
     GtkStringList *titles;
+    GtkStringList *historyTitles;
+    GtkWidget *historyChoice, *historyRefresh, *historyStatus;
+    UmiDesktopWorkspaceHistory history;
+    int historyLoading;
     GtkCssProvider *css;
     GdkDisplay *display;
     char *directory, *cssClass;
@@ -48,8 +55,13 @@ typedef struct WorkspaceJob {
     UmiStatus status;
     char message[256];
     UmiDesktopWorkspaceSnapshot *snapshot;
+    UmiDesktopWorkspaceRestoreReview *review;
+    UmiDesktopWorkspaceHistory history;
+    UmiStatus historyStatus;
 } WorkspaceJob;
 static void Begin(WorkspaceUi *ui, int operation, uint64_t checkpoint);
+static int BeginReviewed(WorkspaceUi *ui, int operation, uint64_t checkpoint,
+    UmiDesktopWorkspaceRestoreReview *review);
 static void Status(WorkspaceUi *ui, const char *message)
 { gtk_label_set_text(GTK_LABEL(ui->status), message); }
 static void Buttons(WorkspaceUi *ui)
@@ -60,6 +72,8 @@ static void Buttons(WorkspaceUi *ui)
     gtk_widget_set_sensitive(ui->save, idle && ui->workspace != NULL && ui->dirty);
     gtk_widget_set_sensitive(ui->discard, idle && ui->workspace != NULL && ui->dirty);
     gtk_widget_set_sensitive(ui->preview, idle && ui->workspace != NULL && !ui->dirty);
+    gtk_widget_set_sensitive(ui->historyRefresh, idle && ui->workspace != NULL && ui->question == NULL);
+    gtk_widget_set_sensitive(ui->historyChoice, idle && ui->workspace != NULL && ui->history.count != 0U && ui->question == NULL);
     g_object_set_data(G_OBJECT(ui->window), "umicom.desktop-workspace.busy", GINT_TO_POINTER(ui->busy));
 }
 static void Changed(gpointer widget, gpointer data)
@@ -188,19 +202,43 @@ static void Run(GTask *task, gpointer source, gpointer taskData, GCancellable *c
         g_free(parent);
     } else if (job->operation == 2)
         job->status = UmiDesktopWorkspaceCommit(ui->workspace, job->snapshot->revision, job->snapshot);
+    /* A review owns the checkpoint that the user will see. Apply consumes
+     * that evidence instead of rereading a possibly different storage record.
+     * The direct restore path remains here for engineering review. */
+#if 0
     else if (job->operation == 3)
         job->status = UmiDesktopWorkspaceReadCheckpoint(ui->workspace, job->checkpoint, job->snapshot);
     else if (job->operation == 4)
         job->status = UmiDesktopWorkspaceRestore(ui->workspace, job->snapshot->revision, job->checkpoint);
+#endif
+    else if (job->operation == 3)
+        job->status = UmiDesktopWorkspacePrepareRestore(ui->workspace, job->checkpoint, &job->review);
+    else if (job->operation == 4)
+        job->status = UmiDesktopWorkspaceApplyRestore(ui->workspace, job->review);
     else if (job->operation == 5) job->status = UmiDesktopWorkspaceCloseClean(ui->workspace);
+    else if (job->operation == 6) job->status = UmiDesktopWorkspaceReadHistory(ui->workspace, &job->history);
     else job->status = UMI_STATUS_INVALID_ARGUMENT;
+    /* History reads must not replace an unsaved editor draft. The earlier
+     * generic read-after-operation rule is retained for engineering review. */
+#if 0
     if (job->status == UMI_STATUS_OK && job->operation != 3 && job->operation != 5)
         job->status = UmiDesktopWorkspaceRead(ui->workspace, job->snapshot);
+#endif
+    if (job->status == UMI_STATUS_OK && job->operation != 3 && job->operation != 5 && job->operation != 6)
+        job->status = UmiDesktopWorkspaceRead(ui->workspace, job->snapshot);
+    /* Refresh the small catalogue on the same sole worker after a successful
+     * open/save/restore. Catalogue failure cannot turn a committed save into
+     * an apparent failed save; report it separately in the history controls. */
+    if (job->status == UMI_STATUS_OK && (job->operation == 1 || job->operation == 2 || job->operation == 4))
+        job->historyStatus = UmiDesktopWorkspaceReadHistory(ui->workspace, &job->history);
+    else if (job->operation == 6) job->historyStatus = job->status;
     (void)snprintf(job->message, sizeof job->message, "%s", UmiDesktopWorkspaceDetail(ui->workspace));
     g_task_return_boolean(task, TRUE);
 }
 static void FreeJob(gpointer data)
-{ WorkspaceJob *job = data; free(job->snapshot); free(job); }
+{ WorkspaceJob *job = data;
+    UmiDesktopWorkspaceDestroyRestoreReview(job->review);
+    free(job->snapshot); free(job); }
 typedef struct QuestionUi { WorkspaceUi *owner; GtkWindow *window; uint64_t checkpoint; } QuestionUi;
 static void FreeQuestion(gpointer data)
 {
@@ -246,6 +284,188 @@ static void Question(WorkspaceUi *ui, const char *title, const char *message, ui
     g_object_set_data_full(G_OBJECT(q->window), "umicom.workspace.question", q, FreeQuestion);
     gtk_window_present(q->window);
 }
+/* The confirmation owns immutable evidence and retains its parent until
+ * every callback is disconnected. The shared text view supplies selectable
+ * full notes and change navigation without becoming another data store. */
+typedef struct RestoreUi {
+    WorkspaceUi *owner;
+    GtkWindow *window;
+    GtkWidget *body;
+    UmiDesktopWorkspaceRestoreReview *review;
+    int dismissed;
+} RestoreUi;
+
+static void FreeRestore(gpointer data)
+{
+    RestoreUi *restore = data;
+    if (restore->owner->question == restore->window) restore->owner->question = NULL;
+    UmiDesktopWorkspaceDestroyRestoreReview(restore->review);
+    g_object_unref(restore->body);
+    g_object_unref(restore->owner->window); free(restore);
+}
+static GString *RestoreText(const UmiDesktopWorkspaceSnapshot *snapshot)
+{
+    const char *theme = snapshot->theme == UMI_DESKTOP_WORKSPACE_LIGHT ? "Light"
+        : snapshot->theme == UMI_DESKTOP_WORKSPACE_DARK ? "Dark" : "System";
+    GString *text = g_string_new(NULL);
+    /* Revisions are labels above the panes, not textual differences. Every
+     * note is included in stored order; no body is shortened for the review. */
+    g_string_append_printf(text, "Theme: %s\nFont: %u pt\nNote list: %s\nSelected note: %s\nNotes: %zu\n",
+        theme, snapshot->fontPoints, snapshot->sidebarVisible ? "visible" : "hidden",
+        snapshot->selectedNote, snapshot->noteCount);
+    for (size_t index = 0U; index < snapshot->noteCount; ++index) {
+        const UmiDesktopWorkspaceNote *note = &snapshot->notes[index];
+        g_string_append_printf(text, "\nNote ID: %s\nTitle: %s\nBody (%zu bytes):\n%s\nEnd of note.\n",
+            note->id, note->title, strlen(note->body), note->body);
+    }
+    return text;
+}
+static gboolean RestoreClosed(GtkWindow *window, gpointer data)
+{
+    (void)window; RestoreUi *restore = data;
+    restore->dismissed = 1;
+    if (restore->owner->question == restore->window) restore->owner->question = NULL;
+    return FALSE;
+}
+/* GTK may keep a destroyed window alive while a test, accessibility client
+ * or embedding host retains a widget. Registration, not a non-NULL pointer,
+ * tells us whether that window can still accept a user command. */
+static int WorkspaceWindowRegistered(GtkWindow *window)
+{
+    GListModel *windows = gtk_window_get_toplevels();
+    for (guint index = 0U; index < g_list_model_get_n_items(windows); ++index) {
+        GObject *candidate = g_list_model_get_item(windows, index);
+        const int found = candidate == G_OBJECT(window); g_object_unref(candidate);
+        if (found) return 1;
+    }
+    return 0;
+}
+static void RestoreAction(GtkButton *button, gpointer data)
+{
+    GtkWindow *window = data;
+    RestoreUi *restore = g_object_get_data(G_OBJECT(window), "umicom.workspace.restore");
+    if (!restore || restore->dismissed || !restore->review || !WorkspaceWindowRegistered(window)) return;
+    WorkspaceUi *ui = restore->owner;
+    if (gtk_widget_get_root(restore->body) != GTK_ROOT(window) ||
+        gtk_widget_get_root(ui->root) != GTK_ROOT(ui->window) || ui->question != window ||
+        !WorkspaceWindowRegistered(ui->window)) return;
+    /* Retained buttons cannot submit twice, and a programmatic edit made
+     * behind a modal window still invalidates permission to discard a draft. */
+    if (g_object_get_data(G_OBJECT(button), "umicom.restore.apply")) {
+        if (ui->busy || ui->dirty) {
+            Status(ui, "The workspace changed. Dismiss this review and save or discard the draft first."); return;
+        }
+        /* Transfer before GTK notifications can re-enter this callback. A
+         * temporary reference keeps the dialog data valid even if an observer
+         * destroys the window while the worker's busy state is published. */
+        g_object_ref(window);
+        UmiDesktopWorkspaceRestoreReview *review = restore->review;
+        restore->review = NULL; restore->dismissed = 1;
+        if (!BeginReviewed(ui, 4, 0U, review)) {
+            restore->review = review; restore->dismissed = 0; g_object_unref(window); return;
+        }
+        if (ui->question == window) ui->question = NULL;
+        gtk_window_destroy(window); g_object_unref(window); return;
+    }
+    restore->dismissed = 1; ui->question = NULL; gtk_window_destroy(window);
+}
+static UmiStatus RestoreQuestion(WorkspaceUi *ui, UmiDesktopWorkspaceRestoreReview *review)
+{
+    const UmiDesktopWorkspaceSnapshot *current = UmiDesktopWorkspaceRestoreCurrent(review);
+    const UmiDesktopWorkspaceSnapshot *checkpoint = UmiDesktopWorkspaceRestoreCheckpoint(review);
+    if (!current || !checkpoint || ui->question || ui->dirty) return UMI_STATUS_INVALID_STATE;
+    GString *left = RestoreText(current), *right = RestoreText(checkpoint);
+    char leftLabel[96], rightLabel[96];
+    (void)snprintf(leftLabel, sizeof leftLabel, "Current saved workspace — revision %" PRIu64, current->revision);
+    (void)snprintf(rightLabel, sizeof rightLabel, "Checkpoint to restore — revision %" PRIu64, checkpoint->revision);
+    GtkWidget *comparison = NULL;
+    UmiStatus status = UmiGtk4TextComparisonCreate(left->str, left->len, right->str, right->len,
+        leftLabel, rightLabel, &comparison);
+    g_string_free(left, TRUE); g_string_free(right, TRUE);
+    if (status != UMI_STATUS_OK) return status;
+    if (!WorkspaceWindowRegistered(ui->window) || gtk_widget_get_root(ui->root) != GTK_ROOT(ui->window)) {
+        g_object_ref_sink(comparison); g_object_unref(comparison); return UMI_STATUS_CANCELLED;
+    }
+    RestoreUi *restore = calloc(1U, sizeof(*restore));
+    if (!restore) { g_object_ref_sink(comparison); g_object_unref(comparison); return UMI_STATUS_OUT_OF_MEMORY; }
+    restore->owner = ui; restore->review = review;
+    restore->window = GTK_WINDOW(gtk_window_new()); g_object_ref(ui->window);
+    /* Retain the body independently so an embedding host may detach it
+     * without leaving the retained command callbacks with a dangling pointer. */
+    restore->body = g_object_ref_sink(gtk_box_new(GTK_ORIENTATION_VERTICAL, 12));
+    gtk_widget_set_name(GTK_WIDGET(restore->window), "umicom.workspace.restore-review");
+    gtk_window_set_title(restore->window, "Review checkpoint restore");
+    gtk_window_set_default_size(restore->window, 1000, 650);
+    gtk_window_set_transient_for(restore->window, ui->window);
+    gtk_window_set_modal(restore->window, TRUE); gtk_window_set_destroy_with_parent(restore->window, TRUE);
+    GtkWidget *explanation = gtk_label_new("Review every note and preference below. Restore creates a new saved revision. "
+        "Other applications and business transactions are unchanged.");
+    gtk_label_set_wrap(GTK_LABEL(explanation), TRUE); gtk_box_append(GTK_BOX(restore->body), explanation);
+    gtk_widget_set_vexpand(comparison, TRUE); gtk_box_append(GTK_BOX(restore->body), comparison);
+    GtkWidget *actions = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    GtkWidget *cancel = gtk_button_new_with_label("Cancel"), *apply = gtk_button_new_with_label("Restore reviewed checkpoint");
+    gtk_widget_set_name(cancel, "umicom.workspace.restore-cancel");
+    gtk_widget_set_name(apply, "umicom.workspace.restore-apply");
+    g_object_set_data(G_OBJECT(apply), "umicom.restore.apply", GINT_TO_POINTER(1));
+    gtk_box_append(GTK_BOX(actions), cancel); gtk_box_append(GTK_BOX(actions), apply);
+    gtk_box_append(GTK_BOX(restore->body), actions); gtk_window_set_child(restore->window, restore->body);
+    ui->question = restore->window;
+    g_object_set_data_full(G_OBJECT(restore->window), "umicom.workspace.restore", restore, FreeRestore);
+    g_signal_connect_object(cancel, "clicked", G_CALLBACK(RestoreAction), G_OBJECT(restore->window), 0);
+    g_signal_connect_object(apply, "clicked", G_CALLBACK(RestoreAction), G_OBJECT(restore->window), 0);
+    g_signal_connect(restore->window, "close-request", G_CALLBACK(RestoreClosed), restore);
+    gtk_window_present(restore->window);
+    return UMI_STATUS_OK;
+}
+
+/* Rows carry stable revisions rather than their changing list positions.
+ * Rendering never changes the manual checkpoint field; only a deliberate
+ * selection does that. This keeps a typed recovery request intact on refresh. */
+static void RenderHistory(WorkspaceUi *ui, const WorkspaceJob *job)
+{
+    guint previous = gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->historyChoice));
+    uint64_t selected = previous < ui->history.count ? ui->history.rows[previous].revision : 0U;
+    ui->historyLoading = 1;
+    gtk_string_list_splice(ui->historyTitles, 0U, g_list_model_get_n_items(G_LIST_MODEL(ui->historyTitles)), NULL);
+    memset(&ui->history, 0, sizeof ui->history);
+    guint selection = GTK_INVALID_LIST_POSITION;
+    if (job->historyStatus == UMI_STATUS_OK) {
+        ui->history = job->history;
+        for (size_t index = 0U; index < ui->history.count; ++index) {
+            const UmiDesktopWorkspaceHistoryRow *row = &ui->history.rows[index];
+            char label[256];
+            if (row->status == UMI_STATUS_OK)
+                (void)snprintf(label, sizeof label, "Checkpoint %" PRIu64 " — %zu notes — %s", row->revision,
+                    row->noteCount, row->selectedTitle[0] ? row->selectedTitle : "No note selected");
+            else (void)snprintf(label, sizeof label, "Checkpoint %" PRIu64 " — unavailable (%s)",
+                row->revision, umi_status_text(row->status));
+            gtk_string_list_append(ui->historyTitles, label);
+            if (row->revision == selected) selection = (guint)index;
+        }
+        gtk_label_set_text(GTK_LABEL(ui->historyStatus), "Newest checkpoints appear first. Select one, then choose Preview checkpoint.");
+    } else gtk_label_set_text(GTK_LABEL(ui->historyStatus),
+        "Checkpoint history could not be read. Your draft is unchanged. Refresh to retry, or inspect a known checkpoint number.");
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(ui->historyChoice), selection);
+    ui->historyLoading = 0;
+}
+static void HistorySelected(GObject *object, GParamSpec *spec, gpointer data)
+{
+    (void)object; (void)spec;
+    WorkspaceUi *ui = data;
+    if (!WorkspaceWindowRegistered(ui->window) || gtk_widget_get_root(ui->root) != GTK_ROOT(ui->window)) return;
+    if (ui->historyLoading || ui->busy || ui->question != NULL) return;
+    guint selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->historyChoice));
+    if (selected >= ui->history.count) return;
+    const UmiDesktopWorkspaceHistoryRow *row = &ui->history.rows[selected];
+    if (row->status != UMI_STATUS_OK) {
+        Status(ui, "This retained checkpoint could not be read. Select another checkpoint or refresh history.");
+        return;
+    }
+    char revision[32]; (void)snprintf(revision, sizeof revision, "%" PRIu64, row->revision);
+    gtk_editable_set_text(GTK_EDITABLE(ui->checkpoint), revision);
+}
+static void RefreshHistory(GtkButton *button, gpointer data)
+{ (void)button; Begin(data, 6, 0U); }
 static void Complete(GObject *source, GAsyncResult *result, gpointer data)
 {
     (void)source; WorkspaceUi *ui = data; GTask *task = G_TASK(result);
@@ -260,6 +480,8 @@ static void Complete(GObject *source, GAsyncResult *result, gpointer data)
      * An external destroy can unparent it, but never frees our callback data
      * while this task is running. Do not redraw an externally removed body. */
     if (gtk_widget_get_root(ui->root) != GTK_ROOT(ui->window)) return;
+    if (job->operation == 6 || (job->status == UMI_STATUS_OK &&
+        (job->operation == 1 || job->operation == 2 || job->operation == 4))) RenderHistory(ui, job);
     if (job->status != UMI_STATUS_OK) {
         char text[400]; (void)snprintf(text, sizeof text, "Operation stopped (status %d). %.255s", (int)job->status, job->message);
         ui->closing = 0; Status(ui, text); Buttons(ui); return;
@@ -268,8 +490,24 @@ static void Complete(GObject *source, GAsyncResult *result, gpointer data)
         UmiDesktopWorkspaceDestroy(ui->workspace); ui->workspace = NULL;
         ui->allowClose = 1; gtk_window_destroy(ui->window); return;
     }
+    /* A history refresh inspects storage without discarding a draft. Keep the
+     * original completion statement for review of the ownership change. */
+#if 0
     if (job->operation != 3) { *ui->draft = *job->snapshot; ui->dirty = 0; Render(ui); Status(ui, job->message); }
+#endif
+    if (job->operation != 3 && job->operation != 6) {
+        *ui->draft = *job->snapshot; ui->dirty = 0; Render(ui); Status(ui, job->message);
+    }
+    if (job->operation == 6) Status(ui, "Checkpoint list refreshed. The current draft is unchanged.");
+    if (ui->closing && job->operation == 6 && ui->dirty) {
+        ui->closing = 0;
+        Question(ui, "Close workspace?", "Save the current draft before closing, or discard only the unsaved edits. Existing checkpoints remain saved.", 0U);
+        Buttons(ui); return;
+    }
     if (ui->closing) { Begin(ui, 5, 0); return; }
+    /* Full copied notes replace a count-only confirmation. The earlier
+     * projection is retained to explain the transition for maintainers. */
+#if 0
     if (job->operation == 3) {
         char message[320]; (void)snprintf(message, sizeof message,
             "Checkpoint %" PRIu64 " contains %zu notes and a %u pt workspace font.\n"
@@ -277,8 +515,18 @@ static void Complete(GObject *source, GAsyncResult *result, gpointer data)
             job->snapshot->revision, job->snapshot->noteCount, job->snapshot->fontPoints);
         Question(ui, "Restore saved checkpoint?", message, job->checkpoint);
     }
+#endif
+    if (job->operation == 3) {
+        const UmiStatus shown = RestoreQuestion(ui, job->review);
+        if (shown == UMI_STATUS_OK) job->review = NULL;
+        else Status(ui, "The complete checkpoint review could not be opened. Nothing was restored.");
+    }
     Buttons(ui);
 }
+/* Job ownership now includes immutable restore evidence. Ordinary save,
+ * open and close operations retain their previous worker and lifetime rules.
+ * The original job launcher remains here for engineering review. */
+#if 0
 static void Begin(WorkspaceUi *ui, int operation, uint64_t checkpoint)
 {
     if (ui->busy || (operation != 1 && !ui->workspace)) return;
@@ -296,6 +544,43 @@ static void Begin(WorkspaceUi *ui, int operation, uint64_t checkpoint)
     GTask *task = g_task_new(ui->window, NULL, Complete, ui);
     g_task_set_task_data(task, job, FreeJob); g_task_run_in_thread(task, Run); g_object_unref(task);
 }
+#endif
+static int BeginReviewed(WorkspaceUi *ui, int operation, uint64_t checkpoint,
+    UmiDesktopWorkspaceRestoreReview *review)
+{
+    if (!WorkspaceWindowRegistered(ui->window) || gtk_widget_get_root(ui->root) != GTK_ROOT(ui->window)) return 0;
+    if (ui->question && !WorkspaceWindowRegistered(ui->question)) ui->question = NULL;
+    if (ui->busy || (operation != 1 && !ui->workspace)) return 0;
+    /* Native model notifications may re-enter a retained control. Finish
+     * projecting the copied rows before allowing another worker to start. */
+    if (ui->loading || ui->historyLoading) return 0;
+    if ((operation == 4) != (review != NULL)) return 0;
+    if (ui->question && operation != 4) return 0;
+    WorkspaceJob *job = calloc(1, sizeof *job);
+    if (!job) { Status(ui, "Not enough memory."); return 0; }
+    job->snapshot = malloc(sizeof *job->snapshot);
+    if (!job->snapshot) { free(job); Status(ui, "Not enough memory."); return 0; }
+    job->ui = ui; job->operation = operation; job->checkpoint = checkpoint; *job->snapshot = *ui->draft;
+    g_object_ref(ui->window);
+    job->review = review;
+    ui->busy = 1; Buttons(ui); Status(ui, "Working with the saved workspace. Closing waits for this operation to finish.");
+    if (!WorkspaceWindowRegistered(ui->window) || gtk_widget_get_root(ui->root) != GTK_ROOT(ui->window)) {
+        job->review = NULL; FreeJob(job); ui->busy = 0;
+        g_object_set_data(G_OBJECT(ui->window), "umicom.desktop-workspace.busy", NULL);
+        g_object_unref(ui->window); return 0;
+    }
+    job->application = gtk_window_get_application(ui->window);
+    if (job->application) {
+        g_object_ref(job->application);
+        g_application_hold(G_APPLICATION(job->application));
+    }
+    GTask *task = g_task_new(ui->window, NULL, Complete, ui);
+    g_task_set_task_data(task, job, FreeJob); g_task_run_in_thread(task, Run); g_object_unref(task);
+    g_object_unref(ui->window);
+    return 1;
+}
+static void Begin(WorkspaceUi *ui, int operation, uint64_t checkpoint)
+{ (void)BeginReviewed(ui, operation, checkpoint, NULL); }
 static void Open(GtkButton *button, gpointer data) { (void)button; Begin(data, 1, 0); }
 static void Save(GtkButton *button, gpointer data)
 { (void)button; WorkspaceUi *ui = data; if (!ui->busy && ui->workspace && ReadControls(ui)) Begin(ui, 2, 0); }
@@ -313,6 +598,7 @@ static void Preview(GtkButton *button, gpointer data)
 static gboolean Close(GtkWindow *window, gpointer data)
 {
     (void)window; WorkspaceUi *ui = data;
+    if (ui->question && !WorkspaceWindowRegistered(ui->question)) ui->question = NULL;
     if (ui->allowClose) return FALSE;
     if (ui->question) { gtk_window_present(ui->question); return TRUE; }
     if (ui->busy) { ui->closing = 1; return TRUE; }
@@ -327,6 +613,9 @@ static void FreeUi(gpointer data)
 {
     WorkspaceUi *ui = data;
     ui->busy = 1; ui->loading = 1;
+    g_signal_handlers_disconnect_by_data(ui->historyChoice, ui);
+    g_signal_handlers_disconnect_by_data(ui->historyRefresh, ui);
+    g_clear_object(&ui->historyTitles);
     UmiDesktopWorkspaceDestroy(ui->workspace); ui->workspace = NULL; free(ui->draft);
     gtk_style_context_remove_provider_for_display(ui->display, GTK_STYLE_PROVIDER(ui->css));
     g_object_unref(ui->css); g_object_unref(ui->display); g_object_unref(ui->titles); g_object_unref(ui->root);
@@ -390,10 +679,26 @@ GtkWindow *UmiDesktopWorkspaceGtkCreate(GtkApplication *application, const char 
     ui->title=gtk_entry_new();gtk_widget_set_name(ui->title,"umicom.workspace.title");gtk_entry_set_placeholder_text(GTK_ENTRY(ui->title),"Note title");gtk_box_append(GTK_BOX(ui->editor),ui->title);
     ui->body=gtk_text_view_new();gtk_widget_set_name(ui->body,"umicom.workspace.body");gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(ui->body),GTK_WRAP_WORD_CHAR);
     GtkWidget *scroll=gtk_scrolled_window_new();gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll),ui->body);gtk_widget_set_vexpand(scroll,TRUE);gtk_widget_set_size_request(scroll,-1,210);gtk_box_append(GTK_BOX(ui->editor),scroll);
+    /* The picker retains its model independently of the controller. History
+     * is read only on the existing worker, never from a GTK notification. */
+    GtkWidget *historyRow = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    gtk_box_append(GTK_BOX(ui->root), historyRow);
+    ui->historyTitles = gtk_string_list_new(NULL);
+    ui->historyChoice = umi_ui_gtk4_drop_down_new_take_string_list(g_object_ref(ui->historyTitles));
+    gtk_widget_set_name(ui->historyChoice, "umicom.workspace.history");
+    gtk_widget_set_hexpand(ui->historyChoice, TRUE);
+    gtk_box_append(GTK_BOX(historyRow), ui->historyChoice);
+    ui->historyRefresh = Button(historyRow, "umicom.workspace.history-refresh", "Refresh checkpoints", G_CALLBACK(RefreshHistory), ui);
+    ui->historyStatus = gtk_label_new("Open workspace to inspect its retained checkpoints.");
+    gtk_widget_set_name(ui->historyStatus, "umicom.workspace.history-status");
+    gtk_label_set_wrap(GTK_LABEL(ui->historyStatus), TRUE); gtk_label_set_xalign(GTK_LABEL(ui->historyStatus), 0.0F);
+    gtk_box_append(GTK_BOX(ui->root), ui->historyStatus);
+    g_signal_connect(ui->historyChoice, "notify::selected", G_CALLBACK(HistorySelected), ui);
     GtkWidget *actions=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,8);gtk_box_append(GTK_BOX(ui->root),actions);
     ui->save=Button(actions,"umicom.workspace.save","Save checkpoint",G_CALLBACK(Save),ui);
     ui->discard=Button(actions,"umicom.workspace.discard","Discard draft",G_CALLBACK(Discard),ui);
     ui->checkpoint=gtk_entry_new();gtk_widget_set_tooltip_text(ui->checkpoint,"Retained checkpoint number");gtk_editable_set_text(GTK_EDITABLE(ui->checkpoint),"1");gtk_widget_set_size_request(ui->checkpoint,80,-1);gtk_box_append(GTK_BOX(actions),ui->checkpoint);
+    gtk_widget_set_name(ui->checkpoint, "umicom.workspace.checkpoint");
     ui->preview=Button(actions,"umicom.workspace.preview","Preview checkpoint",G_CALLBACK(Preview),ui);
     ui->status=gtk_label_new("Open workspace to begin. Nothing is saved until you choose to open storage and commit a checkpoint.");gtk_label_set_wrap(GTK_LABEL(ui->status),TRUE);gtk_label_set_xalign(GTK_LABEL(ui->status),0);gtk_box_append(GTK_BOX(ui->root),ui->status);
     GtkWidget *page=gtk_scrolled_window_new();gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(page),ui->root);gtk_window_set_child(ui->window,page);

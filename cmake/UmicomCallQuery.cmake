@@ -1,0 +1,16 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-call-query-test "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/test_call_query.c")
+    target_link_libraries(umicom-call-query-test PRIVATE Umicom::developer Umicom::editor Umicom::platform)
+    umicom_apply_warnings(umicom-call-query-test)
+    umicom_apply_sanitizers(umicom-call-query-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-call-query-test)
+    endif()
+    foreach(case incoming outgoing object missing disabled encoding sync empty null no-calls null-calls no-sites multiple roots-limit roots-over fragmented notification wrong-id prepare-error call-error second-error malformed-root malformed-call root-outside site-outside related-outside external-root unicode surrogate-site close-error shutdown-error cancel-before cancel-followup timeout-followup read-followup write-followup invalid-direction invalid-source invalid-caret state native-invalid invalid-output)
+        add_test(NAME framework.language_runtime.call_query.${case} COMMAND umicom-call-query-test ${case})
+        set_tests_properties(framework.language_runtime.call_query.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;language;navigation;ownership;regression")
+    endforeach()
+endif()

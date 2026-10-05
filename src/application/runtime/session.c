@@ -52,6 +52,9 @@ static UmiStatus load_layout_panels(
         return UMI_STATUS_INVALID_ARGUMENT;
     if (layout->panel_count > UMI_APPLICATION_RUNTIME_MAX_PANELS)
         return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Never wrap an observation token: an exhausted session must be replaced
+     * explicitly instead of making an old revision look current again. */
+    if (session->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     session->active_panel_count = 0U;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < layout->panel_count; ++index)
@@ -148,7 +151,19 @@ UmiStatus umi_application_session_activate_panel(
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (session->active_panel_count >= UMI_APPLICATION_RUNTIME_MAX_PANELS)
         return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Session identities borrow immutable catalogue strings. The request may
+     * point into a temporary snapshot, so retaining it would leave a dangling
+     * pointer after restore. Resolve the stable owner before publication. */
+    const UmiExperiencePanelDefinition *panel =
+        umi_application_experience_panel_find(session->experience, panel_id);
+    if (session->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    session->active_panel_ids[session->active_panel_count++] = panel->panel_id;
+    /* The former caller-pointer assignment is retained for ownership review.
+     * The catalogue lookup above replaces it and keeps restored sessions valid
+     * after the input snapshot or command buffer has been released. */
+#if 0
     session->active_panel_ids[session->active_panel_count++] = panel_id;
+#endif
     session->revision += 1U;
     return UMI_STATUS_OK;
 }
@@ -172,6 +187,7 @@ UmiStatus umi_application_session_deactivate_panel(
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (found < 0) return UMI_STATUS_NOT_FOUND;
     /* Visit each bounded item once so every record receives the same rule. */
+    if (session->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     for (index = (size_t)found; index + 1U < session->active_panel_count; ++index)
         session->active_panel_ids[index] = session->active_panel_ids[index + 1U];
     session->active_panel_count -= 1U;
@@ -205,6 +221,7 @@ UmiStatus umi_application_session_set_layout_locked(
     if (session == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     /* Apply this branch only when its contract condition is satisfied. */
     if (session->layout_locked != locked) {
+        if (session->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
         session->layout_locked = locked;
         session->revision += 1U;
     }
@@ -226,6 +243,14 @@ UmiStatus umi_application_session_validate(const UmiApplicationSession *session)
         session->experience == NULL || session->layout == NULL ||
         session->active_panel_count > UMI_APPLICATION_RUNTIME_MAX_PANELS)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Verify the borrowed owner before reading through its layout pointer.
+     * Layout identity must refer to this catalogue, not another product. */
+    UmiStatus status = umi_application_experience_validate(session->experience);
+    if (status != UMI_STATUS_OK) return status;
+    bool layout_owned = false;
+    for (size_t layout_index = 0U; layout_index < session->experience->layout_count; ++layout_index)
+        if (session->layout == &session->experience->layouts[layout_index]) layout_owned = true;
+    if (!layout_owned) return UMI_STATUS_INVALID_ARGUMENT;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < session->active_panel_count; ++index) {
         /* Apply this branch only when its contract condition is satisfied. */

@@ -18,6 +18,8 @@
  * contract does not expose toolkit objects, C++ types, or private structures.
  */
 #include "umicom/project/reference.h"
+#include "../base/value_archive_internal.h"
+#include "../base/registry_archive_internal.h"
 #include "../base/snapshot_registry_internal.h"
 /* Every field is described with its actual C member size; no string scan can
  * escape a supplied array. Domain values and legacy size/version normalisation
@@ -247,3 +249,64 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_project_reference_registry_edit_if_current
  * this owner's existing row order and normalized fields remain authoritative. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_project_reference_registry_read_page,
     UmiProjectReferenceRegistry, UmiProjectReferenceSnapshot, UMI_PROJECT_REFERENCE_CAPACITY)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x821e1c6c8c6a36a4);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProjectReferenceSnapshot *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProjectReferenceSnapshot *)0)->project_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProjectReferenceSnapshot *)0)->target_project_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiProjectReferenceSnapshot *)0)->kind)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiProjectReferenceSnapshot *)0)->id) - 1U +
+        8U + sizeof(((UmiProjectReferenceSnapshot *)0)->project_id) - 1U +
+        8U + sizeof(((UmiProjectReferenceSnapshot *)0)->target_project_id) - 1U +
+        8U + sizeof(((UmiProjectReferenceSnapshot *)0)->kind) - 1U +
+        8U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiProjectReferenceSnapshot *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->project_id, sizeof(value->project_id));
+    UmiArchiveWriteText(writer, value->target_project_id, sizeof(value->target_project_id));
+    UmiArchiveWriteText(writer, value->kind, sizeof(value->kind));
+    UmiArchiveWriteSigned(writer, (int64_t)value->required);
+    UmiArchiveWriteSigned(writer, (int64_t)value->available);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiProjectReferenceSnapshot *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->project_id, sizeof(value->project_id));
+    UmiArchiveReadText(reader, value->target_project_id, sizeof(value->target_project_id));
+    UmiArchiveReadText(reader, value->kind, sizeof(value->kind));
+    value->required = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->available = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus ArchiveValidate(const UmiProjectReferenceSnapshot *value)
+{
+    return umi_project_reference_snapshot_validate(value, NULL);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_project_reference_snapshot_archive_encode, umi_project_reference_snapshot_archive_decode,
+    UmiProjectReferenceSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Restoring this complete collection reuses its existing reviewed replacement
+ * rules. Decoding a saved value alone never changes a live registry. */
+UMI_DEFINE_REGISTRY_ARCHIVE(umi_project_reference_registry_archive_encode, umi_project_reference_registry_archive_restore,
+    UmiProjectReferenceRegistry, UmiProjectReferenceSnapshot, UMI_PROJECT_REFERENCE_CAPACITY, ArchiveSchema,
+    umi_project_reference_snapshot_archive_encode, umi_project_reference_snapshot_archive_decode, umi_project_reference_registry_replace_if_current)

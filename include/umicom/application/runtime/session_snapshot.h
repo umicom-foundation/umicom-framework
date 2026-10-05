@@ -17,6 +17,7 @@
 #define UMICOM_APPLICATION_RUNTIME_SESSION_SNAPSHOT_H
 
 #include "umicom/application/runtime/session.h"
+#include "umicom/base/value_archive.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,6 +53,33 @@ UmiStatus umi_application_session_snapshot_restore(
     const UmiApplicationExperienceDefinition *experience,
     const UmiApplicationSessionSnapshot *snapshot,
     UmiApplicationSession *out_session);
+
+/* Encode/decode passive session data. The byte format validates bounded
+ * identifiers, counts, duplicate panels and integrity before publication.
+ * NULL output bytes with zero capacity measures size. Failed decode leaves
+ * the destination unchanged. Keep source and destination storage separate. */
+UmiStatus umi_application_session_snapshot_archive_encode(
+    const UmiApplicationSessionSnapshot *snapshot, void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_application_session_snapshot_archive_decode(
+    const void *bytes, size_t byte_count, UmiApplicationSessionSnapshot *out_snapshot);
+
+/* Capture a live session or preview an archive against a product catalogue.
+ * Catalogue memory must outlive every resulting session. The preview does not
+ * open panels, run commands, create connections or access storage. */
+UmiStatus umi_application_session_archive_capture(const UmiApplicationSession *session,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_application_session_archive_preview(const UmiApplicationExperienceDefinition *experience,
+    const void *bytes, size_t byte_count, UmiApplicationSession *out_candidate);
+
+/* Apply only if the live revision still equals the host's observed revision.
+ * Failure leaves the session unchanged; success advances the local revision
+ * once and never installs the saved counter as authority. Call from the owner
+ * thread with external synchronization. This updates a session value only:
+ * a GUI host must prepare its presentation before publishing a replacement. */
+/* A locked live layout returns UMI_STATUS_PERMISSION_DENIED. Unlock through
+ * the session API, then review again using the resulting local revision. */
+UmiStatus umi_application_session_archive_apply(UmiApplicationSession *session,
+    uint64_t expected_revision, const void *bytes, size_t byte_count);
 
 #ifdef __cplusplus
 }

@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/context_access.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context access from caller-provided values so later operations receive a
@@ -131,6 +132,15 @@ UmiStatus umi_context_access_record_failure(UmiContextAccess *state,UmiStatus st
 /* Check that context access satisfies its contract before another service relies on it. */
 UmiStatus umi_context_access_validate(const UmiContextAccess *state)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (state == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->access_id, '\0', sizeof(state->access_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->subject_id, '\0', sizeof(state->subject_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->channel_id, '\0', sizeof(state->channel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->action_id, '\0', sizeof(state->action_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -158,3 +168,68 @@ bool umi_context_access_covers_sequence(const UmiContextAccess *state,uint64_t s
 {
     return state!=NULL&&state->item_count!=0U&&sequence>=state->first_sequence&&sequence<=state->last_sequence;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextAccessArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x049d430b265927cc);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextAccess *)0)->access_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextAccess *)0)->subject_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextAccess *)0)->channel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextAccess *)0)->action_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextAccessArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextAccess *)0)->access_id) - 1U +
+        8U + sizeof(((UmiContextAccess *)0)->subject_id) - 1U +
+        8U + sizeof(((UmiContextAccess *)0)->channel_id) - 1U +
+        8U + sizeof(((UmiContextAccess *)0)->action_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextAccessArchiveWrite(UmiArchiveWriter *writer, const UmiContextAccess *value)
+{
+    UmiArchiveWriteText(writer, value->access_id, sizeof(value->access_id));
+    UmiArchiveWriteText(writer, value->subject_id, sizeof(value->subject_id));
+    UmiArchiveWriteText(writer, value->channel_id, sizeof(value->channel_id));
+    UmiArchiveWriteText(writer, value->action_id, sizeof(value->action_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->first_sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->last_sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->item_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->failure_count);
+    UmiArchiveWriteSigned(writer, (int64_t)value->status);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextAccessArchiveRead(UmiArchiveReader *reader, UmiContextAccess *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->access_id, sizeof(value->access_id));
+    UmiArchiveReadText(reader, value->subject_id, sizeof(value->subject_id));
+    UmiArchiveReadText(reader, value->channel_id, sizeof(value->channel_id));
+    UmiArchiveReadText(reader, value->action_id, sizeof(value->action_id));
+    value->first_sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->last_sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->item_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->failure_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->status = (UmiStatus)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextAccessArchiveValidate(const UmiContextAccess *value)
+{
+    return umi_context_access_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_access_archive_encode, umi_context_access_archive_decode,
+    UmiContextAccess, UmiContextAccessArchiveSchema, UmiContextAccessArchiveBound, UmiContextAccessArchiveWrite, UmiContextAccessArchiveRead, UmiContextAccessArchiveValidate)

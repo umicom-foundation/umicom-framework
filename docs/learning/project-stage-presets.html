@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Choose project presets and a program working folder</title><style>
+body{font:17px/1.65 system-ui,sans-serif;max-width:980px;margin:3rem auto;padding:0 24px;color:#173747;background:#f8fbfc}
+h1,h2{line-height:1.25}h2{margin-top:2rem}code{font-family:Consolas,monospace}table{border-collapse:collapse;width:100%}td,th{border:1px solid #c8d7df;padding:12px;text-align:left;vertical-align:top}a{color:#075c89}
+</style></head><body><main>
+<h1>Choose project presets and a program working folder</h1>
+<p>A preset is a named set of project options. CMake has separate names for configuring a build folder, building targets and running tests. Studio's Project Settings can save one name for each stage, so a project does not have to reuse the same name for all three.</p>
+<h2>Use a project's existing presets</h2>
+<ol>
+<li>Open the project folder in Studio. Read its <code>CMakePresets.json</code> and, if present, your local <code>CMakeUserPresets.json</code>. Find the exact names in <code>configurePresets</code>, <code>buildPresets</code> and <code>testPresets</code>. These files belong in the project root. See the <a href="https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html">official CMake preset guide</a> for inheritance and required tool support.</li>
+<li>In the Build panel, choose <strong>Project Settings</strong>. Clear the existing shared <strong>CMake preset</strong> field before filling any separate stage field. Keeping both forms filled is rejected so an old setting cannot silently override a new one.</li>
+<li>Enter the configure name in <strong>Configure preset (separate stage)</strong>, the build name in <strong>Build preset (separate stage)</strong>, and the test name in <strong>Test preset (separate stage)</strong>. For example, one project might use <code>notes-configure</code>, <code>notes-build</code> and <code>notes-check</code>. Use names defined by your own project.</li>
+<li>Set <strong>Build folder</strong> to the effective <code>binaryDir</code> of the chosen presets. Set the configuration consistently too. Studio still uses these fields for diagnostic paths, installation, packaging and debugger checks; it does not discover or verify a preset's resolved output folder. The three presets should describe the same build tree.</li>
+<li>Review the executable and install paths. Apply Settings saves the values without starting a build or granting trust automatically. Select the trust checkbox only after reviewing the project's code and build scripts.</li>
+<li>Choose the intended action in Studio. Existing multi-step actions can configure before building and build before running; every stage uses its own setting. Follow progress and failures in the Build panel.</li>
+</ol>
+<h2>Which options control each stage?</h2>
+<table><thead><tr><th>Selection</th><th>Behaviour</th></tr></thead><tbody>
+<tr><td>Explicit configure preset</td><td>CMake resolves that preset's generator, environment, cache values and binary directory. Studio does not add its ordinary generator or compiler fields to that command.</td></tr>
+<tr><td>Explicit build preset</td><td>The preset controls its targets, configuration and parallel jobs. The form's ordinary target, configuration and job count do not override it. Clean uses the build preset with an explicit <code>clean</code> target; the selected generator must provide that target.</td></tr>
+<tr><td>Explicit test preset</td><td>CTest uses its filters, configuration and execution settings. Studio continues to request failure output and to treat an empty selected suite as an error.</td></tr>
+<tr><td>A blank stage field</td><td>That stage uses ordinary profile fields. It does not borrow a name from another stage. This allows a configure preset with ordinary build-folder commands when a project has no build or test preset.</td></tr>
+<tr><td>Only the original shared preset</td><td>Existing behaviour is retained: configure and test use that name; Build uses the saved build folder. Clear all separate stage fields when retaining this arrangement.</td></tr>
+<tr><td>Install, Package and native Debug</td><td>These continue to use the saved profile paths and their existing workflows. There is no install, package or workflow-preset selector in this form.</td></tr>
+</tbody></table>
+<!-- The earlier manual-entry-only description is retained for engineering review.
+The shared declaration reader now offers a chooser; CMake still resolves executable settings.
+<p>Preset names are passed as individual process arguments. They are not shell commands. CMake and CTest report missing, hidden, disabled or invalid presets when the action runs. Studio does not currently list or parse preset files, resolve includes itself, or guarantee that the chosen names are compatible.</p>
+-->
+<p>Preset names are passed as individual process arguments. They are not shell commands. The chooser below reads directly declared names. CMake and CTest still resolve inherited settings and report missing, disabled or invalid presets when the action runs. Studio does not guarantee that selected stage names use the same build tree.</p>
+<h2>Choose names from the project files</h2>
+<ol>
+<!-- The former wording implied that the project root was user-editable.
+The form keeps the open project's root read-only; this wording is retained for review.
+<li>Open <strong>Project Settings</strong> and check <strong>Project folder</strong>. Use the full path to the project root. An unsaved folder edit is used when reading the files.</li>
+-->
+<li>Open <strong>Project Settings</strong> and check <strong>Project folder</strong>. This read-only field shows the open project's absolute root. Open another project to change that root.</li>
+<li>Choose <strong>Read project preset files</strong>. Framework reads <code>CMakePresets.json</code> and <code>CMakeUserPresets.json</code> in that folder on a worker, so the form can remain responsive. Wait for the read to finish before applying settings; Cancel remains available while it is running. Opening the form alone does not read them. No build tool starts and no file is written.</li>
+<li>Open the searchable list. Each row shows its stage, exact name, optional display name, and whether it comes from the project or user file. Choose a row to inspect its description, directly declared configure reference and build folder. These values have not had macros expanded or inherited settings applied.</li>
+<li>Clear the shared <strong>CMake preset</strong> field, then choose <strong>Use selected name</strong>. This copies only that row's name into its configure, build or test field. It preserves the other stage names and ordinary settings. Hidden base presets and entries with a literal false condition cannot be selected.</li>
+<li>Repeat for the other stages you need. Check the effective build folder and configuration using the project's documentation. Choose <strong>Apply Settings</strong> to save, or Cancel to discard the edits. Reading a list and copying a name do not save settings or grant permission to execute the project.</li>
+</ol>
+<p>If you change the project folder after reading, read again before selecting. If you edit a preset file on disk, refresh the list too: it is a snapshot of declarations, not a live view. A name may still become unavailable before a later build.</p>
+<h2>Understand an incomplete list or a read error</h2>
+<!-- The direct-only explanation is retained for engineering review.
+The separate expanded action now follows supported includes and resolves review metadata.
+<p>The chooser reads only the two standard files. If either declares included files, the form explicitly marks the list incomplete. It does not follow includes, evaluate conditions, resolve inheritance, expand environment variables or list package and workflow presets. You can still enter names manually from other files. An inherited or conditional declaration is a candidate; CMake determines whether it can run in the current environment.</p>
+-->
+<p><strong>Read project preset files</strong> reads only direct declarations and marks unread includes.
+Choose <strong>Read included presets</strong> when you want to discover supported shared definitions.
+The expanded action follows declared local paths, including paths outside the project, so use it only
+for preset files you trust. It shows each definition's actual source file and resolves inherited
+configure references, build-folder expressions and literal condition metadata.</p>
+<h2>Review included definitions</h2><ol>
+<li>Choose <strong>Read included presets</strong> and wait for the file and declaration counts.
+The read runs on a worker. Cancelling or closing the form retires the pending result.</li>
+<li>Select a row. Inspect <strong>Source</strong> to identify its defining file. An inherited value
+is marked in the details. Build-folder expressions remain expressions; check their effective
+location with your project's CMake settings before using that path elsewhere.</li>
+<li>Choose <strong>Use selected name</strong> for the intended stage. This copies one name
+into the form. Check the other stages, then apply settings separately.</li>
+<li>If the read fails, inspect the reported file. Missing required includes, repeated names,
+include or inheritance cycles, and inheritance from an inaccessible file reject the whole
+snapshot. Manual preset entry and the direct-only action remain available.</li></ol>
+<p>Expanded discovery accepts literal include paths and <code>${sourceDir}</code> or
+<code>${fileDir}</code> expressions where the preset format permits them. Environment,
+vendor and other include expressions are reported as unsupported rather than silently skipped.
+No environment variables are expanded by this reader.</p>
+<p>The expanded read accepts at most 64 documents, 2 MiB per document and 8 MiB overall,
+with up to 128 declarations across configure, build and test stages. Its owned JSON reader
+limits each document to 262,144 nodes and 128 nesting levels. A failed read publishes no
+partial list. File reads are separate snapshots; refresh after edits.</p>
+<p>Names, display names, descriptions and hidden state are local to each definition.
+The displayed inherited fields follow parent order, with local fields taking precedence.
+Object conditions, environment settings, cache entries and macros within preset values are
+left to CMake. This reader does not validate the entire CMake schema, list package/workflow
+presets or prove that a selected configuration can build successfully.</p>
+<p>One standard file may be absent. If both are absent, the form reports that nothing was loaded. A present but empty, malformed or unreadable file rejects the whole read, including when the other file is valid. A failed refresh clears the old choices so they cannot be mistaken for a current result. Manual fields remain unchanged.</p>
+<!-- The former unqualified limit description is retained for review.
+The larger bounds above apply only to the explicit expanded action.
+<p>Each file must be ordinary UTF-8 JSON and no larger than 65,535 bytes. The reader accepts an optional UTF-8 byte-order mark, limits the combined catalogue to 128 declarations, and applies the shared JSON reader's 4,096-token and 128-level nesting limits to each file. Names must fit the profile's 160-byte field, including the ending zero byte. Duplicate names within a stage are rejected across both files; the same name in different stages is allowed. A final-component symbolic link or special file is refused by the shared file reader. Parent-directory aliases may be followed, so this is not directory confinement.</p>
+-->
+<p>For the direct-only action, each file must be ordinary UTF-8 JSON and no larger than 65,535 bytes. The reader accepts an optional UTF-8 byte-order mark, limits the combined catalogue to 128 declarations, and applies the shared JSON reader's 4,096-token and 128-level nesting limits to each file. Names must fit the profile's 160-byte field, including the ending zero byte. Duplicate names within a stage are rejected across both files; the same name in different stages is allowed. A final-component symbolic link or special file is refused by the shared file reader. Parent-directory aliases may be followed, so this is not directory confinement.</p>
+<ol>
+<li>For a read error, check the full project folder, file permissions and JSON syntax in both files. Correct duplicate names or oversized fields, then read again.</li>
+<li>For a missing choice, check whether it is declared in an included file. Enter its name manually if necessary, and keep the ordinary profile paths consistent with its resolved settings.</li>
+<li>If CMake rejects a selected name later, review the condition, inheritance, environment and installed CMake support. The declaration reader checks the data it displays; it is not a complete CMake schema validator.</li>
+</ol>
+<h2>Choose where the program starts</h2>
+<p>The program working folder is the starting folder used when your application opens a relative file such as <code>data/settings.json</code>. It is separate from the location of the executable.</p>
+<ol>
+<li>In Project Settings, set <strong>Program to run</strong> to the executable's path relative to the project, such as <code>build/bin/notes.exe</code>, or its full path.</li>
+<li>Leave <strong>Program working folder</strong> blank to start in the project root. Enter <code>sample data</code> to start in that project subfolder, or a complete path to use another folder. The folder must already exist when the program starts.</li>
+<li>Apply Settings. Both Run and the native Debug workflow resolve the folder through Framework. The executable path still starts at the project root; it is not moved underneath the data folder.</li>
+<li>If the program cannot find a relative file, check where that file sits relative to the chosen folder. If launching fails, confirm the folder exists and is accessible. Applying settings does not create it.</li>
+</ol>
+<p>On Windows, use a full drive path such as <code>C:/Users/You/Documents/notes-data</code>, a complete network path, or an ordinary project-relative folder. A drive-relative path such as <code>C:notes</code> or a rooted path without a drive is rejected because its meaning depends on process state. Build tools continue to run from the project root to find their preset files.</p>
+<h2>Saved settings and recovery</h2>
+<p>Framework saves the complete profile in one transaction. If another window saves first, reopen the settings and review its values before retrying. A missing required field or a damaged record is reported; it is not replaced with an empty preset or working folder. Older stored profiles receive empty new fields and preserve their earlier behaviour. Older executables may refuse the expanded format; use matching Framework and Studio builds.</p>
+<p>Cancel closes the form without applying changes. An acceptance error leaves it available for correction. Controls retained by extensions after a form closes cannot apply another result. Contributors should keep the dialog handle alive while its callback context exists, destroy it before releasing that context, and clear their stored handle if destroying it from inside a callback.</p>
+<h2>Extend the shared implementation</h2>
+<p><code>UmiBuildProfile</code> owns the stage names and working folder. Initialize it with <code>umi_build_profile_init</code>; appending public fields means every consumer must be rebuilt. Providers validate the record before constructing commands. The profile store compares revisions before saving, and the GTK form only collects values for its application's acceptance callback.</p>
+<p><code>UmiBuildProfileLaunchDirectory</code> takes an already absolute project root and resolves the folder without inspecting storage or changing the process directory. It updates the output only on success. Use this shared operation for additional launch surfaces so Run and Debug keep the same meaning. A valid profile does not prove that a tool, preset, executable or folder exists; those checks belong to the operation using it.</p>
+<p><code>UmiProjectPresetCatalogue</code> owns bounded copies of the declarations. Parsing and selecting names are independent from process execution, so other front ends can reuse the same service. Its two file reads are not an atomic disk snapshot. File I/O runs off the GTK thread; closing a form discards its pending result when the read finishes. It does not forcibly interrupt a blocked operating-system read.</p>
+<p>When extending the native chooser, keep GTK mutations on its owning thread. Retain the controller through asynchronous completion, revoke callbacks when the owner destroys the form, and guard synchronous notifications during selection. A newly added control must not apply settings as a side effect of displaying a result.</p>
+<p><a href="review-launch-settings.html">Choose and review a program launch</a> explains native file/folder selection, launch descriptions, argument boundaries and the preserved difference between a bare Run command and native Debug file lookup.</p>
+</main><footer><p>Umicom Foundation · Sammy Hegab · MIT</p></footer></body></html>

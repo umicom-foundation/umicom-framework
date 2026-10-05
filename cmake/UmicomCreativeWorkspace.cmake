@@ -157,3 +157,11 @@ unset(_umicom_creative_root)
 
 # The native clip tools reuse this service's owned export and file contracts.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomCreativeAudio.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomCreativeAssets.cmake")
+
+# Song planning shares the creative asset writer and has no provider dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSongPlan.cmake")
+
+# Timed audio assemblies reuse the library and the existing PCM decoder.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomAudioArrangement.cmake")

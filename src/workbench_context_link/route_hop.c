@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_context_link/route_hop.h"
+#include "../base/value_archive_internal.h"
 
 #include <string.h>
 
@@ -55,6 +56,14 @@ void umi_workbench_context_link_route_hop_init(UmiWorkbenchContextLinkRouteHop *
 UmiStatus umi_workbench_context_link_route_hop_validate(
     const UmiWorkbenchContextLinkRouteHop *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->hop_id, '\0', sizeof(record->hop_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->source_id, '\0', sizeof(record->source_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->destination_id, '\0', sizeof(record->destination_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -208,3 +217,73 @@ void umi_workbench_context_link_route_hop_touch(
     record->timestamp_ms = timestamp_ms;
     ++record->revision;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiWorkbenchContextLinkRouteHopArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x9f80909ea26a1902);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWorkbenchContextLinkRouteHop *)0)->hop_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWorkbenchContextLinkRouteHop *)0)->source_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiWorkbenchContextLinkRouteHop *)0)->destination_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiWorkbenchContextLinkRouteHopArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiWorkbenchContextLinkRouteHop *)0)->hop_id) - 1U +
+        8U + sizeof(((UmiWorkbenchContextLinkRouteHop *)0)->source_id) - 1U +
+        8U + sizeof(((UmiWorkbenchContextLinkRouteHop *)0)->destination_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiWorkbenchContextLinkRouteHopArchiveWrite(UmiArchiveWriter *writer, const UmiWorkbenchContextLinkRouteHop *value)
+{
+    UmiArchiveWriteText(writer, value->hop_id, sizeof(value->hop_id));
+    UmiArchiveWriteText(writer, value->source_id, sizeof(value->source_id));
+    UmiArchiveWriteText(writer, value->destination_id, sizeof(value->destination_id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->context_kind);
+    UmiArchiveWriteSigned(writer, (int64_t)value->colour);
+    UmiArchiveWriteSigned(writer, (int64_t)value->mode);
+    UmiArchiveWriteSigned(writer, (int64_t)value->state);
+    UmiArchiveWriteSigned(writer, (int64_t)value->origin);
+    UmiArchiveWriteSigned(writer, (int64_t)value->priority);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->flags);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->timestamp_ms);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiWorkbenchContextLinkRouteHopArchiveRead(UmiArchiveReader *reader, UmiWorkbenchContextLinkRouteHop *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->hop_id, sizeof(value->hop_id));
+    UmiArchiveReadText(reader, value->source_id, sizeof(value->source_id));
+    UmiArchiveReadText(reader, value->destination_id, sizeof(value->destination_id));
+    value->context_kind = (UmiContextKind)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->colour = (UmiContextChannelColour)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->mode = (UmiWorkbenchContextLinkMode)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->state = (UmiWorkbenchContextLinkState)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->origin = (UmiWorkbenchContextLinkOrigin)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->priority = (UmiWorkbenchContextLinkPriority)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->flags = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->timestamp_ms = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiWorkbenchContextLinkRouteHopArchiveValidate(const UmiWorkbenchContextLinkRouteHop *value)
+{
+    return umi_workbench_context_link_route_hop_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_context_link_route_hop_archive_encode, umi_workbench_context_link_route_hop_archive_decode,
+    UmiWorkbenchContextLinkRouteHop, UmiWorkbenchContextLinkRouteHopArchiveSchema, UmiWorkbenchContextLinkRouteHopArchiveBound, UmiWorkbenchContextLinkRouteHopArchiveWrite, UmiWorkbenchContextLinkRouteHopArchiveRead, UmiWorkbenchContextLinkRouteHopArchiveValidate)

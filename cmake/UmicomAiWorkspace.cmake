@@ -56,6 +56,8 @@ add_library(umicom_ai_workspace STATIC
     "${_umicom_ai_workspace_root}/src/ai_workspace/wire.c"
     "${_umicom_ai_workspace_root}/src/ai_workspace/storage.c"
     "${_umicom_ai_workspace_root}/src/ai_workspace/workspace.c"
+    "${_umicom_ai_workspace_root}/src/ai_workspace/import.c"
+    "${_umicom_ai_workspace_root}/src/ai_workspace/source_change.c"
     "${_umicom_ai_workspace_root}/src/ai_workspace/retrieval.c"
     "${_umicom_ai_workspace_root}/src/ai_workspace/jobs.c"
     "${_umicom_ai_workspace_root}/src/ai_workspace/request.c"
@@ -187,3 +189,6 @@ unset(_umicom_ai_workspace_root)
 # Reuse the existing workspace owner for inspected retrieval and citation views.
 # This extension introduces no alternative runtime, storage or transport.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiEvidence.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiImports.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiSourceLibrary.cmake")

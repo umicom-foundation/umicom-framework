@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Reading paused program memory</title>
+<style>body{max-width:900px;margin:3rem auto;padding:0 1rem;font:17px/1.6 system-ui;color:#192b36}pre{padding:1rem;background:#eef3f6;overflow:auto}code{font-size:.92em}</style></head><body>
+<h1>Reading paused program memory</h1>
+<p>A debugger can return a memory reference for a variable. This reference is an opaque identifier owned by the adapter, not a pointer that the application should dereference. Framework passes it back to the same paused debug session and retains the returned bytes in an independent capture.</p>
+<h2>Capture bytes from an inspected variable</h2><ol>
+<li>Start a native debug session and pause at a breakpoint. Inspect a scope with <code>UmiDebugScopeInspectionCapture</code> and <code>UmiDebugRuntimeInspectVariable</code>, or inspect children of an expandable variable.</li>
+<li>Use <code>UmiDebugVariablePageTarget</code> to own the selected row. A scalar can expose memory even when it has no children. The compatibility root registry does not retain memory references; use the explicit scope or child page.</li>
+<li>Call <code>UmiDebugRuntimeCheckMemory</code> to check the current session, capability and reference. This performs no transport request.</li>
+<li>Call <code>UmiDebugRuntimeInspectMemory</code> with a signed byte offset, a count from 1 to 4096, and a nonzero timeout. A successful call returns an owned capture. Destroy it with <code>UmiDebugMemoryCaptureDestroy</code>.</li>
+<li>Copy bytes with <code>UmiDebugMemoryCaptureRead</code>, or format a report with <code>UmiDebugMemoryCaptureFormat</code>. A zero-capacity sizing call returns <code>UMI_STATUS_CAPACITY_EXCEEDED</code> and sets the required size, including the final NUL. Allocate that size and call again.</li></ol>
+<h2>Understand the result</h2>
+<p>The report includes the adapter's returned address, the requested offset and count, the actual byte count, and any unreadable bytes reported after the data. Rows use relative offsets from the returned address. Hex bytes are shown in memory order. Printable ASCII bytes are shown alongside them; other bytes appear as dots. The report does not guess pointer width, Unicode encoding, byte order or data types.</p>
+<p>Short data with no unreadable range means the adapter reached the end of readable memory. No bytes are invented to fill the request. An unreadable range may extend beyond the requested count. No follow-up read is sent automatically.</p>
+<h2>Handle changes and failures</h2>
+<p><code>BUSY</code> means the workspace evidence changed or a native event is waiting. Process events and capture a fresh variable before reading again. <code>NOT_IMPLEMENTED</code> means the adapter does not advertise memory reads. <code>NOT_FOUND</code> means there is no memory reference or response body. Malformed responses and data larger than the requested count are rejected as a whole.</p>
+<p>The request leaves root registries unchanged. Existing caller-owned captures remain readable after the session or workspace is destroyed, but they remain historical values. <code>UmiDebugMemoryCaptureValidate</code> compares workspace generations; it does not poll the adapter or prove memory is unchanged. All live operations belong to the debugger's owner thread and are synchronous with a bounded timeout.</p>
+<p>The strict capture decoder accepts complete JSON and canonical padded base64. It rejects duplicate recognized members, invalid text, missing addresses, truncated payloads and excessive data. The earlier memory API and decoder remain available for existing consumers; applications needing the owned stopped-variable workflow should use this interface.</p>
+<h2>Extend the shared feature</h2>
+<p>Frontends should keep request orchestration thin and use Framework for validation, decoding and report formatting. Add display formats from the retained byte capture without contacting the adapter again. Any future memory-writing feature needs its own deliberate action and result handling; this inspection interface never sends a write request or evaluates an expression.</p>
+<p>See the <a href="https://microsoft.github.io/debug-adapter-protocol/specification#Requests_ReadMemory">Debug Adapter Protocol memory request</a> for adapter-side fields and capability negotiation.</p>
+</body></html>

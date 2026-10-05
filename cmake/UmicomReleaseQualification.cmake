@@ -41,16 +41,139 @@ function(umicom_release_contracts_prepare)
         return()
     endif()
     set_property(GLOBAL PROPERTY UMICOM_RELEASE_CONTRACTS_PREPARED TRUE)
+    # Captured row mappings and broker reviews keep portable logic separate from GTK.
+    _umicom_release_declare_pair(umicom_ui include/umicom/ui/text_projection.h src/ui/text_projection.c)
+    _umicom_release_declare_pair(umicom_ui_gtk4 include/umicom/ui/gtk4/filtered_choices.h adapters/gtk4/filtered_choices.c)
+    _umicom_release_declare_pair(umicom_ibkr_connection include/umicom/broker_connectivity/position_review.h src/ibkr_connection/position_review.c)
+    # Cash assumptions have one portable owner and a separate native composition.
+    _umicom_release_declare_pair(umicom_cash_planning include/umicom/cash_planning/plan.h src/cash_planning/plan.c)
+    _umicom_release_declare_pair(umicom_cash_planning include/umicom/cash_planning/document.h src/cash_planning/document.c)
+    _umicom_release_declare_pair(umicom_ui_gtk4 include/umicom/ui/gtk4/cash_plan.h adapters/gtk4/cash_plan_gtk4.c)
+    # Timed audio editing has one portable service and a separate native host.
+    _umicom_release_declare_pair(umicom_creative_workspace include/umicom/creative_workspace/audio_arrangement.h src/creative_workspace/audio_arrangement.c)
+    _umicom_release_declare_pair(umicom_creative_workspace_gtk4 include/umicom/ui/gtk4/audio_arrangement.h adapters/gtk4/audio_arrangement_gtk4.c)
+    # Portable library storage has the same owner across creative hosts.
+    _umicom_release_declare_pair(umicom_creative_workspace include/umicom/creative_workspace/asset_library.h src/creative_workspace/asset_library.c)
+    _umicom_release_declare_pair(umicom_creative_workspace include/umicom/creative_workspace/asset_library_archive.h src/creative_workspace/asset_library_archive.c)
+    _umicom_release_declare_pair(umicom_creative_workspace_gtk4 include/umicom/ui/gtk4/creative_library.h adapters/gtk4/creative_library_gtk4.c)
+    # Creative workflows declare their portable and native implementation owners.
+    _umicom_release_declare_pair(umicom_application include/umicom/application/launch_receipts.h src/application/launch_receipts.c)
+    _umicom_release_declare_pair(umicom_ui_gtk4 include/umicom/ui/gtk4/application_processes.h adapters/gtk4/application_processes_gtk4.c)
+    _umicom_release_declare_pair(umicom_pixverse include/umicom/media_generation/pixverse.h src/media_generation/pixverse_plan.c)
+    _umicom_release_declare_pair(umicom_ui_gtk4 include/umicom/media_generation/pixverse_gtk4.h adapters/gtk4/pixverse_panel_gtk4.c)
+    _umicom_release_declare_pair(umicom_creative_workspace include/umicom/creative_workspace/song_plan.h src/creative_workspace/song_plan.c)
+    _umicom_release_declare_pair(umicom_creative_workspace_gtk4 include/umicom/ui/gtk4/song_plan_gtk4.h adapters/gtk4/song_plan_gtk4.c)
+    _umicom_release_declare_pair(umicom_creative_workspace_gtk4 include/umicom/ui/gtk4/creative_audition.h adapters/gtk4/creative_audition_gtk4.c)
+    _umicom_release_declare_pair(umicom_ibkr_connection include/umicom/broker_connectivity/observation_export.h src/ibkr_connection/observation_export.c)
+    # Image generation headers name their portable and native implementation owners.
+    _umicom_release_declare_pair(umicom_seedream include/umicom/media_generation/seedream.h src/media_generation/seedream_plan.c)
+    _umicom_release_declare_pair(umicom_ui_gtk4 include/umicom/media_generation/seedream_gtk4.h adapters/gtk4/seedream_panel_gtk4.c)
+    # Provider and chart owners expose independent C headers to installed users.
+    _umicom_release_declare_pair(umicom_heygen include/umicom/media_generation/heygen.h src/media_generation/heygen_plan.c)
+    _umicom_release_declare_pair(umicom_ui_gtk4 include/umicom/media_generation/heygen_gtk4.h adapters/gtk4/heygen_panel_gtk4.c)
+    _umicom_release_declare_pair(umicom_chart include/umicom/chart/candle_study.h src/chart/candle_study.c)
+    _umicom_release_declare_pair(umicom_chart include/umicom/chart/volume_profile.h src/chart/volume_profile.c)
     # These explicit source/header pairs were inspected at the canonical owner.
     # They describe build ownership only, not symbol/ABI or runtime acceptance.
     foreach(_name IN ITEMS result memory text)
         _umicom_release_declare_pair(umicom_base "include/umicom/base/${_name}.h" "src/base/${_name}.c")
     endforeach()
+    # Launch parsing and quote observations have explicit implementation owners;
+    # publishing a header alone does not establish the corresponding capability.
+    _umicom_release_declare_pair(umicom_base include/umicom/base/arguments.h src/base/arguments.c)
+    _umicom_release_declare_pair(umicom_build include/umicom/build/profile.h src/build/profile.c)
+    _umicom_release_declare_pair(umicom_build include/umicom/build/launch_plan.h src/build/launch_plan.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/developer_project/preset_catalogue.h src/developer_project/preset_catalogue.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/developer_project/target_catalogue.h src/developer_project/target_catalogue.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/developer_project/installed_files.h src/developer_project/installed_files.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/developer_project/build_cache.h src/developer_project/build_cache.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/debug_runtime/adapter_preferences.h src/debug_runtime/adapter_preferences.c)
+    _umicom_release_declare_pair(umicom_debug include/umicom/debug/setup.h src/debug/setup.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/debug/setup_document.h src/debug/setup_document.c)
+    # Both JSON interfaces share the developer owner; the owned tree adds bounded
+    # heap capacity while the token interface remains available to small readers.
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/json_text.h src/language_runtime/json_text.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/json_tree.h src/language_runtime/json_tree.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/server_probe.h src/language_runtime/server_probe.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/completion_catalogue.h src/language_runtime/completion_catalogue.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/completion_preview.h src/language_runtime/completion_preview.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/completion_query.h src/language_runtime/completion_query.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/server_preferences.h src/language_runtime/server_preferences.c)
+    # Retain the former settings anchor for review; the actual translation unit
+    # now determines whether this capability is present in a focused build.
+    if(FALSE)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/hover_query.h src/language_runtime/server_preferences.c)
+    endif()
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/hover_query.h src/language_runtime/completion_query.c)
+    # Retain the former settings anchor for review; the actual translation unit
+    # now determines whether this capability is present in a focused build.
+    if(FALSE)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/hover_document.h src/language_runtime/server_preferences.c)
+    endif()
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/hover_document.h src/language_runtime/hover_document.c)
+    # Retain the former settings anchor for review; the actual translation unit
+    # now determines whether this capability is present in a focused build.
+    if(FALSE)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/formatting_query.h src/language_runtime/server_preferences.c)
+    endif()
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/formatting_query.h src/language_runtime/completion_query.c)
+    # Retain the former settings anchor for review; the actual translation unit
+    # now determines whether this capability is present in a focused build.
+    if(FALSE)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/response_tree.h src/language_runtime/server_preferences.c)
+    endif()
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/response_tree.h src/language_runtime/response_tree.c)
+    # Retain the former settings anchor for review; the actual translation unit
+    # now determines whether this capability is present in a focused build.
+    if(FALSE)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/text_edit_preview.h src/language_runtime/server_preferences.c)
+    endif()
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/text_edit_preview.h src/language_runtime/text_edit_preview.c)
+    _umicom_release_declare_pair(umicom_editor include/umicom/editor/text_position.h src/editor/text_position.c)
+    _umicom_release_declare_pair(umicom_editor include/umicom/editor/text_position_index.h src/editor/text_position.c)
+    _umicom_release_declare_pair(umicom_document include/umicom/document/source_request.h src/document/coordinator.c)
+    _umicom_release_declare_pair(umicom_ui_gtk4 include/umicom/ui/gtk4/language_connection.h adapters/gtk4/language_connection_gtk4.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/location_catalogue.h src/language_runtime/location_catalogue.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/navigation_query.h src/language_runtime/completion_query.c)
+    _umicom_release_declare_pair(umicom_document include/umicom/document/local_uri.h src/document/local_uri.c)
+    _umicom_release_declare_pair(umicom_document include/umicom/document/source_navigation.h src/document/coordinator.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/symbol_catalogue.h src/language_runtime/symbol_catalogue.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/symbol_query.h src/language_runtime/completion_query.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/signature_catalogue.h src/language_runtime/signature_catalogue.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/signature_query.h src/language_runtime/completion_query.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/workspace_edit_catalogue.h src/language_runtime/workspace_edit_catalogue.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/rename_query.h src/language_runtime/completion_query.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/code_action_catalogue.h src/language_runtime/code_action_catalogue.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/code_action_query.h src/language_runtime/completion_query.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/diagnostic_catalogue.h src/language_runtime/diagnostic_catalogue.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/diagnostic_query.h src/language_runtime/completion_query.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/diagnostic_context.h src/language_runtime/diagnostic_context.c)
+    # Live snapshots remain toolkit-independent; the native presenter is optional.
+    _umicom_release_declare_pair(umicom_build include/umicom/build/live_output.h src/build/project_session.c)
+    _umicom_release_declare_pair(umicom_platform include/umicom/platform/output_file.h src/platform/output_file.c)
+    _umicom_release_declare_pair(umicom_platform include/umicom/platform/input_file.h src/platform/input_file.c)
+    _umicom_release_declare_pair(umicom_platform include/umicom/platform/local_replace.h src/platform/local_replace.c)
+    _umicom_release_declare_pair(umicom_platform include/umicom/platform/rooted_files.h src/platform/rooted_files.c)
+    _umicom_release_declare_pair(umicom_build include/umicom/build/log_capture.h src/build/project_session.c)
+    _umicom_release_declare_pair(umicom_security include/umicom/security/platform_secrets.h src/security/platform_secrets.c)
+    _umicom_release_declare_pair(umicom_security include/umicom/security/profile_secrets.h src/security/profile_secrets.c)
+    _umicom_release_declare_pair(umicom_ui_gtk4 include/umicom/security/gtk4/profile_keys.h adapters/gtk4/security/profile_keys_panel_gtk4.c)
+    _umicom_release_declare_pair(umicom_provider_connections include/umicom/provider_connections/connections.h src/provider_connections/store.c)
+    _umicom_release_declare_pair(umicom_provider_connection_checks include/umicom/provider_connections/check.h src/provider_connection_checks/check.c)
+    _umicom_release_declare_pair(umicom_provider_chat include/umicom/provider_connections/chat.h src/provider_chat/plan.c)
+    _umicom_release_declare_pair(umicom_provider_chat include/umicom/provider_connections/history.h src/provider_chat/history.c)
+    _umicom_release_declare_pair(umicom_document include/umicom/document/proposal.h src/document/coordinator.c)
+    _umicom_release_declare_pair(umicom_ai_workspace include/umicom/ai_workspace/import.h src/ai_workspace/import.c)
+    _umicom_release_declare_pair(umicom_ai_workspace include/umicom/ai_workspace/source_change.h src/ai_workspace/source_change.c)
+    _umicom_release_declare_pair(umicom_ui_gtk4 include/umicom/provider_connections/chat_gtk4.h adapters/gtk4/provider_chat_panel_gtk4.c)
+    _umicom_release_declare_pair(umicom_ui_gtk4 include/umicom/provider_connections/gtk4.h adapters/gtk4/provider_connections_panel_gtk4.c)
+    _umicom_release_declare_pair(umicom_ui_gtk4 include/umicom/build/live_output_gtk4.h adapters/gtk4/build_output_gtk4.c)
+    _umicom_release_declare_pair(umicom_ibkr_connection include/umicom/broker_connectivity/quotes.h src/ibkr_connection/quotes.c)
     # version.h is a type-only base contract consumed by the runtime registry.
     _umicom_release_declare_pair(umicom_base include/umicom/base/version.h src/base/status.c)
     foreach(_name IN ITEMS config path directory cancellation settings filesystem atomic_file
             threading task task_queue process process_supervisor watcher workspace document
-            document_store workspace_graph workspace_files file_index search search_session
+            document_store workspace_graph workspace_files file_index search search_session search_filter
             session_store recovery clock recent_items bookmarks resource_location workspace_history
             file_operation_queue resource_centre)
         _umicom_release_declare_pair(umicom_platform "include/umicom/platform/${_name}.h" "src/platform/${_name}.c")
@@ -60,11 +183,39 @@ function(umicom_release_contracts_prepare)
         _umicom_release_declare_pair(umicom_runtime "include/umicom/runtime/${_name}.h" "src/runtime/${_name}.c")
     endforeach()
     _umicom_release_declare_pair(umicom_source_contracts include/umicom/source_contracts/source_contracts.h src/source_contracts/metadata.c)
+    # Reopening is implemented by the existing document coordinator. Attribute
+    # its header only when that exact implementation belongs to this build.
+    _umicom_release_declare_pair(umicom_document include/umicom/document/reopen.h src/document/coordinator.c)
+    _umicom_release_declare_pair(umicom_document include/umicom/document/navigation_history.h src/document/coordinator.c)
+    _umicom_release_declare_pair(umicom_document include/umicom/document/bookmarks.h src/document/coordinator.c)
+    _umicom_release_declare_pair(umicom_document include/umicom/document/replacement_session.h src/document/replacement_session.c)
+    # Context ownership follows the compiled implementation, including the
+    # reviewed application adapter and the canonical typed UI transaction.
+    _umicom_release_declare_pair(umicom_application include/umicom/application/runtime/context_review.h src/application/runtime/context_review.c)
+    _umicom_release_declare_pair(umicom_application include/umicom/application/runtime/context_binding.h src/application/runtime/context_binding.c)
+    _umicom_release_declare_pair(umicom_application include/umicom/application/runtime/workspace_runtime.h src/application/runtime/workspace_runtime.c)
+    _umicom_release_declare_pair(umicom_ui include/umicom/ui/context_changes.h src/ui/context.c)
+    # Restore evidence and layout exchange belong to their storage bridges;
+    # neither public contract makes a graphical toolkit a core dependency.
+    _umicom_release_declare_pair(umicom_desktop_workspace include/umicom/desktop_workspace/restore_review.h src/desktop_workspace/restore_review.c)
+    _umicom_release_declare_pair(umicom_desktop_workspace include/umicom/desktop_workspace/history.h src/desktop_workspace/repository.c)
+    _umicom_release_declare_pair(umicom_ui_workspace_checkpoint include/umicom/ui/workspace_library_exchange.h src/ui/workspace_library_checkpoint.c)
+    # Captured variable assignments and strict reply decoding belong to the
+    # native runtime; hosts only compose its public API.
+    _umicom_release_declare_pair(umicom_developer include/umicom/debug_runtime/variable_assignment.h src/debug_runtime/platform.c)
     # Full SDK builds declare additional snapshot contracts only when each
     # canonical owner actually compiles its implementation source.
     if(COMMAND umicom_snapshot_contracts_declare_headers)
         umicom_snapshot_contracts_declare_headers()
     endif()
+    _umicom_release_declare_pair(umicom_platform include/umicom/platform/document_store_edits.h src/platform/document_store.c)
+    _umicom_release_declare_pair(umicom_document include/umicom/document/source_batch.h src/document/coordinator.c)
+    _umicom_release_declare_pair(umicom_document include/umicom/document/replacement_set.h src/document/replacement_set.c)
+    _umicom_release_declare_pair(umicom_document include/umicom/document/source_workspace.h src/document/source_workspace.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/query_sources.h src/language_runtime/completion_query.c)
+    _umicom_release_declare_pair(umicom_source_review include/umicom/source_review/workspace_edit.h src/source_review/workspace_edit.c)
+    _umicom_release_declare_pair(umicom_ui_gtk4 include/umicom/ui/gtk4/workspace_edit_review.h adapters/gtk4/document_commands_gtk4.c)
+    _umicom_release_declare_pair(umicom_developer include/umicom/debug_runtime/memory_inspection.h src/debug_runtime/memory_capture.c)
     if(NOT UMICOM_RELEASE_HEADER_CHECKS)
         return()
     endif()

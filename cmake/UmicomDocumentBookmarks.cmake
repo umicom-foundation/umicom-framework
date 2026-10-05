@@ -1,0 +1,33 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# The existing coordinator compiles bookmarks.inc; there is no second owner.
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-document-bookmarks-test "${CMAKE_CURRENT_LIST_DIR}/../tests/document/test_bookmarks.c")
+    target_link_libraries(umicom-document-bookmarks-test PRIVATE Umicom::Framework)
+    umicom_apply_warnings(umicom-document-bookmarks-test)
+    umicom_apply_sanitizers(umicom-document-bookmarks-test)
+    foreach(case invalid-empty toggle-line stale clear readonly deleted-line utf8-clamp column-clamp
+            closed-identity skip-closed capacity cross-document back-history wrap text-history full-draft)
+        add_test(NAME framework.document.bookmarks.${case} COMMAND umicom-document-bookmarks-test ${case})
+        set_tests_properties(framework.document.bookmarks.${case} PROPERTIES TIMEOUT 45 LABELS "framework;document;bookmarks;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-document-bookmarks-test)
+    endif()
+endif()
+if(BUILD_TESTING AND TARGET Umicom::ui_gtk4)
+    add_executable(umicom-document-bookmarks-native-test "${CMAKE_CURRENT_LIST_DIR}/../tests/document/test_bookmarks_gtk4.c")
+    target_link_libraries(umicom-document-bookmarks-native-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-document-bookmarks-native-test)
+    umicom_apply_sanitizers(umicom-document-bookmarks-native-test)
+    foreach(case roundtrip clear save-busy close-busy complete-unbind unbound missing invalid)
+        add_test(NAME framework.document.bookmarks.gtk4.${case} COMMAND umicom-document-bookmarks-native-test ${case})
+        set_tests_properties(framework.document.bookmarks.gtk4.${case} PROPERTIES
+            TIMEOUT 45 SKIP_RETURN_CODE 77 LABELS "framework;document;bookmarks;gtk4;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-document-bookmarks-native-test)
+    endif()
+endif()
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/SOURCE_BOOKMARKS.html"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs)

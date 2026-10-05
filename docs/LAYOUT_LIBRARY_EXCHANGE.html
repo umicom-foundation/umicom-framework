@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portable layout libraries</title><style>
+body{font:17px/1.6 system-ui,sans-serif;max-width:850px;margin:48px auto;padding:0 24px;color:#17293a;background:#fafcfe}
+h1,h2{line-height:1.2}code{background:#eaf0f5;padding:2px 5px}li{margin:.7em 0}aside{border-left:4px solid #167a85;padding:12px 18px;background:#eef9fa}
+</style></head><body><main><h1>Portable layout libraries</h1><p>A layout library contains your named panel arrangements, their order and the active selection. Export it to keep a separate copy or move it between compatible workspaces in the same product.</p>
+<h2>Export your layouts</h2><ol><li>Finish or cancel any layout editing, then open <strong>Layout Library</strong>.</li>
+<li>Choose <strong>Export layouts…</strong> and select a destination. The suggested file name is <code>workspace-layouts.umicom-layouts</code>.</li>
+<li>Wait for the export confirmation. Export leaves your current workspace and its saved library unchanged.</li></ol>
+<h2>Review and import</h2><ol><li>Open <strong>Layout Library</strong> and choose <strong>Review layout file…</strong>.</li>
+<li>Select the file. Read the proposed names, panel counts, active layout and change totals. Nothing changes during review.</li>
+<li>If the list is correct, select <strong>Replace my named layouts with this reviewed library</strong>, then choose <strong>Apply reviewed layouts</strong>.</li>
+<li>Check the restored arrangement. Use <strong>Save library</strong> separately if you want the imported list to survive restart. The library notice states whether persistent storage is available.</li></ol>
+<aside>The import replaces the complete named list. Export your current library first if you want to keep it. Layout files do not contain document drafts, account state, orders or general application settings.</aside>
+<h2>What the review guarantees</h2><p>The review owns a copy of the selected file's content. Changing that file afterwards cannot change what Apply uses. If the workspace changes after review, Apply refuses the old review; select the file again and review it against the current workspace.</p>
+<p>The summary compares names, order, panel counts, locking and active selection. Panel geometry is included in the file but is not displayed as a visual difference. Imported tools and context links must already be available in the receiving workspace.</p>
+<h2>When an import is refused</h2><ul><li><strong>Layout editing is active:</strong> finish or cancel editing and try again.</li>
+<li><strong>The workspace changed:</strong> review the file again before applying it.</li>
+<li><strong>The file is incompatible or damaged:</strong> keep the original and export a fresh copy from the same product. Do not manually remove validation fields.</li>
+<li><strong>The file is too large:</strong> the archive must be smaller than 450 KiB plus its internal terminating byte. Ordinary exports enforce this limit.</li>
+<li><strong>Saving is unavailable:</strong> the imported list can be used in the current session. Check the existing library storage notice before relying on restart recovery.</li></ul>
+
+<h2>Undo an import or library edit</h2>
+<p>Layout Library keeps the last eight successful library changes in memory. This includes renaming, copying, removing, ordering and opening named layouts, applying an imported library, and using Restore library. Each entry keeps the arrangements before and after that change.</p>
+<ol><li>Open <strong>Layout Library</strong> after making a change.</li>
+<li>Choose <strong>Undo layout change</strong>. The previous named list and active arrangement return.</li>
+<li>Choose <strong>Redo layout change</strong> if you want the arrangement you just undid.</li>
+<li>Check the result, then choose <strong>Save library</strong> if it should survive restart. Undo and Redo do not write the saved library.</li></ol>
+<p>Making a new library change after Undo replaces the redo branch. For example, undoing an import and then renaming a layout starts a new path from the restored list. The discarded branch is no longer available through Redo.</p>
+<h2>Understand history limits</h2>
+<ul><li><strong>Session lifetime:</strong> history is cleared when the workstation closes. Keep an exported file for a separate copy that survives restart.</li>
+<li><strong>Eight changes:</strong> accepting a ninth change drops the oldest entry. The remaining entries can still be undone in order.</li>
+<li><strong>Changes outside Layout Library:</strong> panel editing and other workspace commands may invalidate the history. The controls then disable instead of overwriting newer work. A successful new library action begins a fresh history from the current arrangement.</li>
+<li><strong>Active layout editing:</strong> finish or cancel editing before using history.</li>
+<li><strong>A refused restoration:</strong> the owner validates the archived tools and layout again. If it cannot accept the arrangement, the history position stays unchanged. Review the reported error; do not assume that the layout changed.</li></ul>
+<p>Layout history does not undo typing, restore document drafts, place or cancel orders, post bank transactions, or save account state. Use each product's existing document or business workflow for those operations.</p>
+<h2>Extend a native workspace safely</h2>
+<p>The shared <code>workspace_library_history.h</code> interface owns the recovery archives. A product keeps its current workspace model and supplies a publication callback; this callback accepts native widgets before changing that model.</p>
+<ol><li>Create one history object for each workspace owner. Keep all its calls on the same thread.</li>
+<li>Build a proposed model using the existing library commands. Pass the current and proposed models to <code>umi_ui_workspace_library_history_record</code>. The service validates and allocates both archives before calling the publisher.</li>
+<li>In the publisher, keep the current model if native layout creation fails. Return the actual failure. On success publish the candidate without retaining its borrowed pointer.</li>
+<li>Read the copied history state for controls. Pass the revision shown to the user when calling <code>umi_ui_workspace_library_history_navigate</code>. A newer model causes refusal rather than an automatic retry.</li>
+<li>Destroy the history after callbacks finish and before releasing its workspace owner. Do not destroy it from the publication callback.</li></ol>
+<p>The shared GTK layout-library controller accepts history read and apply callbacks. It copies the request before idle dispatch, cancels queued work on destruction, and disconnects retained widgets. The Studio, trading-suite and generic product workstations provide examples of this integration.</p>
+</main><footer><p>Sammy Hegab · Umicom Foundation · MIT</p></footer></body></html>

@@ -17,6 +17,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/requirement.h"
+#include "../../base/value_archive_internal.h"
 
 /*
  * Initialise toolchain requirement from caller-provided values so later operations receive
@@ -52,3 +53,40 @@ UmiStatus umi_toolchain_requirement_validate(const UmiToolchainRequirement *requ
     }
     return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiToolchainRequirementArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x024f97dc4ad9a155);
+
+    return schema;
+}
+static size_t UmiToolchainRequirementArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U +
+        8U;
+}
+static void UmiToolchainRequirementArchiveWrite(UmiArchiveWriter *writer, const UmiToolchainRequirement *value)
+{
+    UmiArchiveWriteSigned(writer, (int64_t)value->kind);
+    UmiArchiveWriteSigned(writer, (int64_t)value->required);
+    UmiArchiveWriteSigned(writer, (int64_t)value->validate_version);
+}
+static void UmiToolchainRequirementArchiveRead(UmiArchiveReader *reader, UmiToolchainRequirement *value)
+{
+    value->kind = (UmiToolKind)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->required = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->validate_version = (int)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+}
+static UmiStatus UmiToolchainRequirementArchiveValidate(const UmiToolchainRequirement *value)
+{
+    return umi_toolchain_requirement_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_toolchain_requirement_archive_encode, umi_toolchain_requirement_archive_decode,
+    UmiToolchainRequirement, UmiToolchainRequirementArchiveSchema, UmiToolchainRequirementArchiveBound, UmiToolchainRequirementArchiveWrite, UmiToolchainRequirementArchiveRead, UmiToolchainRequirementArchiveValidate)

@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/audit_record.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context audit record from caller-provided values so later operations receive
@@ -36,6 +37,17 @@ record->revision=1U;
  */
 UmiStatus umi_context_audit_record_validate(const UmiContextAuditRecord *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->audit_id, '\0', sizeof(record->audit_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->actor_id, '\0', sizeof(record->actor_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->action_id, '\0', sizeof(record->action_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->channel_id, '\0', sizeof(record->channel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->context_id, '\0', sizeof(record->context_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->target_id, '\0', sizeof(record->target_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -192,3 +204,64 @@ if(store->count!=0U)memcpy(out_records,store->items,store->count*sizeof(store->i
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextAuditRecordArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xedb541b9a61081f2);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextAuditRecord *)0)->audit_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextAuditRecord *)0)->actor_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextAuditRecord *)0)->action_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextAuditRecord *)0)->channel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextAuditRecord *)0)->context_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextAuditRecord *)0)->target_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextAuditRecordArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextAuditRecord *)0)->audit_id) - 1U +
+        8U + sizeof(((UmiContextAuditRecord *)0)->actor_id) - 1U +
+        8U + sizeof(((UmiContextAuditRecord *)0)->action_id) - 1U +
+        8U + sizeof(((UmiContextAuditRecord *)0)->channel_id) - 1U +
+        8U + sizeof(((UmiContextAuditRecord *)0)->context_id) - 1U +
+        8U + sizeof(((UmiContextAuditRecord *)0)->target_id) - 1U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextAuditRecordArchiveWrite(UmiArchiveWriter *writer, const UmiContextAuditRecord *value)
+{
+    UmiArchiveWriteText(writer, value->audit_id, sizeof(value->audit_id));
+    UmiArchiveWriteText(writer, value->actor_id, sizeof(value->actor_id));
+    UmiArchiveWriteText(writer, value->action_id, sizeof(value->action_id));
+    UmiArchiveWriteText(writer, value->channel_id, sizeof(value->channel_id));
+    UmiArchiveWriteText(writer, value->context_id, sizeof(value->context_id));
+    UmiArchiveWriteText(writer, value->target_id, sizeof(value->target_id));
+    UmiArchiveWriteSigned(writer, (int64_t)value->status);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->timestamp_ms);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextAuditRecordArchiveRead(UmiArchiveReader *reader, UmiContextAuditRecord *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->audit_id, sizeof(value->audit_id));
+    UmiArchiveReadText(reader, value->actor_id, sizeof(value->actor_id));
+    UmiArchiveReadText(reader, value->action_id, sizeof(value->action_id));
+    UmiArchiveReadText(reader, value->channel_id, sizeof(value->channel_id));
+    UmiArchiveReadText(reader, value->context_id, sizeof(value->context_id));
+    UmiArchiveReadText(reader, value->target_id, sizeof(value->target_id));
+    value->status = (UmiStatus)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->timestamp_ms = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextAuditRecordArchiveValidate(const UmiContextAuditRecord *value)
+{
+    return umi_context_audit_record_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_audit_record_archive_encode, umi_context_audit_record_archive_decode,
+    UmiContextAuditRecord, UmiContextAuditRecordArchiveSchema, UmiContextAuditRecordArchiveBound, UmiContextAuditRecordArchiveWrite, UmiContextAuditRecordArchiveRead, UmiContextAuditRecordArchiveValidate)

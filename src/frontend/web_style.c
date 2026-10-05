@@ -19,6 +19,8 @@
  * responsibility for higher-level threading and persistence policy.
  */
 #include "umicom/frontend/web_style.h"
+#include "../base/value_archive_internal.h"
+#include "../base/registry_archive_internal.h"
 #include "../base/snapshot_registry_internal.h"
 /* Every field is described with its actual C member size; no string scan can
  * escape a supplied array. Domain values and legacy size/version normalisation
@@ -245,3 +247,65 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_EDIT(umi_frontend_web_style_registry_edit_if_curren
  * this owner's existing row order and normalized fields remain authoritative. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_PAGE(umi_frontend_web_style_registry_read_page,
     UmiFrontendStyleRegistry, UmiFrontendStyleSnapshot, UMI_FRONTEND_WEB_STYLE_CAPACITY)
+
+/* Portable state belongs to the Framework owner. Enumerate fields explicitly
+ * so saved bytes contain neither struct padding nor unused text. When adding
+ * a field, extend both directions, the schema identity and the domain fixture;
+ * incompatible layouts must be migrated deliberately before publication. */
+static uint64_t ArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x665f678c4432b911);
+    schema = (schema ^ (uint64_t)sizeof(((UmiFrontendStyleSnapshot *)0)->id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiFrontendStyleSnapshot *)0)->selector)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiFrontendStyleSnapshot *)0)->property)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiFrontendStyleSnapshot *)0)->value)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiFrontendStyleSnapshot *)0)->media_query)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t ArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U +
+        8U + sizeof(((UmiFrontendStyleSnapshot *)0)->id) - 1U +
+        8U + sizeof(((UmiFrontendStyleSnapshot *)0)->selector) - 1U +
+        8U + sizeof(((UmiFrontendStyleSnapshot *)0)->property) - 1U +
+        8U + sizeof(((UmiFrontendStyleSnapshot *)0)->value) - 1U +
+        8U + sizeof(((UmiFrontendStyleSnapshot *)0)->media_query) - 1U +
+        8U +
+        8U;
+}
+static void ArchiveWriteFields(UmiArchiveWriter *writer, const UmiFrontendStyleSnapshot *value)
+{
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->api_version);
+    UmiArchiveWriteText(writer, value->id, sizeof(value->id));
+    UmiArchiveWriteText(writer, value->selector, sizeof(value->selector));
+    UmiArchiveWriteText(writer, value->property, sizeof(value->property));
+    UmiArchiveWriteText(writer, value->value, sizeof(value->value));
+    UmiArchiveWriteText(writer, value->media_query, sizeof(value->media_query));
+    UmiArchiveWriteSigned(writer, (int64_t)value->order);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void ArchiveReadFields(UmiArchiveReader *reader, UmiFrontendStyleSnapshot *value)
+{
+    value->struct_size = (uint32_t)sizeof(*value);
+    value->api_version = (uint32_t)UmiArchiveReadUnsigned(reader, UINT32_MAX);
+    UmiArchiveReadText(reader, value->id, sizeof(value->id));
+    UmiArchiveReadText(reader, value->selector, sizeof(value->selector));
+    UmiArchiveReadText(reader, value->property, sizeof(value->property));
+    UmiArchiveReadText(reader, value->value, sizeof(value->value));
+    UmiArchiveReadText(reader, value->media_query, sizeof(value->media_query));
+    value->order = (int32_t)UmiArchiveReadSigned(reader, INT32_MIN, INT32_MAX);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus ArchiveValidate(const UmiFrontendStyleSnapshot *value)
+{
+    return umi_frontend_web_style_snapshot_validate(value, NULL);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_frontend_web_style_snapshot_archive_encode, umi_frontend_web_style_snapshot_archive_decode,
+    UmiFrontendStyleSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Restoring this complete collection reuses its existing reviewed replacement
+ * rules. Decoding a saved value alone never changes a live registry. */
+UMI_DEFINE_REGISTRY_ARCHIVE(umi_frontend_web_style_registry_archive_encode, umi_frontend_web_style_registry_archive_restore,
+    UmiFrontendStyleRegistry, UmiFrontendStyleSnapshot, UMI_FRONTEND_WEB_STYLE_CAPACITY, ArchiveSchema,
+    umi_frontend_web_style_snapshot_archive_encode, umi_frontend_web_style_snapshot_archive_decode, umi_frontend_web_style_registry_replace_if_current)

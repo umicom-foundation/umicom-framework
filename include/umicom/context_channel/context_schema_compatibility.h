@@ -16,6 +16,7 @@
 #ifndef UMICOM_CONTEXT_CHANNEL_CONTEXT_SCHEMA_COMPATIBILITY_H
 #define UMICOM_CONTEXT_CHANNEL_CONTEXT_SCHEMA_COMPATIBILITY_H
 #include "umicom/context_channel/context_channel.h"
+#include "umicom/base/value_archive.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -72,6 +73,17 @@ UmiStatus umi_context_schema_compatibility_validate(const UmiContextSchemaCompat
  * and its client applications.
  */
 bool umi_context_schema_compatibility_covers_sequence(const UmiContextSchemaCompatibility *state,uint64_t sequence);
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_context_schema_compatibility_archive_encode(const UmiContextSchemaCompatibility *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_context_schema_compatibility_archive_decode(const void *bytes, size_t byte_count,
+    UmiContextSchemaCompatibility *value);
+
 #ifdef __cplusplus
 }
 #endif

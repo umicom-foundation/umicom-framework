@@ -291,9 +291,14 @@ static int Allocation(CONTRACT_REGISTRY *registry)
 #include "snapshot_edit_cases.h"
 
 #include "snapshot_page_cases.h"
+#include "snapshot_archive_cases.h"
 
 static int Run(CONTRACT_REGISTRY *registry, const char *name)
 {
+    if (strcmp(name, "archive-value") == 0) return ArchiveRecordCases();
+    if (strcmp(name, "archive-collection") == 0) return ArchiveCollection(registry);
+    if (strcmp(name, "archive-refused") == 0) return ArchiveCollectionRefused(registry);
+    if (strcmp(name, "archive-empty") == 0) return ArchiveCollectionEmpty(registry);
     if (strcmp(name, "edit-mixed") == 0) return EditMixed(registry);
     if (strcmp(name, "edit-rollback") == 0) return EditRollback(registry);
     if (strcmp(name, "edit-review") == 0) return EditReview(registry);

@@ -1,0 +1,17 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+include_guard(GLOBAL)
+if(BUILD_TESTING)
+    add_executable(umicom-editor-text-position-test "${CMAKE_CURRENT_LIST_DIR}/../tests/editor/test_text_position.c")
+    target_link_libraries(umicom-editor-text-position-test PRIVATE Umicom::editor)
+    umicom_apply_warnings(umicom-editor-text-position-test)
+    umicom_apply_sanitizers(umicom-editor-text-position-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-editor-text-position-test)
+    endif()
+    foreach(case empty ascii end lf crlf cr trailing-lf trailing-cr trailing-crlf mixed empty-line accent combining supplementary cjk invalid-leading invalid-continuation overlong encoded-surrogate out-of-unicode truncated invalid-prefix inside-utf8 inside-surrogate inside-crlf past-column past-line past-byte arguments)
+        add_test(NAME framework.editor.text_position.${case} COMMAND umicom-editor-text-position-test ${case})
+        set_tests_properties(framework.editor.text_position.${case} PROPERTIES TIMEOUT 30 LABELS "framework;editor;unicode;regression")
+    endforeach()
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomTextPositionIndex.cmake")

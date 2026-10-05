@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/capability.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context capability from caller-provided values so later operations receive a
@@ -36,6 +37,14 @@ record->revision=1U;
  */
 UmiStatus umi_context_capability_validate(const UmiContextCapability *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->capability_id, '\0', sizeof(record->capability_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->application_id, '\0', sizeof(record->application_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->schema_id, '\0', sizeof(record->schema_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -186,3 +195,55 @@ if(store->count!=0U)memcpy(out_records,store->items,store->count*sizeof(store->i
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextCapabilityArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0xaa6aea62d8caad7f);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextCapability *)0)->capability_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextCapability *)0)->application_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextCapability *)0)->schema_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextCapabilityArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextCapability *)0)->capability_id) - 1U +
+        8U + sizeof(((UmiContextCapability *)0)->application_id) - 1U +
+        8U + sizeof(((UmiContextCapability *)0)->schema_id) - 1U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextCapabilityArchiveWrite(UmiArchiveWriter *writer, const UmiContextCapability *value)
+{
+    UmiArchiveWriteText(writer, value->capability_id, sizeof(value->capability_id));
+    UmiArchiveWriteText(writer, value->application_id, sizeof(value->application_id));
+    UmiArchiveWriteText(writer, value->schema_id, sizeof(value->schema_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->can_publish);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->can_observe);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->can_share_cross_application);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextCapabilityArchiveRead(UmiArchiveReader *reader, UmiContextCapability *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->capability_id, sizeof(value->capability_id));
+    UmiArchiveReadText(reader, value->application_id, sizeof(value->application_id));
+    UmiArchiveReadText(reader, value->schema_id, sizeof(value->schema_id));
+    value->can_publish = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->can_observe = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->can_share_cross_application = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextCapabilityArchiveValidate(const UmiContextCapability *value)
+{
+    return umi_context_capability_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_capability_archive_encode, umi_context_capability_archive_decode,
+    UmiContextCapability, UmiContextCapabilityArchiveSchema, UmiContextCapabilityArchiveBound, UmiContextCapabilityArchiveWrite, UmiContextCapabilityArchiveRead, UmiContextCapabilityArchiveValidate)

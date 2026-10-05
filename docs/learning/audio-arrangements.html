@@ -1,0 +1,81 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Arrange audio clips</title><style>body{font:17px/1.65 system-ui,sans-serif;max-width:960px;margin:40px auto;padding:0 24px;color:#193744;background:#f8fbfc}h1,h2{line-height:1.25}code{background:#e8f0f4;padding:2px 5px}aside{background:#edf5f6;border-left:4px solid #167f85;padding:14px 22px}td,th{border:1px solid #bdd0d8;padding:10px;text-align:left}table{border-collapse:collapse;width:100%}a{color:#075c6e}</style></head><body>
+<h1>Arrange audio clips in Media and Music</h1>
+<p>An arrangement places captured audio on a timeline. You can select part of a recording, delay its start,
+reduce its volume, fade its ends and overlap it with another clip. Framework produces a complete stereo WAV
+in memory. You then choose whether to export that render to a new file.</p>
+<aside>This editor accepts signed 16-bit PCM WAV files with one or two channels, at most 4 MiB per source.
+All source sample rates must equal the arrangement rate, from 8000 to 192000 Hz. It does not resample,
+decode MP3/AAC, record devices or play audio. Use an external player to listen to the exported WAV.</aside>
+<h2>Prepare your sources</h2><ol>
+<li>In Media or Music, open <strong>Creative workbench → Asset library</strong>.
+Import your WAV files under meaningful IDs, such as <code>narration</code> and <code>intro-music</code>.</li>
+<li>Save the library to a new file. See <a href="creative-asset-libraries.html">Keep creative assets together</a>.</li>
+<li>Open <strong>Audio arrangement</strong>. Enter the absolute saved library path and choose
+<strong>Load asset library</strong>. The result lists its asset IDs and sizes. A failed load retains the
+previous library. Editing the source library elsewhere does not change this captured copy.</li>
+<li>Set a title and the sample rate used by your WAV files, then choose <strong>Apply title and sample rate</strong>.</li></ol>
+<h2>Place and edit audio</h2><ol>
+<li>Enter a unique placement ID, such as <code>opening-voice</code>, and its source asset ID.</li>
+<li>Set the timeline start in milliseconds. A value of <code>0</code> starts immediately;
+<code>2000</code> begins two seconds into the output.</li>
+<li>Set the source begin and end. The beginning is included and the ending is excluded.
+For example, <code>1000</code> to <code>3000</code> uses the recording's second and third seconds.</li>
+<li>Set gain between <code>0</code> (silent) and <code>1000</code> (original volume).
+Use <code>500</code> for half sample amplitude. Optional fades must fit within the selected source range.</li>
+<li>Choose <strong>Add new placement</strong>. Repeat for other sources, or use the same source ID
+again under a different placement ID. Overlapping placements are mixed; gaps become silence.</li>
+<li>To edit an existing placement, enter its ID, choose <strong>Load placement fields by ID</strong>,
+change the fields and choose <strong>Replace existing placement</strong>. Removal uses the entered
+placement ID and leaves the captured source file intact.</li></ol>
+<p>The summary shows the applied plan. Typing in the form alone does not change the arrangement.
+Accepted edits discard an older render so it cannot be exported as though it represented the new plan.
+There are at most 16 placements. This editor has no general Undo history; save new arrangement files
+when you want to keep alternative edits.</p>
+<h2>Render and export</h2><ol>
+<li>Choose <strong>Render arrangement in memory</strong>. Every referenced source must exist, decode
+as supported PCM and contain its complete requested range. A failed render creates no output file.</li>
+<li>Read the reported frame count, sample rate, source count and clipped-sample count.
+Clipping occurs when overlapping samples exceed the signed 16-bit range. Lower the relevant gains
+and render again when clipping is reported.</li>
+<li>Enter a new absolute WAV path and choose <strong>Export rendered WAV to new file</strong>.
+The parent folder must exist. An existing destination is refused, so use another filename.</li>
+<li>Open the saved WAV in a player and listen. No playback is started automatically.</li></ol>
+<p>Rendered output is stereo signed 16-bit PCM; mono sources appear in both channels.
+It ends at the last placement, with no automatic tail. The maximum rendered file is 64 MiB,
+including its 44-byte WAV header. At 48000 Hz stereo this is approximately 349 seconds.
+The timeline also has a ten-minute bound, so the smaller applicable limit controls each render.</p>
+<h2>Save and reopen an arrangement</h2><ol>
+<li>Enter an absolute JSON path and choose <strong>Save arrangement to new file</strong>.</li>
+<li>Keep that JSON file and its saved asset library. The JSON contains titles, IDs and timings;
+it does not embed audio or remember a machine-specific library path.</li>
+<li>In a later session, load the matching library and open the arrangement JSON.
+Opening over unsaved arrangement edits requires explicit approval. Changing the JSON path or
+accepting a plan edit clears that approval.</li></ol>
+<p>A damaged or unsupported recipe leaves the current plan intact. A saved recipe can reference IDs
+that are not in the loaded library; rendering will report the mismatch and produce no partial mix.</p>
+<h2>Understand timing and limits</h2><p>Milliseconds convert to sample frames using the integer part of
+<code>milliseconds × sample rate ÷ 1000</code>. A frame contains one sample per channel.
+Gain is applied first, then fade-in and fade-out, with signed division towards zero.
+Placements add in a wide accumulator; only the final sample is saturated to the PCM range.
+This makes the mix independent of placement order.</p>
+<p>Library bytes, decoded sources and the output may coexist in memory. Rendering caches a decoded
+source once per asset ID. File and render work runs on a worker. Cancel preserves the plan and library;
+a write that has already created its destination may leave a partial or complete new file. Read the
+receipt and use another filename before retrying. Closing the window discards unsaved in-memory work.</p>
+<h2>Use a Studio task or a shell</h2>
+<p>The installed <code>umicom-audio-arrangement</code> command uses the same services as the native page.
+Give it complete absolute paths as separate arguments. For example, from the directory containing the executable:</p>
+<pre><code>.\umicom-audio-arrangement.exe inspect "C:\Projects\Tutorial\mix.json"
+.\umicom-audio-arrangement.exe render "C:\Projects\Tutorial\sources.umilibrary" "C:\Projects\Tutorial\mix.json" "C:\Projects\Tutorial\mix-output.wav"</code></pre>
+<p>On Linux, use the installed command without <code>.exe</code> and use absolute Linux paths.
+Inspect reads only the recipe; render loads its sources, reports clipping, then creates a new WAV.
+Exit code 0 means success, 1 means an operation failed, and 2 means the command arguments were invalid.
+No playback, upload or overwrite occurs. An interrupted write may leave a new partial file.
+In Studio, select this executable for an explicit task and pass the same separate arguments.</p>
+<h2>For contributors</h2><p>The portable <code>audio_arrangement.h</code> interface separates editable
+plan values from library ownership and native controls. New frontends can use the same validator,
+strict JSON reader and renderer. Keep source libraries unchanged during rendering; publish a new
+asset only after the entire mix succeeds. Add format adapters at the existing decoder boundary
+instead of guessing formats from file extensions or silently changing sample rates.</p>
+<p>Copyright Sammy Hegab, Umicom Foundation. MIT licence.</p></body></html>

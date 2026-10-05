@@ -19,6 +19,7 @@
 #ifndef UMICOM_TEST_WORKBENCH_TEST_TREE_SELECTION_H
 #define UMICOM_TEST_WORKBENCH_TEST_TREE_SELECTION_H
 #include "umicom/test/workbench/workbench_types.h"
+#include "umicom/base/value_archive.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -56,6 +57,17 @@ UmiStatus umi_test_tree_selection_set_state(UmiTestTreeSelection *model,UmiTestW
  * it.
  */
 int umi_test_tree_selection_valid(const UmiTestTreeSelection *model);
+/** Transfer this value using the portable format described in value_archive.h.
+ * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
+ * validates every field before replacing the destination; refused input leaves
+ * it unchanged. Restored identifiers and revisions are data, not permission
+ * to change a live service. Hosts must review and apply state through its owner.
+ * Source and destination storage must be separate. Neither call performs I/O. */
+UmiStatus umi_test_tree_selection_archive_encode(const UmiTestTreeSelection *value,
+    void *bytes, size_t capacity, size_t *out_size);
+UmiStatus umi_test_tree_selection_archive_decode(const void *bytes, size_t byte_count,
+    UmiTestTreeSelection *value);
+
 #ifdef __cplusplus
 }
 #endif

@@ -43,6 +43,9 @@ static UmiStatus ReplacementInputLength(const char *text, size_t *outLength)
 }
 
 /* Preparation calculates all bytes before publishing a review to its caller. */
+/* Replacement review now captures explicit search policy before preparing complete text; legacy calls retain smart-case behavior.
+ * The former implementation is retained for engineering review. */
+#if 0
 UmiStatus UmiDocumentCoordinatorPrepareReplacement(UmiDocumentCoordinator *coordinator,
     UmiDocumentId documentId, const char *needle, const char *replacement,
     UmiDocumentReplacementPlan **outPlan)
@@ -100,6 +103,72 @@ UmiStatus UmiDocumentCoordinatorPrepareReplacement(UmiDocumentCoordinator *coord
     *outPlan = plan;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus UmiDocumentCoordinatorPrepareReplacementWithOptions(UmiDocumentCoordinator *coordinator,
+    UmiDocumentId documentId, const char *needle, const char *replacement,
+    const UmiEditorSearchOptions *searchOptions, UmiDocumentReplacementPlan **outPlan)
+{
+    if (outPlan != NULL) *outPlan = NULL;
+    if (coordinator == NULL || documentId == 0U || outPlan == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiEditorSearchOptions options;
+    UmiStatus policy = DocumentSearchOptions(searchOptions, &options);
+    if (policy != UMI_STATUS_OK) return policy;
+    size_t needleBytes = 0U, replacementBytes = 0U;
+    UmiStatus status = ReplacementInputLength(needle, &needleBytes);
+    if (status == UMI_STATUS_OK) status = ReplacementInputLength(replacement, &replacementBytes);
+    if (status != UMI_STATUS_OK) return status;
+    if (needleBytes == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index = EditDocumentIndex(coordinator, documentId);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    UmiDocumentReplacementPlan *plan = calloc(1U, sizeof *plan);
+    if (plan == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = UmiDocumentCoordinatorPrepareEdit(coordinator, documentId, &plan->capture);
+    if (status == UMI_STATUS_OK && plan->capture->view.read_only) status = UMI_STATUS_PERMISSION_DENIED;
+    /* The generic view model can hold arbitrary non-NUL bytes. A text review
+     * must not display invalid encoding or cut through a malformed sequence. */
+    if (status == UMI_STATUS_OK && !umi_document_utf8_validate(
+            (const unsigned char *)plan->capture->text, plan->capture->length, NULL))
+        status = UMI_STATUS_INVALID_STATE;
+    if (status == UMI_STATUS_OK)
+        status = UmiEditorSearchReplaceAllSize(plan->capture->text, plan->capture->length,
+            needle, needleBytes, replacementBytes, &options,
+            &plan->summary.proposed_bytes, &plan->summary.match_count);
+    if (status == UMI_STATUS_OK && plan->summary.proposed_bytes > UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES)
+        status = UMI_STATUS_CAPACITY_EXCEEDED;
+    if (status == UMI_STATUS_OK) {
+        plan->proposed = malloc(plan->summary.proposed_bytes + 1U);
+        if (plan->proposed == NULL) status = UMI_STATUS_OUT_OF_MEMORY;
+    }
+    if (status == UMI_STATUS_OK)
+        status = UmiEditorSearchReplaceAll(plan->capture->text, plan->capture->length,
+            needle, needleBytes, replacement, replacementBytes, &options,
+            plan->proposed, plan->summary.proposed_bytes + 1U, NULL);
+    if (status != UMI_STATUS_OK) { UmiDocumentReplacementPlanDestroy(plan); return status; }
+    const UmiDocumentCoordinatorEntry *entry = &coordinator->entries[index];
+    plan->baseline = entry->baseline;
+    plan->encoding = entry->encoding;
+    plan->lineEnding = entry->line_ending;
+    plan->conflict = entry->conflict;
+    plan->summary.document_id = documentId;
+    (void)snprintf(plan->summary.display_name, sizeof plan->summary.display_name,
+        "%s", plan->capture->stored.display_name);
+    plan->summary.previous_bytes = plan->capture->length;
+    plan->summary.text_changes = plan->capture->length != plan->summary.proposed_bytes ||
+        memcmp(plan->capture->text, plan->proposed, plan->capture->length) != 0;
+    UmiDocumentWorkingCopySnapshot snapshot;
+    status = snapshot_index(coordinator, index, &snapshot);
+    if (status != UMI_STATUS_OK) { UmiDocumentReplacementPlanDestroy(plan); return status; }
+    plan->summary.has_unsaved_changes = snapshot.dirty;
+    *outPlan = plan;
+    return UMI_STATUS_OK;
+}
+UmiStatus UmiDocumentCoordinatorPrepareReplacement(UmiDocumentCoordinator *coordinator,
+    UmiDocumentId documentId, const char *needle, const char *replacement, UmiDocumentReplacementPlan **outPlan)
+{
+    return UmiDocumentCoordinatorPrepareReplacementWithOptions(coordinator, documentId, needle, replacement, NULL, outPlan);
+}
+
 
 /* Readers see copies or borrowed immutable bytes without touching services. */
 UmiStatus UmiDocumentReplacementPlanSummary(const UmiDocumentReplacementPlan *plan,
@@ -133,6 +202,9 @@ UmiStatus UmiDocumentReplacementPlanTexts(const UmiDocumentReplacementPlan *plan
 /* Compare both revisions and bytes so a replaced view with reused metadata
  * cannot apply a review to a different draft. Selection alone is irrelevant
  * to a whole-document edit and the latest caret is kept when possible. */
+/* Captured-state comparison is shared by editing and read-only inspection without granting edit permission.
+ * The former implementation is retained for engineering review. */
+#if 0
 static UmiStatus ReplacementCurrent(UmiDocumentCoordinator *coordinator,
     const UmiDocumentReplacementPlan *plan, size_t *outIndex,
     UmiUiDocumentViewSnapshot *outView)
@@ -174,6 +246,58 @@ static UmiStatus ReplacementCurrent(UmiDocumentCoordinator *coordinator,
     if (status == UMI_STATUS_OK) *outIndex = index;
     return status;
 }
+#endif
+static UmiStatus ReplacementCapturedCurrent(UmiDocumentCoordinator *coordinator,
+    const UmiDocumentReplacementPlan *plan, size_t *outIndex,
+    UmiUiDocumentViewSnapshot *outView, int require_writable)
+{
+    if (coordinator == NULL || plan == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (plan->consumed) return UMI_STATUS_INVALID_STATE;
+    const UmiDocumentEditPlan *capture = plan->capture;
+    if (capture->owner != coordinator) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index = EditDocumentIndex(coordinator, capture->stored.document_id);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    UmiDocumentSnapshot stored;
+    UmiUiDocumentTextInfo textInfo;
+    UmiUiDocumentViewModel *views = umi_ui_workbench_documents(coordinator->workbench);
+    UmiStatus status = umi_document_store_snapshot(coordinator->store, capture->stored.document_id, &stored);
+    if (status == UMI_STATUS_OK) status = umi_ui_document_view_model_find(views,
+        coordinator->entries[index].view_id, outView);
+    if (status == UMI_STATUS_OK) status = UmiUiDocumentViewModelTextInfo(views, outView->view_id, &textInfo);
+    if (status != UMI_STATUS_OK) return status;
+    if (require_writable && outView->read_only) return UMI_STATUS_PERMISSION_DENIED;
+    /* Inspection can capture a read-only view, but a permission change still
+     * makes its earlier question stale. Editing keeps its existing refusal. */
+    if (!require_writable && outView->read_only != capture->view.read_only)
+        return UMI_STATUS_INVALID_STATE;
+    const UmiDocumentCoordinatorEntry *entry = &coordinator->entries[index];
+    if (stored.revision != capture->stored.revision || stored.saved_revision != capture->stored.saved_revision ||
+        stored.has_path != capture->stored.has_path || strcmp(stored.path, capture->stored.path) != 0 ||
+        strcmp(stored.display_name, capture->stored.display_name) != 0 ||
+        stored.external_change != capture->stored.external_change || stored.dirty != capture->stored.dirty ||
+        textInfo.text_revision != capture->textInfo.text_revision || textInfo.byte_count != capture->length ||
+        strcmp(outView->view_id, capture->view.view_id) != 0 ||
+        strcmp(outView->document_id, capture->view.document_id) != 0 ||
+        strcmp(outView->uri, capture->view.uri) != 0 || outView->dirty != capture->view.dirty ||
+        entry->encoding != plan->encoding || entry->line_ending != plan->lineEnding || entry->conflict != plan->conflict ||
+        entry->baseline.valid != plan->baseline.valid ||
+        (entry->baseline.valid && !umi_document_fingerprint_equal(&entry->baseline, &plan->baseline)))
+        return UMI_STATUS_INVALID_STATE;
+    char *current = NULL;
+    size_t currentBytes = 0U;
+    status = UmiUiDocumentViewModelCopyText(views, outView->view_id, &current, &currentBytes);
+    if (status == UMI_STATUS_OK && (currentBytes != capture->length ||
+        memcmp(current, capture->text, currentBytes) != 0)) status = UMI_STATUS_INVALID_STATE;
+    UmiUiDocumentViewModelFreeText(current);
+    if (status == UMI_STATUS_OK) *outIndex = index;
+    return status;
+}
+static UmiStatus ReplacementCurrent(UmiDocumentCoordinator *coordinator,
+    const UmiDocumentReplacementPlan *plan,size_t *out_index,UmiUiDocumentViewSnapshot *out_view)
+{
+    return ReplacementCapturedCurrent(coordinator,plan,out_index,out_view,1);
+}
+
 
 /* A check never refreshes the plan into a different question. */
 UmiStatus UmiDocumentCoordinatorCheckReplacement(UmiDocumentCoordinator *coordinator,

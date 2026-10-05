@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/context_sync.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context sync from caller-provided values so later operations receive a known
@@ -131,6 +132,15 @@ UmiStatus umi_context_sync_record_failure(UmiContextSync *state,UmiStatus status
 /* Check that context sync satisfies its contract before another service relies on it. */
 UmiStatus umi_context_sync_validate(const UmiContextSync *state)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (state == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->peer_id, '\0', sizeof(state->peer_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->channel_id, '\0', sizeof(state->channel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->last_context_id, '\0', sizeof(state->last_context_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(state->error_text, '\0', sizeof(state->error_text)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -158,3 +168,68 @@ bool umi_context_sync_covers_sequence(const UmiContextSync *state,uint64_t seque
 {
     return state!=NULL&&state->item_count!=0U&&sequence>=state->first_sequence&&sequence<=state->last_sequence;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextSyncArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x0a5dcb0074877a9a);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextSync *)0)->peer_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextSync *)0)->channel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextSync *)0)->last_context_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextSync *)0)->error_text)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextSyncArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextSync *)0)->peer_id) - 1U +
+        8U + sizeof(((UmiContextSync *)0)->channel_id) - 1U +
+        8U + sizeof(((UmiContextSync *)0)->last_context_id) - 1U +
+        8U + sizeof(((UmiContextSync *)0)->error_text) - 1U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextSyncArchiveWrite(UmiArchiveWriter *writer, const UmiContextSync *value)
+{
+    UmiArchiveWriteText(writer, value->peer_id, sizeof(value->peer_id));
+    UmiArchiveWriteText(writer, value->channel_id, sizeof(value->channel_id));
+    UmiArchiveWriteText(writer, value->last_context_id, sizeof(value->last_context_id));
+    UmiArchiveWriteText(writer, value->error_text, sizeof(value->error_text));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->first_sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->last_sequence);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->item_count);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->failure_count);
+    UmiArchiveWriteSigned(writer, (int64_t)value->status);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextSyncArchiveRead(UmiArchiveReader *reader, UmiContextSync *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->peer_id, sizeof(value->peer_id));
+    UmiArchiveReadText(reader, value->channel_id, sizeof(value->channel_id));
+    UmiArchiveReadText(reader, value->last_context_id, sizeof(value->last_context_id));
+    UmiArchiveReadText(reader, value->error_text, sizeof(value->error_text));
+    value->first_sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->last_sequence = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->item_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->failure_count = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+    value->status = (UmiStatus)UmiArchiveReadSigned(reader, INT_MIN, INT_MAX);
+    value->enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextSyncArchiveValidate(const UmiContextSync *value)
+{
+    return umi_context_sync_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_sync_archive_encode, umi_context_sync_archive_decode,
+    UmiContextSync, UmiContextSyncArchiveSchema, UmiContextSyncArchiveBound, UmiContextSyncArchiveWrite, UmiContextSyncArchiveRead, UmiContextSyncArchiveValidate)

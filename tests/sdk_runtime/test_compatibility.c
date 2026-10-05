@@ -199,8 +199,46 @@ static int RecordMutationCases(void)
     return 0;
 }
 
+/* Use nonzero domain fields to expose a codec that accidentally drops
+ * values. The existing initializer supplies required compatibility metadata. */
+static UmiSdkRuntimeCompatibility ArchiveSample(void)
+{
+    UmiSdkRuntimeCompatibility value;
+    umi_sdk_runtime_compatibility_init(&value, "archive-record");
+    value.path[0] = 'a';
+    value.detail[0] = 'a';
+    value.compatible = (uint64_t)6U;
+    value.reason_code = (uint64_t)7U;
+    value.revision = (uint64_t)8U;
+    value.state = UMI_SDK_RUNTIME_STATE_READY;
+    value.enabled = true;
+    return value;
+}
+/* Unused tails are not part of a C string and must not enter saved bytes. */
+static void ArchiveFillUnusedText(UmiSdkRuntimeCompatibility *value)
+{
+    {
+        size_t used = strlen(value->id) + 1U;
+        memset(value->id + used, 0xa5, sizeof(value->id) - used);
+    }
+    {
+        size_t used = strlen(value->path) + 1U;
+        memset(value->path + used, 0xa5, sizeof(value->path) - used);
+    }
+    {
+        size_t used = strlen(value->detail) + 1U;
+        memset(value->detail + used, 0xa5, sizeof(value->detail) - used);
+    }
+}
+#define ARCHIVE_TYPE UmiSdkRuntimeCompatibility
+#define ARCHIVE_ENCODE umi_sdk_runtime_compatibility_archive_encode
+#define ARCHIVE_DECODE umi_sdk_runtime_compatibility_archive_decode
+#define ARCHIVE_EQUAL RecordDefaultsEqual
+#include "../value_archive/record_cases.h"
+
 int main(void)
 {
+    if (ArchiveRecordCases() != 0) return 1;
     if (RecordMutationCases() != 0) return 1;
     if (RecordConstructionCases() != 0) return 1;
     if (CheckReviewedRecord() != 0) return 1;

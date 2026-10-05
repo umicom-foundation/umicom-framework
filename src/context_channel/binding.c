@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/context_channel/binding.h"
+#include "../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise context binding from caller-provided values so later operations receive a
@@ -33,6 +34,16 @@ record->revision=1U;
 /* Check that context binding satisfies its contract before another service relies on it. */
 UmiStatus umi_context_binding_validate(const UmiContextBinding *record)
 {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->binding_id, '\0', sizeof(record->binding_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->application_id, '\0', sizeof(record->application_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->panel_id, '\0', sizeof(record->panel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->channel_id, '\0', sizeof(record->channel_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->accepted_schema_id, '\0', sizeof(record->accepted_schema_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -187,3 +198,60 @@ if(store->count!=0U)memcpy(out_records,store->items,store->count*sizeof(store->i
 *out_count=store->count;
 return UMI_STATUS_OK;
 }
+
+/* State transfer belongs to this Framework value owner. Explicit fields keep
+ * padding and unused text out of saved data. Extend both directions and the
+ * schema identity when adding a field; migrate incompatible saved state
+ * deliberately rather than interpreting it as a different record. These
+ * functions never activate a provider, execute a command or perform I/O. */
+static uint64_t UmiContextBindingArchiveSchema(void)
+{
+    uint64_t schema = UINT64_C(0x86c1956910421eb2);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextBinding *)0)->binding_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextBinding *)0)->application_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextBinding *)0)->panel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextBinding *)0)->channel_id)) * UINT64_C(1099511628211);
+    schema = (schema ^ (uint64_t)sizeof(((UmiContextBinding *)0)->accepted_schema_id)) * UINT64_C(1099511628211);
+    return schema;
+}
+static size_t UmiContextBindingArchiveBound(void)
+{
+    return UMI_VALUE_ARCHIVE_HEADER_SIZE +
+        8U + sizeof(((UmiContextBinding *)0)->binding_id) - 1U +
+        8U + sizeof(((UmiContextBinding *)0)->application_id) - 1U +
+        8U + sizeof(((UmiContextBinding *)0)->panel_id) - 1U +
+        8U + sizeof(((UmiContextBinding *)0)->channel_id) - 1U +
+        8U + sizeof(((UmiContextBinding *)0)->accepted_schema_id) - 1U +
+        8U +
+        8U +
+        8U;
+}
+static void UmiContextBindingArchiveWrite(UmiArchiveWriter *writer, const UmiContextBinding *value)
+{
+    UmiArchiveWriteText(writer, value->binding_id, sizeof(value->binding_id));
+    UmiArchiveWriteText(writer, value->application_id, sizeof(value->application_id));
+    UmiArchiveWriteText(writer, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveWriteText(writer, value->channel_id, sizeof(value->channel_id));
+    UmiArchiveWriteText(writer, value->accepted_schema_id, sizeof(value->accepted_schema_id));
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->publish_enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->observe_enabled);
+    UmiArchiveWriteUnsigned(writer, (uint64_t)value->revision);
+}
+static void UmiContextBindingArchiveRead(UmiArchiveReader *reader, UmiContextBinding *value)
+{
+    value->structure_size = (uint32_t)sizeof(*value);
+    UmiArchiveReadText(reader, value->binding_id, sizeof(value->binding_id));
+    UmiArchiveReadText(reader, value->application_id, sizeof(value->application_id));
+    UmiArchiveReadText(reader, value->panel_id, sizeof(value->panel_id));
+    UmiArchiveReadText(reader, value->channel_id, sizeof(value->channel_id));
+    UmiArchiveReadText(reader, value->accepted_schema_id, sizeof(value->accepted_schema_id));
+    value->publish_enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->observe_enabled = (bool)UmiArchiveReadUnsigned(reader, 1U);
+    value->revision = (uint64_t)UmiArchiveReadUnsigned(reader, UINT64_MAX);
+}
+static UmiStatus UmiContextBindingArchiveValidate(const UmiContextBinding *value)
+{
+    return umi_context_binding_validate(value);
+}
+UMI_DEFINE_VALUE_ARCHIVE(umi_context_binding_archive_encode, umi_context_binding_archive_decode,
+    UmiContextBinding, UmiContextBindingArchiveSchema, UmiContextBindingArchiveBound, UmiContextBindingArchiveWrite, UmiContextBindingArchiveRead, UmiContextBindingArchiveValidate)
