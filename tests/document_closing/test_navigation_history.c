@@ -6,6 +6,9 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 
+/* This history fixture also cycles live document tabs. Include the owner of
+ * that separate navigation operation so the compiler checks the real contract. */
+#include "umicom/document/navigation.h"
 #include "umicom/document/navigation_history.h"
 #include "umicom/platform/filesystem.h"
 #include <stdio.h>

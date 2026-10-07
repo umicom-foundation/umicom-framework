@@ -43,7 +43,17 @@ const UmiWebServerState *umi_web_server_state(const UmiWebServer *server){return
 UmiStatus UmiWebServerServeNext(UmiWebServer *server,uint32_t wait_ms,uint32_t exchange_ms,
     const UmiCancellationToken *cancel,UmiWebExchangeResult *out)
 {
+/* Keep the output reset after the null guard. Explicit block structure
+ * makes the unchanged control flow visible to both readers and diagnostics.
+ * The superseded implementation is retained below for engineering review. */
+#if 0
     if(out==NULL)return UMI_STATUS_INVALID_ARGUMENT;memset(out,0,sizeof(*out));
+#endif
+    /* Refuse a null output before clearing caller-owned result storage. */
+    if (out == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    memset(out, 0, sizeof(*out));
     if(server==NULL||wait_ms==0U||wait_ms>60000U||exchange_ms==0U||exchange_ms>60000U)return UMI_STATUS_INVALID_ARGUMENT;
     if(server->serving)return UMI_STATUS_BUSY;
     if(server->state.phase!=UMI_WEB_SERVER_READY||!server->listener.open)return UMI_STATUS_INVALID_STATE;

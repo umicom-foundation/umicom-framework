@@ -134,6 +134,12 @@ UMI_TEST_VALUE_TRANSFER(UmiBarTransferCases, UmiBar,
     umi_bar_archive_encode, umi_bar_archive_decode,
     UmiBarTransferEqual, UmiBarTransferTails, UmiBarTransferMalformed)
 
+/* These helpers describe the Finance market-data-key quote, not the
+ * Trading bid/ask quote used by this test. Their active, type-correct checks
+ * now run in tests/finance_core/test_quote.c through its existing test target.
+ * All Trading quote, bar and snapshot assertions below remain active.
+ * The superseded implementation is retained below for engineering review. */
+#if 0
 #include "umicom/finance/core/quote.h"
 /* Compare the complete domain value rather than using struct padding or
  * re-decoding an expected byte stream. Add new public fields to this check. */
@@ -216,11 +222,44 @@ static int UmiQuoteTransferMalformed(const UmiQuote *sample)
 UMI_TEST_VALUE_TRANSFER(UmiQuoteTransferCases, UmiQuote,
     umi_quote_archive_encode, umi_quote_archive_decode,
     UmiQuoteTransferEqual, UmiQuoteTransferTails, UmiQuoteTransferMalformed)
+#endif
+
+/* Keep malformed Trading input from reaching calculations. No Finance header
+ * is included here: the two historical UmiQuote typedefs are distinct ABIs. */
+static int UmiTradingQuoteBoundaryCases(const UmiQuote *sample)
+{
+    UmiQuote bad = *sample;
+    if (umi_quote_valid(NULL) || umi_quote_mid(NULL) != 0.0 || umi_quote_spread(NULL) != 0.0)
+        return 1;
+    memset(bad.instrument.instrument_id.value, 'x', sizeof(bad.instrument.instrument_id.value));
+    if (umi_quote_valid(&bad)) return 1;
+    bad = *sample;
+    memset(bad.instrument.symbol, 'x', sizeof(bad.instrument.symbol));
+    if (umi_quote_valid(&bad)) return 1;
+    bad = *sample;
+    memset(bad.instrument.venue, 'x', sizeof(bad.instrument.venue));
+    if (umi_quote_valid(&bad)) return 1;
+    bad = *sample;
+    memset(bad.instrument.currency.code, 'x', sizeof(bad.instrument.currency.code));
+    if (umi_quote_valid(&bad)) return 1;
+    bad = *sample; bad.ask = bad.bid - 1.0;
+    if (umi_quote_valid(&bad)) return 1;
+    bad = *sample; bad.bid_size = -1.0;
+    if (umi_quote_valid(&bad)) return 1;
+    return 0;
+}
 
 int main(void){
     UmiQuote q={0};q.instrument=test_instrument();q.bid=25000.0;q.ask=25002.0;q.bid_size=4.0;q.ask_size=2.0;q.event_time_ms=1000;
     assert(umi_quote_valid(&q));
+/* The Finance transfer cases run with a Finance fixture in its owner
+ * test. Exercise the Trading quote's actual string and numeric boundaries here.
+ * The superseded implementation is retained below for engineering review. */
+#if 0
     if (UmiQuoteTransferCases(&q) != 0) return 1;
+#endif
+    /* Exercise the Trading fixture here; Finance transfer cases now run in their owning test. */
+    if (UmiTradingQuoteBoundaryCases(&q) != 0) return 1;
 assert(umi_quote_mid(&q)==25001.0);assert(umi_quote_spread(&q)==2.0);
     UmiBar b={0};b.instrument=q.instrument;b.open=24990;b.high=25010;b.low=24980;b.close=25000;b.volume=100;b.start_time_ms=0;b.end_time_ms=1000;
     assert(umi_bar_valid(&b));

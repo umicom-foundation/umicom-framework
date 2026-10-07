@@ -3433,9 +3433,20 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
         if (status != UMI_STATUS_OK) goto fail;
         status = umi_gtk4_ws_layout_library_set_exchange_handlers(workstation->layout_library,
             suite_library_export, suite_library_import, suite_library_import_apply, workstation);
+/* Attach the saved-review handler only after exchange registration
+ * succeeds. Braces make that boundary explicit while the following failure
+ * check continues to cover both registrations and preserve teardown.
+ * The superseded implementation is retained below for engineering review. */
+#if 0
     if (status == UMI_STATUS_OK)
         status = umi_gtk4_ws_layout_library_set_saved_review_handler(workstation->layout_library,
             suite_library_saved_review, workstation);
+#endif
+        /* Attach the second handler only when the first registration succeeded. */
+        if (status == UMI_STATUS_OK) {
+            status = umi_gtk4_ws_layout_library_set_saved_review_handler(workstation->layout_library,
+                suite_library_saved_review, workstation);
+        }
         if (status != UMI_STATUS_OK) goto fail;
     }
 

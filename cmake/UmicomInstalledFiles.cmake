@@ -33,6 +33,12 @@ function(umicom_attach_installed_files_native_checks)
         add_test(NAME framework.installed_files.gtk4.${case} COMMAND umicom-installed-files-gtk4-test ${case})
         set_tests_properties(framework.installed_files.gtk4.${case} PROPERTIES TIMEOUT 40 SKIP_RETURN_CODE 77 LABELS "framework;developer;install;gtk4;ownership;regression")
     endforeach()
+    # Exercise source identity when filtering changes visible row positions,
+    # including while a selected file is being checked asynchronously.
+    foreach(case choices-sort choices-data choices-program choices-reentrant choices-external choices-pending-sort choices-pending-hidden)
+        add_test(NAME framework.installed_files.gtk4.${case} COMMAND umicom-installed-files-gtk4-test ${case})
+        set_tests_properties(framework.installed_files.gtk4.${case} PROPERTIES TIMEOUT 40 SKIP_RETURN_CODE 77 LABELS "framework;developer;install;gtk4;ownership;regression")
+    endforeach()
 endfunction()
 umicom_attach_installed_files_native_checks()
 if(NOT TARGET umicom_ui_gtk4)

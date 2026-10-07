@@ -5,6 +5,9 @@
  * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
+/* Drawing undo/redo and its snapshot are declared by the shared history
+ * contract; do not depend on another chart header including it incidentally. */
+#include "umicom/trading/chart_history.h"
 #include "../trading_execution/order_review_fixture.h"
 #include "umicom/trading_ui/gtk4/interactive_chart.h"
 #include "umicom/chart/drawing_appearance.h"

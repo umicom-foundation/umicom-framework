@@ -18,7 +18,14 @@ struct UmiGtk4WorkspaceLibraryExchange {
     UmiGtk4WorkspaceLibrarySavedReviewHandler saved_handler;
     void *saved_context;
     bool saved_review;
+/* GtkFileDialog uses the supported GTK 4.10 asynchronous contract.
+ * The existing busy gate and cancellable continue to own one file operation.
+ * The superseded implementation is retained below for engineering review. */
+#if 0
     GtkFileChooserNative *chooser;
+#endif
+    /* One owned dialog participates in the existing busy/cancellation lifetime. */
+    GtkFileDialog *chooser;
     GCancellable *cancel;
     GInputStream *input;
     GByteArray *incoming;
@@ -275,6 +282,11 @@ static void written(GObject *source, GAsyncResult *result, gpointer data)
 
 /* A chooser is owned until its response is consumed or the controller closes.
  * No path is retained as apply authority; import keeps the bytes it reviewed. */
+/* The native-dialog response API is deprecated. Use the supported
+ * async/finish pair, preserving owned GFile cleanup, cancellation, private
+ * export bytes and the existing reviewed-import pipeline.
+ * The superseded implementation is retained below for engineering review. */
+#if 0
 static void chosen(GtkNativeDialog *dialog, int response, gpointer data)
 {
     UmiGtk4WorkspaceLibraryExchange *ui = retain(data);
@@ -288,12 +300,57 @@ static void chosen(GtkNativeDialog *dialog, int response, gpointer data)
     else g_file_read_async(file, G_PRIORITY_DEFAULT, ui->cancel, opened, retain(ui));
     g_object_unref(file); release(ui);
 }
+#endif
+/* Consume the asynchronous result even after close; only a current live owner starts I/O. */
+static void chosen(GObject *source, GAsyncResult *result, gpointer data)
+{
+    /* The launch owns this reference until this completion, including close
+     * and cancellation. Finish always consumes the result, even after teardown. */
+    UmiGtk4WorkspaceLibraryExchange *ui = data;
+    GError *error = NULL;
+    GFile *file = ui->exporting
+        ? gtk_file_dialog_save_finish(GTK_FILE_DIALOG(source), result, &error)
+        : gtk_file_dialog_open_finish(GTK_FILE_DIALOG(source), result, &error);
+    const bool current = ui->chooser == GTK_FILE_DIALOG(source);
+    if (current) g_clear_object(&ui->chooser);
+    if (ui->destroyed || !current || file == NULL) {
+        if (!ui->destroyed && current && error != NULL &&
+            !g_error_matches(error, GTK_DIALOG_ERROR, GTK_DIALOG_ERROR_DISMISSED) &&
+            !g_error_matches(error, GTK_DIALOG_ERROR, GTK_DIALOG_ERROR_CANCELLED) &&
+            !g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+            message(ui, error->message);
+        g_clear_error(&error);
+        g_clear_object(&file);
+        if (ui->destroyed || current) finish_io(ui);
+        release(ui);
+        return;
+    }
+    g_clear_error(&error);
+    /* Keep the existing private export and bounded streaming importer. A
+     * chooser result selects a file; it never grants permission to apply it. */
+    if (ui->exporting)
+        g_file_replace_contents_async(file, ui->outgoing, ui->outgoing_size, NULL, FALSE,
+            G_FILE_CREATE_PRIVATE, ui->cancel, written, retain(ui));
+    else
+        g_file_read_async(file, G_PRIORITY_DEFAULT, ui->cancel, opened, retain(ui));
+    g_object_unref(file);
+    release(ui);
+}
 static void choose_file(GtkButton *button, gpointer data)
 {
     UmiGtk4WorkspaceLibraryExchange *ui = retain(data);
     if (ui->destroyed || ui->busy) { release(ui); return; }
     ui->busy = true; ui->exporting = GTK_WIDGET(button) == ui->export_button;
+/* Review invalidation can notify GTK observers that close the product.
+ * Recheck retirement before resetting cancellation or calling its owner.
+ * The superseded implementation is retained below for engineering review. */
+#if 0
     forget_review(ui); controls(ui);
+    g_cancellable_reset(ui->cancel);
+#endif
+    /* Notifications may retire the controller; recheck before continuing owner work. */
+    forget_review(ui); controls(ui);
+    if (ui->destroyed) { finish_io(ui); release(ui); return; }
     g_cancellable_reset(ui->cancel);
     if (ui->exporting) {
         size_t size = 0U;
@@ -311,6 +368,11 @@ static void choose_file(GtkButton *button, gpointer data)
             finish_io(ui); release(ui); return;
         }
     }
+/* Choose through GtkFileDialog without changing export/import labels,
+ * suggested filename, cancellation or the explicit review-and-apply boundary.
+ * No deprecated chooser API or diagnostic suppression is needed.
+ * The superseded implementation is retained below for engineering review. */
+#if 0
     GtkRoot *root = gtk_widget_get_root(ui->root);
     ui->chooser = gtk_file_chooser_native_new(ui->exporting ? "Export layout library" : "Review layout file",
         GTK_IS_WINDOW(root) ? GTK_WINDOW(root) : NULL,
@@ -319,6 +381,30 @@ static void choose_file(GtkButton *button, gpointer data)
     if (ui->exporting) gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(ui->chooser), "workspace-layouts.umicom-layouts");
     g_signal_connect(ui->chooser, "response", G_CALLBACK(chosen), ui);
     gtk_native_dialog_show(GTK_NATIVE_DIALOG(ui->chooser)); release(ui);
+}
+#endif
+    /* Configure the supported asynchronous chooser without changing review or export authority. */
+    if (ui->destroyed) { finish_io(ui); release(ui); return; }
+    GtkRoot *root = gtk_widget_get_root(ui->root);
+    GtkFileDialog *dialog = gtk_file_dialog_new();
+    gtk_file_dialog_set_title(dialog, ui->exporting ? "Export layout library" : "Review layout file");
+    gtk_file_dialog_set_accept_label(dialog, ui->exporting ? "Export" : "Review");
+    if (ui->exporting)
+        gtk_file_dialog_set_initial_name(dialog, "workspace-layouts.umicom-layouts");
+    if (ui->destroyed) {
+        g_object_unref(dialog);
+        finish_io(ui); release(ui); return;
+    }
+    ui->chooser = dialog;
+    /* GTK retains the dialog during the asynchronous call. Our separate
+     * controller reference keeps byte buffers alive until chosen completes. */
+    if (ui->exporting)
+        gtk_file_dialog_save(dialog, GTK_IS_WINDOW(root) ? GTK_WINDOW(root) : NULL,
+            ui->cancel, chosen, retain(ui));
+    else
+        gtk_file_dialog_open(dialog, GTK_IS_WINDOW(root) ? GTK_WINDOW(root) : NULL,
+            ui->cancel, chosen, retain(ui));
+    release(ui);
 }
 static void apply_review(GtkButton *button, gpointer data)
 {
@@ -423,9 +509,16 @@ void umi_gtk4_ws_library_exchange_destroy(UmiGtk4WorkspaceLibraryExchange *ui)
     ui->saved_handler = NULL; ui->saved_context = NULL;
     g_signal_handlers_disconnect_by_data(ui->export_button, ui); g_signal_handlers_disconnect_by_data(ui->import_button, ui);
     g_signal_handlers_disconnect_by_data(ui->apply_button, ui); g_signal_handlers_disconnect_by_data(ui->confirm, ui);
+/* Cancellation above closes the asynchronous dialog. Release only our
+ * dialog reference here; GTK retains its source and chosen owns the final
+ * controller reference until the cancelled result has been consumed.
+ * The superseded implementation is retained below for engineering review. */
+#if 0
     if (ui->chooser != NULL) {
         g_signal_handlers_disconnect_by_data(ui->chooser, ui);
         gtk_native_dialog_destroy(GTK_NATIVE_DIALOG(ui->chooser)); g_clear_object(&ui->chooser);
     }
+#endif
+    g_clear_object(&ui->chooser);
     gtk_widget_set_sensitive(ui->root, FALSE); release(ui);
 }

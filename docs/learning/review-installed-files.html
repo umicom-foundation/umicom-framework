@@ -17,4 +17,11 @@
 <h2>Use the service in another frontend</h2><p>Include <code>umicom/developer_project/installed_files.h</code> and link the developer module. Call <code>UmiProjectInstalledFilesRead</code> on a worker with a copied profile and optional cancellation token. Retain the returned catalogue while displaying rows. Call <code>UmiProjectInstalledFilesSelect</code> on a worker for an explicit choice, then apply the resulting profile separately on the owning UI thread. Destroy the catalogue only after all readers finish.</p>
 <p>Future frontends can reuse the same parsing, cancellation and stale-file checks. Support for component installs should be a separate explicit manifest choice, rather than silently guessing which install run a user intended.</p>
 <p>See the <a href="https://cmake.org/cmake/help/latest/command/install.html">CMake install reference</a> for install prefixes and components.</p>
+<section><h2>Find a program in a long install list</h2>
+<ol><li>Read installed files after a successful full installation.</li>
+<li>Enter part of a path, or <strong>program candidate</strong> to find executable candidates. Choose Original order, Text A-Z or Text Z-A, then press <strong>Apply filter and order</strong>. Matching is literal; Ignore case folds ASCII letters only.</li>
+<li>Select a visible row and inspect its full path and status. Filtering a selected file out clears its selection. Clear the text and apply again to recover the complete list.</li>
+<li>Choose <strong>Use installed program</strong>. The manifest and file are checked again before the path is copied. Reordering during that check keeps the same file identity; hiding it or choosing another row refuses the late result.</li>
+<li>Review Program to run, arguments and the working folder, then Apply Settings. Run remains a separate action.</li></ol>
+<p>A new manifest read clears the previous selection and keeps the applied filter. If no rows appear, clear that filter. A failed read or changed input requires another read; a matching label never substitutes for executable validation.</p></section>
 <footer>Sammy Hegab · Umicom Foundation · MIT</footer></main></html>

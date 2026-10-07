@@ -22,6 +22,11 @@ static bool DeveloperTargetBusy(const UmiGtk4DeveloperDialog *dialog)
 {
     size_t source = 0U;
     if (dialog->targetFilter != NULL && UmiGtk4FilteredChoicesSelectedSource(dialog->targetFilter, &source) == UMI_STATUS_BUSY) return true;
+    /* Installed-file filtering publishes a model and source mapping together.
+     * Other discovery actions must wait until that publication has finished. */
+    if (dialog->installedFilter != NULL &&
+        UmiGtk4FilteredChoicesSelectedSource(dialog->installedFilter, &source) == UMI_STATUS_BUSY)
+        return true;
     /* A program choice must not race a second discovery or profile acceptance. */
     if (dialog->installedLoading || dialog->installedChanging) return true;
     return dialog->targetLoading || dialog->targetChanging || dialog->presetLoading ||

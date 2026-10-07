@@ -26,9 +26,20 @@ int umi_quote_valid(const UmiQuote *q){
      * every terminator before the domain rules use these strings. Add each
      * new text field here so malformed input never reaches an unbounded read. */
     if (q == NULL) return 0;
+/* Trading quotes own an instrument and bid/ask values, not a Finance
+ * market-data key. Check the actual bounded instrument fields without
+ * changing the established price/size rules, public type or midpoint logic.
+ * The superseded implementation is retained below for engineering review. */
+#if 0
     if (memchr(q->key.key_id.value, '\0', sizeof(q->key.key_id.value)) == NULL) return 0;
     if (memchr(q->key.name, '\0', sizeof(q->key.name)) == NULL) return 0;
     if (memchr(q->key.code, '\0', sizeof(q->key.code)) == NULL) return 0;
+#endif
+    /* Check only the Trading instrument's bounded text before price calculations. */
+    if (memchr(q->instrument.instrument_id.value, '\0', sizeof(q->instrument.instrument_id.value)) == NULL) return 0;
+    if (memchr(q->instrument.symbol, '\0', sizeof(q->instrument.symbol)) == NULL) return 0;
+    if (memchr(q->instrument.venue, '\0', sizeof(q->instrument.venue)) == NULL) return 0;
+    if (memchr(q->instrument.currency.code, '\0', sizeof(q->instrument.currency.code)) == NULL) return 0;
 return q!=NULL&&isfinite(q->bid)&&isfinite(q->ask)&&isfinite(q->bid_size)&&isfinite(q->ask_size)&&q->bid>0.0&&q->ask>=q->bid&&q->bid_size>=0.0&&q->ask_size>=0.0;}
 /* Provide the quote mid operation used by this module and its client applications. */
 /*
@@ -40,6 +51,13 @@ double umi_quote_mid(const UmiQuote *q){return umi_quote_valid(q)?q->bid+(q->ask
 /* Provide the quote spread operation used by this module and its client applications. */
 double umi_quote_spread(const UmiQuote *q){return umi_quote_valid(q)?q->ask-q->bid:0.0;}
 
+/* These field-wise archive definitions implement the distinct Finance quote
+ * contract declared in umicom/finance/core/quote.h. Their active definitions
+ * now live in src/finance/core/quote.c and are checked in the Finance symbol
+ * manifest. Trading and Finance must not reinterpret one another's UmiQuote
+ * layout or publish duplicate archive symbols.
+ * The superseded implementation is retained below for engineering review. */
+#if 0
 /* State transfer belongs to this Framework value owner. Explicit fields keep
  * padding and unused text out of saved data. Extend both directions and the
  * schema identity when adding a field; migrate incompatible saved state
@@ -96,3 +114,4 @@ static UmiStatus UmiQuoteArchiveValidate(const UmiQuote *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_quote_archive_encode, umi_quote_archive_decode,
     UmiQuote, UmiQuoteArchiveSchema, UmiQuoteArchiveBound, UmiQuoteArchiveWrite, UmiQuoteArchiveRead, UmiQuoteArchiveValidate)
+#endif

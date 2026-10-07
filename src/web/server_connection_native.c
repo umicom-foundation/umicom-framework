@@ -51,7 +51,18 @@ static UmiStatus SocketPrepare(WebSocket socket, bool sending)
 {
 #ifdef _WIN32
     u_long enabled = 1UL;
+/* Winsock takes its ioctl command as a signed long even though FIONBIO
+ * is defined with an unsigned high bit. Convert explicitly at this Windows
+ * API boundary, preserving the command bits and the non-inheritable socket
+ * check; do not weaken conversion diagnostics for the rest of the module.
+ * The superseded implementation is retained below for engineering review. */
+#if 0
     if (ioctlsocket(socket, FIONBIO, &enabled) != 0 ||
+        !SetHandleInformation((HANDLE)socket, HANDLE_FLAG_INHERIT, 0))
+        return UMI_STATUS_IO_ERROR;
+#endif
+    /* Convert only the Windows command argument; both socket checks remain required. */
+    if (ioctlsocket(socket, (long)FIONBIO, &enabled) != 0 ||
         !SetHandleInformation((HANDLE)socket, HANDLE_FLAG_INHERIT, 0))
         return UMI_STATUS_IO_ERROR;
     (void)sending;

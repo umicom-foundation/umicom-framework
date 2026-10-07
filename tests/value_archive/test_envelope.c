@@ -105,7 +105,17 @@ static int Numeric(void)
     unsigned char bytes[4096], before[sizeof(output)]; size_t size = 0U;
     REQUIRE(umi_chart_annotation_snapshot_archive_encode(&chart, bytes, sizeof(bytes), &size) == UMI_STATUS_OK);
     REQUIRE(umi_chart_annotation_snapshot_archive_decode(bytes, size, &output) == UMI_STATUS_OK);
+    /* Use the double-precision copysign contract to inspect the restored sign
+     * without a toolchain signbit macro narrowing this double to float. Check
+     * zero as well as its sign: an arbitrary negative value is not negative zero.
+     * The earlier assertion remains disabled for comparison; other checks stay. */
+#if 0
     REQUIRE(signbit(output.value1) && output.value2 == 123.125 && output.time1 == INT64_MIN && output.time2 == INT64_MAX);
+#endif
+    /* Use the double-precision copysign contract to inspect the restored sign
+     * without a toolchain signbit macro narrowing this double to float. */
+    REQUIRE(output.value1 == 0.0 && copysign(1.0, output.value1) < 0.0 &&
+        output.value2 == 123.125 && output.time1 == INT64_MIN && output.time2 == INT64_MAX);
     chart.value1 = NAN; size_t required = 99U;
     REQUIRE(umi_chart_annotation_snapshot_archive_encode(&chart, bytes, sizeof(bytes), &required) == UMI_STATUS_INVALID_ARGUMENT);
     REQUIRE(required == 99U);

@@ -50,6 +50,16 @@ static void DeveloperInstalledWorker(GTask *task, gpointer source, gpointer data
     }
     g_task_return_boolean(task, TRUE);
 }
+/* A worker captures a catalogue index, not a visible row number. Sorting may
+ * move that row while validation runs; hiding it or choosing another file must
+ * refuse the late result. Keep all native-to-domain index translation here. */
+static bool DeveloperInstalledSelectionCurrent(UmiGtk4DeveloperDialog *dialog,
+                                                const DeveloperInstalledRead *read)
+{
+    size_t source = SIZE_MAX;
+    return UmiGtk4FilteredChoicesSelectedSource(dialog->installedFilter, &source) == UMI_STATUS_OK &&
+           source == read->index;
+}
 /* The request owns a controller reference until completion. Closing or destroying
  * the form hides late results; retained buttons cannot revive a retired owner.
  * Keep the busy flag set through every GTK notification during publication. */
@@ -77,8 +87,13 @@ static void DeveloperInstalledDone(GObject *source, GAsyncResult *result, gpoint
         gtk_label_set_text(GTK_LABEL(dialog->installedDetail), text);
         g_free(text);
     }
+/* Resolve the selected source identity after asynchronous validation; visible order may have changed.
+ * The former implementation remains below for engineering review. */
+#if 0
     else if (read->selection != NULL &&
              (size_t)gtk_drop_down_get_selected(GTK_DROP_DOWN(dialog->installedPicker)) != read->index)
+#endif
+    else if (read->selection != NULL && !DeveloperInstalledSelectionCurrent(dialog, read))
     {
         gtk_label_set_text(
             GTK_LABEL(dialog->installedDetail),
@@ -120,10 +135,32 @@ static void DeveloperInstalledDone(GObject *source, GAsyncResult *result, gpoint
             gtk_string_list_append(names, text);
             g_free(text);
         }
+/* Shared filtered choices replace direct list publication so display order cannot change file identity.
+ * The former implementation remains below for engineering review. */
+#if 0
         dialog->installedCatalogue = read->catalogue;
         read->catalogue = NULL;
         gtk_drop_down_set_model(GTK_DROP_DOWN(dialog->installedPicker), G_LIST_MODEL(names));
         g_object_unref(names); /* The setter retains its model. */
+#endif
+        /* Publish copied labels through Framework's common projection before
+         * transferring file evidence. Busy guards prevent callbacks from using
+         * the new mapping until the matching catalogue belongs to this form. */
+        const char **rows = g_new(const char *, summary.count + 1U);
+        for (size_t i = 0U; i < summary.count; ++i)
+            rows[i] = gtk_string_list_get_string(names, (guint)i);
+        UmiStatus mapped = UmiGtk4FilteredChoicesSetRows(dialog->installedFilter, rows, summary.count);
+        g_free(rows);
+        g_object_unref(names);
+        if (mapped != UMI_STATUS_OK)
+        {
+            if (DeveloperVisible(dialog))
+                gtk_label_set_text(GTK_LABEL(dialog->installedDetail),
+                    "Installed paths could not be displayed within the text limits. Manual program settings remain available.");
+            goto done;
+        }
+        dialog->installedCatalogue = read->catalogue;
+        read->catalogue = NULL;
         if (!DeveloperVisible(dialog))
             goto done;
         gtk_drop_down_set_selected(GTK_DROP_DOWN(dialog->installedPicker), GTK_INVALID_LIST_POSITION);
@@ -191,7 +228,13 @@ static void DeveloperInstalledStart(GtkButton *button, gpointer context)
     if (selecting)
     {
         read->selection = dialog->installedCatalogue;
+/* Resolve the selected file before starting validation; an absent or externally replaced model cannot select a program.
+ * The former implementation remains below for engineering review. */
+#if 0
         read->index = (size_t)gtk_drop_down_get_selected(GTK_DROP_DOWN(dialog->installedPicker));
+#endif
+        if (read->status == UMI_STATUS_OK)
+            read->status = UmiGtk4FilteredChoicesSelectedSource(dialog->installedFilter, &read->index);
     }
     else
     {
@@ -204,8 +247,14 @@ static void DeveloperInstalledStart(GtkButton *button, gpointer context)
     gtk_widget_set_sensitive(dialog->installedRead, FALSE);
     if (!DeveloperVisible(dialog))
         goto abandoned;
+/* A fresh manifest read retires both visible rows and their source mapping.
+ * The former implementation remains below for engineering review. */
+#if 0
     if (!selecting)
         gtk_drop_down_set_model(GTK_DROP_DOWN(dialog->installedPicker), NULL);
+#endif
+    if (!selecting)
+        (void)UmiGtk4FilteredChoicesSetRows(dialog->installedFilter, NULL, 0U);
     if (!DeveloperVisible(dialog))
         goto abandoned;
     gtk_label_set_text(GTK_LABEL(dialog->installedDetail),
@@ -238,8 +287,15 @@ static void DeveloperInstalledDetails(GObject *object, GParamSpec *property, gpo
     }
     dialog->installedChanging = 1;
     UmiProjectInstalledFile file;
+/* Details and program selection must read the same captured file after filtering or sorting.
+ * The former implementation remains below for engineering review. */
+#if 0
     guint index = gtk_drop_down_get_selected(GTK_DROP_DOWN(dialog->installedPicker));
     if (UmiProjectInstalledFilesAt(dialog->installedCatalogue, (size_t)index, &file) == UMI_STATUS_OK)
+#endif
+    size_t index = 0U;
+    if (UmiGtk4FilteredChoicesSelectedSource(dialog->installedFilter, &index) == UMI_STATUS_OK &&
+        UmiProjectInstalledFilesAt(dialog->installedCatalogue, index, &file) == UMI_STATUS_OK)
     {
         char *text = g_strdup_printf(
             "%s\nInspection: %s | Bytes: %" G_GUINT64_FORMAT "\n%s", file.path,
@@ -251,6 +307,9 @@ static void DeveloperInstalledDetails(GObject *object, GParamSpec *property, gpo
         gtk_label_set_text(GTK_LABEL(dialog->installedDetail), text);
         g_free(text);
     }
+    else if (DeveloperVisible(dialog))
+        gtk_label_set_text(GTK_LABEL(dialog->installedDetail),
+            "No installed file is selected. Choose a visible row, or clear and apply the filter to see all captured files.");
     dialog->installedChanging = 0;
     DeveloperRelease(dialog);
 }
@@ -259,6 +318,11 @@ static void DeveloperInstalledControls(UmiGtk4DeveloperDialog *dialog)
     dialog->installedRead = gtk_button_new_with_label("Read installed files");
     dialog->installedPicker = gtk_drop_down_new(NULL, NULL);
     gtk_drop_down_set_enable_search(GTK_DROP_DOWN(dialog->installedPicker), TRUE);
+    dialog->installedFilter = UmiGtk4FilteredChoicesCreate(GTK_DROP_DOWN(dialog->installedPicker));
+    (void)umi_gtk4_automation_tag_widget(dialog->installedFilter, "developer.installed.filter");
+    gtk_widget_set_tooltip_text(dialog->installedFilter,
+        "Find text in installed paths or inspection labels, then apply the filter. Sorting changes display order only.");
+    gtk_box_append(GTK_BOX(dialog->body), dialog->installedFilter);
     dialog->installedProgram = gtk_button_new_with_label("Use installed program");
     dialog->installedDetail = gtk_label_new(
         "After Install succeeds, review its files here. "
