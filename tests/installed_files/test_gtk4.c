@@ -181,6 +181,45 @@ int main(int argc, char **argv)
     GListModel *model = gtk_drop_down_get_model(GTK_DROP_DOWN(probe.picker));
     CHECK(model != NULL && g_list_model_get_n_items(model) == 2U);
     gtk_drop_down_set_selected(GTK_DROP_DOWN(probe.picker), strcmp(name, "data-selection") == 0 ? 1U : 0U);
+    /* These cases deliberately reorder source row zero behind a data file.
+     * Assertions check the selected path, not merely a changed dropdown label. */
+    bool choicesCase = strncmp(name, "choices-", 8U) == 0;
+    GtkWidget *filter = Find(GTK_WIDGET(form), "developer.installed.filter");
+    GtkWidget *query = filter != NULL ? Find(filter, "choices.query") : NULL;
+    GtkWidget *order = filter != NULL ? Find(filter, "choices.order") : NULL;
+    GtkWidget *filterApply = filter != NULL ? Find(filter, "choices.apply") : NULL;
+    if (choicesCase)
+    {
+        CHECK(query != NULL && order != NULL && filterApply != NULL);
+        if (strcmp(name, "choices-sort") == 0 || strcmp(name, "choices-reentrant") == 0)
+        {
+            if (strcmp(name, "choices-reentrant") == 0)
+                g_signal_connect(probe.picker, "notify::model", G_CALLBACK(Reenter), &probe);
+            gtk_drop_down_set_selected(GTK_DROP_DOWN(order), 1U);
+            g_signal_emit_by_name(filterApply, "clicked");
+            CHECK(gtk_drop_down_get_selected(GTK_DROP_DOWN(probe.picker)) == 1U);
+            CHECK(strstr(gtk_label_get_text(GTK_LABEL(detail)), fixture.program) != NULL);
+            CHECK(probe.calls == 0U && gtk_widget_get_sensitive(probe.read));
+            /* A final stable notification is allowed to start an action. This
+             * probe listens only to model publication while the mapping is busy. */
+            g_signal_handlers_disconnect_by_data(probe.picker, &probe);
+        }
+        else if (strcmp(name, "choices-data") == 0 || strcmp(name, "choices-program") == 0)
+        {
+            gtk_editable_set_text(GTK_EDITABLE(query), strcmp(name, "choices-data") == 0 ? "help.txt" : "program candidate");
+            g_signal_emit_by_name(filterApply, "clicked");
+            CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(GTK_DROP_DOWN(probe.picker))) == 1U);
+            gtk_drop_down_set_selected(GTK_DROP_DOWN(probe.picker), 0U);
+        }
+        else if (strcmp(name, "choices-external") == 0)
+        {
+            const char *labels[] = {"unrelated row", NULL};
+            GtkStringList *replacement = gtk_string_list_new(labels);
+            gtk_drop_down_set_model(GTK_DROP_DOWN(probe.picker), G_LIST_MODEL(replacement));
+            g_object_unref(replacement);
+            gtk_drop_down_set_selected(GTK_DROP_DOWN(probe.picker), 0U);
+        }
+    }
     if (strcmp(name, "read") == 0)
         goto cleanup;
     if (strcmp(name, "reentrant-entry") == 0)
@@ -190,10 +229,27 @@ int main(int argc, char **argv)
     g_signal_emit_by_name(probe.use, "clicked");
     if (strcmp(name, "selection-edit") == 0)
         gtk_editable_set_text(GTK_EDITABLE(program), "user-edited-program");
+    /* No main-context iteration occurs between request and remapping. The
+     * completion must compare source identity when it eventually reaches GTK. */
+    if (strcmp(name, "choices-pending-sort") == 0)
+    {
+        gtk_drop_down_set_selected(GTK_DROP_DOWN(order), 1U);
+        g_signal_emit_by_name(filterApply, "clicked");
+        CHECK(gtk_drop_down_get_selected(GTK_DROP_DOWN(probe.picker)) == 1U);
+    }
+    if (strcmp(name, "choices-pending-hidden") == 0)
+    {
+        gtk_editable_set_text(GTK_EDITABLE(query), "no matching installed path");
+        g_signal_emit_by_name(filterApply, "clicked");
+        CHECK(gtk_drop_down_get_model(GTK_DROP_DOWN(probe.picker)) == NULL);
+    }
     CHECK(WaitReady(probe.read));
     CHECK(probe.calls == 0U);
     if (strcmp(name, "selection-edit") == 0)
         CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(program)), "user-edited-program") == 0);
+    else if (strcmp(name, "choices-data") == 0 || strcmp(name, "choices-external") == 0 ||
+             strcmp(name, "choices-pending-hidden") == 0)
+        CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(program)), "previous-program") == 0);
     else if (strcmp(name, "removed-file") == 0 || strcmp(name, "data-selection") == 0)
         CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(program)), "previous-program") == 0);
     else

@@ -60,6 +60,8 @@ struct UmiGtk4DeveloperDialog {
     UmiCancellationToken *targetCancel; /* Borrowed from the active read task. */
     /* Shared install review owns its snapshot until the worker and dialog release it. */
     GtkWidget *installedRead, *installedPicker, *installedProgram, *installedDetail;
+    /* The shared filter owns copied labels; installedCatalogue owns file evidence. */
+    GtkWidget *installedFilter;
     UmiProjectInstalledFiles *installedCatalogue;
     UmiCancellationToken *installedCancel; /* Borrowed from the active worker. */
     int installedLoading, installedChanging, installedInvalidated;
@@ -366,6 +368,12 @@ static void ApplyClicked(GtkButton *button, gpointer context)
     /* A discovery update must not recursively accept or replace visible settings. */
     /* Cross-form operations wait until install review finishes publishing its result. */
     if (dialog->installedLoading || dialog->installedChanging) { DeveloperRelease(dialog); return; }
+    /* Profile acceptance cannot observe an installed-file mapping halfway
+     * through publication, even when a native notification reenters this form. */
+    size_t installedSource = 0U;
+    if (dialog->installedFilter != NULL &&
+        UmiGtk4FilteredChoicesSelectedSource(dialog->installedFilter, &installedSource) == UMI_STATUS_BUSY)
+    { DeveloperRelease(dialog); return; }
     if (dialog->targetLoading || dialog->targetChanging) { DeveloperRelease(dialog); return; }
     /* Native model publication can synchronously notify application extensions.
      * Applying the form waits until its source-index mapping is complete. */
