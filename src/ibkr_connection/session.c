@@ -67,6 +67,10 @@ const char *UmiIbkrConnectionStateName(UmiIbkrConnectionState state)
 }
 static void CloseIo(UmiIbkrConnection *c)
 {
+    UmiIbkrHistoricalConnectionClosed(c);
+    UmiIbkrRealtimeConnectionClosed(c);
+    UmiIbkrDiscoveryClosed(c);
+    UmiIbkrScannerCatalogClosed(c);
     if (c->ioOpened) { c->io.Close(c->io.context); c->ioOpened = false; }
 }
 static UmiStatus Fail(UmiIbkrConnection *c, UmiStatus status, const char *message)
@@ -134,11 +138,107 @@ UmiStatus UmiIbkrQueueFields(UmiIbkrConnection *c, const char *const *fields, si
                 strcmp(id,"63") && strcmp(id,"61") && strcmp(id,"64")))
         return UMI_STATUS_PERMISSION_DENIED;
 #endif
+    /* Historical requests contain 23 fields. The prior small-message bound is
+     * retained for review; the byte limit and explicit message gate still apply. */
+#if 0
     if (!c || !fields || count < 2U || count > 20U) return UMI_STATUS_INVALID_ARGUMENT;
+#endif
+    if (!c || !fields || count < 2U || count > 32U) return UMI_STATUS_INVALID_ARGUMENT;
     const char *id = fields[0];
+    /* Contract metadata adds read-only messages 9 and 91. Retain the earlier allowlist
+     * for review; order placement and cancellation remain forbidden. */
+#if 0
     if (!id || (strcmp(id,"71") && strcmp(id,"49") && strcmp(id,"62") &&
                 strcmp(id,"63") && strcmp(id,"61") && strcmp(id,"64") &&
                 strcmp(id,"1") && strcmp(id,"2") && strcmp(id,"59")))
+        return UMI_STATUS_PERMISSION_DENIED;
+#endif
+    /* Recent execution capture adds read-only message 7. Preserve the previous
+     * allowlist for comparison; placing or cancelling an order is not enabled. */
+#if 0
+    if (!id || (strcmp(id,"71") && strcmp(id,"49") && strcmp(id,"62") &&
+                strcmp(id,"63") && strcmp(id,"61") && strcmp(id,"64") &&
+                strcmp(id,"1") && strcmp(id,"2") && strcmp(id,"59") && strcmp(id,"9") && strcmp(id,"91")))
+        return UMI_STATUS_PERMISSION_DENIED;
+#endif
+    /* Keep the preceding allowlist for review. Contract search and P&L
+     * subscribe/cancel messages extend observation only; order commands remain
+     * excluded from this connection owner. */
+#if 0
+    if (!id || (strcmp(id,"71") && strcmp(id,"49") && strcmp(id,"62") &&
+                strcmp(id,"63") && strcmp(id,"61") && strcmp(id,"64") &&
+                strcmp(id,"1") && strcmp(id,"2") && strcmp(id,"59") && strcmp(id,"9") && strcmp(id,"91") && strcmp(id,"7")))
+        return UMI_STATUS_PERMISSION_DENIED;
+#endif
+    /* Depth adds request 10 and cancel 11 to the observation transport.
+     * The former gate remains for review; neither message changes an order. */
+#if 0
+    if (!id || (strcmp(id,"71") && strcmp(id,"49") && strcmp(id,"62") &&
+                strcmp(id,"63") && strcmp(id,"61") && strcmp(id,"64") &&
+                strcmp(id,"1") && strcmp(id,"2") && strcmp(id,"59") && strcmp(id,"9") && strcmp(id,"91") && strcmp(id,"7") &&
+                strcmp(id,"81") && strcmp(id,"92") && strcmp(id,"93") && strcmp(id,"94") && strcmp(id,"95")))
+        return UMI_STATUS_PERMISSION_DENIED;
+#endif
+    /* Preserve the earlier observation gate for review. Open-order requests
+     * add only 5 and 16; client zero, auto-binding and all order mutations stay
+     * unavailable. The native request owner validates the recovery scope. */
+#if 0
+    if (!id || (strcmp(id,"71") && strcmp(id,"49") && strcmp(id,"62") &&
+                strcmp(id,"63") && strcmp(id,"61") && strcmp(id,"64") &&
+                strcmp(id,"1") && strcmp(id,"2") && strcmp(id,"59") && strcmp(id,"9") && strcmp(id,"91") && strcmp(id,"7") &&
+                strcmp(id,"81") && strcmp(id,"92") && strcmp(id,"93") && strcmp(id,"94") && strcmp(id,"95") && strcmp(id,"10") && strcmp(id,"11")))
+        return UMI_STATUS_PERMISSION_DENIED;
+#endif
+    /* Completed history adds read request 99. Preserve the prior gate for
+     * review; this extension grants no order mutation or automatic binding. */
+#if 0
+    if (!id || (strcmp(id,"71") && strcmp(id,"49") && strcmp(id,"62") &&
+                strcmp(id,"63") && strcmp(id,"61") && strcmp(id,"64") &&
+                strcmp(id,"1") && strcmp(id,"2") && strcmp(id,"59") && strcmp(id,"9") && strcmp(id,"91") && strcmp(id,"7") &&
+                strcmp(id,"81") && strcmp(id,"92") && strcmp(id,"93") && strcmp(id,"94") && strcmp(id,"95") && strcmp(id,"10") && strcmp(id,"11") && strcmp(id,"5") && strcmp(id,"16")))
+        return UMI_STATUS_PERMISSION_DENIED;
+#endif
+    /* Historical data adds request 20 and cancellation 25. Retain the preceding
+     * gate for review. These messages cannot place, bind or cancel an order. */
+#if 0
+    if (!id || (strcmp(id,"71") && strcmp(id,"49") && strcmp(id,"62") &&
+                strcmp(id,"63") && strcmp(id,"61") && strcmp(id,"64") &&
+                strcmp(id,"1") && strcmp(id,"2") && strcmp(id,"59") && strcmp(id,"9") && strcmp(id,"91") && strcmp(id,"7") &&
+                strcmp(id,"81") && strcmp(id,"92") && strcmp(id,"93") && strcmp(id,"94") && strcmp(id,"95") && strcmp(id,"10") && strcmp(id,"11") && strcmp(id,"5") && strcmp(id,"16") && strcmp(id,"99")))
+        return UMI_STATUS_PERMISSION_DENIED;
+#endif
+    /* Retain the finite-capture gate for review. Streaming subscribe/cancel
+     * extends market observation only; order mutation messages remain excluded. */
+#if 0
+    if (!id || (strcmp(id,"71") && strcmp(id,"49") && strcmp(id,"62") &&
+                strcmp(id,"63") && strcmp(id,"61") && strcmp(id,"64") &&
+                strcmp(id,"1") && strcmp(id,"2") && strcmp(id,"59") && strcmp(id,"9") && strcmp(id,"91") && strcmp(id,"7") &&
+                strcmp(id,"81") && strcmp(id,"92") && strcmp(id,"93") && strcmp(id,"94") && strcmp(id,"95") && strcmp(id,"10") && strcmp(id,"11") && strcmp(id,"5") && strcmp(id,"16") && strcmp(id,"99") && strcmp(id,"20") && strcmp(id,"25")))
+        return UMI_STATUS_PERMISSION_DENIED;
+#endif
+    /* Scanner subscribe/cancel and option-definition discovery extend the
+     * read-only gate. Retain its predecessor for review; order mutations and
+     * broker configuration changes remain separate responsibilities. */
+#if 0
+    if (!id || (strcmp(id,"71") && strcmp(id,"49") && strcmp(id,"62") &&
+                strcmp(id,"63") && strcmp(id,"61") && strcmp(id,"64") &&
+                strcmp(id,"1") && strcmp(id,"2") && strcmp(id,"59") && strcmp(id,"9") && strcmp(id,"91") && strcmp(id,"7") &&
+                strcmp(id,"81") && strcmp(id,"92") && strcmp(id,"93") && strcmp(id,"94") && strcmp(id,"95") && strcmp(id,"10") && strcmp(id,"11") && strcmp(id,"5") && strcmp(id,"16") && strcmp(id,"99") && strcmp(id,"20") && strcmp(id,"25") && strcmp(id,"50") && strcmp(id,"51")))
+        return UMI_STATUS_PERMISSION_DENIED;
+#endif
+    /* Catalogue discovery adds read-only request 24. Retain the previous gate
+     * so the transport's authority remains straightforward to review. */
+#if 0
+    if (!id || (strcmp(id,"71") && strcmp(id,"49") && strcmp(id,"62") &&
+                strcmp(id,"63") && strcmp(id,"61") && strcmp(id,"64") &&
+                strcmp(id,"1") && strcmp(id,"2") && strcmp(id,"59") && strcmp(id,"9") && strcmp(id,"91") && strcmp(id,"7") &&
+                strcmp(id,"81") && strcmp(id,"92") && strcmp(id,"93") && strcmp(id,"94") && strcmp(id,"95") && strcmp(id,"10") && strcmp(id,"11") && strcmp(id,"5") && strcmp(id,"16") && strcmp(id,"99") && strcmp(id,"20") && strcmp(id,"25") && strcmp(id,"50") && strcmp(id,"51") && strcmp(id,"22") && strcmp(id,"23") && strcmp(id,"78")))
+        return UMI_STATUS_PERMISSION_DENIED;
+#endif
+    if (!id || (strcmp(id,"71") && strcmp(id,"49") && strcmp(id,"62") &&
+                strcmp(id,"63") && strcmp(id,"61") && strcmp(id,"64") &&
+                strcmp(id,"1") && strcmp(id,"2") && strcmp(id,"59") && strcmp(id,"9") && strcmp(id,"91") && strcmp(id,"7") &&
+                strcmp(id,"81") && strcmp(id,"92") && strcmp(id,"93") && strcmp(id,"94") && strcmp(id,"95") && strcmp(id,"10") && strcmp(id,"11") && strcmp(id,"5") && strcmp(id,"16") && strcmp(id,"99") && strcmp(id,"20") && strcmp(id,"25") && strcmp(id,"50") && strcmp(id,"51") && strcmp(id,"22") && strcmp(id,"23") && strcmp(id,"78") && strcmp(id,"24")))
         return UMI_STATUS_PERMISSION_DENIED;
     size_t length = 0;
     for (size_t i=0; i<count; ++i) {
@@ -163,9 +263,35 @@ static UmiStatus Ping(UmiIbkrConnection *c, uint64_t now)
 }
 static UmiStatus Drain(UmiIbkrConnection *c, uint64_t now, size_t *budget)
 {
+    /* A large catalogue is accumulated over multiple pump calls. The usual
+     * per-call byte budget remains unchanged, keeping the UI responsive. */
+    if (c->catalogFrame) {
+        if (c->catalogFrameSize >= 7U &&
+            memcmp(c->catalogFrame + 4U, "19\0", 3U))
+            return UMI_STATUS_PARSE_ERROR;
+        if (c->catalogFrameSize < c->catalogFrameCapacity || !*budget)
+            return UMI_STATUS_OK;
+        if (c->snapshot.framesReceived == UINT64_MAX)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        UmiStatus status = UmiIbkrScannerCatalogFrame(c, c->catalogFrame + 4U,
+            c->catalogFrameCapacity - 4U, now);
+        if (status != UMI_STATUS_OK) return status;
+        free(c->catalogFrame);
+        c->catalogFrame = NULL;
+        c->catalogFrameSize = c->catalogFrameCapacity = 0U;
+        ++c->snapshot.framesReceived;
+        --*budget;
+    }
     while (*budget && c->rxSize>=4U) {
         size_t length=((size_t)c->rx[0]<<24U)|((size_t)c->rx[1]<<16U)|((size_t)c->rx[2]<<8U)|c->rx[3];
+        /* Retain the former universal bound for review. Only the explicit
+         * catalogue owner can admit a larger, separately bounded message. */
+#if 0
         if (length==0 || length>UMI_IBKR_FRAME_LIMIT) return UMI_STATUS_CAPACITY_EXCEEDED;
+#endif
+        if (!length) return UMI_STATUS_CAPACITY_EXCEEDED;
+        if (length > UMI_IBKR_FRAME_LIMIT)
+            return UmiIbkrScannerCatalogBeginFrame(c, length);
         if (c->rxSize<length+4U) return UMI_STATUS_OK;
         if (c->snapshot.framesReceived==UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
         UmiStatus status=UmiIbkrProcessFrame(c,c->rx+4U,length,now);
@@ -182,6 +308,9 @@ UmiStatus UmiIbkrConnectionPump(UmiIbkrConnection *c, uint64_t now)
     if (!c->ioOpened || c->snapshot.state<UMI_IBKR_CONNECTING || c->snapshot.state>UMI_IBKR_READY)
         return UMI_STATUS_INVALID_STATE;
     c->lastNow=now;
+    UmiIbkrOrdersExpire(c,now);
+    UmiIbkrCompletedExpire(c,now);
+    UmiIbkrHistoricalExpire(c,now);
     if (c->snapshot.state!=UMI_IBKR_READY && now-c->startedAt>=c->options.timeoutMilliseconds)
         return Fail(c,UMI_STATUS_TIMEOUT,"API handshake timed out. Check login, API settings, port and client ID.");
     if (c->snapshot.requestIssued && (!c->snapshot.summaryComplete || !c->snapshot.positionsComplete) &&
@@ -209,18 +338,39 @@ UmiStatus UmiIbkrConnectionPump(UmiIbkrConnection *c, uint64_t now)
     UmiStatus status=Drain(c,now,&frames);
     if (status!=UMI_STATUS_OK) return Fail(c,status,c->snapshot.message[0]?NULL:"Invalid API message.");
     while (frames && bytes) {
+        /* The previous fixed receive destination remains below for review.
+         * A promoted catalogue uses its own buffer; ordinary frames still use
+         * the original storage and bounds. No borrowed pointer escapes Pump. */
+#if 0
         size_t room=sizeof c->rx-c->rxSize;
+#endif
+        unsigned char *destination = c->catalogFrame ?
+            c->catalogFrame + c->catalogFrameSize : c->rx + c->rxSize;
+        size_t room = c->catalogFrame ?
+            c->catalogFrameCapacity - c->catalogFrameSize : sizeof c->rx - c->rxSize;
         if (!room) return Fail(c,UMI_STATUS_CAPACITY_EXCEEDED,"Receive frame exceeds the configured bound.");
         if (room>bytes) room=bytes;
         if (room>4096U) room=4096U;
+        /* Read into the selected owned envelope; preserve the fixed-buffer
+         * call for comparison with the bounded catalogue path. */
+#if 0
         size_t received=0;status=c->io.Read(c->io.context,c->rx+c->rxSize,room,&received);
+#endif
+        size_t received=0;status=c->io.Read(c->io.context,destination,room,&received);
         if (status==UMI_STATUS_BUSY) {
             if(received!=0) return Fail(c,UMI_STATUS_IO_ERROR,"Invalid transport read progress.");
             break;
         }
         if (status!=UMI_STATUS_OK || received==0 || received>room)
             return Fail(c,UMI_STATUS_IO_ERROR,"Connection closed or read failed; retained observations are stale.");
+        /* Keep each receive size with its owning buffer. The earlier counter
+         * update remains for review because it applies to ordinary frames. */
+#if 0
         c->rxSize+=received;bytes-=received;
+#endif
+        if (c->catalogFrame) c->catalogFrameSize += received;
+        else c->rxSize += received;
+        bytes -= received;
         status=Drain(c,now,&frames);
         if (status!=UMI_STATUS_OK) return Fail(c,status,NULL);
     }
@@ -269,6 +419,12 @@ void UmiIbkrConnectionDestroy(UmiIbkrConnection *c)
 {
     if(!c)return;
     UmiIbkrConnectionClose(c);
+    UmiIbkrOrdersDestroy(c);
+    UmiIbkrCompletedDestroy(c);
+    free(c->history);
+    UmiIbkrDiscoveryDestroy(c);
+    UmiIbkrScannerCatalogDestroy(c);
+    for (size_t i=0; i<UMI_IBKR_REALTIME_STREAM_LIMIT; ++i) free(c->realtime[i]);
     if(c->DestroyIo)c->DestroyIo(c->io.context);
     free(c);
 }

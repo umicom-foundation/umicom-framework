@@ -263,8 +263,15 @@ bool UmiIbkrQuoteProviderMessage(UmiIbkrConnection *connection,
     if (!UmiIbkrUnsigned(requestText, &request)) return false;
     UmiIbkrQuoteSnapshot *quote = Find(connection, request);
     /* A response for a cancelled/reused request must not disconnect the account. */
+    /* Discovery, bars and other observations share this sequence. A missing
+     * quote is not evidence that their request has retired. Let the protocol
+     * dispatcher try every owner before its final retired-ID check; keep the
+     * old quote-only assumption here for engineering review. */
+#if 0
     if (request >= 36000U && request < connection->nextQuoteRequest &&
         (quote == NULL || !quote->subscribed)) return true;
+#endif
+    if (quote != NULL && !quote->subscribed) return true;
     if (quote == NULL || !quote->subscribed) return false;
     quote->failed = true;
     quote->providerCode = code;

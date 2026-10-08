@@ -61,3 +61,8 @@ if(BUILD_TESTING)
             RESOURCE_LOCK ctest_jobs_fixture TIMEOUT 30)
     endforeach()
 endif()
+
+# Live output checks share the real process runner and keep their own fixture lock.
+if(BUILD_TESTING)
+    include("${CMAKE_CURRENT_LIST_DIR}/../live_test_output/checks.cmake")
+endif()

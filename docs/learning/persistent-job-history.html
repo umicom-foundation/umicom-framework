@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Recording jobs that survive an application restart</title><style>body{font:17px/1.6 system-ui,sans-serif;max-width:920px;margin:3rem auto;padding:0 1.4rem;color:#203144}h1,h2{line-height:1.2}code,pre{font-family:Consolas,monospace}pre{background:#f1f4f7;padding:1rem;overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #c9d3df;padding:.7rem;text-align:left}a{color:#155bb0}</style></head><body><main><h1>Recording jobs that survive an application restart</h1>
+<p>A running process and its saved history describe different things. The process
+does the work; the history records what the application has observed. If the application
+stops before saving a final result, the history cannot tell whether the outside operation finished.</p>
+<h2>Use the shared Data Server</h2>
+<ol><li>Create a Data Server at a private, absolute SQLite database path. A memory server
+uses the same API but does not survive closing the application. Keep the database outside source repositories.</li>
+<li>Create a <code>UmiJobHistory</code> with a stable scope such as <code>studio.build</code>.
+The scope separates one feature's records from another feature's records.</li>
+<li>Call <code>UmiJobHistoryBegin</code> before scheduling work. Keep the returned identifier and revision.
+A revision is a counter that changes whenever the record changes.</li>
+<li>Save a <code>RUNNING</code> checkpoint before starting the authorised operation.
+Use the returned revision for the next update. If storage refuses a checkpoint, stop before starting more work.</li>
+<li>Save progress after each completed step, then record success, failure or cancellation.
+Success requires every planned step to have completed.</li>
+<li>On a later launch, call <code>UmiJobHistoryCapture</code> to read previous outcomes.
+Display unfinished entries as uncertain. Do not automatically submit them again.</li>
+<li>Join all workers, destroy the history handle, then close the Data Server.</li></ol>
+<p>The example <code>examples/data/job_history.c</code> demonstrates ownership and transitions.
+It records an example operation in memory and does not launch a compiler, trade, payment or provider request.</p>
+<h2>Attach history to a build session</h2>
+<pre>UmiJobHistory *history = NULL;
+/* database remains owned by the host until all session workers are joined. */
+UmiStatus status = UmiJobHistoryCreate(database, "studio.build", &amp;history);
+if (status == UMI_STATUS_OK)
+    status = UmiBuildProjectSessionSetHistory(session, history);</pre>
+<p>Handle a failure before submitting a build. If attachment succeeds, use the existing
+project-session submission API. Framework writes a prepared record before queueing,
+records the start before the first phase, and saves progress between phases.
+The existing workspace trust decision is still required.</p>
+<p><code>UmiBuildProjectSessionReadHistory</code> copies published metadata without reading the database.
+Use it for UI polling. If a storage error occurs after a successful phase, that phase's
+result remains available. The workflow stops before the next phase and the saved record
+may remain unfinished. Do not label the entire build successful from one phase result.</p>
+<h2>Understand refusals</h2>
+<table><tr><th>Result</th><th>What to do</th></tr>
+<tr><td>Busy</td><td>A competing transaction or a newer revision prevented the update.
+Read fresh evidence. A history write may be retried by its owner after review; this is never permission to replay the outside operation.</td></tr>
+<tr><td>Capacity exceeded</td><td>Each scope holds 64 jobs. Use <code>UmiJobHistoryPruneFinished</code>
+when the user chooses to discard finished metadata. It retains unfinished records and never reuses identifiers.</td></tr>
+<tr><td>Parse error</td><td>Records are malformed, inconsistent or use an unsupported storage format.
+Preserve the database for diagnosis. Do not replace unknown data with an empty history.</td></tr>
+<tr><td>I/O error</td><td>Check the private directory, free space and database access.
+Inspect the actual build outcome separately. A failed history write does not undo external work.</td></tr></table>
+<h2>Extend without duplicating policy</h2>
+<p>Media generation, imports and desktop tasks can reuse the store with their own scope and
+short captions. Their hosts must still implement provider-specific reconciliation and cancellation.
+The store does not manage worker leases, reconnect a provider, cancel a remote operation,
+guarantee exactly-once execution, or make payments and trades safe to replay.</p>
+<p>Each call owns a short Data Server transaction. Do not call from inside another transaction.
+Handles may share a server, but destruction requires all users to be stopped. SQLite persistence
+depends on the filesystem and storage hardware; history is not a power-loss guarantee or a tamper-proof audit log.</p>
+<p>Store only non-sensitive metadata. This database is not encrypted by the history API.
+Credentials, account details, prompts, signed URLs, command lines and raw output belong elsewhere.
+Captions are bounded byte strings; frontends should validate or repair UTF-8 before displaying them.</p>
+</main></body></html>

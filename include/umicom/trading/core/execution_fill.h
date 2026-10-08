@@ -23,6 +23,8 @@ extern "C" {
  */
 typedef struct UmiTradingExecutionFill { UmiFinancialId execution_id; UmiFinancialId client_order_id; UmiTradingQuantityLots quantity_lots; UmiTradingPriceTicks price_ticks; int64_t event_time_ms; } UmiTradingExecutionFill;
 /* Initialise and validate represent one integer-normalised venue fill for deterministic aggregation. */
+/* Invalid input leaves value unchanged. The identity arguments may refer to
+ * fields inside value; initialization copies them before publishing the fill. */
 UmiStatus umi_trading_execution_fill_init(UmiTradingExecutionFill *value,const UmiFinancialId * execution_id, const UmiFinancialId * client_order_id, UmiTradingQuantityLots quantity_lots, UmiTradingPriceTicks price_ticks, int64_t event_time_ms);
 /* Validate the invariant set for this trading record. */
 bool umi_trading_execution_fill_valid(const UmiTradingExecutionFill *value);

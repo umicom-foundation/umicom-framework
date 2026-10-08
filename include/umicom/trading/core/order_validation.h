@@ -24,6 +24,10 @@ extern "C" {
 #include "umicom/trading/core/lot_size_rule.h"
 #include "umicom/trading/core/price_band.h"
 /* Validate an order against reusable venue microstructure rules. */
+/* Both positive supplied prices must lie within the tick rule's inclusive range,
+ * align with its increment and satisfy an optional price band. Stop triggers
+ * receive the same checks as limits. An accepted decision is local arithmetic
+ * validation; it does not establish broker or route support. */
 UmiTradingCoreDecision umi_trading_order_validation_check(const UmiTradingOrderInstruction *instruction,const UmiTradingTickSizeRule *tick_rule,const UmiTradingLotSizeRule *lot_rule,const UmiTradingPriceBand *band);
 #ifdef __cplusplus
 }

@@ -1782,3 +1782,24 @@ endif()
 
 message(STATUS
     "Umicom real Debug Adapter Protocol runtime enabled")
+
+# Observed waits keep debugger initialization progress inside one request budget.
+if(BUILD_TESTING)
+    add_executable(umicom-debug-observed-wait-test "${CMAKE_CURRENT_LIST_DIR}/../tests/debug_runtime/test_observed_wait.c")
+    set_target_properties(umicom-debug-observed-wait-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-debug-observed-wait-test PRIVATE Umicom::Framework)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-debug-observed-wait-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-debug-observed-wait-test)
+    endif()
+    foreach(case invalid zero decline consume refusal consumed-refusal nested unrelated failed-reply)
+        add_test(NAME framework.debug_runtime.observed_wait.${case} COMMAND umicom-debug-observed-wait-test ${case})
+        set_tests_properties(framework.debug_runtime.observed_wait.${case} PROPERTIES
+            TIMEOUT 20 LABELS "framework;debugger;transport;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-debug-observed-wait-test)
+    endif()
+endif()

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Keep completed test evidence across restarts</title><style>body{font:17px/1.6 system-ui,sans-serif;max-width:980px;margin:3rem auto;padding:0 1.3rem;color:#203144}h1,h2{line-height:1.25}code,pre{font-family:Consolas,monospace}pre{background:#eef3f7;padding:1rem;overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccd5df;padding:.65rem;text-align:left;vertical-align:top}a{color:#155bb0}</style></head><body><main><h1>Keep completed test evidence across restarts</h1>
+
+<p>A test archive stores what a completed run observed. It keeps the original selection, repeat settings,
+outcomes and source context so a later viewer can explain which tests ran and which never started.
+Reading history does not mark the current checkout as tested and never executes a saved selection.</p>
+<h2>Choose the storage owner</h2>
+<p>Link <code>Umicom::test_archive</code> and include <code>umicom/testing/archive.h</code>.
+The archive uses the shared Data Server. Basic CTest execution still links through
+<code>Umicom::testing</code> without requiring this archive library. A memory Data Server is useful
+for transient sessions; SQLite retains records when the application restarts.</p>
+<ol><li>Create a Data Server at an explicitly selected private location. The caller owns that server.</li>
+<li>Call <code>UmiTestArchiveCreate</code> with a scope such as <code>studio.tests</code>.
+Scopes contain at most 64 ASCII letters, digits, dots, dashes or underscores.
+Each scope holds at most 32 saved runs.</li>
+<li>Keep the completed <code>UmiCtestJob</code> alive. Its immutable request copies contain
+the original test IDs, build directories, configurations, enabled flags and timeouts.</li>
+<li>Fill <code>UmiTestArchiveOrigin</code> from the context accepted when that run started.
+A caller-supplied revision description is optional. Neither a description nor a workspace generation
+proves that the checkout was clean or identifies every byte in a test executable.</li>
+<li>Choose whether to retain diagnostic output. The default zero-initialized value omits it.
+Names, paths and result metadata are still stored. SQLite storage here is not encrypted.</li>
+<li>Save only a terminal job. The archive copies its complete intended selection and completed
+results within one transaction. The difference between planned and completed attempts records
+work that never started; it is never treated as a pass.</li></ol>
+<h2>Keep an interactive application responsive</h2>
+<p>Include <code>umicom/testing/archive_write.h</code> to create and submit an
+<code>UmiTestArchiveWrite</code> on an existing task queue. Keep its archive, Data Server and source job alive.
+Do not replace the source job while saving. Poll <code>UmiTestArchiveWriteRead</code> on the UI thread;
+it copies memory and does not read the database.</p>
+<ol><li>Create the writer from a terminal job and a copied origin.</li>
+<li>Submit it once. A queue rejection leaves a created writer that can be retried or destroyed.</li>
+<li>Continue normal UI refresh. Stop calls <code>UmiTestArchiveWriteCancel</code> and returns promptly.</li>
+<li>Wait through polling until the writer is terminal. A nonzero <code>saved.id</code> means
+a database commit succeeded, even if cancellation arrived immediately afterward.</li>
+<li>Destroy the writer on its creating thread, then release the source job and archive when no longer needed.</li></ol>
+<p>Cancellation checked before commit rolls back the save. A failure to save is a storage result,
+not a new test verdict. Applications should show both outcomes independently.</p>
+<h2>Read, inspect and retain evidence</h2>
+<p><code>UmiTestArchiveList</code> returns metadata ordered by durable ID.
+<code>UmiTestArchiveRequestAt</code> addresses the original selection; <code>UmiTestArchiveResultAt</code>
+addresses completed invocations in execution order and returns a one-based repeat number.
+These are different indices when a selection repeats. Public errors leave output objects unchanged.</p>
+<p>Each save owns a new ID. IDs are not reused after removal. Remove a particular run with
+<code>UmiTestArchiveRemove</code>; its rows and metadata are removed atomically.
+There is no automatic eviction. The memory backend has a shared record limit and can fill before
+the archive reaches 32 runs. A capacity failure rolls back and preserves earlier evidence.</p>
+<p>Retained text is the adapter's bounded diagnostic tail, not a complete process log.
+Long records are split into values small enough for Data Server's existing 4 KiB limit.
+The archive validates chunk lengths and result identities; missing chunks are reported as corruption.
+A catalogue read validates metadata, not every stored result body. Archives are local records, not
+signed attestations: a user with database write access can modify them.</p>
+<h2>Handle common errors</h2>
+<table><tr><th>Result</th><th>What to do</th></tr>
+<tr><td>BUSY</td><td>The job is still running, a save owns the archive, or the Data Server is already in a transaction.
+Poll later. Do not commit or roll back a transaction you did not acquire.</td></tr>
+<tr><td>CAPACITY_EXCEEDED</td><td>Keep the original job available. Remove a specifically reviewed old run or select
+another private database, then save again.</td></tr>
+<tr><td>PARSE_ERROR</td><td>Keep the database for diagnosis. A saved record is incomplete or unsupported.
+Do not replace it with an empty archive or present its unreadable results as passed.</td></tr>
+<tr><td>IO_ERROR</td><td>Check the selected location, space and permissions. The original run remains unchanged.
+A rollback failure must be resolved through the Data Server's recovery contract. An I/O error can leave the
+commit outcome uncertain; inspect the database before retrying rather than assuming no write occurred.</td></tr>
+<tr><td>UNAVAILABLE</td><td>Persistent SQLite support is absent from this build. Memory storage is transient.</td></tr></table>
+<p>Related: <a href="live-test-output.html">live test output</a> and
+<a href="persistent-job-history.html">shared job history</a>.</p>
+
+</main><section id="compare"><h2>Compare completed runs</h2>
+<p>Include <code>umicom/testing/archive_compare.h</code> and call
+<code>UmiTestArchiveCompare</code> with the baseline and candidate IDs. It reads both runs in one transaction and returns an owned comparison. Release it with <code>UmiTestArchiveComparisonDestroy</code>. The comparison stays readable after the archive closes; it does not contain diagnostic output.</p>
+<ol><li>Choose two saved runs from the same private archive.</li>
+<li>Read <code>UmiTestArchiveComparisonRead</code> for the total number of rows and each outcome category.</li>
+<li>Read rows with <code>UmiTestArchiveComparisonRowAt</code>. Each row includes the selected request and aggregate repeated-attempt counts on both sides.</li>
+<li>Inspect changed conditions and incomplete evidence before treating a result as a regression. Never use comparison rows as permission to run a test command.</li></ol>
+<p>Matching uses the exact build-directory, configuration and test name. Discovery IDs may change without changing identity. Paths are compared as bytes; aliases and case differences are not guessed. Duplicate matching keys are ambiguous and return a parse error.</p>
+<table><thead><tr><th>Category</th><th>Meaning</th></tr></thead><tbody>
+<tr><td>New failure after a complete pass</td><td>Every baseline attempt passed; the candidate has a failure, timeout or reporting error under the same recorded conditions.</td></tr>
+<tr><td>Complete pass after a failure</td><td>The baseline had a failure and every candidate attempt passed.</td></tr>
+<tr><td>Failure remains</td><td>Both runs contain failure evidence. Inspect the original attempts for details.</td></tr>
+<tr><td>Execution conditions changed</td><td>The source root, repeat count, early-stop policy, timeout or enabled flag changed. Counts are still shown, but no regression claim is made.</td></tr>
+<tr><td>Incomplete evidence</td><td>At least one side contains cancelled, not-run or never-started attempts without a stronger observed failure/recovery classification.</td></tr>
+<tr><td>Added or removed</td><td>The named test and execution location occur in only one selection.</td></tr>
+<tr><td>Unchanged or changed outcome</td><td>The recorded outcome counts agree or differ. A skipped test can have an unchanged outcome; that does not mean it passed.</td></tr>
+</tbody></table>
+<p>Duration changes alone do not change classification. Equal caller-supplied revision labels do not prove that source files or executables are identical. Comparisons report observed evidence, not the cause of a failure or release readiness.</p>
+<h3>Keep native interfaces responsive</h3>
+<p>For interactive hosts, include <code>umicom/testing/archive_review.h</code>. Create a review, submit it to a Framework task queue and poll <code>UmiTestArchiveReviewRead</code>. The worker reads storage while the UI copies only memory. <code>ready</code> identifies a fully captured comparison, even if cancellation arrived just after capture.</p>
+<p>Keep the archive and queue alive until the review is terminal. Request cancellation before closing, continue polling, then destroy the review. A pending destroy returns <code>BUSY</code>. Do not wait for a worker inside a GTK callback. Present results in bounded pages for large suites.</p>
+<p>If storage is busy, retry after the current transaction finishes. Missing or corrupt rows fail the entire comparison; no partial result is published. A comparison failure leaves the caller's existing comparison pointer unchanged. Preserve the database for diagnosis rather than removing individual storage keys.</p></section>
+
+</body></html>

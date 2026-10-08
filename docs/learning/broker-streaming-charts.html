@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Streaming broker charts — Umicom Framework</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:980px;margin:40px auto;padding:0 24px;color:#202b35}
+h1,h2{line-height:1.2}code,pre{background:#eef3f6}pre{padding:16px;overflow:auto}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bac8d2;padding:9px;text-align:left}a{color:#065b91}</style></head>
+<body><h1>Streaming five-second broker charts</h1>
+<p>The broker workbench can request five-second price bars from a local TWS or IB Gateway session.
+A bar records the open, highest, lowest and closing price during an interval. The shared Framework
+owns subscriptions and decimal records; the native view uses the existing chart renderer.</p>
+<h2>Start a chart</h2>
+<ol><li>Sign in to TWS or IB Gateway and enable its socket API. Open the broker connection window in
+Umicom Trader, choose the intended Paper or Live profile, and connect. Check the reported accounts.
+The selected profile and port do not prove which account environment the server is using.</li>
+<li>Use contract discovery to establish the instrument's contract ID and exchange route.
+Enter those values in the <strong>Contract ID</strong> and <strong>Exchange</strong> fields.
+The application does not guess a route from a symbol.</li>
+<li>Expand <strong>Streaming five-second chart</strong>. Choose Trades, Midpoint, Bid or Ask,
+and decide whether to request only regular trading hours.</li>
+<li>Select <strong>Start five-second bars</strong>. Expect a waiting message until the first valid bar
+arrives. Data availability depends on the instrument, session and your broker permissions.</li>
+<li>Change <strong>Visible bars (zoom)</strong> and <strong>Older bars offset (pan)</strong> to inspect
+the retained window. Zero offset follows its newest bars. These controls do not request more data.
+An older offset is relative to a moving window; it does not freeze a particular timestamp.</li>
+<li>Select <strong>Cancel streaming bars</strong> before changing instruments or starting another
+subscription in this panel. Cancellation retains the records for inspection and export.</li></ol>
+<h2>Understand the window</h2>
+<table><thead><tr><th>Observation</th><th>Meaning</th></tr></thead><tbody>
+<tr><td>Retained bars</td><td>At most 512 bars remain in each subscription. The oldest leaves the window when a new bar arrives after capacity is reached.</td></tr>
+<tr><td>Discarded bars</td><td>The number no longer present in this rolling window. This is not a permanent market-history archive.</td></tr>
+<tr><td>Gap events</td><td>Consecutive bars were not exactly five seconds apart. Closed trading hours can cause gaps. Missing prices are never invented.</td></tr>
+<tr><td>Stale</td><td>No bar has arrived, the series stopped, or no newly accepted bar arrived within the view's 15-second freshness window. Stale charts are cleared; raw records remain available.</td></tr>
+<tr><td>Volume</td><td>The broker's original units are retained. They are not automatically converted to shares or lots. Midpoint, Bid and Ask do not advertise trade volume, weighted average price or trade count.</td></tr>
+</tbody></table>
+<p>An identical repeat does not refresh the receipt time. A conflicting repeat, out-of-order bar or
+broker correction retires the series. Cancel it and start a fresh subscription after reviewing the
+message. A new connection requires an explicit new subscription; there is no automatic resubmission.</p>
+<h2>Save a report</h2>
+<ol><li>Enter a new absolute CSV path in the streaming panel, for example
+<code>C:\Users\Public\Documents\streaming-bars.csv</code>, using a directory that already exists.</li>
+<li>Select <strong>Write new streaming-bar report</strong>. The report captures the retained rows at that
+moment, including contract, data kind, regular-hours selection, request identity, receipt times,
+stale and failure flags, broker error code, discarded bars and gaps.</li>
+<li>Wait for the saved message. Existing files are never replaced. If writing fails, inspect any
+partial new file and select a different path before retrying.</li></ol>
+<p>The report owns its bytes before the background write starts. Later bars, cancellation, reconnection
+or closing the window cannot change that captured report. Text cells are protected from spreadsheet
+formula interpretation. Raw price text and exact-decimal flags are exported together.</p>
+<h2>Use the shared C interface</h2>
+<pre><code>UmiIbkrRealtimeQuery query = {0};
+query.contract.contractId = resolvedContractId;
+UmiStatus status = umi_text_copy(query.contract.exchange,
+                                 sizeof query.contract.exchange, resolvedExchange);
+if (status != UMI_STATUS_OK) return status;
+query.dataKind = UMI_IBKR_HISTORY_TRADES;
+query.regularHours = true;
+
+uint32_t requestId = 0;
+status = UmiIbkrRealtimeRequest(connection, &amp;query, nowMilliseconds, &amp;requestId);
+/* Continue pumping the connection on its owner thread. Check every status
+ * before using the request ID or copying the newest observation. */
+</code></pre>
+<p>Include <code>umicom/broker_connectivity/realtime_bars.h</code> and
+<code>umicom/base/text.h</code> and link <code>Umicom::ibkr_connection</code>.
+The connection supports four independent streaming slots.
+Serialize requests, pumping and copies on the same owner thread. Request and copy failures leave
+caller outputs untouched. Cancelled slots may be reused, with a new request ID.</p>
+<p><code>UmiIbkrRealtimeCopy</code> copies metadata and evaluates the caller's freshness limit.
+<code>UmiIbkrRealtimeBarCopy</code> reads chronological retained rows, with index zero the oldest.
+A received timestamp measures local arrival freshness, not market-time accuracy or entitlement.
+Do not use an inexact decimal value for exact financial arithmetic.</p>
+<p>Include <code>realtime_chart.h</code> and link the optional existing
+<code>Umicom::ibkr_historical_chart</code> target for candle and scene projection.
+Scene creation requires a fresh series and representable prices. The caller owns a successful scene.
+A scene is frozen: compare <code>receivedBars</code> and freshness before reusing it.
+Transport-only consumers do not need a graphics dependency.</p>
+<p><code>UmiIbkrRealtimeExportCsv</code> returns an owned CSV document and sets its output to null on failure.
+A stale or cancelled series remains exportable with its state attached to each row.
+Release the document with <code>UmiCsvDocumentDestroy</code>.</p>
+<h2>Recover from common problems</h2>
+<ul><li><strong>Busy:</strong> cancel the previous panel subscription and allow 15 seconds between
+new historical or streaming requests. This conservative local gate survives cancellation. Other
+applications and connections still consume account-wide broker limits.</li>
+<li><strong>No bars:</strong> verify the contract, route, trading session and market-data subscription.
+A waiting series is not evidence that real-time data is available.</li>
+<li><strong>Broker error or correction:</strong> inspect the code, cancel the affected subscription
+and explicitly request a new series when appropriate. Error 10225 is treated as a correction requiring
+a fresh series; retained prices are not silently rewritten.</li>
+<li><strong>Connection reset:</strong> reconnect and subscribe again. Previously retained bars remain stale.</li>
+<li><strong>Chart unavailable:</strong> review raw decimal values. If this build has no optional chart or
+Cairo adapter, the summary and export remain available.</li></ul>
+<h2>Supported scope</h2>
+<p>This adapter uses the bounded legacy TWS protocol range 151–176 and resolved contract IDs.
+It does not negotiate protobuf, provide tick-by-tick data, merge historical and streaming series,
+persist an unlimited history, or submit orders through this observation window.
+Availability of a request does not guarantee support for every instrument and route.</p>
+<p>For the broker requirements, see
+<a href="https://www.interactivebrokers.com/docs/tws-api/doc/market-data-live/5-second-bars/introduction">five-second bars</a>,
+<a href="https://www.interactivebrokers.com/docs/tws-api/doc/market-data-live/5-second-bars/request-real-time-bars">request fields and limits</a>
+and <a href="https://www.interactivebrokers.com/docs/tws-api/doc/market-data-live/5-second-bars/receive-real-time-bars">returned values</a>.</p>
+</body></html>

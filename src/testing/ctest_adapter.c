@@ -18,6 +18,7 @@
 #endif
 
 #include "umicom/testing/ctest_adapter.h"
+#include "umicom/testing/ctest_output.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -184,6 +185,10 @@ static void CtestDiagnostic(UmiTestResult *result, const char *message)
     memcpy(result->output + used, line, length + 1U);
 }
 
+/* Observed and quiet CTest runs share one verified execution path. The optional
+ * raw observer exposes progress without changing how final results are accepted.
+ * The previous implementation remains here for engineering review. */
+#if 0
 static UmiStatus CtestRunConfigured(const char *buildDirectory,
     const char *testName, const UmiCtestRunOptions *options,
     UmiTestResult *outResult)
@@ -303,6 +308,152 @@ cleanup:
             outResult->state = UMI_TEST_STATE_FAILED;
     }
     outResult->status = status;
+    return status;
+}
+#endif
+static UmiStatus CtestRunWithOutput(const char *buildDirectory,
+    const char *testName, const UmiCtestRunOptions *options,
+    UmiProcessOutputObserver observer, void *context, UmiTestResult *outResult)
+{
+    if (outResult == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Initialise even on rejected requests: Studio must never inspect garbage
+     * as a state, duration, exit code or captured output after an early error. */
+    memset(outResult, 0, sizeof *outResult);
+    outResult->state = UMI_TEST_STATE_NOT_RUN;
+    outResult->status = UMI_STATUS_INVALID_ARGUMENT;
+    outResult->exit_code = -1;
+    char pattern[UMI_CTEST_EXACT_PATTERN_CAPACITY];
+    UmiStatus status = UmiCtestEscapeName(testName, pattern, sizeof pattern);
+    if (status != UMI_STATUS_OK) { outResult->status = status; return status; }
+    if (buildDirectory == NULL || buildDirectory[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    const char *testId = options != NULL && options->test_id != NULL
+        ? options->test_id : testName;
+    if (testId[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    if (strlen(testId) >= sizeof outResult->test_id) {
+        outResult->status = UMI_STATUS_CAPACITY_EXCEEDED;
+        return outResult->status;
+    }
+    memcpy(outResult->test_id, testId, strlen(testId) + 1U);
+    memcpy(outResult->name, testName, strlen(testName) + 1U);
+    if (options != NULL && umi_cancellation_token_is_requested(options->cancellation)) {
+        outResult->state = UMI_TEST_STATE_CANCELLED;
+        outResult->status = UMI_STATUS_CANCELLED;
+        CtestDiagnostic(outResult, "Cancelled before launching CTest.");
+        return outResult->status;
+    }
+    UmiCtestReportFiles files;
+    char *xml = NULL; size_t xmlLength = 0U;
+    status = CtestReportCreate(&files);
+    if (status != UMI_STATUS_OK) {
+        CtestDiagnostic(outResult, "Cannot create a fresh private CTest report directory.");
+        goto cleanup;
+    }
+    const char *arguments[11]; size_t count = 0U;
+    arguments[count++] = "--test-dir"; arguments[count++] = buildDirectory;
+    arguments[count++] = "-R"; arguments[count++] = pattern;
+    arguments[count++] = "--output-on-failure";
+    /* CTest otherwise withholds passing-test output until the run finishes. */
+    if (observer != NULL) arguments[count++] = "--verbose";
+    arguments[count++] = "--no-tests=error";
+    arguments[count++] = "--output-junit"; arguments[count++] = files.path;
+    if (options != NULL && options->configuration != NULL &&
+        options->configuration[0] != '\0') {
+        arguments[count++] = "-C"; arguments[count++] = options->configuration;
+    }
+    UmiProcessRequest request;
+    UmiProcessResult process;
+    memset(&request, 0, sizeof request);
+    memset(&process, 0, sizeof process); process.exit_code = -1;
+    request.program = "ctest";
+    request.arguments = arguments; request.argument_count = count;
+    request.capture_stdout = 1; request.capture_stderr = 1;
+    request.window_mode = UMI_PROCESS_WINDOW_HIDDEN;
+    if (options != NULL) {
+        request.timeout_ms = options->timeout_ms;
+        request.cancellation = options->cancellation;
+    }
+    /* No shell parser, command-string interpolation or global chdir is used.
+     * CTest itself owns test properties, fixtures and WORKING_DIRECTORY. */
+    UmiStatus processStatus = UmiProcessExecuteWithLifetime(&request,
+        UMI_PROCESS_LIFETIME_TREE, NULL, observer, context, &process);
+    CtestCopyOutput(outResult, &process);
+    outResult->exit_code = process.exit_code;
+    outResult->duration_ms = process.duration_ms;
+    if (process.cancelled || processStatus == UMI_STATUS_CANCELLED) {
+        outResult->state = UMI_TEST_STATE_CANCELLED; status = UMI_STATUS_CANCELLED;
+        CtestDiagnostic(outResult, "CTest was cancelled; no pass is inferred from a partial report.");
+        goto cleanup;
+    }
+    if (process.timed_out || processStatus == UMI_STATUS_TIMEOUT) {
+        outResult->state = UMI_TEST_STATE_TIMED_OUT; status = UMI_STATUS_TIMEOUT;
+        CtestDiagnostic(outResult, "The complete CTest invocation exceeded its time limit.");
+        goto cleanup;
+    }
+    if (!process.launched) {
+        status = processStatus != UMI_STATUS_OK ? processStatus : UMI_STATUS_UNAVAILABLE;
+        CtestDiagnostic(outResult, "CTest did not launch; the selected test was not run.");
+        goto cleanup;
+    }
+    status = CtestReportRead(&files, &xml, &xmlLength);
+    if (status != UMI_STATUS_OK) {
+        CtestDiagnostic(outResult, "CTest did not produce a readable bounded JUnit report (CTest 3.21+ required).");
+        goto cleanup;
+    }
+    UmiCtestReportSnapshot report;
+    status = UmiCtestParseReport(xml, xmlLength, testName, &report);
+    if (status != UMI_STATUS_OK) {
+        CtestDiagnostic(outResult, status == UMI_STATUS_NOT_FOUND
+            ? "The report contains no exact result for the selected test. Refresh discovery and check the build root."
+            : "The CTest report is malformed, inconsistent, duplicated or outside the supported limits.");
+        goto cleanup;
+    }
+    outResult->state = report.state;
+    outResult->duration_ms = report.duration_ms;
+    if (report.message[0] != '\0') CtestDiagnostic(outResult, report.message);
+    if (report.state == UMI_TEST_STATE_TIMED_OUT) status = UMI_STATUS_TIMEOUT;
+    else if (report.state == UMI_TEST_STATE_FAILED) status = UMI_STATUS_INTERNAL_ERROR;
+    else if (report.state == UMI_TEST_STATE_NOT_RUN) status = UMI_STATUS_INVALID_STATE;
+    else if (processStatus != UMI_STATUS_OK || process.exit_code != 0) {
+        status = processStatus != UMI_STATUS_OK ? processStatus : UMI_STATUS_INTERNAL_ERROR;
+        /* A passing selected body is insufficient when a fixture, cleanup or
+         * CTest itself fails. Preserve the evidence, but fail the whole run. */
+        if (outResult->state == UMI_TEST_STATE_PASSED)
+            outResult->state = UMI_TEST_STATE_FAILED;
+        CtestDiagnostic(outResult, "CTest reported a run-level failure; inspect fixture and cleanup output.");
+    } else status = UMI_STATUS_OK;
+cleanup:
+    free(xml);
+    UmiStatus cleanupStatus = CtestReportCleanup(&files);
+    if (cleanupStatus != UMI_STATUS_OK) {
+        CtestDiagnostic(outResult, "Temporary report cleanup failed; unexpected files were not removed recursively.");
+        if (status == UMI_STATUS_OK) status = cleanupStatus;
+        if (outResult->state == UMI_TEST_STATE_PASSED)
+            outResult->state = UMI_TEST_STATE_FAILED;
+    }
+    outResult->status = status;
+    return status;
+}
+
+/* The legacy entry point remains quiet and follows exactly the same validation,
+ * report parsing and cleanup as an observed run. Adding output cannot bypass
+ * fixture failures or turn a partial report into a successful test. */
+static UmiStatus CtestRunConfigured(const char *buildDirectory,
+    const char *testName, const UmiCtestRunOptions *options, UmiTestResult *outResult)
+{
+    return CtestRunWithOutput(buildDirectory, testName, options, NULL, NULL, outResult);
+}
+
+UmiStatus UmiCtestRunObserved(const char *buildDirectory, const char *testName,
+    const UmiCtestRunOptions *options, UmiProcessOutputObserver observer,
+    void *context, UmiTestResult *outResult)
+{
+    if (outResult == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve input aliases into the output record until execution has read them. */
+    UmiTestResult result;
+    UmiStatus status = CtestRunWithOutput(buildDirectory, testName, options,
+        observer, context, &result);
+    *outResult = result;
     return status;
 }
 

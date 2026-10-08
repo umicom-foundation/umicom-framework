@@ -26,6 +26,9 @@ typedef struct UmiTradingPriceBand { UmiTradingPriceTicks reference_price; uint3
 /* Initialise a positive reference price and basis-point bands. */
 UmiStatus umi_trading_price_band_init(UmiTradingPriceBand *band,UmiTradingPriceTicks reference_price,uint32_t lower_bps,uint32_t upper_bps);
 /* Determine whether a price is inside the configured basis-point band. */
+/* The predicate rechecks reference and basis-point bounds because callers may
+ * construct public records without using the initializer. Invalid records
+ * return false without performing potentially overflowing arithmetic. */
 bool umi_trading_price_band_contains(const UmiTradingPriceBand *band,UmiTradingPriceTicks price);
 #ifdef __cplusplus
 }

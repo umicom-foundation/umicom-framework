@@ -452,3 +452,42 @@ if(BUILD_TESTING)
 endif()
 
 message(STATUS "Umicom trading, brokerage and exchange platform core enabled")
+
+# Boundary cases cover invalid public records, including zero divisors and stop prices.
+if(BUILD_TESTING)
+    add_executable(umicom-trading-price-boundaries-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/trading_core/test_price_validation_boundaries.c")
+    target_link_libraries(umicom-trading-price-boundaries-test PRIVATE Umicom::trading)
+    set_target_properties(umicom-trading-price-boundaries-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-trading-price-boundaries-test)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-trading-price-boundaries-test)
+    endif()
+    foreach(case valid-stop stop-tick stop-range limit-range stop-band unknown-type unknown-tif negative-price
+        unterminated-id invalid-band market zero-tick band-record volatility-record)
+        add_test(NAME framework.trading_core.price_boundaries.${case} COMMAND umicom-trading-price-boundaries-test ${case})
+        set_tests_properties(framework.trading_core.price_boundaries.${case} PROPERTIES
+            TIMEOUT 20 LABELS "framework;trading;validation;arithmetic;regression")
+    endforeach()
+endif()
+
+# Arithmetic cases use only normalized integer fills; no broker session is opened.
+if(BUILD_TESTING)
+    add_executable(umicom-trading-fill-boundaries-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/trading_core/test_fill_boundaries.c")
+    target_link_libraries(umicom-trading-fill-boundaries-test PRIVATE Umicom::trading)
+    set_target_properties(umicom-trading-fill-boundaries-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-trading-fill-boundaries-test)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-trading-fill-boundaries-test)
+    endif()
+    foreach(case weighted-up weighted-down large-up large-down same-price quantity-overflow empty-corrupt negative-total negative-average count-inconsistent invalid-fill alias-identities invalid-init unterminated-execution unterminated-order last-terminator first-large rounding)
+        add_test(NAME framework.trading_core.fill_boundaries.${case} COMMAND umicom-trading-fill-boundaries-test ${case})
+        set_tests_properties(framework.trading_core.fill_boundaries.${case} PROPERTIES
+            TIMEOUT 20 LABELS "framework;trading;execution;arithmetic;regression")
+    endforeach()
+endif()

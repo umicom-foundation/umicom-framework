@@ -20,4 +20,19 @@ UmiStatus umi_trading_price_band_init(UmiTradingPriceBand *band,UmiTradingPriceT
 /* Compare a positive difference with a basis-point allowance using quotient/remainder decomposition to avoid reference*bps overflow. */
 static bool within_bps(UmiTradingPriceTicks reference,UmiTradingPriceTicks difference,uint32_t bps){/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(difference<0)return false;int64_t q=reference/10000;int64_t r=reference%10000;uint64_t allowance=(uint64_t)q*(uint64_t)bps+((uint64_t)r*(uint64_t)bps)/10000U;return (uint64_t)difference<=allowance;}
 /* Determine whether a price is inside the configured basis-point band. */
+/* The former predicate trusted the initializer and could overflow when a
+ * caller supplied an invalid reference price. Validate the public record at
+ * the arithmetic boundary while retaining the former predicate for review. */
+#if 0
 bool umi_trading_price_band_contains(const UmiTradingPriceBand *band,UmiTradingPriceTicks price){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(band==NULL||price<0)return false;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(price>=band->reference_price)return within_bps(band->reference_price,price-band->reference_price,band->upper_bps);return within_bps(band->reference_price,band->reference_price-price,band->lower_bps);}
+#endif
+bool umi_trading_price_band_contains(const UmiTradingPriceBand *band,UmiTradingPriceTicks price)
+{
+    if(band==NULL || price<0 || band->reference_price<=0 ||
+        band->lower_bps>10000U || band->upper_bps>10000U) return false;
+    /* Positive reference and nonnegative price make either subtraction fit
+     * signed 64-bit storage. The validated basis points bound the allowance. */
+    if(price>=band->reference_price)
+        return within_bps(band->reference_price,price-band->reference_price,band->upper_bps);
+    return within_bps(band->reference_price,band->reference_price-price,band->lower_bps);
+}

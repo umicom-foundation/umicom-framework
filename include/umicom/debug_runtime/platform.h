@@ -136,6 +136,14 @@ UmiStatus umi_debug_runtime_platform_stop(
  * Provide the debug runtime platform restart operation used by this module and its client
  * applications.
  */
+/* Check the active adapter's capability without sending a request. Drain pending
+ * events before retrying BUSY. An uncertain attempted restart requires explicit
+ * Stop and a new session. Restart keeps the current launch configuration; it does
+ * not rebuild or emulate an unsupported operation by terminating the process.
+ * The restart call requires a nonzero timeout and retires thread, stack, scope
+ * and variable captures before writing, including when the reply later fails. */
+UmiStatus UmiDebugRuntimePlatformCheckRestart(UmiDebugRuntimePlatform *platform);
+
 UmiStatus umi_debug_runtime_platform_restart(
     UmiDebugRuntimePlatform *platform,
     uint32_t timeout_ms);

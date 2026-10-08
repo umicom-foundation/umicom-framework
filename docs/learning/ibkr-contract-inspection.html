@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Inspect an IBKR instrument in Umicom Trader</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:900px;margin:40px auto;padding:0 24px;color:#182633}h1,h2{line-height:1.25}code{background:#eef2f5;padding:2px 5px}aside{border-left:4px solid #247798;padding:10px 18px;background:#eff8fa}</style></head>
+<body><h1>Inspect an IBKR instrument</h1>
+<p>An instrument's contract identifier identifies the security that Interactive Brokers knows about.
+The contract inspector retrieves its description through the same read-only connection used for quotes.
+This lets you compare identity, route information and trading increments before preparing an order elsewhere.</p>
+<aside>Contract metadata does not establish that a particular route supports fill-or-kill or all-or-none.
+The inspector never submits an order and does not reserve displayed liquidity.</aside>
+<h2>Read the current quote's description</h2>
+<ol><li>Open Trader's IBKR connection window. Start with your paper session in TWS or IB Gateway and enable its API connection.</li>
+<li>Connect using the matching host, port and client identifier. Keep the broker's read-only API setting enabled.</li>
+<li>Subscribe to a quote using the exact contract identifier and exchange. Check the identifier against your broker's instrument description.</li>
+<li>Expand <strong>Instrument description and route metadata</strong>. Select <strong>Read current quote's contract description</strong>.</li>
+<li>Wait for <strong>end marker received</strong>. Until this appears, the response is incomplete. Compare the symbol, security type, currency, local symbol and trading class with your intended instrument.</li>
+<li>Read the reported order types, exchanges, minimum size and price information. A blank field means that this response did not provide a value. Do not substitute a default.</li></ol>
+<h2>Understand what the fields mean</h2>
+<p>A primary exchange helps describe an instrument's listing. The requested route and returned exchange
+are also shown so that you can see how the lookup was resolved. Exchange and order-type lists are separate
+pieces of metadata: their presence does not prove that every combination is permitted for your account.</p>
+<p>The minimum tick is price metadata. Some instruments use price bands with different increments, so a
+single minimum tick is not a complete price-validation rule. Use the route price-band view below to
+retrieve the reported rule. Price magnifiers and size increments are displayed without changing an order.
+The limit review uses the provider's quoted units; it does not convert currencies or apply a magnifier.</p>
+<h2>Review a limit against the selected route's price bands</h2>
+<ol><li>Keep the quote subscription active and finish its contract lookup. The native view requires one
+unambiguous description for the same contract and route.</li>
+<li>Expand <strong>Route price bands and limit review</strong> and select <strong>Read current route's price bands</strong>.
+Framework pairs each exchange with the market-rule identifier in the corresponding list position.</li>
+<li>Wait for the captured rule to become complete. Each row shows a lower price bound and its increment.</li>
+<li>Enter a positive limit in the full-quantity controls. The view chooses the greatest lower bound at or
+below that price and reports whether the limit aligns with its increment. Your price is never rounded.</li>
+<li>If you change the quote or contract lookup, request its bands again. Reconnect to retrieve fresh
+copies of previously requested rules.</li></ol>
+<p>A rule is requested at most once per connection because its response identifies the rule, not an individual
+request generation. Completed responses can be reused as historical metadata. A timed-out query cannot be
+retried on that connection, so a late reply cannot be misidentified as a fresh capture. The connection
+keeps up to eight rules with up to 64 bands each. Empty, stale and unsupported tables cannot approve a price.</p>
+<p>The shared arithmetic accepts exact fixed and scientific decimal notation with up to nine fractional
+places after removing trailing zeros. It refuses values that cannot be represented exactly. The band
+review supports nonnegative prices and a grid measured from zero; shifted grids are refused. Broker
+configuration can also affect some increments, including forex settings. A price alignment result does
+not check minimum lots, account permissions or FOK/AON restrictions.</p>
+<h2>Handle an incomplete or unavailable response</h2>
+<ol><li>If a lookup is pending, wait for completion or choose <strong>Abandon local contract review</strong>.
+Abandonment retires this local request. It does not cancel any order.</li>
+<li>If the lookup times out or the connection closes, treat displayed values as historical.
+Reconnect if necessary, subscribe to the correct quote and request a fresh description.</li>
+<li>If the provider refuses the query, review its displayed diagnostic and verify your contract identifier,
+route and API permissions in TWS. Do not remove an order restriction as a fallback.</li>
+<li>If the inspector reports an unsupported protocol or bond description, inspect the instrument in TWS.
+The current native decoder supports ordinary contract descriptions using the negotiated protocol range
+164 through 176; bond-specific responses are reported as unsupported.</li></ol>
+<p>The inspector keeps one local lookup at a time and accepts up to eight descriptions, each bound to the
+requested contract identifier. It rejects malformed or oversized responses instead of truncating them.
+Provider Unicode escape sequences in long names remain visible as text. A completed response is a captured
+description, not a continuously refreshed entitlement check.</p>
+<h2>Extend the shared implementation</h2>
+<p>The request owner and bounded decoder belong to Framework's broker-connectivity module.
+The native view only starts a request and presents copied metadata. New frontends can use
+<code>UmiIbkrContractDetailsRequest</code> and <code>UmiIbkrContractDetailsCopy</code> without depending on GTK.
+Keep request identity, completion markers and protocol gates intact when extending the decoder.</p>
+<p>See the official <a href="https://www.interactivebrokers.com/docs/tws-api/doc/contracts-financial-instruments/contract-details/request-contract-details">contract-details guide</a>
+the <a href="https://www.interactivebrokers.com/docs/tws-api/doc/orders/minimum-price-increment/introduction">price-increment guide</a>,
+and <a href="full-quantity-orders.html">Umicom's full-quantity review guide</a>.</p></body></html>

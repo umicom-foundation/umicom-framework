@@ -47,6 +47,10 @@ struct UmiDebugRuntimePlatform {
     int attached;
     int paused;
     uint64_t native_generation;
+    /* Lost restart replies must not trigger a second request. */
+    int restartUncertain;
+    int restartConfigurationPending;
+    DebugDeadline restartDeadline;
 };
 
 /*
@@ -258,6 +262,8 @@ static UmiStatus build_default_launch_arguments(
  * Provide the publish event envelope operation used by this module and its client
  * applications.
  */
+static UmiStatus RestartConfigure(UmiDebugRuntimePlatform *platform);
+
 static UmiStatus publish_event_envelope(
     UmiDebugRuntimePlatform *platform,
     const UmiDebugRuntimeEnvelope *envelope)
@@ -265,6 +271,8 @@ static UmiStatus publish_event_envelope(
     UmiDebugRuntimeEvent event;
     UmiStatus status;
 
+    /* Event publication must not wrap the revision that identifies inspection state. */
+    if (platform->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     status = umi_debug_runtime_decode_event(envelope->json, &event);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
@@ -276,7 +284,12 @@ static UmiStatus publish_event_envelope(
     /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(event.event, "initialized") == 0) {
         platform->initialized = 1;
+        if (platform->restartConfigurationPending) {
+            status = RestartConfigure(platform);
+            if (status != UMI_STATUS_OK) return status;
+        }
     } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(event.event, "stopped") == 0) {
+        platform->restartConfigurationPending = 0;
         platform->paused = 1;
         platform->active_thread_id = event.thread_id;
         (void)umi_debug_runtime_adapter_set_state(
@@ -286,6 +299,7 @@ static UmiStatus publish_event_envelope(
             umi_debug_advanced_platform_inspection(platform->advanced),
             UMI_DEBUG_INSPECTION_PAUSED);
     } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(event.event, "continued") == 0) {
+        platform->restartConfigurationPending = 0;
         platform->paused = 0;
         (void)umi_debug_runtime_adapter_set_state(
             platform->adapter,
@@ -738,6 +752,8 @@ UmiStatus umi_debug_runtime_platform_start(
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto failure;
 
+    platform->restartUncertain = 0;
+    platform->restartConfigurationPending = 0;
     platform->active = 1;
     /* Former platform->paused = 0 discarded a stop already delivered by the adapter. */
     (void)umi_debug_runtime_adapter_set_state(
@@ -869,6 +885,8 @@ UmiStatus umi_debug_runtime_platform_stop(
         umi_debug_runtime_adapter_destroy(platform->adapter);
     }
 
+    platform->restartUncertain = 0;
+    platform->restartConfigurationPending = 0;
     platform->contract_owner = NULL;
     platform->adapter = NULL;
     (void)memset(&platform->descriptor, 0, sizeof(platform->descriptor));
@@ -2762,6 +2780,10 @@ UmiStatus umi_debug_runtime_platform_write_memory(
  * Provide the debug runtime platform restart operation used by this module and its client
  * applications.
  */
+/* Restart now retires inspection data before a possible transport write and
+ * checks the response command. The earlier implementation is retained here for
+ * review of its public compatibility and previous inspection lifetime. */
+#if 0
 UmiStatus umi_debug_runtime_platform_restart(
     UmiDebugRuntimePlatform *platform,
     uint32_t timeout_ms)
@@ -2822,6 +2844,9 @@ UmiStatus umi_debug_runtime_platform_restart(
     if (status == UMI_STATUS_OK) platform->revision += 1U;
     return status;
 }
+
+#endif
+#include "restart_session.inc"
 
 
 /* The native launcher composes existing profiles, JSON writer, process transport

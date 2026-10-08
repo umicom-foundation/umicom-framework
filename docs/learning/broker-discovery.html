@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Find instruments with scanners and option chains</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:980px;margin:40px auto;padding:0 24px;color:#202c3c}h1,h2{line-height:1.25}code{background:#edf2f7;padding:2px 5px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #bbc7d4;padding:10px;text-align:left;vertical-align:top}aside{background:#eef6fb;border-left:4px solid #216fa0;padding:16px}a{color:#12659d}</style></head><body>
+<header><p>Umicom Framework Â· Broker connectivity</p><h1>Find instruments with scanners and option chains</h1>
+<p>A scanner asks the broker for a ranked list of contracts matching a chosen market and filter.
+An option chain describes available expiries and strikes for an underlying instrument. Neither response is a quote or an order.</p></header>
+<h2>Look up scanner parameters</h2>
+<ol>
+<li>Connect to your local TWS or IB Gateway, then expand <strong>Scanner parameter catalogue</strong>.</li>
+<li>Select <strong>Read scanner catalogue</strong>. The application requests the broker's current XML parameter document once on this connection.</li>
+<li>Enter a scan, location or filter name and select <strong>Find next</strong>. Search ignores letter case and wraps to the beginning. You can select and copy text from the viewer.</li>
+<li>Review the matching entries, then enter the appropriate values in <strong>Market scanner</strong>. The viewer does not automatically construct a valid subscription.</li>
+</ol>
+<p>The catalogue is plain text. It is not executed, and external XML resources are never loaded.
+A complete document is retained after disconnect and marked stale. Reconnect to request another catalogue
+after completion, failure or a 60-second timeout. Documents larger than 4 MiB are refused rather than truncated.
+This viewer does not validate the XML schema or prove that a scan is available for your account.</p>
+<h2>Before you start</h2><ol>
+<li>Sign in to your TWS or IB Gateway application and enable its socket API. Review the account mode and permissions in that application.</li>
+<li>Open Umicom Trader's broker connection window. Choose the intended Paper or Live profile, confirm the port and connect.</li>
+<li>Wait for the connection to report that its read-only API is ready. A profile choice records your intent; it does not attest the account environment.</li>
+</ol><aside>The connection window observes the broker. Its discovery, chart and report controls do not submit, modify or cancel trading orders.</aside>
+<h2>Run a market scanner</h2><ol>
+<li>Expand <strong>Market scanner</strong>. Enter the instrument, location code and scan code you have checked in TWS.
+The initial stock scan values are an editable example, not a recommendation.</li>
+<li>Choose a maximum of 1 to 50 results. Leave optional thresholds blank when you do not want to constrain them.
+Prices, market capitalisation and coupon thresholds use a dot for the decimal separator; volume thresholds use whole numbers.</li>
+<li>For generic filters, enter pairs such as <code>usdMarketCapAbove=10000</code>.
+Separate multiple pairs with semicolons. Duplicate tags, empty values and separator characters inside values are rejected.</li>
+<li>Select <strong>Start scanner</strong>. A complete refresh replaces the previous ranking together, so rows from two refreshes are never mixed.</li>
+<li>Select a ranked result to inspect its broker description. Stop any existing quote stream, then choose <strong>Use selected contract ID</strong>.</li>
+<li>Review the contract details and choose the quote route explicitly. Start a separate quote subscription when you want prices.</li>
+<li>Choose <strong>Cancel scanner</strong> before replacing the panel's scan. Previously received rows remain visible with stale status.</li></ol>
+<p>Scan filters and availability depend on the broker and your subscriptions. Umicom does not download the scanner-parameter XML catalogue yet.
+Check the desired scan in TWS. A fresh local receipt indicates when Umicom received the result, not the age of an exchange price.</p>
+<h2>Inspect and resolve an option</h2><ol>
+<li>Use contract discovery to identify the underlying instrument. Put its resolved contract ID in the connection window's Contract ID field.</li>
+<li>Expand <strong>Option chains</strong>. Enter the underlying symbol and security type. Use <code>STK</code> for a stock,
+<code>IND</code> for an index or <code>FUT</code> for a future when selecting an option to resolve.</li>
+<li>Optionally enter a chain exchange filter, then select <strong>Request option chains</strong>. Wait for the broker's completion marker.</li>
+<li>Choose an exchange and trading class from the returned definitions. Choose one expiry, one strike, and Call or Put.
+Enter the option currency and review the connection window's quote Exchange field; this is the route used for contract resolution.</li>
+<li>Select <strong>Resolve selected option</strong>. The lists describe candidate values: some expiry and strike combinations do not form a valid contract.</li>
+<li>Wait for exactly one completed contract match. Inspect its symbol, expiry, strike, right, currency and contract ID.
+If no match or several matches are returned, review the selection instead of guessing an identity.</li>
+<li>Stop an existing quote stream before selecting <strong>Use resolved option ID</strong>. Explicitly request market data for the resolved option.</li></ol>
+<p><strong>Abandon local lookup</strong> stops accepting replies locally. The negotiated API has no option-chain cancellation message.
+Starting another lookup uses a new request ID. A disconnected or incomplete chain is not eligible for contract resolution.</p>
+<h2>Save discovery records</h2><ol>
+<li>Enter a new absolute CSV path in the relevant panel, for example <code>C:\Users\YourName\Documents\scanner-review.csv</code>.</li>
+<li>Select <strong>Write scanner report</strong> or <strong>Write option definition report</strong>.</li>
+<li>Wait for the saved status. Existing files are not overwritten; choose another name if the destination already exists.</li>
+<li>Import provider text columns as text in your spreadsheet to preserve exact spelling and identifiers.
+Check the stale, failed, complete and environment-attested columns before interpreting the records.</li></ol>
+<p>Scanner reports include query properties, generic filters, ranks and contract descriptions. Option reports contain separate
+chain, expiry and strike records. They deliberately do not imply that every possible combination is valid.
+The report owns a frozen copy before the file worker starts; later scanner refreshes cannot alter that copy.
+If writing fails after a new file has been opened, inspect that partial file and choose another path to retry.</p>
+<h2>Current bounds and recovery</h2>
+<table><thead><tr><th>Area</th><th>Supported bound and recovery</th></tr></thead><tbody>
+<tr><td>Transport</td><td>The legacy field protocol is negotiated in the existing supported range. Protobuf sessions are not supported by this connection.</td></tr>
+<tr><td>Scanners</td><td>Framework supports ten subscriptions of up to fifty rows each; the native panel controls one.
+Local requests are separated by at least one second. Other clients and account-wide broker limits are outside this local pacing rule.</td></tr>
+<tr><td>Filters</td><td>Up to sixteen generic filters and 511 serialized bytes. Internal-use subscription options stay empty.
+Numeric thresholds must be exactly representable by the shared decimal owner; an unsupported precision is rejected, never rounded.</td></tr>
+<tr><td>Option definitions</td><td>One pending lookup, at most 32 exchange/class/multiplier definitions, 128 expiries and 512 strikes per definition.
+A response beyond these bounds fails explicitly instead of pretending a truncated chain is complete. Use an exchange filter to reduce large responses.</td></tr>
+<tr><td>Timeouts and stale results</td><td>Option discovery waits up to 60 seconds. Scanner results are marked stale in the native panel after 60 seconds without a complete refresh.
+A malformed result fails the session; retained evidence remains available. Correct the request and reconnect explicitly.</td></tr>
+<tr><td>Exports</td><td>Scanner documents are bounded to 2 MiB; option documents use the shared 4 MiB limit.
+An oversized export returns a capacity error without exposing a partial document. Narrow the discovery scope and retry.</td></tr>
+</tbody></table>
+<h2>Extend the shared implementation</h2>
+<p>Use <code>scanner.h</code>, <code>option_chain.h</code>, <code>option_contract.h</code> and <code>discovery_report.h</code>
+from the Framework broker-connectivity module. Serialize access on the connection's owning event loop.
+Request and copy APIs retain their data in Framework; native controls only collect inputs and display copies.
+When adding another consumer, retain the request ID and scanner generation alongside the selected row.</p>
+<p>Add a protocol decoder only after checking the official field order and server-version boundary. Validate complete messages before changing public state.
+Keep large temporary records on the heap, preserve output values on failed requests, and add injected-transport cases for late replies and queue failures.
+The current controls do not provide option Greeks, volatility models, multi-leg order construction or a complete OptionTrader replacement.</p>
+<h2>Reference material</h2>
+<p><a href="https://www.interactivebrokers.com/docs/tws-api/doc/market-scanner/introduction">IBKR scanner API</a> Â·
+<a href="https://www.interactivebrokers.com/docs/tws-api/doc/contracts-financial-instruments/option-chains/introduction">IBKR option-chain API</a> Â·
+<a href="https://www.ibkrguides.com/traderworkstation/optiontrader.htm">OptionTrader user guide</a></p>
+<footer>Sammy Hegab Â· Umicom Foundation Â· MIT</footer></body></html>

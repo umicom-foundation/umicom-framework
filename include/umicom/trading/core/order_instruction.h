@@ -28,6 +28,9 @@ typedef struct UmiTradingOrderInstruction { UmiTradingOrderIdentity identity; Um
 /* Initialise a normalised order instruction. */
 UmiStatus umi_trading_order_instruction_init(UmiTradingOrderInstruction *instruction,const UmiTradingOrderIdentity *identity,const UmiInstrument *instrument,UmiSide side,UmiOrderType type,UmiTimeInForce tif,UmiTradingQuantityLots quantity_lots,UmiTradingPriceTicks limit_ticks,UmiTradingPriceTicks stop_ticks);
 /* Validate quantity and price requirements for the selected order type. */
+/* Validation rejects unknown order types and time-in-force values, unterminated
+ * required identifiers and negative supplied prices. New order families must
+ * explicitly define their required price fields in the shared validator. */
 bool umi_trading_order_instruction_valid(const UmiTradingOrderInstruction *instruction);
 #ifdef __cplusplus
 }

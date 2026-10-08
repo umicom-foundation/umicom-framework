@@ -57,4 +57,5 @@ The existing completed diagnostic parser still operates on its own bounded final
 <li>For a custom executor, inspect <code>streamed</code>. Final-output-only executors cannot provide progress they never emitted.</li>
 <li>If an operation or revision is stale, obtain a fresh snapshot. Do not overwrite a newer display with an earlier job's data.</li>
 <li>If <code>counters_saturated</code> is set, refresh on every poll; revision equality is no longer sufficient.</li></ol>
-<h2>Keep a full emitted-output file</h2><p>The bounded viewer can now be used alongside an optional capture file. See <a href="saving-build-logs.html">saving build logs</a> for deliberate file selection, completeness checks and recovery. The viewer and copied display remain bounded as described above.</p></main></body></html>
+<h2>Keep a full emitted-output file</h2><p>The bounded viewer can now be used alongside an optional capture file. See <a href="saving-build-logs.html">saving build logs</a> for deliberate file selection, completeness checks and recovery. The viewer and copied display remain bounded as described above.</p><p>Test Explorer uses the same output controls. See <a href="live-test-output.html">Reading test output while an attempt runs</a> for the shared capture and display contracts.</p>
+</main></body></html>

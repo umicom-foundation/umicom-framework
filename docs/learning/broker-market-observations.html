@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Find instruments and read P&amp;L and market depth</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:950px;margin:40px auto;padding:0 24px;color:#182633}
+h1,h2{line-height:1.25}code{background:#eef2f5;padding:2px 5px}table{border-collapse:collapse;width:100%}
+th,td{border:1px solid #bacbd5;padding:10px;text-align:left;vertical-align:top}
+aside{border-left:4px solid #247798;padding:10px 18px;background:#eff8fa}</style></head>
+<body><h1>Find instruments and read P&amp;L and market depth</h1>
+<p>Umicom Trader uses Framework's broker connection window for these observations.
+TWS or IB Gateway authenticates your account. Umicom connects to that local application;
+you do not enter your brokerage password into these controls.</p>
+<aside>This window is read-only. It can request data and stop its own data subscriptions.
+It does not submit, modify or cancel trading orders. The Paper/Live choice describes your requested
+connection; confirm the actual account environment in TWS.</aside>
+<h2>Connect</h2><ol>
+<li>Sign in to TWS or IB Gateway. Use a paper account while checking a new installation.</li>
+<li>Enable its socket API and retain the read-only API setting. Note its socket port.</li>
+<li>Open <strong>Open Paper / Live broker connections</strong> in Trader.
+Choose the matching program and environment, enter the port, and connect.</li>
+<li>Wait for <strong>Read-only API ready</strong>. The account selector lists accounts advertised by
+that connection. If it stays empty, resolve the connection or broker permissions before continuing.</li>
+</ol>
+<h2>Find an instrument</h2><ol>
+<li>Expand <strong>Find an instrument</strong> and enter a symbol prefix or company-name fragment.</li>
+<li>Select <strong>Search symbols and names</strong>. Wait for the completed response.
+A successful empty result means no candidates were returned for that search.</li>
+<li>Compare the symbol, security type, listing exchange and currency. Where supplied,
+the description, issuer identifier and available derivative types give more context.</li>
+<li>Choose a candidate and select <strong>Use selected contract ID</strong>.
+Stop an active quote stream first. Only the contract ID is copied into the quote controls.</li>
+<li>Enter the intended exchange yourself, subscribe to the quote, and use
+<strong>Instrument description and route metadata</strong> to inspect its contract details.
+A listing exchange is not automatically the route you want to trade through.</li>
+</ol>
+<p>Only one search is pending at a time, and accepted searches are at least one second apart.
+<strong>Abandon local search</strong> retires the result locally; this protocol has no search-cancel request.
+Late responses cannot complete a newer search. Up to 16 candidates are retained.
+Description and issuer fields depend on the negotiated protocol; empty fields are not invented.</p>
+<h2>Read account or position P&amp;L</h2><p>P&amp;L means profit and loss. Daily, unrealized and realized
+figures are separate values; they should not be added together as if they were independent balances.</p>
+<ol><li>Select an advertised account and expand <strong>Account and position P&amp;L</strong>.</li>
+<li>Leave the model code empty unless you use a broker portfolio model.
+Leave the contract ID empty for account P&amp;L, or enter a confirmed positive contract ID for one position.</li>
+<li>Select <strong>Subscribe to selected account P&amp;L</strong>. The output identifies the captured
+account, model, contract and request. Changing an input does not relabel an existing subscription.</li>
+<li>Wait for values. Position subscriptions also report quantity and market value. Negative position
+quantities are preserved. An absent callback is shown as waiting rather than as zero.</li>
+<li>Select <strong>Stop P&amp;L subscription</strong> before changing scope. If stopping cannot be queued,
+the previous subscription remains active. Disconnecting ends the underlying connection.</li></ol>
+<p>TWS controls the reset schedule. These callbacks do not carry a currency field, so Umicom does not infer
+currency or combine accounts. Provider unset values and numbers outside Framework's exact decimal range
+remain unavailable for arithmetic, with their reported text retained. The native view becomes stale after
+15 seconds without an update; staleness records receipt age, not proof that the provider value changed.</p>
+<h2>Read the depth ladder</h2><ol>
+<li>Enter a confirmed contract ID and exchange in the quote controls above the depth section.</li>
+<li>Expand <strong>Market depth</strong>. Choose 1 to 50 rows for each side.</li>
+<li>For an explicit exchange such as LSE, leave <strong>Aggregate SMART depth</strong> off.
+For exchange SMART, turn it on. The combination is validated before a request is queued.</li>
+<li>Select <strong>Subscribe to market depth</strong>. The output shows received bids and asks,
+prices, sizes and, where supplied, the market maker or exchange identifier.</li>
+<li>Observe row ages. Updating one level does not refresh other levels.
+The ladder follows the broker's row order; Umicom does not sort incoming updates by price.</li>
+<li>Select <strong>Stop depth stream</strong> when finished. The retained ladder becomes historical.
+Stop and start explicitly after a stream failure.</li></ol>
+<p>IBKR reset message 317 clears both sides before subsequent inserts are applied.
+There is no complete-book marker: seeing rows does not certify that every order is visible.
+Displayed liquidity can change before an order arrives and does not enforce full-quantity execution.
+Depth requires the appropriate broker permissions and subscription allowance. Combos are not supported.</p>
+<h2>Understand limits and recover</h2>
+<table><thead><tr><th>Message or symptom</th><th>What to do</th></tr></thead><tbody>
+<tr><td>No response for an instrument</td><td>Check its contract identity, the account's position where relevant,
+data subscriptions and availability in TWS. Do not treat silence as zero.</td></tr>
+<tr><td>Search pending or requests too close together</td><td>Wait for completion, abandon locally, or allow
+the request timeout to expire. Keep at least one second between accepted searches.</td></tr>
+<tr><td>Unsupported protocol or malformed response</td><td>Retain the diagnostic and stop qualification.
+The current transport supports a bounded legacy protocol range; it does not decode every newer API format.</td></tr>
+<tr><td>Depth needs an explicit restart</td><td>Stop that stream, review the provider code and correct its route
+or permissions before subscribing again. A reset is handled automatically only for code 317.</td></tr>
+<tr><td>STALE after disconnection</td><td>Retained rows are historical. Reconnect and explicitly start new
+subscriptions. Previous request IDs never acquire authority on a new connection.</td></tr>
+</tbody></table>
+<h2>Extend the shared implementation</h2>
+<p>The public interfaces are <code>broker_connectivity/symbol_search.h</code>,
+<code>broker_connectivity/pnl.h</code> and <code>broker_connectivity/market_depth.h</code>.
+Keep one thread responsible for pumping the connection and calling its APIs. Copy snapshots for other
+consumers rather than sharing mutable connection storage. The C API permits 16 P&amp;L streams and
+three depth streams locally; the native panels each show one stream at a time.</p>
+<p>Depth selection exposes the contract descriptors used by its request: contract ID, symbol, security type,
+expiry, strike, right, multiplier, exchange, primary exchange, currency, local symbol and trading class,
+plus requested rows and SMART aggregation. Provider-internal options are sent empty.
+Adding a field requires checking its negotiated protocol layout, validation, lifetime and regression coverage.
+Do not add an unvalidated generic field passthrough.</p>
+<p>Regression sources use invented accounts and injected byte transports. Native lifetime probes use an
+unconnected window. They cannot establish broker compatibility or permissions for a real account.</p>
+<h2>Provider documentation</h2><ul>
+<li><a href="https://www.interactivebrokers.com/docs/tws-api/doc/contracts-financial-instruments/stock-symbol-search/request-stock-contract-search">Instrument search</a></li>
+<li><a href="https://www.interactivebrokers.com/docs/tws-api/doc/account-portfolio-data/profit-loss-pn-l/introduction">P&amp;L values and reset schedules</a></li>
+<li><a href="https://www.interactivebrokers.com/docs/tws-api/doc/market-data-live/market-depth-l-2/introduction">Market depth and reset handling</a></li>
+</ul></body></html>
