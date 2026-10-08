@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Review recent broker executions</title>
+<style>body{font:18px/1.6 system-ui,sans-serif;max-width:850px;margin:3rem auto;padding:0 1.5rem;color:#183143}code{background:#edf3f6;padding:.1rem .3rem}aside{border-left:4px solid #167986;padding-left:1rem}</style>
+</head><body><h1>Review recent broker executions</h1>
+<p>An execution is a reported fill. A single order can produce several execution reports. Framework captures these reports through the existing read-only TWS connection and presents them in Umicom Trader's broker window.</p>
+<h2>Read a capture</h2><ol>
+<li>Start TWS or IB Gateway and enable its API connection. Follow the <a href="paper-live-connections.html">connection guide</a>. Keep the provider's read-only API setting enabled for this workflow.</li>
+<li>Open Trader's broker connection window, connect to the intended Paper or Live session and select an account from the advertised accounts list.</li>
+<li>Expand <strong>Recent executions and stock quantity comparison</strong> and select <strong>Read selected account's recent executions</strong>.</li>
+<li>Wait for the execution end marker. Until it arrives, the view remains incomplete. An empty completed capture means no matching reports were returned.</li>
+<li>Inspect the execution IDs, times, quantities, prices, permanent order IDs and contract IDs. The capture contains up to 256 distinct execution reports.</li></ol>
+<aside>The capture covers the recent reports TWS makes available to this API client. It is not an account statement or a complete history. API client settings can limit visibility. The end marker finishes this request; it does not mean every order has finished.</aside>
+<h2>Compare an intended stock quantity</h2><ol>
+<li>Copy the positive permanent order ID and contract ID from the captured rows into the matching fields.</li>
+<li>Select Bought or Sold and enter the intended stock quantity, such as <code>7000</code>.</li>
+<li>Read the comparison below the capture. Reports for exactly that permanent order, contract and side are added using exact decimal arithmetic. For example, distinct fills of 10 and 6,990 total 7,000. Repeating the same report does not add its quantity again.</li>
+<li>If the observed total is below the intended quantity, check the order in TWS. A further execution may still arrive after the capture. The application does not infer cancellation, rejection or finality from a smaller total.</li></ol>
+<p>Related execution IDs may indicate a correction. Both versions remain visible, but quantity aggregation is withheld because arrival order does not establish which corrected report should be used. Combo-style execution IDs and other asset classes remain visible but are outside this stock-only comparison.</p>
+<h2>Read commission reports</h2>
+<p>Commissions arrive separately. Each matching execution shows its reported amount and currency when received. The comparison shows a commission total only when every selected stock execution has a consistent exact amount in the same currency. A missing fee is not treated as zero, and different currencies are not converted or added together.</p>
+<p>The view retains the first and latest texts when amounts or currencies conflict and asks for review. Negative reported amounts, such as rebates, remain negative. Fees outside the exact decimal range remain visible as provider text, with no total.</p>
+<p>Fee reports have no request ID. This capture accepts them only for an execution already received, during the connection's capture timeout window, including after its execution end marker. Reports arriving before their execution or after that window remain unavailable. Request another capture and compare against TWS if fees are missing. Captured fees are observations, not guaranteed final charges.</p>
+<h2>Recover from an incomplete capture</h2><ol>
+<li>If the request times out or is refused, read the message and inspect TWS diagnostics. Partial rows are retained as incomplete.</li>
+<li><strong>Abandon local execution capture</strong> retires the local read request. It never cancels or modifies a broker order.</li>
+<li>Start another capture when ready. A new accepted request replaces the previous capture. Late replies from the old request are ignored.</li>
+<li>After disconnecting, retained results are labelled stale. Reconnect and request another capture before relying on the comparison.</li></ol>
+<p>Final order-state reconciliation and transmission of FOK or AON orders are separate capabilities. This view cannot guarantee full-quantity execution or prevent a commission. See <a href="full-quantity-orders.html">full-quantity order policy</a> for the distinction between a local liquidity watch and an enforceable broker instruction.</p>
+<h2>Extend the shared implementation</h2>
+<p>The connection owns request identity and copied observations. New interfaces can use <code>UmiIbkrExecutionsRequest</code> and <code>UmiIbkrExecutionsCopy</code> without depending on GTK. Keep large capture snapshots on the heap. Do not combine cumulative quantity with individual fills or use an API order ID as an account-wide identity. Add provider-specific correction and combo reconciliation before broadening aggregation beyond ordinary stock executions.</p>
+<p>Protocol layouts are supported for the connection's negotiated legacy range of 164 through 176. Unsupported layouts are refused. Decimal values requiring more than nine nonzero fractional places or exceeding the coefficient range are refused rather than rounded.</p>
+<p>Provider references: <a href="https://www.interactivebrokers.com/docs/tws-api/doc/order-management/execution-details/request-execution-details">request execution details</a>,
+<a href="https://www.interactivebrokers.com/docs/tws-api/doc/order-management/execution-details/receive-execution-details">receive execution details</a> and
+<a href="https://www.interactivebrokers.com/docs/tws-api/doc/order-management/execution-details/exec-id-behavior">execution ID behavior</a>.</p>
+<p>See IBKR <a href="https://www.interactivebrokers.com/docs/tws-api/doc/order-management/commission-and-fees-report">commission report documentation</a> for the separate provider event.</p>
+<section><h2>Keep order status separate from execution totals</h2>
+<p>Execution totals answer how much the captured reports contain. They cannot establish whether an order is still working.
+In the shared API, <code>UmiIbkrReviewOrderObservation</code> retains the broker status and its cumulative filled and remaining quantities.
+A working order with fills and a positive remainder can be classified as partially filled. A cancellation request remains pending until confirmed.
+The status-only compatibility mapping now leaves its output unchanged for Inactive, warnings and pending cancellations.</p>
+<ol><li>Match a status observation to the order identity in your connection owner before using it.</li>
+<li>Display the original status alongside filled and remaining quantities. Do not add cumulative quantities as if they were new executions.</li>
+<li>Use the proposed local status only when <code>hasCanonicalStatus</code> is true, and apply the journal sequence checks before updating retained state.</li>
+<li>If Filled is paired with no filled quantity or a nonzero remainder, retain the conflicting evidence for review.
+Do not infer that FOK or AON was enforced, or that a cancelled order had no fills.</li></ol>
+<p>This classification API does not request or subscribe to order-status messages in the read-only connection panel.
+A status such as Inactive alone does not establish rejection; inspect the accompanying broker error and order context.
+See <a href="https://www.interactivebrokers.com/docs/tws-api/doc/order-management/order-status/understanding-order-status-message">IBKR order-status meanings</a>.</p>
+</section>
+</body></html>

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Historical broker charts — Umicom Framework</title>
+<style>body{font:17px/1.65 system-ui,sans-serif;max-width:940px;margin:40px auto;padding:0 24px;color:#172d40}h1,h2{color:#075b74}code{background:#eef4f7;padding:2px 5px}aside{border-left:4px solid #087a97;padding:12px 20px;background:#eef7fa}table{border-collapse:collapse;width:100%}td,th{padding:9px;border:1px solid #cad8df;text-align:left}</style></head>
+<body><main><h1>Read historical bars and explore a candlestick chart</h1>
+<p>A candle summarizes the opening, highest, lowest and closing price within an interval.
+The shared broker window can request a finite set of intraday bars from TWS or IB Gateway,
+then display them using Framework's chart renderer. Trader uses this same window through its broker connection action.</p>
+<aside>This is a captured historical view. It does not stream new candles, submit orders or establish
+whether the most recent candle has finished. Data availability depends on the selected contract,
+route and the permissions of the account logged into TWS.</aside>
+<h2>Capture a chart</h2><ol>
+<li>Open the broker connection window and connect to your intended Paper or Live session.
+Keep Read-Only API enabled in TWS. Confirm the actual login there; a port number alone does not identify an account's environment.</li>
+<li>Use symbol discovery or TWS Contract Description to find the instrument's positive Contract ID.
+Enter that ID and its Exchange in the existing contract fields. A historical request does not require a quote subscription.</li>
+<li>Expand <strong>Historical candlestick chart</strong>. Choose Trades, Midpoint, Bid or Ask, a bar size,
+and a duration in seconds. Start with one-minute bars and a duration of 14400 seconds (four hours).</li>
+<li>Leave the end field empty for the latest available window. To request an earlier window, enter a UTC value such as
+<code>20261007 13:00:00 UTC</code>. UTC is a common time reference that does not change with the computer's local time zone.</li>
+<li>Select whether to restrict data to regular trading hours, then choose <strong>Read historical bars</strong>.
+The display changes only after the complete response has passed validation. A valid response can contain no bars.</li>
+<li>Adjust <strong>Visible bars (zoom)</strong> to change how many candles appear.
+Increase <strong>Older bars offset (pan)</strong> to move backward through the capture.
+These controls use the existing data and do not send another broker request.</li>
+<li>Read the contract, route, interval, capture status and last visible candle below the chart.
+Unavailable volume is labelled explicitly. A finished response can still include an unfinished final candle.</li>
+</ol>
+<h2>Bounds and recovery</h2><table><thead><tr><th>Setting</th><th>Supported behaviour</th></tr></thead><tbody>
+<tr><td>Bar intervals</td><td>1, 5, 15 and 30 minutes; 1 hour.</td></tr>
+<tr><td>Capture size</td><td>At most 512 bars and 64 KiB per broker response. The duration reserves space for an edge bar.</td></tr>
+<tr><td>Duration</td><td>Up to one day, also limited by bar size. For one-minute bars the maximum is 30660 seconds.</td></tr>
+<tr><td>Request pacing</td><td>One pending capture per connection; at least 15 seconds between accepted requests. This local throttle does not replace broker-wide limits.</td></tr>
+<tr><td>Cancellation</td><td>Cancel historical request stops accepting its response. It never cancels a trading order.</td></tr>
+<tr><td>Timeout and age</td><td>A pending capture times out after 60 seconds. The native view clears captures older than five minutes after receipt, or after disconnect.</td></tr>
+</tbody></table>
+<p>If a request is refused, check the contract and route, reduce the duration, verify the UTC format and wait before retrying.
+A broker rejection appears in the capture message; resolve the reported entitlement or contract issue before trying again.
+A full transmit queue leaves the previous capture intact. A newly accepted request replaces it.</p>
+<p>A precision warning means a reported price cannot be represented exactly by the current decimal owner.
+The original numeric text remains available to code that inspects retained bars, but the chart refuses to draw that series.
+A build without the optional chart renderer still shows the capture summary.</p>
+<h2>Save a capture for offline review</h2><ol>
+<li>In the historical chart section, enter a new absolute CSV file path in a private folder.</li>
+<li>Choose <strong>Write new historical-bar report</strong> and wait for the saved status.
+The export takes an independent copy before the file worker starts; changing the chart or reconnecting does not alter that copy.</li>
+<li>Import provider price and volume columns as text to retain their spelling. Text cells use the shared protection
+against spreadsheet formula prefixes, including negative-number text.</li>
+<li>Keep the capture-state columns with the bar rows. A pending, cancelled or failed request produces metadata,
+not fabricated bars. Stale captures remain exportable with their state attached.</li>
+</ol><p>Existing files are never replaced. If writing fails, inspect any partial new file and choose another path.
+Closing the window after the write starts does not undo the requested write. Developers can use
+<code>UmiIbkrHistoricalExportCsv</code> without opening a native window.</p>
+<h2>Reuse the implementation</h2><ol>
+<li>Link <code>Umicom::ibkr_connection</code> and include <code>umicom/broker_connectivity/historical_bars.h</code>.
+Fill a <code>UmiIbkrHistoricalQuery</code> using a resolved contract and validate it before requesting.</li>
+<li>Call <code>UmiIbkrHistoricalRequest</code> with the connection's monotonic clock and keep its returned request ID.
+Continue pumping the connection. Each accepted request owns a distinct identity, including after cancellation.</li>
+<li>Use <code>UmiIbkrHistoricalCopy</code> to inspect completion and freshness, then
+<code>UmiIbkrHistoricalBarCopy</code> to obtain independent values. Check numeric <code>exact</code> flags before decimal calculations,
+and the availability flags before using volume, weighted-average price or trade count.</li>
+<li>For graphics, link the optional <code>Umicom::ibkr_historical_chart</code> target and include
+<code>umicom/broker_connectivity/historical_chart.h</code>. Create a scene for a contiguous bar range,
+render it with the existing chart adapter, and destroy it with <code>umi_chart_render_scene_destroy</code>.</li>
+<li>Keep exact broker numbers separate from floating-point presentation values.
+The candle projection exposes a volume-availability flag; its zero placeholder is not a measured volume.
+A scene owns its commands, but the application must still check the capture's status before showing it as current.</li>
+</ol>
+<p>The decoder supports the connection's negotiated legacy protocol range. Daily bars, historical ticks,
+streaming historical updates, combination contracts, expired-contract options and protobuf messages need separate implementations.
+Add their ownership and protocol coverage before extending this contract.</p>
+<h2>Provider reference</h2><p>See Interactive Brokers' guides to
+<a href="https://www.interactivebrokers.com/docs/tws-api/doc/market-data-historical/historical-bars/requesting-historical-bars">requesting historical bars</a>
+and <a href="https://www.interactivebrokers.com/docs/tws-api/doc/market-data-historical/historical-bars/format-date-received">timestamp formats</a>.
+The Framework request uses epoch seconds for intraday responses and disables continuous updates.</p>
+</main></body></html>

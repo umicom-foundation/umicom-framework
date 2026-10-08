@@ -30,6 +30,7 @@ set(shared_sources
     "${framework_root}/src/platform/threading.c"
     "${framework_root}/src/platform/clock.c"
     "${framework_root}/src/platform/cancellation.c"
+    "${framework_root}/src/platform/output_tail.c"
     "${framework_root}/src/testing/case.c"
     "${framework_root}/src/testing/suite.c"
     "${framework_root}/src/testing/discovery.c"

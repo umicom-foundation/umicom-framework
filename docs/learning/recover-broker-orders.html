@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recover and review broker orders — Umicom Framework</title>
+<style>body{max-width:920px;margin:3rem auto;padding:0 1.5rem;font:18px/1.6 system-ui;color:#18283a;background:#fafcfe}h1,h2{line-height:1.2;color:#173e68}code{background:#eef2f6;padding:.1em .25em}table{border-collapse:collapse;width:100%}td,th{padding:.6rem;text-align:left;border:1px solid #ccd5df}a{color:#175b9b}.note{padding:1rem;border-left:4px solid #477cae;background:#edf4fa}</style></head>
+<body><main><h1>Recover and review broker orders</h1>
+<p>The broker connection window can request the currently open orders visible to an API client.
+Framework retains the returned contract and order summaries, the separate order-status reports and
+the identities needed to tell orders apart. Trader uses this shared window.</p>
+<p class="note">This is an observation workflow. It does not place, change, bind or cancel orders.
+An open-order snapshot is not an execution history, and an order status is not a commission report.
+Use the execution review alongside this view when investigating fills.</p>
+<h2>Before connecting</h2>
+<ol><li>Log into TWS or IB Gateway. For initial qualification, use your paper environment.</li>
+<li>Enable socket API access and check its port. Keep the API read-only setting enabled.</li>
+<li>Use a positive API client ID that is not already in use. Client ID zero has special order-binding behaviour and is refused by this connection owner.</li>
+<li>In Trader, open Broker Connections and the Paper / Live connection window. Match the program, port and intended environment to TWS or Gateway.</li>
+<li>Connect and wait for <strong>Read-only API ready</strong>. Check the account and environment in the broker application: a port number or a local Paper/Live selection does not prove the broker environment.</li></ol>
+<h2>Recover open orders</h2>
+<ol><li>Expand <strong>Open orders and broker identity</strong>.</li>
+<li>Leave <strong>Include orders from all visible clients/accounts</strong> unchecked to request orders belonging to this API client. Check it to request all open orders visible to the connection. This scope is independent of the account selector used by the account-value panel.</li>
+<li>Select <strong>Recover open orders</strong>. Wait for the provider's end marker. Rows displayed before that marker are a partial capture.</li>
+<li>Review each row's client ID, API order ID and permanent ID before comparing its symbol, currency, quantity, limit price and time in force. A permanent ID of zero means it has not been reported.</li>
+<li>Read cumulative filled quantity and remaining quantity as the latest broker report. Duplicate status messages are counted, but their quantities are never added again. An unfamiliar status, including <code>Inactive</code>, is displayed as reported; it is not automatically classified as a rejection.</li>
+<li>To obtain a new snapshot, disconnect and reconnect, then request recovery again. The protocol end marker does not carry a request ID, so this owner accepts one recovery request per connection. It does not retry a timed-out request behind the user's back.</li></ol>
+<h2>Understand identities and freshness</h2>
+<table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody>
+<tr><td>Client ID and API order ID</td><td>Together they identify an API binding. Negative order IDs are retained. The same order number from another client is a separate row.</td></tr>
+<tr><td>Permanent ID</td><td>An additional broker identity. Unbound manual orders with a zero client/order pair are distinguished by their nonzero permanent IDs. Conflicting identities for an established nonzero binding stop the connection rather than merge different orders.</td></tr>
+<tr><td>Next-ID hint</td><td>Framework retains the latest broker next-valid-ID report and a conservative floor above the nonnegative IDs it has decoded in order observations and accepted execution captures. The floor never moves backwards in the connection. It is not an allocation, reservation or persistent order journal. Ignored execution streams and unimplemented callback types are not covered.</td></tr>
+<tr><td>Old summary / old status</td><td>The two channels have separate receipt times. Updating a status does not make an old contract summary fresh. The native panel marks observations older than fifteen seconds as old.</td></tr>
+<tr><td>Stale or incomplete snapshot</td><td>The capture is unfinished, timed out, disconnected or older than the panel's freshness limit. Later individual statuses do not renew the original snapshot's completion time.</td></tr>
+</tbody></table>
+<p>Requesting all open orders is a one-time recovery; it does not establish a subscription to every client's future orders.
+Later callbacks depend on TWS client and Master Client configuration. Missing callbacks cannot establish that an order was cancelled or filled.
+The report retains observations rather than removing rows when it sees a terminal-looking status.</p>
+<h2>Use the shared C interface</h2>
+<p>Include <code>umicom/broker_connectivity/order_recovery.h</code> and link the existing
+<code>Umicom::ibkr_connection</code> target. Keep these calls on the thread that owns and pumps the connection.</p>
+<ol><li>Call <code>UmiIbkrOrdersRequest</code> after the connection becomes ready. Choose the client-only or all-clients scope explicitly. A full transmit queue leaves the request opportunity available for a later attempt.</li>
+<li>Continue pumping the connection. Use <code>UmiIbkrOrdersCopy</code> to inspect completion, failure, count and scope. Supply the same monotonic clock and a positive age limit.</li>
+<li>Use <code>UmiIbkrOrderCopy</code> for each row. Check <code>hasOpenOrder</code>, <code>hasStatus</code> and the two stale flags. Status-only rows do not yet identify an account or instrument.</li>
+<li>Check each numeric value's <code>exact</code> flag before arithmetic. Raw text remains available when a value is unset or outside the Framework exact-decimal range; it is not replaced with a financial zero.</li>
+<li>For diagnostic tooling, <code>UmiIbkrOpenOrderFieldCopy</code> copies one raw field from the retained payload. Index zero is the message ID. Query the required byte count with a null buffer and zero capacity; a short buffer returns <code>UMI_STATUS_CAPACITY_EXCEEDED</code> and leaves the buffer untouched. Field indices and extension layouts depend on the negotiated protocol.</li></ol>
+<p>The interpreted open-order structure covers the stable prefix through the permanent ID:
+contract descriptors, action, quantity, order type, prices, time in force, OCA group, account, open/close, origin and order reference.
+Advanced conditions, combo legs, algorithms, allocations and OrderState fields are retained as opaque wire evidence.
+This is not a complete typed Order/OrderState implementation. Raw fields must never be replayed as outgoing order instructions.</p>
+<h2>Limits and recovery</h2>
+<ul><li>The connection uses the negotiated legacy protocol range 151–176. Protobuf transport and later order fields are not interpreted by this adapter.</li>
+<li>A connection retains at most 64 order rows. Each open-order payload is bounded to 65,536 bytes and 1,024 fields. Exceeding a bound stops observation with an explicit connection failure; partial rows are not presented as a complete recovery.</li>
+<li>A capture that times out cannot become complete after a late end marker. Reconnect after investigating the broker's API log and account permissions.</li>
+<li>No rows after a successful end marker can mean there are no visible open orders. It does not mean there were no trades or completed orders. Client-only recovery may be empty when another client placed the orders.</li>
+<li>Completed-order history, automatic order binding, order modification and transmission remain separate work. Existing simulation and local policy panels do not gain live-trading permission from this report.</li>
+<li>Account names and order references are private information. Raw evidence is held in memory until the connection is destroyed; this feature does not write it to disk or send it to another service.</li></ul>
+<h2>Further reading</h2>
+<p>See the broker's documentation for
+<a href="https://www.interactivebrokers.com/docs/tws-api/doc/order-management/open-orders">open-order callbacks</a>,
+<a href="https://www.interactivebrokers.com/docs/tws-api/doc/order-management/requesting-currently-active-orders/all-submitted-orders">all-client recovery</a>,
+and <a href="https://www.interactivebrokers.com/docs/tws-api/doc/next-valid-id/receive-next-valid-id">next-valid-ID reports</a>.
+Use <a href="review-broker-executions.html">Review broker executions</a> for fill and commission evidence.</p>
+</main></body></html>

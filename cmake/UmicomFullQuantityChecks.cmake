@@ -1,0 +1,25 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# These regressions consume the same implementation as the native inspector.
+# All observations are invented; no broker connection or order is created.
+include_guard(GLOBAL)
+if(NOT BUILD_TESTING)
+    return()
+endif()
+function(umicom_full_quantity_checks group)
+    set(target "umicom-full-quantity-${group}-test")
+    add_executable("${target}" "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../tests/full_quantity/test_${group}.c")
+    target_link_libraries("${target}" PRIVATE Umicom::ibkr_connection)
+    umicom_ibkr_target("${target}")
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target("${target}")
+    endif()
+    foreach(case IN LISTS ARGN)
+        add_test(NAME "framework.full_quantity.${group}.${case}" COMMAND "${target}" "${case}")
+        set_tests_properties("framework.full_quantity.${group}.${case}" PROPERTIES
+            TIMEOUT 20 LABELS "framework;trading;full-quantity;regression")
+    endforeach()
+endfunction()
+umicom_full_quantity_checks(decimal compare sum overflow invalid)
+umicom_full_quantity_checks(policy match partial-size fraction buffer price-buy price-sell sell-better buy-better missing delayed stale-flag old-price old-size future skew boundary-age boundary-skew zero-size invalid)
+umicom_full_quantity_checks(ibkr before-subscription zero-request fields contract exchange request unterminated unterminated-value exponent excess-scale cancelled failed missing-size unavailable frozen mixed-type stale sell-side other-side large-whole match)
+umicom_full_quantity_checks(watch bounds transitions expiry cancel ownership rollback)

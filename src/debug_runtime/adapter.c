@@ -633,3 +633,6 @@ UmiStatus umi_debug_runtime_adapter_snapshot(
     out_snapshot->revision = adapter->revision;
     return UMI_STATUS_OK;
 }
+
+/* Optional protocol event handling shares this adapter and its response queues. */
+#include "adapter_observed_wait.inc"

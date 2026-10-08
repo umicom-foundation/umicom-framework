@@ -28,6 +28,10 @@ typedef struct UmiTradingExecutionAggregation { UmiTradingQuantityLots total_lot
 /* Initialise an empty execution aggregate. */
 void umi_trading_execution_aggregation_init(UmiTradingExecutionAggregation *aggregate);
 /* Add one fill and update a quantity-weighted average without wide nonstandard integers. */
+/* The average uses the previous rounded average plus a weighted price step;
+ * it is an incremental integer estimate, not an exact total-notional ledger.
+ * Positive normalized prices/lots are required. Refused input leaves all fields
+ * unchanged. Deduplicate execution IDs before adding: this owner keeps no IDs. */
 UmiStatus umi_trading_execution_aggregation_add(UmiTradingExecutionAggregation *aggregate,const UmiTradingExecutionFill *fill);
 #ifdef __cplusplus
 }

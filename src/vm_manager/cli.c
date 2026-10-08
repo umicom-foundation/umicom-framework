@@ -14,8 +14,10 @@
  * interactive console accepts only named operations, never raw QMP or a shell.
  *---------------------------------------------------------------------------*/
 #include "internal.h"
+#include "boot_internal.h"
 #include <errno.h>
 static void Help(void){
+    puts("  qemu targets|plan|review|run (use qemu --help for standalone boots)");
     puts( "Umicom Virtual Machine Manager\n" "  --self-test | --help\n" "  runtime-pack --source DIR --inventory FILE --output NEWDIR\n" "  runtime-verify --root DIR\n" "  runtime-component --root DIR --output NEWFILE\n" "  profile-save --database FILE --id ID --name NAME --runtime DIR --image DIR\n" "       [--arch x86_64|riscv64] [--memory 1024] [--cpus 2] [--recovery 0|1]\n" "       [--disk DIR] [--expected 0]\n" "  profile-show | profile-remove --database FILE --id ID [--expected REVISION]\n" "  profile-list --database FILE\n" "  review | run --database FILE --id ID --directory NEWDIR [--expect HASH]\n" "  disk-create --runtime DIR --output NEWDIR --bytes NUMBER\n" "  disk-checkpoint --runtime DIR --disk DIR --output NEWDIR\n" "Run begins PAUSED. Its interactive commands are status, resume, pause, console,\n" "send TEXT, powerdown, quit-qemu, force-stop and leave. No TCP monitor is opened.\n" "Use a trusted qualified runtime. Hashes are not publisher signatures.");
 }
 typedef struct Option {
@@ -120,7 +122,18 @@ static int Interactive(UmiVmSession*s){
     }
     return result;
 }
+/* Both packaged images and standalone boots share the same supervised console.
+ * Keep Interactive as the original implementation so its commands and comments
+ * remain available for review while new entry points reuse its behaviour. */
+int VmSessionConsole(UmiVmSession *session)
+{
+    return Interactive(session);
+}
+
 int UmiVmMain(int argc,char**argv){
+    /* The standalone command composes the same Framework services as umicom.
+     * Existing profile and packaged-runtime commands remain unchanged. */
+    if(argc>=2&&!strcmp(argv[1],"qemu"))return UmiVmBootMain(argc-2,argv+2);
     if(argc==2&&!strcmp(argv[1],"--help")){
         Help();
         return 0;

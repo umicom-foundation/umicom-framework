@@ -41,6 +41,15 @@ typedef struct UmiBrokerOrderJournal {
     uint64_t revision;
 } UmiBrokerOrderJournal;
 
+/* Initialise before use. Operations validate retained identity and timestamps,
+ * but do not treat a journal record as order submission permission. The request
+ * may be a minimal identity placeholder; submitters must separately validate it.
+ * Updates accept direct broker state observations, preserve terminal states,
+ * reject older sequence/time and reject conflicting reuse of a sequence.
+ * Exact replay leaves the revision unchanged. A correction after a terminal
+ * state needs explicit reconciliation rather than reopening through update.
+ * Failed mutation leaves the journal unchanged; find returns NULL for invalid
+ * storage. Returned records are borrowed until the next owner mutation. */
 void umi_broker_order_journal_init(UmiBrokerOrderJournal *journal);
 UmiStatus umi_broker_order_journal_add(
     UmiBrokerOrderJournal *journal,

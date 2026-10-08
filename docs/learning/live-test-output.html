@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Reading test output while an attempt runs</title><style>body{font:17px/1.65 system-ui;max-width:920px;margin:2rem auto;padding:0 24px;color:#18252d}code,pre{font-family:monospace}pre{padding:16px;background:#f1f5f7;overflow:auto}h1,h2{line-height:1.25}a{color:#07658a}</style></head><body><main><h1>Reading test output while an attempt runs</h1>
+
+<p>CTest runs tests registered by a configured CMake project. A single selected test can also run
+setup and cleanup fixtures: helper tests needed before or after the selected body. Framework captures
+that whole invocation while it runs and keeps the latest 65,535 bytes for a responsive frontend.</p>
+<h2>Connect a test explorer</h2>
+<ol><li>Create a <code>UmiCtestJob</code> from copied test requests and submit it to the existing task queue.
+Keep the job and queue alive while it runs. The job validates selection, build root and repeat limits.</li>
+<li>Allocate a <code>UmiCtestOutputSnapshot</code> on the heap. Large output records should not consume a small
+UI thread stack. Call <code>UmiCtestJobReadOutput</code> on each frontend refresh.</li>
+<li>Read <code>invocation</code> before presenting a result. Zero means no attempt has started.
+<code>attempt</code> counts repetitions; <code>invocation</code> counts all started selected attempts.
+A new invocation clears the bytes and increases the revision within the same job.</li>
+<li>For GTK, create <code>UmiCtestOutputGtk4Create()</code> once, then pass successful snapshots to
+<code>UmiCtestOutputGtk4Update</code> on the GTK thread. The widget owns display copies and never starts tests.</li>
+<li>Use the job progress summary and completed <code>UmiTestResult</code> records for outcomes.
+Output arriving, an empty buffer, or a skipped test does not establish a pass. Inspect the completed
+result for report errors, fixture failures and launch diagnostics.</li>
+<li>On Stop, request cancellation and keep polling. Release the job only after its queued or running
+work finishes. <code>UmiCtestJobDestroy</code> returns <code>BUSY</code> while that lifetime is still active.</li></ol>
+<h2>Observe a synchronous invocation</h2>
+<p><code>UmiCtestRunObserved</code> uses the same exact-name selection, fresh JUnit report, cancellation,
+timeout and process-tree ownership as <code>UmiCtestRunConfigured</code>. Its optional observer receives
+borrowed raw chunks on the executing thread. Copy the bytes promptly; do not touch GUI objects or re-enter
+the running adapter from that callback. A NULL observer preserves the ordinary quiet invocation.</p>
+<p>The observed path requests <code>--verbose</code> so CTest exposes passing-test output as well as failures.
+The final verdict still comes from validated report and process evidence.
+See <a href="https://cmake.org/cmake/help/latest/manual/ctest.1.html#cmdoption-ctest-verbose">CTest's output options</a>.
+The adapter requires CTest with JUnit report support; an absent or malformed report is an error.</p>
+<p>The source example <code>examples/testing/live_output.c</code> demonstrates a command-line host. It streams bytes to the console, checks write failures separately, and accepts only a verified passed result as success.</p>
+<h2>Reuse the shared output components</h2>
+<p><code>UmiOutputTailAppend</code> accepts caller-owned storage and a zero-initialised state. It retains raw
+bytes without allocating, locks or character conversion. Supply separate state, input and destination
+regions and hold your own lock across reads and writes. Invalid inputs leave storage unchanged.
+Both build and test workers use this policy.</p>
+<p><code>UmiOutputViewGtk4Create</code> is the reusable native presenter. A host maps domain evidence into a
+copied <code>UmiOutputViewSnapshot</code> with plain-text context and status. Identity and revision prevent
+older captures replacing newer jobs. Build and test adapters preserve their own public APIs.</p>
+<h2>Read the limits correctly</h2>
+<ul><li>The tail is a temporary view, not a complete or persistent log. Slow polling may miss an entire
+attempt. Earlier completed results remain available separately.</li>
+<li>Both standard output and standard error are merged. CTest adds its own progress and fixture text.
+This is a transcript viewer, not an interactive terminal.</li>
+<li><code>tail.length</code> includes embedded NUL bytes. The spare terminator is only a convenience.
+GTK displays NUL as &#x2400; and repairs invalid UTF-8 only in its display copy.</li>
+<li>Truncation removes the oldest bytes. Total-byte and revision counters saturate instead of wrapping.
+If <code>counters_saturated</code> is set, update the display on every poll.</li>
+<li>Test programs can buffer their own output. A quiet display does not prove a hung test; use its configured
+timeout or Stop when appropriate.</li></ul>
+<h2>Troubleshoot a capture</h2>
+<ol><li>If there is no attempt, inspect queue and cancellation state in the job summary.</li>
+<li>If output seems frozen, enable Follow output or select Refresh output. A paused display intentionally
+keeps the text you are reading while accepting newer captures.</li>
+<li>If the status reports a launch, report or capture error, inspect the completed result.
+Never recover by treating process exit zero or readable text alone as a successful test.</li></ol>
+
+</main></body></html>

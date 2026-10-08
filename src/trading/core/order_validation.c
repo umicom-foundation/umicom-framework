@@ -18,4 +18,37 @@
 /* Set a bounded validation decision reason. */
 static UmiTradingCoreDecision decision(bool allowed,const char *reason){UmiTradingCoreDecision d={0};d.allowed=allowed;(void)umi_trading_core_copy_text(d.reason,sizeof d.reason,reason);return d;}
 /* Validate an order against reusable venue microstructure rules. */
+/* The former implementation checked only limit-price alignment and omitted
+ * the tick rule range and stop trigger. Shared validation now reviews both
+ * supplied prices before routing. Preserve the previous body for comparison. */
+#if 0
 UmiTradingCoreDecision umi_trading_order_validation_check(const UmiTradingOrderInstruction *instruction,const UmiTradingTickSizeRule *tick_rule,const UmiTradingLotSizeRule *lot_rule,const UmiTradingPriceBand *band){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(!umi_trading_order_instruction_valid(instruction)||!umi_trading_tick_size_rule_valid(tick_rule)||!umi_trading_lot_size_rule_valid(lot_rule))return decision(false,"invalid-input");/* Protect caller-owned memory by checking that required state is available before it is used. */ if(instruction->quantity_lots<lot_rule->minimum_lots||instruction->quantity_lots>lot_rule->maximum_lots||((instruction->quantity_lots-lot_rule->minimum_lots)%lot_rule->step_lots)!=0)return decision(false,"invalid-lot");/* Protect caller-owned memory by checking that required state is available before it is used. */ if(instruction->limit_ticks>0&&(instruction->limit_ticks%tick_rule->tick_size)!=0)return decision(false,"invalid-tick");/* Protect caller-owned memory by checking that required state is available before it is used. */ if(instruction->limit_ticks>0&&band!=NULL&&!umi_trading_price_band_contains(band,instruction->limit_ticks))return decision(false,"outside-band");return decision(true,"accepted");}
+#endif
+UmiTradingCoreDecision umi_trading_order_validation_check(
+    const UmiTradingOrderInstruction *instruction,const UmiTradingTickSizeRule *tick_rule,
+    const UmiTradingLotSizeRule *lot_rule,const UmiTradingPriceBand *band)
+{
+    if(!umi_trading_order_instruction_valid(instruction) ||
+        !umi_trading_tick_size_rule_valid(tick_rule) ||
+        !umi_trading_lot_size_rule_valid(lot_rule) ||
+        (band!=NULL && (band->reference_price<=0 || band->lower_bps>10000U || band->upper_bps>10000U)))
+        return decision(false,"invalid-input");
+    if(instruction->quantity_lots<lot_rule->minimum_lots ||
+        instruction->quantity_lots>lot_rule->maximum_lots ||
+        (instruction->quantity_lots-lot_rule->minimum_lots)%lot_rule->step_lots!=0)
+        return decision(false,"invalid-lot");
+    /* Both prices use this listing's integer tick units. Zero means absent;
+     * order-type validation above already requires each necessary price. */
+    const UmiTradingPriceTicks prices[]={instruction->limit_ticks,instruction->stop_ticks};
+    for(size_t index=0U;index<2U;++index) {
+        UmiTradingPriceTicks price=prices[index];
+        if(price==0) continue;
+        if(price<tick_rule->minimum_price || price>tick_rule->maximum_price)
+            return decision(false,index==0U?"outside-tick-range":"stop-outside-tick-range");
+        if(price%tick_rule->tick_size!=0)
+            return decision(false,index==0U?"invalid-tick":"invalid-stop-tick");
+        if(band!=NULL && !umi_trading_price_band_contains(band,price))
+            return decision(false,index==0U?"outside-band":"stop-outside-band");
+    }
+    return decision(true,"accepted");
+}

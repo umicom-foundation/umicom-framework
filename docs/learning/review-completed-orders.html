@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review completed orders and fills - Umicom Framework</title>
+<style>body{max-width:940px;margin:3rem auto;padding:0 1.5rem;font:18px/1.6 system-ui;color:#18283a;background:#fafcfe}h1,h2{line-height:1.2;color:#173e68}code{background:#edf2f7;padding:.1em .25em}table{border-collapse:collapse;width:100%}td,th{padding:.6rem;text-align:left;border:1px solid #ccd5df}a{color:#175b9b}.note{padding:1rem;border-left:4px solid #477cae;background:#edf4fa}</style>
+</head><body><main><h1>Review completed orders and fills</h1>
+<p>The broker connection window can request completed orders and compare their reported filled quantities
+with a separate execution capture. Framework owns the connection, decoding and comparison. Trader uses
+the same controls, and other native applications can reuse the Framework window.</p>
+<p class="note">An order can finish through cancellation after only part of its quantity was filled.
+A completed order is therefore not necessarily a fully filled order. This view preserves the broker's
+status and quantities separately. It does not submit, bind, modify, repeat or cancel orders.</p>
+<h2>Connect and read completed orders</h2>
+<ol><li>Log into TWS or IB Gateway and enable its socket API. Start qualification with a paper account and
+keep the broker API read-only setting enabled.</li>
+<li>In Trader, open <strong>Broker Connections</strong>, then the <strong>Paper / Live</strong> connection window.
+Choose the program, port and intended account environment. Use a positive client ID that is not already in use.</li>
+<li>Select <strong>Connect</strong> and wait for <strong>Read-only API ready</strong>. Verify the account environment
+in TWS or Gateway; the local mode selector does not prove which environment is running.</li>
+<li>Expand <strong>Completed orders and execution review</strong>. Leave <strong>Only API-origin completed
+orders</strong> selected to request that scope. Clear it to include other completed orders the login can see.
+This is not a filter for the current API client or for the account selector above.</li>
+<li>Select <strong>Read completed orders</strong>. Wait for the end marker. Before that marker, the displayed
+rows are only a partial capture.</li>
+<li>Read the account, permanent order ID, instrument, original quantity, reported filled quantity,
+order state, completion status and broker time together. The permanent ID identifies the broker order;
+it is not a client order ID and cannot be used as a replacement for one.</li></ol>
+<h2>Compare captured executions and commission</h2>
+<ol><li>Select the account shown on the completed-order row.</li>
+<li>Use the existing <strong>Recent executions and stock quantity comparison</strong> section to read executions.
+The execution request must finish independently of the completed-order request.</li>
+<li>Return to the completed-order section. Matching ordinary stock executions are grouped by account,
+permanent order ID, contract ID and side. The comparison uses the completed row's <em>filled</em> quantity.</li>
+<li>Inspect the commission result separately. A total is shown only when each selected execution has a
+consistent, exactly representable fee in one currency. Missing fees remain unavailable. Conflicting or
+mixed-currency reports require separate review.</li></ol>
+<p>For example, an order for 7,000 shares could show <strong>Cancelled</strong> with a filled quantity of 10.
+Ten captured shares agree with that reported fill, but they do not mean 7,000 shares traded or that
+a full-quantity restriction was enforced. A broker status alone does not establish the commission charged.</p>
+<h2>Save a local report</h2>
+<ol><li>In the completed-order section, enter a new absolute CSV path in a private folder.
+The report contains every account in the captured scope, independent of the account selector.</li>
+<li>Select <strong>Write new completed-order report</strong>. The application captures an owned copy before
+starting the background write. Closing the window after writing starts does not cancel that requested write.</li>
+<li>Wait for the saved confirmation. If the file already exists, choose a new name; existing files are never
+replaced. A failed write can leave a partial new file, which remains available for inspection.</li>
+<li>Import provider quantity, identifier and time columns as text in a spreadsheet. This preserves decimal
+spelling and identifiers. Formula-like provider text receives a protective apostrophe under Framework's CSV policy.</li>
+<li>Read the scope, completion, failure, freshness and connection columns alongside every order row.
+A metadata row is present even when no orders arrived. Partial or old captures are exportable as labelled
+evidence; saving them does not make them complete or fresh.</li></ol>
+<p>The report contains completed-order observations and original receipt times. It does not include a
+commission statement, all raw advanced fields, or a promise of complete account history. It is saved locally
+only when requested, and no report data is sent to an online service by this workflow.</p>
+<h2>Understand the limits</h2>
+<table><thead><tr><th>Area</th><th>Current behaviour</th></tr></thead><tbody>
+<tr><td>History scope</td><td>The broker supplies its available completed-order window. Receiving an end marker
+does not prove that all historical trades or all account activity were returned.</td></tr>
+<tr><td>Capture lifetime</td><td>One completed-order request is accepted per connection because these callbacks
+carry no request identity. Reconnect to start another capture. Queue failure does not consume the opportunity.</td></tr>
+<tr><td>Freshness</td><td>The native view uses a 15-second age limit. A disconnected, expired or incomplete capture
+cannot produce a fresh comparison. Library callers provide their own positive age limit.</td></tr>
+<tr><td>Exact quantities</td><td>Reported decimal text is retained even when it cannot be represented exactly.
+Zero or inexact completed filled quantities do not produce a positive execution comparison.</td></tr>
+<tr><td>Execution comparison</td><td>Ordinary stocks only. Corrections and ambiguous execution structures require
+review; the application does not choose a correction by arrival order. Other asset classes remain available
+as completed-order observations when their message layout is supported.</td></tr>
+<tr><td>Message layouts</td><td>Legacy protocol 151 through 176 is supported here. The decoder walks conditional
+sections for combo legs, scale orders, hedges, algorithms and known condition types. Advanced fields remain raw
+evidence unless a public property explicitly represents them. Structural decoding is not full semantic support
+for constructing or transmitting these order types.</td></tr>
+<tr><td>Bounds</td><td>At most 64 completed records, 1,024 fields per message and 65,536 payload bytes.
+Variable sections allow up to 32 combo legs or conditions and 64 tag/value pairs. Unknown layouts and
+over-capacity responses fail explicitly rather than shifting fields or dropping evidence silently.</td></tr>
+<tr><td>Repeated records</td><td>Byte-identical records with the same permanent ID are counted as duplicates.
+A conflicting record retains the first evidence and fails the connection for review.</td></tr>
+</tbody></table>
+<h2>Use the Framework interface</h2>
+<ol><li>Include <code>umicom/broker_connectivity/completed_orders.h</code> and link <code>Umicom::ibkr_connection</code>.</li>
+<li>After the connection becomes ready, call <code>UmiIbkrCompletedOrdersRequest</code> with the intended API-origin
+scope and monotonic time. Continue pumping the same connection.</li>
+<li>Copy the capture with <code>UmiIbkrCompletedOrdersCopy</code>. Inspect <code>complete</code>,
+<code>failed</code> and <code>stale</code> before presenting a qualified result.</li>
+<li>Copy individual rows with <code>UmiIbkrCompletedOrderCopy</code>. Caller-owned copies remain independent
+of the connection. Raw-field access uses <code>UmiIbkrCompletedOrderFieldCopy</code>; field zero is the
+message identifier, and the required buffer size includes the string terminator.</li>
+<li>Call <code>UmiIbkrCompletedOrderReviewExecutions</code> with the execution request ID. Check its return
+status before reading the result, then inspect quantity flags and <code>feeAvailable</code> separately.
+Failure leaves the caller's result unchanged.</li></ol>
+<p>To create a report in another application, include
+<code>umicom/broker_connectivity/completed_report.h</code> and call
+<code>UmiIbkrCompletedOrdersExportCsv</code> on the connection's owning thread.
+The returned <code>UmiCsvDocument</code> owns its bytes. Save it on a worker with
+<code>UmiIbkrObservationsWriteNew</code> from <code>observation_export.h</code>,
+then release it with <code>UmiCsvDocumentDestroy</code>.</p>
+<p>Extend the public projection by adding a named property, validating its wire representation and adding
+independent fixtures for every conditional layout it affects. Keep raw observations separate from order
+commands so historical evidence can never become an accidental instruction to trade.</p>
+<h2>Recover from an unavailable view</h2>
+<ol><li>If the capture is incomplete or timed out, inspect the connection message and the TWS API diagnostics.
+Retained rows are partial evidence.</li>
+<li>If the completed row and execution account differ, select the matching account and request executions again.
+The application does not join records from different accounts.</li>
+<li>If the view is old, reconnect and request both captures again. Historical rows remain useful to read but
+cannot become current merely by repainting the window.</li>
+<li>If the broker reports an unsupported message layout, retain the diagnostic for investigation. Do not
+disable bounds or guess field positions to make it appear successful.</li></ol>
+<p>See <a href="recover-broker-orders.html">open-order recovery</a> and
+<a href="review-broker-executions.html">execution and commission review</a> for the related workflows.
+IBKR's <a href="https://www.interactivebrokers.com/docs/tws-api/doc/introduction">TWS API documentation</a>
+describes the broker interface. Its
+<a href="https://www.interactivebrokers.com/docs/tws-api/doc/order-management/order-status/understanding-order-status-message">order-status guide</a>
+explains why pending cancellation and cancellation must be interpreted carefully.</p>
+</main></body></html>

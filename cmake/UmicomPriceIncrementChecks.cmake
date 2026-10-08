@@ -1,0 +1,22 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# Decimal and band checks have no provider, socket or account dependency.
+include_guard(GLOBAL)
+if(NOT BUILD_TESTING)
+    return()
+endif()
+function(umicom_price_increment_checks group)
+    set(target "umicom-price-increment-${group}-test")
+    add_executable("${target}" "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../tests/price_increment/test_${group}.c")
+    target_link_libraries("${target}" PRIVATE Umicom::trading)
+    umicom_ibkr_target("${target}")
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target("${target}")
+    endif()
+    foreach(case IN LISTS ARGN)
+        add_test(NAME "framework.price_increment.${group}.${case}" COMMAND "${target}" "${case}")
+        set_tests_properties("framework.price_increment.${group}.${case}" PROPERTIES
+            TIMEOUT 20 LABELS "framework;finance;trading;price-increment;regression")
+    endforeach()
+endfunction()
+umicom_price_increment_checks(decimal scientific limits precision malformed multiple wide invalid)
+umicom_price_increment_checks(bands edges mixed-scale below bad-order bad-increment bounds)

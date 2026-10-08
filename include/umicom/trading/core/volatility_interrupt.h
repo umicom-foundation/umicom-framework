@@ -33,6 +33,9 @@ UmiStatus umi_trading_volatility_interrupt_init(UmiTradingVolatilityInterrupt *i
  * Provide the trading volatility interrupt evaluate operation used by this module and its
  * client applications.
  */
+/* Invalid reference, price or threshold returns false and preserves the
+ * previous auction_required flag. The result is a local recommendation, not
+ * an exchange halt instruction or proof of a broker's market status. */
 bool umi_trading_volatility_interrupt_evaluate(UmiTradingVolatilityInterrupt *interrupt,UmiTradingPriceTicks price_ticks);
 #ifdef __cplusplus
 }

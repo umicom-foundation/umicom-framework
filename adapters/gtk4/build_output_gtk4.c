@@ -6,6 +6,11 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 
+
+/* Text repair, selection, pause and control lifetime now belong to the shared
+ * output presenter. This build-specific implementation is retained for review;
+ * the adapter below preserves its public API and automation control names. */
+#if 0
 #include "umicom/build/live_output_gtk4.h"
 #include <inttypes.h>
 #include <stdio.h>
@@ -184,4 +189,52 @@ UmiStatus UmiBuildOutputGtk4Update(GtkWidget *panel, const UmiBuildOutputSnapsho
     if (changed && gtk_check_button_get_active(GTK_CHECK_BUTTON(view->follow))) display_latest(view);
     else describe(view);
     return UMI_STATUS_OK;
+}
+
+#endif
+
+#include "umicom/build/live_output_gtk4.h"
+#include "umicom/ui/gtk4/output_view.h"
+#include <string.h>
+
+GtkWidget *UmiBuildOutputGtk4Create(void)
+{
+    GtkWidget *panel = UmiOutputViewGtk4Create("build.output",
+        "Ready. Build output appears here after submission.");
+    g_object_set_data(G_OBJECT(panel), "umicom-build-output-adapter", GINT_TO_POINTER(1));
+    return panel;
+}
+
+/* Adapt domain evidence without duplicating output ownership or text rendering. */
+UmiStatus UmiBuildOutputGtk4Update(GtkWidget *panel, const UmiBuildOutputSnapshot *snapshot)
+{
+    if (panel == NULL || !GTK_IS_BOX(panel) || snapshot == NULL ||
+        g_object_get_data(G_OBJECT(panel), "umicom-build-output-adapter") == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (snapshot->length >= sizeof(snapshot->bytes) ||
+        snapshot->bytes[snapshot->length] != '\0' || snapshot->total_bytes < snapshot->length ||
+        snapshot->phase_index >= UMI_BUILD_PROJECT_SESSION_MAX_PHASES ||
+        snapshot->phase < UMI_BUILD_PHASE_CONFIGURE || snapshot->phase > UMI_BUILD_PHASE_DEPLOY ||
+        (snapshot->operation_id == 0U && (snapshot->revision != 0U || snapshot->length != 0U)) ||
+        (snapshot->operation_id != 0U && snapshot->revision == 0U))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    _Static_assert(UMI_BUILD_LIVE_OUTPUT_CAPACITY <= UMI_OUTPUT_VIEW_CAPACITY, "Output view must retain build tail");
+    UmiOutputViewSnapshot *view = g_new0(UmiOutputViewSnapshot, 1);
+    view->operation_id = snapshot->operation_id;
+    view->revision = snapshot->revision;
+    view->length = snapshot->length;
+    view->total_bytes = snapshot->total_bytes;
+    view->truncated = snapshot->truncated;
+    view->counters_saturated = snapshot->counters_saturated;
+    memcpy(view->bytes, snapshot->bytes, snapshot->length + 1U);
+    if (snapshot->operation_id != 0U) {
+        (void)g_snprintf(view->context, sizeof(view->context), "Latest capture: %s",
+            umi_build_phase_text(snapshot->phase));
+        (void)g_snprintf(view->status, sizeof(view->status), "%s%s",
+            snapshot->phase_complete ? umi_status_text(snapshot->status) : "running; result pending",
+            snapshot->streamed ? "" : " | final output only");
+    }
+    UmiStatus status = UmiOutputViewGtk4Update(panel, view);
+    g_free(view);
+    return status;
 }

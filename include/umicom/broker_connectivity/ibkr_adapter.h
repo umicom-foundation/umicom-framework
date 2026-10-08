@@ -51,6 +51,10 @@ UmiStatus umi_ibkr_adapter_map_order(
     const UmiOrderRequest *request,
     const UmiIbkrAdapterConfig *config,
     UmiIbkrOrderMessage *outMessage);
+/* Status-only compatibility mapping. Inactive, warnings and pending cancellation
+ * return UNAVAILABLE with output unchanged; they do not prove rejection or a
+ * completed cancellation. Use UmiIbkrReviewOrderObservation when filled and
+ * remaining quantities are available, including partial executions. */
 UmiStatus umi_ibkr_adapter_map_status(
     const char *providerStatus,
     UmiOrderStatus *outStatus);

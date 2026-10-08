@@ -160,4 +160,7 @@ int umi_cli_command_dependencies(UmiCliContext *context, int argc, char **argv);
  */
 int umi_cli_command_workflow(UmiCliContext *context, int argc, char **argv);
 
+/* Shared QEMU boot workflows; arguments exclude the qemu command name. */
+int umi_cli_command_qemu(int argc, char **argv);
+
 #endif

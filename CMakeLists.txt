@@ -262,6 +262,9 @@ find_package(SQLite3 QUIET)
 
 add_library(umicom_data STATIC
     src/data/data_server.c
+    # Job evidence shares Data Server transactions across native and web hosts.
+    src/data/job_history.c
+    src/data/job_history_codec.c
     src/data/connector.c
     src/data/store.c
     src/data/repository.c
@@ -2974,6 +2977,8 @@ add_library(umicom_finance STATIC
     src/finance/party.c
     src/finance/business_time.c
     src/finance/decimal.c
+    src/finance/decimal_arithmetic.c
+    src/finance/decimal_scientific.c
 )
 add_library(Umicom::finance ALIAS umicom_finance)
 set_target_properties(umicom_finance PROPERTIES EXPORT_NAME finance)
@@ -3021,6 +3026,9 @@ add_library(umicom_trading STATIC
     src/trading/oms.c
     src/trading/order_book.c
     src/trading/order_request.c
+    src/trading/fill_policy.c
+    src/trading/fill_watch.c
+    src/trading/price_increment.c
     src/trading/order_state.c
     src/trading/order_store.c
     src/trading/order_throttle.c
@@ -5572,7 +5580,10 @@ include(cmake/UmicomMemoryInspection.cmake)
 include(cmake/UmicomScopeInspection.cmake)
 include(cmake/UmicomVariableAssignment.cmake)
 include(cmake/UmicomLiveBuildOutput.cmake)
+include(cmake/UmicomLiveTestOutput.cmake)
 include(cmake/UmicomBuildLogCapture.cmake)
+include(cmake/UmicomJobHistory.cmake)
+include(cmake/UmicomTestArchive.cmake)
 include(cmake/UmicomInputFile.cmake)
 include(cmake/UmicomPlatformSecrets.cmake)
 include(cmake/UmicomProviderConnections.cmake)
@@ -5612,6 +5623,8 @@ include(cmake/UmicomWorkspaceValueArchives.cmake)
 # Copied source contents then invalidate old owner objects even when their
 # modification times predate those objects. Public-header checks remain active.
 include(cmake/UmicomSnippetUpdates.cmake)
+# Native QEMU commands consume the canonical VM planner and process owner.
+include(cmake/UmicomQemuCommand.cmake)
 include(cmake/UmicomValueOwnerBuildChecks.cmake)
 
 # Scope filters run through the same indexed search and owned worker session.

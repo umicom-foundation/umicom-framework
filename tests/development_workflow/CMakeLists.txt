@@ -122,3 +122,28 @@ if(COMMAND umicom_register_validation_target)
     umicom_register_validation_target(umicom-launch-arguments-test)
     umicom_register_validation_target(umicom-argument-launch-test)
 endif()
+
+# Restart qualification uses the existing controlled peer and production runtime.
+add_executable(umicom-debug-restart-session-test ../debug_restart/test_session.c)
+target_link_libraries(umicom-debug-restart-session-test PRIVATE Umicom::Framework)
+umicom_apply_warnings(umicom-debug-restart-session-test)
+umicom_apply_sanitizers(umicom-debug-restart-session-test)
+add_dependencies(umicom-debug-restart-session-test umicom-dap-protocol-fixture)
+foreach(case supported unsupported rejected timeout wrong-command event-first zero queued
+    reconfigure-before reconfigure-after reconfigure-rejected reconfigure-timeout)
+    add_test(NAME framework.debug_restart.${case} COMMAND umicom-debug-restart-session-test
+        "$<TARGET_FILE:umicom-dap-protocol-fixture>" "${case}")
+    set_tests_properties(framework.debug_restart.${case} PROPERTIES
+        TIMEOUT 20 LABELS "framework;debugger;restart;protocol-fixture;regression")
+endforeach()
+add_executable(umicom-debug-watch-invalidation-test ../debug_restart/test_watches.c)
+target_link_libraries(umicom-debug-watch-invalidation-test PRIVATE Umicom::Framework)
+umicom_apply_warnings(umicom-debug-watch-invalidation-test)
+umicom_apply_sanitizers(umicom-debug-watch-invalidation-test)
+add_test(NAME framework.debug_restart.watch_choices COMMAND umicom-debug-watch-invalidation-test)
+set_tests_properties(framework.debug_restart.watch_choices PROPERTIES TIMEOUT 20
+    LABELS "framework;debugger;restart;regression")
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-debug-restart-session-test)
+    umicom_register_validation_target(umicom-debug-watch-invalidation-test)
+endif()

@@ -99,6 +99,12 @@ uint64_t umi_debug_watch_registry_revision(const UmiDebugWatchRegistry *registry
  * safely.
  */
 void umi_debug_watch_registry_clear(UmiDebugWatchRegistry *registry);
+/* Retire evaluated values while preserving watch IDs, expressions and enabled
+ * choices. This owner-thread operation allocates nothing, advances the registry
+ * once, and clears session/value/type evidence. Empty owners are unchanged;
+ * revision exhaustion leaves every record untouched. */
+UmiStatus UmiDebugWatchRegistryInvalidateValues(UmiDebugWatchRegistry *registry);
+
 
 
 /** Check id and every fixed text array before lookup/copy. id must be nonempty;

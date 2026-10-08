@@ -157,6 +157,27 @@ UmiStatus umi_debug_runtime_adapter_snapshot(
     const UmiDebugRuntimeAdapter *adapter,
     UmiDebugRuntimeAdapterSnapshot *out_snapshot);
 
+
+/* An owner-thread observer may consume a protocol event that needs a response
+ * before the awaited request can complete. It may issue bounded nested requests
+ * on the same adapter but must not destroy it or recursively wait for the
+ * original sequence. Set consumed=1 only after handling the borrowed event.
+ * Unconsumed events retain FIFO order for ordinary event dispatch. */
+/* An observer that issues a nested request must consume the triggering event.
+ * Otherwise events received by that nested request would appear ahead of it.
+ * Declined events are queued even when the observer reports an error.
+ * A zero remaining timeout permits only an already queued response; no new
+ * transport read is started after the deadline. */
+typedef UmiStatus (*UmiDebugRuntimeEventObserver)(void *context,
+    const UmiDebugRuntimeEnvelope *event,uint32_t remainingMilliseconds,int *consumed);
+/* Wait with one timeout budget, including observer work. Nested requests may
+ * queue the original response; it is checked again before another read. The
+ * large receive envelope lives on the heap. A NULL observer uses normal event
+ * buffering. Adapter ownership and all input/output storage must survive return. */
+UmiStatus UmiDebugRuntimeAdapterWaitObserved(UmiDebugRuntimeAdapter *adapter,uint64_t requestSequence,
+    uint32_t timeoutMilliseconds,UmiDebugRuntimeEventObserver observer,void *context,
+    UmiDebugRuntimeEnvelope *outResponse);
+
 #ifdef __cplusplus
 }
 #endif

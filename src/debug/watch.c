@@ -339,3 +339,23 @@ void UmiDebugWatchPublishSetup(UmiDebugWatchRegistry *owner, const UmiDebugWatch
     for (size_t i = 0U; i < owner->count; ++i)
         owner->items[i].revision = revision;
 }
+
+/* Watches are user-authored expressions. A resumed or restarted target invalidates
+ * their results, not the expressions themselves. Centralising this distinction
+ * keeps frontends from clearing the user's watch list to retire old evidence. */
+UmiStatus UmiDebugWatchRegistryInvalidateValues(UmiDebugWatchRegistry *registry)
+{
+    if (registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (registry->count == 0U) return UMI_STATUS_OK;
+    if (registry->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    ++registry->revision;
+    for (size_t index = 0U; index < registry->count; ++index) {
+        UmiDebugWatchSnapshot *item = &registry->items[index];
+        memset(item->session_id, 0, sizeof item->session_id);
+        memset(item->value, 0, sizeof item->value);
+        memset(item->type, 0, sizeof item->type);
+        item->valid = 0;
+        item->revision = registry->revision;
+    }
+    return UMI_STATUS_OK;
+}

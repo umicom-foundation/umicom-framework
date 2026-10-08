@@ -18,7 +18,52 @@ struct UmiCtestJob {
     uint32_t repeats;
     int stop_on_failure;
     UmiCtestJobSnapshot progress;
+    /* Only the worker writes this owned buffer; readers receive a mutex-protected copy. */
+    UmiCtestOutputSnapshot output;
 };
+
+
+/* These helpers use the job mutex. Revision never wraps, allowing frontends to
+ * avoid replacing a paused selection when no newer capture has arrived. */
+static void CtestOutputChanged(UmiCtestOutputSnapshot *output)
+{
+    if (output->revision != UINT64_MAX) ++output->revision;
+    else output->tail.counters_saturated = true;
+}
+
+static void CtestOutputBegin(UmiCtestJob *job, const UmiCtestJobRequest *request,
+    uint32_t attempt)
+{
+    UmiCtestOutputSnapshot *output = &job->output;
+    uint64_t revision = output->revision;
+    bool saturated = output->tail.counters_saturated;
+    memset(output, 0, sizeof(*output));
+    output->revision = revision;
+    output->tail.counters_saturated = saturated;
+    output->invocation = job->progress.completed + 1U;
+    output->attempt = attempt;
+    output->result_state = UMI_TEST_STATE_NOT_RUN;
+    output->result_status = UMI_STATUS_BUSY;
+    memcpy(output->test_id, request->test_id, sizeof(output->test_id));
+    memcpy(output->name, request->name, sizeof(output->name));
+    CtestOutputChanged(output);
+}
+
+/* Process bytes are borrowed only for this call. Copy before returning; no UI
+ * pointers, file writes or application callbacks are used under the job lock. */
+static void CtestOutputObserve(const char *bytes, size_t length, void *context)
+{
+    UmiCtestJob *job = context;
+    if (length == 0U) return;
+    (void)umi_mutex_lock(job->mutex);
+    UmiCtestOutputSnapshot *output = &job->output;
+    if (output->capture_status == UMI_STATUS_OK) {
+        output->capture_status = UmiOutputTailAppend(output->bytes, sizeof(output->bytes),
+            &output->tail, bytes, length);
+        CtestOutputChanged(output);
+    }
+    (void)umi_mutex_unlock(job->mutex);
+}
 
 static int CtestJobTerminal(UmiTaskState state)
 {
@@ -32,6 +77,10 @@ static void CtestJobRecord(UmiCtestJob *job, const UmiTestResult *result)
 {
     (void)umi_mutex_lock(job->mutex);
     job->results[job->progress.completed++] = *result;
+    job->output.attempt_complete = true;
+    job->output.result_status = result->status;
+    job->output.result_state = result->state;
+    CtestOutputChanged(&job->output);
     switch (result->state) {
         case UMI_TEST_STATE_PASSED: ++job->progress.passed; break;
         case UMI_TEST_STATE_FAILED: ++job->progress.failed; break;
@@ -53,6 +102,10 @@ static void CtestJobRecord(UmiCtestJob *job, const UmiTestResult *result)
 
 /* One worker serialises the selected attempts; CTest retains fixture and
  * timeout ownership. The GUI thread can cancel or read progress throughout. */
+/* Queued attempts now retain live process output in Framework-owned storage.
+ * Selection ordering, cancellation and completed-result publication remain unchanged.
+ * The previous implementation remains here for engineering review. */
+#if 0
 static UmiStatus CtestJobRun(UmiTaskContext *context, void *data)
 {
     UmiCtestJob *job = data;
@@ -84,6 +137,61 @@ static UmiStatus CtestJobRun(UmiTaskContext *context, void *data)
                 options.cancellation = UmiTaskContextCancellation(context);
                 result.status = UmiCtestRunConfigured(request->build_directory,
                     request->name, &options, &result);
+            }
+            /* Do not accept a passing outcome when process/report validation
+             * failed, even if a future provider change supplies inconsistent data. */
+            if (result.status != UMI_STATUS_OK && result.state == UMI_TEST_STATE_PASSED)
+                result.state = UMI_TEST_STATE_FAILED;
+            CtestJobRecord(job, &result);
+            ++completed;
+            (void)umi_task_context_report(context,
+                (unsigned)((completed * 100U) / job->progress.planned), request->name);
+            if (firstError == UMI_STATUS_OK && result.status != UMI_STATUS_OK)
+                firstError = result.status;
+            if (result.state == UMI_TEST_STATE_CANCELLED ||
+                umi_task_context_is_cancelled(context)) return UMI_STATUS_CANCELLED;
+            if (job->stop_on_failure &&
+                (result.status != UMI_STATUS_OK ||
+                 (result.state != UMI_TEST_STATE_PASSED && result.state != UMI_TEST_STATE_SKIPPED)))
+                return firstError != UMI_STATUS_OK ? firstError : UMI_STATUS_INVALID_STATE;
+        }
+    }
+    return firstError;
+}
+#endif
+static UmiStatus CtestJobRun(UmiTaskContext *context, void *data)
+{
+    UmiCtestJob *job = data;
+    UmiStatus firstError = UMI_STATUS_OK;
+    size_t completed = 0U;
+    for (uint32_t pass = 0U; pass < job->repeats; ++pass) {
+        for (size_t index = 0U; index < job->count; ++index) {
+            const UmiCtestJobRequest *request = &job->requests[index];
+            if (umi_task_context_is_cancelled(context)) return UMI_STATUS_CANCELLED;
+            (void)umi_mutex_lock(job->mutex);
+            memcpy(job->progress.active_test_id, request->test_id, sizeof(request->test_id));
+            memcpy(job->progress.active_name, request->name, sizeof(request->name));
+            job->progress.active_attempt = pass + 1U;
+            CtestOutputBegin(job, request, pass + 1U);
+            (void)umi_mutex_unlock(job->mutex);
+            UmiTestResult result = {0};
+            memcpy(result.test_id, request->test_id, sizeof(result.test_id));
+            memcpy(result.name, request->name, sizeof(result.name));
+            result.state = UMI_TEST_STATE_NOT_RUN;
+            result.exit_code = -1;
+            if (!request->enabled) {
+                result.state = UMI_TEST_STATE_SKIPPED;
+                (void)snprintf(result.output, sizeof(result.output),
+                    "Disabled in the selected catalogue; no test process was launched.");
+                CtestOutputObserve(result.output, strlen(result.output), job);
+            } else {
+                UmiCtestRunOptions options = {0};
+                options.configuration = request->configuration;
+                options.test_id = request->test_id;
+                options.timeout_ms = request->timeout_ms;
+                options.cancellation = UmiTaskContextCancellation(context);
+                result.status = UmiCtestRunObserved(request->build_directory,
+                    request->name, &options, CtestOutputObserve, job, &result);
             }
             /* Do not accept a passing outcome when process/report validation
              * failed, even if a future provider change supplies inconsistent data. */
@@ -214,5 +322,38 @@ UmiStatus UmiCtestJobDestroy(UmiCtestJob *job)
     umi_task_destroy(job->task);
     umi_mutex_destroy(job->mutex);
     free(job->requests); free(job->results); free(job);
+    return UMI_STATUS_OK;
+}
+
+
+UmiStatus UmiCtestJobReadOutput(UmiCtestJob *job, UmiCtestOutputSnapshot *outSnapshot)
+{
+    if (job == NULL || outSnapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)umi_mutex_lock(job->mutex);
+    *outSnapshot = job->output;
+    outSnapshot->task_id = umi_task_id(job->task);
+    (void)umi_mutex_unlock(job->mutex);
+    return UMI_STATUS_OK;
+}
+
+/* Archive and audit consumers need the original selection, not a reconstruction
+ * from whichever test is currently highlighted in a frontend. These immutable
+ * copies can also support future remote/headless result viewers. */
+#include "umicom/testing/ctest_capture.h"
+UmiStatus UmiCtestJobReadPlan(UmiCtestJob *job, UmiCtestJobPlanSnapshot *out_plan)
+{
+    if (job == NULL || out_plan == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiCtestJobPlanSnapshot plan = {0};
+    plan.request_count = job->count;
+    plan.repeat_count = job->repeats;
+    plan.stop_on_failure = job->stop_on_failure != 0;
+    *out_plan = plan;
+    return UMI_STATUS_OK;
+}
+UmiStatus UmiCtestJobRequestAt(UmiCtestJob *job, size_t index, UmiCtestJobRequest *out_request)
+{
+    if (job == NULL || out_request == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (index >= job->count) return UMI_STATUS_NOT_FOUND;
+    *out_request = job->requests[index];
     return UMI_STATUS_OK;
 }

@@ -20,6 +20,8 @@ extern "C" {
 #endif
 
 /* Determine whether one normalised order state may transition to another. */
+/* Unknown enum values are rejected even when both operands are equal.
+ * Refused apply operations leave the caller-owned state unchanged. */
 bool umi_trading_order_state_machine_allowed(UmiTradingCoreOrderState from,UmiTradingCoreOrderState to);
 /* Apply a valid transition in place. */
 UmiStatus umi_trading_order_state_machine_apply(UmiTradingCoreOrderState *state,UmiTradingCoreOrderState next);

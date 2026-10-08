@@ -137,3 +137,6 @@ target_link_libraries(umicom-vm-real-qmp-test PRIVATE Umicom::vm_manager)
 set(UMICOM_VM_TEST_QEMU "" CACHE FILEPATH "Explicit trusted QEMU for optional real protocol test")
 add_test(NAME framework.vm_manager.real_qemu_protocol COMMAND umicom-vm-real-qmp-test "${UMICOM_VM_TEST_QEMU}" "${CMAKE_CURRENT_BINARY_DIR}")
 set_tests_properties(framework.vm_manager.real_qemu_protocol PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 20)
+
+# Standalone guests use the same QMP and process services as packaged images.
+include("${CMAKE_CURRENT_LIST_DIR}/BootTests.cmake")

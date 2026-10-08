@@ -15,6 +15,29 @@
 #include "umicom/broker_connectivity/connection_gtk4.h"
 #include "umicom/broker_connectivity/connection.h"
 #include "umicom/broker_connectivity/quotes.h"
+#include "umicom/broker_connectivity/contract_details.h"
+#include "umicom/broker_connectivity/market_rule.h"
+#include "umicom/broker_connectivity/execution_observation.h"
+#include "umicom/broker_connectivity/pnl.h"
+#include "umicom/broker_connectivity/market_depth.h"
+#include "umicom/broker_connectivity/symbol_search.h"
+#include "umicom/broker_connectivity/order_recovery.h"
+#include "umicom/broker_connectivity/completed_orders.h"
+#include "umicom/broker_connectivity/completed_report.h"
+#include "umicom/broker_connectivity/historical_chart.h"
+#include "umicom/broker_connectivity/historical_report.h"
+#include "umicom/broker_connectivity/realtime_chart.h"
+#include "umicom/broker_connectivity/realtime_report.h"
+#include "umicom/broker_connectivity/scanner.h"
+#include "umicom/broker_connectivity/scanner_catalog.h"
+#include "umicom/broker_connectivity/discovery_report.h"
+#include "umicom/broker_connectivity/option_contract.h"
+#include <stddef.h>
+#ifdef UMI_IBKR_HAS_HISTORY_CHART
+#include "umicom/chart/adapters/cairo_renderer.h"
+#endif
+#include "umicom/broker_connectivity/fill_policy.h"
+#include "umicom/trading/fill_watch.h"
 #include "umicom/broker_connectivity/observation_export.h"
 #include "umicom/platform/output_file.h"
 #ifdef UMI_IBKR_HAS_FILTERED_CHOICES
@@ -28,6 +51,7 @@
 #include "desktop_system_brand.inc"
 
 #define UI_KEY "umicom-ibkr-connection-owner"
+typedef struct HistoricalCanvas HistoricalCanvas;
 typedef struct ConnectionUi {
     UmiIbkrConnection *connection;
     UmiIbkrConnectionSnapshot snapshot;
@@ -42,6 +66,62 @@ typedef struct ConnectionUi {
     gboolean quoteSubscribed;
     GtkWidget *exportPath, *exportReport, *exportStatus;
     gboolean exportBusy;
+    /* The connection window owns a local notification watch. It never owns an
+     * order submission callback, and a new connection retires the old binding. */
+    GtkWindow *window;
+    GtkWidget *fillMode, *fillSide, *fillTif, *fillQuantity, *fillPrice, *fillBuffer;
+    GtkWidget *fillAge, *fillSkew, *fillReview, *fillStart, *fillStop, *fillOutput;
+    UmiFullQuantityWatch *fillWatch;
+    UmiFullQuantityPolicy fillPolicy;
+    UmiIbkrQuoteContract fillContract;
+    uint32_t fillRequest;
+    gboolean fillBusy, fillRetired;
+    GtkWidget *contractRead, *contractAbandon, *contractOutput;
+    uint32_t contractRequest;
+    GtkWidget *ruleRead, *ruleOutput;
+    uint32_t ruleId, ruleQuoteRequest, ruleContractRequest;
+    UmiIbkrQuoteContract ruleContract;
+    GtkWidget *executionRead,*executionAbandon,*executionOutput,*executionReviewOutput;
+    GtkWidget *executionPermanent,*executionContract,*executionQuantity,*executionSide;
+    uint32_t executionRequest;
+    /* Each observation panel owns its request identity until stopped or replaced. */
+    GtkWidget *pnlModel,*pnlContract,*pnlStart,*pnlStop,*pnlOutput;
+    uint32_t pnlRequest;
+    GtkWidget *symbolSearchPattern,*symbolSearchRead,*symbolSearchAbandon;
+    GtkWidget *symbolSearchResults,*symbolSearchApply,*symbolSearchOutput;
+    uint32_t symbolSearchRequest,symbolSearchDisplayed;
+    GtkWidget *depthRows,*depthSmart,*depthStart,*depthStop,*depthOutput;
+    uint32_t depthRequest;
+    GtkWidget *ordersAll,*ordersRead,*ordersOutput;
+    GtkWidget *completedApiOnly,*completedRead,*completedOutput;
+    GtkWidget *completedExportPath,*completedExportReport,*completedExportStatus;
+    gboolean completedExportBusy;
+    GtkWidget *historySize,*historyKind,*historyDuration,*historyEnd,*historyRth;
+    GtkWidget *historyRead,*historyCancel,*historyOutput,*historyDrawing;
+    GtkWidget *historyVisible,*historyOffset;
+    uint32_t historyRequest;
+    GtkWidget *historyExportPath,*historyExportReport,*historyExportStatus;
+    gboolean historyExportBusy;
+    HistoricalCanvas *historyCanvas; /* Owned by the drawing widget. */
+    /* The native panel presents one explicit subscription; Framework consumers
+     * can use additional independent slots without adding another transport. */
+    GtkWidget *streamKind,*streamRth,*streamStart,*streamStop,*streamOutput;
+    GtkWidget *streamDrawing,*streamVisible,*streamOffset;
+    GtkWidget *streamExportPath,*streamExportReport,*streamExportStatus;
+    gboolean streamExportBusy;
+    GtkWidget *scannerEntries[19], *scannerRows, *scannerFilters, *scannerExclude;
+    GtkWidget *scannerResults, *scannerOutput;
+    GtkWidget *catalogText, *catalogSearch, *catalogOutput;
+    gboolean catalogLoaded, catalogReset;
+    uint32_t scannerRequest, scannerDisplayedRequest;
+    uint64_t scannerDisplayedGeneration;
+    GtkWidget *optionSymbol, *optionType, *optionExchange, *optionResults, *optionExpiry, *optionStrike;
+    GtkWidget *optionRight, *optionCurrency, *optionOutput;
+    uint32_t optionRequest, optionDisplayedRequest, optionContractRequest;
+    GtkWidget *discoveryExportPath[2], *discoveryExportReport[2], *discoveryExportStatus[2];
+    gboolean discoveryExportBusy[2];
+    uint32_t streamRequest;
+    HistoricalCanvas *streamCanvas; /* Uses the same owned-scene drawing callback. */
 #ifdef UMI_IBKR_HAS_FILTERED_CHOICES
     GtkWidget *positionFilter, *positionPicker, *positionDetail;
     UmiIbkrPositionReview *positionReview;
@@ -68,6 +148,30 @@ static GtkWidget *Text(const char *value)
 #include "ibkr_position_review.inc"
 #endif
 
+static void FillWatchRetire(ConnectionUi *ui)
+{
+    if (ui->fillWatch != NULL) ui->fillRetired = TRUE;
+    UmiFullQuantityWatchDestroy(ui->fillWatch);
+    ui->fillWatch = NULL;
+    ui->fillRequest = 0U;
+}
+static void FillWatchPaint(ConnectionUi *ui, uint64_t now);
+static void ContractDetailsPaint(ConnectionUi *ui, uint64_t now);
+static void MarketRulePaint(ConnectionUi *ui, uint64_t now);
+static void ExecutionsPaint(ConnectionUi *ui, uint64_t now);
+static void PnlPaint(ConnectionUi *ui, uint64_t now);
+static void SymbolSearchPaint(ConnectionUi *ui, uint64_t now);
+static void DepthPaint(ConnectionUi *ui, uint64_t now);
+static void OrdersPaint(ConnectionUi *ui, uint64_t now);
+static void CompletedPaint(ConnectionUi *ui, uint64_t now);
+static void HistoricalPaint(ConnectionUi *ui, uint64_t now);
+static void HistoricalRetire(ConnectionUi *ui);
+static void StreamingPaint(ConnectionUi *ui, uint64_t now);
+static void ScannerPaint(ConnectionUi *ui, uint64_t now);
+static void CatalogPaint(ConnectionUi *ui, uint64_t now);
+static void OptionChainPaint(ConnectionUi *ui, uint64_t now);
+static void StreamingRetire(ConnectionUi *ui);
+
 static GtkWidget *Brand(const unsigned char *bytes, size_t length, int height)
 {
     GBytes *data = g_bytes_new_static(bytes, length);
@@ -89,23 +193,42 @@ static void Controls(ConnectionUi *ui)
 {
     gboolean active = Connected(ui);
     GtkWidget *profile[] = {ui->mode, ui->program, ui->port, ui->client};
+    /* A sensitivity observer may close the window. The former loop is kept
+     * for review; the replacement stops before accessing another child. */
+#if 0
     for (size_t i = 0; i < G_N_ELEMENTS(profile); ++i)
         gtk_widget_set_sensitive(profile[i], !active);
+#endif
+    for (size_t i = 0; i < G_N_ELEMENTS(profile); ++i)
+    {
+        if (ui->closed) return;
+        gtk_widget_set_sensitive(profile[i], !active);
+    }
+    if (ui->closed) return;
     gboolean live = gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->mode)) == 1U;
     gtk_widget_set_sensitive(ui->ack, !active && live);
+    if (ui->closed) return;
     gtk_widget_set_sensitive(ui->connect, !active);
+    if (ui->closed) return;
     gtk_widget_set_sensitive(ui->disconnect, active);
+    if (ui->closed) return;
     gboolean canRead = active && ui->snapshot.state == UMI_IBKR_READY &&
         !ui->snapshot.requestIssued && ui->snapshot.accountCount != 0U;
     gtk_widget_set_sensitive(ui->read, canRead);
+    if (ui->closed) return;
     gtk_widget_set_sensitive(ui->accounts, canRead);
+    if (ui->closed) return;
     /* Quote inspection shares the existing connection but has its own request
      * lifetime. A failed quote remains cancellable without closing the account. */
     gboolean ready = active && ui->snapshot.state == UMI_IBKR_READY;
     gtk_widget_set_sensitive(ui->quoteStart, ready && !ui->quoteSubscribed);
+    if (ui->closed) return;
     gtk_widget_set_sensitive(ui->quoteStop, ready && ui->quoteSubscribed);
+    if (ui->closed) return;
     gtk_widget_set_sensitive(ui->quoteContract, !ui->quoteSubscribed);
+    if (ui->closed) return;
     gtk_widget_set_sensitive(ui->quoteExchange, !ui->quoteSubscribed);
+    if (ui->closed) return;
 }
 /* Show each field's own receipt age. Activity on another side of the market
  * does not refresh this field, and the data type is always printed beside it. */
@@ -150,7 +273,9 @@ static void Render(ConnectionUi *ui, uint64_t now)
         g_object_unref(items);
         ui->populated = TRUE;
     }
+    if (ui->closed) return;
     RenderQuote(ui, now);
+    if (ui->closed) return;
     GString *text = g_string_new(NULL);
     const UmiIbkrConnectionSnapshot *s = &ui->snapshot;
     g_string_append_printf(text, "Requested mode: %s\nServer mode attested: NO\nOrders: not available\nProtocol version: %d\n\n",
@@ -189,6 +314,7 @@ static void Render(ConnectionUi *ui, uint64_t now)
     } else {
         g_string_free(text, TRUE);
     }
+    if (ui->closed) return;
     GString *status = g_string_new(UmiIbkrConnectionStateName(s->state));
     g_string_append_printf(status, "\n%s", s->message);
     if (s->summaryComplete && now >= s->summaryAtMilliseconds)
@@ -197,8 +323,40 @@ static void Render(ConnectionUi *ui, uint64_t now)
         g_string_append_printf(status, " Positions age: %" PRIu64 " ms.", now-s->positionsAtMilliseconds);
     gtk_label_set_text(GTK_LABEL(ui->status), status->str);
     g_string_free(status, TRUE);
+    if (ui->closed) return;
     Controls(ui);
+    ContractDetailsPaint(ui, now);
+    if (ui->closed) return;
+    MarketRulePaint(ui, now);
+    if (ui->closed) return;
+    ExecutionsPaint(ui, now);
+    if (ui->closed) return;
+    PnlPaint(ui, now);
+    if (ui->closed) return;
+    SymbolSearchPaint(ui, now);
+    if (ui->closed) return;
+    DepthPaint(ui, now);
+    if (ui->closed) return;
+    OrdersPaint(ui, now);
+    if (ui->closed) return;
+    CompletedPaint(ui, now);
+    if (ui->closed) return;
+    HistoricalPaint(ui, now);
+    if (ui->closed) return;
+    StreamingPaint(ui, now);
+    if (ui->closed) return;
+    CatalogPaint(ui, now);
+    if (ui->closed) return;
+    ScannerPaint(ui, now);
+    if (ui->closed) return;
+    OptionChainPaint(ui, now);
+    if (ui->closed) return;
+    FillWatchPaint(ui, now);
 }
+/* Native label callbacks can remove a retained window during polling. The
+ * replacement below checks logical lifetime after publication; the former
+ * timer callback is retained for engineering review. */
+#if 0
 static gboolean Poll(gpointer data)
 {
     ConnectionUi *ui = Owner(GTK_WINDOW(data));
@@ -217,6 +375,32 @@ static gboolean Poll(gpointer data)
         return G_SOURCE_REMOVE;
     }
     return G_SOURCE_CONTINUE;
+}
+#endif
+/* Poll owns a temporary window reference while GTK publishes labels. A
+ * notification may close the native window; reacquire the logical owner before
+ * scheduling or touching state again. This also protects future child panels. */
+static gboolean Poll(gpointer data)
+{
+    GtkWindow *window = GTK_WINDOW(data);
+    g_object_ref(window);
+    ConnectionUi *ui = Owner(window);
+    if (ui == NULL) { g_object_unref(window); return G_SOURCE_REMOVE; }
+    const uint64_t now = UmiIbkrMonotonicMilliseconds();
+    UmiStatus status = UmiIbkrConnectionPump(ui->connection, now);
+    (void)UmiIbkrConnectionCopy(ui->connection, &ui->snapshot);
+    if (status != UMI_STATUS_OK && Connected(ui)) UmiIbkrConnectionClose(ui->connection);
+    if (status != UMI_STATUS_OK || now-ui->lastPaint >= 250U)
+    {
+        Render(ui, now);
+        ui = Owner(window);
+        if (ui == NULL) { g_object_unref(window); return G_SOURCE_REMOVE; }
+        ui->lastPaint = now;
+    }
+    const gboolean keep = status == UMI_STATUS_OK && Connected(ui);
+    if (!keep) ui->source = 0U;
+    g_object_unref(window);
+    return keep ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
 }
 static void ProfileChanged(GObject *object, GParamSpec *spec, gpointer data)
 {
@@ -239,6 +423,7 @@ static void ConnectClicked(GtkButton *button, gpointer data)
     /* A catalogue identity never crosses into a newly created connection. */
     PositionReviewRetire(ui);
 #endif
+    FillWatchRetire(ui);
     UmiIbkrConnectionOptions options = UmiIbkrConnectionOptionsDefault();
     options.environment = gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->mode)) == 1U ? UMI_TRADING_LIVE : UMI_TRADING_PAPER;
     options.program = gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->program)) == 1U ? UMI_IBKR_GATEWAY : UMI_IBKR_TWS;
@@ -253,9 +438,23 @@ static void ConnectClicked(GtkButton *button, gpointer data)
     }
     UmiIbkrConnectionDestroy(ui->connection);
     ui->connection = NULL; ui->populated = FALSE;
+    HistoricalRetire(ui);
+    StreamingRetire(ui);
+    ui->catalogLoaded=FALSE; ui->catalogReset=TRUE;
+    ui->scannerRequest=0U; ui->scannerDisplayedRequest=0U; ui->scannerDisplayedGeneration=0U;
+    ui->optionRequest=0U; ui->optionDisplayedRequest=0U; ui->optionContractRequest=0U;
     /* Reconnecting creates a new request namespace. Discard the old inspector
      * selection before the new connection can allocate an identical number. */
     ui->quoteRequest = 0U; ui->quoteSubscribed = FALSE;
+    ui->contractRequest = 0U;
+    ui->executionRequest = 0U;
+    ui->pnlRequest = 0U;
+    ui->symbolSearchRequest = 0U;
+    ui->depthRequest = 0U;
+    ui->symbolSearchDisplayed = 0U;
+    ui->ruleId = 0U;
+    ui->ruleQuoteRequest = 0U;
+    ui->ruleContractRequest = 0U;
     gtk_label_set_text(GTK_LABEL(ui->quoteOutput), "No quote requested on this connection.");
     gtk_label_set_text(GTK_LABEL(ui->quoteNotice), "");
     memset(&ui->snapshot, 0, sizeof ui->snapshot);
@@ -268,6 +467,7 @@ static void ConnectClicked(GtkButton *button, gpointer data)
     uint64_t now = UmiIbkrMonotonicMilliseconds();
     status = UmiIbkrConnectionOpen(ui->connection, now);
     Render(ui, now);
+    if (ui->closed) return;
     if (status == UMI_STATUS_OK) {
         ui->lastPaint = now;
         ui->source = g_timeout_add(25U, Poll, data);
@@ -311,6 +511,7 @@ static void QuoteStopClicked(GtkButton *button, gpointer data)
     (void)button;
     ConnectionUi *ui = Owner(GTK_WINDOW(data));
     if (ui == NULL || ui->connection == NULL || ui->quoteRequest == 0U) return;
+    FillWatchRetire(ui);
     UmiStatus status = UmiIbkrQuoteCancel(ui->connection, ui->quoteRequest);
     gtk_label_set_text(GTK_LABEL(ui->quoteNotice), status == UMI_STATUS_OK
         ? "Quote stream cancelled. Choose another contract or disconnect."
@@ -344,6 +545,7 @@ static void Destroyed(GtkWidget *widget, gpointer data)
     ConnectionUi *ui = g_object_get_data(G_OBJECT(widget), UI_KEY);
     if (ui == NULL || ui->closed) return;
     ui->closed = TRUE;
+    FillWatchRetire(ui);
 #ifdef UMI_IBKR_HAS_FILTERED_CHOICES
     PositionReviewRetire(ui);
 #endif
@@ -359,6 +561,7 @@ static void FreeOwner(gpointer data)
     if (ui->source != 0U) g_source_remove(ui->source);
     UmiIbkrConnectionDestroy(ui->connection);
     g_free(ui->lastOutput);
+    FillWatchRetire(ui);
 #ifdef UMI_IBKR_HAS_FILTERED_CHOICES
     PositionReviewRetire(ui);
 #endif
@@ -371,10 +574,30 @@ static void Field(GtkGrid *grid, const char *name, GtkWidget *widget, int row, c
     gtk_widget_set_hexpand(widget, TRUE);
     gtk_widget_set_name(widget, id);
 }
+/* The native adapter only collects fields and paints shared policy results. */
+#include "ibkr_fill_policy.inc"
+#include "ibkr_contract_details.inc"
+#include "ibkr_market_rule.inc"
+#include "ibkr_executions.inc"
+#include "ibkr_pnl.inc"
+#include "ibkr_symbol_search.inc"
+#include "ibkr_depth.inc"
+#include "ibkr_orders.inc"
+#include "ibkr_completed_export.inc"
+#include "ibkr_completed.inc"
+#include "ibkr_historical_export.inc"
+#include "ibkr_historical.inc"
+#include "ibkr_streaming_export.inc"
+#include "ibkr_streaming.inc"
+#include "ibkr_discovery_export.inc"
+#include "ibkr_scanner_catalog.inc"
+#include "ibkr_scanner.inc"
+#include "ibkr_option_chain.inc"
 GtkWindow *UmiIbkrGtkCreate(GtkWindow *parent)
 {
     GtkWindow *window = GTK_WINDOW(gtk_window_new());
     ConnectionUi *ui = g_new0(ConnectionUi, 1);
+    ui->window = window;
     g_object_set_data_full(G_OBJECT(window), UI_KEY, ui, FreeOwner);
 /* Close the connection at native window removal, including retained windows. The previous implementation remains for engineering review. */
 #if 0
@@ -478,6 +701,20 @@ GtkWindow *UmiIbkrGtkCreate(GtkWindow *parent)
     g_signal_connect_object(ui->read, "clicked", G_CALLBACK(ReadClicked), window, 0);
     g_signal_connect_object(ui->quoteStart, "clicked", G_CALLBACK(QuoteStartClicked), window, 0);
     g_signal_connect_object(ui->quoteStop, "clicked", G_CALLBACK(QuoteStopClicked), window, 0);
+    FillPolicyControls(window, ui, root);
+    ContractDetailsControls(window, ui, root);
+    MarketRuleControls(window, ui, root);
+    ExecutionsControls(window, ui, root);
+    PnlControls(window, ui, root);
+    SymbolSearchControls(window, ui, root);
+    DepthControls(window, ui, root);
+    OrdersControls(window, ui, root);
+    CompletedControls(window, ui, root);
+    HistoricalControls(window, ui, root);
+    StreamingControls(window, ui, root);
+    CatalogControls(window, ui, root);
+    ScannerControls(window, ui, root);
+    OptionChainControls(window, ui, root);
     ObservationExportControls(window, ui, root);
 #ifdef UMI_IBKR_HAS_FILTERED_CHOICES
     PositionReviewControls(window, ui, root);

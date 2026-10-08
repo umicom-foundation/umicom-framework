@@ -41,6 +41,20 @@ function(umicom_release_contracts_prepare)
         return()
     endif()
     set_property(GLOBAL PROPERTY UMICOM_RELEASE_CONTRACTS_PREPARED TRUE)
+    # Raw byte retention, test execution and native display have explicit owners.
+    _umicom_release_declare_pair(umicom_platform include/umicom/platform/output_tail.h src/platform/output_tail.c)
+    _umicom_release_declare_pair(umicom_testing include/umicom/testing/ctest_output.h src/testing/ctest_adapter.c)
+    _umicom_release_declare_pair(umicom_ui_gtk4 include/umicom/ui/gtk4/output_view.h adapters/gtk4/output_view_gtk4.c)
+    _umicom_release_declare_pair(umicom_ui_gtk4 include/umicom/testing/ctest_output_gtk4.h adapters/gtk4/ctest_output_gtk4.c)
+    # Test archives keep their persistence dependency outside the execution owner.
+    _umicom_release_declare_pair(umicom_testing include/umicom/testing/ctest_capture.h src/testing/ctest_adapter.c)
+    _umicom_release_declare_pair(umicom_test_archive include/umicom/testing/archive.h src/testing/archive.c)
+    _umicom_release_declare_pair(umicom_test_archive include/umicom/testing/archive_write.h src/testing/archive_write.c)
+    _umicom_release_declare_pair(umicom_test_archive include/umicom/testing/archive_compare.h src/testing/archive.c)
+    _umicom_release_declare_pair(umicom_test_archive include/umicom/testing/archive_review.h src/testing/archive_review.c)
+    # Job persistence belongs to Data Server; worker integration belongs to build.
+    _umicom_release_declare_pair(umicom_data include/umicom/data/job_history.h src/data/job_history.c)
+    _umicom_release_declare_pair(umicom_build include/umicom/build/job_history.h src/build/project_session.c)
     # Captured row mappings and broker reviews keep portable logic separate from GTK.
     _umicom_release_declare_pair(umicom_ui include/umicom/ui/text_projection.h src/ui/text_projection.c)
     _umicom_release_declare_pair(umicom_ui_gtk4 include/umicom/ui/gtk4/filtered_choices.h adapters/gtk4/filtered_choices.c)

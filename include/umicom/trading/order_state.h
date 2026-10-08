@@ -30,6 +30,8 @@ extern "C" {
  * Provide the order transition allowed operation used by this module and its client
  * applications.
  */
+/* Only declared states are valid, including for an unchanged state. */
+int UmiOrderStatusValid(UmiOrderStatus state);
 int umi_order_transition_allowed(UmiOrderStatus from, UmiOrderStatus to);
 #ifdef __cplusplus
 }

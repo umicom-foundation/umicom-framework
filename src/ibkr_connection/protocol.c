@@ -163,6 +163,22 @@ static UmiStatus ProviderMessage(UmiIbkrConnection *c,char **f,size_t n)
     /* Quote-scoped refusals belong to their subscription, not the account
      * snapshot. The frame has already passed the diagnostic text bounds. */
     if (UmiIbkrQuoteProviderMessage(c, f[2], (int)code, f[4])) return UMI_STATUS_OK;
+    if (UmiIbkrContractDetailsProviderMessage(c, f[2], (int)code, f[4])) return UMI_STATUS_OK;
+    if (UmiIbkrExecutionsProviderMessage(c, f[2], (int)code, f[4])) return UMI_STATUS_OK;
+    if (UmiIbkrDepthProviderMessage(c, f[2], (int)code, f[4])) return UMI_STATUS_OK;
+    if (UmiIbkrPnlProviderMessage(c, f[2], (int)code, f[4])) return UMI_STATUS_OK;
+    if (UmiIbkrSymbolSearchProviderMessage(c, f[2], (int)code, f[4])) return UMI_STATUS_OK;
+    if (UmiIbkrHistoricalProviderMessage(c, f[2], (int)code, f[4])) return UMI_STATUS_OK;
+    if (UmiIbkrRealtimeProviderMessage(c, f[2], (int)code, f[4])) return UMI_STATUS_OK;
+    if (UmiIbkrScannerProviderMessage(c, f[2], (int)code, f[4])) return UMI_STATUS_OK;
+    if (UmiIbkrOptionChainProviderMessage(c, f[2], (int)code, f[4])) return UMI_STATUS_OK;
+    /* Request IDs are never reused on a connection. Once an observation owner
+     * retires, its late diagnostic cannot fail a newer contract/quote or account
+     * inspection. Global diagnostics and IDs never issued here keep the existing
+     * connection-level error behavior below. */
+    uint64_t retiredRequest;
+    if (UmiIbkrUnsigned(f[2], &retiredRequest) && retiredRequest >= 36000U &&
+        retiredRequest < c->nextQuoteRequest) return Ignore(c);
     c->snapshot.providerCode=(int)code;
     /* Never crop UTF-8 in the middle of a code point. Long provider text
      * is explicitly omitted, not published as a complete diagnostic. */
@@ -184,6 +200,34 @@ static UmiStatus Decode(UmiIbkrConnection *c,const unsigned char *body,size_t le
     char number[21]={0};memcpy(number,body,(size_t)(first-body));
     if(!UmiIbkrUnsigned(number,&id))return UMI_STATUS_PARSE_ERROR;
     bool handshake=c->snapshot.state==UMI_IBKR_HANDSHAKE;
+    /* Catalogue XML is inert text with separate ownership and byte limits. */
+    if (!handshake && id==19U) return UmiIbkrScannerCatalogFrame(c,body,length,now);
+    /* Discovery owns large result packets and request-scoped failures. */
+    if (!handshake && id==20U) return UmiIbkrScannerFrame(c,body,length,now);
+    if (!handshake && (id==75U || id==76U)) return UmiIbkrOptionChainFrame(c,id,body,length,now);
+    /* Finite historical bars have their own bounded field decoder. */
+    if (id == 17U) return UmiIbkrHistoricalFrame(c, body, length, now);
+    /* Streaming bars retain their own bounded subscriptions and request IDs. */
+    if (!handshake && id == 50U) return UmiIbkrRealtimeFrame(c, body, length, now);
+    /* Completed history has no request ID; its owner accepts one finite capture. */
+    if (!handshake && (id == 101U || id == 102U))
+        return UmiIbkrCompletedFrame(c, id, body, length, now);
+    /* Order recovery keeps its independently bounded payload and status owner. */
+    if (!handshake && (id == 3U || id == 5U || id == 53U))
+        return UmiIbkrOrdersFrame(c, id, body, length, now);
+    /* Each observation owns its request identities and complete field layout. */
+    if (!handshake && (id == 94U || id == 95U)) return UmiIbkrPnlFrame(c, id, body, length, now);
+    if (!handshake && id == 79U) return UmiIbkrSymbolSearchFrame(c, body, length, now);
+    if (!handshake && (id == 12U || id == 13U)) return UmiIbkrDepthFrame(c, id, body, length, now);
+    /* Price-band responses have an independent bounded field layout. */
+    if (!handshake && id == 93U)
+        return UmiIbkrMarketRuleFrame(c, body, length, now);
+    if (!handshake && (id == 11U || id == 55U)) return UmiIbkrExecutionsFrame(c, id, body, length, now);
+    if (!handshake && id == 59U) return UmiIbkrCommissionFrame(c, body, length, now);
+    /* Contract metadata uses its own bounded variable-length decoder. Account
+     * and quote layouts keep their established field limits. */
+    if (!handshake && (id == 10U || id == 18U || id == 52U))
+        return UmiIbkrContractDetailsFrame(c, id, body, length, now);
     /* Retain the former account-only receive allowlist for review. Quote frames
      * are now decoded by their request owner before entering application views. */
 #if 0
@@ -209,7 +253,13 @@ static UmiStatus Decode(UmiIbkrConnection *c,const unsigned char *body,size_t le
     case 4: status=ProviderMessage(c,f,n);break;
     case 9:{uint64_t order;
         if(n!=3U||strcmp(f[1],"1")||!UmiIbkrUnsigned(f[2],&order)||order>INT_MAX)status=UMI_STATUS_PARSE_ERROR;
+        /* The former readiness-only assignment is retained for review. The
+         * identity owner preserves readiness and also retains the broker floor,
+         * so future order owners cannot mistake a callback for an allocation. */
+#if 0
         else c->nextIdReceived=true;
+#endif
+        else status=UmiIbkrOrdersNextId(c,(uint32_t)order);
         break;}
     case 15:status=n==3U&&!strcmp(f[1],"1")?Accounts(c,f[2]):UMI_STATUS_PARSE_ERROR;break;
     case 49:{uint64_t seconds;

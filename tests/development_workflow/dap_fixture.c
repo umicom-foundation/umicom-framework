@@ -59,6 +59,7 @@ static int Event(const char *event, const char *body) {
 #include "../scope_inspection/peer.inc"
 #include "../variable_assignment/peer.inc"
 #include "../memory_inspection/peer.inc"
+#include "../debug_restart/peer.inc"
 int main(int argc, char **argv) {
 #ifdef _WIN32
     (void)_setmode(_fileno(stdin),_O_BINARY); (void)_setmode(_fileno(stdout),_O_BINARY);
@@ -86,6 +87,15 @@ int main(int argc, char **argv) {
         if (strncmp(mode, "variable-assignment-", 20) == 0 &&
             (strcmp(cmd, "variables") == 0 || strcmp(cmd, "setVariable") == 0 || strcmp(cmd, "setExpression") == 0)) {
             if (!AssignmentPeerReply(&request, mode, json)) return 18;
+            continue;
+        }
+        /* Restart scenarios use independent replies on the real transport.
+         * Existing scenarios retain their previous capability and event behavior. */
+        if (strncmp(mode, "session-restart-", 16) == 0 &&
+            (strcmp(cmd, "initialize") == 0 || strcmp(cmd, "restart") == 0 ||
+             (RestartPeerPending != 0U && (strcmp(cmd, "setBreakpoints") == 0 ||
+                                          strcmp(cmd, "configurationDone") == 0)))) {
+            if (!RestartPeerReply(&request, mode)) return 20;
             continue;
         }
         if(strcmp(cmd,"initialize")==0) {
@@ -156,6 +166,8 @@ int main(int argc, char **argv) {
             }
             if(!Response(request.sequence,cmd,1,"{\"scopes\":[{\"name\":\"Locals\",\"variablesReference\":1,\"expensive\":false}]}")) return 5;
         } else if(strcmp(cmd,"variables")==0) {
+            if (strcmp(mode, "session-restart-queued") == 0 &&
+                !Event("output", "{\"category\":\"console\",\"output\":\"pending event\"}")) return 20;
             if (strncmp(mode, "scope-inspection-", 17) == 0) {
                 if (!ScopePeerVariables(&request, mode, json)) return 17;
                 continue;

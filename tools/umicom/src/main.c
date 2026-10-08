@@ -120,6 +120,10 @@ int main(int argc, char **argv)
         return 0;
     }
     /* Use the stable identifier comparison to choose the matching record or policy. */
+    /* VM policy and child ownership stay in Framework; this command is only
+     * a presentation adapter shared with the standalone VM manager. */
+    if (strcmp(command, "qemu") == 0)
+        return umi_cli_command_qemu(argc - 2, argv + 2);
     if (strcmp(command, "check") == 0 || strcmp(command, "doctor") == 0)
         return umi_cli_command_check(&context, argc - 2, argv + 2);
     /* Use the stable identifier comparison to choose the matching record or policy. */

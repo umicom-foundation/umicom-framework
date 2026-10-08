@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Review full-quantity order intent</title><style>body{font:18px/1.6 system-ui,sans-serif;max-width:960px;margin:3rem auto;padding:0 1.5rem;color:#172d36;background:#f8fafb}code,pre{background:#e8eef1;padding:.15rem .35rem}pre{padding:1rem;overflow:auto}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bdcbd0;padding:.65rem;text-align:left}aside{border-left:4px solid #067986;padding:1rem;background:#e8f4f4}</style></head>
+<body><main><h1>Review full-quantity order intent</h1>
+<p>The broker connection window can review your full-quantity preference and watch a subscribed quote. It cannot place, cancel or change orders. A local watch compares displayed price and size with your rule; it does not reserve liquidity.</p>
+<h2>Choose the intended instruction</h2><table><thead><tr><th>Preference</th><th>Descriptive API fields</th><th>Meaning</th></tr></thead><tbody>
+<tr><td>Fill all immediately</td><td><code>orderType=LMT</code>, <code>tif=FOK</code></td><td>Request immediate full execution, otherwise cancellation.</td></tr>
+<tr><td>Wait for all</td><td><code>orderType=LMT</code>, <code>allOrNone=true</code>, DAY or GTC</td><td>Request full execution while allowing the order to wait.</td></tr>
+<tr><td>Watch locally before FOK review</td><td>The same FOK fields, with a local observation rule</td><td>Observe liquidity first. Reaching the threshold does not transmit an order.</td></tr>
+</tbody></table>
+<p>FOK and AON availability depends on the product and route. IBKR's published overview lists FOK for US options and AON for US products. This does not establish support for a UK share or a particular account. The panel therefore reports contract/route support as <strong>UNCONFIRMED</strong>. See the <a href="https://www.interactivebrokers.com/en/trading/ordertypes.php?m=fillKillModal">IBKR order-type overview</a> and <a href="https://www.ibkrguides.com/traderworkstation/order-types.htm">TWS order guide</a>.</p>
+<aside><code>minQty</code> is a separate minimum-quantity field. This preview leaves it unset. IOC can allow a partial fill and is not a replacement for FOK. Umicom does not silently weaken your selected full-quantity intent. See the <a href="https://www.interactivebrokers.com/docs/tws-api/ref/order">IBKR Order reference</a>.</aside>
+<h2>Review a policy</h2><ol>
+<li>Open <strong>Paper / Live broker connections</strong> from Trader. Keep the TWS API connection read-only. Authenticate in TWS or IB Gateway as usual.</li>
+<li>Connect, then copy the contract ID and exchange from TWS Contract Description into the quote inspector. Subscribe to that quote. The provider controls API data access; a desktop subscription does not by itself prove API entitlement.</li>
+<li>Expand <strong>Full-quantity policy and local liquidity watch</strong>. Choose Buy to inspect the ask, or Sell to inspect the bid.</li>
+<li>Enter your quantity and limit in the units reported by the provider. A price quoted in pence needs a limit in pence, not pounds. The panel does not discover currency, lot sizes or price increments.</li>
+<li>Optionally require extra displayed quantity. The threshold is your quantity plus this buffer. The buffer is a local preference, not an IBKR rule or assurance of execution.</li>
+<li>Set maximum field age and maximum time gap between price and size. Each uses local receipt time in milliseconds. The gap must not exceed the age limit. Review the policy to see the requested fields and the current observation.</li>
+</ol>
+<p>Use a decimal point without group separators or exponent notation. The current policy requires positive limit prices and quantities; negative-price instruments need a separate supported policy. Values support up to nine fractional places and a signed 64-bit coefficient. Unsupported precision or arithmetic overflow is refused instead of rounded.</p>
+<h2>Watch displayed liquidity</h2><ol>
+<li>With a quote subscribed and valid policy fields, select <strong>Watch displayed liquidity for five minutes</strong>.</li>
+<li>The display reports why the rule is waiting: missing data, delayed/frozen data, stale fields, excessive timestamp gap, price outside the limit, or insufficient size.</li>
+<li>When the rule is met, the display says so. The condition can return to waiting as observations change. Price and size arrive separately; even fresh fields are not an atomic exchange snapshot.</li>
+<li>Select <strong>Stop local watch</strong> when finished. Editing a policy field, cancelling the quote stream, reconnecting or closing the window retires the watch. Expiry requires a new explicit start.</li>
+</ol>
+<h2>If the rule stays unmet</h2><p>Check the displayed market-data type and each field's age. A recent price does not refresh an old size. A larger buffer makes the displayed-size threshold harder to meet. For an unsupported precision or invalid quote, the watch stops; review the source observation before restarting. A SMART quote is not proof of liquidity on any particular destination. Do not infer route support from a symbol, quote size, account prefix or a successful read-only connection.</p>
+<h2>Extend the shared implementation</h2><p><code>UmiFullQuantityEvaluate</code> owns decimal price/size and freshness checks. <code>UmiFullQuantityWatch</code> owns the copied policy, expiry and transitions. <code>UmiIbkrFillObservation</code> binds one observation to a contract, exchange and request ID. Future provider adapters should preserve these identities and supply explicit data quality; request IDs must be retired on reconnect.</p>
+<p>A future order transport also needs verified contract rules, account permissions, risk controls and callback reconciliation. It must preserve errors, warnings, order status and executions, without retrying as a weaker instruction. The current window has no such submission path. IBKR describes the callbacks in <a href="https://www.interactivebrokers.com/docs/tws-api/doc/orders/place-order/order-placement-considerations">order placement considerations</a>.</p>
+</main></body></html>

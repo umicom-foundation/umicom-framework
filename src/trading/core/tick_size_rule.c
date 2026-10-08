@@ -30,4 +30,16 @@ UmiStatus umi_trading_tick_size_rule_init(UmiTradingTickSizeRule *value,UmiTradi
 /* Validate the invariant set for this trading record. */
 bool umi_trading_tick_size_rule_valid(const UmiTradingTickSizeRule *value) { return value!=NULL && (value->minimum_price>=0 && value->maximum_price>=value->minimum_price && value->tick_size>0); }
 /* Calculate whether a representative price is tick aligned. */
+/* The former check assumed initialized input and could divide by zero. The
+ * replacement validates the public record before arithmetic; retain this body
+ * so contributors can review the earlier assumption. */
+#if 0
 bool umi_trading_tick_size_rule_aligned(const UmiTradingTickSizeRule *value) { /* Protect caller-owned memory by checking that required state is available before it is used. */ if(value==NULL) return (bool)0; return (value->minimum_price % value->tick_size)==0; }
+#endif
+bool umi_trading_tick_size_rule_aligned(const UmiTradingTickSizeRule *value)
+{
+    /* Public records can also be loaded or edited by callers. Validate the
+     * complete range before using its increment as a divisor. */
+    return umi_trading_tick_size_rule_valid(value) &&
+        value->minimum_price % value->tick_size == 0;
+}

@@ -16,8 +16,10 @@
 #include "umicom/build/project_session.h"
 #include "umicom/build/live_output.h"
 #include "umicom/build/log_capture.h"
+#include "umicom/build/job_history.h"
 #include "umicom/platform/task_queue.h"
 #include "umicom/platform/threading.h"
+#include "umicom/platform/output_tail.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -39,6 +41,9 @@ struct UmiBuildProjectSession {
     /* The worker owns file I/O; polling only reads this published copy. */
     UmiOutputFile *log_file;
     UmiBuildLogSnapshot log;
+    /* The host owns the database; the session publishes only copied evidence. */
+    UmiJobHistory *job_history;
+    UmiBuildJobHistoryState durable;
 };
 
 /* All helpers below run with the session mutex held. Saturating counters
@@ -67,6 +72,10 @@ static void output_begin(UmiBuildProjectSession *session, size_t phase_index)
 
 /* Keep the newest bytes without allocations or unbounded growth in callbacks.
  * A chunk may itself exceed the capacity; only its tail needs to be copied. */
+/* Bounded retention moves into the platform service so every worker uses the same
+ * byte accounting and eviction rules. Build snapshot layout and behaviour stay compatible.
+ * The previous implementation remains here for engineering review. */
+#if 0
 static void output_append(UmiBuildOutputSnapshot *output, const char *bytes, size_t length)
 {
     const size_t limit = sizeof(output->bytes) - 1U;
@@ -91,6 +100,24 @@ static void output_append(UmiBuildOutputSnapshot *output, const char *bytes, siz
         output->length += length;
     }
     output->bytes[output->length] = '\0';
+    output_changed(output);
+}
+#endif
+static void output_append(UmiBuildOutputSnapshot *output, const char *bytes, size_t length)
+{
+    if (length == 0U) return;
+    UmiOutputTailState tail = {
+        .length = output->length, .total_bytes = output->total_bytes,
+        .truncated = output->truncated, .counters_saturated = output->counters_saturated
+    };
+    /* The session lock protects both the borrowed storage and its counters.
+     * Build and test workers now use the same eviction and overflow policy. */
+    if (UmiOutputTailAppend(output->bytes, sizeof(output->bytes), &tail, bytes, length)
+        != UMI_STATUS_OK) return;
+    output->length = tail.length;
+    output->total_bytes = tail.total_bytes;
+    output->truncated = tail.truncated;
+    output->counters_saturated = tail.counters_saturated;
     output_changed(output);
 }
 
@@ -181,8 +208,38 @@ static UmiStatus run_phase(UmiBuildProjectSession *session, UmiBuildPhase phase,
     return status;
 }
 
+
+/* Disk transactions never run under the session mutex. Only this worker updates
+ * a submitted job; frontend reads consume a small copy instead of waiting on I/O.
+ * A failed checkpoint stops subsequent external actions. The prior database
+ * record remains unfinished, so a later session cannot invent a final result. */
+static UmiStatus record_job_progress(UmiBuildProjectSession *session,
+    UmiJobHistoryState state, size_t completed, UmiStatus result)
+{
+    if (session->job_history==NULL) return UMI_STATUS_OK;
+    UmiJobHistoryEntry current;
+    UmiStatus prior;
+    (void)umi_mutex_lock(session->mutex);
+    current=session->durable.entry;
+    prior=session->durable.storage_status;
+    (void)umi_mutex_unlock(session->mutex);
+    if (prior!=UMI_STATUS_OK) return prior;
+    UmiJobHistoryEntry updated;
+    UmiStatus status=UmiJobHistoryUpdate(session->job_history,current.id,current.revision,
+        state,(unsigned)completed,result,&updated);
+    (void)umi_mutex_lock(session->mutex);
+    session->durable.storage_status=status;
+    if (status==UMI_STATUS_OK) session->durable.entry=updated;
+    (void)umi_mutex_unlock(session->mutex);
+    return status;
+}
+
 /* Only this worker writes the current result slot. The mutex publishes it
  * after completion, so a polling frontend never sees a partially copied draft. */
+/* The worker now checkpoints shared durable job evidence before starting work and between phases.
+ * Completed phase output remains available if storage fails; no later phase is launched.
+ * The former implementation is retained for engineering review. */
+#if 0
 static UmiStatus execute_session(UmiTaskContext *context, void *data)
 {
     UmiBuildProjectSession *session = data;
@@ -225,6 +282,73 @@ static UmiStatus execute_session(UmiTaskContext *context, void *data)
         (void)umi_mutex_unlock(session->mutex);
         if (status != UMI_STATUS_OK) break;
     }
+    close_log(session);
+    (void)umi_mutex_lock(session->mutex);
+    session->snapshot.status = status;
+    session->snapshot.active = false;
+    /* Cancellation before a phase starts still produces terminal evidence.
+     * If an earlier phase completed successfully, keep its status intact:
+     * cancelling the remaining workflow does not make that phase fail. */
+    if (!session->output.phase_complete) {
+        session->output.phase_complete = true;
+        session->output.status = status;
+        output_changed(&session->output);
+    }
+    (void)umi_mutex_unlock(session->mutex);
+    return status;
+}
+#endif
+static UmiStatus execute_session(UmiTaskContext *context, void *data)
+{
+    UmiBuildProjectSession *session = data;
+    UmiStatus status = UMI_STATUS_OK;
+    (void)context;
+    size_t completed=0U;
+    status=record_job_progress(session,UMI_JOB_HISTORY_RUNNING,0U,UMI_STATUS_OK);
+    for (size_t index = 0U; status==UMI_STATUS_OK && index < session->phase_count; ++index) {
+        UmiBuildResult *result = &session->results[index];
+        if (umi_cancellation_token_is_requested(session->cancellation)) {
+            status = UMI_STATUS_CANCELLED;
+            break;
+        }
+        (void)umi_mutex_lock(session->mutex);
+        session->snapshot.current_phase = session->phases[index];
+        output_begin(session, index);
+        (void)umi_mutex_unlock(session->mutex);
+        umi_build_result_init(result, 0U, session->phases[index], session->profile.profile_id);
+        status = run_phase(session, session->phases[index], result);
+        result->operation_id = session->snapshot.operation_id * UINT64_C(8) + (uint64_t)index;
+        /* Failed launch/executor results still expose the attempted phase. */
+        if (result->state == UMI_BUILD_STATE_CREATED || result->state == UMI_BUILD_STATE_RUNNING)
+            umi_build_result_finish(result, status, result->exit_code, result->duration_ms);
+        /* Final-only custom executors remain useful but are never described
+         * as complete streamed logs. Copy their bounded bytes exactly once. */
+        if (session->config.execute != NULL) {
+            size_t length = 0U;
+            while (length < sizeof(result->output) && result->output[length] != '\0') ++length;
+            capture_log(session, result->output, length);
+        }
+        (void)umi_mutex_lock(session->mutex);
+        if (session->config.execute != NULL) {
+            size_t length = 0U;
+            while (length < sizeof(result->output) && result->output[length] != '\0') ++length;
+            output_append(&session->output, result->output, length);
+        }
+        session->output.phase_complete = true;
+        session->output.status = status;
+        output_changed(&session->output);
+        session->snapshot.completed_phase_count = index + 1U;
+        session->snapshot.status = status;
+        (void)umi_mutex_unlock(session->mutex);
+        completed=index+1U;
+        if (status != UMI_STATUS_OK) break;
+        if (completed<session->phase_count)
+            status=record_job_progress(session,UMI_JOB_HISTORY_RUNNING,completed,UMI_STATUS_OK);
+    }
+    UmiJobHistoryState outcome=status==UMI_STATUS_OK?UMI_JOB_HISTORY_SUCCEEDED:
+        status==UMI_STATUS_CANCELLED?UMI_JOB_HISTORY_CANCELLED:UMI_JOB_HISTORY_FAILED;
+    UmiStatus history_status=record_job_progress(session,outcome,completed,status);
+    if (history_status!=UMI_STATUS_OK && status==UMI_STATUS_OK) status=history_status;
     close_log(session);
     (void)umi_mutex_lock(session->mutex);
     session->snapshot.status = status;
@@ -362,6 +486,10 @@ UmiStatus umi_build_project_session_submit(UmiBuildProjectSession *session,
     return status;
 }
 #endif
+/* Submission now reserves shared job evidence before it opens a log or starts a worker.
+ * The same phase planner, trust checks and exclusive log rules remain in the replacement.
+ * The former implementation is retained for engineering review. */
+#if 0
 UmiStatus UmiBuildProjectSessionSubmitLogged(UmiBuildProjectSession *session,
     const UmiBuildProfile *profile, UmiBuildPhase phase, bool trusted, const char *log_path)
 {
@@ -455,6 +583,115 @@ UmiStatus UmiBuildProjectSessionSubmitLogged(UmiBuildProjectSession *session,
     }
     return status;
 }
+#endif
+UmiStatus UmiBuildProjectSessionSubmitLogged(UmiBuildProjectSession *session,
+    const UmiBuildProfile *profile, UmiBuildPhase phase, bool trusted, const char *log_path)
+{
+    UmiTaskQueueStats stats;
+    UmiTaskConfig task_config = {0};
+    UmiStatus status;
+    if (session == NULL || profile == NULL || phase < UMI_BUILD_PHASE_CONFIGURE ||
+        phase > UMI_BUILD_PHASE_DEPLOY) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!trusted) return UMI_STATUS_PERMISSION_DENIED;
+    if ((phase == UMI_BUILD_PHASE_PACKAGE || phase == UMI_BUILD_PHASE_DEPLOY) &&
+        !profile->build_testing) return UMI_STATUS_INVALID_STATE;
+    status = umi_build_profile_validate(profile, NULL, 0U);
+    if (status != UMI_STATUS_OK) return status;
+    if (phase == UMI_BUILD_PHASE_RUN && profile->run_program[0] == '\0') return UMI_STATUS_INVALID_STATE;
+    stats = umi_task_queue_stats(session->queue);
+    if (stats.queued != 0U || stats.running != 0U) return UMI_STATUS_BUSY;
+    if (session->snapshot.operation_id >= UINT64_MAX / UINT64_C(8) - 1U)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    umi_task_destroy(session->task); session->task = NULL;
+    task_config.label = "Project build workflow";
+    task_config.function = execute_session; task_config.user_data = session;
+    status = umi_task_create(&task_config, &session->task);
+    if (status != UMI_STATUS_OK) return status;
+    session->profile = *profile;
+/* Previous three-stage plan retained. The same worker now gates delivery on tests. */
+//     if (phase == UMI_BUILD_PHASE_TEST || phase == UMI_BUILD_PHASE_INSTALL)
+//         session->profile.build_target[0] = '\0';
+//     session->phase_count = 0U;
+//     if (phase == UMI_BUILD_PHASE_BUILD || phase == UMI_BUILD_PHASE_RUN ||
+//         phase == UMI_BUILD_PHASE_TEST || phase == UMI_BUILD_PHASE_INSTALL)
+//         session->phases[session->phase_count++] = UMI_BUILD_PHASE_CONFIGURE;
+//     if (phase == UMI_BUILD_PHASE_RUN || phase == UMI_BUILD_PHASE_TEST ||
+//         phase == UMI_BUILD_PHASE_INSTALL)
+//         session->phases[session->phase_count++] = UMI_BUILD_PHASE_BUILD;
+//     session->phases[session->phase_count++] = phase;
+    if (phase == UMI_BUILD_PHASE_TEST || phase == UMI_BUILD_PHASE_INSTALL ||
+        phase == UMI_BUILD_PHASE_PACKAGE || phase == UMI_BUILD_PHASE_DEPLOY)
+        session->profile.build_target[0] = '\0';
+    session->phase_count = 0U;
+    if (phase == UMI_BUILD_PHASE_REBUILD) {
+        session->phases[session->phase_count++] = UMI_BUILD_PHASE_CONFIGURE;
+        session->phases[session->phase_count++] = UMI_BUILD_PHASE_CLEAN;
+        session->phases[session->phase_count++] = UMI_BUILD_PHASE_BUILD;
+    } else {
+        if (phase == UMI_BUILD_PHASE_BUILD || phase == UMI_BUILD_PHASE_RUN ||
+            phase == UMI_BUILD_PHASE_TEST || phase == UMI_BUILD_PHASE_INSTALL ||
+            phase == UMI_BUILD_PHASE_PACKAGE || phase == UMI_BUILD_PHASE_DEPLOY)
+            session->phases[session->phase_count++] = UMI_BUILD_PHASE_CONFIGURE;
+        if (phase == UMI_BUILD_PHASE_RUN || phase == UMI_BUILD_PHASE_TEST ||
+            phase == UMI_BUILD_PHASE_INSTALL || phase == UMI_BUILD_PHASE_PACKAGE ||
+            phase == UMI_BUILD_PHASE_DEPLOY)
+            session->phases[session->phase_count++] = UMI_BUILD_PHASE_BUILD;
+        if (phase == UMI_BUILD_PHASE_PACKAGE || phase == UMI_BUILD_PHASE_DEPLOY)
+            session->phases[session->phase_count++] = UMI_BUILD_PHASE_TEST;
+        session->phases[session->phase_count++] = phase;
+    }
+    UmiJobHistoryEntry prepared={0};
+    if (session->job_history!=NULL) {
+        status=UmiJobHistoryBegin(session->job_history,"build.workflow",
+            umi_build_phase_text(phase),(unsigned)session->phase_count,&prepared);
+        (void)umi_mutex_lock(session->mutex);
+        session->durable.enabled=true;
+        session->durable.storage_status=status;
+        session->durable.entry=prepared;
+        (void)umi_mutex_unlock(session->mutex);
+        if (status!=UMI_STATUS_OK) return status;
+    }
+    UmiOutputFile *new_log=NULL;
+    if (log_path!=NULL) {
+        status=UmiOutputFileCreate(log_path,&new_log);
+        if (status!=UMI_STATUS_OK) {
+            (void)record_job_progress(session,UMI_JOB_HISTORY_FAILED,0U,status);
+            return status;
+        }
+    }
+    /* Preserve prior log files; release only the previous closed handle. */
+    UmiOutputFileDestroy(session->log_file);
+    session->log_file=new_log;
+    umi_cancellation_token_reset(session->cancellation);
+    (void)umi_mutex_lock(session->mutex);
+    ++session->snapshot.operation_id;
+    memset(&session->log, 0, sizeof(session->log));
+    session->log.operation_id = session->snapshot.operation_id;
+    session->log.enabled = new_log != NULL;
+    session->log.streamed = session->config.execute == NULL;
+    if (new_log != NULL) (void)UmiOutputFileRead(new_log, &session->log.file);
+    session->snapshot.requested_phase = phase;
+    session->snapshot.current_phase = session->phases[0];
+    session->snapshot.completed_phase_count = 0U;
+    session->snapshot.status = UMI_STATUS_OK;
+    session->snapshot.active = true;
+    memset(&session->output, 0, sizeof(session->output));
+    output_begin(session, 0U);
+    (void)umi_mutex_unlock(session->mutex);
+    status = umi_task_queue_submit(session->queue, session->task);
+    if (status != UMI_STATUS_OK) {
+        (void)record_job_progress(session,UMI_JOB_HISTORY_FAILED,0U,status);
+        close_log(session);
+        (void)umi_mutex_lock(session->mutex);
+        session->log.capture_complete = false; /* No worker was accepted. */
+        session->snapshot.active = false; session->snapshot.status = status;
+        session->output.phase_complete = true;
+        session->output.status = status;
+        output_changed(&session->output);
+        (void)umi_mutex_unlock(session->mutex);
+    }
+    return status;
+}
 /* Preserve the unlogged API through the same submission and phase planner. */
 UmiStatus umi_build_project_session_submit(UmiBuildProjectSession *session,
     const UmiBuildProfile *profile, UmiBuildPhase phase, bool trusted)
@@ -537,6 +774,29 @@ UmiStatus UmiBuildProjectSessionReadLog(UmiBuildProjectSession *session, UmiBuil
     if (session == NULL || out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)umi_mutex_lock(session->mutex);
     *out_snapshot = session->log;
+    (void)umi_mutex_unlock(session->mutex);
+    return UMI_STATUS_OK;
+}
+
+/* Binding is an owner-thread operation. Worker completion is not sufficient
+ * until the queue has also released its task reference. */
+UmiStatus UmiBuildProjectSessionSetHistory(UmiBuildProjectSession *session,UmiJobHistory *history)
+{
+    if (session==NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiTaskQueueStats stats=umi_task_queue_stats(session->queue);
+    if (stats.queued!=0 || stats.running!=0) return UMI_STATUS_BUSY;
+    (void)umi_mutex_lock(session->mutex);
+    session->job_history=history;
+    memset(&session->durable,0,sizeof(session->durable));
+    session->durable.enabled=history!=NULL;
+    (void)umi_mutex_unlock(session->mutex);
+    return UMI_STATUS_OK;
+}
+UmiStatus UmiBuildProjectSessionReadHistory(UmiBuildProjectSession *session,UmiBuildJobHistoryState *out_state)
+{
+    if (session==NULL || out_state==NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)umi_mutex_lock(session->mutex);
+    *out_state=session->durable;
     (void)umi_mutex_unlock(session->mutex);
     return UMI_STATUS_OK;
 }

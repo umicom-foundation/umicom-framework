@@ -36,6 +36,13 @@ typedef struct UmiBrokerExecutionReconciler {
     uint64_t revision;
 } UmiBrokerExecutionReconciler;
 
+/* Initialise before use. This generic reconciler permits an explicit same-ID
+ * replacement only within the same client order. Distinct provider correction
+ * IDs require provider-specific mapping before using this contract.
+ * Counters and revision never wrap; refusal leaves the entire owner unchanged.
+ * The latest event time is a high-water mark, including accepted corrections;
+ * lateReports counts newly seen executions older than that mark.
+ * find returns a borrowed record, or NULL for invalid storage or a missing ID. */
 void umi_broker_execution_reconciler_init(
     UmiBrokerExecutionReconciler *reconciler);
 UmiStatus umi_broker_execution_reconciler_accept(

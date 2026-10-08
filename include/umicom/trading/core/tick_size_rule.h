@@ -27,6 +27,8 @@ UmiStatus umi_trading_tick_size_rule_init(UmiTradingTickSizeRule *value,UmiTradi
 /* Validate the invariant set for this trading record. */
 bool umi_trading_tick_size_rule_valid(const UmiTradingTickSizeRule *value);
 /* Calculate whether a representative price is tick aligned. */
+/* Alignment also validates the complete public record. A zero or negative
+ * increment returns false before any division can occur. */
 bool umi_trading_tick_size_rule_aligned(const UmiTradingTickSizeRule *value);
 #ifdef __cplusplus
 }

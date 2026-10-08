@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/broker_connectivity/ibkr_adapter.h"
+#include "umicom/broker_connectivity/order_observation.h"
 #include "../base/value_archive_internal.h"
 
 #include <math.h>
@@ -129,6 +130,11 @@ UmiStatus umi_ibkr_adapter_map_order(
     return UMI_STATUS_OK;
 }
 
+/* Preserve the earlier status translation for review. It treated Inactive as
+ * rejected, although this status alone does not establish an order rejection.
+ * The shared phase classifier below keeps ambiguous and pending states out of
+ * terminal local transitions; use the observation API when quantities exist. */
+#if 0
 UmiStatus umi_ibkr_adapter_map_status(
     const char *providerStatus,
     UmiOrderStatus *outStatus)
@@ -151,6 +157,28 @@ UmiStatus umi_ibkr_adapter_map_status(
     } else {
         return UMI_STATUS_NOT_FOUND;
     }
+    return UMI_STATUS_OK;
+}
+
+
+#endif
+UmiStatus umi_ibkr_adapter_map_status(const char *providerStatus, UmiOrderStatus *outStatus)
+{
+    if (outStatus == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiIbkrOrderPhase phase;
+    UmiStatus status = UmiIbkrClassifyOrderPhase(providerStatus, &phase);
+    if (status != UMI_STATUS_OK) return status;
+    UmiOrderStatus candidate;
+    switch (phase) {
+    case UMI_IBKR_ORDER_PENDING_SUBMIT:
+    case UMI_IBKR_ORDER_PRE_SUBMITTED: candidate = UMI_ORDER_VALIDATED; break;
+    case UMI_IBKR_ORDER_WORKING: candidate = UMI_ORDER_ACCEPTED; break;
+    case UMI_IBKR_ORDER_FILLED: candidate = UMI_ORDER_FILLED; break;
+    case UMI_IBKR_ORDER_CANCELLED: candidate = UMI_ORDER_CANCELLED; break;
+    case UMI_IBKR_ORDER_UNRECOGNIZED: return UMI_STATUS_NOT_FOUND;
+    default: return UMI_STATUS_UNAVAILABLE;
+    }
+    *outStatus = candidate;
     return UMI_STATUS_OK;
 }
 

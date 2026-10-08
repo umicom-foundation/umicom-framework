@@ -39,6 +39,7 @@ target_sources(umicom_trading PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/broker_connectivity/pretrade_guard.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/broker_connectivity/audit_journal.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/broker_connectivity/ibkr_adapter.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/broker_connectivity/order_observation.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/broker_connectivity/paper_runtime.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/broker_connectivity/account/buying_power.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/broker_connectivity/account/cash.c"
@@ -613,3 +614,67 @@ endif()
 
 message(STATUS
     "Umicom broker connectivity, paper execution, reconciliation and IBKR boundary enabled")
+
+# Check owner mutation boundaries independently of network adapters.
+if(BUILD_TESTING)
+    add_executable(umicom-broker-journal_boundaries-test "${CMAKE_CURRENT_LIST_DIR}/../tests/broker_connectivity/test_journal_boundaries.c")
+    target_link_libraries(umicom-broker-journal_boundaries-test PRIVATE Umicom::trading)
+    set_target_properties(umicom-broker-journal_boundaries-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-broker-journal_boundaries-test)
+    endif()
+    foreach(case valid replay same-sequence same-sequence-time old-sequence old-time regression terminal unknown-status revision replay-at-capacity count stored-id provider-id duplicate-stored missing)
+        add_test(NAME framework.broker.journal_boundaries.${case} COMMAND umicom-broker-journal_boundaries-test ${case})
+        set_tests_properties(framework.broker.journal_boundaries.${case} PROPERTIES TIMEOUT 20 LABELS "framework;broker;ownership;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-broker-journal_boundaries-test)
+    endif()
+    add_executable(umicom-broker-reconciler_boundaries-test "${CMAKE_CURRENT_LIST_DIR}/../tests/broker_connectivity/test_reconciler_boundaries.c")
+    target_link_libraries(umicom-broker-reconciler_boundaries-test PRIVATE Umicom::trading)
+    set_target_properties(umicom-broker-reconciler_boundaries-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-broker-reconciler_boundaries-test)
+    endif()
+    foreach(case duplicate duplicates-capacity corrections-capacity revision late-capacity other-order count stored-id duplicate-stored high-water late invalid-report)
+        add_test(NAME framework.broker.reconciler_boundaries.${case} COMMAND umicom-broker-reconciler_boundaries-test ${case})
+        set_tests_properties(framework.broker.reconciler_boundaries.${case} PROPERTIES TIMEOUT 20 LABELS "framework;broker;ownership;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-broker-reconciler_boundaries-test)
+    endif()
+    add_executable(umicom-broker-state_domain-test "${CMAKE_CURRENT_LIST_DIR}/../tests/trading_core/test_state_domain.c")
+    target_link_libraries(umicom-broker-state_domain-test PRIVATE Umicom::trading)
+    set_target_properties(umicom-broker-state_domain-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-broker-state_domain-test)
+    endif()
+    foreach(case canonical-invalid core-invalid declared)
+        add_test(NAME framework.broker.state_domain.${case} COMMAND umicom-broker-state_domain-test ${case})
+        set_tests_properties(framework.broker.state_domain.${case} PROPERTIES TIMEOUT 20 LABELS "framework;broker;ownership;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-broker-state_domain-test)
+    endif()
+endif()
+
+# Provider observations preserve pending and unknown states without trading side effects.
+if(BUILD_TESTING)
+    add_executable(umicom-ibkr-order-observation-test "${CMAKE_CURRENT_LIST_DIR}/../tests/broker_connectivity/test_order_observation.c")
+    target_link_libraries(umicom-ibkr-order-observation-test PRIVATE Umicom::trading)
+    set_target_properties(umicom-ibkr-order-observation-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-ibkr-order-observation-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-ibkr-order-observation-test)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-ibkr-order-observation-test)
+    endif()
+    foreach(case working partial filled filled-empty filled-remainder cancelled-empty cancelled-partial api-cancelled pending-cancel pre-cancelled inactive warning pending-submit pre-submitted working-empty unknown invalid-scale negative unterminated empty control alias legacy-inactive legacy-pending legacy-working legacy-unknown)
+        add_test(NAME framework.ibkr_order_observation.${case} COMMAND umicom-ibkr-order-observation-test ${case})
+        set_tests_properties(framework.ibkr_order_observation.${case} PROPERTIES
+            TIMEOUT 20 LABELS "framework;broker;status;regression")
+    endforeach()
+endif()
