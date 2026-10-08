@@ -5623,6 +5623,8 @@ include(cmake/UmicomWorkspaceValueArchives.cmake)
 # Copied source contents then invalidate old owner objects even when their
 # modification times predate those objects. Public-header checks remain active.
 include(cmake/UmicomSnippetUpdates.cmake)
+# Native QEMU commands consume the canonical VM planner and process owner.
+include(cmake/UmicomQemuCommand.cmake)
 include(cmake/UmicomValueOwnerBuildChecks.cmake)
 
 # Scope filters run through the same indexed search and owned worker session.

@@ -28,6 +28,7 @@ void umi_cli_print_help(void)
         "Umicom Framework native command\n\n"
         "Usage:\n"
         "  umicom version\n"
+        "  umicom qemu targets|plan|review|run (qemu --help for options)\n"
         "  umicom check [--all] [--gtk] [--github] [--project PATH]\n"
         "  umicom env\n"
         "  umicom repair [--dry-run]\n"

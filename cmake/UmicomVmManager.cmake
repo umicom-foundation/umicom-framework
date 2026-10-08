@@ -23,6 +23,13 @@ add_library(umicom_vm_manager STATIC
     "${_umi_vm_root}/src/vm_manager/lease.c"
     "${_umi_vm_root}/src/vm_manager/disk.c"
     "${_umi_vm_root}/src/vm_manager/session.c"
+    # Reuse this target for standalone boot plans and supervised sessions.
+    "${_umi_vm_root}/src/vm_manager/boot_targets.c"
+    "${_umi_vm_root}/src/vm_manager/boot_plan.c"
+    "${_umi_vm_root}/src/vm_manager/boot_session.c"
+    "${_umi_vm_root}/src/vm_manager/boot_profile.c"
+    "${_umi_vm_root}/src/vm_manager/boot_profile_cli.c"
+    "${_umi_vm_root}/src/vm_manager/boot_cli.c"
     "${_umi_vm_root}/src/vm_manager/cli.c")
 add_library(Umicom::vm_manager ALIAS umicom_vm_manager)
 set_target_properties(umicom_vm_manager PROPERTIES EXPORT_NAME vm_manager C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
@@ -33,7 +40,10 @@ add_executable(umicom-vm "${_umi_vm_root}/examples/vm_manager/main.c")
 target_link_libraries(umicom-vm PRIVATE Umicom::vm_manager)
 add_executable(umicom-vm-profile-example "${_umi_vm_root}/examples/vm_manager/profile_lesson.c")
 target_link_libraries(umicom-vm-profile-example PRIVATE Umicom::vm_manager)
-foreach(_target IN ITEMS umicom_vm_manager umicom-vm umicom-vm-profile-example)
+# The public lesson deliberately stops before file review and process launch.
+add_executable(umicom-vm-boot-plan-example "${_umi_vm_root}/examples/vm_manager/boot_plan_lesson.c")
+target_link_libraries(umicom-vm-boot-plan-example PRIVATE Umicom::vm_manager)
+foreach(_target IN ITEMS umicom_vm_manager umicom-vm umicom-vm-profile-example umicom-vm-boot-plan-example)
     set_target_properties(${_target} PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(${_target})
@@ -77,4 +87,8 @@ install(FILES "${_umi_vm_root}/docs/learning/run-umicom-in-a-virtual-machine.htm
 if(BUILD_TESTING)
     add_subdirectory("${_umi_vm_root}/tests/vm_manager" "${CMAKE_CURRENT_BINARY_DIR}/vm-manager-tests")
 endif()
+# Install the standalone boot lesson beside the packaged-image guide.
+install(FILES "${_umi_vm_root}/docs/learning/boot-kernels-and-linux-with-qemu.html"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)
+
 unset(_umi_vm_root)
