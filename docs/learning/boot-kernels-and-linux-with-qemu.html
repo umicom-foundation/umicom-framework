@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Boot Kernel and Linux images with Umicom</title>
+<style>body{font:17px/1.65 system-ui,sans-serif;max-width:1000px;margin:auto;padding:2rem;color:#192839;background:#f5f8fb}h1,h2{color:#123d5b}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#132b3d;color:#edf5fc;padding:1rem;border-radius:8px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #c5d3df;padding:.65rem;text-align:left}aside{border-left:4px solid #29728c;padding:1rem;background:#e5f0f6}code{font-family:ui-monospace,monospace}a{color:#075e89}</style></head>
+<body>
+<header><p>Umicom Framework · Sammy Hegab · Umicom Foundation · MIT</p>
+<h1>Boot Kernel and Linux images with Umicom</h1>
+<p>A virtual machine runs a guest operating system inside an emulator. The host is
+your computer; the guest can use a different processor architecture. Framework
+builds QEMU arguments, checks selected files and owns the emulator process.
+Applications can reuse these services without creating their own process launcher.</p></header>
+<aside>This workflow provides a serial text console. It does not embed a graphical
+guest desktop. Use trusted native QEMU installations and guest assets you are
+permitted to use. The command neither downloads nor installs them. A successful
+process start or QMP response is not evidence that an operating system booted.</aside>
+
+<h2>Choose a boot target</h2>
+<p>Run <code>umicom qemu targets</code> to list the shared catalogue.
+<code>umicom-vm qemu</code> accepts the same subcommands in the standalone VM tools.</p>
+<table><thead><tr><th>Target</th><th>Required asset</th><th>Machine and console</th></tr></thead><tbody>
+<tr><td>umicom-kernel</td><td>--firmware umicom-system.elf</td><td>RV64 virt, ACLINT disabled, one CPU, at least 128 MiB</td></tr>
+<tr><td>linux-x86_64</td><td>--kernel Linux boot image</td><td>x86-64 q35, console=ttyS0</td></tr>
+<tr><td>linux-riscv64</td><td>--kernel Linux Image</td><td>RV64 virt, OpenSBI, console=ttyS0</td></tr>
+<tr><td>linux-aarch64</td><td>--kernel Linux Image</td><td>ARM virt, Cortex-A57, console=ttyAMA0</td></tr>
+<tr><td>pc-iso</td><td>--iso BIOS-compatible image</td><td>x86-64 q35 with SATA CD-ROM; guest needs serial interaction</td></tr>
+<tr><td>pc-disk</td><td>--disk BIOS-compatible raw image</td><td>x86-64 q35 with VirtIO disk</td></tr>
+</tbody></table>
+<p>Linux targets accept an optional initramfs using <code>--initrd</code> and an
+explicit guest command line using <code>--append</code>. Linux RV64 uses QEMU's
+default OpenSBI unless an absolute <code>--firmware</code> path is supplied.
+ARM direct Linux boot does not accept a separate firmware image in this workflow.
+Guest kernels need the drivers for the selected virtual devices.</p>
+
+<h2>Review an Umicom Kernel boot</h2>
+<ol>
+<li><p>Prepare your built <code>umicom-system.elf</code>, a matching native QEMU
+executable and an existing working directory. Use complete paths. For example:</p>
+<pre>New-Item -ItemType Directory -Force "C:\VMs\Umicom"</pre></li>
+<li><p>Preview the argument vector. This step opens no guest file and starts nothing.</p>
+<pre>umicom qemu plan --target umicom-kernel `
+    --qemu "C:\msys64\ucrt64\bin\qemu-system-riscv64.exe" `
+    --directory "C:\VMs\Umicom" `
+    --firmware "C:\umicom\umicom-kernel\build\riscv64-clang-debug\bin\umicom-system.elf"</pre>
+<p>The output lists <code>-machine virt,aclint=off</code>, <code>-S</code>,
+<code>-m 128</code> and <code>-smp 1</code>. Each numbered line is one argument,
+not a shell command.</p></li>
+<li><p>Repeat with <code>review</code> in place of <code>plan</code>. Review reads
+the executable and selected input files, then prints a fingerprint. That
+fingerprint describes those bytes and arguments; it is not a signature or trust
+certificate. QEMU's shared libraries and automatically located firmware are
+outside this check. Keep the trusted installation and inputs unchanged while running.</p></li>
+<li><p>Repeat with <code>run</code> and add <code>--expect</code> followed by the
+fingerprint you just reviewed. The command checks the inputs again and connects
+to QEMU while paused. It refuses a stale fingerprint.</p></li>
+<li><p>At the VM prompt, type <code>resume</code>, then <code>console</code>.
+Use <code>send help</code> to send a line to the guest and <code>console</code>
+to retrieve its response. Output is a bounded ring buffer; poll it regularly.
+The terminal escapes non-printable bytes instead of interpreting guest escape sequences.</p></li>
+<li><p>For Umicom Kernel, use <code>send poweroff</code>. Other operating systems
+may use a different shutdown command. <code>powerdown</code> sends a QEMU power
+request which the guest may ignore. <code>quit-qemu</code> and <code>force-stop</code>
+stop the emulator and are not evidence of clean guest shutdown.</p></li>
+</ol>
+
+<h2>Save several local configurations</h2>
+<p>Profiles live in a local SQLite database through Framework's Data Server.
+They store paths and settings, not running processes or reusable launch approvals.
+Keep the database outside your source repositories. Do not put credentials in
+a guest command line: configuration values are not an encrypted secret store.</p>
+<pre>umicom qemu profiles save --database "C:\VMs\profiles.sqlite" `
+    --id umicom --name "Umicom system" --target umicom-kernel `
+    --qemu "C:\msys64\ucrt64\bin\qemu-system-riscv64.exe" `
+    --directory "C:\VMs\Umicom" `
+    --firmware "C:\umicom\umicom-kernel\build\riscv64-clang-debug\bin\umicom-system.elf"
+
+umicom qemu profiles list --database "C:\VMs\profiles.sqlite"
+umicom qemu profiles show --database "C:\VMs\profiles.sqlite" --id umicom
+umicom qemu profiles review --database "C:\VMs\profiles.sqlite" --id umicom</pre>
+<p>To run that configuration, use <code>profiles run</code> with the same database
+and ID and an <code>--expect</code> fingerprint from the latest review. To update
+a saved profile, repeat <code>save</code> with its current <code>--expected</code>
+revision. To remove only its settings, use <code>profiles remove --database FILE
+--id ID --expected REVISION</code>. Guest files are retained. There is a maximum
+of 64 standalone profiles; the earlier packaged-image catalogue is separate.</p>
+
+<h2>Try Linux or a disk image</h2>
+<p>A direct Linux boot needs an architecture-compatible kernel and a usable
+root filesystem. An initramfs can contain that filesystem; otherwise provide
+a raw disk and the matching <code>root=</code> parameter. The command does not
+guess a root partition or promise that an arbitrary distribution image works.</p>
+<pre>umicom qemu plan --target linux-riscv64 `
+    --qemu "C:\msys64\ucrt64\bin\qemu-system-riscv64.exe" `
+    --directory "C:\VMs\Linux" --kernel "C:\VMs\assets\Image" `
+    --initrd "C:\VMs\assets\initramfs.cpio.gz" `
+    --append "console=ttyS0 rdinit=/init" --memory 1024</pre>
+<p>Replace <code>plan</code> with <code>review</code>, then use the returned
+fingerprint with <code>run</code>. For AArch64 select <code>linux-aarch64</code>,
+<code>qemu-system-aarch64</code> and an ARM64 kernel, and use
+<code>console=ttyAMA0</code>. For an x86-64 ISO select <code>pc-iso</code>
+and supply <code>--iso</code>. A graphical-only installer will not be usable in
+this serial interface.</p>
+<p>An optional <code>--disk</code> must name a regular RAW image, not QCOW2 or a
+host device. QEMU writes guest changes to a temporary overlay and discards them
+when it exits. This is useful for experiments but not for persistent installation.
+No monitor command is provided to commit those writes back to the source.</p>
+
+<h2>Troubleshooting and extension points</h2>
+<ul>
+<li><strong>Invalid option:</strong> check spelling, duplicates and the target's
+allowed assets. An unused initramfs or command line in Kernel mode is rejected.</li>
+<li><strong>Review failed:</strong> check that paths are absolute, input files
+are nonempty regular files and the working directory already exists. Links and
+device paths are not accepted by the checked file layer.</li>
+<li><strong>Inputs changed:</strong> review again and inspect the new plan.
+Do not reuse a fingerprint from an older build.</li>
+<li><strong>QMP negotiation failed:</strong> confirm that the selected executable
+is a compatible QEMU system emulator. Unsupported machine options, missing
+firmware and missing host libraries can prevent startup.</li>
+<li><strong>No console output:</strong> the guest starts paused. Resume it,
+poll the console and check its serial configuration. Paused QMP state does not
+prove a valid guest image.</li>
+<li><strong>Database capacity:</strong> SQLite profiles support the bounded
+record format. The memory-only Data Server has a smaller value limit and can
+reject very long configurations without replacing their prior values.</li>
+</ul>
+<p>Application developers use <code>UmiVmBootPlanCreate</code>,
+<code>UmiVmBootReview</code> and <code>UmiVmBootStart</code>, followed by existing
+<code>UmiVmControl</code> operations. Keep blocking review and process work on
+a persistent worker, because Linux child ownership is tied to the creating thread.
+Saving a profile does not open its guest paths. Additional architectures belong
+in the shared target table with explicit firmware, device and test coverage.</p>
+<p>See <a href="https://www.qemu.org/docs/master/system/invocation.html">QEMU invocation</a>,
+<a href="https://www.qemu.org/docs/master/system/riscv/virt.html">RV64 virt</a> and
+<a href="https://www.qemu.org/docs/master/system/arm/virt.html">ARM virt</a>
+for the underlying emulator behaviour. Hardware acceleration, graphics embedding,
+networking, writable base disks, migration and guest agents require separate integration.</p>
+</body></html>

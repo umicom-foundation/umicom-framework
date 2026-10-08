@@ -26,6 +26,10 @@ static bool command_scope_valid(UmiWsCommandScope scope)
            scope <= UMI_WS_COMMAND_SCOPE_AI;
 }
 
+/* The original single-phrase search and priority-only ordering are retained
+ * for review. Word matching and relevance ordering below replace them so users
+ * can find tools without remembering the exact label or registration order. */
+#if 0
 /* Compare ASCII command metadata without making search depend on the machine's
  * locale. User-visible Unicode text remains intact in the returned item. */
 static bool text_contains_ignore_case(const char *text, const char *query)
@@ -104,6 +108,103 @@ static void insert_result(
                model->items[item_index].priority) {
         model->result_indices[position] =
             model->result_indices[position - 1U];
+        --position;
+    }
+    model->result_indices[position] = item_index;
+    ++model->result_count;
+}
+
+#endif
+
+/* Search belongs in Framework so every frontend recognises the same words.
+ * ASCII folding is explicit: locale settings must not change command ordering.
+ * Non-ASCII bytes are compared exactly; this is not Unicode case folding. */
+static unsigned char search_fold(unsigned char value)
+{
+    return value >= (unsigned char)'A' && value <= (unsigned char)'Z'
+        ? (unsigned char)(value + (unsigned char)('a' - 'A')) : value;
+}
+
+/* Space-separated words may match different discovery fields. The caller
+ * supplies a bounded span so matching never needs a temporary word buffer. */
+static bool search_space(char value)
+{
+    return value == ' ' || value == '\t' || value == '\r' || value == '\n';
+}
+
+static bool search_prefix(const char *text, const char *word, size_t length)
+{
+    for (size_t index = 0U; index < length; ++index) {
+        if (text[index] == '\0' ||
+            search_fold((unsigned char)text[index]) !=
+            search_fold((unsigned char)word[index])) return false;
+    }
+    return true;
+}
+
+static bool search_contains(const char *text, const char *word, size_t length)
+{
+    for (; *text != '\0'; ++text)
+        if (search_prefix(text, word, length)) return true;
+    return length == 0U;
+}
+
+/* Relevance precedes the application's priority for a non-empty query. Exact
+ * names win over prefix matches; otherwise all words must be discoverable.
+ * Registration order remains the tie-breaker for equal relevance and priority. */
+static unsigned int command_match_rank(
+    const UmiWsCommandBarItem *item, const UmiWsCommandBarQuery *query)
+{
+    const char *first = query->text;
+    const char *end = first + strlen(first);
+    const char *cursor;
+    size_t length;
+    if (query->scope != UMI_WS_COMMAND_SCOPE_ALL &&
+        query->scope != item->scope) return 0U;
+    while (search_space(*first)) ++first;
+    while (end > first && search_space(end[-1])) --end;
+    length = (size_t)(end - first);
+    if (length == 0U) return 1U;
+    cursor = first;
+    while (cursor < end) {
+        const char *word = cursor;
+        while (cursor < end && !search_space(*cursor)) ++cursor;
+        size_t word_length = (size_t)(cursor - word);
+        if (!search_contains(item->title, word, word_length) &&
+            !search_contains(item->description, word, word_length) &&
+            !search_contains(item->keywords, word, word_length) &&
+            !search_contains(item->command_id, word, word_length) &&
+            !search_contains(item->item_id, word, word_length)) return 0U;
+        while (cursor < end && search_space(*cursor)) ++cursor;
+    }
+    if (strlen(item->title) == length &&
+        search_prefix(item->title, first, length)) return 4U;
+    if (strlen(item->command_id) == length &&
+        search_prefix(item->command_id, first, length)) return 3U;
+    if (search_prefix(item->title, first, length)) return 2U;
+    return 1U;
+}
+
+static bool item_matches_query(
+    const UmiWsCommandBarItem *item, const UmiWsCommandBarQuery *query)
+{
+    return item != NULL && query != NULL && command_match_rank(item, query) != 0U;
+}
+
+/* Insert indices rather than copying items. A filtered view retains the
+ * catalogue's ownership and does not expose borrowed pointers across refresh. */
+static void insert_result(UmiWsCommandBarModel *model, size_t item_index)
+{
+    size_t position = model->result_count;
+    unsigned int rank = command_match_rank(&model->items[item_index], &model->query);
+    while (position > 0U) {
+        const UmiWsCommandBarItem *previous =
+            &model->items[model->result_indices[position - 1U]];
+        unsigned int previous_rank = command_match_rank(previous, &model->query);
+        if (previous_rank > rank ||
+            (previous_rank == rank && previous->priority >= model->items[item_index].priority))
+            break;
+        model->result_indices[position] = model->result_indices[position - 1U];
         --position;
     }
     model->result_indices[position] = item_index;
@@ -289,9 +390,21 @@ const UmiWsCommandBarItem *umi_ws_command_bar_model_result_at(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
+    /* The direct index lookup is kept for review; the checked lookup below
+     * adds protection for malformed public snapshots without changing valid results. */
+#if 0
     if (model == NULL || result_index >= model->result_count) return NULL;
     return &model->items[model->result_indices[result_index]];
+#endif
+    /* Public snapshots may cross an extension boundary. Reject invalid counts
+     * before following an index into their fixed-capacity arrays. */
+    if (model == NULL || model->count > UMI_WS_MAX_PALETTE_ITEMS ||
+        model->result_count > model->count || result_index >= model->result_count ||
+        model->result_indices[result_index] >= model->count) return NULL;
+    return &model->items[model->result_indices[result_index]];
 }
+
+static bool command_results_valid(const UmiWsCommandBarModel *model);
 
 /*
  * Provide the ws command bar model move selection operation used by this module and its
@@ -307,6 +420,8 @@ UmiStatus umi_ws_command_bar_model_move_selection(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
+    /* Validate before converting a public size_t index to a signed offset. */
+    if (!command_results_valid(model)) return UMI_STATUS_INVALID_ARGUMENT;
     if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (model->result_count == 0U) return UMI_STATUS_NOT_FOUND;
@@ -319,6 +434,52 @@ UmiStatus umi_ws_command_bar_model_move_selection(
     }
     model->selected_result = (size_t)next;
     ++model->revision;
+    return UMI_STATUS_OK;
+}
+
+/* Validate the published result map before sharing page indices with a
+ * frontend. Checking the entire map prevents a later page from hiding damage. */
+static bool command_results_valid(const UmiWsCommandBarModel *model)
+{
+    if (model == NULL || model->count > UMI_WS_MAX_PALETTE_ITEMS ||
+        model->result_count > model->count ||
+        (model->result_count > 0U && model->selected_result >= model->result_count))
+        return false;
+    for (size_t index = 0U; index < model->result_count; ++index)
+        if (model->result_indices[index] >= model->count) return false;
+    return true;
+}
+
+/* Shared selection keeps keyboard, touch paging and automation on the same
+ * result. It changes presentation state only and never invokes a command. */
+UmiStatus umi_ws_command_bar_model_select_result(
+    UmiWsCommandBarModel *model, size_t result_index)
+{
+    if (!command_results_valid(model)) return UMI_STATUS_INVALID_ARGUMENT;
+    if (result_index >= model->result_count) return UMI_STATUS_NOT_FOUND;
+    if (result_index != model->selected_result) {
+        model->selected_result = result_index;
+        ++model->revision;
+    }
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_ws_command_bar_model_page(
+    const UmiWsCommandBarModel *model, size_t page_size, UmiWsCommandBarPage *out_page)
+{
+    UmiWsCommandBarPage page = {0};
+    if (out_page == NULL || page_size == 0U || !command_results_valid(model))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    page.total_results = model->result_count;
+    if (model->result_count > 0U) {
+        page.selected_result = model->selected_result;
+        page.first_result = (model->selected_result / page_size) * page_size;
+        page.result_count = model->result_count - page.first_result;
+        if (page.result_count > page_size) page.result_count = page_size;
+        page.has_previous = page.first_result != 0U;
+        page.has_next = page.result_count < model->result_count - page.first_result;
+    }
+    *out_page = page;
     return UMI_STATUS_OK;
 }
 
@@ -397,6 +558,9 @@ UmiStatus umi_ws_command_bar_parse(
      * used.
      */
     if (input == NULL || out_query == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* The original in-place parser is preserved for comparison. A local
+     * candidate now prevents rejected input from erasing the previous query. */
+#if 0
     text = input;
     /* Prefixes make a broad command bar predictable without requiring a
      * separate search window for every kind of application object. */
@@ -418,6 +582,32 @@ UmiStatus umi_ws_command_bar_parse(
     *out_query = (UmiWsCommandBarQuery){0};
     out_query->scope = scope;
     return umi_ws_copy_text(out_query->text, sizeof(out_query->text), text);
+#endif
+    /* Parse into local storage. Failure must leave the caller's previous
+     * query intact, including when input aliases that query's text buffer. */
+    UmiWsCommandBarQuery candidate = {0};
+    UmiStatus status;
+    text = input;
+    while (search_space(*text)) ++text;
+    switch (*text) {
+        case '>': scope = UMI_WS_COMMAND_SCOPE_COMMAND; ++text; break;
+        case '@': scope = UMI_WS_COMMAND_SCOPE_SYMBOL; ++text; break;
+        case '#': scope = UMI_WS_COMMAND_SCOPE_TEXT; ++text; break;
+        case ':': scope = UMI_WS_COMMAND_SCOPE_LINE; ++text; break;
+        case '/': scope = UMI_WS_COMMAND_SCOPE_SETTING; ++text; break;
+        case '+': scope = UMI_WS_COMMAND_SCOPE_PANEL; ++text; break;
+        case '?': scope = UMI_WS_COMMAND_SCOPE_AI; ++text; break;
+        default: break;
+    }
+    while (search_space(*text)) ++text;
+    status = umi_ws_copy_text(candidate.text, sizeof(candidate.text), text);
+    if (status != UMI_STATUS_OK) return status;
+    size_t length = strlen(candidate.text);
+    while (length > 0U && search_space(candidate.text[length - 1U]))
+        candidate.text[--length] = '\0';
+    candidate.scope = scope;
+    *out_query = candidate;
+    return UMI_STATUS_OK;
 }
 
 /*

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Find commands and windows in Umicom</title>
+<style>body{max-width:850px;margin:3rem auto;padding:0 1rem;font:17px/1.65 system-ui;color:#162537}
+h1,h2{line-height:1.2}code,kbd{background:#eef2f6;padding:.15rem .3rem;border-radius:4px}
+table{border-collapse:collapse;width:100%}td,th{text-align:left;border-bottom:1px solid #ccd6e0;padding:.6rem}
+aside{padding:1rem;background:#f1f5f9}a{color:#075eac}</style></head><body>
+<h1>Find commands and windows</h1>
+<p>The shared command bar searches actions registered by the current application.
+Searching alone does not run a command, connect to a service, or submit an order.</p>
+<h2>Find an action</h2><ol>
+<li>Select the search field in the application toolbar.</li>
+<li>Type words describing the action. For example, <code>build project</code>
+can find an IDE build command. Words may appear in its title, description,
+keywords or identifier; every word must match somewhere.</li>
+<li>Read the results. An exact title appears before a title prefix. Other
+matches use the application's priority, with registration order breaking ties.</li>
+<li>Use Up or Down to choose a result. Press Enter to activate it, or click its
+button. A disabled result remains visible but cannot be activated.</li>
+</ol>
+<p>ASCII letters are matched without regard to case. Other Unicode text is
+preserved and compared exactly; translated case folding and fuzzy spelling
+correction are not implemented. Quotation marks are ordinary search characters.</p>
+<h2>Browse more results</h2>
+<p>The footer shows the visible range and total, such as “11-20 of 23 matches”.
+Use Previous or Next for another page. Page Up and Page Down move a page at a
+time. Ctrl+Home and Ctrl+End choose the first and last result. Ordinary Home
+and End retain their text-editing meaning. Escape closes suggestions.</p>
+<p>On narrow windows, the Commands button opens the catalogue even when there
+is not enough room for the search field. Paging still makes every result
+reachable. Widen the window to type a filter.</p>
+<h2>Narrow the search</h2>
+<table><tr><th>Prefix</th><th>Scope</th></tr>
+<tr><td><code>&gt;</code></td><td>Commands</td></tr>
+<tr><td><code>+</code></td><td>Windows and panels</td></tr>
+<tr><td><code>/</code></td><td>Settings</td></tr>
+<tr><td><code>?</code></td><td>Assistant actions</td></tr>
+<tr><td><code>@</code>, <code>#</code>, <code>:</code></td>
+<td>Symbols, text and lines, when registered by the application.</td></tr></table>
+<h2>When results change</h2>
+<p>A refreshed catalogue keeps the selected action when its item identifier and
+command identifier still agree. If the action disappears, selection returns to
+the first match. A reused item identifier with a different command is treated as
+a new action. Always read the label before activation.</p>
+<p>If pasted input exceeds the supported text capacity, the bar shows an error
+and hides the old results. Shorten the text to resume searching. An empty result
+list means no registered action matches; remove a word or scope prefix.</p>
+<h2>Using this in an application</h2><ol>
+<li>Register real actions with <code>umi_ws_command_bar_model_add</code>.
+Give each action stable identifiers, a clear title and useful search keywords.</li>
+<li>Create the GTK component with
+<code>umi_gtk4_ws_command_bar_create_managed</code> and install its activation callback.</li>
+<li>Refresh the model when availability changes. Continue checking permissions
+and current application state in the command handler; discovery does not grant permission.</li>
+<li>Destroy the command-bar controller before releasing the owner used by its
+callback. The controller disconnects retained widgets and event controllers.</li>
+</ol>
+<aside>The portable model also exposes selection and page snapshots for other
+frontends. GTK implements the keyboard and paging controls described here.
+Other renderers need their own native control integration.</aside>
+<p>The GTK integration follows the documented
+<a href="https://docs.gtk.org/gtk4/class.EventControllerKey.html">key event controller</a>
+and <a href="https://docs.gtk.org/gtk4/method.Popover.set_autohide.html">popover focus behaviour</a>.</p>
+</body></html>

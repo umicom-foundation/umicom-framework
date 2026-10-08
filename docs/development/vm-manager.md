@@ -49,3 +49,18 @@ The focused SDK compiles real canonical dependency sources but is not the comple
 ## Public lesson
 
 See `../learning/run-umicom-in-a-virtual-machine.html` and `examples/vm_manager/profile_lesson.c`. The saved profile lesson performs no file, emulator or network action. Existing scripts, installer paths, prior APIs, licences and comments are retained.
+
+
+## Standalone Kernel and Linux boot requests
+
+The shared boot API also accepts explicitly selected Kernel firmware, direct Linux
+kernels, BIOS-compatible x86 ISO media and raw disk images. See
+[Boot Kernel and Linux images](../learning/boot-kernels-and-linux-with-qemu.html)
+for the plan, review, paused-start and local-profile workflow. The existing sealed
+runtime and packaged-image services above remain available.
+
+Standalone boot plans copy their arguments, use the current QMP session owner and
+never pass a shell command to the process layer. Selected disk images use temporary
+overlays, so guest writes are not a persistent installation. These plans do not
+inventory QEMU's implicit firmware or shared libraries. New GUIs should use the
+public boot and profile APIs rather than construct their own argument strings.

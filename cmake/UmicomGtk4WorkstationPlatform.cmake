@@ -274,6 +274,27 @@ if(BUILD_TESTING)
         if(COMMAND umicom_register_validation_target)
             umicom_register_validation_target(umicom-gtk4-workspace-canvas-test)
         endif()
+        # Native paging is tested through real widget/controller callbacks.
+        add_executable(umicom-command-navigation-gtk4-test
+            "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/test_command_navigation_gtk4.c")
+        target_link_libraries(umicom-command-navigation-gtk4-test PRIVATE Umicom::ui_gtk4)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(umicom-command-navigation-gtk4-test)
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(umicom-command-navigation-gtk4-test)
+        endif()
+        foreach(navigation_case IN ITEMS paging keyboard refresh invalid-refresh
+                invalid-input retained-controls initial-query no-matches)
+            add_test(NAME framework.ui_workstation.command.navigation.${navigation_case}.gtk4
+                COMMAND umicom-command-navigation-gtk4-test "${navigation_case}")
+            set_tests_properties(framework.ui_workstation.command.navigation.${navigation_case}.gtk4
+                PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 60
+                LABELS "framework;ui-workstation;gtk4;command-navigation")
+        endforeach()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-command-navigation-gtk4-test)
+        endif()
         # These native interaction fixtures create inert widgets only. They
         # never present application windows or invoke external commands.
         foreach(interaction_case IN ITEMS workspace_maximise suite_navigation command_bar_lifetime desk_home layout_library)
@@ -454,6 +475,28 @@ if(BUILD_TESTING)
         framework.ui_workstation.command.bar
         tests/ui_workstation/test_command_bar.c
     )
+    # Shared search cases use one owned model and never execute an application action.
+    add_executable(umicom-command-search-test
+        "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/test_command_search.c")
+    target_link_libraries(umicom-command-search-test PRIVATE Umicom::ui)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-command-search-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-command-search-test)
+    endif()
+    foreach(search_case IN ITEMS words rank scope all-words stable-order unicode
+            parse-atomic parse-alias query-atomic pages empty invalid-index
+            invalid-count extreme-offset page-output)
+        add_test(NAME framework.ui_workstation.command.search.${search_case}
+            COMMAND umicom-command-search-test "${search_case}")
+        set_tests_properties(framework.ui_workstation.command.search.${search_case}
+            PROPERTIES TIMEOUT 30 LABELS "framework;ui-workstation;command-search")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-command-search-test)
+    endif()
+
     umicom_add_ui_workstation_test(
         umicom-ui-workstation-data-grid-surface-test
         framework.ui_workstation.data.grid.surface

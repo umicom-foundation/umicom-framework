@@ -81,6 +81,24 @@ UmiStatus umi_gtk4_ws_command_bar_set_query_text(
     UmiGtk4WorkstationCommandBar *command_bar,
     const char *text);
 
+/** Move within search results and reveal the selected page. Never dispatches. */
+UmiStatus umi_gtk4_ws_command_bar_move_selection(
+    UmiGtk4WorkstationCommandBar *command_bar, int32_t offset);
+
+/** Select a result by absolute index, revealing its page. */
+UmiStatus umi_gtk4_ws_command_bar_select_result(
+    UmiGtk4WorkstationCommandBar *command_bar, size_t result_index);
+
+/** Activate the visible selection through the existing copied-action callback.
+ * Unavailable actions and invalid entry text are rejected without dispatch. */
+UmiStatus umi_gtk4_ws_command_bar_activate_selected(
+    UmiGtk4WorkstationCommandBar *command_bar);
+
+/** Copy the current page and search status. On invalid text the page is empty,
+ * and the failure status explains why no previous result can be activated. */
+UmiStatus umi_gtk4_ws_command_bar_page(
+    const UmiGtk4WorkstationCommandBar *command_bar, UmiWsCommandBarPage *out_page);
+
 /** Adapt the component without removing any registered action. */
 UmiStatus umi_gtk4_ws_command_bar_set_available_width(
     UmiGtk4WorkstationCommandBar *command_bar,

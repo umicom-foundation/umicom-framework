@@ -102,6 +102,9 @@ UmiStatus umi_ws_command_bar_model_add(
     uint32_t priority);
 
 /** Parse text, apply its optional scope prefix and rebuild matching results. */
+/* Search matches every whitespace-separated word across discovery fields.
+ * Exact titles and command IDs precede prefixes, then application priority.
+ * ASCII matching is case-insensitive; other UTF-8 bytes must match exactly. */
 UmiStatus umi_ws_command_bar_model_set_query(
     UmiWsCommandBarModel *model,
     const char *input);
@@ -121,6 +124,25 @@ const UmiWsCommandBarItem *umi_ws_command_bar_model_result_at(
 UmiStatus umi_ws_command_bar_model_move_selection(
     UmiWsCommandBarModel *model,
     int32_t offset);
+
+/** A copied window of results; indices refer to the model, never to widgets. */
+typedef struct UmiWsCommandBarPage {
+    size_t first_result;
+    size_t result_count;
+    size_t total_results;
+    size_t selected_result;
+    bool has_previous;
+    bool has_next;
+} UmiWsCommandBarPage;
+
+/** Select an existing result. Rejected indices leave selection unchanged. */
+UmiStatus umi_ws_command_bar_model_select_result(
+    UmiWsCommandBarModel *model, size_t result_index);
+
+/** Describe the page containing the selection. Page size must be nonzero.
+ * Empty catalogues produce an empty page; malformed indices are rejected. */
+UmiStatus umi_ws_command_bar_model_page(
+    const UmiWsCommandBarModel *model, size_t page_size, UmiWsCommandBarPage *out_page);
 
 /** Return the borrowed selected action, or `NULL` when there is no result. */
 const UmiWsCommandBarItem *umi_ws_command_bar_model_selected(
