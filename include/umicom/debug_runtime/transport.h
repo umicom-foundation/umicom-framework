@@ -37,6 +37,22 @@ UmiStatus umi_debug_runtime_transport_validate(
     const UmiDebugRuntimeTransport *transport);
 
 /**
+ * Start the same owned DAP process with one project-selected tool folder.
+ * NULL/empty tool_directory retains inherited selection. A simple tool name
+ * resolves only inside an explicit absolute folder; an absolute executable is
+ * kept. Only the child receives the PATH prefix. No trust is granted here.
+ * Arguments and folder strings are borrowed until return. Failure clears the
+ * output; successful ownership follows the ordinary start-process contract.
+ */
+UmiStatus UmiDebugRuntimeTransportStartProcessWithToolDirectory(
+    const char *program,
+    const char *const *arguments,
+    size_t argument_count,
+    const char *working_directory,
+    const char *tool_directory,
+    UmiDebugRuntimeTransport *out_transport);
+
+/**
  * Provide the debug runtime transport start process operation used by this module and its
  * client applications.
  */
@@ -73,6 +89,19 @@ UmiStatus umi_debug_runtime_memory_transport_written(
     char *out_text,
     size_t capacity,
     size_t *out_count);
+
+/** Start the DAP transport with reviewed child environment overrides.
+ * definitions follows UmiProcessEnvironmentValidate; NULL keeps inherited values.
+ * The tools directory, process lifetime and output ownership match the existing
+ * WithToolDirectory entry point. No host environment is changed. */
+UmiStatus UmiDebugRuntimeTransportStartProcessWithEnvironment(
+    const char *program,
+    const char *const *arguments,
+    size_t argument_count,
+    const char *working_directory,
+    const char *tool_directory,
+    const char *definitions,
+    UmiDebugRuntimeTransport *out_transport);
 
 #ifdef __cplusplus
 }

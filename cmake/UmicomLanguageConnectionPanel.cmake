@@ -23,7 +23,9 @@ function(umicom_attach_language_connection_panel)
         if(COMMAND umicom_register_validation_target)
             umicom_register_validation_target(umicom-language-connection-gtk4-test)
         endif()
-        foreach(case initial invalid success error cancel edit edit-back hide remap close retained notify-close repeat)
+        # Retain existing panel lifetime cases and exercise the new copied tool draft.
+        foreach(case initial invalid success error cancel edit edit-back hide remap close retained notify-close repeat
+            tools-name tools-absolute tools-invalid tools-edit tools-edit-back)
             add_test(NAME framework.language_runtime.connection.gtk4.${case}
                 COMMAND umicom-language-connection-gtk4-test ${case} "$<TARGET_FILE:umicom-language-process-fixture>")
             set_tests_properties(framework.language_runtime.connection.gtk4.${case} PROPERTIES

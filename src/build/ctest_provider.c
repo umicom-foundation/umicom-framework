@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "umicom/build/tool_location.h"
 #include "umicom/build/ctest_provider.h"
 
 static UmiStatus ctest_command(const UmiBuildProfile *profile,
@@ -27,7 +28,14 @@ static UmiStatus ctest_command(const UmiBuildProfile *profile,
     }
     UmiStatus validation = umi_build_profile_validate(profile, NULL, 0U);
     if (validation != UMI_STATUS_OK) return validation;
+/* An explicit project tool folder selects this program directly. The original inherited-lookup call remains for review; empty tool folders preserve that behaviour. The previous implementation is retained for engineering review. */
+#if 0
     umi_build_command_init(out_command, "ctest");
+#endif
+    char tool[UMI_BUILD_PATH_CAPACITY];
+    UmiStatus tool_status = UmiBuildToolProgram(profile, "ctest", tool, sizeof tool);
+    if (tool_status != UMI_STATUS_OK) return tool_status;
+    umi_build_command_init(out_command, tool);
     /* An explicit test preset supplies its own configuration, environment,
      * filters and execution options. Keep the established visible-failure and
      * nonempty-suite policy without overriding the preset's configuration. */

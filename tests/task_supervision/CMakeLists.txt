@@ -75,7 +75,11 @@ if(BUILD_TESTING)
     endforeach()
 endif()
 
+# Tool-aware test workers share production path resolution; no duplicate
+# process transport is linked into tests that inject that boundary.
 set(ctest_metadata_sources
+    "${framework_root}/src/platform/process_search_path.c"
+    "${framework_root}/src/platform/path.c"
     "${framework_root}/src/test_platform/ctest.c"
     "${framework_root}/src/test_platform/item.c"
     "${framework_root}/src/test_platform/suite.c"

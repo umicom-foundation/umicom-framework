@@ -131,6 +131,7 @@ endif()
 add_library(umicom_base STATIC
     src/base/status.c
     src/base/arguments.c
+    src/base/sha256.c
     src/base/csv_document.c
     src/base/snapshot_validation.c
     src/base/result.c
@@ -181,6 +182,7 @@ add_library(umicom_diagnostics STATIC
     src/diagnostics/output_filter.c
     src/diagnostics/parser.c
     src/diagnostics/compiler_parser.c
+    src/diagnostics/compiler_stream.c
     src/diagnostics/runtime_parser.c
     src/diagnostics/event.c
     src/diagnostics/pipeline.c
@@ -264,6 +266,8 @@ add_library(umicom_data STATIC
     src/data/data_server.c
     # Job evidence shares Data Server transactions across native and web hosts.
     src/data/job_history.c
+    src/data/job_identity.c
+    src/data/job_inputs.c
     src/data/job_history_codec.c
     src/data/connector.c
     src/data/store.c
@@ -327,6 +331,8 @@ umicom_apply_sanitizers(umicom_data)
 # -----------------------------------------------------------------------------
 add_library(umicom_platform STATIC
     src/platform/config.c
+    src/platform/native_arguments.c
+    src/platform/native_arguments_capture.c
     src/platform/path.c
     src/platform/directory.c
     src/platform/cancellation.c
@@ -339,6 +345,8 @@ add_library(umicom_platform STATIC
     src/platform/task.c
     src/platform/task_queue.c
     src/platform/process.c
+    src/platform/process_search_path.c
+    src/platform/process_environment.c
     src/platform/process_supervisor.c
     src/platform/watcher.c
     src/platform/watcher_polling.c
@@ -380,6 +388,10 @@ target_include_directories(umicom_platform
 )
 umicom_apply_warnings(umicom_platform)
 umicom_apply_sanitizers(umicom_platform)
+if(WIN32)
+    # Original Unicode process arguments use the documented Windows shell parser.
+    target_link_libraries(umicom_platform PRIVATE shell32)
+endif()
 
 # -----------------------------------------------------------------------------
 # Capability-based security and secrets
@@ -393,6 +405,7 @@ add_library(umicom_security STATIC
     # Local authentication is shared; applications never implement password storage.
     src/security/local_profile.c
     src/security/local_profile_platform.c
+    src/security/local_profile_database.c
     src/security/identity.c
     src/security/permission.c
     src/security/role.c
@@ -427,6 +440,19 @@ target_link_libraries(umicom_security PUBLIC
     Umicom::base
     Umicom::platform
 )
+# Local account persistence uses the same SQLite dependency already discovered
+# for Data Server. Core builds without SQLite retain the native vault adapter.
+if(SQLite3_FOUND)
+    target_compile_definitions(umicom_security PRIVATE UMI_LOCAL_PROFILE_HAS_SQLITE=1)
+    if(TARGET SQLite3::SQLite3)
+        target_link_libraries(umicom_security PRIVATE SQLite3::SQLite3)
+    elseif(TARGET SQLite::SQLite3)
+        target_link_libraries(umicom_security PRIVATE SQLite::SQLite3)
+    else()
+        target_include_directories(umicom_security PRIVATE ${SQLite3_INCLUDE_DIRS})
+        target_link_libraries(umicom_security PRIVATE ${SQLite3_LIBRARIES})
+    endif()
+endif()
 target_include_directories(umicom_security PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -783,6 +809,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
     add_library(umicom_ui_gtk4 STATIC
         adapters/gtk4/gtk4_adapter.c
         adapters/gtk4/automation_gtk4.c
+        adapters/gtk4/widget_lookup_gtk4.c
         adapters/gtk4/interaction_recording_gtk4.c
         adapters/gtk4/drop_down_gtk4.c
         adapters/gtk4/shell_gtk4.c
@@ -1059,6 +1086,11 @@ umicom_apply_sanitizers(umicom_compiler)
 add_library(umicom_build STATIC
     src/build/types.c
     src/build/profile.c
+    src/build/configure_definitions.c
+    src/build/diagnostic_location.c
+    src/build/run_current.c
+    src/build/configuration_library.c
+    src/build/tool_location.c
     src/build/profile_store.c
     src/build/preset.c
     src/build/diagnostic.c
@@ -1072,6 +1104,8 @@ add_library(umicom_build STATIC
     src/build/cpack_provider.c
     src/build/runner.c
     src/build/project_session.c
+    src/build/job_identity.c
+    src/build/profile_root.c
     src/build/graph.c
     src/build/policy.c
     src/build/plan.c
@@ -1209,6 +1243,7 @@ add_library(umicom_terminal STATIC
     src/terminal/transcript.c
     src/terminal/environment.c
     src/terminal/session.c
+    src/terminal/location.c
     src/terminal/manager.c
     src/terminal/shell.c
     src/terminal/profile.c
@@ -1552,6 +1587,12 @@ add_library(umicom_vcs STATIC
     src/vcs/types.c
     src/vcs/change.c
     src/vcs/status.c
+    # Share exact-path Git observations with every source-control client.
+    src/vcs/working_tree.c
+    src/vcs/working_tree_process.c
+    src/vcs/working_tree_legacy.c
+    src/vcs/working_tree_job.c
+    src/vcs/working_tree_review.c
     src/vcs/branch.c
     src/vcs/branch_list.c
     src/vcs/commit.c
@@ -1607,6 +1648,7 @@ umicom_apply_sanitizers(umicom_vcs_ui)
 # Configure the optional target only when its feature has created it.
 if(TARGET umicom_ui_gtk4)
     target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::vcs_ui)
+    target_sources(umicom_ui_gtk4 PRIVATE adapters/gtk4/working_tree_gtk4.c)
 endif()
 
 # -----------------------------------------------------------------------------
@@ -5625,6 +5667,11 @@ include(cmake/UmicomWorkspaceValueArchives.cmake)
 include(cmake/UmicomSnippetUpdates.cmake)
 # Native QEMU commands consume the canonical VM planner and process owner.
 include(cmake/UmicomQemuCommand.cmake)
+# Read-only Git observations and source-control review acceptance cases.
+include(cmake/UmicomNativeArguments.cmake)
+include(cmake/UmicomLocalProfileDatabase.cmake)
+include(cmake/UmicomWorkingTreeReview.cmake)
+include(cmake/UmicomLearningLibrary.cmake)
 include(cmake/UmicomValueOwnerBuildChecks.cmake)
 
 # Scope filters run through the same indexed search and owned worker session.
@@ -5645,3 +5692,58 @@ endif()
 
 # Native filtering shares the portable source-index projection.
 include(cmake/UmicomTextProjectionChecks.cmake)
+
+include(cmake/UmicomCompilerStream.cmake)
+
+# Share explicit tool selection across native project workflows.
+include(cmake/UmicomToolLocation.cmake)
+include(cmake/UmicomConfigureDefinitions.cmake)
+
+# Exercise supervised terminal command ownership independently of product frontends.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomTerminalExecution.cmake")
+
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomDiagnosticSourceNavigation.cmake")
+
+# Launch variables are validated before crossing native process boundaries.
+include(cmake/UmicomRunEnvironment.cmake)
+
+# Launch-only jobs reuse the build worker without expanding its phase plan.
+include(cmake/UmicomRunCurrent.cmake)
+
+# Named settings reuse the field codec and native form owner.
+include(cmake/UmicomBuildConfigurations.cmake)
+
+# Compiler settings are inspected as metadata and adopted through explicit drafts.
+include(cmake/UmicomCompilationDatabase.cmake)
+
+install(FILES docs/COMPILER_DATABASES.html DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs)
+
+# Project consoles share native input and lifetime ownership with Framework.
+include(cmake/UmicomProgramConsole.cmake)
+
+# Persistent language diagnostics share copied drafts with desktop frontends.
+include(cmake/UmicomLiveDiagnostics.cmake)
+
+# Attach external processes through the existing debugger session owner.
+include(cmake/UmicomNativeAttach.cmake)
+
+# Present only exception filters advertised by the connected adapter.
+include(cmake/UmicomDebugExceptionFilters.cmake)
+
+# Function-breakpoint drafts reuse the existing native DAP request and session owner.
+include(cmake/UmicomFunctionBreakpointSession.cmake)
+
+# Module browsing observes bounded pages without replacing the shared registry.
+include(cmake/UmicomDebugModulePages.cmake)
+
+# Share bounded adapter source inspection with native development applications.
+include(cmake/UmicomDebugSources.cmake)
+
+# Protocol integer readers retain exact identities at both signed limits.
+include(cmake/UmicomJsonIntegerBounds.cmake)
+
+# Exception captures preserve nested causes without evaluating adapter expressions.
+include(cmake/UmicomExceptionInformation.cmake)
+
+# Process discovery shares bounded native observations across developer interfaces.
+include(cmake/UmicomProcessCatalog.cmake)

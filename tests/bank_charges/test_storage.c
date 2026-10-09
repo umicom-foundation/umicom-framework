@@ -38,6 +38,19 @@ int main(int argc,char **argv)
             "CREATE TRIGGER charge_fail BEFORE UPDATE ON umicom_kv WHEN NEW.key='bank.operations.revision' BEGIN SELECT RAISE(ROLLBACK,'charge failure'); END;";
         OK(umi_data_server_execute(f.bank->server,trigger));
         CHECK(UmiBankOperationsExecuteReviewed(f.bank,&f.operator,review,&receipt)!=UMI_STATUS_OK && receipt.revision==0);
+/* The old fixture used cached state after a transaction-loss error. Reopen the poisoned handle and then check the same saved balances; retain the original assertion for review. */
+#if 0
+        Balance(&f,100000,0); OK(UmiBankOperationsReload(f.bank));
+#endif
+        /* A whole-transaction abort leaves the banking handle deliberately
+         * poisoned. Reopen through durable replay before trusting its balances;
+         * statement-only ABORT still permits an explicit successful rollback. */
+        if (strcmp(name, "write-rollback") == 0) {
+            CHECK(f.bank->poisoned);
+            UmiBankOperationsDestroy(f.bank);
+            f.bank = NULL;
+            OK(UmiBankOperationsOpenSqlite(argv[2], &f.bank));
+        }
         Balance(&f,100000,0); OK(UmiBankOperationsReload(f.bank));
         UmiBankChargeRequest request; OK(UmiBankOperationsChargeAt(f.bank,0,&request)); CHECK(request.state==UMI_BANK_TRANSFER_APPROVED);
         UmiBankCounts counts; OK(UmiBankOperationsCounts(f.bank,&counts)); CHECK(counts.revision==5 && counts.journals==1);

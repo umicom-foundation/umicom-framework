@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "internal.h"
+#include "process_scan_internal.h"
 
 static uint64_t TimeValue(FILETIME time)
 { return ((uint64_t)time.dwHighDateTime << 32) | (uint64_t)time.dwLowDateTime; }
@@ -94,6 +95,8 @@ static void Insert(UmiDesktopSystemSnapshot *s, UmiDesktopSystemProcess value)
 }
 static int CompareInterface(const void *a, const void *b)
 { return strcmp(((const UmiDesktopSystemInterface *)a)->name, ((const UmiDesktopSystemInterface *)b)->name); }
+/* The process scanner is shared with debugger attachment selection. */
+#include "process_scan_windows.inc"
 void UmiDesktopSystemCaptureNative(const UmiDesktopSystemOptions *options, UmiDesktopSystemSnapshot *s)
 {
     strcpy(s->source, "Windows native APIs");
@@ -111,6 +114,8 @@ void UmiDesktopSystemCaptureNative(const UmiDesktopSystemOptions *options, UmiDe
         s->cpu.ticks[0] = TimeValue(user); s->cpu.ticks[2] = TimeValue(kernel) - TimeValue(idle);
         s->cpu.ticks[3] = TimeValue(idle); s->cpuStatus = UMI_STATUS_OK;
     } else s->cpuStatus = UMI_STATUS_UNAVAILABLE;
+/* The shared native process scanner now serves both the desktop monitor and debugger process catalogue, with one handle and cancellation policy. The prior inline enumeration is retained for review. The previous implementation is retained for engineering review. */
+#if 0
     HANDLE list = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (list == INVALID_HANDLE_VALUE) s->processStatus = WinError();
     else {
@@ -135,6 +140,9 @@ void UmiDesktopSystemCaptureNative(const UmiDesktopSystemOptions *options, UmiDe
         CloseHandle(list);
         if (s->processStatus == UMI_STATUS_OK && s->processesSeen > UMI_DESKTOP_SYSTEM_PROCESS_LIMIT) s->processStatus = UMI_STATUS_CAPACITY_EXCEEDED;
     }
+
+#endif
+    ProcessMonitorCapture(s);
     PMIB_IF_TABLE2 table = NULL;
     NETIO_STATUS network = GetIfTable2(&table);
     if (network != NO_ERROR || !table) s->networkStatus = UMI_STATUS_UNAVAILABLE;

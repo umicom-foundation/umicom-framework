@@ -593,6 +593,8 @@ static void Field(GtkGrid *grid, const char *name, GtkWidget *widget, int row, c
 #include "ibkr_scanner_catalog.inc"
 #include "ibkr_scanner.inc"
 #include "ibkr_option_chain.inc"
+/* Keep connection choices and status together, and place optional account and market inspection controls in a collapsible group. The existing transport, controls and callbacks are retained unchanged. The previous implementation is retained for engineering review. */
+#if 0
 GtkWindow *UmiIbkrGtkCreate(GtkWindow *parent)
 {
     GtkWindow *window = GTK_WINDOW(gtk_window_new());
@@ -722,6 +724,145 @@ GtkWindow *UmiIbkrGtkCreate(GtkWindow *parent)
     Controls(ui);
     return window;
 }
+#endif
+GtkWindow *UmiIbkrGtkCreate(GtkWindow *parent)
+{
+    GtkWindow *window = GTK_WINDOW(gtk_window_new());
+    ConnectionUi *ui = g_new0(ConnectionUi, 1);
+    ui->window = window;
+    g_object_set_data_full(G_OBJECT(window), UI_KEY, ui, FreeOwner);
+/* Close the connection at native window removal, including retained windows. The previous implementation remains for engineering review. */
+#if 0
+    g_signal_connect(window, "destroy", G_CALLBACK(Destroyed), NULL);
+#endif
+    UmiGtk4ObserveWindowRemoval(window, G_OBJECT(window), Destroyed, NULL);
+    gtk_window_set_title(window, "Interactive Brokers - Umicom Trader");
+    gtk_window_set_default_size(window, 940, 740);
+    gtk_window_set_icon_name(window, "org.umicom.trader");
+    if (parent != NULL) {
+        gtk_window_set_transient_for(window, parent);
+        gtk_window_set_destroy_with_parent(window, TRUE);
+        UmiGtk4ObserveWindowRemoval(parent, G_OBJECT(window), UmiGtk4CloseRemovedParentChild, window);
+        GtkApplication *application = gtk_window_get_application(parent);
+        if (application != NULL) gtk_window_set_application(window, application);
+    }
+    GtkWidget *scroll = gtk_scrolled_window_new();
+    GtkWidget *root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 12);
+    gtk_widget_set_margin_start(root, 18); gtk_widget_set_margin_end(root, 18);
+    gtk_widget_set_margin_top(root, 18); gtk_widget_set_margin_bottom(root, 18);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), root);
+    gtk_window_set_child(window, scroll);
+    GtkWidget *brand = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
+    gtk_box_append(GTK_BOX(brand), Brand(UMICOM_SYSTEM_ICON, sizeof UMICOM_SYSTEM_ICON, 40));
+    gtk_box_append(GTK_BOX(brand), Brand(UMICOM_SYSTEM_LOGO, sizeof UMICOM_SYSTEM_LOGO, 48));
+    gtk_box_append(GTK_BOX(root), brand);
+    gtk_box_append(GTK_BOX(root), Text("Choose Paper or Live, then confirm the actual login in TWS / IB Gateway. This window cannot place, cancel or modify orders."));
+    gtk_box_append(GTK_BOX(root), Text("Endpoint: 127.0.0.1 only. Keep Read-Only API enabled in TWS. A port number or account prefix does not verify the environment."));
+    const char *modes[] = {"Paper", "Live", NULL};
+    const char *programs[] = {"TWS", "IB Gateway", NULL};
+    ui->mode = gtk_drop_down_new_from_strings(modes);
+    ui->program = gtk_drop_down_new_from_strings(programs);
+    ui->port = gtk_spin_button_new_with_range(1, 65535, 1);
+    ui->client = gtk_spin_button_new_with_range(1, INT_MAX, 1);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->port), 7497);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->client), 35);
+    GtkWidget *grid = gtk_grid_new();
+    gtk_grid_set_row_spacing(GTK_GRID(grid), 8); gtk_grid_set_column_spacing(GTK_GRID(grid), 16);
+    Field(GTK_GRID(grid), "Requested environment", ui->mode, 0, "ibkr-mode");
+    Field(GTK_GRID(grid), "Provider program", ui->program, 1, "ibkr-program");
+    Field(GTK_GRID(grid), "Configured API port", ui->port, 2, "ibkr-port");
+    Field(GTK_GRID(grid), "Unique client ID", ui->client, 3, "ibkr-client");
+    gtk_box_append(GTK_BOX(root), grid);
+    ui->ack = gtk_check_button_new_with_label("I intend to access my Live account read-only and have checked the provider login.");
+    gtk_widget_set_name(ui->ack, "ibkr-live-ack");
+    gtk_box_append(GTK_BOX(root), ui->ack);
+    GtkWidget *buttons = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    ui->connect = gtk_button_new_with_label("Connect read-only");
+    ui->disconnect = gtk_button_new_with_label("Disconnect");
+    gtk_widget_set_name(ui->connect, "ibkr-connect");
+    gtk_widget_set_name(ui->disconnect, "ibkr-disconnect");
+    gtk_box_append(GTK_BOX(buttons), ui->connect); gtk_box_append(GTK_BOX(buttons), ui->disconnect);
+    gtk_box_append(GTK_BOX(root), buttons);
+    ui->status = Text("Not connected. Opening this window does not open a socket.");
+    gtk_widget_set_name(ui->status, "ibkr-status");
+    gtk_box_append(GTK_BOX(root), ui->status);
+    /* Connection choices stay visible while the optional inspection tools are
+     * collapsed. The same widgets and callbacks retain their owner; moving their
+     * parent changes presentation without creating another broker session. */
+    GtkWidget *tools = gtk_expander_new("Account, market data and order review");
+    gtk_widget_set_name(tools, "ibkr-account-tools");
+    GtkWidget *toolsRoot = gtk_box_new(GTK_ORIENTATION_VERTICAL, 12);
+    gtk_expander_set_child(GTK_EXPANDER(tools), toolsRoot);
+    gtk_box_append(GTK_BOX(root), tools);
+    root = toolsRoot;
+    ui->accounts = gtk_drop_down_new(NULL, NULL);
+    ui->read = gtk_button_new_with_label("Read selected account once");
+    gtk_widget_set_name(ui->accounts, "ibkr-accounts"); gtk_widget_set_name(ui->read, "ibkr-read");
+    gtk_box_append(GTK_BOX(root), ui->accounts); gtk_box_append(GTK_BOX(root), ui->read);
+    gtk_box_append(GTK_BOX(root), Text("To refresh or choose another account, disconnect and connect again. Only selected-account observations are retained; provider requests may cover all accounts authorised to this login."));
+    gtk_box_append(GTK_BOX(root), Text("Subscribed market quote"));
+    gtk_box_append(GTK_BOX(root), Text("In TWS, open Contract Description and copy the contract ID and exchange. This inspector streams one contract at a time through your API market-data permissions. It does not request paid regulatory snapshots. Values older than 15 seconds are marked stale; this does not prove the market price changed."));
+    GtkWidget *quoteGrid = gtk_grid_new();
+    gtk_grid_set_row_spacing(GTK_GRID(quoteGrid), 8);
+    gtk_grid_set_column_spacing(GTK_GRID(quoteGrid), 16);
+    ui->quoteContract = gtk_entry_new();
+    ui->quoteExchange = gtk_entry_new();
+    gtk_entry_set_placeholder_text(GTK_ENTRY(ui->quoteContract), "Contract ID from TWS");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(ui->quoteExchange), "Exchange from TWS");
+    Field(GTK_GRID(quoteGrid), "Contract ID", ui->quoteContract, 0, "ibkr-quote-contract");
+    Field(GTK_GRID(quoteGrid), "Exchange", ui->quoteExchange, 1, "ibkr-quote-exchange");
+    gtk_box_append(GTK_BOX(root), quoteGrid);
+    GtkWidget *quoteButtons = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    ui->quoteStart = gtk_button_new_with_label("Subscribe to quote");
+    ui->quoteStop = gtk_button_new_with_label("Cancel quote stream");
+    gtk_widget_set_name(ui->quoteStart, "ibkr-quote-start");
+    gtk_widget_set_name(ui->quoteStop, "ibkr-quote-stop");
+    gtk_box_append(GTK_BOX(quoteButtons), ui->quoteStart);
+    gtk_box_append(GTK_BOX(quoteButtons), ui->quoteStop);
+    gtk_box_append(GTK_BOX(root), quoteButtons);
+    ui->quoteNotice = Text("");
+    ui->quoteOutput = Text("Connect read-only, then choose a contract to inspect its quote.");
+    gtk_widget_set_name(ui->quoteOutput, "ibkr-quote-output");
+    gtk_label_set_selectable(GTK_LABEL(ui->quoteOutput), TRUE);
+    gtk_box_append(GTK_BOX(root), ui->quoteNotice);
+    gtk_box_append(GTK_BOX(root), ui->quoteOutput);
+    ui->output = gtk_text_view_new();
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(ui->output), FALSE);
+    gtk_text_view_set_monospace(GTK_TEXT_VIEW(ui->output), TRUE);
+    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(ui->output), GTK_WRAP_WORD_CHAR);
+    GtkWidget *outputScroll = gtk_scrolled_window_new();
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(outputScroll), ui->output);
+    gtk_widget_set_size_request(outputScroll, -1, 300);
+    gtk_widget_set_vexpand(outputScroll, TRUE);
+    gtk_box_append(GTK_BOX(root), outputScroll);
+    g_signal_connect_object(ui->mode, "notify::selected", G_CALLBACK(ProfileChanged), window, 0);
+    g_signal_connect_object(ui->program, "notify::selected", G_CALLBACK(ProfileChanged), window, 0);
+    g_signal_connect_object(ui->connect, "clicked", G_CALLBACK(ConnectClicked), window, 0);
+    g_signal_connect_object(ui->disconnect, "clicked", G_CALLBACK(DisconnectClicked), window, 0);
+    g_signal_connect_object(ui->read, "clicked", G_CALLBACK(ReadClicked), window, 0);
+    g_signal_connect_object(ui->quoteStart, "clicked", G_CALLBACK(QuoteStartClicked), window, 0);
+    g_signal_connect_object(ui->quoteStop, "clicked", G_CALLBACK(QuoteStopClicked), window, 0);
+    FillPolicyControls(window, ui, root);
+    ContractDetailsControls(window, ui, root);
+    MarketRuleControls(window, ui, root);
+    ExecutionsControls(window, ui, root);
+    PnlControls(window, ui, root);
+    SymbolSearchControls(window, ui, root);
+    DepthControls(window, ui, root);
+    OrdersControls(window, ui, root);
+    CompletedControls(window, ui, root);
+    HistoricalControls(window, ui, root);
+    StreamingControls(window, ui, root);
+    CatalogControls(window, ui, root);
+    ScannerControls(window, ui, root);
+    OptionChainControls(window, ui, root);
+    ObservationExportControls(window, ui, root);
+#ifdef UMI_IBKR_HAS_FILTERED_CHOICES
+    PositionReviewControls(window, ui, root);
+#endif
+    Controls(ui);
+    return window;
+}
 
 typedef struct ParentLink { GWeakRef parent; gulong destroyed; } ParentLink;
 static void ParentDestroyed(GtkWidget *widget, gpointer data)
@@ -741,6 +882,8 @@ static void FreeLink(gpointer data)
     }
     g_weak_ref_clear(&link->parent); g_free(link);
 }
+/* A failed window allocation must not be passed to GTK presentation; the weak-parent connection lifetime remains unchanged. The previous implementation is retained for engineering review. */
+#if 0
 static void OpenClicked(GtkButton *button, gpointer data)
 {
     (void)button;
@@ -751,6 +894,38 @@ static void OpenClicked(GtkButton *button, gpointer data)
     gtk_window_present(window);
     g_object_unref(parent);
 }
+#endif
+static void OpenClicked(GtkButton *button, gpointer data)
+{
+    (void)button;
+    ParentLink *link = data;
+    GObject *parent = g_weak_ref_get(&link->parent);
+    if (parent == NULL) return;
+    GtkWindow *window = UmiIbkrGtkCreate(GTK_WINDOW(parent));
+    if (window != NULL) gtk_window_present(window);
+    g_object_unref(parent);
+}
+/* A toolbar can host this launcher without wrapping its entire workspace. The
+ * weak owner and native-removal observer preserve the same lifetime boundary. */
+GtkWidget *UmiIbkrGtkLauncherCreate(GtkWindow *parent)
+{
+    if (!GTK_IS_WINDOW(parent)) return NULL;
+    GtkWidget *button = gtk_button_new_with_label("Open Paper / Live broker connections");
+    ParentLink *link = g_new0(ParentLink, 1);
+    g_weak_ref_init(&link->parent, parent);
+/* A retained parent must lose launcher authority when removed from the native window list. The previous implementation remains for engineering review. */
+#if 0
+    link->destroyed = g_signal_connect(parent, "destroy", G_CALLBACK(ParentDestroyed), link);
+#endif
+    UmiGtk4ObserveWindowRemoval(parent, G_OBJECT(button), ParentDestroyed, link);
+    g_object_set_data_full(G_OBJECT(button), "umicom-broker-parent", link, FreeLink);
+    g_signal_connect(button, "clicked", G_CALLBACK(OpenClicked), link);
+    gtk_widget_set_halign(button, GTK_ALIGN_START);
+    return button;
+}
+
+/* Launcher construction is shared with compact toolbars, preserving its native-window lifetime rules. The earlier wrapper remains for review. The previous implementation is retained for engineering review. */
+#if 0
 GtkWidget *UmiIbkrGtkWrap(GtkWidget *child, GtkWindow *parent)
 {
     if (!GTK_IS_WIDGET(child) || !GTK_IS_WINDOW(parent) || gtk_widget_get_parent(child) != NULL) return child;
@@ -769,4 +944,28 @@ GtkWidget *UmiIbkrGtkWrap(GtkWidget *child, GtkWindow *parent)
     gtk_box_append(GTK_BOX(box), button); gtk_box_append(GTK_BOX(box), child);
     gtk_widget_set_vexpand(child, TRUE);
     return box;
+}
+#endif
+GtkWidget *UmiIbkrGtkWrap(GtkWidget *child, GtkWindow *parent)
+{
+    if (!GTK_IS_WIDGET(child) || !GTK_IS_WINDOW(parent) ||
+        gtk_widget_get_parent(child) != NULL) return child;
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+    /* The shared launcher owns the weak-parent callback for every composition. */
+    gtk_box_append(GTK_BOX(box), UmiIbkrGtkLauncherCreate(parent));
+    gtk_box_append(GTK_BOX(box), child);
+    gtk_widget_set_vexpand(child, TRUE);
+    return box;
+}
+
+/* Reuse the established inspector and its port/consent update signals. Merely
+ * opening the welcome choice must never create a broker socket or approve Live. */
+GtkWindow *UmiIbkrGtkCreateForEnvironment(GtkWindow *parent, int live)
+{
+    if (live != 0 && live != 1) return NULL;
+    GtkWindow *window = UmiIbkrGtkCreate(parent);
+    if (window == NULL) return NULL;
+    ConnectionUi *ui = Owner(window);
+    if (ui != NULL) gtk_drop_down_set_selected(GTK_DROP_DOWN(ui->mode), live ? 1U : 0U);
+    return window;
 }

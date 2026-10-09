@@ -9,6 +9,21 @@
 #include "../build_log/fixture.h"
 #include "umicom/developer_project/snippet_storage.h"
 #include "umicom/platform/filesystem.h"
+/* Storage round trips preserve meaningful fields, not bytes after a string's
+ * terminator. Editing a shorter template can leave such bytes in the source;
+ * decoding correctly creates a fresh owned record. Failure checks below still
+ * compare the complete sentinel to prove that unsuccessful reads do not write. */
+static int TemplateEqual(const UmiEditorSnippetTemplate *left,
+                         const UmiEditorSnippetTemplate *right)
+{
+    return left->struct_size == right->struct_size &&
+        left->api_version == right->api_version &&
+        strcmp(left->id, right->id) == 0 &&
+        strcmp(left->language_id, right->language_id) == 0 &&
+        strcmp(left->name, right->name) == 0 &&
+        strcmp(left->body, right->body) == 0;
+}
+
 int main(int argc, char **argv)
 {
     CHECK(argc == 2);
@@ -61,8 +76,13 @@ int main(int argc, char **argv)
         snippet->body[sizeof(snippet->body) - 1U] = '\0';
     }
     CHECK(UmiSnippetTemplateEncode(snippet, encoded, 65536U, &bytes) == UMI_STATUS_OK);
+/* Compare complete stored fields rather than bytes beyond string terminators. Keep the earlier object-byte comparison for review. */
+#if 0
     CHECK(UmiSnippetTemplateDecode(encoded, bytes, decoded) == UMI_STATUS_OK &&
           memcmp(decoded, snippet, sizeof(*snippet)) == 0);
+#endif
+    CHECK(UmiSnippetTemplateDecode(encoded, bytes, decoded) == UMI_STATUS_OK &&
+          TemplateEqual(decoded, snippet));
     *decoded = *sentinel;
     const char *bad = NULL;
     /* Each malformed record reaches the decoder with its original bytes.
@@ -224,7 +244,12 @@ int main(int argc, char **argv)
                                      ? UMI_STATUS_INVALID_STATE
                                      : UMI_STATUS_OK;
             CHECK(UmiSnippetTemplateLoad(path, language, id, decoded) == expected);
+/* Successful decoding preserves field values; a failed decode must leave every sentinel byte unchanged. Retain the former combined comparison for review. */
+#if 0
             CHECK(memcmp(decoded, expected == UMI_STATUS_OK ? snippet : sentinel, sizeof(*decoded)) == 0);
+#endif
+            CHECK(expected == UMI_STATUS_OK ? TemplateEqual(decoded, snippet)
+                : memcmp(decoded, sentinel, sizeof(*decoded)) == 0);
         }
     }
     free(encoded);

@@ -46,6 +46,8 @@ add_library(umicom_education_workspace STATIC
     "${_umicom_education_root}/src/education_workspace/storage.c"
     "${_umicom_education_root}/src/education_workspace/report.c"
     "${_umicom_education_root}/src/education_workspace/export_project.c"
+    "${_umicom_education_root}/src/education_workspace/project_workflow.c"
+    "${_umicom_education_root}/src/education_workspace/local_record.c"
     "${_umicom_education_resources}")
 add_library(Umicom::education_workspace ALIAS umicom_education_workspace)
 set_target_properties(umicom_education_workspace PROPERTIES EXPORT_NAME education_workspace)
@@ -78,6 +80,24 @@ if(TARGET Umicom::ui_gtk4)
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)
 endif()
 if(BUILD_TESTING)
+    add_executable(umicom-education-project-workflow-test
+        "${_umicom_education_root}/tests/education_workspace/test_project_workflow.c")
+    target_link_libraries(umicom-education-project-workflow-test PRIVATE Umicom::education_workspace)
+    umicom_education_configure_target(umicom-education-project-workflow-test)
+    if(WIN32 AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_link_options(umicom-education-project-workflow-test PRIVATE -municode)
+    endif()
+    foreach(case notes assembly framework invalid existing)
+        set(directory "${CMAKE_CURRENT_BINARY_DIR}/education-tests/project-workflow/${case}")
+        file(MAKE_DIRECTORY "${directory}")
+        add_test(NAME framework.education_workspace.project_workflow.${case}
+            COMMAND umicom-education-project-workflow-test "${case}")
+        set_tests_properties(framework.education_workspace.project_workflow.${case} PROPERTIES
+            WORKING_DIRECTORY "${directory}" TIMEOUT 30 LABELS "framework;education-workspace;export;ide-workflow")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-education-project-workflow-test)
+    endif()
     # Compile the same canonical source files that learners export. These
     # results are CTest evidence, not automatically credited quiz progress.
     # The stock test deliberately uses the C reference here; the exported
@@ -137,6 +157,25 @@ if(BUILD_TESTING)
         message(STATUS "Education independent output check not registered: Python3 interpreter unavailable")
     endif()
     if(TARGET Umicom::education_workspace_gtk4)
+        add_executable(umicom-education-project-workflow-gtk-test
+            "${_umicom_education_root}/tests/education_workspace/test_project_workflow_gtk4.c")
+        target_link_libraries(umicom-education-project-workflow-gtk-test PRIVATE Umicom::education_workspace_gtk4)
+        umicom_education_configure_target(umicom-education-project-workflow-gtk-test)
+        if(WIN32 AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+            target_link_options(umicom-education-project-workflow-gtk-test PRIVATE -municode)
+        endif()
+        foreach(case success captured-path failed-export close-callback recursive retained unbound)
+            set(directory "${CMAKE_CURRENT_BINARY_DIR}/education-tests/project-gtk/${case}")
+            file(MAKE_DIRECTORY "${directory}")
+            add_test(NAME framework.education_workspace.project_gtk.${case}
+                COMMAND umicom-education-project-workflow-gtk-test "${case}")
+            set_tests_properties(framework.education_workspace.project_gtk.${case} PROPERTIES
+                WORKING_DIRECTORY "${directory}" TIMEOUT 30 SKIP_RETURN_CODE 77
+                LABELS "framework;education-workspace;export;ide-workflow;gtk4")
+        endforeach()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-education-project-workflow-gtk-test)
+        endif()
         add_executable(umicom-education-workspace-gtk-test
             "${_umicom_education_root}/tests/education_workspace/test_panel_gtk4.c")
         target_link_libraries(umicom-education-workspace-gtk-test PRIVATE Umicom::education_workspace_gtk4)
@@ -189,3 +228,47 @@ unset(_umicom_education_project_files)
 # Study planning reuses the same catalogue, progress service and GUI owner.
 # Existing course exports, assessments and persistence remain authoritative.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomEducationStudy.cmake")
+
+# Explicit local storage is shared by standalone and embedded learning panels.
+if(BUILD_TESTING)
+    add_executable(umicom-education-local-record-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/education_workspace/test_local_record.c")
+    target_link_libraries(umicom-education-local-record-test PRIVATE Umicom::education_workspace)
+    umicom_education_configure_target(umicom-education-local-record-test)
+    if(WIN32 AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_link_options(umicom-education-local-record-test PRIVATE -municode)
+    endif()
+    foreach(case invalid missing-parent reopen corrupt independent)
+        set(directory "${CMAKE_CURRENT_BINARY_DIR}/education-tests/local-record/${case}")
+        file(MAKE_DIRECTORY "${directory}")
+        add_test(NAME framework.education_workspace.local_record.${case}
+            COMMAND umicom-education-local-record-test "${case}")
+        set_tests_properties(framework.education_workspace.local_record.${case} PROPERTIES
+            WORKING_DIRECTORY "${directory}" TIMEOUT 30 SKIP_RETURN_CODE 77
+            LABELS "framework;education-workspace;local-storage;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-education-local-record-test)
+    endif()
+    if(TARGET Umicom::education_workspace_gtk4)
+        add_executable(umicom-education-local-record-gtk-test
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/education_workspace/test_local_record_gtk4.c")
+        target_link_libraries(umicom-education-local-record-gtk-test PRIVATE Umicom::education_workspace_gtk4)
+        umicom_education_configure_target(umicom-education-local-record-gtk-test)
+        if(WIN32 AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+            target_link_options(umicom-education-local-record-gtk-test PRIVATE -municode)
+        endif()
+        foreach(case save dirty failed-open retained-browser unparented-browser)
+            set(directory "${CMAKE_CURRENT_BINARY_DIR}/education-tests/local-record-gtk/${case}")
+            file(MAKE_DIRECTORY "${directory}")
+            add_test(NAME framework.education_workspace.local_record_gtk.${case}
+                COMMAND umicom-education-local-record-gtk-test "${case}")
+            set_tests_properties(framework.education_workspace.local_record_gtk.${case} PROPERTIES
+                WORKING_DIRECTORY "${directory}" TIMEOUT 30 SKIP_RETURN_CODE 77
+                LABELS "framework;education-workspace;local-storage;gtk4")
+        endforeach()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-education-local-record-gtk-test)
+        endif()
+    endif()
+endif()

@@ -1,0 +1,40 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Program console</title>
+<style>body{max-width:64rem;margin:3rem auto;padding:0 1rem;font:17px/1.65 system-ui;color:#202b39}code,pre{background:#edf1f5}pre{padding:1rem;overflow:auto}</style></head><body>
+<h1>Run a program that asks for input</h1>
+<p>The program console connects a selected executable to input and output pipes. You can send text lines, finish the input stream and stop the program while its output remains visible. It is useful for console lessons that use functions such as <code>fgets</code>. A pipe carries bytes; it does not provide a full terminal screen.</p>
+<h2>Use it in Studio</h2><ol>
+<li>Open your project folder and review its trust setting. Only run programs that you trust.</li>
+<li>Save your source and build the program. In Project Settings, select its executable, arguments, working folder and any required tools folder or non-secret environment values.</li>
+<li>Open Studio's Terminal panel and choose <strong>Open project program console</strong>. Opening the window starts nothing.</li>
+<li>Choose <strong>Run existing program</strong>. This uses the current project launch settings. It does not save files, configure or compile the project.</li>
+<li>Type a line in the input field and choose <strong>Send line</strong>, or press Enter. The console adds one newline. “Input queued” means the bytes were accepted by the console, not that the program has read them.</li>
+<li>Choose <strong>End input</strong> when the program needs to read until end-of-file. Previously accepted input is sent first. You cannot send more input to that run after ending it.</li>
+<li>Read Output and Errors separately. A finished run shows its process exit code; zero is the usual success convention. Use <strong>Stop</strong> for a program that will not finish.</li></ol>
+<p>Closing or hiding the console stops its program. Changing or closing the project, or revoking project trust, also requests Stop. Keep the window open while working with the program. Stop the program before rebuilding or starting the debugger; Studio blocks competing build and debug commands while console cleanup is pending.</p>
+<h2>Write an input prompt</h2><pre><code>#include &lt;stdio.h&gt;
+int main(void)
+{
+    char name[80];
+    /* A pipe may buffer output. Flush the prompt before waiting for input. */
+    fputs("What is your name? ", stdout);
+    fflush(stdout);
+    if (fgets(name, sizeof name, stdin) == NULL)
+        return 1;
+    printf("Hello, %s", name);
+    return 0;
+}</code></pre>
+<p>The console sends UTF-8 text with an LF newline. A child that expects a different encoding must perform its own conversion. Windows programs may choose binary mode when they need exact byte handling instead of the C runtime's text translations.</p>
+<h2>Limits and troubleshooting</h2><ul>
+<li>A single input frame is at most 4,096 bytes, including the newline. At most sixteen frames can wait. A full queue keeps your input draft; wait for the program to read before trying again.</li>
+<li>The Output view retains the last 65,535 bytes and Errors retains the last 4,095 bytes. Omitted earlier text is reported. These views are not saved logs.</li>
+<li>Input is not copied into command history. A program may itself print input, so do not assume the output view is a secret store.</li>
+<li>Run uses the existing executable on disk. Check the selected path and rebuild if it is out of date. A missing runtime library may require the project's tools folder or an explicit PATH setting.</li>
+<li>The project profile timeout also applies to this run. Allow enough time for human input; a timeout stops the program.</li>
+<li>If the program never reads input, a bounded write can time out after sending only part of a frame. The console stops that run instead of replaying uncertain input.</li>
+<li>Windows and Linux have native support. Linux accepts native little-endian 64-bit ELF executables and rejects a symlink at the executable or working-directory leaf. Other hosts report unavailable.</li>
+<li>This is not a PTY or terminal emulator. Programs requiring screen control, raw terminal input, password prompts tied to a terminal device or persistent shell state need an external terminal.</li>
+<li>Process ownership is not a sandbox. Trusted programs inherit the host environment plus the reviewed overrides. Linux processes can deliberately leave their process group.</li></ul>
+<h2>Extend the Framework service</h2>
+<p><code>UmiBuildProgramConsoleCreate</code> prepares saved project settings. <code>UmiProgramConsoleCreate</code> accepts a directly specified native program. Run the console on one dedicated worker and keep that worker alive until <code>UmiProgramConsoleRun</code> returns. Other threads may send input, request EOF, stop or read snapshots. Join the worker before destruction.</p>
+<p>The GTK panel accepts host callbacks that prepare a console and recheck authority. Keep project identity and trust checks in that host callback; input queues, environment preparation, native process lifetime and output ownership remain in Framework. The existing restricted process-channel entry point remains available for protocol clients such as VM tools.</p>
+</body></html>

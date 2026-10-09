@@ -12,9 +12,12 @@
  * Paper/Live connection controls. This window never offers order execution.
  *---------------------------------------------------------------------------*/
 #include "umicom/broker_connectivity/connection_gtk4.h"
+#include "umicom/ui/gtk4/automation.h"
 #include <stdio.h>
 #include <string.h>
 #define CHECK(x) do { if (!(x)) { fprintf(stderr, "check failed: %s at %d\n", #x, __LINE__); return 1; } } while (0)
+/* Use the shared bounded logical lookup so collapsed broker tools remain inspectable. The previous implementation is retained for engineering review. */
+#if 0
 static GtkWidget *Find(GtkWidget *root, const char *name)
 {
     if (strcmp(gtk_widget_get_name(root), name) == 0) return root;
@@ -22,6 +25,13 @@ static GtkWidget *Find(GtkWidget *root, const char *name)
         GtkWidget *found = Find(child, name); if (found != NULL) return found;
     }
     return NULL;
+}
+#endif
+static GtkWidget *Find(GtkWidget *root, const char *name)
+{
+    /* A collapsed tools group still owns its controls. Inspect that logical
+     * child without expanding the interface merely to find a test target. */
+    return umi_gtk4_automation_find_named_widget(root, name);
 }
 typedef struct ReportReentry {
     GtkWidget *button;
@@ -93,7 +103,43 @@ int main(int argc, char **argv)
         gtk_window_destroy(window); g_object_unref(window);
         return 0;
     }
-    if (!strcmp(argv[1], "construction")) {
+    if (!strcmp(argv[1], "environment-intent")) {
+        GtkWindow *paper = UmiIbkrGtkCreateForEnvironment(NULL, 0);
+        GtkWindow *live = UmiIbkrGtkCreateForEnvironment(NULL, 1);
+        CHECK(paper && live);
+        CHECK(UmiIbkrGtkCreateForEnvironment(NULL, -1) == NULL);
+        CHECK(UmiIbkrGtkCreateForEnvironment(NULL, 2) == NULL);
+        CHECK(gtk_drop_down_get_selected(GTK_DROP_DOWN(Find(GTK_WIDGET(paper), "ibkr-mode"))) == 0U);
+        CHECK(gtk_drop_down_get_selected(GTK_DROP_DOWN(Find(GTK_WIDGET(live), "ibkr-mode"))) == 1U);
+        CHECK(gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(Find(GTK_WIDGET(live), "ibkr-port"))) == 7496);
+        CHECK(!gtk_check_button_get_active(GTK_CHECK_BUTTON(Find(GTK_WIDGET(live), "ibkr-live-ack"))));
+        CHECK(!gtk_widget_get_sensitive(Find(GTK_WIDGET(live), "ibkr-disconnect")));
+        CHECK(strstr(gtk_label_get_text(GTK_LABEL(Find(GTK_WIDGET(live), "ibkr-status"))), "Not connected") != NULL);
+        gtk_window_destroy(paper); gtk_window_destroy(live);
+    } else if (!strcmp(argv[1], "compact-tools")) {
+        GtkWidget *tools = Find(GTK_WIDGET(window), "ibkr-account-tools");
+        GtkWidget *account = Find(GTK_WIDGET(window), "ibkr-accounts");
+        GtkWidget *status = Find(GTK_WIDGET(window), "ibkr-status");
+        CHECK(GTK_IS_EXPANDER(tools) && account && status);
+        CHECK(!gtk_expander_get_expanded(GTK_EXPANDER(tools)));
+        CHECK(gtk_widget_is_ancestor(account, gtk_expander_get_child(GTK_EXPANDER(tools))));
+        CHECK(!gtk_widget_is_ancestor(mode, tools));
+        CHECK(!gtk_widget_is_ancestor(status, tools));
+        gtk_expander_set_expanded(GTK_EXPANDER(tools), TRUE);
+        CHECK(Find(GTK_WIDGET(window), "ibkr-accounts") == account);
+    } else if (!strcmp(argv[1], "retained-launcher")) {
+        GtkWindow *parent = GTK_WINDOW(gtk_window_new());
+        g_object_ref(parent);
+        GtkWidget *launcher = UmiIbkrGtkLauncherCreate(parent);
+        CHECK(GTK_IS_BUTTON(launcher));
+        gtk_window_set_child(parent, launcher);
+        g_object_ref(launcher);
+        gtk_window_destroy(parent);
+        guint before = g_list_model_get_n_items(gtk_window_get_toplevels());
+        g_signal_emit_by_name(launcher, "clicked");
+        CHECK(g_list_model_get_n_items(gtk_window_get_toplevels()) == before);
+        g_object_unref(launcher); g_object_unref(parent);
+    } else if (!strcmp(argv[1], "construction")) {
         CHECK(!gtk_widget_get_visible(GTK_WIDGET(window)));
         CHECK(!gtk_widget_get_sensitive(Find(GTK_WIDGET(window), "ibkr-read")));
         CHECK(!gtk_widget_get_sensitive(Find(GTK_WIDGET(window), "ibkr-disconnect")));

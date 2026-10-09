@@ -6,6 +6,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 
+#include "umicom/ui/gtk4/selection_list.h"
 static int VerifyNativeQueue(const char *name)
 {
     GtkWidget *window;BankUi *ui=Create(&window);Fixture f={0};f.bank=ui->operations;f.serial=100;
@@ -15,7 +16,11 @@ static int VerifyNativeQueue(const char *name)
     strcpy(c.name,"Queue charge");c.amount=Cash(250);Send(&f,&f.maker,&c);
     QueueCreate(ui);Refresh(ui);CHECK(ui->workQueue!=NULL);
     UmiBankWorkQueueSummary summary;OK(UmiBankWorkQueueSummaryRead(ui->workQueue,&summary));CHECK(summary.count==1&&summary.revision==4);
+/* Check the absence of a business choice, including the explicit GTK prompt. Retain the earlier raw-index assertion for review. */
+#if 0
     CHECK(gtk_drop_down_get_selected(ui->queueRows)==GTK_INVALID_LIST_POSITION);
+#endif
+    CHECK(UmiGtk4SelectionListSelected(ui->queueRows)==GTK_INVALID_LIST_POSITION);
     gtk_drop_down_set_selected(ui->queueRows,0);gtk_drop_down_set_selected(ui->identity,1);
     if(strcmp(name,"queue-capture")==0){
         CHECK(Contains(ui->queueDetails,"queue-charge")&&Contains(ui->queueDetails,"GBP 2.50"));Balance(&f,100000,0);
@@ -29,7 +34,11 @@ static int VerifyNativeQueue(const char *name)
             gtk_drop_down_set_selected(ui->identity,2);gtk_drop_down_set_selected(ui->queueDecision,3);
             g_signal_emit_by_name(ui->queueReviewButton,"clicked");CHECK(ui->review!=NULL);Submit(ui->submit,window);Balance(&f,99750,0);
             OK(UmiBankWorkQueueSummaryRead(ui->workQueue,&summary));CHECK(summary.count==0);
+/* Check the absence of a business choice, including the explicit GTK prompt. Retain the earlier raw-index assertion for review. */
+#if 0
             CHECK(gtk_drop_down_get_selected(ui->queueRows)==GTK_INVALID_LIST_POSITION&&!gtk_widget_get_sensitive(ui->queueReviewButton));
+#endif
+            CHECK(UmiGtk4SelectionListSelected(ui->queueRows)==GTK_INVALID_LIST_POSITION&&!gtk_widget_get_sensitive(ui->queueReviewButton));
         }
     }else if(strcmp(name,"queue-filter")==0){
         g_signal_emit_by_name(ui->queueReviewButton,"clicked");CHECK(ui->review!=NULL);

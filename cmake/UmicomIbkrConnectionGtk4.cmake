@@ -18,6 +18,12 @@ target_link_libraries(umicom_ibkr_connection_gtk4 PUBLIC Umicom::ibkr_connection
 if(TARGET Umicom::ui_gtk4)
     target_link_libraries(umicom_ibkr_connection_gtk4 PRIVATE Umicom::ui_gtk4)
     target_compile_definitions(umicom_ibkr_connection_gtk4 PRIVATE UMI_IBKR_HAS_FILTERED_CHOICES=1)
+else()
+    # Standalone broker inspectors still need logical control lookup in their
+    # native fixtures. Compile only the small GTK lookup module when the complete
+    # frontend is disabled; otherwise its existing UI library owns these symbols.
+    target_sources(umicom_ibkr_connection_gtk4 PRIVATE
+        "${_ibkr_gtk_root}/adapters/gtk4/widget_lookup_gtk4.c")
 endif()
 umicom_ibkr_target(umicom_ibkr_connection_gtk4)
 install(TARGETS umicom_ibkr_connection_gtk4 EXPORT UmicomFrameworkTargets
@@ -329,4 +335,13 @@ if(BUILD_TESTING)
     if(COMMAND umicom_register_validation_target)
         umicom_register_validation_target(umicom-catalog_native-test)
     endif()
+endif()
+
+# Welcome-screen environment choices do not open sockets or grant Live consent.
+if(BUILD_TESTING)
+    foreach(case environment-intent compact-tools retained-launcher)
+        add_test(NAME framework.ibkr_connection.gtk_${case} COMMAND umicom-ibkr-gtk-test ${case})
+        set_tests_properties(framework.ibkr_connection.gtk_${case} PROPERTIES
+            SKIP_RETURN_CODE 77 TIMEOUT 20 LABELS "framework;broker;gtk4;ownership;regression")
+    endforeach()
 endif()

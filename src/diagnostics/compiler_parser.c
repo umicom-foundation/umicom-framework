@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/diagnostics/compiler_parser.h"
+#include "compiler_parser_internal.h"
 
 #include <ctype.h>
 #include <inttypes.h>
@@ -274,6 +275,100 @@ UmiStatus UmiCompilerDiagnosticParseText(const char *text,
     return UMI_STATUS_NOT_FOUND;
 }
 
+
+/* A build transcript is a sequence of records. CMake's explanation belongs to
+ * its preceding header, while its call stack remains separate transcript text.
+ * Keeping this grouping beside the compiler grammar lets every build consumer
+ * use the same source location and message instead of guessing in the UI. */
+static size_t DiagnosticLineBytes(const char *text)
+{
+    const char *newline = strchr(text, '\n');
+    return newline != NULL ? (size_t)(newline - text) + 1U : strlen(text);
+}
+
+UmiStatus UmiCompilerDiagnosticParseBlock(const char *text,
+    UmiCompilerDiagnosticFields *outFields, size_t *outConsumed)
+{
+    if (text == NULL || outFields == NULL || outConsumed == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiCompilerDiagnosticFields candidate;
+    const size_t firstBytes = DiagnosticLineBytes(text);
+    *outConsumed = firstBytes;
+    UmiStatus status = UmiCompilerDiagnosticParseText(text, &candidate);
+    if (status != UMI_STATUS_OK) return status;
+
+    /* The single-line parser has already recognised this complete header.
+     * Other compiler formats keep their established one-line behaviour. */
+    char header[8192];
+    UmiCompilerDiagnosticFields cmakeHeader = {0};
+    status = CleanLine(text, header, sizeof header);
+    if (status != UMI_STATUS_OK) return status;
+    const char *headerStart = header;
+    while (*headerStart == ' ' || *headerStart == '\t') ++headerStart;
+    if (ParseCMake(headerStart, &cmakeHeader) != UMI_STATUS_OK) {
+        *outFields = candidate;
+        return UMI_STATUS_OK;
+    }
+
+    const char *cursor = text + firstBytes;
+    size_t used = strlen(candidate.message);
+    int paragraph = 0;
+    UmiStatus recordStatus = UMI_STATUS_OK;
+    while (*cursor != '\0') {
+        char clean[8192];
+        size_t bytes = DiagnosticLineBytes(cursor);
+        status = CleanLine(cursor, clean, sizeof clean);
+        if (status != UMI_STATUS_OK) {
+            /* An oversized indented line still belongs to the record. Consume
+             * it without publishing a shortened message or parsing its tail as
+             * another error. Unsupported terminal controls remain raw output. */
+            if (status != UMI_STATUS_CAPACITY_EXCEEDED ||
+                (cursor[0] != ' ' && cursor[0] != '\t')) break;
+            recordStatus = UMI_STATUS_CAPACITY_EXCEEDED;
+            cursor += bytes;
+            *outConsumed = (size_t)(cursor - text);
+            continue;
+        }
+
+        const char *first = clean;
+        while (*first == ' ' || *first == '\t') ++first;
+        if (*first == '\0') {
+            /* Blank separators join the record only when followed by another
+             * indented paragraph. Trailing separators stay in the transcript. */
+            paragraph = 1;
+            cursor += bytes;
+            continue;
+        }
+        if (first == clean) break;
+
+        UmiCompilerDiagnosticFields nextHeader = {0};
+        if (ParseCMake(first, &nextHeader) != UMI_STATUS_NOT_FOUND) break;
+        const char *last = first + strlen(first);
+        while (last > first && (last[-1] == ' ' || last[-1] == '\t')) --last;
+        size_t length = (size_t)(last - first);
+        size_t separator = paragraph ? 2U : 1U;
+        if (recordStatus == UMI_STATUS_OK) {
+            /* Reserve the terminator before subtracting: an exact fit is valid,
+             * but no partial UTF-8 text or ellipsis is substituted on overflow. */
+            size_t remaining = sizeof candidate.message - 1U - used;
+            if (separator > remaining || length > remaining - separator) {
+                recordStatus = UMI_STATUS_CAPACITY_EXCEEDED;
+            } else {
+                candidate.message[used++] = '\n';
+                if (paragraph) candidate.message[used++] = '\n';
+                memcpy(candidate.message + used, first, length);
+                used += length;
+                candidate.message[used] = '\0';
+            }
+        }
+        paragraph = 0;
+        cursor += bytes;
+        *outConsumed = (size_t)(cursor - text);
+    }
+    if (recordStatus == UMI_STATUS_OK) *outFields = candidate;
+    return recordStatus;
+}
+
 /* Keep the original registry entry point. Only the field grammar is shared. */
 UmiStatus umi_compiler_diagnostic_parse(const UmiOutputRecord *output,
     UmiDiagnosticSnapshot *out_diagnostic, int *out_matched, void *user_data)
@@ -371,4 +466,21 @@ UmiStatus UmiTestFailureParseText(const char *text, UmiCompilerDiagnosticFields 
         *outFields = candidate; return UMI_STATUS_OK;
     }
     return UMI_STATUS_NOT_FOUND;
+}
+
+/* Stream consumers need the same cleaned indentation and CMake header grammar
+ * as ParseBlock. Keeping this small boundary query beside that grammar prevents
+ * byte-chunk boundaries from changing the meaning of a compiler transcript. */
+UmiCompilerLineKind UmiCompilerClassifyLine(const char *line)
+{
+    char clean[8192];
+    UmiCompilerDiagnosticFields header = {0};
+    if (line == NULL || CleanLine(line, clean, sizeof clean) != UMI_STATUS_OK)
+        return UMI_COMPILER_LINE_OTHER;
+    const char *first = clean;
+    while (*first == ' ' || *first == '\t') ++first;
+    if (*first == '\0') return UMI_COMPILER_LINE_BLANK;
+    if (ParseCMake(first, &header) != UMI_STATUS_NOT_FOUND)
+        return UMI_COMPILER_LINE_CMAKE;
+    return first != clean ? UMI_COMPILER_LINE_INDENTED : UMI_COMPILER_LINE_OTHER;
 }

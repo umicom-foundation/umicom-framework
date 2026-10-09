@@ -14,13 +14,22 @@ if(NOT CASE IN_LIST _cases)
     message(FATAL_ERROR "Unknown integration case: ${CASE}")
 endif()
 string(RANDOM LENGTH 16 ALPHABET 0123456789abcdef _token)
+# Keep the unique probe and space-containing paths while leaving room for compiler dependency filenames on Windows. The longer layout is retained for review.
+if(FALSE)
 set(RUN "${PROBE_ROOT}/${CASE}-${_token}")
+endif()
+set(RUN "${PROBE_ROOT}/${_token}")
 if(EXISTS "${RUN}")
     message(FATAL_ERROR "Refusing an existing probe directory: ${RUN}")
 endif()
 file(MAKE_DIRECTORY "${RUN}")
+# Keep the unique probe and space-containing paths while leaving room for compiler dependency filenames on Windows. The longer layout is retained for review.
+if(FALSE)
 set(_source "${RUN}/source with spaces")
 set(_build "${RUN}/build with spaces")
+endif()
+set(_source "${RUN}/s p")
+set(_build "${RUN}/b p")
 file(COPY "${CMAKE_CURRENT_LIST_DIR}/probe/" DESTINATION "${_source}")
 get_filename_component(_cmake_directory "${CMAKE_COMMAND}" DIRECTORY)
 find_program(_ctest NAMES ctest HINTS "${_cmake_directory}" NO_DEFAULT_PATH REQUIRED)
@@ -78,7 +87,12 @@ function(CheckInventory stage)
             if(_entry MATCHES "^(COMMON|LINUX|LINUX_WRAP)[|](framework[.].+)$")
                 set(_kind "${CMAKE_MATCH_1}")
                 set(_name "${CMAKE_MATCH_2}")
-                if(_mode STREQUAL "partial" AND NOT _name MATCHES "^framework[.]ibkr_connection[.]")
+                # All broker families belong to the partial composition. Preserve the former
+# condition as a comment without introducing an unmatched inactive CMake block.
+#[=[
+if(_mode STREQUAL "partial" AND NOT _name MATCHES "^framework[.]ibkr_connection[.]")
+]=]
+if(_mode STREQUAL "partial" AND NOT _name MATCHES "^framework[.]ibkr_")
                     continue()
                 endif()
                 if(_kind STREQUAL "COMMON" OR

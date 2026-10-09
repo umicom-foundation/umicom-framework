@@ -167,3 +167,14 @@ int main(int argc,char **argv)
     }
     TestFinish(queue);Dispose(&value);printf("PASS %s\n",scenario);return 0;
 }
+
+/* This fixture substitutes process transport deliberately. Tool-aware launches
+ * must reach the same injected stream instead of starting an external program. */
+UmiStatus UmiProcessExecuteWithLifetime(const UmiProcessRequest *request,
+    UmiProcessLifetime lifetime,UmiProcessResultObserver observer,
+    UmiProcessOutputObserver rawObserver,void *context,UmiProcessResult *result)
+{
+    if(lifetime!=UMI_PROCESS_LIFETIME_CHILD || observer!=NULL || rawObserver==NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    return UmiProcessExecuteStreamed(request,rawObserver,context,result);
+}

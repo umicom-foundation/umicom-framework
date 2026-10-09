@@ -33,6 +33,7 @@ endif()
 target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/types.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/foundations_curriculum.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/learning_library.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/curriculum_track.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/curriculum_catalogue.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/teacher/curriculum_prerequisite.c"

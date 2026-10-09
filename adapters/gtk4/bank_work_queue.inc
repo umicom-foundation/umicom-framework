@@ -8,6 +8,8 @@
 
 /* Included after the form helpers. Window-bound signals and SignalUi make
  * retained controls inert after close; the queue owns no service reference. */
+#include "umicom/ui/gtk4/selection_list.h"
+
 static void QueueClear(BankUi *ui,const char *message)
 {
     UmiBankWorkQueueDestroy(ui->workQueue);ui->workQueue=NULL;
@@ -21,7 +23,11 @@ static void QueueSelectionChanged(GObject *object,GParamSpec *spec,gpointer wind
 {
     (void)object;(void)spec;BankUi *ui=SignalUi(window);if(ui==NULL)return;
     InvalidateReview(ui);UmiBankWorkQueueRow row;UmiBankAction action;
+/* Read only business rows; the displayed prompt is not an instruction. Retain the raw GTK selection reader for review. */
+#if 0
     guint index=gtk_drop_down_get_selected(ui->queueRows),decision=gtk_drop_down_get_selected(ui->queueDecision);
+#endif
+    guint index=UmiGtk4SelectionListSelected(ui->queueRows),decision=gtk_drop_down_get_selected(ui->queueDecision);
     UmiStatus status=UmiBankWorkQueueRowAt(ui->workQueue,index,&row);
     gtk_widget_set_sensitive(ui->queueReviewButton,status==UMI_STATUS_OK&&decision<4U&&
         UmiBankWorkQueueResolveAction(ui->workQueue,index,(UmiBankWorkDecision)(decision+1U),&action)==UMI_STATUS_OK);
@@ -46,7 +52,11 @@ static void QueueRefresh(BankUi *ui)
 {
     if(ui->queueRows==NULL||ui->closed)return;
     UmiBankWorkQueueRow prior={0};
+/* Read only business rows; the displayed prompt is not an instruction. Retain the raw GTK selection reader for review. */
+#if 0
     (void)UmiBankWorkQueueRowAt(ui->workQueue,gtk_drop_down_get_selected(ui->queueRows),&prior);
+#endif
+    (void)UmiBankWorkQueueRowAt(ui->workQueue,UmiGtk4SelectionListSelected(ui->queueRows),&prior);
     UmiBankWorkQueueFilter filter=UmiBankWorkQueueFilterAll();
     guint kind=gtk_drop_down_get_selected(ui->queueKinds),state=gtk_drop_down_get_selected(ui->queueStates);
     if(kind>3U||state>2U||!CopyId(ui->queueAccount,&filter.accountId)){
@@ -67,9 +77,15 @@ static void QueueRefresh(BankUi *ui)
         char *valid=g_utf8_make_valid(label,-1);gtk_string_list_append(rows,valid);g_free(valid);g_free(label);
         if(row.kind==prior.kind&&strcmp(row.id.value,prior.id.value)==0)selected=(guint)i;
     }
+/* Publish the queue with an explicit prompt when its prior record is absent. Retain the earlier invalid-index publication for review. */
+#if 0
     gtk_drop_down_set_model(ui->queueRows,G_LIST_MODEL(rows));g_object_unref(rows);
     /* Never choose another record just because a selected request disappeared. */
     gtk_drop_down_set_selected(ui->queueRows,selected);
+#endif
+    /* Never choose another record just because a selected request disappeared. */
+    (void)UmiGtk4SelectionListPublish(ui->queueRows, rows, selected);
+    g_object_unref(rows);
     char label[220];(void)snprintf(label,sizeof(label),"Captured revision %" PRIu64 " | %zu shown of %zu open | %zu pending, %zu approved | %s",
         summary.revision,summary.count,summary.totalOpen,summary.pending,summary.approved,summary.durable?"local disk":"memory only");
     gtk_label_set_text(ui->queueSummary,label);gtk_widget_set_sensitive(ui->queueCopyButton,TRUE);
@@ -89,7 +105,11 @@ static void QueueRefreshClicked(GtkButton *button,gpointer window)
 static void QueueReviewClicked(GtkButton *button,gpointer window)
 {
     (void)button;BankUi *ui=SignalUi(window);if(ui==NULL)return;
+/* Read only business rows; the displayed prompt is not an instruction. Retain the raw GTK selection reader for review. */
+#if 0
     InvalidateReview(ui);guint index=gtk_drop_down_get_selected(ui->queueRows);
+#endif
+    InvalidateReview(ui);guint index=UmiGtk4SelectionListSelected(ui->queueRows);
     guint decision=gtk_drop_down_get_selected(ui->queueDecision);UmiBankWorkQueueRow row;UmiBankAction action;
     UmiStatus status=UmiBankWorkQueueRowAt(ui->workQueue,index,&row);
     if(status==UMI_STATUS_OK)status=UmiBankWorkQueueResolveAction(ui->workQueue,index,(UmiBankWorkDecision)(decision+1U),&action);

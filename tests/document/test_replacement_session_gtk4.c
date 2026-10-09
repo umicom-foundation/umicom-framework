@@ -6,6 +6,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 
+#include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/document_commands.h"
 #include <gtk/gtk.h>
 #include <stdio.h>
@@ -20,6 +21,8 @@ static void Complete(void *data, UmiStatus status)
 }
 
 /* Inspect semantic controls, never GTK implementation child positions. */
+/* The rendered-only search missed controls in collapsed review panels. The Framework logical-tree helper replaces it; retain the former traversal for review. */
+#if 0
 static GtkWidget *Find(GtkWidget *root, const char *id)
 {
     if (root == NULL) return NULL;
@@ -29,6 +32,13 @@ static GtkWidget *Find(GtkWidget *root, const char *id)
         GtkWidget *found = Find(child, id); if (found != NULL) return found;
     }
     return NULL;
+}
+#endif
+/* Inspect logical ownership as well as rendered children. Finding a control
+ * does not grant permission to edit it or make a collapsed panel visible. */
+static GtkWidget *Find(GtkWidget *root, const char *id)
+{
+    return umi_gtk4_automation_find_tagged_widget(root, id);
 }
 static GtkWindow *Review(void)
 {
@@ -87,6 +97,9 @@ int main(int argc, char **argv)
     CHECK(umi_ui_document_view_model_find(views, active.view_id, &view) == UMI_STATUS_OK);
     view.dirty = 1;
     CHECK(UmiUiDocumentViewModelUpsertText(views, &view, "note note", 9U) == UMI_STATUS_OK);
+    /* UpsertText copies its input; reload the owned preview before later
+     * metadata edits so this fixture cannot restore the previous draft. */
+    CHECK(umi_ui_document_view_model_find(views, view.view_id, &view) == UMI_STATUS_OK);
     CHECK(umi_gtk4_adapter_create(application, &adapter) == UMI_STATUS_OK);
     CHECK(umi_gtk4_adapter_prepare(adapter, shell) == UMI_STATUS_OK);
     CHECK(UmiGtk4AdapterBindDocumentEditing(adapter, documents, Complete, &result) == UMI_STATUS_OK);
@@ -135,6 +148,9 @@ int main(int argc, char **argv)
         CHECK(!UmiGtk4AdapterReplacementReviewBusy(adapter) && result.count == 1U); goto unchanged;
     }
     if (strcmp(name, "stale") == 0) CHECK(UmiUiDocumentViewModelUpsertText(views, &view, "later typing", 12U) == UMI_STATUS_OK);
+    /* UpsertText copies its input; reload the owned preview before later
+     * metadata edits so this fixture cannot restore the previous draft. */
+    CHECK(umi_ui_document_view_model_find(views, view.view_id, &view) == UMI_STATUS_OK);
     if (strcmp(name, "skip") == 0) {
         GtkWidget *skip = Find(GTK_WIDGET(dialog), "document.replacements.skip"); CHECK(GTK_IS_BUTTON(skip));
         g_signal_emit_by_name(skip, "clicked");

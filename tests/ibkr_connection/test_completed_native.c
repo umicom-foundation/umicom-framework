@@ -5,6 +5,7 @@
  * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
+#include "umicom/ui/gtk4/automation.h"
 #include "umicom/broker_connectivity/connection_gtk4.h"
 #include <stdio.h>
 #include <string.h>
@@ -17,6 +18,8 @@
             return 1;                                                                                        \
         }                                                                                                    \
     } while (0)
+/* Broker controls inside collapsed panels still belong to the window. Framework logical lookup replaces rendered-child recursion so fixtures inspect those controls without expanding panels or starting a broker action. The previous implementation is retained for engineering review. */
+#if 0
 static GtkWidget *Find(GtkWidget *root, const char *name)
 {
     if (!strcmp(gtk_widget_get_name(root), name))
@@ -29,6 +32,11 @@ static GtkWidget *Find(GtkWidget *root, const char *name)
             return found;
     }
     return NULL;
+}
+#endif
+static GtkWidget *Find(GtkWidget *root, const char *name)
+{
+    return umi_gtk4_automation_find_named_widget(root, name);
 }
 typedef struct Probe
 {

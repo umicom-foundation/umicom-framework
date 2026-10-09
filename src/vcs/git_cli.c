@@ -21,6 +21,7 @@
 
 #include "umicom/platform/process.h"
 #include "umicom/vcs/status.h"
+#include "umicom/vcs/working_tree.h"
 
 typedef struct UmiGitCliProvider {
     int reserved;
@@ -96,6 +97,8 @@ static UmiStatus run_git_checked(const char *root,
 }
 
 /* Provide the git status operation used by this module and its client applications. */
+/* The shared binary status reader preserves exact filenames and separates child repository state. The previous line-based adapter is retained for review; provider consumers keep their existing interface and receive a complete observation only after parsing succeeds. The previous implementation is retained for engineering review. */
+#if 0
 static UmiStatus git_status(void *instance,
                             const char *root,
                             UmiVcsChangeList *out_changes,
@@ -155,6 +158,25 @@ static UmiStatus git_status(void *instance,
         out_changes,
         NULL
     );
+}
+#endif
+static UmiStatus git_status(void *instance,
+                            const char *root,
+                            UmiVcsChangeList *out_changes,
+                            UmiVcsBranch *out_branch)
+{
+    UmiVcsWorkingTreeRequest request = {0};
+    UmiVcsWorkingTree *tree = NULL;
+    UmiStatus status;
+    (void)instance;
+    if (root == NULL || out_changes == NULL || out_branch == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    request.repository_root = root;
+    status = UmiVcsWorkingTreeRead(&request, &tree);
+    if (status == UMI_STATUS_OK)
+        status = UmiVcsWorkingTreeCopyChanges(tree, out_changes, out_branch);
+    UmiVcsWorkingTreeDestroy(tree);
+    return status;
 }
 
 /* Provide the git history operation used by this module and its client applications. */

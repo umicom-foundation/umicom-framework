@@ -312,6 +312,11 @@ int main(int argc, char **argv)
     if (strcmp(name, "unchanged") == 0)
     {
         CHECK(!gtk_widget_get_sensitive(mark));
+        /* A retained control cannot turn an unchanged review into a completed
+         * edit, even when an observer sets approval and emits its signal. */
+        gtk_check_button_set_active(GTK_CHECK_BUTTON(approval), TRUE);
+        g_signal_emit_by_name(apply, "clicked");
+        CHECK(!gtk_widget_get_sensitive(apply) && !gtk_widget_get_sensitive(approval));
         goto unchanged;
     }
     if (strcmp(name, "no-review") == 0)

@@ -15,6 +15,8 @@
 
 #include "umicom/language_runtime/json.h"
 #include <ctype.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 typedef struct P { const char *j; size_t n,p; UmiLanguageRuntimeJsonDocument *d; int parent; } P;
@@ -81,7 +83,42 @@ UmiStatus umi_language_runtime_json_string(const UmiLanguageRuntimeJsonDocument*
  * Provide the language runtime json int64 operation used by this module and its client
  * applications.
  */
+/* Checked digit accumulation replaces strtoll without range inspection. It rejects overflowing identifiers before assigning output and preserves exact signed limits independently of C library errno. The previous converter is retained for review. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_language_runtime_json_int64(const UmiLanguageRuntimeJsonDocument*d,int t,int64_t*out){char b[64],*e;long long v;size_t n;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(d==NULL||out==NULL||t<0||(size_t)t>=d->token_count||d->tokens[t].type!=UMI_LANGUAGE_RUNTIME_JSON_PRIMITIVE)return UMI_STATUS_INVALID_ARGUMENT;n=(size_t)(d->tokens[t].end-d->tokens[t].start);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(n==0||n>=sizeof(b))return UMI_STATUS_PARSE_ERROR;memcpy(b,d->json+d->tokens[t].start,n);b[n]=0;v=strtoll(b,&e,10);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(e==b||*e)return UMI_STATUS_PARSE_ERROR;*out=(int64_t)v;return UMI_STATUS_OK;}
+#endif
+UmiStatus umi_language_runtime_json_int64(const UmiLanguageRuntimeJsonDocument *document,
+    int token,int64_t *out)
+{
+    if(document==NULL||document->json==NULL||out==NULL||token<0||
+        (size_t)token>=document->token_count||document->token_count>UMI_LANGUAGE_RUNTIME_MAX_TOKENS||
+        document->tokens[token].type!=UMI_LANGUAGE_RUNTIME_JSON_PRIMITIVE)return UMI_STATUS_INVALID_ARGUMENT;
+    const UmiLanguageRuntimeJsonToken *value=&document->tokens[token];
+    size_t input_size=strlen(document->json);
+    if(value->start<0||value->end<value->start||(size_t)value->end>input_size)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    const char *text=document->json+value->start;
+    size_t length=(size_t)(value->end-value->start),at=0U;
+    bool negative=length!=0U&&text[0]=='-';
+    if(negative)++at;
+    if(at==length)return UMI_STATUS_PARSE_ERROR;
+    /* JSON has no leading plus, leading zeroes, whitespace or decimal suffix in
+     * an integer token. Reject those spellings even for manually supplied tokens. */
+    if(text[at]=='0'&&length-at!=1U)return UMI_STATUS_PARSE_ERROR;
+    uint64_t magnitude=0U,limit=(uint64_t)INT64_MAX+(negative?1U:0U);
+    for(;at<length;++at){
+        if(text[at]<'0'||text[at]>'9')return UMI_STATUS_PARSE_ERROR;
+        uint64_t digit=(uint64_t)(text[at]-'0');
+        /* Check before multiply/add; neither signed overflow nor a saturated
+         * library conversion may silently change a protocol identifier. */
+        if(magnitude>(limit-digit)/10U)return UMI_STATUS_PARSE_ERROR;
+        magnitude=magnitude*10U+digit;
+    }
+    int64_t result;
+    if(negative&&magnitude==(uint64_t)INT64_MAX+1U)result=INT64_MIN;
+    else result=negative?-(int64_t)magnitude:(int64_t)magnitude;
+    *out=result;return UMI_STATUS_OK;
+}
 /*
  * Provide the language runtime json bool operation used by this module and its client
  * applications.

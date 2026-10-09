@@ -6,6 +6,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 
+#include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/developer_dialog.h"
 #include <glib/gstdio.h>
 #include "fixture.h"
@@ -26,6 +27,8 @@ typedef struct Probe
     unsigned calls, notifications;
     UmiBuildProfile profile;
 } Probe;
+/* The rendered-child walk omitted controls owned by collapsed expanders. The shared bounded logical-tree lookup replaces it; retain the earlier traversal for review. */
+#if 0
 static GtkWidget *Find(GtkWidget *root, const char *id)
 {
     const char *tag = g_object_get_data(G_OBJECT(root), "umicom-automation-id");
@@ -39,6 +42,13 @@ static GtkWidget *Find(GtkWidget *root, const char *id)
             return found;
     }
     return NULL;
+}
+#endif
+/* Use the Framework logical tree so a collapsed panel can be inspected
+ * without changing the user's layout or overlooking an ambiguous identifier. */
+static GtkWidget *Find(GtkWidget *root, const char *id)
+{
+    return umi_gtk4_automation_find_tagged_widget(root, id);
 }
 static GtkWindow *Form(GtkWindow *parent)
 {
@@ -179,7 +189,11 @@ int main(int argc, char **argv)
         goto cleanup;
     }
     GListModel *model = gtk_drop_down_get_model(GTK_DROP_DOWN(probe.picker));
+/* The native list now includes its explicit no-choice prompt after the data rows. Retain the earlier count for review; data-row indexes and selection assertions remain unchanged. */
+#if 0
     CHECK(model != NULL && g_list_model_get_n_items(model) == 2U);
+#endif
+    CHECK(model != NULL && g_list_model_get_n_items(model) == 3U);
     gtk_drop_down_set_selected(GTK_DROP_DOWN(probe.picker), strcmp(name, "data-selection") == 0 ? 1U : 0U);
     /* These cases deliberately reorder source row zero behind a data file.
      * Assertions check the selected path, not merely a changed dropdown label. */
@@ -208,7 +222,11 @@ int main(int argc, char **argv)
         {
             gtk_editable_set_text(GTK_EDITABLE(query), strcmp(name, "choices-data") == 0 ? "help.txt" : "program candidate");
             g_signal_emit_by_name(filterApply, "clicked");
+/* The native list now includes its explicit no-choice prompt after the data rows. Retain the earlier count for review; data-row indexes and selection assertions remain unchanged. */
+#if 0
             CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(GTK_DROP_DOWN(probe.picker))) == 1U);
+#endif
+            CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(GTK_DROP_DOWN(probe.picker))) == 2U);
             gtk_drop_down_set_selected(GTK_DROP_DOWN(probe.picker), 0U);
         }
         else if (strcmp(name, "choices-external") == 0)

@@ -105,6 +105,8 @@ int umi_cli_command_repository(UmiCliContext *context, int argc, char **argv);
  * Provide the cli command repo operation used by this module and its client applications.
  */
 int umi_cli_command_repo(UmiCliContext *context, int argc, char **argv);
+/** Explain local changes and child repositories without running a mutating Git operation. */
+int umi_cli_command_repository_review(int argc, char **argv);
 /**
  * Provide the cli command repository workflow operation used by this module and its client
  * applications.

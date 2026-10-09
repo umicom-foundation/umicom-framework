@@ -114,6 +114,8 @@ static wchar_t *Environment(void){
     e[used]=0;
     return e;
 }
+/* Launch environment policy now belongs to explicit wrappers; native pipe and process ownership remain shared. The restricted launch implementation is retained for review. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus UmiProcessChannelOpen(const UmiProcessChannelRequest *r,UmiProcessChannel **out){
     if(!out)return UMI_STATUS_INVALID_ARGUMENT;
     *out=NULL;
@@ -273,6 +275,207 @@ UmiStatus UmiProcessChannelOpen(const UmiProcessChannelRequest *r,UmiProcessChan
     UmiProcessChannelDestroy(c);
     return s;
 }
+#endif
+#include "process_windows_environment.inc"
+/* Both launch policies use the same handle allowlist and job ownership. The
+ * environment belongs to the wrapper and is borrowed only by CreateProcessW. */
+static UmiStatus ChannelOpenNative(const UmiProcessChannelRequest *r, wchar_t *env, UmiProcessChannel **out){
+    if(!out)return UMI_STATUS_INVALID_ARGUMENT;
+    *out=NULL;
+    UmiStatus s=PcValidate(r);
+    if(s!=UMI_STATUS_OK)return s;
+    wchar_t *program=NULL,*cwd=NULL;
+    s=UmiWindowsUtf16(r->program,&program);
+    if(s==UMI_STATUS_OK)s=UmiWindowsUtf16(r->workingDirectory,&cwd);
+    if(s!=UMI_STATUS_OK){free(program);free(cwd);return s;}
+    wchar_t *command=calloc(32768U,sizeof *command);
+    size_t used=0;
+    UmiProcessChannel *c=calloc(1,sizeof *c);
+    HANDLE childIn=NULL,childOut=NULL,childErr=NULL;
+    STARTUPINFOEXW start;
+    memset(&start,0,sizeof start);
+    SIZE_T attributeSize=0;
+    if(!program||!cwd||!command||!c){
+        s=UMI_STATUS_OUT_OF_MEMORY;
+        goto finish;
+    }
+    c->snapshot.exitCode=-1;
+    if(!Quote(command,32768U,&used,program)){
+        s=UMI_STATUS_CAPACITY_EXCEEDED;
+        goto finish;
+    }
+    for(size_t i=0;i<r->argumentCount;++i){
+        wchar_t *a=Wide(r->arguments[i]);
+        if(!a){
+            s=UMI_STATUS_INVALID_ARGUMENT;
+            goto finish;
+        }
+        command[used++]=L' ';
+        int ok=Quote(command,32768U,&used,a);
+        free(a);
+        if(!ok){
+            s=UMI_STATUS_CAPACITY_EXCEEDED;
+            goto finish;
+        }
+    }
+    SECURITY_ATTRIBUTES sa={
+        sizeof sa,NULL,TRUE
+    };
+    unsigned char random[16];
+    if(BCryptGenRandom(NULL,random,sizeof random,BCRYPT_USE_SYSTEM_PREFERRED_RNG)!=0){
+        s=UMI_STATUS_IO_ERROR;
+        goto finish;
+    }
+    wchar_t name[100];
+    size_t pos=(size_t)swprintf(name,100,L"\\\\.\\pipe\\umicom-channel-");
+    const wchar_t hex[]=L"0123456789abcdef";
+    for(size_t i=0;i<sizeof random;++i){
+        name[pos++]=hex[random[i]>>4];
+        name[pos++]=hex[random[i]&15U];
+    }
+    name[pos]=0;
+    c->input=CreateNamedPipeW(name,PIPE_ACCESS_OUTBOUND|FILE_FLAG_OVERLAPPED|FILE_FLAG_FIRST_PIPE_INSTANCE,         PIPE_TYPE_BYTE|PIPE_READMODE_BYTE|PIPE_WAIT|PIPE_REJECT_REMOTE_CLIENTS,1,8192,8192,0,NULL);
+    if(c->input==INVALID_HANDLE_VALUE){
+        c->input=NULL;
+        s=UMI_STATUS_IO_ERROR;
+        goto finish;
+    }
+    childIn=CreateFileW(name,GENERIC_READ,0,&sa,OPEN_EXISTING,0,NULL);
+    if(childIn==INVALID_HANDLE_VALUE){
+        childIn=NULL;
+        s=UMI_STATUS_IO_ERROR;
+        goto finish;
+    }
+    /* The client end is already open. A connected result is success even
+     * when ConnectNamedPipe reports ERROR_PIPE_CONNECTED. */
+    {
+        OVERLAPPED connection={0};
+        connection.hEvent=CreateEventW(NULL,TRUE,FALSE,NULL);
+        if(!connection.hEvent){s=UMI_STATUS_IO_ERROR;goto finish;}
+        BOOL connected=ConnectNamedPipe(c->input,&connection);
+        DWORD error=connected?ERROR_SUCCESS:GetLastError();
+        if(error==ERROR_IO_PENDING){
+            DWORD transferred=0;
+            if(WaitForSingleObject(connection.hEvent,1000)==WAIT_OBJECT_0)
+                connected=GetOverlappedResult(c->input,&connection,&transferred,FALSE);
+            else{
+                CancelIoEx(c->input,&connection);
+                (void)GetOverlappedResult(c->input,&connection,&transferred,TRUE);
+                connected=FALSE;
+            }
+        }else connected=connected||error==ERROR_PIPE_CONNECTED;
+        CloseHandle(connection.hEvent);
+        if(!connected){s=UMI_STATUS_IO_ERROR;goto finish;}
+    }
+    if(!CreatePipe((PHANDLE)&c->output,&childOut,&sa,65536)||!CreatePipe((PHANDLE)&c->error,&childErr,&sa,65536)){
+        s=UMI_STATUS_IO_ERROR;
+        goto finish;
+    }
+    if(!SetHandleInformation(c->output,HANDLE_FLAG_INHERIT,0)||!SetHandleInformation(c->error,HANDLE_FLAG_INHERIT,0)){
+        s=UMI_STATUS_IO_ERROR;
+        goto finish;
+    }
+    InitializeProcThreadAttributeList(NULL,1,0,&attributeSize);
+    start.lpAttributeList=malloc(attributeSize);
+    if(!start.lpAttributeList){
+        s=UMI_STATUS_OUT_OF_MEMORY;
+        goto finish;
+    }
+    if(!InitializeProcThreadAttributeList(start.lpAttributeList,1,0,&attributeSize)){
+        free(start.lpAttributeList);
+        start.lpAttributeList=NULL;
+        s=UMI_STATUS_IO_ERROR;
+        goto finish;
+    }
+    HANDLE handles[]={
+        childIn,childOut,childErr
+    };
+    if(!UpdateProcThreadAttribute(start.lpAttributeList,0,PROC_THREAD_ATTRIBUTE_HANDLE_LIST,handles,sizeof handles,NULL,NULL)){
+        s=UMI_STATUS_IO_ERROR;
+        goto finish;
+    }
+    c->job=CreateJobObjectW(NULL,NULL);
+    JOBOBJECT_EXTENDED_LIMIT_INFORMATION limit;
+    memset(&limit,0,sizeof limit);
+    limit.BasicLimitInformation.LimitFlags=JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+    if(!c->job||!SetInformationJobObject(c->job,JobObjectExtendedLimitInformation,&limit,sizeof limit)){
+        s=UMI_STATUS_IO_ERROR;
+        goto finish;
+    }
+    start.StartupInfo.cb=sizeof start;
+    start.StartupInfo.dwFlags=STARTF_USESTDHANDLES|STARTF_USESHOWWINDOW;
+    start.StartupInfo.wShowWindow=SW_HIDE;
+    start.StartupInfo.hStdInput=childIn;
+    start.StartupInfo.hStdOutput=childOut;
+    start.StartupInfo.hStdError=childErr;
+    PROCESS_INFORMATION info;
+    memset(&info,0,sizeof info);
+    if(!CreateProcessW(program,command,NULL,NULL,TRUE,EXTENDED_STARTUPINFO_PRESENT|CREATE_SUSPENDED|CREATE_NO_WINDOW|CREATE_UNICODE_ENVIRONMENT,env,cwd,&start.StartupInfo,&info)){
+        s=UMI_STATUS_UNAVAILABLE;
+        goto finish;
+    }
+    c->process=info.hProcess;
+    c->snapshot.processId=info.dwProcessId;
+    c->snapshot.running=1;
+    if(!AssignProcessToJobObject(c->job,c->process)||ResumeThread(info.hThread)==(DWORD)-1){
+        TerminateProcess(c->process,1);
+        CloseHandle(info.hThread);
+        s=UMI_STATUS_IO_ERROR;
+        goto finish;
+    }
+    CloseHandle(info.hThread);
+    *out=c;
+    c=NULL;
+    s=UMI_STATUS_OK;
+    finish:     if(start.lpAttributeList){
+        DeleteProcThreadAttributeList(start.lpAttributeList);
+        free(start.lpAttributeList);
+    }
+    if(childIn)CloseHandle(childIn);
+    if(childOut)CloseHandle(childOut);
+    if(childErr)CloseHandle(childErr);
+    free(program);
+    free(cwd);
+    free(command);
+    UmiProcessChannelDestroy(c);
+    return s;
+}
+UmiStatus UmiProcessChannelOpen(const UmiProcessChannelRequest *request, UmiProcessChannel **out)
+{
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out = NULL;
+    UmiStatus status = PcValidate(request);
+    if (status != UMI_STATUS_OK) return status;
+    wchar_t *environment = Environment();
+    if (environment == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = ChannelOpenNative(request, environment, out);
+    free(environment);
+    return status;
+}
+UmiStatus UmiProcessChannelOpenProgram(const UmiProcessChannelRequest *request,
+    const UmiEnvironmentVariable *environment, size_t count, UmiProcessChannel **out)
+{
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out = NULL;
+    UmiStatus status = PcValidate(request);
+    if (status == UMI_STATUS_OK) status = PcEnvironmentValidate(environment, count);
+    if (status != UMI_STATUS_OK) return status;
+    UmiProcessRequest values = {0};
+    values.environment = environment;
+    values.environment_count = count;
+    wchar_t *block = NULL;
+    status = umi_windows_environment_block(&values, &block);
+    if (status == UMI_STATUS_OK) status = ChannelOpenNative(request, block, out);
+    free(block);
+    return status;
+}
+UmiStatus UmiProcessChannelCloseInput(UmiProcessChannel *channel)
+{
+    if (channel == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    Close(&channel->input);
+    return UMI_STATUS_OK;
+}
+
 UmiStatus UmiProcessChannelRead(UmiProcessChannel *c,void *b,size_t cap,size_t *out,unsigned timeout){
     if(!c||!b||!out||!cap||cap>65536U||timeout>60000U)return UMI_STATUS_INVALID_ARGUMENT;
     *out=0;
@@ -299,8 +502,37 @@ UmiStatus UmiProcessChannelRead(UmiProcessChannel *c,void *b,size_t cap,size_t *
         Sleep(2);
     }
 }
+/* Explicit end-of-input now rejects later writes before accessing a closed handle. The prior writer is retained for review. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus UmiProcessChannelWrite(UmiProcessChannel *c,const void *p,size_t n,unsigned timeout){
     if(!c||(!p&&n)||n>4096U||timeout>60000U)return UMI_STATUS_INVALID_ARGUMENT;
+    if(!n)return UMI_STATUS_OK;
+    Drain(c);
+    Reap(c);
+    if(!c->snapshot.running)return UMI_STATUS_INVALID_STATE;
+    OVERLAPPED io;
+    memset(&io,0,sizeof io);
+    io.hEvent=CreateEventW(NULL,TRUE,FALSE,NULL);
+    if(!io.hEvent)return UMI_STATUS_IO_ERROR;
+    DWORD sent=0;
+    UmiStatus s=UMI_STATUS_OK;
+    if(!WriteFile(c->input,p,(DWORD)n,&sent,&io)){
+        if(GetLastError()!=ERROR_IO_PENDING)s=UMI_STATUS_IO_ERROR;
+        else if(WaitForSingleObject(io.hEvent,timeout)!=WAIT_OBJECT_0){
+            CancelIoEx(c->input,&io);
+            WaitForSingleObject(io.hEvent,INFINITE);
+            s=UMI_STATUS_TIMEOUT;
+        }
+        else if(!GetOverlappedResult(c->input,&io,&sent,FALSE))s=UMI_STATUS_IO_ERROR;
+    }
+    if(s==UMI_STATUS_OK&&sent!=n)s=UMI_STATUS_IO_ERROR;
+    CloseHandle(io.hEvent);
+    return s;
+}
+#endif
+UmiStatus UmiProcessChannelWrite(UmiProcessChannel *c,const void *p,size_t n,unsigned timeout){
+    if(!c||(!p&&n)||n>4096U||timeout>60000U)return UMI_STATUS_INVALID_ARGUMENT;
+    if(!c->input)return UMI_STATUS_INVALID_STATE;
     if(!n)return UMI_STATUS_OK;
     Drain(c);
     Reap(c);

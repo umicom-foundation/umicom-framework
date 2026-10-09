@@ -150,6 +150,10 @@ static UmiStatus start(UmiJobHistory *history, JobRecords **out_records)
     *out_records = records;
     return UMI_STATUS_OK;
 }
+/* Identity is reserved atomically with the job, before external work starts.
+ * The original implementation is retained for review; its public entry point
+ * delegates with no identity so existing callers and stored jobs remain valid. */
+#if 0
 UmiStatus UmiJobHistoryBegin(UmiJobHistory *history, const char *kind, const char *label,
                              unsigned total_steps, UmiJobHistoryEntry *out_entry)
 {
@@ -189,6 +193,56 @@ UmiStatus UmiJobHistoryBegin(UmiJobHistory *history, const char *kind, const cha
     if (status == UMI_STATUS_OK)
         *out_entry = entry;
     return status;
+}
+#endif
+UmiStatus UmiJobHistoryBeginIdentified(UmiJobHistory *history, const char *kind, const char *label,
+                             unsigned total_steps, const UmiJobIdentity *identity, UmiJobHistoryEntry *out_entry)
+{
+    if (history == NULL || out_entry == NULL ||
+        !UmiJobHistoryIdentifier(kind, UMI_JOB_HISTORY_KIND_CAPACITY) ||
+        !UmiJobHistoryCaption(label, UMI_JOB_HISTORY_LABEL_CAPACITY) || total_steps == 0 || total_steps > 64U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (identity != NULL && UmiJobIdentityValidate(identity) != UMI_STATUS_OK)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    JobRecords *records = NULL;
+    UmiStatus status = start(history, &records);
+    if (status != UMI_STATUS_OK)
+        return status;
+    size_t slot = 0;
+    while (slot < UMI_JOB_HISTORY_CAPACITY && records->entries[slot].id != 0)
+        ++slot;
+    UmiJobHistoryEntry entry = {0};
+    if (slot == UMI_JOB_HISTORY_CAPACITY || records->next_id == UINT64_MAX)
+        status = UMI_STATUS_CAPACITY_EXCEEDED;
+    else
+    {
+        if (identity != NULL) entry.identity = *identity;
+        entry.id = records->next_id;
+        entry.revision = 1U;
+        entry.state = UMI_JOB_HISTORY_PREPARED;
+        entry.total_steps = total_steps;
+        memcpy(entry.kind, kind, strlen(kind) + 1U);
+        memcpy(entry.label, label, strlen(label) + 1U);
+        status = store(history, slot, &entry);
+        if (status == UMI_STATUS_OK)
+        {
+            char key[128], next[32];
+            (void)snprintf(key, sizeof(key), "%snext", history->prefix);
+            (void)snprintf(next, sizeof(next), "1|%" PRIu64, records->next_id + 1U);
+            status = umi_data_server_set(history->server, key, next);
+        }
+    }
+    status = finish(history, status);
+    free(records);
+    if (status == UMI_STATUS_OK)
+        *out_entry = entry;
+    return status;
+}
+
+UmiStatus UmiJobHistoryBegin(UmiJobHistory *history, const char *kind, const char *label,
+    unsigned total_steps, UmiJobHistoryEntry *out_entry)
+{
+    return UmiJobHistoryBeginIdentified(history, kind, label, total_steps, NULL, out_entry);
 }
 UmiStatus UmiJobHistoryUpdate(UmiJobHistory *history, uint64_t id, uint64_t expected_revision,
                               UmiJobHistoryState state, unsigned completed_steps, UmiStatus result,

@@ -77,6 +77,13 @@ int main(int argc, char **argv)
     UmiCtestJob *job = FixtureJob();
     PassAll(job);
     UmiTestArchiveOrigin origin = FixtureOrigin(false);
+    if (strncmp(name, "identity-", 9) == 0)
+    {
+        memset(origin.identity.subject, 'a', 64);
+        memset(origin.identity.configuration, 'b', 64);
+        if (strcmp(name, "identity-missing-inputs") != 0)
+            memset(origin.identity.inputs, 'c', 64);
+    }
     UmiTestArchiveEntry before = {0}, after = {0};
     if (strcmp(name, "recovered") == 0 || strcmp(name, "persisting") == 0)
     {
@@ -189,6 +196,21 @@ int main(int argc, char **argv)
             strcpy(job->results[i].name, job->requests[i % 2U].name);
         }
     }
+    else if (strncmp(name, "identity-", 9) == 0)
+    {
+        if (strcmp(name, "identity-settings") == 0)
+            origin.identity.configuration[0] = 'd';
+        else if (strcmp(name, "identity-project") == 0)
+            origin.identity.subject[0] = 'd';
+        else if (strcmp(name, "identity-inputs") == 0)
+            origin.identity.inputs[0] = 'd';
+        else if (strcmp(name, "identity-legacy") == 0)
+            memset(&origin.identity, 0, sizeof(origin.identity));
+        else
+            CHECK(strcmp(name, "identity-missing-inputs") == 0);
+        if (strcmp(name, "identity-settings") == 0 || strcmp(name, "identity-project") == 0)
+            expected = UMI_TEST_ARCHIVE_CONDITIONS_CHANGED;
+    }
     else if (strcmp(name, "duration") == 0)
     {
         job->results[0].duration_ms = UINT64_MAX;
@@ -256,6 +278,17 @@ int main(int argc, char **argv)
         UmiTestArchiveComparisonSummary summary = {0};
         CHECK(UmiTestArchiveComparisonRead(comparison, &summary) == UMI_STATUS_OK);
         CHECK(summary.counts[expected] == expected_count);
+        CHECK(summary.selection_evidence_recorded);
+        if (strncmp(name, "identity-", 9) == 0)
+        {
+            UmiJobIdentityComparison identity = strcmp(name, "identity-settings") == 0 ?
+                UMI_JOB_IDENTITY_DIFFERENT_CONFIGURATION : strcmp(name, "identity-project") == 0 ?
+                UMI_JOB_IDENTITY_DIFFERENT_SUBJECT : strcmp(name, "identity-inputs") == 0 ?
+                UMI_JOB_IDENTITY_DIFFERENT_INPUTS : strcmp(name, "identity-legacy") == 0 ?
+                UMI_JOB_IDENTITY_UNKNOWN : UMI_JOB_IDENTITY_INPUTS_UNRECORDED;
+            CHECK(summary.identity_comparison == identity && summary.same_recorded_selection);
+        }
+
         CHECK(summary.same_source_root == (strcmp(name, "root") != 0));
         CHECK(summary.same_recorded_revision == (strcmp(name, "revision") != 0));
         if (strcmp(name, "build-root") == 0 || strcmp(name, "configuration") == 0)

@@ -15,6 +15,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "cli.h"
+#include "umicom/platform/native_arguments.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -95,6 +96,8 @@ static int umi_cli_command_dev(
  * Start this command or application, report setup failures, and return a process exit code
  * to the operating system.
  */
+/* Native argument ownership now belongs to Framework so every command receives original Windows Unicode paths. The former narrow entry point is retained for review; its command routing is preserved in RunNativeCommand. The previous implementation is retained for engineering review. */
+#if 0
 int main(int argc, char **argv)
 {
     UmiCliContext context;
@@ -248,4 +251,169 @@ int main(int argc, char **argv)
     (void)fprintf(stderr, "Unknown command: %s\n\n", command);
     umi_cli_print_help();
     return 2;
+}
+#endif
+static int RunNativeCommand(int argc, char **argv)
+{
+    UmiCliContext context;
+    const char *command;
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (argc < 2) {
+        umi_cli_print_help();
+        return 0;
+    }
+    command = argv[1];
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "help") == 0 || strcmp(command, "--help") == 0 ||
+        strcmp(command, "-h") == 0) {
+        umi_cli_print_help();
+        return 0;
+    }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "version") == 0 || strcmp(command, "--version") == 0) {
+        (void)printf("Umicom Framework %s (ABI %u)\n",
+                     UMICOM_FRAMEWORK_VERSION_STRING,
+                     UMICOM_FRAMEWORK_ABI_VERSION);
+        return 0;
+    }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    /* VM policy and child ownership stay in Framework; this command is only
+     * a presentation adapter shared with the standalone VM manager. */
+    if (strcmp(command, "qemu") == 0)
+        return umi_cli_command_qemu(argc - 2, argv + 2);
+    if (strcmp(command, "check") == 0 || strcmp(command, "doctor") == 0)
+        return umi_cli_command_check(&context, argc - 2, argv + 2);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "env") == 0)
+        return umi_cli_command_environment(&context, argc - 2, argv + 2);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "repair") == 0)
+        return umi_cli_command_repair(&context, argc - 2, argv + 2);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "shell") == 0)
+        return umi_cli_command_shell(&context, argc - 2, argv + 2);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "configure") == 0)
+        return umi_cli_command_build(&context,
+                                     UMI_BUILD_CONFIGURE,
+                                     argc - 2,
+                                     argv + 2);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "build") == 0)
+        return umi_cli_command_build(&context,
+                                     UMI_BUILD_COMPILE,
+                                     argc - 2,
+                                     argv + 2);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "test") == 0)
+        return umi_cli_command_build(&context,
+                                     UMI_BUILD_TEST,
+                                     argc - 2,
+                                     argv + 2);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "clean") == 0)
+        return umi_cli_command_build(&context,
+                                     UMI_BUILD_CLEAN,
+                                     argc - 2,
+                                     argv + 2);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "install") == 0)
+        return umi_cli_command_build(&context,
+                                     UMI_BUILD_INSTALL,
+                                     argc - 2,
+                                     argv + 2);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "package") == 0)
+        return umi_cli_command_build(&context,
+                                     UMI_BUILD_PACKAGE,
+                                     argc - 2,
+                                     argv + 2);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "deliver") == 0)
+        return umi_cli_command_build(&context,
+                                     UMI_BUILD_DELIVER,
+                                     argc - 2,
+                                     argv + 2);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "make") == 0)
+        return umi_cli_command_build(&context,
+                                     UMI_BUILD_MAKE,
+                                     argc - 2,
+                                     argv + 2);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "run") == 0)
+        return umi_cli_command_build(&context,
+                                     UMI_BUILD_RUN,
+                                     argc - 2,
+                                     argv + 2);
+    /* Offer one memorable entry point for target-free incremental work. */
+    if (strcmp(command, "automate") == 0 ||
+        strcmp(command, "auto-build") == 0)
+        return umi_cli_command_automation(&context, argc - 2, argv + 2);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "dev") == 0)
+        return umi_cli_command_dev(&context, argc - 2, argv + 2);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "repo") == 0)
+        return umi_cli_command_repo(&context, argc - 2, argv + 2);
+    /*
+     * Familiar Git-shaped aliases reduce the learning burden for beginners.
+     * They use the same guarded Framework repository workflow as `repo`, so
+     * no separate source-control implementation is introduced here.
+     */
+    if (strcmp(command, "status") == 0 ||
+        strcmp(command, "stage") == 0 ||
+        strcmp(command, "add") == 0 ||
+        strcmp(command, "commit") == 0 ||
+        strcmp(command, "push") == 0 ||
+        strcmp(command, "publish") == 0 ||
+        strcmp(command, "update") == 0 ||
+        strcmp(command, "sync") == 0 ||
+        strcmp(command, "clone") == 0 ||
+        strcmp(command, "init") == 0 ||
+        strcmp(command, "submodule") == 0)
+        return umi_cli_command_repo(&context, argc - 1, argv + 1);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if ((strcmp(command, "create") == 0 || strcmp(command, "new") == 0) &&
+        argc >= 3 && strcmp(argv[2], "repo") == 0)
+        return umi_cli_command_repository(&context, argc - 3, argv + 3);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "capabilities") == 0)
+        return umi_cli_command_capabilities(&context, argc - 2, argv + 2);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "suite") == 0)
+        return umi_cli_command_suite(&context, argc - 2, argv + 2);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "security") == 0)
+        return umi_cli_command_security(&context, argc - 2, argv + 2);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "architecture") == 0)
+        return umi_cli_command_architecture(&context, argc - 2, argv + 2);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "quality") == 0 || strcmp(command, "scan") == 0)
+        return umi_cli_command_quality(&context, argc - 2, argv + 2);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "memory") == 0)
+        return umi_cli_command_memory(&context, argc - 2, argv + 2);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "dependencies") == 0 || strcmp(command, "deps") == 0)
+        return umi_cli_command_dependencies(&context, argc - 2, argv + 2);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(command, "workflow") == 0)
+        return umi_cli_command_workflow(&context, argc - 2, argv + 2);
+
+    (void)fprintf(stderr, "Unknown command: %s\n\n", command);
+    umi_cli_print_help();
+    return 2;
+}
+/* Framework captures the original Unicode arguments once, before any command parses a path.
+ * Command implementations keep their existing control flow and receive owned UTF-8 on Windows. */
+int main(int argc, char **argv)
+{
+    int exit_code = 1;
+    UmiStatus status = UmiNativeArgumentsDispatch(argc, argv, RunNativeCommand, &exit_code);
+    if (status != UMI_STATUS_OK)
+        (void)fprintf(stderr, "Unable to read command arguments: %s\n", umi_status_text(status));
+    return exit_code;
 }

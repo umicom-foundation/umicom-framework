@@ -35,6 +35,18 @@ typedef struct UmiLanguageRuntimeServer UmiLanguageRuntimeServer;
  */
 typedef struct UmiLanguageRuntimeServerSnapshot{char server_id[UMI_LANGUAGE_RUNTIME_ID_CAPACITY];char profile_id[UMI_LANGUAGE_RUNTIME_ID_CAPACITY];char root_uri[UMI_LANGUAGE_RUNTIME_PATH_CAPACITY];UmiLanguageRuntimeServerState state;uint64_t next_request_id;size_t pending_requests;uint64_t messages_sent,messages_received,bytes_sent,bytes_received,revision;}UmiLanguageRuntimeServerSnapshot;
 /**
+ * Start one LSP child using an explicit tool folder before its inherited PATH.
+ * NULL or empty tool_directory retains inherited selection. The folder must be
+ * absolute. A simple tool name resolves only there; an absolute profile executable
+ * takes precedence. No fallback, installation or trust decision is performed.
+ * Inputs are borrowed until return. Failure clears out; success transfers the
+ * process and transport to the returned server. This does not initialize LSP.
+ */
+UmiStatus UmiLanguageRuntimeServerStartWithToolDirectory(const char *server_id,
+    const UmiLanguageServerProfile *profile, const char *root_uri,
+    const char *working_directory, const char *tool_directory, UmiLanguageRuntimeServer **out);
+
+/**
  * Provide the language runtime server start operation used by this module and its client
  * applications.
  */

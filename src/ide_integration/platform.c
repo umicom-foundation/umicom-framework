@@ -34,6 +34,8 @@ struct UmiIdeIntegrationPlatform {
  * Initialise ide integration platform from caller-provided values so later operations
  * receive a known state.
  */
+/* The composition root now offers an explicit closed-workspace constructor. The earlier initializer is retained for review; existing non-empty calls keep their validation. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_ide_integration_platform_create(
     const char *workspace_root,
     const UmiIdeIntegrationBindings *bindings,
@@ -108,6 +110,113 @@ UmiStatus umi_ide_integration_platform_create(
     *out_platform = platform;
     return UMI_STATUS_OK;
 }
+#endif
+static UmiStatus IntegrationPlatformCreate(
+    const char *workspace_root,
+    const UmiIdeIntegrationBindings *bindings,
+    UmiIdeIntegrationPlatform **out_platform)
+{
+    UmiIdeIntegrationPlatform *platform;
+    size_t root_length;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace_root == NULL ||
+        bindings == NULL || out_platform == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    root_length = strlen(workspace_root);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (root_length >= UMI_IDE_INTEGRATION_PATH_CAPACITY) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    *out_platform = NULL;
+
+    platform = (UmiIdeIntegrationPlatform *)calloc(1U, sizeof(*platform));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (platform == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+
+    platform->bindings = *bindings;
+    (void)memcpy(
+        platform->workspace_root,
+        workspace_root,
+        root_length + 1U);
+    platform->revision = 1U;
+
+    status = umi_ide_cross_navigation_init(
+        &platform->navigation,
+        &platform->bindings);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) platform->navigation_ready = 1;
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = workspace_root[0] == '\0'
+            ? umi_ide_workflow_service_init_closed(&platform->workflow, &platform->bindings)
+            : umi_ide_workflow_service_init(&platform->workflow, &platform->bindings, workspace_root);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) platform->workflow_ready = 1;
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = umi_ide_surface_registry_create(&platform->surfaces);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = umi_ide_builtin_surfaces_install(platform->surfaces);
+    }
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) {
+        umi_ide_integration_platform_destroy(platform);
+        return status;
+    }
+
+    *out_platform = platform;
+    return UMI_STATUS_OK;
+}
+/* A welcome window can bind document and command services before a project is
+ * selected. Empty identity prevents it from treating application storage as code. */
+UmiStatus umi_ide_integration_platform_create_closed(
+    const UmiIdeIntegrationBindings *bindings, UmiIdeIntegrationPlatform **out_platform)
+{
+    return IntegrationPlatformCreate("", bindings, out_platform);
+}
+
+UmiStatus umi_ide_integration_platform_create(const char *workspace_root,
+    const UmiIdeIntegrationBindings *bindings, UmiIdeIntegrationPlatform **out_platform)
+{
+    if (workspace_root == NULL || workspace_root[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    return IntegrationPlatformCreate(workspace_root, bindings, out_platform);
+}
+
+/* Update metadata only after the authoritative workspace service has accepted
+ * its open or close operation. Workflow validation and root publication agree. */
+UmiStatus umi_ide_integration_platform_set_workspace(
+    UmiIdeIntegrationPlatform *platform, const char *workspace_root)
+{
+    if (platform == NULL || workspace_root == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t length = strlen(workspace_root);
+    if (length >= sizeof(platform->workspace_root)) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (strcmp(platform->workspace_root, workspace_root) == 0) return UMI_STATUS_OK;
+    UmiStatus status = umi_ide_workflow_service_set_workspace(&platform->workflow, workspace_root);
+    if (status == UMI_STATUS_OK) {
+        memcpy(platform->workspace_root, workspace_root, length + 1U);
+        ++platform->revision;
+    }
+    return status;
+}
+
 
 /*
  * Release or reset state held by ide integration platform so the same storage can be

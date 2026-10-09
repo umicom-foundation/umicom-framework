@@ -6,6 +6,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 
+#include "umicom/ui/gtk4/selection_list.h"
 #include "umicom/ui/gtk4/filtered_choices.h"
 #include <stdio.h>
 #include <string.h>
@@ -71,7 +72,11 @@ int main(int argc, char **argv)
     if (!strcmp(name, "reentrant"))
         g_signal_connect(picker, "notify::model", G_CALLBACK(Reenter), &probe);
     CHECK(UmiGtk4FilteredChoicesSetRows(root, rows, 4U) == UMI_STATUS_OK);
+/* Check the absence of a business choice, including the explicit GTK prompt. Retain the earlier raw-index assertion for review. */
+#if 0
     CHECK(gtk_drop_down_get_selected(picker) == GTK_INVALID_LIST_POSITION);
+#endif
+    CHECK(UmiGtk4SelectionListSelected(picker) == GTK_INVALID_LIST_POSITION);
     if (!strcmp(name, "reentrant"))
     {
         CHECK(probe.calls == 1U && probe.status == UMI_STATUS_BUSY && probe.selected == 99U);

@@ -245,7 +245,13 @@ int main(void)
      * a direct executable/PATH launcher. Existing processes reuse activation. */
     header_report = g_try_new0(UmiApplicationLaunchDispatchReport, 1);
     CHECK(header_report != NULL);
+/* The header identity was absent from this fixture catalogue, so the new-window request never reached the host policy under test. Preserve that setup for review; the registered Studio identity exercises the intended rejection. */
+#if 0
     header_config = umi_gtk4_ws_shell_header_config_default("org.umicom.desktop", "Desk test");
+#endif
+    /* Use an eligible fixture product so the request reaches Desk's host
+     * policy. An unregistered identity is rejected earlier by discovery. */
+    header_config = umi_gtk4_ws_shell_header_config_default("org.umicom.studio", "Desk test");
     CHECK(umi_gtk4_ws_shell_header_create_managed(&header_config, &header) == UMI_STATUS_OK);
     CHECK(umi_gtk4_desk_bind_shell_header(NULL, header) == UMI_STATUS_INVALID_ARGUMENT);
     CHECK(umi_gtk4_desk_bind_shell_header(fixture.desk, header) == UMI_STATUS_OK);

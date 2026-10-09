@@ -17,4 +17,6 @@ struct UmiProcessChannel {
 void PcDiagnostic(UmiProcessChannel *channel,const char *data,size_t size);
 UmiStatus PcValidate(const UmiProcessChannelRequest *request);
 uint64_t PcMilliseconds(void);
+/* Validate portable overrides before either native launch implementation reads them. */
+UmiStatus PcEnvironmentValidate(const UmiEnvironmentVariable *environment, size_t count);
 #endif

@@ -207,6 +207,8 @@ typedef struct UmiDebugRuntimeCapabilities {
     int supports_goto_targets_request;
     /* Appended negotiated support: expressions and log messages stay adapter-owned. */
     int supports_log_points;
+    /* Exception metadata is available only when the adapter advertises this request. */
+    int supports_exception_info_request;
 } UmiDebugRuntimeCapabilities;
 
 /**

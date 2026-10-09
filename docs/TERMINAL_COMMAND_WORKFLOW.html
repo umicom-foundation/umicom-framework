@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Terminal commands with Umicom Framework</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:960px;margin:3rem auto;padding:0 1.4rem;color:#202b36}code{background:#eef2f5}h1,h2{line-height:1.25}li{margin:.5rem 0}</style>
+<main><h1>Terminal commands with Umicom Framework</h1>
+<p>A terminal session keeps a folder, an environment and a transcript. A supervised command runs separately from the interface thread, allowing an application to display output and request Stop while the command is working.</p>
+<h2>Choose the folder</h2><ol><li>Read the session snapshot to show its current folder.</li>
+<li>Ask the user to select an existing absolute folder. Call <code>UmiTerminalSessionChooseDirectory</code> from <code>umicom/terminal/location.h</code>.</li>
+<li>Keep the previous folder visible if selection fails. A running or closed session cannot change folders.</li></ol>
+<p>This changes the selected session only. It does not change the application's current directory or another terminal. Windows selection accepts ordinary local drive paths. Directory inspection is not a filesystem sandbox and does not grant permission to run a project.</p>
+<h2>Submit through application policy</h2>
+<ol><li>Keep execution behind the application's normal command registry and trust checks.</li>
+<li>On the owning interface thread, call <code>UmiTerminalControllerArmBackground</code> immediately before dispatching the existing terminal Execute command.</li>
+<li>Always call <code>UmiTerminalControllerDisarmBackground</code> after dispatch, including when policy denies the command. Arming changes dispatch mode; it does not grant permission.</li>
+<li>Poll with <code>UmiTerminalControllerPollJob</code> from the normal application refresh. The snapshot identifies the originating session even if another tab is selected.</li>
+<li>Use <code>UmiTerminalControllerStopJob</code> to request cancellation. Continue polling until pending becomes false.</li></ol>
+<p>One controller owns one pending background command. Synchronous callers retain their existing Execute behavior. Direct session clients use the Start, Poll, Stop and Wait functions in <code>umicom/terminal/execution.h</code>.</p>
+<h2>Read the result</h2><p>A successful Poll means the snapshot was copied, not that the command succeeded. Inspect the process state and exit code. Pending stays true until completion is published and the supervisor slot is released. History and counters update once, so another refresh cannot duplicate a completed command.</p>
+<p>Output is a bounded tail, with an explicit truncation flag. It is not a complete log. Workflows needing a full log should use a dedicated logging service or explicit file output. Display captured text as text, repairing invalid encoding for presentation without treating it as markup or commands.</p>
+<h2>Ownership and shutdown</h2><p>The supervisor copies arguments, folder and environment before submission returns. Its worker never borrows a widget or session pointer. Keep the supervisor alive until the job is retired. Stop affects the owned process and its ordinary descendants; it cannot reverse changes already made, and process groups are not a security boundary.</p>
+<p>Normal refresh uses Poll, not Wait. When closing a window, request Stop and let refresh observe completion before releasing services. Explicit teardown cancels and waits for a remaining command. Retire the controller before destroying its borrowed manager and supervisor.</p>
+<h2>Limits</h2><p>This captures one command at a time. It does not supply interactive standard input, persistent shell state, terminal emulation or full-screen console applications. A directory change inside one command does not alter the next command's session folder. Use explicit folder selection or an external terminal for those workflows.</p>
+</main></html>

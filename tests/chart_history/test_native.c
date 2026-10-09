@@ -6,11 +6,16 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 
+#include "umicom/ui/gtk4/automation.h"
 #include "../trading_execution/order_review_fixture.h"
 #include "umicom/trading_ui/gtk4/interactive_chart.h"
 #include "umicom/trading/chart_history.h"
 #define CHECK REVIEW_CHECK
 #define OK(x) CHECK((x)==UMI_STATUS_OK)
+/* The rendered-child walk omitted controls owned by collapsed expanders. The shared bounded logical-tree lookup replaces it; retain the earlier traversal for review. */
+#if 0
+/* The chart inspector owns controls while collapsed. Shared logical lookup replaces the rendered-child walk, retained here for review. The previous implementation is retained for engineering review. */
+#if 0
 static GtkWidget *Find(GtkWidget *root,const char *id)
 {
     const char *tag=g_object_get_data(G_OBJECT(root),"umicom-automation-id");
@@ -19,6 +24,19 @@ static GtkWidget *Find(GtkWidget *root,const char *id)
         GtkWidget *found=Find(child,id); if (found!=NULL) return found;
     }
     return NULL;
+}
+#endif
+static GtkWidget *Find(GtkWidget *root,const char *id)
+{
+    /* Read controls owned by collapsed chart inspectors without changing layout. */
+    return umi_gtk4_automation_find_tagged_widget(root, id);
+}
+#endif
+/* Use the Framework logical tree so a collapsed panel can be inspected
+ * without changing the user's layout or overlooking an ambiguous identifier. */
+static GtkWidget *Find(GtkWidget *root, const char *id)
+{
+    return umi_gtk4_automation_find_tagged_widget(root, id);
 }
 static gboolean Key(GtkWidget *area,guint key,GdkModifierType mods)
 {
@@ -45,7 +63,26 @@ int main(int argc,char **argv)
     GtkWidget *area=Find(root,"trading.chart.canvas"), *label=Find(root,"trading.chart.drawing-history");
     CHECK(GTK_IS_BUTTON(undo) && GTK_IS_BUTTON(redo) && GTK_IS_LABEL(label));
     CHECK(gtk_widget_is_sensitive(undo) && !gtk_widget_is_sensitive(redo));
-    if (strcmp(name,"buttons")==0 || strcmp(name,"key-y")==0 || strcmp(name,"key-shift-z")==0) {
+    if (strcmp(name, "compact-inspector") == 0) {
+        GtkWidget *inspector = Find(root, "trading.chart.inspector");
+        CHECK(GTK_IS_EXPANDER(inspector));
+        CHECK(!gtk_expander_get_expanded(GTK_EXPANDER(inspector)));
+        CHECK(gtk_widget_is_ancestor(undo, inspector));
+        CHECK(!gtk_widget_is_ancestor(area, inspector));
+        GtkWidget *trend = Find(root, "trading.chart.trend");
+        CHECK(GTK_IS_TOGGLE_BUTTON(trend));
+        CHECK(strcmp(gtk_button_get_label(GTK_BUTTON(trend)), "/") == 0);
+        CHECK(gtk_widget_get_tooltip_text(trend) != NULL);
+        /* Expanding and collapsing must preserve the same editor controls and
+         * drawing history; these presentation actions cannot submit an order. */
+        gtk_expander_set_expanded(GTK_EXPANDER(inspector), TRUE);
+        CHECK(Find(root, "trading.chart.undo-drawing") == undo);
+        g_signal_emit_by_name(undo, "clicked");
+        CHECK(umi_chart_drawing_registry_count(registry) == 0U);
+        gtk_expander_set_expanded(GTK_EXPANDER(inspector), FALSE);
+        g_signal_emit_by_name(redo, "clicked");
+        CHECK(umi_chart_drawing_registry_count(registry) == 1U);
+    } else if (strcmp(name,"buttons")==0 || strcmp(name,"key-y")==0 || strcmp(name,"key-shift-z")==0) {
         if (strcmp(name,"buttons")==0) g_signal_emit_by_name(undo,"clicked");
         else CHECK(Key(area,GDK_KEY_z,GDK_CONTROL_MASK));
         CHECK(umi_chart_drawing_registry_count(registry)==0 && gtk_widget_is_sensitive(redo));

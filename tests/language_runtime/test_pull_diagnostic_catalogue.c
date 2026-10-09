@@ -82,7 +82,11 @@ int main(int argc, char **argv)
     if (strcmp(mode, "duplicate-id") == 0)
     {
         extra = ",\"resultId\":\"a\",\"resultId\":\"b\"";
+/* The shared JSON tree reports duplicate object members distinctly as ALREADY_EXISTS. Keep rejecting the response and preserve the earlier generic-error assertion for review. */
+#if 0
         expected = UMI_STATUS_PARSE_ERROR;
+#endif
+        expected = UMI_STATUS_ALREADY_EXISTS;
     }
     if (strcmp(mode, "unchanged") == 0)
     {
@@ -129,12 +133,20 @@ int main(int argc, char **argv)
     if (strcmp(mode, "duplicate-items") == 0)
     {
         extra = ",\"items\":[]";
+/* The shared JSON tree reports duplicate object members distinctly as ALREADY_EXISTS. Keep rejecting the response and preserve the earlier generic-error assertion for review. */
+#if 0
         expected = UMI_STATUS_PARSE_ERROR;
+#endif
+        expected = UMI_STATUS_ALREADY_EXISTS;
     }
     if (strcmp(mode, "duplicate-kind") == 0)
     {
         extra = ",\"kind\":\"full\"";
+/* The shared JSON tree reports duplicate object members distinctly as ALREADY_EXISTS. Keep rejecting the response and preserve the earlier generic-error assertion for review. */
+#if 0
         expected = UMI_STATUS_PARSE_ERROR;
+#endif
+        expected = UMI_STATUS_ALREADY_EXISTS;
     }
     if (strcmp(mode, "wrong-id") == 0)
     {
@@ -184,7 +196,11 @@ int main(int argc, char **argv)
     if (strcmp(mode, "duplicate-result") == 0)
     {
         strcpy(response, "{\"jsonrpc\":\"2.0\",\"id\":7,\"result\":{},\"result\":{}}");
+/* The shared JSON tree reports duplicate object members distinctly as ALREADY_EXISTS. Keep rejecting the response and preserve the earlier generic-error assertion for review. */
+#if 0
         expected = UMI_STATUS_PARSE_ERROR;
+#endif
+        expected = UMI_STATUS_ALREADY_EXISTS;
     }
     UmiCancellationToken *cancel = NULL;
     CHECK(umi_cancellation_token_create(&cancel) == UMI_STATUS_OK);

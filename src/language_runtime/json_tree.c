@@ -381,8 +381,18 @@ UmiStatus UmiJsonTreeMember(const UmiJsonTree *tree, int object, const char *nam
 }
 UmiStatus UmiJsonTreeInteger(const UmiJsonTree *tree, int node, int64_t *out)
 {
+/* The former guard conflated invalid arguments with a valid JSON value of the wrong type. The separate checks preserve caller diagnostics and protocol parse errors; retain the original guard for review. */
+#if 0
     if (UmiJsonTreeKind(tree, node) != UMI_LANGUAGE_RUNTIME_JSON_PRIMITIVE || out == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
+#endif
+    /* Invalid handles are caller mistakes. A valid JSON value of the wrong
+     * type is malformed protocol input, so report a parse error consistently
+     * with fractional numbers and non-boolean primitives. Never change out. */
+    if (!JsonValid(tree, node) || out == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (UmiJsonTreeKind(tree, node) != UMI_LANGUAGE_RUNTIME_JSON_PRIMITIVE)
+        return UMI_STATUS_PARSE_ERROR;
     const JsonNode *value = &tree->nodes[node];
     const char *text = tree->text + value->begin;
     size_t length = value->end - value->begin, at = 0U;
@@ -407,8 +417,18 @@ UmiStatus UmiJsonTreeInteger(const UmiJsonTree *tree, int node, int64_t *out)
 }
 UmiStatus UmiJsonTreeBoolean(const UmiJsonTree *tree, int node, int *out)
 {
+/* The former guard conflated invalid arguments with a valid JSON value of the wrong type. The separate checks preserve caller diagnostics and protocol parse errors; retain the original guard for review. */
+#if 0
     if (UmiJsonTreeKind(tree, node) != UMI_LANGUAGE_RUNTIME_JSON_PRIMITIVE || out == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
+#endif
+    /* Invalid handles are caller mistakes. A valid JSON value of the wrong
+     * type is malformed protocol input, so report a parse error consistently
+     * with fractional numbers and non-boolean primitives. Never change out. */
+    if (!JsonValid(tree, node) || out == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (UmiJsonTreeKind(tree, node) != UMI_LANGUAGE_RUNTIME_JSON_PRIMITIVE)
+        return UMI_STATUS_PARSE_ERROR;
     const JsonNode *value = &tree->nodes[node];
     size_t length = value->end - value->begin;
     const char *text = tree->text + value->begin;

@@ -5,6 +5,7 @@
  * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
+#include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/workstation/shell_header.h"
 #include "umicom/application/portfolio.h"
 #include <stdio.h>
@@ -19,6 +20,8 @@
             goto done;                                                                                       \
         }                                                                                                    \
     } while (0)
+/* The rendered-only search missed controls in collapsed review panels. The Framework logical-tree helper replaces it; retain the former traversal for review. */
+#if 0
 static GtkWidget *find(GtkWidget *widget, const char *id)
 {
     if (g_strcmp0(g_object_get_data(G_OBJECT(widget), "umicom-automation-id"), id) == 0)
@@ -31,6 +34,13 @@ static GtkWidget *find(GtkWidget *widget, const char *id)
             return found;
     }
     return NULL;
+}
+#endif
+/* Inspect logical ownership as well as rendered children. Finding a control
+ * does not grant permission to edit it or make a collapsed panel visible. */
+static GtkWidget *find(GtkWidget *widget, const char *id)
+{
+    return umi_gtk4_automation_find_tagged_widget(widget, id);
 }
 /* Capture the delegated action so an independent request cannot silently
  * fall back to the standard launch path. */

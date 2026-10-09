@@ -6,6 +6,8 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 
+#include "umicom/ui/gtk4/selection_list.h"
+
 static void AuditFiltersChanged(GtkWidget *widget,gpointer window)
 {
     (void)widget;BankUi *ui=SignalUi(window);if(ui==NULL)return;
@@ -16,7 +18,11 @@ static void AuditFilterSelection(GObject *object,GParamSpec *spec,gpointer windo
 static void AuditSelect(GObject *object,GParamSpec *spec,gpointer window)
 {
     (void)object;(void)spec;BankUi *ui=SignalUi(window);if(ui==NULL || ui->auditPublishing)return;
+/* Read only business rows; the displayed prompt is not an instruction. Retain the raw GTK selection reader for review. */
+#if 0
     guint at=gtk_drop_down_get_selected(ui->auditRows);size_t required=0;
+#endif
+    guint at=UmiGtk4SelectionListSelected(ui->auditRows);size_t required=0;
     UmiStatus status=UmiBankAuditDescribeEvent(ui->auditReport,at,NULL,0,&required);
     char *text=status==UMI_STATUS_OK?g_try_malloc(required):NULL;
     if(status==UMI_STATUS_OK && text==NULL)status=UMI_STATUS_OUT_OF_MEMORY;
@@ -59,7 +65,11 @@ static void AuditCaptureClicked(GtkButton *button,gpointer window)
     /* Complete the next owned report before replacing a useful older capture.
      * Native selection signals are blocked from choosing a new row implicitly. */
     UmiBankAuditReport *previous=ui->auditReport;ui->auditReport=next;ui->auditPublishing=true;
+/* Publish model and explicit choice together. The shared prompt replaces invalid-index clearing, which GTK may ignore; retain the old publication for review. */
+#if 0
     gtk_drop_down_set_model(ui->auditRows,G_LIST_MODEL(rows));gtk_drop_down_set_selected(ui->auditRows,GTK_INVALID_LIST_POSITION);
+#endif
+    (void)UmiGtk4SelectionListPublish(ui->auditRows, rows, GTK_INVALID_LIST_POSITION);
     g_object_unref(rows);char *valid=g_utf8_make_valid(text,-1);gtk_text_buffer_set_text(ui->auditSummary,valid,-1);g_free(valid);g_free(text);
     gtk_text_buffer_set_text(ui->auditDetail,"Select a captured command to inspect its original payload and exact posting journals.",-1);
     ui->auditPublishing=false;UmiBankAuditDestroy(previous);

@@ -81,6 +81,13 @@ int main(void)
     GtkWidget *target = Find(GTK_WIDGET(form), "developer.project.target");
     GtkWidget *accept = Find(GTK_WIDGET(form), "developer.dialog.accept");
     CHECK(GTK_IS_ENTRY(folder) && GTK_IS_ENTRY(target) && GTK_IS_BUTTON(accept));
+    /* A first project must not silently inherit a hidden or default directory.
+     * Create with no selection stays in the form and invokes no adoption. */
+    CHECK(gtk_editable_get_text(GTK_EDITABLE(folder))[0] == '\0');
+    CHECK(GTK_IS_ENTRY(Find(GTK_WIDGET(form), "developer.project.folder-name")));
+    CHECK(GTK_IS_BUTTON(Find(GTK_WIDGET(form), "developer.project.choose-parent")));
+    g_signal_emit_by_name(accept, "clicked");
+    CHECK(probe.created == 0U && gtk_widget_get_visible(GTK_WIDGET(form)));
     gtk_editable_set_text(GTK_EDITABLE(folder), root);
     gtk_editable_set_text(GTK_EDITABLE(target), "invalid) target");
     g_signal_emit_by_name(accept, "clicked");
@@ -99,6 +106,16 @@ int main(void)
     accept = Find(GTK_WIDGET(form), "developer.dialog.accept");
     CHECK(GTK_IS_CHECK_BUTTON(trust) && GTK_IS_BUTTON(accept));
     CHECK(!gtk_check_button_get_active(GTK_CHECK_BUTTON(trust)));
+    GtkWidget *tools = Find(GTK_WIDGET(form), "developer.build.field.11");
+    CHECK(GTK_IS_ENTRY(tools));
+    CHECK(gtk_editable_get_text(GTK_EDITABLE(tools))[0] == '\0');
+    gtk_editable_set_text(GTK_EDITABLE(tools),"relative tools");
+    g_signal_emit_by_name(accept,"clicked");
+    CHECK(probe.applied == 0U && gtk_widget_get_visible(GTK_WIDGET(form)));
+    /* An existing absolute directory is a value choice only: applying settings
+     * does not inspect its executables or grant workspace trust. */
+    gtk_editable_set_text(GTK_EDITABLE(tools),cwd);
+
     /* An unmatched quote or two competing argument fields must keep the form
      * open without applying any partial settings or changing the trust choice. */
     GtkWidget *arguments = Find(GTK_WIDGET(form), "developer.build.arguments");
@@ -115,6 +132,7 @@ int main(void)
     gtk_check_button_set_active(GTK_CHECK_BUTTON(trust), TRUE);
     g_signal_emit_by_name(accept, "clicked");
     CHECK(probe.applied == 1U && probe.trusted == 1);
+    CHECK(strcmp(probe.profile.tool_directory,cwd)==0);
     CHECK(strcmp(probe.profile.run_arguments, "--file \"notes for review.txt\" \"\"") == 0);
     CHECK(!gtk_widget_get_visible(GTK_WIDGET(form)));
     /* Test the parent-first teardown order as well as dialog-first above. */

@@ -9,6 +9,7 @@
 #include "umicom/ui/gtk4/filtered_choices.h"
 #include "umicom/ui/text_projection.h"
 #include <string.h>
+#include "umicom/ui/gtk4/selection_list.h"
 
 #define CHOICES_OWNER "umicom-filtered-choices-owner"
 typedef struct FilteredChoices
@@ -48,8 +49,13 @@ UmiStatus UmiGtk4FilteredChoicesSelectedSource(GtkWidget *controls, size_t *out_
         return UMI_STATUS_INVALID_STATE;
     if (state->projection == NULL)
         return UMI_STATUS_NOT_FOUND;
+/* The prompt is not a source record. Translate it through the shared selection policy; retain the original index mapping for review. */
+#if 0
     return UmiUiTextProjectionToSource(state->projection, (size_t)gtk_drop_down_get_selected(state->picker),
                                        out_source);
+#endif
+    return UmiUiTextProjectionToSource(state->projection,
+        (size_t)UmiGtk4SelectionListSelected(state->picker), out_source);
 }
 /* Every mutation below may notify application code. The public caller retains
  * the root and busy blocks nested publication or selection until both the
@@ -69,9 +75,19 @@ static void ChoicesPublish(FilteredChoices *state, size_t previous_source)
         (void)UmiUiTextProjectionToView(state->projection, previous_source, &selected);
     g_clear_object(&state->visible);
     state->visible = visible;
+/* GTK cannot reliably clear a nonempty dropdown by assigning an invalid index. Publish an explicit prompt instead, retaining the former publication for review. */
+#if 0
     gtk_drop_down_set_model(state->picker, G_LIST_MODEL(visible));
     gtk_drop_down_set_selected(state->picker,
                                selected == SIZE_MAX ? GTK_INVALID_LIST_POSITION : (guint)selected);
+#endif
+    /* Keep data-row indexes stable and expose a real prompt when the previous
+     * source is absent. GTK's automatic first-row selection cannot choose it. */
+    if (visible != NULL)
+        (void)UmiGtk4SelectionListPublish(state->picker, visible,
+            selected == SIZE_MAX ? GTK_INVALID_LIST_POSITION : (guint)selected);
+    else
+        gtk_drop_down_set_model(state->picker, NULL);
     char *summary =
         g_strdup_printf("%zu of %zu rows | Applied text: %s | %s | %s", count,
                         UmiUiTextProjectionSourceCount(state->projection),

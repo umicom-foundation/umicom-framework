@@ -7,6 +7,7 @@
  *---------------------------------------------------------------------------*/
 
 
+#include "umicom/ui/gtk4/selection_list.h"
 #include "fixture.h"
 static int VerifyNativeReservations(const char *name)
 {
@@ -14,7 +15,11 @@ static int VerifyNativeReservations(const char *name)
     ReservationsCreate(ui);GtkWidget *capture=ActivityFind(window,"bank.reservations.capture");CHECK(capture!=NULL);
     gtk_editable_set_text(GTK_EDITABLE(ui->reservationAccount),"account");g_signal_emit_by_name(capture,"clicked");
     CHECK(ui->reservations!=NULL && Contains(ui->reservationText,"Available = booked minus reserved: GBP 940.00"));
+/* Check the absence of a business choice, including the explicit GTK prompt. Retain the earlier raw-index assertion for review. */
+#if 0
     CHECK(gtk_drop_down_get_selected(ui->reservationRows)==GTK_INVALID_LIST_POSITION && !gtk_widget_get_sensitive(ui->reservationReview));
+#endif
+    CHECK(UmiGtk4SelectionListSelected(ui->reservationRows)==GTK_INVALID_LIST_POSITION && !gtk_widget_get_sensitive(ui->reservationReview));
     if(strcmp(name,"reservations-account")==0){
         gtk_editable_set_text(GTK_EDITABLE(ui->reservationAccount),"missing");CHECK(ui->reservations==NULL && !gtk_widget_get_sensitive(ui->reservationCopy));
         g_signal_emit_by_name(capture,"clicked");CHECK(ui->reservations==NULL && Contains(ui->reservationText,"Account not found"));

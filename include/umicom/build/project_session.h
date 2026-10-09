@@ -31,6 +31,8 @@ typedef struct UmiBuildProjectSession UmiBuildProjectSession;
 /** Optional worker-side executor for controlled hosts and inert native tests.
  * It receives borrowed copied input and must honour cancellation. It must not
  * call session destruction or access GTK/document/command-registry objects. */
+/* Queued execution captures an absolute source root before the worker starts.
+ * Relative build/install paths still resolve from that captured project root. */
 typedef UmiStatus (*UmiBuildProjectSessionExecute)(const UmiBuildProfile *profile,
     UmiBuildPhase phase, UmiCancellationToken *cancellation,
     UmiBuildResult *out_result, void *context);

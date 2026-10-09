@@ -48,6 +48,9 @@ typedef struct UmiCtestDiscoveryOptions {
     const char *configuration;
     const UmiCancellationToken *cancellation;
     uint32_t timeout_ms;
+    /* Optional absolute folder containing ctest. Borrowed until return.
+     * Child PATH receives this prefix; NULL/empty keeps inherited selection. */
+    const char *tool_directory;
 } UmiCtestDiscoveryOptions;
 
 /** Discover a complete bounded legacy catalogue without partial publication.
@@ -83,6 +86,9 @@ typedef struct UmiCtestRunOptions {
     const char *test_id;
     const UmiCancellationToken *cancellation;
     uint32_t timeout_ms;
+    /* Optional absolute folder containing ctest. Borrowed until return.
+     * Child PATH receives this prefix; NULL/empty keeps inherited selection. */
+    const char *tool_directory;
 } UmiCtestRunOptions;
 
 /** Facts from the one exactly named testcase, not the CTest process summary.

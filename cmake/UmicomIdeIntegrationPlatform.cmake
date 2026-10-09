@@ -778,3 +778,20 @@ endif()
 
 message(STATUS
     "Umicom cross-domain IDE integration, inline AI and self-host workflow enabled")
+
+
+# A welcome screen has no implied source root. Keep this separate from general
+# readiness checks so opening, rejecting and closing a workspace are exercised.
+if(BUILD_TESTING)
+    add_executable(umicom-ide-workspace-identity-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_workspace_identity.c")
+    target_link_libraries(umicom-ide-workspace-identity-test PRIVATE Umicom::developer)
+    umicom_apply_warnings(umicom-ide-workspace-identity-test)
+    umicom_apply_sanitizers(umicom-ide-workspace-identity-test)
+    add_test(NAME framework.ide_integration.workspace_identity COMMAND umicom-ide-workspace-identity-test)
+    set_tests_properties(framework.ide_integration.workspace_identity PROPERTIES
+        TIMEOUT 20 LABELS "framework;ide;workspace;regression")
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-ide-workspace-identity-test)
+    endif()
+endif()

@@ -38,6 +38,9 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/generation_request.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/generator.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/new_project.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/destination.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/entry_point.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/tool_catalogue.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/language_health.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/language_pack.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/language_provider.c"
@@ -127,6 +130,16 @@ if(BUILD_TESTING)
         add_test(NAME "${test_name}" COMMAND "${target}")
     endfunction()
 
+    umicom_add_developer_project_test(
+        umicom-developer-project-entry-point-test
+        framework.developer_project.entry-point
+        tests/developer_project/test_entry_point.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-destination-test
+        framework.developer_project.destination
+        tests/developer_project/test_destination.c
+    )
     umicom_add_developer_project_test(
         umicom-developer-project-build-plan-test
         framework.developer_project.build-plan
@@ -446,6 +459,26 @@ function(umicom_attach_developer_dialogs_gtk4)
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers(umicom-developer-dialog-gtk4-test)
         endif()
+        # The inventory never launches tools; GTK cases also cover edits and
+        # disposal while a filesystem capture is waiting to publish its result.
+        add_executable(umicom-project-tool-catalogue-gtk4-test
+            "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../tests/developer_project/test_tool_catalogue_gtk4.c")
+        target_link_libraries(umicom-project-tool-catalogue-gtk4-test PRIVATE Umicom::ui_gtk4)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(umicom-project-tool-catalogue-gtk4-test)
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(umicom-project-tool-catalogue-gtk4-test)
+        endif()
+        foreach(toolCase IN ITEMS files invalid edit edit-back close hide retained notify-close notify-edit notify-edit-back)
+            add_test(NAME framework.ide_workflow.tool_catalogue.gtk4.${toolCase}
+                COMMAND umicom-project-tool-catalogue-gtk4-test ${toolCase})
+            set_tests_properties(framework.ide_workflow.tool_catalogue.gtk4.${toolCase} PROPERTIES
+                SKIP_RETURN_CODE 77 TIMEOUT 45 LABELS "framework;ide-workflow;gtk4;ownership")
+        endforeach()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-project-tool-catalogue-gtk4-test)
+        endif()
         # Lifetime scenarios use the actual forms and their public callback API.
         add_executable(umicom-developer-settings-lifetime-test
             "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../tests/developer_project/test_settings_lifetime_gtk4.c")
@@ -509,4 +542,33 @@ if(BUILD_TESTING)
         set_tests_properties(framework.ide_workflow.project_session.${case} PROPERTIES
             TIMEOUT 30 LABELS "framework;ide-workflow;regression")
     endforeach()
+endif()
+
+
+# Inert tool files verify location selection without trusting or executing a
+# compiler. The test captures its own PATH evidence instead of requiring one.
+if(BUILD_TESTING)
+    add_executable(umicom-project-tool-catalogue-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_project/test_tool_catalogue.c")
+    target_link_libraries(umicom-project-tool-catalogue-test PRIVATE Umicom::developer)
+    if(WIN32 AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_link_options(umicom-project-tool-catalogue-test PRIVATE -municode)
+    endif()
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-project-tool-catalogue-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-project-tool-catalogue-test)
+    endif()
+    foreach(toolCase IN ITEMS selected missing automatic absolute invalid-compiler inherited snapshot boundaries invalid cancel)
+        set(toolDirectory "${CMAKE_CURRENT_BINARY_DIR}/qualification/tool_catalogue/${toolCase}")
+        file(MAKE_DIRECTORY "${toolDirectory}")
+        add_test(NAME framework.ide_workflow.tool_catalogue.${toolCase}
+            COMMAND umicom-project-tool-catalogue-test ${toolCase})
+        set_tests_properties(framework.ide_workflow.tool_catalogue.${toolCase} PROPERTIES
+            WORKING_DIRECTORY "${toolDirectory}" TIMEOUT 30 LABELS "framework;ide-workflow;toolchain;filesystem")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-project-tool-catalogue-test)
+    endif()
 endif()

@@ -87,6 +87,8 @@ typedef struct UmiTestPlatformCtestDiscoveryOptions {
     size_t maximum_tests;         /* zero selects registry hard limit minus root */
     uint32_t timeout_ms;          /* zero selects the bounded default */
     const UmiCancellationToken *cancellation; /* borrowed for this call */
+    /* Optional CTest tool folder, borrowed synchronously and copied by jobs. */
+    const char *tool_directory;
 } UmiTestPlatformCtestDiscoveryOptions;
 
 /** Parse a complete byte span with a required ctestInfo/version-1 envelope.

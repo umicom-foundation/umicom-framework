@@ -90,6 +90,8 @@ static void DisposeDialog(gpointer context)
     g_free(dialog);
 }
 
+/* An optional host binding connects explicit exported-project adoption to an IDE. The original standalone opener delegates without a host action; retain the previous composition for review. The previous implementation is retained for engineering review. */
+#if 0
 void UmiEducationGtkOpen(GtkWindow *parent)
 {
     UmiEducationGtkPanel *panel = UmiEducationGtkCreate();
@@ -113,6 +115,42 @@ void UmiEducationGtkOpen(GtkWindow *parent)
     UmiEducationGtkAttachCloseGuard(panel, GTK_WINDOW(window));
     g_object_set_data_full(G_OBJECT(window), "umicom-education-dialog", dialog, DisposeDialog);
     gtk_window_present(GTK_WINDOW(window));
+}
+#endif
+UmiStatus UmiEducationGtkOpenWithProjectOpener(GtkWindow *parent,
+    UmiEducationGtkProjectOpen open,void *context,GDestroyNotify release)
+{
+    UmiEducationGtkPanel *panel = UmiEducationGtkCreate();
+    if (panel == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    if(open!=NULL){
+        UmiStatus status=UmiEducationGtkSetProjectOpener(panel,open,context,release);
+        if(status!=UMI_STATUS_OK){UmiEducationGtkDestroy(panel);return status;}
+    }else if(context!=NULL || release!=NULL){UmiEducationGtkDestroy(panel);return UMI_STATUS_INVALID_ARGUMENT;}
+    GtkWidget *window = gtk_window_new();
+    gtk_window_set_title(GTK_WINDOW(window), "Umicom Education — Learning practicum");
+    gtk_window_set_default_size(GTK_WINDOW(window), 880, 720);
+    if (parent != NULL) {
+        gtk_window_set_transient_for(GTK_WINDOW(window), parent);
+        /* Do not force-destroy a learning window when the Studio parent closes:
+         * the learner must still be able to save or discard a draft note. */
+        GtkApplication *application = gtk_window_get_application(parent);
+        if (application != NULL) gtk_window_set_application(GTK_WINDOW(window), application);
+    }
+    EducationDialog *dialog = g_new0(EducationDialog, 1U);
+    dialog->panel = panel;
+    dialog->scroll = g_object_ref_sink(GTK_SCROLLED_WINDOW(gtk_scrolled_window_new()));
+    gtk_scrolled_window_set_policy(dialog->scroll, GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_scrolled_window_set_child(dialog->scroll, UmiEducationGtkWidget(panel));
+    gtk_window_set_child(GTK_WINDOW(window), GTK_WIDGET(dialog->scroll));
+    UmiEducationGtkAttachCloseGuard(panel, GTK_WINDOW(window));
+    g_object_set_data_full(G_OBJECT(window), "umicom-education-dialog", dialog, DisposeDialog);
+    gtk_window_present(GTK_WINDOW(window));
+    return UMI_STATUS_OK;
+}
+
+void UmiEducationGtkOpen(GtkWindow *parent)
+{
+    (void)UmiEducationGtkOpenWithProjectOpener(parent,NULL,NULL,NULL);
 }
 
 static void Launch(GtkButton *button, gpointer context)

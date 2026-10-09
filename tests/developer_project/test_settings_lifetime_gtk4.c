@@ -6,6 +6,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 
+#include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/developer_dialog.h"
 #include "umicom/platform/filesystem.h"
 #include <stdio.h>
@@ -34,6 +35,8 @@ typedef struct Probe
 
 /* Match stable identifiers rather than translated labels. External references
  * intentionally keep controls alive after their controller has been retired. */
+/* The rendered-child walk omitted controls owned by collapsed expanders. The shared bounded logical-tree lookup replaces it; retain the earlier traversal for review. */
+#if 0
 static GtkWidget *Find(GtkWidget *root, const char *id)
 {
     const char *tag = g_object_get_data(G_OBJECT(root), "umicom-automation-id");
@@ -47,6 +50,13 @@ static GtkWidget *Find(GtkWidget *root, const char *id)
             return found;
     }
     return NULL;
+}
+#endif
+/* Use the Framework logical tree so a collapsed panel can be inspected
+ * without changing the user's layout or overlooking an ambiguous identifier. */
+static GtkWidget *Find(GtkWidget *root, const char *id)
+{
+    return umi_gtk4_automation_find_tagged_widget(root, id);
 }
 static GtkWindow *Form(GtkWindow *parent)
 {
@@ -97,6 +107,7 @@ int main(int argc, char **argv)
     Probe probe = {0};
     GtkWindow *parent = NULL, *form = NULL;
     GtkWidget *cancel = NULL;
+    GtkWidget *chooseParent = NULL;
     char *projectRoot = NULL, *scratch = NULL;
     int failed = 0;
     CHECK(argc == 2);
@@ -134,6 +145,9 @@ int main(int argc, char **argv)
     {
         GtkWidget *folder = Find(GTK_WIDGET(form), "developer.project.folder");
         CHECK(GTK_IS_ENTRY(folder));
+        chooseParent = Find(GTK_WIDGET(form), "developer.project.choose-parent");
+        CHECK(GTK_IS_BUTTON(chooseParent));
+        g_object_ref(chooseParent);
         gtk_editable_set_text(GTK_EDITABLE(folder), projectRoot);
     }
     else
@@ -154,6 +168,9 @@ int main(int argc, char **argv)
         Dispose(&probe);
         g_signal_emit_by_name(probe.accept, "clicked");
         g_signal_emit_by_name(cancel, "clicked");
+        /* Retaining a folder chooser button must not retain authority after
+         * the dialog owner was destroyed. This must not open a native dialog. */
+        if (chooseParent != NULL) g_signal_emit_by_name(chooseParent, "clicked");
         CHECK(probe.calls == 0U);
         if (project)
             CHECK(!umi_fs_exists(projectRoot));
@@ -215,6 +232,7 @@ int main(int argc, char **argv)
         CHECK(probe.profile.preset[0] == '\0' && !probe.trusted);
     }
 cleanup:
+    if (chooseParent != NULL) g_object_unref(chooseParent);
     if (form != NULL)
         g_signal_handlers_disconnect_by_data(form, &probe);
     Dispose(&probe);

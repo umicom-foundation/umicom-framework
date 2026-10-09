@@ -7,6 +7,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/document/source_request.h"
+#include "umicom/ui/gtk4/compilation_database.h"
 #include "umicom/ui/gtk4/workspace_edit_review.h"
 #include "umicom/language_runtime/completion_query.h"
 #include "umicom/language_runtime/completion_preview.h"
@@ -22053,6 +22054,24 @@ static UmiStatus CompletionReviewCreateWithCallDirection(
     review->folder =
         CompletionReviewEntry(review, window, box, "Project folder", "document.completion.folder", folder);
     g_free(folder);
+    /* C-family source tools can inspect the compiler's real include paths and
+     * definitions before requesting language assistance. The shared inspector
+     * edits only this form's argument draft, through a weak widget reference. */
+    if (strcmp(summary.language_id, "c") == 0 || strcmp(summary.language_id, "cpp") == 0 ||
+        strcmp(summary.language_id, "objective-c") == 0 ||
+        strcmp(summary.language_id, "objective-cpp") == 0 ||
+        strcmp(summary.language_id, "assembly") == 0) {
+        GtkWidget *compilerPanel = NULL;
+        char *sourcePath = g_filename_from_uri(summary.uri, NULL, NULL);
+        UmiStatus inspector = UmiGtk4CompilationDatabasePanelCreate(
+            NULL, sourcePath, GTK_EDITABLE(review->arguments), &compilerPanel);
+        g_free(sourcePath);
+        if (inspector == UMI_STATUS_OK) {
+            GtkWidget *expander = gtk_expander_new("Compiler database (clangd)");
+            gtk_expander_set_child(GTK_EXPANDER(expander), compilerPanel);
+            gtk_box_append(GTK_BOX(box), expander);
+        }
+    }
     if (review->settings_path[0] != '\0')
     {
         review->load_settings = CompletionReviewControl(

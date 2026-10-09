@@ -216,3 +216,14 @@ size_t umi_vcs_change_list_staged_count(const UmiVcsChangeList *list)
     }
     return count;
 }
+
+/* Publishing a prepared collection cannot fail halfway through an allocation or copy. */
+UmiStatus UmiVcsChangeListExchange(UmiVcsChangeList *left, UmiVcsChangeList *right)
+{
+    UmiVcsChangeList previous;
+    if (left == NULL || right == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    previous = *left;
+    *left = *right;
+    *right = previous;
+    return UMI_STATUS_OK;
+}

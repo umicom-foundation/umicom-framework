@@ -5,6 +5,7 @@
  * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
+#include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/document_commands.h"
 #include "umicom/ui/gtk4/interaction_recording.h"
 #include <gtk/gtk.h>
@@ -34,6 +35,8 @@ static void Complete(void *data, UmiStatus status)
     if (completion->detach != NULL)
         (void)UmiGtk4AdapterBindDocumentEditing(completion->detach, NULL, NULL, NULL);
 }
+/* The rendered-only search missed controls in collapsed review panels. The Framework logical-tree helper replaces it; retain the former traversal for review. */
+#if 0
 static GtkWidget *Find(GtkWidget *root, const char *id)
 {
     const char *actual = g_object_get_data(G_OBJECT(root), "umicom-automation-id");
@@ -47,6 +50,13 @@ static GtkWidget *Find(GtkWidget *root, const char *id)
             return found;
     }
     return NULL;
+}
+#endif
+/* Inspect logical ownership as well as rendered children. Finding a control
+ * does not grant permission to edit it or make a collapsed panel visible. */
+static GtkWidget *Find(GtkWidget *root, const char *id)
+{
+    return umi_gtk4_automation_find_tagged_widget(root, id);
 }
 static GtkWindow *Review(void)
 {
@@ -173,7 +183,12 @@ static int ProgramMain(int argc, char **argv)
     secondary_view.dirty = 1;
     secondary_view.read_only = strcmp(mode, "read-only") == 0;
     CHECK(UmiUiDocumentViewModelUpsertText(views, &secondary_view, other, strlen(other)) == UMI_STATUS_OK);
+/* Selecting only the view model left the workbench on the last created document. The workbench activation below updates both owners; retain the former fixture setup for review. */
+#if 0
     CHECK(umi_ui_document_view_model_activate(views, primary.view_id) == UMI_STATUS_OK);
+#endif
+    /* Activate through the workbench so its coordinator and visible tab agree. */
+    CHECK(umi_ui_workbench_activate_document(workbench, primary.view_id) == UMI_STATUS_OK);
     CHECK(umi_gtk4_adapter_create(application, &adapter) == UMI_STATUS_OK);
     CHECK(umi_gtk4_adapter_prepare(adapter, shell) == UMI_STATUS_OK);
     CHECK(UmiGtk4AdapterBindDocumentEditing(adapter, documents, Complete, &result) == UMI_STATUS_OK);
@@ -259,9 +274,19 @@ static int ProgramMain(int argc, char **argv)
         CHECK(umi_ui_document_view_model_upsert(views, &primary_view) == UMI_STATUS_OK);
     }
     if (strcmp(mode, "invalid-location") == 0)
+        /* GTK may ignore an invalid index on a nonempty list. An empty model
+         * exercises the no-selection path. Retain the former setup for review. */
+#if 0
         gtk_drop_down_set_selected(GTK_DROP_DOWN(location), GTK_INVALID_LIST_POSITION);
+#endif
+        gtk_drop_down_set_model(GTK_DROP_DOWN(location), NULL);
     if (strcmp(mode, "invalid-diagnostic") == 0)
+        /* GTK may ignore an invalid index on a nonempty list. An empty model
+         * exercises the no-selection path. Retain the former setup for review. */
+#if 0
         gtk_drop_down_set_selected(GTK_DROP_DOWN(choice), GTK_INVALID_LIST_POSITION);
+#endif
+        gtk_drop_down_set_model(GTK_DROP_DOWN(choice), NULL);
     if (strcmp(mode, "changed-settings") == 0)
     {
         gtk_editable_set_text(GTK_EDITABLE(arguments), "diagnostics-invalid");

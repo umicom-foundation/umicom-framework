@@ -108,12 +108,16 @@ static void append_output(UmiProcessResult *result,
 #ifdef _WIN32
 /* Add two sizes without allowing an environment or command-line allocation
  * calculation to wrap back to a small value. */
+/* The shared Unicode environment builder now checks each addition against its fixed remaining capacity before adding. This former arithmetic helper is no longer called and is retained for review. The previous implementation is retained for engineering review. */
+#if 0
 static int umi_process_size_add(size_t left, size_t right, size_t *out)
 {
     if (out == NULL || right > SIZE_MAX - left) return 0;
     *out = left + right;
     return 1;
 }
+#endif
+
 #endif
 
 #ifdef _WIN32

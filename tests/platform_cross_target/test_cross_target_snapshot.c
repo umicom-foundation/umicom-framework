@@ -130,5 +130,14 @@ UMI_TEST_VALUE_TRANSFER(UmiCtCrossTargetSnapshotTransferCases, UmiCtCrossTargetS
     UmiCtCrossTargetSnapshotTransferEqual, UmiCtCrossTargetSnapshotTransferTails, UmiCtCrossTargetSnapshotTransferMalformed)
 
 int main(void){UmiCtCrossTargetSnapshot s={0};s.target.architecture=UMI_CT_ARCH_RISCV64;CHECK(umi_ct_copy(s.abi,sizeof(s.abi),"lp64d")==UMI_STATUS_OK);s.cpu_count=4U;s.page_size=4096U;s.fingerprint=1U;s.health.health=UMI_CT_HEALTH_READY;CHECK(umi_ct_cross_target_snapshot_validate(&s)==UMI_STATUS_OK);
+/* The archive reconstructs local ABI metadata rather than storing host structure sizes. Initialize the transfer fixture while retaining the earlier zero-initialized round-trip call for review. */
+#if 0
+    if (UmiCtCrossTargetSnapshotTransferCases(&s) != 0) return 1;
+#endif
+    /* The validator above still covers the legacy zero-initialized input.
+     * Archive decoding reconstructs the receiver's local structure size, so
+     * exact field round trips use an explicitly initialized current target. */
+    s.target.structure_size = (uint32_t)sizeof(s.target);
+    s.target.api_version = UMI_CT_API_VERSION;
     if (UmiCtCrossTargetSnapshotTransferCases(&s) != 0) return 1;
 s.health.health=UMI_CT_HEALTH_BLOCKED;CHECK(umi_ct_cross_target_snapshot_validate(&s)==UMI_STATUS_UNAVAILABLE);return 0;}

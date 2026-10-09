@@ -147,3 +147,37 @@ if(COMMAND umicom_register_validation_target)
     umicom_register_validation_target(umicom-debug-restart-session-test)
     umicom_register_validation_target(umicom-debug-watch-invalidation-test)
 endif()
+
+# Isolated adapters have the builtin filenames, so the selected-folder path is
+# exercised without depending on a developer's installed GDB or LLDB.
+add_executable(umicom-tool-debugger-test ../tool_location/test_debugger.c)
+target_link_libraries(umicom-tool-debugger-test PRIVATE Umicom::Framework)
+umicom_apply_warnings(umicom-tool-debugger-test)
+umicom_apply_sanitizers(umicom-tool-debugger-test)
+if(WIN32 AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_link_options(umicom-tool-debugger-test PRIVATE -municode)
+endif()
+foreach(kind lldb gdb)
+    add_executable(umicom-tool-${kind}-peer dap_fixture.c)
+    target_link_libraries(umicom-tool-${kind}-peer PRIVATE Umicom::Framework)
+    umicom_apply_warnings(umicom-tool-${kind}-peer)
+    umicom_apply_sanitizers(umicom-tool-${kind}-peer)
+    set_target_properties(umicom-tool-${kind}-peer PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/isolated debugger tools")
+    if(kind STREQUAL "lldb")
+        set_target_properties(umicom-tool-${kind}-peer PROPERTIES OUTPUT_NAME lldb-dap)
+    else()
+        set_target_properties(umicom-tool-${kind}-peer PROPERTIES OUTPUT_NAME gdb)
+    endif()
+    add_dependencies(umicom-tool-debugger-test umicom-tool-${kind}-peer)
+endforeach()
+foreach(case lldb gdb absolute invalid-folder relative-adapter missing)
+    add_test(NAME framework.tool_location.debugger.${case}
+        COMMAND umicom-tool-debugger-test "${case}" "$<TARGET_FILE_DIR:umicom-tool-lldb-peer>"
+            "$<TARGET_FILE:umicom-tool-lldb-peer>")
+    set_tests_properties(framework.tool_location.debugger.${case} PROPERTIES
+        TIMEOUT 30 LABELS "framework;debugger;tool-location;protocol-fixture;regression")
+endforeach()
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-tool-debugger-test)
+endif()

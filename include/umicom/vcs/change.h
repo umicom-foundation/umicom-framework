@@ -71,6 +71,12 @@ const UmiVcsChange *umi_vcs_change_list_find(const UmiVcsChangeList *list,
  */
 size_t umi_vcs_change_list_staged_count(const UmiVcsChangeList *list);
 
+/**
+ * Exchange complete list storage without allocating. Build a replacement privately first
+ * when the displayed list must survive a failed refresh. Both list owners remain valid.
+ */
+UmiStatus UmiVcsChangeListExchange(UmiVcsChangeList *left, UmiVcsChangeList *right);
+
 #ifdef __cplusplus
 }
 #endif

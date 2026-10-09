@@ -6,6 +6,8 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 
+#include "umicom/ui/gtk4/automation.h"
+#include "umicom/ui/gtk4/selection_list.h"
 #include "umicom/ui/gtk4/developer_dialog.h"
 #include <glib/gstdio.h>
 #include <stdio.h>
@@ -27,6 +29,8 @@ typedef struct Probe
     unsigned calls, notifications;
     UmiBuildProfile profile;
 } Probe;
+/* The rendered-child walk omitted controls owned by collapsed expanders. The shared bounded logical-tree lookup replaces it; retain the earlier traversal for review. */
+#if 0
 static GtkWidget *Find(GtkWidget *root, const char *id)
 {
     const char *tag = g_object_get_data(G_OBJECT(root), "umicom-automation-id");
@@ -40,6 +44,13 @@ static GtkWidget *Find(GtkWidget *root, const char *id)
             return found;
     }
     return NULL;
+}
+#endif
+/* Use the Framework logical tree so a collapsed panel can be inspected
+ * without changing the user's layout or overlooking an ambiguous identifier. */
+static GtkWidget *Find(GtkWidget *root, const char *id)
+{
+    return umi_gtk4_automation_find_tagged_widget(root, id);
 }
 static GtkWindow *Form(GtkWindow *parent)
 {
@@ -203,7 +214,11 @@ int main(int argc, char **argv)
             goto cleanup;
         }
         GListModel *expandedModel = gtk_drop_down_get_model(GTK_DROP_DOWN(probe.picker));
-        CHECK(expandedModel != NULL && g_list_model_get_n_items(expandedModel) == 5U);
+        /* Check the explicit no-choice row while keeping all preset indexes unchanged. The earlier native-model assertion is retained for review. */
+#if 0
+CHECK(expandedModel != NULL && g_list_model_get_n_items(expandedModel) == 5U);
+#endif
+CHECK(expandedModel != NULL && g_list_model_get_n_items(expandedModel) == 6U);
         CHECK(strstr(gtk_label_get_text(GTK_LABEL(detail)), "3 files") != NULL);
         guint expandedIndex = strcmp(mode, "includes-origin") == 0 ? 2U : strcmp(mode, "includes-inherited") == 0 ? 1U : 0U;
         gtk_drop_down_set_selected(GTK_DROP_DOWN(probe.picker), expandedIndex);
@@ -264,10 +279,18 @@ int main(int argc, char **argv)
     }
     GListModel *model = gtk_drop_down_get_model(GTK_DROP_DOWN(probe.picker));
     CHECK(model != NULL);
-    CHECK(g_list_model_get_n_items(model) == (strcmp(mode, "user-only") == 0 ? 1U : 5U));
+    /* Check the explicit no-choice row while keeping all preset indexes unchanged. The earlier native-model assertion is retained for review. */
+#if 0
+CHECK(g_list_model_get_n_items(model) == (strcmp(mode, "user-only") == 0 ? 1U : 5U));
+#endif
+CHECK(g_list_model_get_n_items(model) == (strcmp(mode, "user-only") == 0 ? 2U : 6U));
     if (strcmp(mode, "user-only") != 0)
         CHECK(strstr(gtk_label_get_text(GTK_LABEL(detail)), "incomplete") != NULL);
-    CHECK(gtk_drop_down_get_selected(GTK_DROP_DOWN(probe.picker)) == GTK_INVALID_LIST_POSITION);
+    /* Check the explicit no-choice row while keeping all preset indexes unchanged. The earlier native-model assertion is retained for review. */
+#if 0
+CHECK(gtk_drop_down_get_selected(GTK_DROP_DOWN(probe.picker)) == GTK_INVALID_LIST_POSITION);
+#endif
+CHECK(UmiGtk4SelectionListSelected(GTK_DROP_DOWN(probe.picker)) == GTK_INVALID_LIST_POSITION);
     if (strcmp(mode, "refresh-invalid") == 0)
     {
         CHECK(g_file_set_contents(userFile, "{", -1, NULL));

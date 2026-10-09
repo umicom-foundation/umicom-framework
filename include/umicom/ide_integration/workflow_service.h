@@ -64,6 +64,24 @@ UmiStatus umi_ide_workflow_service_refresh(
 int umi_ide_workflow_service_ready(
     const UmiIdeWorkflowService *service);
 
+/**
+ * @brief Initialize readiness for a welcome screen with no open workspace.
+ * @param service Caller-owned state, initialized on success.
+ * @param bindings Borrowed service bindings that outlive the workflow service.
+ * @return Status from initialization and the first readiness evaluation.
+ */
+UmiStatus umi_ide_workflow_service_init_closed(
+    UmiIdeWorkflowService *service, UmiIdeIntegrationBindings *bindings);
+/**
+ * @brief Replace the workspace identity and its readiness evidence together.
+ * @param service Initialized workflow service on its owner thread.
+ * @param workspace_root Copied path, or an empty string when the workspace closes.
+ * @return OK on publication; an error leaves the previous service unchanged.
+ * @details This records an existing workspace decision; it does not open files,
+ * grant trust, start a compiler, or inspect a working directory.
+ */
+UmiStatus umi_ide_workflow_service_set_workspace(
+    UmiIdeWorkflowService *service, const char *workspace_root);
 #ifdef __cplusplus
 }
 #endif

@@ -34,3 +34,13 @@ if(UMICOM_LESSON_WITH_GTK)
     target_link_libraries(umicom-framework-notes-window PRIVATE Umicom::data PkgConfig::LESSON_GTK)
     lesson_warnings(umicom-framework-notes-window)
 endif()
+
+# Install the teaching executable under an explicitly selected local prefix.
+# This adds a deployable example without installing test fixtures or quiz data.
+install(TARGETS umicom-framework-notes RUNTIME DESTINATION bin)
+if(TARGET umicom-framework-notes-window)
+    install(TARGETS umicom-framework-notes-window RUNTIME DESTINATION bin)
+endif()
+# Packaging uses the same install rules and keeps generated archives in the build tree.
+set(CPACK_GENERATOR "ZIP")
+include(CPack)

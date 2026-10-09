@@ -6,12 +6,15 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 
+#include "umicom/ui/gtk4/automation.h"
 #include "../trading_execution/order_review_fixture.h"
 #include "umicom/trading_ui/gtk4/interactive_chart.h"
 #define CHECK REVIEW_CHECK
 #define OK(x) CHECK((x) == UMI_STATUS_OK)
 
 /* Locate public automation identities in the actual shared chart widget. */
+/* The chart inspector owns controls while collapsed. Shared logical lookup replaces the rendered-child walk, retained here for review. The previous implementation is retained for engineering review. */
+#if 0
 static GtkWidget *Find(GtkWidget *root, const char *id)
 {
     const char *tag = g_object_get_data(G_OBJECT(root), "umicom-automation-id");
@@ -20,6 +23,12 @@ static GtkWidget *Find(GtkWidget *root, const char *id)
         GtkWidget *found = Find(child, id); if (found != NULL) return found;
     }
     return NULL;
+}
+#endif
+static GtkWidget *Find(GtkWidget *root, const char *id)
+{
+    /* Read controls owned by collapsed chart inspectors without changing layout. */
+    return umi_gtk4_automation_find_tagged_widget(root, id);
 }
 
 /* Drive one registered scenario through the public feature owners. */

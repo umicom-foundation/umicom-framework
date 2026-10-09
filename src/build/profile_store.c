@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/build/profile_store.h"
+#include "profile_store_internal.h"
 
 #include <errno.h>
 #include <inttypes.h>
@@ -44,7 +45,13 @@ static const ProfileTextField TEXT_FIELDS[] = {
     PROFILE_FIELD(run_argument), PROFILE_FIELD(install_directory),
     PROFILE_FIELD(run_arguments),
     PROFILE_FIELD(configure_preset), PROFILE_FIELD(build_preset), PROFILE_FIELD(test_preset),
-    PROFILE_FIELD(run_working_directory)
+    PROFILE_FIELD(run_working_directory),
+    /* Persist tool selection in the same transaction as the source settings. */
+    PROFILE_FIELD(tool_directory),
+    /* Cache definitions commit with their build profile, never as a side file. */
+    PROFILE_FIELD(configure_definitions),
+    /* Launch variables commit atomically with the remaining project settings. */
+    PROFILE_FIELD(run_environment)
 };
 #undef PROFILE_FIELD
 static const char *const NUMBER_FIELDS[] = {
@@ -54,6 +61,8 @@ static const char *const NUMBER_FIELDS[] = {
 /* Reuse the shared URI fingerprint. The full source path is also stored and
  * compared on every read, so a hash collision never substitutes another project.
  * Windows ASCII path case follows the existing path comparison contract. */
+/* Absolute project settings remain readable when the host working directory is unavailable or changes. Relative-root compatibility is retained, and the previous resolver remains for review. The previous implementation is retained for engineering review. */
+#if 0
 static UmiStatus ProfileIdentity(const char *root, char *normalised, char *prefix)
 {
     char current[UMI_BUILD_PATH_CAPACITY];
@@ -63,6 +72,34 @@ static UmiStatus ProfileIdentity(const char *root, char *normalised, char *prefi
     status = umi_fs_current_directory(current, sizeof(current));
     if (status == UMI_STATUS_OK)
         status = umi_path_absolute(root, current, normalised, UMI_BUILD_PATH_CAPACITY);
+    if (status != UMI_STATUS_OK) return status;
+    (void)memcpy(identity, normalised, strlen(normalised) + 1U);
+#ifdef _WIN32
+    for (size_t index = 0U; identity[index] != '\0'; ++index)
+        if (identity[index] >= 'A' && identity[index] <= 'Z')
+            identity[index] = (char)(identity[index] + ('a' - 'A'));
+    const char *scope = "build-profile-windows";
+#else
+    const char *scope = "build-profile-posix";
+#endif
+    return umi_platform_recent_item_id_from_uri(scope, identity, prefix, 128U);
+}
+#endif
+static UmiStatus ProfileIdentity(const char *root, char *normalised, char *prefix)
+{
+    char current[UMI_BUILD_PATH_CAPACITY];
+    char identity[UMI_BUILD_PATH_CAPACITY];
+    UmiStatus status;
+    if (root == NULL || root[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    /* Absolute project identities do not depend on the IDE's process directory.
+     * Only compatibility callers passing a relative root need to capture cwd. */
+    if (umi_path_is_absolute(root))
+        status = umi_path_normalise(root, normalised, UMI_BUILD_PATH_CAPACITY);
+    else {
+        status = umi_fs_current_directory(current, sizeof(current));
+        if (status == UMI_STATUS_OK)
+            status = umi_path_absolute(root, current, normalised, UMI_BUILD_PATH_CAPACITY);
+    }
     if (status != UMI_STATUS_OK) return status;
     (void)memcpy(identity, normalised, strlen(normalised) + 1U);
 #ifdef _WIN32
@@ -157,6 +194,8 @@ static UmiStatus CheckAbsent(UmiDataServer *server, const char *prefix)
 
 /* Read inside a transaction so no independently committed writer can mix two
  * revisions. The candidate remains private until its complete contract passes. */
+/* Current records require the launch environment field. Older complete records migrate with no overrides; preserve the former reader so migration behavior remains reviewable. The previous implementation is retained for engineering review. */
+#if 0
 static UmiStatus ReadProfile(UmiDataServer *server, const char *prefix,
     const char *root, UmiBuildProfile *profile, uint64_t *revision)
 {
@@ -180,7 +219,17 @@ static UmiStatus ReadProfile(UmiDataServer *server, const char *prefix,
     if (!legacyArguments && strcmp(schema, "2") != 0) return UMI_STATUS_INVALID_STATE;
 #endif
     bool legacyStages = legacyArguments || strcmp(schema, "2") == 0;
+/* The stored tool folder is required in current records. Earlier records migrate with inherited lookup; retain the preceding marker check for review. The previous implementation is retained for engineering review. */
+#if 0
     if (!legacyStages && strcmp(schema, "3") != 0) return UMI_STATUS_INVALID_STATE;
+#endif
+    bool legacyTools = legacyStages || strcmp(schema, "3") == 0;
+/* Current profiles require their explicit configure definitions. Older profiles migrate with no extra definitions; preserve the preceding marker check for compatibility review. The previous implementation is retained for engineering review. */
+#if 0
+    if (!legacyTools && strcmp(schema, "4") != 0) return UMI_STATUS_INVALID_STATE;
+#endif
+    bool legacyDefinitions = legacyTools || strcmp(schema, "4") == 0;
+    if (!legacyDefinitions && strcmp(schema, "5") != 0) return UMI_STATUS_INVALID_STATE;
     (void)memset(profile, 0, sizeof(*profile));
     for (size_t index = 0U; index < sizeof(TEXT_FIELDS)/sizeof(TEXT_FIELDS[0]); ++index) {
         const ProfileTextField *field = &TEXT_FIELDS[index];
@@ -197,8 +246,112 @@ static UmiStatus ReadProfile(UmiDataServer *server, const char *prefix,
              field->offset == offsetof(UmiBuildProfile, test_preset) ||
              field->offset == offsetof(UmiBuildProfile, run_working_directory)))
             status = UMI_STATUS_OK;
+        if (status == UMI_STATUS_NOT_FOUND && legacyTools &&
+            field->offset == offsetof(UmiBuildProfile, tool_directory))
+            status = UMI_STATUS_OK;
+        if (status == UMI_STATUS_NOT_FOUND && legacyDefinitions &&
+            field->offset == offsetof(UmiBuildProfile, configure_definitions))
+            status = UMI_STATUS_OK;
         if (status != UMI_STATUS_OK) break;
     }
+    /* A downgraded record must not silently lose an SDK or feature selection. */
+    if (status == UMI_STATUS_OK && legacyDefinitions && profile->configure_definitions[0] != '\0')
+        status = UMI_STATUS_PARSE_ERROR;
+    /* A downgraded marker cannot silently drop an explicit executable source. */
+    if (status == UMI_STATUS_OK && legacyTools && profile->tool_directory[0] != '\0')
+        status = UMI_STATUS_PARSE_ERROR;
+    /* An older format cannot describe independent stages. Reject a downgraded
+     * marker with active stage data instead of silently changing its meaning.
+     * Empty fields left by an older writer remain safe to migrate. */
+    if (status == UMI_STATUS_OK && legacyStages &&
+        (profile->configure_preset[0] != '\0' || profile->build_preset[0] != '\0' ||
+         profile->test_preset[0] != '\0' || profile->run_working_directory[0] != '\0')) status = UMI_STATUS_PARSE_ERROR;
+    if (status == UMI_STATUS_OK) status = ReadUnsigned(server, prefix, "parallel_jobs", UINT_MAX, &number);
+    if (status == UMI_STATUS_OK) profile->parallel_jobs = (unsigned)number;
+    if (status == UMI_STATUS_OK) status = ReadUnsigned(server, prefix, "timeout_ms", UINT32_MAX, &number);
+    if (status == UMI_STATUS_OK) profile->timeout_ms = (uint32_t)number;
+    if (status == UMI_STATUS_OK) status = ReadInteger(server, prefix, "build_testing", &profile->build_testing);
+    if (status == UMI_STATUS_OK) status = ReadInteger(server, prefix, "strict_warnings", &profile->strict_warnings);
+    if (status == UMI_STATUS_OK) status = ReadUnsigned(server, prefix, "revision", UINT64_MAX, revision);
+    if (status == UMI_STATUS_NOT_FOUND) return UMI_STATUS_PARSE_ERROR;
+    if (status != UMI_STATUS_OK) return status;
+    if (*revision == 0U || !umi_path_is_absolute(profile->source_directory) ||
+        !umi_path_equal(root, profile->source_directory)) return UMI_STATUS_INVALID_STATE;
+    return umi_build_profile_validate(profile, NULL, 0U) == UMI_STATUS_OK
+        ? UMI_STATUS_OK : UMI_STATUS_PARSE_ERROR;
+}
+#endif
+static UmiStatus ReadProfile(UmiDataServer *server, const char *prefix,
+    const char *root, UmiBuildProfile *profile, uint64_t *revision)
+{
+    char schema[32];
+    uint64_t number = 0U;
+    UmiStatus status = ReadField(server, prefix, "schema", schema, sizeof(schema));
+    if (status == UMI_STATUS_NOT_FOUND) return CheckAbsent(server, prefix);
+    if (status != UMI_STATUS_OK) return status;
+    /* The additional stored field is mandatory in new records. Older records
+     * retain their literal-argument semantics; a missing new field in a current
+     * record is corruption, not permission to launch with fewer arguments. The
+     * former schema-only check remains below for compatibility review. */
+#if 0
+    if (strcmp(schema, "1") != 0) return UMI_STATUS_INVALID_STATE;
+#endif
+    bool legacyArguments = strcmp(schema, "1") == 0;
+    /* Stage names are required in current records. Earlier records retain
+     * the shared-preset contract and receive empty independent stage fields.
+     * The former argument-only format check remains for migration review. */
+#if 0
+    if (!legacyArguments && strcmp(schema, "2") != 0) return UMI_STATUS_INVALID_STATE;
+#endif
+    bool legacyStages = legacyArguments || strcmp(schema, "2") == 0;
+/* The stored tool folder is required in current records. Earlier records migrate with inherited lookup; retain the preceding marker check for review. The previous implementation is retained for engineering review. */
+#if 0
+    if (!legacyStages && strcmp(schema, "3") != 0) return UMI_STATUS_INVALID_STATE;
+#endif
+    bool legacyTools = legacyStages || strcmp(schema, "3") == 0;
+/* Current profiles require their explicit configure definitions. Older profiles migrate with no extra definitions; preserve the preceding marker check for compatibility review. The previous implementation is retained for engineering review. */
+#if 0
+    if (!legacyTools && strcmp(schema, "4") != 0) return UMI_STATUS_INVALID_STATE;
+#endif
+    bool legacyDefinitions = legacyTools || strcmp(schema, "4") == 0;
+    bool legacyEnvironment = legacyDefinitions || strcmp(schema, "5") == 0;
+    if (!legacyEnvironment && strcmp(schema, "6") != 0) return UMI_STATUS_INVALID_STATE;
+    (void)memset(profile, 0, sizeof(*profile));
+    for (size_t index = 0U; index < sizeof(TEXT_FIELDS)/sizeof(TEXT_FIELDS[0]); ++index) {
+        const ProfileTextField *field = &TEXT_FIELDS[index];
+        status = ReadField(server, prefix, field->name,
+            (char *)profile + field->offset, field->capacity);
+        /* Existing records predate the explicit argument-list field. Its absence
+         * means the original literal argument remains authoritative. Other
+         * missing fields still identify a corrupt, incomplete record. */
+        if (status == UMI_STATUS_NOT_FOUND && legacyArguments && field->offset == offsetof(UmiBuildProfile, run_arguments))
+            status = UMI_STATUS_OK;
+        if (status == UMI_STATUS_NOT_FOUND && legacyStages &&
+            (field->offset == offsetof(UmiBuildProfile, configure_preset) ||
+             field->offset == offsetof(UmiBuildProfile, build_preset) ||
+             field->offset == offsetof(UmiBuildProfile, test_preset) ||
+             field->offset == offsetof(UmiBuildProfile, run_working_directory)))
+            status = UMI_STATUS_OK;
+        if (status == UMI_STATUS_NOT_FOUND && legacyTools &&
+            field->offset == offsetof(UmiBuildProfile, tool_directory))
+            status = UMI_STATUS_OK;
+        if (status == UMI_STATUS_NOT_FOUND && legacyDefinitions &&
+            field->offset == offsetof(UmiBuildProfile, configure_definitions))
+            status = UMI_STATUS_OK;
+        if (status == UMI_STATUS_NOT_FOUND && legacyEnvironment &&
+            field->offset == offsetof(UmiBuildProfile, run_environment))
+            status = UMI_STATUS_OK;
+        if (status != UMI_STATUS_OK) break;
+    }
+    /* A changed marker must not erase launch settings which were previously reviewed. */
+    if (status == UMI_STATUS_OK && legacyEnvironment && profile->run_environment[0] != '\0')
+        status = UMI_STATUS_PARSE_ERROR;
+    /* A downgraded record must not silently lose an SDK or feature selection. */
+    if (status == UMI_STATUS_OK && legacyDefinitions && profile->configure_definitions[0] != '\0')
+        status = UMI_STATUS_PARSE_ERROR;
+    /* A downgraded marker cannot silently drop an explicit executable source. */
+    if (status == UMI_STATUS_OK && legacyTools && profile->tool_directory[0] != '\0')
+        status = UMI_STATUS_PARSE_ERROR;
     /* An older format cannot describe independent stages. Reject a downgraded
      * marker with active stage data instead of silently changing its meaning.
      * Empty fields left by an older writer remain safe to migrate. */
@@ -242,6 +395,8 @@ UmiStatus UmiBuildProfileStoreLoad(UmiDataServer *server,
     return status;
 }
 
+/* Move field encoding into the common persistence owner so current settings and named configurations retain identical validation and storage semantics. The complete earlier save path is retained for engineering review. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus UmiBuildProfileStoreSave(UmiDataServer *server,
     const UmiBuildProfile *profile, uint64_t expectedRevision, uint64_t *outRevision)
 {
@@ -297,11 +452,168 @@ UmiStatus UmiBuildProfileStoreSave(UmiDataServer *server,
 #if 0
     if (status == UMI_STATUS_OK) status = WriteField(server, prefix, "schema", "2");
 #endif
+/* Publish the tool folder and its required-field marker atomically. Older readers must refuse this record rather than forget its tool selection. The previous implementation is retained for engineering review. */
+#if 0
     if (status == UMI_STATUS_OK) status = WriteField(server, prefix, "schema", "3");
+#endif
+/* Publish configure definitions and the required-field marker together. Retain the preceding write so storage migration remains reviewable. The previous implementation is retained for engineering review. */
+#if 0
+    if (status == UMI_STATUS_OK) status = WriteField(server, prefix, "schema", "4");
+#endif
+/* Store launch variables and their required-field marker in the same transaction. Retain the earlier write for storage compatibility review. The previous implementation is retained for engineering review. */
+#if 0
+    if (status == UMI_STATUS_OK) status = WriteField(server, prefix, "schema", "5");
+#endif
+    if (status == UMI_STATUS_OK) status = WriteField(server, prefix, "schema", "6");
     if (status == UMI_STATUS_OK) {
         status = umi_data_server_commit(server);
         if (status == UMI_STATUS_OK) { *outRevision = revision + 1U; return status; }
     }
     finish = umi_data_server_rollback(server);
     return finish == UMI_STATUS_OK ? status : finish;
+}
+#endif
+
+/* Named configurations and the active profile share this encoder. Keeping the
+ * required-field marker next to its fields prevents one path from forgetting
+ * newer launch, tool or configure settings during a later save. */
+UmiStatus UmiBuildProfileStorageIdentity(const char *root, char *normalised, char *prefix)
+{
+    return ProfileIdentity(root, normalised, prefix);
+}
+UmiStatus UmiBuildProfileStorageRead(UmiDataServer *server, const char *prefix,
+    const char *root, UmiBuildProfile *profile, uint64_t *revision)
+{
+    return ReadProfile(server, prefix, root, profile, revision);
+}
+UmiStatus UmiBuildProfileStorageWrite(UmiDataServer *server, const char *prefix,
+    const UmiBuildProfile *profile, uint64_t revision)
+{
+    char number[32];
+    UmiStatus status = UMI_STATUS_OK;
+    for (size_t index = 0U; status == UMI_STATUS_OK && index < sizeof(TEXT_FIELDS)/sizeof(TEXT_FIELDS[0]); ++index) {
+        const ProfileTextField *field = &TEXT_FIELDS[index];
+        status = WriteField(server, prefix, field->name, (const char *)profile + field->offset);
+    }
+    if (status == UMI_STATUS_OK) {
+        (void)snprintf(number, sizeof(number), "%u", profile->parallel_jobs);
+        status = WriteField(server, prefix, "parallel_jobs", number);
+    }
+    if (status == UMI_STATUS_OK) {
+        (void)snprintf(number, sizeof(number), "%" PRIu32, profile->timeout_ms);
+        status = WriteField(server, prefix, "timeout_ms", number);
+    }
+    if (status == UMI_STATUS_OK) {
+        (void)snprintf(number, sizeof(number), "%d", profile->build_testing);
+        status = WriteField(server, prefix, "build_testing", number);
+    }
+    if (status == UMI_STATUS_OK) {
+        (void)snprintf(number, sizeof(number), "%d", profile->strict_warnings);
+        status = WriteField(server, prefix, "strict_warnings", number);
+    }
+    if (status == UMI_STATUS_OK) {
+        (void)snprintf(number, sizeof(number), "%" PRIu64, revision);
+        status = WriteField(server, prefix, "revision", number);
+    }
+    /* Mark the complete argument-list record in the same transaction as its
+     * fields. The previous format write is retained for migration review. */
+#if 0
+    if (status == UMI_STATUS_OK) status = WriteField(server, prefix, "schema", "1");
+#endif
+    /* Publish stage fields and their required-field marker in one transaction.
+     * Keep the former write for review; older readers must reject this format
+     * rather than silently forgetting a build or test preset. */
+#if 0
+    if (status == UMI_STATUS_OK) status = WriteField(server, prefix, "schema", "2");
+#endif
+/* Publish the tool folder and its required-field marker atomically. Older readers must refuse this record rather than forget its tool selection. The previous implementation is retained for engineering review. */
+#if 0
+    if (status == UMI_STATUS_OK) status = WriteField(server, prefix, "schema", "3");
+#endif
+/* Publish configure definitions and the required-field marker together. Retain the preceding write so storage migration remains reviewable. The previous implementation is retained for engineering review. */
+#if 0
+    if (status == UMI_STATUS_OK) status = WriteField(server, prefix, "schema", "4");
+#endif
+/* Store launch variables and their required-field marker in the same transaction. Retain the earlier write for storage compatibility review. The previous implementation is retained for engineering review. */
+#if 0
+    if (status == UMI_STATUS_OK) status = WriteField(server, prefix, "schema", "5");
+#endif
+    if (status == UMI_STATUS_OK) status = WriteField(server, prefix, "schema", "6");
+    return status;
+}
+
+UmiStatus UmiBuildProfileStoreSave(UmiDataServer *server,
+    const UmiBuildProfile *profile, uint64_t expectedRevision, uint64_t *outRevision)
+{
+    UmiBuildProfile candidate, previous;
+    char root[UMI_BUILD_PATH_CAPACITY], prefix[128];
+    uint64_t revision = 0U;
+    UmiStatus status, finish;
+    if (server == NULL || outRevision == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_build_profile_validate(profile, NULL, 0U);
+    if (status != UMI_STATUS_OK) return status;
+    status = ProfileIdentity(profile->source_directory, root, prefix);
+    if (status != UMI_STATUS_OK) return status;
+    candidate = *profile;
+    (void)memcpy(candidate.source_directory, root, strlen(root) + 1U);
+    status = umi_data_server_begin(server);
+    if (status != UMI_STATUS_OK) return status;
+    status = ReadProfile(server, prefix, root, &previous, &revision);
+    if (status == UMI_STATUS_NOT_FOUND) { revision = 0U; status = UMI_STATUS_OK; }
+    if (status == UMI_STATUS_OK && expectedRevision != revision) status = UMI_STATUS_INVALID_STATE;
+    if (status == UMI_STATUS_OK && revision == UINT64_MAX) status = UMI_STATUS_CAPACITY_EXCEEDED;
+    if (status == UMI_STATUS_OK)
+        status = UmiBuildProfileStorageWrite(server, prefix, &candidate, revision + 1U);
+    if (status == UMI_STATUS_OK) {
+        status = umi_data_server_commit(server);
+        if (status == UMI_STATUS_OK) { *outRevision = revision + 1U; return status; }
+    }
+    finish = umi_data_server_rollback(server);
+    return finish == UMI_STATUS_OK ? status : finish;
+}
+
+/* Named-configuration removal shares this field table with all profile readers
+ * and writers. Contributors adding a persisted field extend the table once; an
+ * unknown stored field is preserved by refusing the removal transaction. */
+typedef struct ProfileRemovalCheck {
+    const char *prefix;
+    int unknown;
+} ProfileRemovalCheck;
+static UmiStatus ProfileRemovalVisit(const char *key, const char *value, void *context)
+{
+    (void)value;
+    ProfileRemovalCheck *check = context;
+    size_t length = strlen(check->prefix);
+    if (strncmp(key, check->prefix, length) != 0 || (key[length] != '.' && key[length] != '\0'))
+        return UMI_STATUS_OK;
+    if (key[length] == '\0') { check->unknown = 1; return UMI_STATUS_OK; }
+    const char *field = key + length + 1U;
+    if (strcmp(field, "schema") == 0) return UMI_STATUS_OK;
+    for (size_t index = 0U; index < sizeof TEXT_FIELDS / sizeof TEXT_FIELDS[0]; ++index)
+        if (strcmp(field, TEXT_FIELDS[index].name) == 0) return UMI_STATUS_OK;
+    for (size_t index = 0U; index < sizeof NUMBER_FIELDS / sizeof NUMBER_FIELDS[0]; ++index)
+        if (strcmp(field, NUMBER_FIELDS[index]) == 0) return UMI_STATUS_OK;
+    check->unknown = 1;
+    return UMI_STATUS_OK;
+}
+static UmiStatus ProfileRemoveField(UmiDataServer *server, const char *prefix, const char *field)
+{
+    char key[192];
+    UmiStatus status = ProfileKey(prefix, field, key);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_data_server_delete(server, key);
+    return status == UMI_STATUS_NOT_FOUND ? UMI_STATUS_OK : status;
+}
+UmiStatus UmiBuildProfileStorageRemove(UmiDataServer *server, const char *prefix)
+{
+    if (server == NULL || prefix == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    ProfileRemovalCheck check = {prefix, 0};
+    UmiStatus status = umi_data_server_visit(server, ProfileRemovalVisit, &check);
+    if (status == UMI_STATUS_OK && check.unknown) status = UMI_STATUS_INVALID_STATE;
+    for (size_t index = 0U; status == UMI_STATUS_OK && index < sizeof TEXT_FIELDS / sizeof TEXT_FIELDS[0]; ++index)
+        status = ProfileRemoveField(server, prefix, TEXT_FIELDS[index].name);
+    for (size_t index = 0U; status == UMI_STATUS_OK && index < sizeof NUMBER_FIELDS / sizeof NUMBER_FIELDS[0]; ++index)
+        status = ProfileRemoveField(server, prefix, NUMBER_FIELDS[index]);
+    if (status == UMI_STATUS_OK) status = ProfileRemoveField(server, prefix, "schema");
+    return status;
 }

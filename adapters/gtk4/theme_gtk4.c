@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "theme_settings_gtk4.h"
 #include "gtk4_internal.h"
 
 #include <string.h>
@@ -680,8 +681,14 @@ UmiStatus umi_gtk4_apply_theme(UmiGtk4Adapter *adapter,
      * used.
      */
     if (settings != NULL) {
+        /* The shared settings helper chooses the current property at runtime.
+         * Retain the previous write for review; older GTK still uses it through
+         * the helper's fallback without warning on newer installations. */
+#if 0
         g_object_set(settings, "gtk-application-prefer-dark-theme",
                      prefer_dark != 0, NULL);
+#endif
+        umi_gtk4_settings_prefer_dark(settings, prefer_dark != 0);
     }
     return umi_gtk4_apply_editor_themes(adapter, workbench);
 }

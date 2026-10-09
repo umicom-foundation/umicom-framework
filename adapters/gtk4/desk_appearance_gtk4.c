@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "theme_settings_gtk4.h"
 #include "umicom/ui/gtk4/desk_appearance.h"
 
 #include <string.h>
@@ -150,11 +151,17 @@ UmiStatus umi_gtk4_desk_apply_appearance(
         profile->mode == UMI_UI_THEME_MODE_HIGH_CONTRAST;
     settings = gtk_settings_get_for_display(display);
     if (settings != NULL) {
+        /* The shared settings helper chooses the current property at runtime.
+         * Retain the previous write for review; older GTK still uses it through
+         * the helper's fallback without warning on newer installations. */
+#if 0
         g_object_set(
             settings,
             "gtk-application-prefer-dark-theme",
             prefer_dark != 0,
             NULL);
+#endif
+        umi_gtk4_settings_prefer_dark(settings, prefer_dark != 0);
     }
     return UMI_STATUS_OK;
 }

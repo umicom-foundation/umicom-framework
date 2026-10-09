@@ -5,6 +5,7 @@
  * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
+#include "umicom/build/tool_location.h"
 #include "umicom/build/cpack_provider.h"
 #include "umicom/platform/filesystem.h"
 
@@ -22,7 +23,14 @@ static UmiStatus CreatePackageCommand(const UmiBuildProfile *profile,
         status = umi_fs_join(output, sizeof(output), profile->build_directory, "packages");
     if (status != UMI_STATUS_OK) return status;
     UmiBuildCommand command;
+/* An explicit project tool folder selects this program directly. The original inherited-lookup call remains for review; empty tool folders preserve that behaviour. The previous implementation is retained for engineering review. */
+#if 0
     umi_build_command_init(&command, "cpack");
+#endif
+    char tool[UMI_BUILD_PATH_CAPACITY];
+    UmiStatus tool_status = UmiBuildToolProgram(profile, "cpack", tool, sizeof tool);
+    if (tool_status != UMI_STATUS_OK) return tool_status;
+    umi_build_command_init(&command, tool);
     const char *arguments[] = {"--config", config, "-G", "ZIP", "-C",
         profile->configuration, "-B", output, "-D", "CPACK_PACKAGE_CHECKSUM=SHA256"};
     for (size_t index = 0U; index < sizeof(arguments) / sizeof(arguments[0]); ++index)

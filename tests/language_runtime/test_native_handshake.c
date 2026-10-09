@@ -14,6 +14,7 @@
 #include "umicom/language_runtime/server_probe.h"
 #include "umicom/platform/filesystem.h"
 #include "umicom/platform/clock.h"
+#include "umicom/platform/process_search_path.h"
 
 static int ProgramMain(int argc, char **argv)
 {
@@ -34,6 +35,53 @@ static int ProgramMain(int argc, char **argv)
     strcpy(profile.arguments, "lsp");
     profile.enabled = 1;
 
+    /* These cases exercise the real child transport while keeping every selected
+     * path and cancellation token owned by this call. No language tool is installed. */
+    if (strncmp(mode, "tools-", 6U) == 0)
+    {
+        char toolFolder[UMI_PATH_CAPACITY];
+        CHECK(umi_path_parent(argv[2], toolFolder, sizeof toolFolder) == UMI_STATUS_OK);
+        const char *selected = toolFolder;
+        UmiCancellationToken *cancel = NULL;
+        UmiLanguageRuntimeProbeResult report;
+        char *before = NULL, *after = NULL;
+        CHECK(umi_cancellation_token_create(&cancel) == UMI_STATUS_OK);
+        CHECK(UmiProcessSearchPathRead(&before) == UMI_STATUS_OK);
+        UmiStatus expected = UMI_STATUS_OK;
+        if (strcmp(mode, "tools-name") == 0)
+            strcpy(profile.executable, "umicom-language-process-fixture");
+        else if (strcmp(mode, "tools-invalid") == 0)
+        {
+            selected = "relative/tools";
+            expected = UMI_STATUS_INVALID_ARGUMENT;
+        }
+        else if (strcmp(mode, "tools-cancel") == 0)
+        {
+            umi_cancellation_token_request(cancel);
+            expected = UMI_STATUS_CANCELLED;
+        }
+        else if (strcmp(mode, "tools-missing") == 0)
+        {
+            selected = directory;
+            strcpy(profile.executable, "missing-language-fixture");
+            expected = UMI_STATUS_IO_ERROR;
+        }
+        else if (strcmp(mode, "tools-absolute") != 0) return 2;
+        CHECK(UmiLanguageRuntimeProbeWithToolDirectory(&profile, "file:///project", directory,
+            selected, 2000U, cancel, &report) == expected);
+        CHECK(report.initializationStatus == expected);
+        CHECK(report.launched == (expected == UMI_STATUS_OK));
+        CHECK(report.initialized == (expected == UMI_STATUS_OK));
+        CHECK(report.shutdownStatus == UMI_STATUS_OK);
+        CHECK(UmiProcessSearchPathRead(&after) == UMI_STATUS_OK);
+        CHECK(strcmp(before, after) == 0);
+        UmiProcessSearchPathFree(before);
+        UmiProcessSearchPathFree(after);
+        umi_cancellation_token_destroy(cancel);
+        umi_language_runtime_server_manager_destroy(manager);
+        umi_language_service_destroy(language);
+        return 0;
+    }
     if (strncmp(mode, "probe", 5U) == 0)
     {
         UmiLanguageRuntimeProbeResult report;

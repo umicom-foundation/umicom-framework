@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "umicom/platform/process.h"
+#include "umicom/platform/process_search_path.h"
 
 /* Migration: the previous provider mutated live registries while parsing and
  * consumed only the fixed process tail. Its public entry points remain below.

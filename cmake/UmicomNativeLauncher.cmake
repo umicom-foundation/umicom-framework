@@ -23,6 +23,8 @@ else()
         target_sources(umicom_native_launcher PRIVATE "${_umi_native_root}/src/native_launcher/digest_windows.c")
     endif()
 endif()
+# Digest arithmetic is shared by Base; keep the native compatibility symbols here.
+target_link_libraries(umicom_native_launcher PUBLIC Umicom::base)
 add_library(Umicom::native_launcher ALIAS umicom_native_launcher)
 set_target_properties(umicom_native_launcher PROPERTIES EXPORT_NAME native_launcher
     C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)

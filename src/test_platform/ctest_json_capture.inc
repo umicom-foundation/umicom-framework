@@ -111,7 +111,15 @@ UmiStatus UmiTestPlatformCtestDiscoverConfigured(
     arguments[2] = "--show-only=json-v1"; arguments[3] = "-C"; arguments[4] = selected.configuration;
     request.program = "ctest"; request.arguments = arguments; request.argument_count = 5U;
     request.capture_stdout = 1; request.capture_stderr = 1; request.window_mode = UMI_PROCESS_WINDOW_HIDDEN;
+/* JSON discovery uses the same selected CTest installation as execution. Capturing raw JSON and transactional catalogue publication remain unchanged. The previous implementation is retained for engineering review. */
+#if 0
     status = UmiProcessExecuteStreamed(&request, UmiCtestCaptureChunk, &capture, &result);
+#endif
+    status = execution != NULL && execution->tool_directory != NULL &&
+        execution->tool_directory[0] != '\0'
+        ? UmiProcessExecuteTool(&request,execution->tool_directory,
+            UMI_PROCESS_LIFETIME_CHILD,UmiCtestCaptureChunk,&capture,&result)
+        : UmiProcessExecuteStreamed(&request,UmiCtestCaptureChunk,&capture,&result);
     if (result.cancelled || umi_cancellation_token_is_requested(request.cancellation)) status = UMI_STATUS_CANCELLED;
     else if (result.timed_out) status = UMI_STATUS_TIMEOUT;
     else if (status == UMI_STATUS_OK && !result.launched) status = UMI_STATUS_UNAVAILABLE;

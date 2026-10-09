@@ -1,0 +1,20 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Break at a function name</title><style>body{font:16px/1.6 system-ui;max-width:900px;margin:40px auto;padding:0 24px}code{overflow-wrap:anywhere}li{margin-bottom:12px}</style></head><body><h1>Break at a function name</h1>
+<p>A function breakpoint asks the debugger to pause when execution reaches a named function. It is useful when you know the function you want to inspect but do not yet know its source line. The adapter must advertise support and have enough symbols to resolve the name.</p>
+<h2>Edit the current session</h2><ol>
+<li>Open a trusted project and start its native debugger or attach to an authorised running application. The function editor works with an active session.</li>
+<li>In the Debug surface, expand <strong>Function breakpoints</strong> and choose <strong>Refresh function breakpoints</strong>.</li>
+<li>Choose <strong>Add function</strong> and enter a name such as <code>main</code>. Keep <strong>Enabled</strong> checked for a breakpoint you want installed.</li>
+<li>If the adapter supports them, enter an optional condition or hit condition. Conditions are debugger expressions; their syntax and effect depend on the debugger. They may evaluate code in the target, so use expressions you understand.</li>
+<li>Choose <strong>Apply function breakpoints</strong>. Studio sends the complete enabled set. Adding, editing, disabling or removing a row alone does not change the debugger.</li>
+<li>Read each row's <strong>Last Apply</strong> result. An accepted response can still contain an unverified breakpoint, for example when symbols are unavailable. The adapter's message helps explain that result.</li>
+</ol>
+<p>Clear all rows and Apply to remove the session's function breakpoints. Disabling a row retains it in the local draft while omitting it from the next request. Refresh discards unapplied edits and rereads the Framework-owned draft; it does not ask the adapter to enumerate breakpoints.</p>
+<h2>Session and failure behaviour</h2>
+<p>Function choices belong to the active connection. A new session starts with an empty, unacknowledged draft and does not automatically replay the preceding process's names or conditions. Reading that initial draft sends no clearing request.</p>
+<p>Applying an old session or revision is refused before a request is sent. After a timeout or malformed response, the last requested draft remains visible with acknowledgement unavailable. The target may have received the change; retry only after reviewing its state. No automatic retry, resume or termination is performed by this editor.</p>
+<p>The verification shown is evidence from the most recent Apply response, not a live guarantee about later module loading or breakpoint events. Editing a field retires its previous visible verification so that an old reply cannot appear to confirm a new name.</p>
+<h2>Use from another application</h2>
+<p><code>UmiDebugRuntimeFunctionBreakpointsRead</code> copies the current snapshot. Edit its <code>draft</code> and call <code>UmiDebugRuntimeFunctionBreakpointsApply</code> on the platform's owner thread. The owner checks the session ID, revision, capability flags, complete field bounds and exact reply count. The GTK editor accepts Read and Apply callbacks so another frontend can supply its own workspace authority.</p>
+<p>A draft holds at most 32 unique names. Text fields are bounded UTF-8 without embedded NUL or control characters. Only enabled entries are sent. Unsupported conditions are refused before transmission. Choices are kept in memory, and this editor does not provide cross-session storage or configuration before a session starts.</p>
+<p>The request follows <a href="https://microsoft.github.io/debug-adapter-protocol/specification">the Debug Adapter Protocol</a>: <code>setFunctionBreakpoints</code> replaces the complete function set, while capability flags determine support for functions and their optional conditions.</p>
+</body></html>

@@ -14,6 +14,9 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal_ui/controller.h"
+#include "umicom/terminal_ui/execution.h"
+#include "umicom/platform/path.h"
+#include "umicom/platform/filesystem.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,7 +37,14 @@ struct UmiTerminalController {
     UmiTerminalSplitModel *splits;
     UmiTerminalEventLog *events;
     uint64_t revision;
+    /* Background publication belongs to this model, never to a widget callback. */
+    int background_armed;
+    UmiTerminalControllerExecution execution;
 };
+static UmiStatus TerminalControllerStartJob(UmiTerminalController *controller,
+    const char *command, uint32_t timeout_ms);
+static void TerminalControllerDrainJob(UmiTerminalController *controller);
+
 
 /* Provide the now ns operation used by this module and its client applications. */
 static uint64_t now_ns(const UmiTerminalController *controller)
@@ -249,6 +259,8 @@ UmiStatus umi_terminal_controller_create(
  * Release or reset state held by terminal controller so the same storage can be reused
  * safely.
  */
+/* Controller teardown now cancels and retires its own command before releasing history and borrowed services. The earlier teardown is retained for review. The previous implementation is retained for engineering review. */
+#if 0
 void umi_terminal_controller_destroy(UmiTerminalController *controller)
 {
     /*
@@ -256,6 +268,22 @@ void umi_terminal_controller_destroy(UmiTerminalController *controller)
      * used.
      */
     if (controller == NULL) return;
+    umi_terminal_event_log_destroy(controller->events);
+    umi_terminal_split_model_destroy(controller->splits);
+    umi_terminal_tab_model_destroy(controller->tabs);
+    umi_terminal_history_destroy(controller->history);
+    umi_terminal_profile_registry_destroy(controller->profiles);
+    free(controller);
+}
+#endif
+void umi_terminal_controller_destroy(UmiTerminalController *controller)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (controller == NULL) return;
+    TerminalControllerDrainJob(controller);
     umi_terminal_event_log_destroy(controller->events);
     umi_terminal_split_model_destroy(controller->splits);
     umi_terminal_tab_model_destroy(controller->tabs);
@@ -326,6 +354,8 @@ UmiStatus umi_terminal_controller_open(UmiTerminalController *controller,
  * Provide the terminal controller close operation used by this module and its client
  * applications.
  */
+/* A running session must remain reachable until its command finishes. The previous tab-removal order is retained for review. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_terminal_controller_close(UmiTerminalController *controller,
                                         const char *session_id)
 {
@@ -337,6 +367,63 @@ UmiStatus umi_terminal_controller_close(UmiTerminalController *controller,
      * used.
      */
     if (controller == NULL || session_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (umi_terminal_tab_model_count(controller->tabs) <= 1U) {
+        return UMI_STATUS_BUSY;
+    }
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < umi_terminal_split_model_count(controller->splits);
+         ++index) {
+        UmiTerminalSplitSnapshot node;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (umi_terminal_split_model_at(controller->splits, index, &node) ==
+                UMI_STATUS_OK && node.leaf &&
+            strcmp(node.session_id, session_id) == 0) {
+            split_leaf_id = node.node_id;
+            break;
+        }
+    }
+    status = umi_terminal_tab_model_remove(controller->tabs, session_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) status = umi_terminal_manager_close(controller->manager,
+                                                                     session_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK && split_leaf_id != 0U &&
+        umi_terminal_split_model_count(controller->splits) > 1U) {
+        status = umi_terminal_split_model_close(controller->splits,
+                                                split_leaf_id);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status == UMI_STATUS_OK) {
+            emit_event(controller, UMI_TERMINAL_EVENT_LAYOUT_CHANGED,
+                       session_id, "Terminal split closed", 0);
+        }
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) emit_event(controller, UMI_TERMINAL_EVENT_SESSION_CLOSED,
+                                            session_id, "Terminal session closed", 0);
+    return status;
+}
+#endif
+UmiStatus umi_terminal_controller_close(UmiTerminalController *controller,
+                                        const char *session_id)
+{
+    UmiStatus status;
+    uint64_t split_leaf_id = 0U;
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (controller == NULL || session_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (controller->execution.execution.pending &&
+        strcmp(controller->execution.session_id, session_id) == 0) return UMI_STATUS_BUSY;
+    /* Refuse before mutating tabs or split models. Stop and Poll retire the job. */
+    UmiTerminalSession *closing = umi_terminal_manager_find(controller->manager, session_id);
+    UmiTerminalSessionSnapshot current;
+    if (closing == NULL) return UMI_STATUS_NOT_FOUND;
+    if (umi_terminal_session_snapshot(closing, &current) != UMI_STATUS_OK)
+        return UMI_STATUS_INVALID_STATE;
+    if (current.state == UMI_TERMINAL_RUNNING) return UMI_STATUS_BUSY;
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (umi_terminal_tab_model_count(controller->tabs) <= 1U) {
         return UMI_STATUS_BUSY;
@@ -453,6 +540,8 @@ UmiTerminalSession *umi_terminal_controller_active_session(
  * Perform terminal controller through the module contract so client applications do not
  * duplicate its policy.
  */
+/* The shared controller now supports an explicit background dispatch while preserving synchronous CLI behavior. The previous implementation remains for engineering review. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_terminal_controller_execute(UmiTerminalController *controller,
                                           const char *command,
                                           uint32_t timeout_ms,
@@ -473,6 +562,96 @@ UmiStatus umi_terminal_controller_execute(UmiTerminalController *controller,
      */
     if (controller == NULL || command == NULL || command[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    session = umi_terminal_controller_active_session(controller);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (session == NULL) return UMI_STATUS_NOT_FOUND;
+    (void)umi_terminal_session_snapshot(session, &snapshot);
+    status = umi_terminal_tab_model_find(controller->tabs,
+                                         snapshot.session_id, &tab);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = umi_terminal_profile_registry_find(
+            controller->profiles, tab.profile_id, &profile);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = prepare_profile_command(&profile, command, &prepared);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    emit_event(controller, UMI_TERMINAL_EVENT_COMMAND_STARTED,
+               snapshot.session_id, command, 0);
+    publish_output(controller, "Terminal", UMI_OUTPUT_STREAM_SYSTEM, command);
+    status = umi_terminal_session_execute_prepared(
+        session, &prepared, command, timeout_ms, cancellation, &exit_code);
+    (void)snprintf(history.session_id, sizeof(history.session_id), "%s",
+                   snapshot.session_id);
+    (void)snprintf(history.working_directory, sizeof(history.working_directory),
+                   "%s", snapshot.working_directory);
+    (void)snprintf(history.command, sizeof(history.command), "%s", command);
+    history.timestamp_ns = now_ns(controller);
+    history.exit_code = exit_code;
+    history.completed = 1;
+    (void)umi_terminal_history_append(controller->history, &history);
+    emit_event(controller, UMI_TERMINAL_EVENT_COMMAND_FINISHED,
+               snapshot.session_id, command, (int)status);
+    {
+        UmiTerminalTranscript *transcript = umi_terminal_session_transcript(session);
+        size_t count = umi_terminal_transcript_count(transcript);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (count > 0U) {
+            UmiTerminalTranscriptLine line;
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+            if (umi_terminal_transcript_at(transcript, count - 1U, &line) == UMI_STATUS_OK) {
+                publish_output(controller, "Terminal",
+                    line.stream == UMI_TERMINAL_STREAM_ERROR
+                        ? UMI_OUTPUT_STREAM_ERROR : UMI_OUTPUT_STREAM_STANDARD,
+                    line.text);
+            }
+        }
+    }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (out_exit_code != NULL) *out_exit_code = exit_code;
+    return status;
+}
+#endif
+UmiStatus umi_terminal_controller_execute(UmiTerminalController *controller,
+                                          const char *command,
+                                          uint32_t timeout_ms,
+                                          UmiCancellationToken *cancellation,
+                                          int *out_exit_code)
+{
+    UmiTerminalSession *session;
+    UmiTerminalSessionSnapshot snapshot;
+    UmiTerminalTabSnapshot tab;
+    UmiTerminalProfile profile;
+    UmiTerminalCommand prepared;
+    UmiTerminalHistoryEntry history = {0};
+    UmiStatus status;
+    int exit_code = -1;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (controller == NULL || command == NULL || command[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* GUI dispatch is armed only after its existing command-policy checks.
+     * CLI callers keep synchronous semantics unless they explicitly opt in. */
+    int background = controller->background_armed;
+    controller->background_armed = 0;
+    if (controller->execution.execution.pending) return UMI_STATUS_BUSY;
+    if (background) {
+        if (cancellation != NULL) return UMI_STATUS_INVALID_ARGUMENT;
+        if (out_exit_code != NULL) *out_exit_code = -1;
+        return TerminalControllerStartJob(controller, command, timeout_ms);
     }
     session = umi_terminal_controller_active_session(controller);
     /*
@@ -820,3 +999,6 @@ UmiStatus umi_terminal_controller_cancel_operation(
     }
     return status;
 }
+
+/* The background workflow shares the controller ownership and event helpers. */
+#include "execution.inc"

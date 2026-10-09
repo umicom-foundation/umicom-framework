@@ -22,7 +22,15 @@ int main(int argc,char **argv)
     CHECK(s->holdExistedBefore!=newHold && s->holdAfter.amount.minor_units==(newHold?400:2000));
     CHECK(s->holdAfter.capturedMinor==(newHold?0:500));
     CHECK(s->holdAfter.state==(newHold?UMI_BANK_HOLD_ACTIVE:strcmp(name,"capture")==0?UMI_BANK_HOLD_CAPTURED:UMI_BANK_HOLD_REFUNDED));
+/* The previous test expected a successful write from a zero-capacity sizing query. The established review contract returns CAPACITY_EXCEEDED and the required size; retain the earlier assertion for review. */
+#if 0
     size_t required=0;OK(UmiBankReviewDescribe(review,NULL,0,&required));char *text=malloc(required);CHECK(text!=NULL);
+#endif
+    /* A sizing query returns the required capacity before any text is written.
+     * Honour the existing review API contract, then inspect the full explanation. */
+    size_t required=0;
+    CHECK(UmiBankReviewDescribe(review,NULL,0,&required)==UMI_STATUS_CAPACITY_EXCEEDED && required>1U);
+    char *text=malloc(required);CHECK(text!=NULL);
     OK(UmiBankReviewDescribe(review,text,required,NULL));CHECK(strstr(text,"Original reservation:")!=NULL && strstr(text,newHold?"GBP 4.00":"GBP 20.00")!=NULL);
     if(!newHold)CHECK(strstr(text,"Captured amount: GBP 5.00")!=NULL);
     free(text);free(s);UmiBankReviewDestroy(review);UmiBankOperationsDestroy(f.bank);return 0;

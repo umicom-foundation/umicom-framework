@@ -40,6 +40,16 @@ extern "C"
  * Retained child controls are detached when their owning widget is disposed. */
     void UmiCreativeAuditionGtkClear(GtkWidget *widget);
     UmiStatus UmiCreativeAuditionGtkRead(GtkWidget *widget, UmiCreativeAuditionState *out);
+/**
+ * @brief Check playback components without constructing a media player.
+ * @param message Writable diagnostic buffer; always terminated when capacity is nonzero.
+ * @param capacity Buffer capacity in bytes, including the terminator.
+ * @return OK when required GStreamer factories exist, UNAVAILABLE otherwise.
+ * @details Call on the GTK owner thread. This may initialize GStreamer and read
+ * its plugin registry. It does not open a device or prove that playback works.
+ * A missing backend must not terminate the application's editing workflow.
+ */
+UmiStatus UmiCreativeAuditionGtkBackendStatus(char *message, size_t capacity);
 #ifdef __cplusplus
 }
 #endif

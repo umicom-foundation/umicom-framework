@@ -105,7 +105,11 @@ int main(int argc, char **argv)
                                  "1.0",
                                  "1e2",
                                  "true",
+/* Exercise wrong JSON value kinds as well as malformed integer spellings. The earlier final array entry is retained for review. */
+#if 0
                                  "null"};
+#endif
+                                 "null", "\"1\"", "{}", "[]"};
         for (size_t i = 0U; i < sizeof(numbers) / sizeof(numbers[0]); ++i)
         {
             CHECK(Parse(numbers[i], &tree) == UMI_STATUS_OK);
@@ -127,9 +131,17 @@ int main(int argc, char **argv)
     }
     else if (strcmp(mode, "booleans") == 0)
     {
-        CHECK(Parse("[true,false,1,null]", &tree) == UMI_STATUS_OK);
+        /* Boolean protocol readers reject strings and containers without modifying their output. Retain the earlier shorter input for review. */
+#if 0
+CHECK(Parse("[true,false,1,null]", &tree) == UMI_STATUS_OK);
+#endif
+CHECK(Parse("[true,false,1,null,\"true\",{},[]]", &tree) == UMI_STATUS_OK);
         int node = UmiJsonTreeFirst(tree, 0);
-        for (size_t i = 0U; i < 4U; ++i, node = UmiJsonTreeNext(tree, node))
+        /* Inspect all seven boolean inputs, including the added wrong-type values. Retain the former bound for review. */
+#if 0
+for (size_t i = 0U; i < 4U; ++i, node = UmiJsonTreeNext(tree, node))
+#endif
+for (size_t i = 0U; i < 7U; ++i, node = UmiJsonTreeNext(tree, node))
         {
             int value = 42;
             UmiStatus status = UmiJsonTreeBoolean(tree, node, &value);

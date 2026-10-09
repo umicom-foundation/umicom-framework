@@ -13,6 +13,7 @@ struct UmiCtestJob {
     UmiMutex *mutex;
     uint64_t owner_thread;
     UmiCtestJobRequest *requests;
+    char toolDirectory[UMI_CTEST_JOB_PATH_CAPACITY]; /* Owned before dispatch. */
     UmiTestResult *results;
     size_t count;
     uint32_t repeats;
@@ -159,6 +160,8 @@ static UmiStatus CtestJobRun(UmiTaskContext *context, void *data)
     return firstError;
 }
 #endif
+/* Queued tests now retain the selected CTest folder rather than consult changing GUI settings on the worker. The old worker remains for review. The previous implementation is retained for engineering review. */
+#if 0
 static UmiStatus CtestJobRun(UmiTaskContext *context, void *data)
 {
     UmiCtestJob *job = data;
@@ -213,8 +216,66 @@ static UmiStatus CtestJobRun(UmiTaskContext *context, void *data)
     }
     return firstError;
 }
+#endif
+static UmiStatus CtestJobRun(UmiTaskContext *context, void *data)
+{
+    UmiCtestJob *job = data;
+    UmiStatus firstError = UMI_STATUS_OK;
+    size_t completed = 0U;
+    for (uint32_t pass = 0U; pass < job->repeats; ++pass) {
+        for (size_t index = 0U; index < job->count; ++index) {
+            const UmiCtestJobRequest *request = &job->requests[index];
+            if (umi_task_context_is_cancelled(context)) return UMI_STATUS_CANCELLED;
+            (void)umi_mutex_lock(job->mutex);
+            memcpy(job->progress.active_test_id, request->test_id, sizeof(request->test_id));
+            memcpy(job->progress.active_name, request->name, sizeof(request->name));
+            job->progress.active_attempt = pass + 1U;
+            CtestOutputBegin(job, request, pass + 1U);
+            (void)umi_mutex_unlock(job->mutex);
+            UmiTestResult result = {0};
+            memcpy(result.test_id, request->test_id, sizeof(result.test_id));
+            memcpy(result.name, request->name, sizeof(result.name));
+            result.state = UMI_TEST_STATE_NOT_RUN;
+            result.exit_code = -1;
+            if (!request->enabled) {
+                result.state = UMI_TEST_STATE_SKIPPED;
+                (void)snprintf(result.output, sizeof(result.output),
+                    "Disabled in the selected catalogue; no test process was launched.");
+                CtestOutputObserve(result.output, strlen(result.output), job);
+            } else {
+                UmiCtestRunOptions options = {0};
+                options.configuration = request->configuration;
+                options.tool_directory = job->toolDirectory;
+                options.test_id = request->test_id;
+                options.timeout_ms = request->timeout_ms;
+                options.cancellation = UmiTaskContextCancellation(context);
+                result.status = UmiCtestRunObserved(request->build_directory,
+                    request->name, &options, CtestOutputObserve, job, &result);
+            }
+            /* Do not accept a passing outcome when process/report validation
+             * failed, even if a future provider change supplies inconsistent data. */
+            if (result.status != UMI_STATUS_OK && result.state == UMI_TEST_STATE_PASSED)
+                result.state = UMI_TEST_STATE_FAILED;
+            CtestJobRecord(job, &result);
+            ++completed;
+            (void)umi_task_context_report(context,
+                (unsigned)((completed * 100U) / job->progress.planned), request->name);
+            if (firstError == UMI_STATUS_OK && result.status != UMI_STATUS_OK)
+                firstError = result.status;
+            if (result.state == UMI_TEST_STATE_CANCELLED ||
+                umi_task_context_is_cancelled(context)) return UMI_STATUS_CANCELLED;
+            if (job->stop_on_failure &&
+                (result.status != UMI_STATUS_OK ||
+                 (result.state != UMI_TEST_STATE_PASSED && result.state != UMI_TEST_STATE_SKIPPED)))
+                return firstError != UMI_STATUS_OK ? firstError : UMI_STATUS_INVALID_STATE;
+        }
+    }
+    return firstError;
+}
 
 /* Fully bounded validation precedes allocation and command execution. */
+/* The compatibility entry point delegates to the tool-aware owner. All requests and the tool folder are copied before dispatch, preserving lifetime and cancellation semantics. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus UmiCtestJobCreate(const UmiCtestJobRequest *requests, size_t count,
     const UmiCtestJobOptions *options, UmiCtestJob **outJob)
 {
@@ -245,6 +306,76 @@ UmiStatus UmiCtestJobCreate(const UmiCtestJobRequest *requests, size_t count,
     }
     UmiCtestJob *job = calloc(1U, sizeof(*job));
     if (job == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    job->owner_thread = umi_thread_current_id();
+    job->count = count;
+    job->repeats = repeats;
+    job->stop_on_failure = options != NULL && options->stop_on_failure != 0;
+    job->progress.planned = count * (size_t)repeats;
+    job->requests = calloc(count, sizeof(*job->requests));
+    job->results = calloc(job->progress.planned, sizeof(*job->results));
+    UmiStatus status = job->requests != NULL && job->results != NULL
+        ? umi_mutex_create(&job->mutex) : UMI_STATUS_OUT_OF_MEMORY;
+    if (status == UMI_STATUS_OK) {
+        memcpy(job->requests, requests, count * sizeof(*requests));
+        UmiTaskConfig config = {0};
+        config.label = "CTest selection";
+        config.function = CtestJobRun;
+        config.user_data = job;
+        status = umi_task_create(&config, &job->task);
+    }
+    if (status != UMI_STATUS_OK) {
+        umi_mutex_destroy(job->mutex);
+        free(job->requests); free(job->results); free(job);
+        return status;
+    }
+    *outJob = job;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus UmiCtestJobCreate(const UmiCtestJobRequest *requests, size_t count,
+    const UmiCtestJobOptions *options, UmiCtestJob **outJob)
+{
+    return UmiCtestJobCreateWithToolDirectory(requests,count,options,NULL,outJob);
+}
+
+UmiStatus UmiCtestJobCreateWithToolDirectory(const UmiCtestJobRequest *requests, size_t count,
+    const UmiCtestJobOptions *options, const char *directory, UmiCtestJob **outJob)
+{
+    if (outJob == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outJob = NULL;
+    if (directory != NULL && directory[0] != '\0') {
+        UmiStatus checked = UmiProcessSearchDirectoryValidate(directory);
+        if (checked != UMI_STATUS_OK) return checked;
+        if (strlen(directory) >= UMI_CTEST_JOB_PATH_CAPACITY)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    if (requests == NULL || count == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    uint32_t repeats = options != NULL && options->repeat_count != 0U
+        ? options->repeat_count : 1U;
+    if (count > UMI_CTEST_JOB_MAX_ATTEMPTS ||
+        repeats > UMI_CTEST_JOB_MAX_ATTEMPTS / count)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    for (size_t index = 0U; index < count; ++index) {
+        const UmiCtestJobRequest *request = &requests[index];
+        if (memchr(request->test_id, '\0', sizeof(request->test_id)) == NULL ||
+            memchr(request->name, '\0', sizeof(request->name)) == NULL ||
+            memchr(request->build_directory, '\0', sizeof(request->build_directory)) == NULL ||
+            memchr(request->configuration, '\0', sizeof(request->configuration)) == NULL)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        if (request->test_id[0] == '\0' || request->name[0] == '\0' ||
+            request->build_directory[0] == '\0' ||
+            (request->enabled != 0 && request->enabled != 1)) return UMI_STATUS_INVALID_ARGUMENT;
+        char pattern[UMI_CTEST_EXACT_PATTERN_CAPACITY];
+        UmiStatus status = UmiCtestEscapeName(request->name, pattern, sizeof(pattern));
+        if (status != UMI_STATUS_OK) return status;
+        for (size_t prior = 0U; prior < index; ++prior)
+            if (strcmp(requests[prior].test_id, request->test_id) == 0)
+                return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    UmiCtestJob *job = calloc(1U, sizeof(*job));
+    if (job == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    if (directory != NULL)
+        memcpy(job->toolDirectory,directory,strlen(directory)+1U);
     job->owner_thread = umi_thread_current_id();
     job->count = count;
     job->repeats = repeats;

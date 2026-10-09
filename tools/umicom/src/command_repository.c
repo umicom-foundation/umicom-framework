@@ -588,6 +588,9 @@ int umi_cli_command_repo(
         return 0;
     }
     /* Use the stable identifier comparison to choose the matching record or policy. */
+    /* Read-only review requires only Git, not compiler or SDK discovery. */
+    if (strcmp(argv[0], "review") == 0)
+        return umi_cli_command_repository_review(argc - 1, argv + 1);
     if (strcmp(argv[0], "lock") == 0) {
         return umi_cli_command_repository_lock(
             context, argc - 1, argv + 1);

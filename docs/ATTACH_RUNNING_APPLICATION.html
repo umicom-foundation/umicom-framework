@@ -1,0 +1,27 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Attach to a running application</title><style>body{font:16px/1.6 system-ui;max-width:900px;margin:40px auto;padding:0 24px}code{overflow-wrap:anywhere}li{margin-bottom:12px}</style></head><body><h1>Attach to a running application</h1>
+<p>Attachment lets a debugger inspect an application that is already running. It does not compile the project or start a second copy. The selected debugger may pause the application while it connects.</p>
+<h2>Before you begin</h2>
+<p>Use a local GDB installation with DAP support or <code>lldb-dap</code>. DAP, the Debug Adapter Protocol, carries requests between Studio and the debugger. Debug only a process you are authorised to inspect. This workflow does not request administrator privileges or change operating-system debugging permissions.</p>
+<h2>Connect from Studio</h2><ol>
+<li>Open the project's actual folder and mark it trusted only if you trust its tools and source. Select the build profile for that same folder.</li>
+<li>Open the Debug surface. Choose GDB or LLDB, enter the absolute adapter executable path if needed, and choose <strong>Use adapter</strong>.</li>
+<li>Find the running application's process ID using your operating system's process viewer. Recheck its name and owner before proceeding: process IDs can be reused after a process exits.</li>
+<li>Expand <strong>Attach to a running application</strong>. Enter the decimal process ID. Optionally enter the absolute path to the matching executable containing debugging information.</li>
+<li>Choose <strong>Attach to process</strong>. Studio sends an explicit attach request, configures the enabled breakpoints, and completes the adapter's configuration sequence. It does not save editor drafts, run a build, apply launch arguments, or change the target's environment.</li>
+<li>Use the existing Debug controls to inspect stopped threads, frames and variables when the adapter provides them. Choose <strong>Stop</strong> to request detachment. Closing the debugger owner also requests detachment rather than termination.</li>
+</ol>
+<h2>Understand the result</h2>
+<p>The connection sequence waits synchronously for bounded adapter replies; the interface can pause briefly during negotiation. Each phase has its own wait budget. A timeout or disconnected adapter is not evidence that the target resumed. Inspect the target before deciding whether to make another explicit attachment request. Studio does not automatically retry an uncertain attachment.</p>
+<p>This workflow accepts a local numeric process ID, not a process name, remote debug endpoint, debugger command script, or request to wait for a future process. It refuses the current Studio process to avoid stopping the thread needed to communicate with the adapter. A successful request still depends on the installed debugger, matching symbols, target architecture and operating-system permissions.</p>
+<h2>Use the shared Framework operation</h2>
+<p><code>UmiDebugNativeAttachPlanCreate</code> validates and copies the options before any process starts. <code>UmiDebugRuntimePlatformAttachNative</code> performs the native connection. Keep the platform on its owning thread and authorise both the adapter executable and target before calling it. For an attached session, pass <code>0</code> as <code>terminate_debuggee</code> to the explicit stop operation. Destroying the platform selects detachment for an attached session.</p>
+<p>The options borrow their strings for the duration of the call. The prepared plan owns its copies. A failed plan leaves the caller's output unchanged. The selected working directory must exist and be absolute; optional executable and symbols paths must also be absolute existing files. No working-directory search is used for an explicitly supplied adapter.</p>
+<h2>If attachment fails</h2><ol>
+<li>Check that the process is still running and that its ID has not changed.</li>
+<li>Check the selected adapter path and support for DAP. GDB and LLDB are separate tools; choosing one does not install it.</li>
+<li>Check that the operating system permits your account to debug the target. Studio does not bypass a permission refusal.</li>
+<li>If symbols are missing, select the executable built for that exact running application, with debugging information enabled.</li>
+<li>After a timeout, check the application's current state before retrying. A detach request without an acknowledgement cannot establish whether the application is running.</li>
+</ol>
+<p>The adapter option mapping follows the <a href="https://sourceware.org/gdb/current/onlinedocs/gdb.html/Debugger-Adapter-Protocol.html">GDB DAP documentation</a> and <a href="https://lldb.llvm.org/use/lldbdap.html">LLDB DAP documentation</a>. The shared layer sends a numeric <code>pid</code> and an optional <code>program</code>; it does not claim support for every adapter-specific attachment option.</p>
+</body></html>

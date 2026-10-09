@@ -24,7 +24,7 @@ if(BUILD_TESTING AND TARGET Umicom::ui_gtk4)
     target_link_libraries(umicom-drawing-history-native-test PRIVATE Umicom::ui_gtk4)
     umicom_apply_warnings(umicom-drawing-history-native-test)
     umicom_apply_sanitizers(umicom-drawing-history-native-test)
-    foreach(case buttons key-y key-shift-z key-modifiers stale external instrument appearance-draft retained)
+    foreach(case compact-inspector buttons key-y key-shift-z key-modifiers stale external instrument appearance-draft retained)
         add_test(NAME "framework.drawing_history.native.${case}" COMMAND umicom-drawing-history-native-test "${case}")
         set_tests_properties("framework.drawing_history.native.${case}" PROPERTIES
             TIMEOUT 60 SKIP_RETURN_CODE 77 LABELS "framework;chart;gtk4;regression")

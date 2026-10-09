@@ -86,6 +86,8 @@ static UmiStatus comparison_load(UmiTestArchive *archive, ArchiveRecords *record
         return UMI_STATUS_OUT_OF_MEMORY;
     }
     UmiStatus status = UMI_STATUS_OK;
+    UmiTestSelectionHasher selection;
+    UmiTestSelectionBegin(&selection, &entry->plan);
     for (size_t i = 0; status == UMI_STATUS_OK && i < entry->plan.request_count; ++i)
     {
         if (comparison_cancelled(token))
@@ -94,7 +96,19 @@ static UmiStatus comparison_load(UmiTestArchive *archive, ArchiveRecords *record
             break;
         }
         status = request_read(archive, records, entry, i, &side[i].request);
+        if (status == UMI_STATUS_OK)
+            UmiTestSelectionAdd(&selection, &side[i].request);
         side[i].outcomes.planned = entry->plan.repeat_count;
+    }
+    /* Validate the saved fingerprint against persisted requests before sorting.
+     * This detects accidental row changes, not a malicious writer that can
+     * rewrite both the rows and their digest. Old archives have no digest. */
+    if (status == UMI_STATUS_OK && entry->selection_digest[0] != '\0')
+    {
+        char digest[UMI_SHA256_HEX_CAPACITY];
+        status = UmiTestSelectionFinish(&selection, digest);
+        if (status == UMI_STATUS_OK && strcmp(digest, entry->selection_digest) != 0)
+            status = UMI_STATUS_PARSE_ERROR;
     }
     UmiCtestJobSnapshot total = {0};
     for (size_t i = 0; status == UMI_STATUS_OK && i < entry->run.completed; ++i)
@@ -157,6 +171,11 @@ static UmiTestArchiveChange comparison_classify(const UmiTestArchiveComparison *
                                                 const ArchiveComparisonSide *b)
 {
     const UmiTestArchiveComparisonSummary *summary = &comparison->summary;
+    /* Different recorded build settings must not be labelled a source
+     * regression. Legacy missing evidence remains explicit in the summary. */
+    if (summary->identity_comparison == UMI_JOB_IDENTITY_DIFFERENT_SUBJECT ||
+        summary->identity_comparison == UMI_JOB_IDENTITY_DIFFERENT_CONFIGURATION)
+        return UMI_TEST_ARCHIVE_CONDITIONS_CHANGED;
     if (!summary->same_source_root ||
         summary->baseline.plan.repeat_count != summary->candidate.plan.repeat_count ||
         summary->baseline.plan.stop_on_failure != summary->candidate.plan.stop_on_failure ||
@@ -237,6 +256,15 @@ UmiStatus UmiTestArchiveCompare(UmiTestArchive *archive, uint64_t baseline_id, u
         comparison->summary.same_recorded_revision =
             before->source_revision[0] != '\0' &&
             strcmp(before->source_revision, after->source_revision) == 0;
+        comparison->summary.identity_comparison =
+            UmiJobIdentityCompare(&before->identity, &after->identity);
+        comparison->summary.selection_evidence_recorded =
+            records->entries[a].selection_digest[0] != '\0' &&
+            records->entries[b].selection_digest[0] != '\0';
+        comparison->summary.same_recorded_selection =
+            comparison->summary.selection_evidence_recorded &&
+            strcmp(records->entries[a].selection_digest,
+                   records->entries[b].selection_digest) == 0;
         size_t capacity = records->entries[a].plan.request_count + records->entries[b].plan.request_count;
         comparison->rows = calloc(capacity, sizeof(*comparison->rows));
         if (comparison->rows == NULL)

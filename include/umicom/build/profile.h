@@ -63,12 +63,35 @@ typedef struct UmiBuildProfile {
      * that root; an absolute path selects a separate data directory. Run and
      * native Debug share this setting rather than inheriting the IDE's cwd. */
     char run_working_directory[UMI_BUILD_PATH_CAPACITY];
+    /* Optional absolute folder containing the project's CMake/CTest/CPack and
+     * Ninja programs. The runner prepends it to PATH only in child processes,
+     * including Run, so compiler helpers and runtime libraries can be found.
+     * Empty retains inherited lookup. Append to preserve earlier member offsets;
+     * rebuild consumers when adopting this enlarged public value type. */
+    char tool_directory[UMI_BUILD_PATH_CAPACITY];
+    /* Reviewed -D definitions are passed as literal configure arguments, including
+     * after an explicit preset. Use them for SDK prefixes and project options.
+     * Existing dedicated profile fields remain authoritative. Append this field
+     * to retain earlier member offsets; consumers must rebuild the value type. */
+    char configure_definitions[UMI_ARGUMENT_TEXT_CAPACITY];
+    /* Explicit non-secret NAME=VALUE settings for Run and native Debug.
+     * The host, configure/build/test processes and terminal sessions keep their
+     * existing environment. These values are saved in project settings; use a
+     * secret provider, not this record, for passwords or API credentials. */
+    char run_environment[UMI_ARGUMENT_TEXT_CAPACITY];
 } UmiBuildProfile;
 
 /* Resolve the effective argument vector used by both Run and Debug. Each
  * argument must fit the build command's 512-byte cell including its terminator.
  * Failure clears out. The profile and output must not overlap. */
 UmiStatus UmiBuildProfileArguments(const UmiBuildProfile *profile, UmiArguments *out);
+
+/** Resolve the source directory at the caller's current location, copying an
+ * absolute root only on success. An already absolute root never reads cwd.
+ * Capturing this before queue submission keeps later phases on the same project
+ * if another operation changes the process directory. This does not check
+ * existence, canonicalise symlinks or grant workspace trust. */
+UmiStatus UmiBuildProfileSourceDirectory(const UmiBuildProfile *profile, char *out, size_t capacity);
 
 /** Resolve the launch folder without touching the filesystem or process cwd.
  * absoluteProjectDirectory must be the already resolved project root. The

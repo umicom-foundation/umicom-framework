@@ -71,3 +71,23 @@ if(TARGET umicom_ui_gtk4 OR UMICOM_GUI_CONTROL_NATIVE_TESTS)
             TIMEOUT 20 SKIP_RETURN_CODE 77 LABELS "framework;gui-control-checks;gtk4;acceptance")
     endforeach()
 endif()
+
+# Keep logical lookup and explicit selection in one small native fixture. These
+# cases exercise GTK behaviour without starting an application or contacting services.
+if(TARGET umicom-gui-control-native-tests)
+    add_executable(umicom-gui-selection-tree-tests test_selection_tree_gtk4.c)
+    target_link_libraries(umicom-gui-selection-tree-tests PRIVATE ${_native_library})
+    set_target_properties(umicom-gui-selection-tree-tests PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED ON)
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(umicom-gui-selection-tree-tests PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror)
+    endif()
+    # Named controls share the logical-tree and ambiguity contract; retain prior registration.
+    #[[
+    foreach(_case logical-tree explicit-selection)
+    ]]
+    foreach(_case logical-tree explicit-selection named-collapsed named-duplicate named-boundary)
+        add_test(NAME framework.gui_control_checks.gtk4.${_case} COMMAND umicom-gui-selection-tree-tests ${_case})
+        set_tests_properties(framework.gui_control_checks.gtk4.${_case} PROPERTIES
+            TIMEOUT 20 SKIP_RETURN_CODE 77 LABELS "framework;gtk4;regression")
+    endforeach()
+endif()

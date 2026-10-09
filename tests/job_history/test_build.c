@@ -140,6 +140,12 @@ int main(int argc, char **argv)
         else
         {
             CHECK(snapshot->count == 1);
+            /* Success, refusal and cancellation retain the producing settings.
+             * Changing a caller's profile must not rewrite an earlier outcome. */
+            UmiJobIdentity identity;
+            CHECK(UmiBuildProfileJobIdentity(&profile, &identity) == UMI_STATUS_OK);
+            CHECK(UmiJobIdentityCompare(&snapshot->entries[0].identity, &identity) ==
+                  UMI_JOB_IDENTITY_INPUTS_UNRECORDED);
             UmiJobHistoryState expected = strcmp(argv[1], "storage-failure") == 0 ? UMI_JOB_HISTORY_RUNNING
                                           : strcmp(argv[1], "cancel") == 0 || strcmp(argv[1], "destroy") == 0
                                               ? UMI_JOB_HISTORY_CANCELLED

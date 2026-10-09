@@ -137,6 +137,8 @@ UmiStatus umi_debug_runtime_adapter_create_with_transport(
  * Provide the debug runtime adapter start process operation used by this module and its
  * client applications.
  */
+/* Debugger child creation accepts the project tool directory through Framework-owned process transport. The compatibility entry point delegates to the same ownership and failure handling. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_debug_runtime_adapter_start_process(
     const char *adapter_id,
     const char *program,
@@ -172,6 +174,120 @@ UmiStatus umi_debug_runtime_adapter_start_process(
     }
 
     return status;
+}
+#endif
+/* Pass copied launch environment settings through the existing DAP process owner. The PATH-only public entry point remains as a wrapper; its preceding implementation is retained for review. The previous implementation is retained for engineering review. */
+#if 0
+UmiStatus UmiDebugRuntimeAdapterStartProcessWithToolDirectory(
+    const char *adapter_id,
+    const char *program,
+    const char *const *arguments,
+    size_t argument_count,
+    const char *working_directory,
+    const char *tool_directory,
+    UmiDebugRuntimeAdapter **out_adapter)
+{
+    /* Reject invalid ownership destinations before any external process starts. */
+    if (out_adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_adapter = NULL;
+    if (adapter_id == NULL || adapter_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (strlen(adapter_id) >= sizeof(((UmiDebugRuntimeAdapter *)0)->adapter_id))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiDebugRuntimeTransport transport;
+    UmiStatus status;
+
+    (void)memset(&transport, 0, sizeof(transport));
+
+    status = UmiDebugRuntimeTransportStartProcessWithToolDirectory(
+        program,
+        arguments,
+        argument_count,
+        working_directory,
+        tool_directory,
+        &transport);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    status = umi_debug_runtime_adapter_create_with_transport(
+        adapter_id,
+        &transport,
+        out_adapter);
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK &&
+        transport.instance != NULL &&
+        transport.destroy != NULL) {
+        transport.destroy(transport.instance);
+    }
+
+    return status;
+}
+#endif
+UmiStatus UmiDebugRuntimeAdapterStartProcessWithEnvironment(
+    const char *adapter_id,
+    const char *program,
+    const char *const *arguments,
+    size_t argument_count,
+    const char *working_directory,
+    const char *tool_directory,
+    const char *definitions,
+    UmiDebugRuntimeAdapter **out_adapter)
+{
+    /* Reject invalid ownership destinations before any external process starts. */
+    if (out_adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_adapter = NULL;
+    if (adapter_id == NULL || adapter_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (strlen(adapter_id) >= sizeof(((UmiDebugRuntimeAdapter *)0)->adapter_id))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiDebugRuntimeTransport transport;
+    UmiStatus status;
+
+    (void)memset(&transport, 0, sizeof(transport));
+
+    status = UmiDebugRuntimeTransportStartProcessWithEnvironment(
+        program,
+        arguments,
+        argument_count,
+        working_directory,
+        tool_directory,
+        definitions,
+        &transport);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    status = umi_debug_runtime_adapter_create_with_transport(
+        adapter_id,
+        &transport,
+        out_adapter);
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK &&
+        transport.instance != NULL &&
+        transport.destroy != NULL) {
+        transport.destroy(transport.instance);
+    }
+
+    return status;
+}
+
+UmiStatus UmiDebugRuntimeAdapterStartProcessWithToolDirectory(
+    const char *adapter_id, const char *program, const char *const *arguments,
+    size_t argument_count, const char *working_directory, const char *tool_directory,
+    UmiDebugRuntimeAdapter **out_adapter)
+{
+    return UmiDebugRuntimeAdapterStartProcessWithEnvironment(adapter_id, program,
+        arguments, argument_count, working_directory, tool_directory, NULL, out_adapter);
+}
+
+/* Existing callers keep inherited tool selection. */
+UmiStatus umi_debug_runtime_adapter_start_process(
+    const char *adapter_id, const char *program, const char *const *arguments,
+    size_t argument_count, const char *working_directory, UmiDebugRuntimeAdapter **out_adapter)
+{
+    return UmiDebugRuntimeAdapterStartProcessWithToolDirectory(adapter_id, program,
+        arguments, argument_count, working_directory, NULL, out_adapter);
 }
 
 /*

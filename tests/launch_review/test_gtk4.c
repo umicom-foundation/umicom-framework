@@ -6,6 +6,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 
+#include "umicom/ui/gtk4/automation.h"
 #include <gtk/gtk.h>
 #include "umicom/ui/gtk4/developer_dialog.h"
 #include <stdio.h>
@@ -108,6 +109,8 @@ static UmiStatus Accept(const UmiBuildProfile *profile, int trusted, void *conte
     f->adopted = *profile;
     return UMI_STATUS_OK;
 }
+/* The rendered-child traversal omitted controls inside collapsed panels. Use the bounded Framework logical tree and preserve this earlier finder for review. */
+#if 0
 static GtkWidget *FindControl(GtkWidget *root, const char *id)
 {
     const char *tag = g_object_get_data(G_OBJECT(root), "umicom-automation-id");
@@ -121,6 +124,11 @@ static GtkWidget *FindControl(GtkWidget *root, const char *id)
             return found;
     }
     return NULL;
+}
+#endif
+static GtkWidget *FindControl(GtkWidget *root, const char *id)
+{
+    return umi_gtk4_automation_find_tagged_widget(root, id);
 }
 static void Notify(GObject *object, GParamSpec *property, gpointer context)
 {

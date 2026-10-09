@@ -351,3 +351,41 @@ UmiStatus UmiDocumentCoordinatorOpenSourceRange(UmiDocumentCoordinator *coordina
     }
     return status;
 }
+
+/* Diagnostic ranges belong to a particular source snapshot. Validate that proof
+ * through the live view owner before reusing the normal navigation transaction;
+ * filenames alone cannot establish freshness after an unsaved edit. */
+UmiStatus UmiDocumentCoordinatorSelectCapturedSourceRange(
+    UmiDocumentCoordinator *coordinator, UmiDocumentId document,
+    const char *captured_uri, const char *captured_source, size_t source_bytes,
+    UmiEditorTextPosition start, UmiEditorTextPosition end,
+    size_t *out_offset, size_t *out_bytes)
+{
+    if (coordinator == NULL || document == 0U || captured_uri == NULL ||
+        captured_uri[0] == '\0' || captured_source == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (coordinator->save_in_progress || coordinator->reopen_in_progress ||
+        coordinator->navigation_depth != 0U)
+        return UMI_STATUS_BUSY;
+    size_t index = EditDocumentIndex(coordinator, document);
+    if (index == SIZE_MAX)
+        return UMI_STATUS_NOT_FOUND;
+    UmiUiDocumentViewModel *views = umi_ui_workbench_documents(coordinator->workbench);
+    UmiUiDocumentViewSnapshot current;
+    UmiStatus status = umi_ui_document_view_model_find(
+        views, coordinator->entries[index].view_id, &current);
+    if (status == UMI_STATUS_OK && strcmp(current.uri, captured_uri) != 0)
+        status = UMI_STATUS_INVALID_STATE;
+    char *source = NULL;
+    size_t bytes = 0U;
+    if (status == UMI_STATUS_OK)
+        status = UmiUiDocumentViewModelCopyText(views, current.view_id, &source, &bytes);
+    if (status == UMI_STATUS_OK &&
+        (bytes != source_bytes || memcmp(source, captured_source, bytes) != 0))
+        status = UMI_STATUS_INVALID_STATE;
+    UmiUiDocumentViewModelFreeText(source);
+    if (status == UMI_STATUS_OK)
+        status = UmiDocumentCoordinatorSelectSourceRange(
+            coordinator, document, start, end, out_offset, out_bytes);
+    return status;
+}

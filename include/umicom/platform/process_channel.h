@@ -17,6 +17,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "umicom/base/status.h"
+#include "umicom/platform/process.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -52,6 +53,24 @@ extern "C" {
      * keep that thread alive until the child ends, using a persistent worker
      * rather than a one-shot thread that exits immediately after launch. */
     UmiStatus UmiProcessChannelOpen(const UmiProcessChannelRequest *request,     UmiProcessChannel **outChannel);
+    /** Open an explicitly selected trusted native program with the parent's
+     * environment plus optional overrides. No shell or PATH executable search
+     * occurs. This differs deliberately from Open's restricted environment.
+     * Overrides use portable ASCII names and UTF-8 values; duplicates are
+     * refused case-insensitively. Inputs are borrowed until return. Serialize
+     * host environment changes with launch preparation. Linux still requires
+     * a native ELF executable and an existing non-symlink directory leaf.
+     * Keep the opening thread alive until the child ends. Failure clears out.
+     */
+    UmiStatus UmiProcessChannelOpenProgram(const UmiProcessChannelRequest *request,
+        const UmiEnvironmentVariable *environment, size_t environmentCount,
+        UmiProcessChannel **outChannel);
+    /** Close the parent's stdin writer so the child can observe end-of-file.
+     * This is idempotent and does not stop the child or close either output.
+     * Serialize with Read, Write, Poll and destruction; writes after closure
+     * return INVALID_STATE. Queued application input must be sent first.
+     */
+    UmiStatus UmiProcessChannelCloseInput(UmiProcessChannel *channel);
     /** Read some stdout, draining diagnostics while waiting. timeoutMs <= 60000.
                          * OK with *outRead==0 means EOF. TIMEOUT is not EOF. Inputs/outputs are bytes.
                          * Read never merges stderr into a protocol stream. */

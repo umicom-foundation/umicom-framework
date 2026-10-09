@@ -778,3 +778,22 @@ if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
 endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomSourceDiagnosticsPanel.cmake")
+
+# The preference test runs against the installed GTK runtime. Headless builders
+# retain the normal skip code instead of reporting an unobserved native pass.
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-theme-settings-native-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ui_workstation/test_theme_settings_gtk4.c")
+    target_link_libraries(umicom-theme-settings-native-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-theme-settings-native-test)
+    umicom_apply_sanitizers(umicom-theme-settings-native-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-theme-settings-native-test)
+    endif()
+    foreach(_scheme IN ITEMS light dark)
+        add_test(NAME framework.ui_workstation.theme.settings.${_scheme}
+            COMMAND umicom-theme-settings-native-test "${_scheme}")
+        set_tests_properties(framework.ui_workstation.theme.settings.${_scheme}
+            PROPERTIES TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;gtk4;theme;regression")
+    endforeach()
+endif()

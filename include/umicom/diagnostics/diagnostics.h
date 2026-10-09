@@ -28,6 +28,7 @@
 #include "umicom/diagnostics/output_filter.h"
 #include "umicom/diagnostics/parser.h"
 #include "umicom/diagnostics/compiler_parser.h"
+#include "umicom/diagnostics/compiler_stream.h"
 #include "umicom/diagnostics/runtime_parser.h"
 #include "umicom/diagnostics/event.h"
 #include "umicom/diagnostics/pipeline.h"

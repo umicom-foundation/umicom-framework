@@ -17,6 +17,7 @@
 
 #define _POSIX_C_SOURCE 200809L
 #include "internal.h"
+#include "process_scan_internal.h"
 #include "umicom/desktop_system/linux_parse.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -92,6 +93,10 @@ static void InsertProcess(UmiDesktopSystemSnapshot *s, const UmiDesktopSystemPro
     for (size_t i = count - 1; i > at; --i) s->processes[i] = s->processes[i - 1];
     s->processes[at] = *value; s->processCount = count;
 }
+/* Native process discovery is shared with debugger attachment selection. */
+#include "process_scan_linux.inc"
+/* The desktop monitor and debugger process catalogue now share proc-stat parsing, limits and cancellation ownership. The former monitor-specific loop is retained for review. The previous implementation is retained for engineering review. */
+#if 0
 static void Processes(const char *root, UmiDesktopSystemSnapshot *s)
 {
     DIR *dir = opendir(root); if (!dir) { s->processStatus = FileError(); return; }
@@ -116,6 +121,16 @@ static void Processes(const char *root, UmiDesktopSystemSnapshot *s)
     if (closedir(dir) != 0) s->processStatus = UMI_STATUS_IO_ERROR;
     if (s->processStatus == UMI_STATUS_OK && s->processesSeen > UMI_DESKTOP_SYSTEM_PROCESS_LIMIT)
         s->processStatus = UMI_STATUS_CAPACITY_EXCEEDED;
+}
+#endif
+static void Processes(const char *root,UmiDesktopSystemSnapshot *snapshot)
+{
+    UmiDesktopProcessCaptureOptions options={0};options.linux_proc_root=root;
+    UmiDesktopProcessReport report={0};
+    snapshot->processStatus=UmiDesktopProcessScanNative(&options,ProcessMonitorKeep,snapshot,&report);
+    snapshot->processesSeen=report.seen;snapshot->processesUnreadable=report.unreadable;
+    if(snapshot->processStatus==UMI_STATUS_OK&&report.seen>UMI_DESKTOP_SYSTEM_PROCESS_LIMIT)
+        snapshot->processStatus=UMI_STATUS_CAPACITY_EXCEEDED;
 }
 static int InterfaceCompare(const void *a, const void *b)
 {

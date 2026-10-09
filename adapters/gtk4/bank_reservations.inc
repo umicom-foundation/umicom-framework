@@ -8,6 +8,8 @@
 
 /* Included after the existing form, review and tagging helpers. A report owns
  * its evidence, while window-bound callbacks reject controls retained after close. */
+#include "umicom/ui/gtk4/selection_list.h"
+
 static void ReservationsClear(BankUi *ui,const char *message)
 {
     UmiBankReservationsDestroy(ui->reservations);ui->reservations=NULL;
@@ -20,7 +22,11 @@ static void ReservationsSelection(GObject *object,GParamSpec *spec,gpointer wind
 {
     (void)object;(void)spec;BankUi *ui=SignalUi(window);if(ui==NULL)return;
     InvalidateReview(ui);UmiBankAction action;
+/* Read only business rows; the displayed prompt is not an instruction. Retain the raw GTK selection reader for review. */
+#if 0
     UmiStatus status=UmiBankReservationsReleaseAction(ui->reservations,gtk_drop_down_get_selected(ui->reservationRows),&action);
+#endif
+    UmiStatus status=UmiBankReservationsReleaseAction(ui->reservations,UmiGtk4SelectionListSelected(ui->reservationRows),&action);
     gtk_widget_set_sensitive(ui->reservationReview,status==UMI_STATUS_OK);
     if(status==UMI_STATUS_OK){
         const char *label=action==UMI_BANK_HOLD_RELEASE?"Review manual hold release":
@@ -60,15 +66,25 @@ static void ReservationsCaptureClicked(GtkButton *button,gpointer window)
         char *label=g_strdup_printf("%s | %s | %s",UmiBankReservationKindName(row.kind),row.id.value,money);
         valid=g_utf8_make_valid(label,-1);gtk_string_list_append(rows,valid);g_free(valid);g_free(label);
     }
+/* Publish model and explicit choice together. The shared prompt replaces invalid-index clearing, which GTK may ignore; retain the old publication for review. */
+#if 0
     gtk_drop_down_set_model(ui->reservationRows,G_LIST_MODEL(rows));g_object_unref(rows);
     /* A new capture never silently selects a different financial record. */
     gtk_drop_down_set_selected(ui->reservationRows,GTK_INVALID_LIST_POSITION);
+#endif
+    /* A new capture never silently selects a different financial record. */
+    (void)UmiGtk4SelectionListPublish(ui->reservationRows, rows, GTK_INVALID_LIST_POSITION);
+    g_object_unref(rows);
     gtk_widget_set_sensitive(ui->reservationCopy,TRUE);ReservationsSelection(NULL,NULL,window);
 }
 static void ReservationsReviewClicked(GtkButton *button,gpointer window)
 {
     (void)button;BankUi *ui=SignalUi(window);if(ui==NULL)return;
+/* Read only business rows; the displayed prompt is not an instruction. Retain the raw GTK selection reader for review. */
+#if 0
     InvalidateReview(ui);guint index=gtk_drop_down_get_selected(ui->reservationRows);
+#endif
+    InvalidateReview(ui);guint index=UmiGtk4SelectionListSelected(ui->reservationRows);
     UmiBankReservationRow row;UmiBankAction action;
     UmiStatus status=UmiBankReservationsRowAt(ui->reservations,index,&row);
     if(status==UMI_STATUS_OK)status=UmiBankReservationsReleaseAction(ui->reservations,index,&action);

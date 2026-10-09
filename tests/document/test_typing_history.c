@@ -87,6 +87,9 @@ int main(int argc, char **argv)
     view.read_only = strcmp(name, "read-only") == 0;
     view.dirty = 1;
     CHECK(UmiUiDocumentViewModelUpsertText(views, &view, typed, strlen(typed)) == UMI_STATUS_OK);
+    /* UpsertText copies its input; reload the owned preview before later
+     * metadata edits so this fixture cannot restore the previous draft. */
+    CHECK(umi_ui_document_view_model_find(views, view.view_id, &view) == UMI_STATUS_OK);
     if (strcmp(name, "read-only") == 0 || strcmp(name, "capture-read-only") == 0)
         wanted = UMI_STATUS_PERMISSION_DENIED;
     if (strcmp(name, "store-changed") == 0 || strcmp(name, "store-round-trip") == 0)

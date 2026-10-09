@@ -93,6 +93,21 @@ UmiStatus UmiDebugRuntimePlatformLaunchArguments(UmiDebugRuntimePlatform *platfo
     const char *working_directory, const char *const *arguments, size_t count,
     uint32_t timeout_ms);
 
+/**
+ * Launch the reviewed argument vector using the project's selected tool folder.
+ * Empty/NULL tool_directory keeps inherited selection. Otherwise it must name
+ * one absolute folder. The builtin gdb/lldb-dap executable resolves only there;
+ * a supplied absolute adapter executable takes precedence. The adapter child
+ * receives that folder before inherited PATH so dependencies and child tools can
+ * use the same installation. Studio's process environment is never changed.
+ * Missing tools do not fall back to other installations. All trust, lifetime,
+ * snapshot-capacity and protocol limits of LaunchArguments still apply.
+ */
+UmiStatus UmiDebugRuntimePlatformLaunchArgumentsWithToolDirectory(
+    UmiDebugRuntimePlatform *platform, const char *kind, const char *executable,
+    const char *program, const char *working_directory, const char *const *arguments,
+    size_t count, uint32_t timeout_ms, const char *tool_directory);
+
 /** Populate Threads, Stack, Scopes and non-expensive Variables after a stop.
  * Uses one shared timeout budget and the existing Debug Service registries.
  * Does not evaluate watches automatically: evaluating an expression can execute
@@ -391,6 +406,19 @@ UmiDebugAdvancedPlatform *umi_debug_runtime_platform_advanced(
  */
 UmiDebugRuntimeAdapter *umi_debug_runtime_platform_adapter(
     UmiDebugRuntimePlatform *platform);
+
+
+/** Launch with the same argument and tool rules plus NAME=VALUE settings.
+ * Definitions follow UmiProcessEnvironmentValidate. The adapter child receives
+ * these overrides and its target inherits them; the host environment is unchanged.
+ * This avoids replacing GDB's entire inferior environment with a partial DAP env
+ * object. Debugger policy or target shell startup can still change target values.
+ * Values are retained in native.launch configuration, so use ordinary project
+ * options here, not secrets. Invalid entries reject before any adapter starts. */
+UmiStatus UmiDebugRuntimePlatformLaunchArgumentsWithEnvironment(UmiDebugRuntimePlatform *platform,
+    const char *kind, const char *executable, const char *program,
+    const char *working_directory, const char *const *arguments, size_t count,
+    uint32_t timeout_ms, const char *tool_directory, const char *definitions);
 
 #ifdef __cplusplus
 }

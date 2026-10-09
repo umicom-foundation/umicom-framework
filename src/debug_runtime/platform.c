@@ -16,10 +16,19 @@
 #include "umicom/debug_runtime/platform.h"
 #include "umicom/base/arguments.h"
 #include "umicom/debug_runtime/variable_assignment.h"
+#include "umicom/debug_runtime/exception_filters.h"
+#include "umicom/debug_runtime/function_breakpoint_session.h"
+#include "umicom/debug_runtime/module_page.h"
+#include "umicom/debug_runtime/connection_identity.h"
+#include "umicom/debug_runtime/source_catalog.h"
+#include "umicom/debug_runtime/exception_inspection.h"
+#include <limits.h>
 
 #include "umicom/base/text.h"
 #include "deadline.h"
 #include "umicom/platform/filesystem.h"
+#include "umicom/platform/process_search_path.h"
+#include "umicom/platform/process_environment.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,7 +60,26 @@ struct UmiDebugRuntimePlatform {
     int restartUncertain;
     int restartConfigurationPending;
     DebugDeadline restartDeadline;
+    /* Advertised exception choices belong to this adapter session, never a global profile. */
+    UmiDebugExceptionSnapshot exceptions;
+    /* Requested function breakpoints never outlive their adapter session. */
+    UmiDebugFunctionSnapshot functions;
+    /* Module page requests remain tied to a connection even if its name is reused. */
+/* Module and source inspections now share one connection generation. The previous module-only member is retained for architectural review. The previous implementation is retained for engineering review. */
+#if 0
+    uint64_t module_generation;
+#endif
+    uint64_t inspection_generation;
+    /* Only an observed exception stop can authorise exceptionInfo inspection. */
+    int stopped_by_exception;
 };
+
+#include "exception_filters.inc"
+#include "function_breakpoint_session.inc"
+#include "connection_identity.inc"
+#include "module_page.inc"
+#include "source_catalog.inc"
+#include "exception_inspection.inc"
 
 /*
  * Provide the project memory view operation used by this module and its client
@@ -161,6 +189,8 @@ UmiStatus umi_debug_runtime_platform_create(
  * Release or reset state held by debug runtime platform so the same storage can be reused
  * safely.
  */
+/* An attached process was not created by this debugger. Owner destruction now requests detach for attachments while retaining termination for launched targets; keep the prior unconditional termination for review. The previous implementation is retained for engineering review. */
+#if 0
 void umi_debug_runtime_platform_destroy(
     UmiDebugRuntimePlatform *platform)
 {
@@ -174,6 +204,40 @@ void umi_debug_runtime_platform_destroy(
     if (platform->active) {
         (void)umi_debug_runtime_platform_stop(
             platform, 1, 100U);
+    }
+
+    umi_debug_advanced_platform_destroy(platform->advanced);
+    platform->advanced = NULL;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (platform->contract_owner != NULL) {
+        umi_debug_runtime_contract_adapter_destroy(
+            platform->contract_owner);
+        platform->contract_owner = NULL;
+        platform->adapter = NULL;
+    }
+
+    umi_debug_service_destroy(platform->service);
+    platform->service = NULL;
+    free(platform);
+}
+#endif
+void umi_debug_runtime_platform_destroy(
+    UmiDebugRuntimePlatform *platform)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (platform == NULL) return;
+
+    /* Apply this operation only while the related capability or state is available. */
+    if (platform->active) {
+        (void)umi_debug_runtime_platform_stop(
+            platform, platform->attached ? 0 : 1, 100U);
     }
 
     umi_debug_advanced_platform_destroy(platform->advanced);
@@ -264,6 +328,8 @@ static UmiStatus build_default_launch_arguments(
  */
 static UmiStatus RestartConfigure(UmiDebugRuntimePlatform *platform);
 
+/* The event owner now remembers whether the current stop was caused by an exception. This gates descriptive exception requests without inferring them from a selected frame. The previous event publisher is retained for review. The previous implementation is retained for engineering review. */
+#if 0
 static UmiStatus publish_event_envelope(
     UmiDebugRuntimePlatform *platform,
     const UmiDebugRuntimeEnvelope *envelope)
@@ -318,11 +384,72 @@ static UmiStatus publish_event_envelope(
     platform->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+static UmiStatus publish_event_envelope(
+    UmiDebugRuntimePlatform *platform,
+    const UmiDebugRuntimeEnvelope *envelope)
+{
+    UmiDebugRuntimeEvent event;
+    UmiStatus status;
+
+    /* Event publication must not wrap the revision that identifies inspection state. */
+    if (platform->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = umi_debug_runtime_decode_event(envelope->json, &event);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    status = umi_debug_runtime_publish_event(&platform->bridge, &event);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(event.event, "initialized") == 0) {
+        platform->initialized = 1;
+        platform->stopped_by_exception = 0;
+        if (platform->restartConfigurationPending) {
+            status = RestartConfigure(platform);
+            if (status != UMI_STATUS_OK) return status;
+        }
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(event.event, "stopped") == 0) {
+        platform->restartConfigurationPending = 0;
+        platform->paused = 1;
+        platform->stopped_by_exception = strcmp(event.reason, "exception") == 0;
+        platform->active_thread_id = event.thread_id;
+        (void)umi_debug_runtime_adapter_set_state(
+            platform->adapter,
+            UMI_DEBUG_RUNTIME_ADAPTER_PAUSED);
+        (void)umi_debug_inspection_session_set_state(
+            umi_debug_advanced_platform_inspection(platform->advanced),
+            UMI_DEBUG_INSPECTION_PAUSED);
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(event.event, "continued") == 0) {
+        platform->restartConfigurationPending = 0;
+        platform->paused = 0;
+        platform->stopped_by_exception = 0;
+        (void)umi_debug_runtime_adapter_set_state(
+            platform->adapter,
+            UMI_DEBUG_RUNTIME_ADAPTER_RUNNING);
+        (void)umi_debug_inspection_session_set_state(
+            umi_debug_advanced_platform_inspection(platform->advanced),
+            UMI_DEBUG_INSPECTION_RUNNING);
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(event.event, "terminated") == 0 ||
+               strcmp(event.event, "exited") == 0) {
+        platform->paused = 0;
+        platform->stopped_by_exception = 0;
+        (void)umi_debug_runtime_adapter_set_state(
+            platform->adapter,
+            UMI_DEBUG_RUNTIME_ADAPTER_STOPPED);
+    }
+
+    platform->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the initialize adapter operation used by this module and its client
  * applications.
  */
+/* Capture the adapter exception catalogue during initialization so all frontends use the same supported IDs. The previous initializer is retained for review. The previous implementation is retained for engineering review. */
+#if 0
 static UmiStatus initialize_adapter(
     UmiDebugRuntimePlatform *platform,
     const UmiDebugAdapterProfile *profile,
@@ -356,6 +483,211 @@ static UmiStatus initialize_adapter(
         &platform->capabilities);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+
+    platform->capability_bits =
+        umi_debug_runtime_capability_bits(&platform->capabilities);
+
+    return umi_debug_runtime_adapter_set_state(
+        platform->adapter,
+        UMI_DEBUG_RUNTIME_ADAPTER_READY);
+}
+#endif
+/* Reset session-scoped function breakpoint requests after capability negotiation. This prevents names and conditions from a previous target becoming implicit configuration for the next target; the earlier initializer is retained for review. The previous implementation is retained for engineering review. */
+#if 0
+static UmiStatus initialize_adapter(
+    UmiDebugRuntimePlatform *platform,
+    const UmiDebugAdapterProfile *profile,
+    uint32_t timeout_ms)
+{
+    UmiDebugRuntimeEnvelope response;
+    uint64_t sequence = 0U;
+    UmiStatus status;
+
+    (void)umi_debug_runtime_adapter_set_state(
+        platform->adapter,
+        UMI_DEBUG_RUNTIME_ADAPTER_INITIALIZING);
+
+    status = umi_debug_runtime_request_initialize(
+        platform->adapter,
+        profile->debugger_kind,
+        &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    status = umi_debug_runtime_adapter_wait_response(
+        platform->adapter,
+        sequence,
+        timeout_ms,
+        &response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    status = umi_debug_runtime_decode_initialize(
+        response.json,
+        &platform->capabilities);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    /* Preserve adapter-defined labels and defaults for the shared exception editor. */
+    status = DebugExceptionInitialize(platform, response.json);
+    if (status != UMI_STATUS_OK) return status;
+
+    platform->capability_bits =
+        umi_debug_runtime_capability_bits(&platform->capabilities);
+
+    return umi_debug_runtime_adapter_set_state(
+        platform->adapter,
+        UMI_DEBUG_RUNTIME_ADAPTER_READY);
+}
+#endif
+/* Give module pages a connection generation so a retained page cannot query a later target with a reused session name. The earlier initializer is retained for review. The previous implementation is retained for engineering review. */
+#if 0
+static UmiStatus initialize_adapter(
+    UmiDebugRuntimePlatform *platform,
+    const UmiDebugAdapterProfile *profile,
+    uint32_t timeout_ms)
+{
+    UmiDebugRuntimeEnvelope response;
+    uint64_t sequence = 0U;
+    UmiStatus status;
+
+    (void)umi_debug_runtime_adapter_set_state(
+        platform->adapter,
+        UMI_DEBUG_RUNTIME_ADAPTER_INITIALIZING);
+
+    status = umi_debug_runtime_request_initialize(
+        platform->adapter,
+        profile->debugger_kind,
+        &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    status = umi_debug_runtime_adapter_wait_response(
+        platform->adapter,
+        sequence,
+        timeout_ms,
+        &response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    status = umi_debug_runtime_decode_initialize(
+        response.json,
+        &platform->capabilities);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    /* Preserve adapter-defined labels and defaults for the shared exception editor. */
+    status = DebugExceptionInitialize(platform, response.json);
+    if (status != UMI_STATUS_OK) return status;
+
+    status = DebugFunctionInitialize(platform);
+    if (status != UMI_STATUS_OK) return status;
+
+    platform->capability_bits =
+        umi_debug_runtime_capability_bits(&platform->capabilities);
+
+    return umi_debug_runtime_adapter_set_state(
+        platform->adapter,
+        UMI_DEBUG_RUNTIME_ADAPTER_READY);
+}
+#endif
+/* The connection generation now protects every delayed inspection action, including module pages and source references. The previous module-only initialization is retained for review. The previous implementation is retained for engineering review. */
+#if 0
+static UmiStatus initialize_adapter(
+    UmiDebugRuntimePlatform *platform,
+    const UmiDebugAdapterProfile *profile,
+    uint32_t timeout_ms)
+{
+    UmiDebugRuntimeEnvelope response;
+    uint64_t sequence = 0U;
+    UmiStatus status;
+
+    (void)umi_debug_runtime_adapter_set_state(
+        platform->adapter,
+        UMI_DEBUG_RUNTIME_ADAPTER_INITIALIZING);
+
+    status = umi_debug_runtime_request_initialize(
+        platform->adapter,
+        profile->debugger_kind,
+        &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    status = umi_debug_runtime_adapter_wait_response(
+        platform->adapter,
+        sequence,
+        timeout_ms,
+        &response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    status = umi_debug_runtime_decode_initialize(
+        response.json,
+        &platform->capabilities);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    /* Preserve adapter-defined labels and defaults for the shared exception editor. */
+    status = DebugExceptionInitialize(platform, response.json);
+    if (status != UMI_STATUS_OK) return status;
+
+    status = DebugFunctionInitialize(platform);
+    if (status != UMI_STATUS_OK) return status;
+
+    if (platform->module_generation == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    ++platform->module_generation;
+
+    platform->capability_bits =
+        umi_debug_runtime_capability_bits(&platform->capabilities);
+
+    return umi_debug_runtime_adapter_set_state(
+        platform->adapter,
+        UMI_DEBUG_RUNTIME_ADAPTER_READY);
+}
+#endif
+static UmiStatus initialize_adapter(
+    UmiDebugRuntimePlatform *platform,
+    const UmiDebugAdapterProfile *profile,
+    uint32_t timeout_ms)
+{
+    UmiDebugRuntimeEnvelope response;
+    uint64_t sequence = 0U;
+    UmiStatus status;
+
+    (void)umi_debug_runtime_adapter_set_state(
+        platform->adapter,
+        UMI_DEBUG_RUNTIME_ADAPTER_INITIALIZING);
+
+    status = umi_debug_runtime_request_initialize(
+        platform->adapter,
+        profile->debugger_kind,
+        &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    status = umi_debug_runtime_adapter_wait_response(
+        platform->adapter,
+        sequence,
+        timeout_ms,
+        &response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    status = umi_debug_runtime_decode_initialize(
+        response.json,
+        &platform->capabilities);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    /* Preserve adapter-defined labels and defaults for the shared exception editor. */
+    status = DebugExceptionInitialize(platform, response.json);
+    if (status != UMI_STATUS_OK) return status;
+
+    status = DebugFunctionInitialize(platform);
+    if (status != UMI_STATUS_OK) return status;
+
+    if (platform->inspection_generation == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    ++platform->inspection_generation;
 
     platform->capability_bits =
         umi_debug_runtime_capability_bits(&platform->capabilities);
@@ -428,7 +760,7 @@ static UmiStatus register_contract(
 //     int configuration_sent = 0;
 //     uint32_t attempts = 0U;
 //     UmiStatus status = UMI_STATUS_OK;
-// 
+//
 //     /*
 //      * Continue only while work remains available; the loop body advances the state on each
 //      * pass.
@@ -438,40 +770,40 @@ static UmiStatus register_contract(
 //             (platform->capabilities.supports_configuration_done &&
 //              !configuration_sent))) {
 //         UmiDebugRuntimeEnvelope envelope;
-// 
+//
 //         status = umi_debug_runtime_adapter_receive(
 //             platform->adapter,
 //             timeout_ms,
 //             &envelope);
-// 
+//
 //         /* Preserve the original failure result so the caller can respond to the correct cause. */
 //         if (status == UMI_STATUS_NOT_FOUND) {
 //             attempts += 1U;
 //             continue;
 //         }
-// 
+//
 //         /* Preserve the original failure result so the caller can respond to the correct cause. */
 //         if (status != UMI_STATUS_OK) return status;
-// 
+//
 //         /* Apply this branch only when its contract condition is satisfied. */
 //         if (envelope.kind == UMI_DEBUG_RUNTIME_MESSAGE_EVENT) {
 //             status = publish_event_envelope(platform, &envelope);
 //             /* Preserve the original failure result so the caller can respond to the correct cause. */
 //             if (status != UMI_STATUS_OK) return status;
-// 
+//
 //             /* Apply this branch only when its contract condition is satisfied. */
 //             if (platform->initialized &&
 //                 platform->capabilities.supports_configuration_done &&
 //                 !configuration_sent) {
 //                 uint64_t configuration_sequence = 0U;
 //                 UmiDebugRuntimeEnvelope configuration_response;
-// 
+//
 //                 status = umi_debug_runtime_request_configuration_done(
 //                     platform->adapter,
 //                     &configuration_sequence);
 //                 /* Preserve the original failure result so the caller can respond to the correct cause. */
 //                 if (status != UMI_STATUS_OK) return status;
-// 
+//
 //                 status = umi_debug_runtime_adapter_wait_response(
 //                     platform->adapter,
 //                     configuration_sequence,
@@ -479,7 +811,7 @@ static UmiStatus register_contract(
 //                     &configuration_response);
 //                 /* Preserve the original failure result so the caller can respond to the correct cause. */
 //                 if (status != UMI_STATUS_OK) return status;
-// 
+//
 //                 configuration_sent = 1;
 //             }
 //         } else /* Apply this branch only when its contract condition is satisfied. */ if (envelope.kind == UMI_DEBUG_RUNTIME_MESSAGE_RESPONSE &&
@@ -487,7 +819,7 @@ static UmiStatus register_contract(
 //             /* Preserve the original failure result so the caller can respond to the correct cause. */
 //             if (!envelope.success) return UMI_STATUS_UNAVAILABLE;
 //             launch_response_received = 1;
-// 
+//
 //             /*
 //              * Some adapters respond to launch before emitting initialized.
 //              * A configurationDone request is only sent after the event.
@@ -496,13 +828,13 @@ static UmiStatus register_contract(
 //                 configuration_sent = 1;
 //             }
 //         }
-// 
+//
 //         attempts += 1U;
 //     }
-// 
+//
 //     /* Preserve the original failure result so the caller can respond to the correct cause. */
 //     if (!launch_response_received) return UMI_STATUS_TIMEOUT;
-// 
+//
 //     /*
 //      * Adapters that advertise configurationDone but do not emit initialized
 //      * within the bounded wait are left ready for the caller to pump events.
@@ -510,7 +842,9 @@ static UmiStatus register_contract(
 //      */
 //     return UMI_STATUS_OK;
 // }
-// 
+//
+/* Complete advertised exception-filter defaults before releasing the debugger configuration gate. Source breakpoints and response ordering remain part of the same session sequence; the previous loop is retained for review. The previous implementation is retained for engineering review. */
+#if 0
 static UmiStatus wait_launch_and_initialized(
     UmiDebugRuntimePlatform *platform, uint64_t launch_sequence, uint32_t timeout_ms)
 {
@@ -581,11 +915,91 @@ static UmiStatus wait_launch_and_initialized(
     }
     return UMI_STATUS_OK;
 }
+#endif
+static UmiStatus wait_launch_and_initialized(
+    UmiDebugRuntimePlatform *platform, uint64_t launch_sequence, uint32_t timeout_ms)
+{
+    DebugDeadline deadline = DebugDeadlineStart(timeout_ms);
+    int launchReceived = 0;
+    /* initialize may already have queued initialized/output events. Read those
+     * first. Launch responses may arrive before OR after configurationDone. */
+    for (unsigned attempt = 0U; attempt < 256U && !platform->initialized; ++attempt) {
+        UmiDebugRuntimeEnvelope envelope;
+        UmiStatus status = umi_debug_runtime_adapter_next_event(platform->adapter, &envelope);
+        if (status == UMI_STATUS_NOT_FOUND)
+            status = umi_debug_runtime_adapter_receive(platform->adapter,
+                DebugDeadlineRemaining(&deadline), &envelope);
+        if (status == UMI_STATUS_NOT_FOUND) {
+            if (DebugDeadlineRemaining(&deadline) == 0U) return UMI_STATUS_TIMEOUT;
+            continue;
+        }
+        if (status != UMI_STATUS_OK) return status;
+        if (envelope.kind == UMI_DEBUG_RUNTIME_MESSAGE_EVENT) {
+            status = publish_event_envelope(platform, &envelope);
+            if (status != UMI_STATUS_OK) return status;
+        } else if (envelope.kind == UMI_DEBUG_RUNTIME_MESSAGE_RESPONSE &&
+                   envelope.request_sequence == launch_sequence) {
+            if (!envelope.success) return UMI_STATUS_UNAVAILABLE;
+            launchReceived = 1;
+        }
+        if (!platform->initialized && DebugDeadlineRemaining(&deadline) == 0U)
+            return UMI_STATUS_TIMEOUT;
+    }
+    if (!platform->initialized) return UMI_STATUS_TIMEOUT;
+
+    /* Set each source's breakpoints before allowing the adapter to run. The
+     * registry owns its records; copy a source before any response updates it. */
+    UmiDebugBreakpointRegistry *registry = umi_debug_service_breakpoint(platform->service);
+    for (size_t index = 0U; index < umi_debug_breakpoint_registry_count(registry); ++index) {
+        UmiDebugBreakpointSnapshot current;
+        UmiStatus status = umi_debug_breakpoint_registry_at(registry, index, &current);
+        if (status != UMI_STATUS_OK) return status;
+        int first = 1;
+        for (size_t previous = 0U; previous < index; ++previous) {
+            UmiDebugBreakpointSnapshot other;
+            status = umi_debug_breakpoint_registry_at(registry, previous, &other);
+            if (status != UMI_STATUS_OK) return status;
+            if (strcmp(current.uri, other.uri) == 0) { first = 0; break; }
+        }
+        if (first) {
+            status = umi_debug_runtime_platform_sync_breakpoints(platform, current.uri,
+                DebugDeadlineRemaining(&deadline));
+            if (status != UMI_STATUS_OK) return status;
+        }
+    }
+    /* Apply advertised defaults only after initialized and before configurationDone.
+     * A missing catalogue sends no exception request at all. */
+    if (platform->exceptions.catalog.count != 0U) {
+        UmiStatus status = DebugExceptionConfigure(platform, &platform->exceptions.selection,
+            DebugDeadlineRemaining(&deadline));
+        if (status != UMI_STATUS_OK) return status;
+    }
+    if (platform->capabilities.supports_configuration_done) {
+        uint64_t sequence = 0U;
+        UmiDebugRuntimeEnvelope response;
+        UmiStatus status = umi_debug_runtime_request_configuration_done(platform->adapter, &sequence);
+        if (status == UMI_STATUS_OK)
+            status = umi_debug_runtime_adapter_wait_response(platform->adapter, sequence,
+                DebugDeadlineRemaining(&deadline), &response);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    if (!launchReceived) {
+        UmiDebugRuntimeEnvelope response;
+        /* This also consumes an early launch response queued while waiting for
+         * setBreakpoints/configurationDone: never wait for it a second time. */
+        UmiStatus status = umi_debug_runtime_adapter_wait_response(platform->adapter,
+            launch_sequence, DebugDeadlineRemaining(&deadline), &response);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the debug runtime platform start operation used by this module and its client
  * applications.
  */
+/* A scoped launch helper carries the reviewed project tool directory through adapter startup. Protocol initialization, session publication and failure cleanup remain shared with the original API. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_debug_runtime_platform_start(
     UmiDebugRuntimePlatform *platform,
     const char *profile_id,
@@ -678,7 +1092,7 @@ UmiStatus umi_debug_runtime_platform_start(
     //         platform->capability_bits);
     //     /* Preserve the original failure result so the caller can respond to the correct cause. */
     //     if (status != UMI_STATUS_OK) goto failure;
-    // 
+    //
     (void)snprintf(
         platform->active_session_id,
         sizeof(platform->active_session_id),
@@ -806,6 +1220,723 @@ failure:
 
     (void)memset(&platform->descriptor, 0, sizeof(platform->descriptor));
     return status;
+}
+#endif
+/* The native adapter inherits the reviewed launch overrides from a child-only environment plan. Retain the preceding tool-only process setup; callers without overrides keep the same public behavior. The previous implementation is retained for engineering review. */
+#if 0
+static UmiStatus DebugPlatformStartWithToolDirectory(
+    UmiDebugRuntimePlatform *platform,
+    const char *profile_id,
+    const char *session_id,
+    const char *configuration_id,
+    const char *launch_or_attach_arguments_json,
+    int attach,
+    const char *working_directory,
+    uint32_t timeout_ms,
+    const char *toolDirectory)
+{
+    UmiDebugAdapterProfile profile;
+    UmiDebugRuntimeProfileHealth health;
+    UmiLanguageRuntimeArguments arguments;
+    char generated_arguments[UMI_DEBUG_RUNTIME_JSON_CAPACITY];
+    const char *launch_arguments = launch_or_attach_arguments_json;
+    uint64_t launch_sequence = 0U;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (platform == NULL || profile_id == NULL ||
+        session_id == NULL || session_id[0] == '\0' ||
+        configuration_id == NULL || configuration_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (platform->active) return UMI_STATUS_BUSY;
+
+    status = profile_find(platform, profile_id, &profile);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if ((attach && !profile.supports_attach) ||
+        (!attach && !profile.supports_launch)) {
+        return UMI_STATUS_NOT_IMPLEMENTED;
+    }
+
+    status = umi_debug_runtime_profile_health_probe(&profile, &health);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (!health.available) return UMI_STATUS_UNAVAILABLE;
+
+    status = umi_language_runtime_arguments_parse(
+        profile.arguments,
+        &arguments);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    status = UmiDebugRuntimeAdapterStartProcessWithToolDirectory(
+        session_id,
+        profile.executable,
+        arguments.values,
+        arguments.count,
+        working_directory,
+        toolDirectory,
+        &platform->adapter);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    status = initialize_adapter(platform, &profile, timeout_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+    status = register_contract(
+        platform,
+        &profile,
+        session_id,
+        timeout_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+    status = umi_debug_runtime_service_bridge_init(
+        &platform->bridge,
+        platform->service,
+        session_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+    /* The inspection session requires its Debug Service record to exist.
+     * Previous ordering (retained below) bound it before publication and failed
+     * with NOT_FOUND. The same call now follows publish_session below. */
+    //     status = umi_debug_advanced_platform_open_session(
+    //         platform->advanced,
+    //         session_id,
+    //         platform->descriptor.id,
+    //         platform->capability_bits);
+    //     /* Preserve the original failure result so the caller can respond to the correct cause. */
+    //     if (status != UMI_STATUS_OK) goto failure;
+    //
+    (void)snprintf(
+        platform->active_session_id,
+        sizeof(platform->active_session_id),
+        "%s",
+        session_id);
+    (void)snprintf(
+        platform->active_configuration_id,
+        sizeof(platform->active_configuration_id),
+        "%s",
+        configuration_id);
+    (void)snprintf(
+        platform->active_profile_id,
+        sizeof(platform->active_profile_id),
+        "%s",
+        profile.id);
+    platform->attached = attach != 0;
+
+    status = umi_debug_runtime_publish_session(
+        &platform->bridge,
+        configuration_id,
+        platform->descriptor.id,
+        "initializing",
+        UMI_DEBUG_INSPECTION_READY,
+        attach,
+        platform->capabilities.supports_restart);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+    status = umi_debug_advanced_platform_open_session(
+        platform->advanced,
+        session_id,
+        platform->descriptor.id,
+        platform->capability_bits);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (launch_arguments == NULL) {
+        status = build_default_launch_arguments(
+            platform,
+            configuration_id,
+            attach,
+            generated_arguments,
+            sizeof(generated_arguments));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) goto failure;
+        launch_arguments = generated_arguments;
+    }
+
+    status = attach
+        ? umi_debug_runtime_request_attach(
+            platform->adapter,
+            launch_arguments,
+            &launch_sequence)
+        : umi_debug_runtime_request_launch(
+            platform->adapter,
+            launch_arguments,
+            &launch_sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+    status = wait_launch_and_initialized(
+        platform,
+        launch_sequence,
+        timeout_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+    platform->restartUncertain = 0;
+    platform->restartConfigurationPending = 0;
+    platform->active = 1;
+    /* Former platform->paused = 0 discarded a stop already delivered by the adapter. */
+    (void)umi_debug_runtime_adapter_set_state(
+        platform->adapter,
+        platform->paused ? UMI_DEBUG_RUNTIME_ADAPTER_PAUSED : UMI_DEBUG_RUNTIME_ADAPTER_RUNNING);
+    (void)umi_debug_inspection_session_set_state(
+        umi_debug_advanced_platform_inspection(platform->advanced),
+        platform->paused ? UMI_DEBUG_INSPECTION_PAUSED : UMI_DEBUG_INSPECTION_RUNNING);
+
+    status = umi_debug_runtime_publish_session(
+        &platform->bridge,
+        configuration_id,
+        platform->descriptor.id,
+        platform->paused ? "stopped" : "running",
+        platform->paused ? UMI_DEBUG_INSPECTION_PAUSED : UMI_DEBUG_INSPECTION_RUNNING,
+        attach,
+        platform->capabilities.supports_restart);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+    platform->revision += 1U;
+    return UMI_STATUS_OK;
+
+failure:
+    if (platform->bridge.service != NULL && platform->active_session_id[0] != '\0')
+        (void)umi_debug_runtime_publish_session(&platform->bridge, configuration_id,
+            platform->descriptor.id, "failed", UMI_DEBUG_INSPECTION_FAILED, attach, 0);
+    platform->active = 0; platform->paused = 0; platform->initialized = 0;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (platform->descriptor.id[0] != '\0') {
+        (void)umi_debug_advanced_platform_close_session(platform->advanced);
+        (void)umi_debug_advanced_platform_unregister_adapter(
+            platform->advanced,
+            platform->descriptor.id);
+    }
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (platform->contract_owner != NULL) {
+        umi_debug_runtime_contract_adapter_destroy(
+            platform->contract_owner);
+        platform->contract_owner = NULL;
+        platform->adapter = NULL;
+    } else /* Protect caller-owned memory by checking that required state is available before it is used. */ if (platform->adapter != NULL) {
+        umi_debug_runtime_adapter_destroy(platform->adapter);
+        platform->adapter = NULL;
+    }
+
+    (void)memset(&platform->descriptor, 0, sizeof(platform->descriptor));
+    return status;
+}
+#endif
+/* Failed native attachment can leave an externally owned process stopped. Add a bounded detach request before adapter teardown, preserving the primary failure and the previous startup implementation for review. The previous implementation is retained for engineering review. */
+#if 0
+static UmiStatus DebugPlatformStartWithEnvironment(
+    UmiDebugRuntimePlatform *platform,
+    const char *profile_id,
+    const char *session_id,
+    const char *configuration_id,
+    const char *launch_or_attach_arguments_json,
+    int attach,
+    const char *working_directory,
+    uint32_t timeout_ms,
+    const char *toolDirectory,
+    const char *definitions)
+{
+    UmiDebugAdapterProfile profile;
+    UmiDebugRuntimeProfileHealth health;
+    UmiLanguageRuntimeArguments arguments;
+    char generated_arguments[UMI_DEBUG_RUNTIME_JSON_CAPACITY];
+    const char *launch_arguments = launch_or_attach_arguments_json;
+    uint64_t launch_sequence = 0U;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (platform == NULL || profile_id == NULL ||
+        session_id == NULL || session_id[0] == '\0' ||
+        configuration_id == NULL || configuration_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (platform->active) return UMI_STATUS_BUSY;
+
+    status = profile_find(platform, profile_id, &profile);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if ((attach && !profile.supports_attach) ||
+        (!attach && !profile.supports_launch)) {
+        return UMI_STATUS_NOT_IMPLEMENTED;
+    }
+
+    status = umi_debug_runtime_profile_health_probe(&profile, &health);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (!health.available) return UMI_STATUS_UNAVAILABLE;
+
+    status = umi_language_runtime_arguments_parse(
+        profile.arguments,
+        &arguments);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    status = UmiDebugRuntimeAdapterStartProcessWithEnvironment(
+        session_id,
+        profile.executable,
+        arguments.values,
+        arguments.count,
+        working_directory,
+        toolDirectory,
+        definitions,
+        &platform->adapter);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    status = initialize_adapter(platform, &profile, timeout_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+    status = register_contract(
+        platform,
+        &profile,
+        session_id,
+        timeout_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+    status = umi_debug_runtime_service_bridge_init(
+        &platform->bridge,
+        platform->service,
+        session_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+    /* The inspection session requires its Debug Service record to exist.
+     * Previous ordering (retained below) bound it before publication and failed
+     * with NOT_FOUND. The same call now follows publish_session below. */
+    //     status = umi_debug_advanced_platform_open_session(
+    //         platform->advanced,
+    //         session_id,
+    //         platform->descriptor.id,
+    //         platform->capability_bits);
+    //     /* Preserve the original failure result so the caller can respond to the correct cause. */
+    //     if (status != UMI_STATUS_OK) goto failure;
+    //
+    (void)snprintf(
+        platform->active_session_id,
+        sizeof(platform->active_session_id),
+        "%s",
+        session_id);
+    (void)snprintf(
+        platform->active_configuration_id,
+        sizeof(platform->active_configuration_id),
+        "%s",
+        configuration_id);
+    (void)snprintf(
+        platform->active_profile_id,
+        sizeof(platform->active_profile_id),
+        "%s",
+        profile.id);
+    platform->attached = attach != 0;
+
+    status = umi_debug_runtime_publish_session(
+        &platform->bridge,
+        configuration_id,
+        platform->descriptor.id,
+        "initializing",
+        UMI_DEBUG_INSPECTION_READY,
+        attach,
+        platform->capabilities.supports_restart);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+    status = umi_debug_advanced_platform_open_session(
+        platform->advanced,
+        session_id,
+        platform->descriptor.id,
+        platform->capability_bits);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (launch_arguments == NULL) {
+        status = build_default_launch_arguments(
+            platform,
+            configuration_id,
+            attach,
+            generated_arguments,
+            sizeof(generated_arguments));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) goto failure;
+        launch_arguments = generated_arguments;
+    }
+
+    status = attach
+        ? umi_debug_runtime_request_attach(
+            platform->adapter,
+            launch_arguments,
+            &launch_sequence)
+        : umi_debug_runtime_request_launch(
+            platform->adapter,
+            launch_arguments,
+            &launch_sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+    status = wait_launch_and_initialized(
+        platform,
+        launch_sequence,
+        timeout_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+    platform->restartUncertain = 0;
+    platform->restartConfigurationPending = 0;
+    platform->active = 1;
+    /* Former platform->paused = 0 discarded a stop already delivered by the adapter. */
+    (void)umi_debug_runtime_adapter_set_state(
+        platform->adapter,
+        platform->paused ? UMI_DEBUG_RUNTIME_ADAPTER_PAUSED : UMI_DEBUG_RUNTIME_ADAPTER_RUNNING);
+    (void)umi_debug_inspection_session_set_state(
+        umi_debug_advanced_platform_inspection(platform->advanced),
+        platform->paused ? UMI_DEBUG_INSPECTION_PAUSED : UMI_DEBUG_INSPECTION_RUNNING);
+
+    status = umi_debug_runtime_publish_session(
+        &platform->bridge,
+        configuration_id,
+        platform->descriptor.id,
+        platform->paused ? "stopped" : "running",
+        platform->paused ? UMI_DEBUG_INSPECTION_PAUSED : UMI_DEBUG_INSPECTION_RUNNING,
+        attach,
+        platform->capabilities.supports_restart);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+    platform->revision += 1U;
+    return UMI_STATUS_OK;
+
+failure:
+    if (platform->bridge.service != NULL && platform->active_session_id[0] != '\0')
+        (void)umi_debug_runtime_publish_session(&platform->bridge, configuration_id,
+            platform->descriptor.id, "failed", UMI_DEBUG_INSPECTION_FAILED, attach, 0);
+    platform->active = 0; platform->paused = 0; platform->initialized = 0;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (platform->descriptor.id[0] != '\0') {
+        (void)umi_debug_advanced_platform_close_session(platform->advanced);
+        (void)umi_debug_advanced_platform_unregister_adapter(
+            platform->advanced,
+            platform->descriptor.id);
+    }
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (platform->contract_owner != NULL) {
+        umi_debug_runtime_contract_adapter_destroy(
+            platform->contract_owner);
+        platform->contract_owner = NULL;
+        platform->adapter = NULL;
+    } else /* Protect caller-owned memory by checking that required state is available before it is used. */ if (platform->adapter != NULL) {
+        umi_debug_runtime_adapter_destroy(platform->adapter);
+        platform->adapter = NULL;
+    }
+
+    (void)memset(&platform->descriptor, 0, sizeof(platform->descriptor));
+    return status;
+}
+#endif
+static UmiStatus DebugPlatformStartWithEnvironment(
+    UmiDebugRuntimePlatform *platform,
+    const char *profile_id,
+    const char *session_id,
+    const char *configuration_id,
+    const char *launch_or_attach_arguments_json,
+    int attach,
+    const char *working_directory,
+    uint32_t timeout_ms,
+    const char *toolDirectory,
+    const char *definitions)
+{
+    UmiDebugAdapterProfile profile;
+    UmiDebugRuntimeProfileHealth health;
+    UmiLanguageRuntimeArguments arguments;
+    char generated_arguments[UMI_DEBUG_RUNTIME_JSON_CAPACITY];
+    const char *launch_arguments = launch_or_attach_arguments_json;
+    uint64_t launch_sequence = 0U;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (platform == NULL || profile_id == NULL ||
+        session_id == NULL || session_id[0] == '\0' ||
+        configuration_id == NULL || configuration_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (platform->active) return UMI_STATUS_BUSY;
+
+    status = profile_find(platform, profile_id, &profile);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if ((attach && !profile.supports_attach) ||
+        (!attach && !profile.supports_launch)) {
+        return UMI_STATUS_NOT_IMPLEMENTED;
+    }
+
+    status = umi_debug_runtime_profile_health_probe(&profile, &health);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (!health.available) return UMI_STATUS_UNAVAILABLE;
+
+    status = umi_language_runtime_arguments_parse(
+        profile.arguments,
+        &arguments);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    status = UmiDebugRuntimeAdapterStartProcessWithEnvironment(
+        session_id,
+        profile.executable,
+        arguments.values,
+        arguments.count,
+        working_directory,
+        toolDirectory,
+        definitions,
+        &platform->adapter);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    status = initialize_adapter(platform, &profile, timeout_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+    status = register_contract(
+        platform,
+        &profile,
+        session_id,
+        timeout_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+    status = umi_debug_runtime_service_bridge_init(
+        &platform->bridge,
+        platform->service,
+        session_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+    /* The inspection session requires its Debug Service record to exist.
+     * Previous ordering (retained below) bound it before publication and failed
+     * with NOT_FOUND. The same call now follows publish_session below. */
+    //     status = umi_debug_advanced_platform_open_session(
+    //         platform->advanced,
+    //         session_id,
+    //         platform->descriptor.id,
+    //         platform->capability_bits);
+    //     /* Preserve the original failure result so the caller can respond to the correct cause. */
+    //     if (status != UMI_STATUS_OK) goto failure;
+    //
+    (void)snprintf(
+        platform->active_session_id,
+        sizeof(platform->active_session_id),
+        "%s",
+        session_id);
+    (void)snprintf(
+        platform->active_configuration_id,
+        sizeof(platform->active_configuration_id),
+        "%s",
+        configuration_id);
+    (void)snprintf(
+        platform->active_profile_id,
+        sizeof(platform->active_profile_id),
+        "%s",
+        profile.id);
+    platform->attached = attach != 0;
+
+    status = umi_debug_runtime_publish_session(
+        &platform->bridge,
+        configuration_id,
+        platform->descriptor.id,
+        "initializing",
+        UMI_DEBUG_INSPECTION_READY,
+        attach,
+        platform->capabilities.supports_restart);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+    status = umi_debug_advanced_platform_open_session(
+        platform->advanced,
+        session_id,
+        platform->descriptor.id,
+        platform->capability_bits);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (launch_arguments == NULL) {
+        status = build_default_launch_arguments(
+            platform,
+            configuration_id,
+            attach,
+            generated_arguments,
+            sizeof(generated_arguments));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) goto failure;
+        launch_arguments = generated_arguments;
+    }
+
+    status = attach
+        ? umi_debug_runtime_request_attach(
+            platform->adapter,
+            launch_arguments,
+            &launch_sequence)
+        : umi_debug_runtime_request_launch(
+            platform->adapter,
+            launch_arguments,
+            &launch_sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+    status = wait_launch_and_initialized(
+        platform,
+        launch_sequence,
+        timeout_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+    platform->restartUncertain = 0;
+    platform->restartConfigurationPending = 0;
+    platform->active = 1;
+    /* Former platform->paused = 0 discarded a stop already delivered by the adapter. */
+    (void)umi_debug_runtime_adapter_set_state(
+        platform->adapter,
+        platform->paused ? UMI_DEBUG_RUNTIME_ADAPTER_PAUSED : UMI_DEBUG_RUNTIME_ADAPTER_RUNNING);
+    (void)umi_debug_inspection_session_set_state(
+        umi_debug_advanced_platform_inspection(platform->advanced),
+        platform->paused ? UMI_DEBUG_INSPECTION_PAUSED : UMI_DEBUG_INSPECTION_RUNNING);
+
+    status = umi_debug_runtime_publish_session(
+        &platform->bridge,
+        configuration_id,
+        platform->descriptor.id,
+        platform->paused ? "stopped" : "running",
+        platform->paused ? UMI_DEBUG_INSPECTION_PAUSED : UMI_DEBUG_INSPECTION_RUNNING,
+        attach,
+        platform->capabilities.supports_restart);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto failure;
+
+    platform->revision += 1U;
+    return UMI_STATUS_OK;
+
+failure:
+    /* After an uncertain attach, ask the adapter to detach before closing it.
+     * Preserve the original error: an unacknowledged detach is not proof that
+     * the external target has resumed. Never substitute terminateDebuggee. */
+    if (attach && launch_sequence != 0U && platform->adapter != NULL) {
+        uint64_t disconnect = 0U;
+        UmiDebugRuntimeEnvelope *reply = malloc(sizeof *reply);
+        if (umi_debug_runtime_request_disconnect(platform->adapter, 0, 0, 0, &disconnect) == UMI_STATUS_OK && reply != NULL)
+            (void)umi_debug_runtime_adapter_wait_response(platform->adapter, disconnect, 250U, reply);
+        free(reply);
+    }
+    if (platform->bridge.service != NULL && platform->active_session_id[0] != '\0')
+        (void)umi_debug_runtime_publish_session(&platform->bridge, configuration_id,
+            platform->descriptor.id, "failed", UMI_DEBUG_INSPECTION_FAILED, attach, 0);
+    platform->active = 0; platform->paused = 0; platform->initialized = 0;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (platform->descriptor.id[0] != '\0') {
+        (void)umi_debug_advanced_platform_close_session(platform->advanced);
+        (void)umi_debug_advanced_platform_unregister_adapter(
+            platform->advanced,
+            platform->descriptor.id);
+    }
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (platform->contract_owner != NULL) {
+        umi_debug_runtime_contract_adapter_destroy(
+            platform->contract_owner);
+        platform->contract_owner = NULL;
+        platform->adapter = NULL;
+    } else /* Protect caller-owned memory by checking that required state is available before it is used. */ if (platform->adapter != NULL) {
+        umi_debug_runtime_adapter_destroy(platform->adapter);
+        platform->adapter = NULL;
+    }
+
+    (void)memset(&platform->descriptor, 0, sizeof(platform->descriptor));
+    return status;
+}
+
+static UmiStatus DebugPlatformStartWithToolDirectory(
+    UmiDebugRuntimePlatform *platform,
+    const char *profile_id,
+    const char *session_id,
+    const char *configuration_id,
+    const char *launch_or_attach_arguments_json,
+    int attach,
+    const char *working_directory,
+    uint32_t timeout_ms,
+    const char *toolDirectory)
+{
+    return DebugPlatformStartWithEnvironment(platform, profile_id, session_id,
+        configuration_id, launch_or_attach_arguments_json, attach, working_directory,
+        timeout_ms, toolDirectory, NULL);
+}
+
+/* Existing profile launches retain their inherited tool environment. */
+UmiStatus umi_debug_runtime_platform_start(
+    UmiDebugRuntimePlatform *platform, const char *profile_id, const char *session_id,
+    const char *configuration_id, const char *launch_or_attach_arguments_json,
+    int attach, const char *working_directory, uint32_t timeout_ms)
+{
+    return DebugPlatformStartWithToolDirectory(platform, profile_id, session_id,
+        configuration_id, launch_or_attach_arguments_json, attach, working_directory,
+        timeout_ms, NULL);
 }
 
 /*
@@ -1545,6 +2676,8 @@ UmiStatus umi_debug_runtime_platform_step_out(
  * Provide the debug runtime platform refresh modules operation used by this module and its
  * client applications.
  */
+/* Keep the large module collection off the native thread stack while preserving the existing request and registry publication. Operation-owned heap storage replaces automatic storage; the earlier implementation is retained for review. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_debug_runtime_platform_refresh_modules(
     UmiDebugRuntimePlatform *platform,
     uint32_t timeout_ms)
@@ -1593,6 +2726,32 @@ UmiStatus umi_debug_runtime_platform_refresh_modules(
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) platform->revision += 1U;
+    return status;
+}
+#endif
+UmiStatus umi_debug_runtime_platform_refresh_modules(
+    UmiDebugRuntimePlatform *platform, uint32_t timeout_ms)
+{
+    if (platform == NULL || platform->adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!platform->capabilities.supports_modules_request) return UMI_STATUS_NOT_IMPLEMENTED;
+    /* The bounded module list is still larger than a typical Windows thread
+     * stack. Its owner is this operation, and every return releases its storage. */
+    UmiDebugRuntimeEnvelope *response = malloc(sizeof *response);
+    UmiDebugRuntimeModuleList *result = malloc(sizeof *result);
+    if (response == NULL || result == NULL) {
+        free(response); free(result); return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    uint64_t sequence = 0U;
+    UmiStatus status = umi_debug_runtime_request_modules(
+        platform->adapter, 0U, UMI_DEBUG_RUNTIME_MAX_ITEMS, &sequence);
+    if (status == UMI_STATUS_OK)
+        status = umi_debug_runtime_adapter_wait_response(platform->adapter, sequence, timeout_ms, response);
+    if (status == UMI_STATUS_OK)
+        status = umi_debug_runtime_decode_modules(response->json, result);
+    if (status == UMI_STATUS_OK)
+        status = umi_debug_runtime_publish_modules(&platform->bridge, result);
+    if (status == UMI_STATUS_OK) ++platform->revision;
+    free(result); free(response);
     return status;
 }
 
@@ -2851,6 +4010,8 @@ UmiStatus umi_debug_runtime_platform_restart(
 
 /* The native launcher composes existing profiles, JSON writer, process transport
  * and DAP state. It does not introduce a second debugger or shell launcher. */
+/* Native launch resolves the reviewed project tool installation before publication and carries its environment into the persistent adapter. The old public function remains compatible. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus UmiDebugRuntimePlatformLaunchNative(UmiDebugRuntimePlatform *platform,
     const char *kind, const char *executable, const char *program,
     const char *working_directory, const char *arguments, uint32_t timeout_ms)
@@ -2924,10 +4085,220 @@ UmiStatus UmiDebugRuntimePlatformLaunchNative(UmiDebugRuntimePlatform *platform,
     return umi_debug_runtime_platform_start(platform, profile.id, session,
         "native.launch", json, 0, working_directory, timeout_ms);
 }
+#endif
+/* Native launch now carries the same reviewed variable overrides as Run, retained in its launch configuration. The previous launch implementation is kept for comparison; empty overrides preserve existing calls. The previous implementation is retained for engineering review. */
+#if 0
+static UmiStatus DebugPlatformLaunchNativeWithToolDirectory(UmiDebugRuntimePlatform *platform,
+    const char *kind, const char *executable, const char *program,
+    const char *working_directory, const char *arguments, uint32_t timeout_ms, const char *toolDirectory)
+{
+    if (platform == NULL || kind == NULL || program == NULL ||
+        working_directory == NULL || timeout_ms == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (platform->active) return UMI_STATUS_BUSY;
+    const char *profileId;
+    if (strcmp(kind, "lldb") == 0) profileId = "debug.adapter.lldb-dap";
+    else if (strcmp(kind, "gdb") == 0) profileId = "debug.adapter.gdb-dap";
+    else return UMI_STATUS_NOT_IMPLEMENTED;
+    if (!umi_fs_is_absolute(program) || !umi_fs_is_absolute(working_directory))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (!umi_fs_is_file(program) || !umi_fs_is_directory(working_directory))
+        return UMI_STATUS_NOT_FOUND;
+    UmiDebugAdapterProfile profile = *umi_debug_runtime_builtin_profile_find(profileId);
+    if (executable != NULL && executable[0] != '\0') {
+        size_t length = strlen(executable);
+        if (length >= sizeof(profile.executable)) return UMI_STATUS_CAPACITY_EXCEEDED;
+        memcpy(profile.executable, executable, length + 1U);
+    }
+    /* Resolve the selected installation before registering or launching anything.
+     * An explicitly configured absolute adapter takes precedence over the folder. */
+    if (toolDirectory != NULL && toolDirectory[0] != '\0')
+    {
+        UmiStatus selectedStatus = UmiProcessSearchDirectoryValidate(toolDirectory);
+        if (selectedStatus != UMI_STATUS_OK) return selectedStatus;
+        if (!umi_fs_is_absolute(profile.executable))
+        {
+            char selected[sizeof profile.executable];
+            selectedStatus = UmiProcessToolProgram(toolDirectory, profile.executable,
+                selected, sizeof selected);
+            if (selectedStatus != UMI_STATUS_OK) return selectedStatus;
+            memcpy(profile.executable, selected, strlen(selected) + 1U);
+        }
+    }
+    UmiLanguageRuntimeArguments argv;
+    UmiStatus status = umi_language_runtime_arguments_parse(arguments != NULL ? arguments : "", &argv);
+    if (status != UMI_STATUS_OK) return status;
+    char json[UMI_DEBUG_RUNTIME_JSON_CAPACITY];
+    UmiLanguageRuntimeJsonWriter writer;
+    umi_language_runtime_json_writer_init(&writer, json, sizeof(json));
+    (void)umi_language_runtime_json_writer_raw(&writer, "{\"program\":");
+    (void)umi_language_runtime_json_writer_string(&writer, program);
+    (void)umi_language_runtime_json_writer_raw(&writer, ",\"cwd\":");
+    (void)umi_language_runtime_json_writer_string(&writer, working_directory);
+    (void)umi_language_runtime_json_writer_raw(&writer, ",\"args\":[");
+    for (size_t index = 0U; index < argv.count; ++index) {
+        if (index != 0U) (void)umi_language_runtime_json_writer_raw(&writer, ",");
+        (void)umi_language_runtime_json_writer_string(&writer, argv.values[index]);
+    }
+    (void)umi_language_runtime_json_writer_raw(&writer,
+        strcmp(kind, "gdb") == 0
+        ? "],\"stopAtBeginningOfMainSubprogram\":true}"
+        : "],\"stopOnEntry\":true,\"disableASLR\":false,\"console\":\"internalConsole\"}");
+    if (writer.status != UMI_STATUS_OK) return writer.status;
+    /* Publish the reviewed launch inputs with the session. Source navigation
+     * can now resolve relative frame paths without borrowing the IDE's CWD. */
+    UmiDebugLaunchConfigurationSnapshot configuration={0};
+    const char *argumentText=arguments!=NULL?arguments:"";
+    if(strlen(program)>=sizeof(configuration.program)||
+        strlen(working_directory)>=sizeof(configuration.working_directory)||
+        strlen(argumentText)>=sizeof(configuration.arguments))return UMI_STATUS_CAPACITY_EXCEEDED;
+    strcpy(configuration.id,"native.launch");strcpy(configuration.name,"Native debugger launch");
+    strcpy(configuration.adapter,kind);strcpy(configuration.program,program);
+    strcpy(configuration.working_directory,working_directory);strcpy(configuration.arguments,argumentText);
+    configuration.stop_on_entry=1;
+    if (platform->native_generation == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = umi_debug_adapter_profile_registry_upsert(
+        umi_debug_service_adapter_profiles(platform->service), &profile);
+    if (status != UMI_STATUS_OK) return status;
+    status=umi_debug_launch_configuration_registry_upsert(
+        umi_debug_service_launch_configuration(platform->service),&configuration);
+    if(status!=UMI_STATUS_OK)return status;
+    char session[128];
+    (void)snprintf(session, sizeof(session), "native.%llu",
+        (unsigned long long)++platform->native_generation);
+    /* Previous stopped state is not evidence for the newly launched process. */
+    umi_debug_thread_registry_clear(umi_debug_service_thread(platform->service));
+    umi_debug_stack_frame_registry_clear(umi_debug_service_stack_frame(platform->service));
+    umi_debug_scope_registry_clear(umi_debug_service_scope(platform->service));
+    umi_debug_variable_registry_clear(umi_debug_service_variable(platform->service));
+    platform->paused = 0; platform->initialized = 0;
+    platform->active_thread_id = 0U; platform->active_frame_id = 0U;
+    return DebugPlatformStartWithToolDirectory(platform, profile.id, session,
+        "native.launch", json, 0, working_directory, timeout_ms, toolDirectory);
+}
+#endif
+static UmiStatus DebugPlatformLaunchNativeWithEnvironment(UmiDebugRuntimePlatform *platform,
+    const char *kind, const char *executable, const char *program,
+    const char *working_directory, const char *arguments, uint32_t timeout_ms, const char *toolDirectory, const char *definitions)
+{
+    if (platform == NULL || kind == NULL || program == NULL ||
+        working_directory == NULL || timeout_ms == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (platform->active) return UMI_STATUS_BUSY;
+    /* Validate before touching profile registries or starting an adapter. The
+     * adapter inherits these settings, so its inferior inherits them without
+     * emitting GDB's replacement-environment DAP field. Shell startup files or
+     * adapter policy can still alter a target environment after launch. */
+    if (definitions == NULL) definitions = "";
+    UmiStatus environmentStatus = UmiProcessEnvironmentValidate(definitions);
+    if (environmentStatus != UMI_STATUS_OK) return environmentStatus;
+
+    const char *profileId;
+    if (strcmp(kind, "lldb") == 0) profileId = "debug.adapter.lldb-dap";
+    else if (strcmp(kind, "gdb") == 0) profileId = "debug.adapter.gdb-dap";
+    else return UMI_STATUS_NOT_IMPLEMENTED;
+    if (!umi_fs_is_absolute(program) || !umi_fs_is_absolute(working_directory))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (!umi_fs_is_file(program) || !umi_fs_is_directory(working_directory))
+        return UMI_STATUS_NOT_FOUND;
+    UmiDebugAdapterProfile profile = *umi_debug_runtime_builtin_profile_find(profileId);
+    if (executable != NULL && executable[0] != '\0') {
+        size_t length = strlen(executable);
+        if (length >= sizeof(profile.executable)) return UMI_STATUS_CAPACITY_EXCEEDED;
+        memcpy(profile.executable, executable, length + 1U);
+    }
+    /* Resolve the selected installation before registering or launching anything.
+     * An explicitly configured absolute adapter takes precedence over the folder. */
+    if (toolDirectory != NULL && toolDirectory[0] != '\0')
+    {
+        UmiStatus selectedStatus = UmiProcessSearchDirectoryValidate(toolDirectory);
+        if (selectedStatus != UMI_STATUS_OK) return selectedStatus;
+        if (!umi_fs_is_absolute(profile.executable))
+        {
+            char selected[sizeof profile.executable];
+            selectedStatus = UmiProcessToolProgram(toolDirectory, profile.executable,
+                selected, sizeof selected);
+            if (selectedStatus != UMI_STATUS_OK) return selectedStatus;
+            memcpy(profile.executable, selected, strlen(selected) + 1U);
+        }
+    }
+    UmiLanguageRuntimeArguments argv;
+    UmiStatus status = umi_language_runtime_arguments_parse(arguments != NULL ? arguments : "", &argv);
+    if (status != UMI_STATUS_OK) return status;
+    char json[UMI_DEBUG_RUNTIME_JSON_CAPACITY];
+    UmiLanguageRuntimeJsonWriter writer;
+    umi_language_runtime_json_writer_init(&writer, json, sizeof(json));
+    (void)umi_language_runtime_json_writer_raw(&writer, "{\"program\":");
+    (void)umi_language_runtime_json_writer_string(&writer, program);
+    (void)umi_language_runtime_json_writer_raw(&writer, ",\"cwd\":");
+    (void)umi_language_runtime_json_writer_string(&writer, working_directory);
+    (void)umi_language_runtime_json_writer_raw(&writer, ",\"args\":[");
+    for (size_t index = 0U; index < argv.count; ++index) {
+        if (index != 0U) (void)umi_language_runtime_json_writer_raw(&writer, ",");
+        (void)umi_language_runtime_json_writer_string(&writer, argv.values[index]);
+    }
+    (void)umi_language_runtime_json_writer_raw(&writer,
+        strcmp(kind, "gdb") == 0
+        ? "],\"stopAtBeginningOfMainSubprogram\":true}"
+        : "],\"stopOnEntry\":true,\"disableASLR\":false,\"console\":\"internalConsole\"}");
+    if (writer.status != UMI_STATUS_OK) return writer.status;
+    /* Publish the reviewed launch inputs with the session. Source navigation
+     * can now resolve relative frame paths without borrowing the IDE's CWD. */
+    UmiDebugLaunchConfigurationSnapshot configuration={0};
+    const char *argumentText=arguments!=NULL?arguments:"";
+    if(strlen(program)>=sizeof(configuration.program)||
+        strlen(working_directory)>=sizeof(configuration.working_directory)||
+        strlen(argumentText)>=sizeof(configuration.arguments))return UMI_STATUS_CAPACITY_EXCEEDED;
+    strcpy(configuration.id,"native.launch");strcpy(configuration.name,"Native debugger launch");
+    strcpy(configuration.adapter,kind);strcpy(configuration.program,program);
+    strcpy(configuration.working_directory,working_directory);strcpy(configuration.arguments,argumentText);
+    if (strlen(definitions) >= sizeof configuration.environment)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    memcpy(configuration.environment, definitions, strlen(definitions) + 1U);
+    configuration.stop_on_entry=1;
+    if (platform->native_generation == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = umi_debug_adapter_profile_registry_upsert(
+        umi_debug_service_adapter_profiles(platform->service), &profile);
+    if (status != UMI_STATUS_OK) return status;
+    status=umi_debug_launch_configuration_registry_upsert(
+        umi_debug_service_launch_configuration(platform->service),&configuration);
+    if(status!=UMI_STATUS_OK)return status;
+    char session[128];
+    (void)snprintf(session, sizeof(session), "native.%llu",
+        (unsigned long long)++platform->native_generation);
+    /* Previous stopped state is not evidence for the newly launched process. */
+    umi_debug_thread_registry_clear(umi_debug_service_thread(platform->service));
+    umi_debug_stack_frame_registry_clear(umi_debug_service_stack_frame(platform->service));
+    umi_debug_scope_registry_clear(umi_debug_service_scope(platform->service));
+    umi_debug_variable_registry_clear(umi_debug_service_variable(platform->service));
+    platform->paused = 0; platform->initialized = 0;
+    platform->active_thread_id = 0U; platform->active_frame_id = 0U;
+    return DebugPlatformStartWithEnvironment(platform, profile.id, session,
+        "native.launch", json, 0, working_directory, timeout_ms, toolDirectory, definitions);
+}
+
+static UmiStatus DebugPlatformLaunchNativeWithToolDirectory(UmiDebugRuntimePlatform *platform,
+    const char *kind, const char *executable, const char *program,
+    const char *working_directory, const char *arguments, uint32_t timeout_ms, const char *toolDirectory)
+{
+    return DebugPlatformLaunchNativeWithEnvironment(platform, kind, executable, program,
+        working_directory, arguments, timeout_ms, toolDirectory, NULL);
+}
+
+/* Preserve inherited selection for existing native-launch callers. */
+UmiStatus UmiDebugRuntimePlatformLaunchNative(UmiDebugRuntimePlatform *platform,
+    const char *kind, const char *executable, const char *program,
+    const char *working_directory, const char *arguments, uint32_t timeout_ms)
+{
+    return DebugPlatformLaunchNativeWithToolDirectory(platform, kind, executable, program,
+        working_directory, arguments, timeout_ms, NULL);
+}
 
 /* A vector is formatted losslessly before reaching the established native
  * launcher. This keeps adapter selection, launch evidence and DAP setup in one
  * place while making Run and Debug agree on empty values and quoted paths. */
+/* The argument-vector launch now supports the same explicit tool installation used by build and test. Formatting remains lossless and bounded before the native launch begins. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus UmiDebugRuntimePlatformLaunchArguments(UmiDebugRuntimePlatform *platform,
     const char *kind, const char *executable, const char *program,
     const char *working_directory, const char *const *arguments, size_t count,
@@ -2938,6 +4309,51 @@ UmiStatus UmiDebugRuntimePlatformLaunchArguments(UmiDebugRuntimePlatform *platfo
     if (status != UMI_STATUS_OK) return status;
     return UmiDebugRuntimePlatformLaunchNative(platform, kind, executable, program,
         working_directory, text, timeout_ms);
+}
+#endif
+/* The argument-vector API delegates to the environment-aware launch without reinterpreting arguments. Preserve the previous call path for API review. The previous implementation is retained for engineering review. */
+#if 0
+UmiStatus UmiDebugRuntimePlatformLaunchArgumentsWithToolDirectory(UmiDebugRuntimePlatform *platform,
+    const char *kind, const char *executable, const char *program,
+    const char *working_directory, const char *const *arguments, size_t count,
+    uint32_t timeout_ms, const char *tool_directory)
+{
+    char text[sizeof(((UmiDebugLaunchConfigurationSnapshot *)0)->arguments)];
+    UmiStatus status = UmiArgumentsFormat(arguments, count, text, sizeof(text));
+    if (status != UMI_STATUS_OK) return status;
+    return DebugPlatformLaunchNativeWithToolDirectory(platform, kind, executable, program,
+        working_directory, text, timeout_ms, tool_directory);
+}
+#endif
+UmiStatus UmiDebugRuntimePlatformLaunchArgumentsWithEnvironment(UmiDebugRuntimePlatform *platform,
+    const char *kind, const char *executable, const char *program,
+    const char *working_directory, const char *const *arguments, size_t count,
+    uint32_t timeout_ms, const char *tool_directory, const char *definitions)
+{
+    char text[sizeof(((UmiDebugLaunchConfigurationSnapshot *)0)->arguments)];
+    UmiStatus status = UmiArgumentsFormat(arguments, count, text, sizeof(text));
+    if (status != UMI_STATUS_OK) return status;
+    return DebugPlatformLaunchNativeWithEnvironment(platform, kind, executable, program,
+        working_directory, text, timeout_ms, tool_directory, definitions);
+}
+
+UmiStatus UmiDebugRuntimePlatformLaunchArgumentsWithToolDirectory(UmiDebugRuntimePlatform *platform,
+    const char *kind, const char *executable, const char *program,
+    const char *working_directory, const char *const *arguments, size_t count,
+    uint32_t timeout_ms, const char *tool_directory)
+{
+    return UmiDebugRuntimePlatformLaunchArgumentsWithEnvironment(platform, kind, executable,
+        program, working_directory, arguments, count, timeout_ms, tool_directory, NULL);
+}
+
+/* Retain the established argument-vector API. */
+UmiStatus UmiDebugRuntimePlatformLaunchArguments(UmiDebugRuntimePlatform *platform,
+    const char *kind, const char *executable, const char *program,
+    const char *working_directory, const char *const *arguments, size_t count,
+    uint32_t timeout_ms)
+{
+    return UmiDebugRuntimePlatformLaunchArgumentsWithToolDirectory(platform, kind,
+        executable, program, working_directory, arguments, count, timeout_ms, NULL);
 }
 
 UmiStatus UmiDebugRuntimePlatformInspectStopped(UmiDebugRuntimePlatform *platform,
@@ -2990,3 +4406,6 @@ UmiStatus UmiDebugRuntimePlatformInspectStopped(UmiDebugRuntimePlatform *platfor
 
 /* Share captured assignment policy with every native debugger host. */
 #include "variable_assignment.inc"
+
+/* Running processes use the same protocol sequencing and inspection ownership as launches. */
+#include "native_attach.inc"

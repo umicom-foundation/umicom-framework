@@ -5,6 +5,7 @@
  * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
+#include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/document_commands.h"
 #include "umicom/ui/gtk4/interaction_recording.h"
 #include <gtk/gtk.h>
@@ -34,6 +35,8 @@ static void Complete(void *data, UmiStatus status)
     if (completion->detach != NULL)
         (void)UmiGtk4AdapterBindDocumentEditing(completion->detach, NULL, NULL, NULL);
 }
+/* The rendered-only search missed controls in collapsed review panels. The Framework logical-tree helper replaces it; retain the former traversal for review. */
+#if 0
 static GtkWidget *Find(GtkWidget *root, const char *id)
 {
     const char *actual = g_object_get_data(G_OBJECT(root), "umicom-automation-id");
@@ -47,6 +50,13 @@ static GtkWidget *Find(GtkWidget *root, const char *id)
             return found;
     }
     return NULL;
+}
+#endif
+/* Inspect logical ownership as well as rendered children. Finding a control
+ * does not grant permission to edit it or make a collapsed panel visible. */
+static GtkWidget *Find(GtkWidget *root, const char *id)
+{
+    return umi_gtk4_automation_find_tagged_widget(root, id);
 }
 static GtkWindow *Review(void)
 {
@@ -160,10 +170,16 @@ static int ProgramMain(int argc, char **argv)
     view.selection_length = 2U;
     view.dirty = 1;
     CHECK(UmiUiDocumentViewModelUpsertText(views, &view, "pu", 2U) == UMI_STATUS_OK);
+    /* UpsertText copies its input; reload the owned preview before later
+     * metadata edits so this fixture cannot restore the previous draft. */
+    CHECK(umi_ui_document_view_model_find(views, view.view_id, &view) == UMI_STATUS_OK);
     if (strcmp(mode, "multiline") == 0)
     {
         view.selection_length = 3U;
         CHECK(UmiUiDocumentViewModelUpsertText(views, &view, "pu\n", 3U) == UMI_STATUS_OK);
+    /* UpsertText copies its input; reload the owned preview before later
+     * metadata edits so this fixture cannot restore the previous draft. */
+    CHECK(umi_ui_document_view_model_find(views, view.view_id, &view) == UMI_STATUS_OK);
     }
     if (strcmp(mode, "surrounding") == 0 || strcmp(mode, "no-selection") == 0)
     {
@@ -324,6 +340,9 @@ static int ProgramMain(int argc, char **argv)
         gtk_check_button_set_active(GTK_CHECK_BUTTON(approve), TRUE);
     if (strcmp(mode, "stale") == 0)
         CHECK(UmiUiDocumentViewModelUpsertText(views, &view, "push", 4U) == UMI_STATUS_OK);
+    /* UpsertText copies its input; reload the owned preview before later
+     * metadata edits so this fixture cannot restore the previous draft. */
+    CHECK(umi_ui_document_view_model_find(views, view.view_id, &view) == UMI_STATUS_OK);
     if (strcmp(mode, "completion-unbind") == 0)
         result.detach = adapter;
     g_signal_emit_by_name(apply, "clicked");

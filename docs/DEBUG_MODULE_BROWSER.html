@@ -1,0 +1,18 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Inspect loaded debugger modules</title><style>body{font:16px/1.6 system-ui;max-width:900px;margin:40px auto;padding:0 24px}code{overflow-wrap:anywhere}li{margin-bottom:12px}</style></head><body><h1>Inspect loaded debugger modules</h1>
+<p>A module is a program or shared library known to the debugger. Its symbol information connects machine instructions to function names and source lines. The module browser reports what the connected adapter supplies; it does not search your disk or load symbol files.</p>
+<h2>Read modules in Studio</h2><ol>
+<li>Open your project, review its location and trust it. Start a native debugging session or attach to a process you are authorised to debug.</li>
+<li>Open the Debug surface, expand <strong>Loaded modules</strong>, then choose <strong>Refresh modules</strong>. Nothing is requested before this action.</li>
+<li>Expand a module to inspect its path, version, symbol status, symbol file, timestamp, address range and the optional user-code and optimisation flags. <strong>Not reported</strong> means the adapter omitted a value.</li>
+<li>Use <strong>Next</strong> or <strong>Previous</strong> to read another page. Each request contains at most 32 modules. A full page without a total may require another request to discover the end.</li>
+<li>After restarting, reconnecting or changing projects, choose <strong>Refresh modules</strong> again. A page captured from the old connection cannot be used to navigate the new one.</li>
+</ol><h2>Interpret the results</h2>
+<p>Modules can load or unload between requests. Pages are separate observations, not a frozen snapshot of a process. Numeric and string module IDs remain distinct even when their visible spelling matches. Paths are adapter metadata and may refer to another machine; the browser does not treat them as trusted local files.</p>
+<p>The displayed total may be absent. Navigation stops at the adapter protocol's maximum starting index of 2,147,483,647. Oversized fields, duplicate IDs within a page and malformed responses are reported as errors rather than silently truncated.</p>
+<h2>If a request fails</h2><ol>
+<li>If support is unavailable, check that the selected adapter advertises module browsing. A connected session alone does not guarantee that feature.</li>
+<li>If a session or workspace changed, refresh from the first page. Do not assume an old list describes the new process.</li>
+<li>If the adapter times out or sends an invalid response, inspect its own diagnostic output. The browser clears the stale page and does not retry automatically.</li>
+</ol><p>The request is bounded and synchronous, so the current Studio window may pause briefly while waiting. It does not resume or pause execution, evaluate an expression or change breakpoints.</p>
+<h2>Use the Framework component</h2><p>Read <code>UmiDebugRuntimeModuleSessionRead</code>, then pass that captured identity to <code>UmiDebugRuntimeModulePageRead</code>. Call on the platform owner thread after checking workspace authority. The caller owns the returned page; failures leave it unchanged. Pending lifecycle events block inspection, and every restart attempt retires earlier captures. Allocate pages on the heap because their copied path fields are large. The existing whole-registry refresh API remains available for existing consumers.</p>
+<p>Protocol reference: <a href="https://microsoft.github.io/debug-adapter-protocol/specification#Requests_Modules">Debug Adapter Protocol modules request</a>.</p></body></html>
