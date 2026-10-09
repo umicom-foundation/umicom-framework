@@ -24,7 +24,11 @@ elseif(MSVC)
 endif()
 
 find_package(Threads REQUIRED)
+# Tool-aware test workers share production path resolution; no duplicate
+# process transport is linked into tests that inject that boundary.
 set(shared_sources
+    "${framework_root}/src/platform/process_search_path.c"
+    "${framework_root}/src/platform/path.c"
     "${framework_root}/src/platform/task.c"
     "${framework_root}/src/platform/task_queue.c"
     "${framework_root}/src/platform/threading.c"

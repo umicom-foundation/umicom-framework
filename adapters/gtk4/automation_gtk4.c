@@ -43,6 +43,8 @@ static int automation_copy_text(
     return written >= 0 && (size_t)written < capacity;
 }
 
+/* Logical lookup now lives in a small GTK module usable by standalone broker inspectors. The driver shares its private traversal; the former in-file implementation is retained for engineering review. The previous implementation is retained for engineering review. */
+#if 0
 /* Retain the first matching object while checking for ambiguous identifiers.
  * A partial or ambiguous tree is not a licence to activate its first match. */
 typedef struct AutomationSearch {
@@ -50,6 +52,7 @@ typedef struct AutomationSearch {
     size_t matches;
     size_t visited;
     UmiStatus status;
+    bool by_widget_name;
 } AutomationSearch;
 static void automation_find_widgets(GtkWidget *widget, const char *target_id,
     GtkWidget *excluded, unsigned depth, AutomationSearch *search)
@@ -62,7 +65,12 @@ static void automation_find_widgets(GtkWidget *widget, const char *target_id,
         return;
     }
     ++search->visited;
+/* The bounded logical traversal now supports existing GTK names as well as automation IDs. One traversal retains ambiguity and ownership checks for both selectors. The previous implementation is retained for engineering review. */
+#if 0
     id = g_object_get_data(G_OBJECT(widget), UMI_GTK4_AUTOMATION_ID_KEY);
+#endif
+    id = search->by_widget_name ? gtk_widget_get_name(widget) :
+        g_object_get_data(G_OBJECT(widget), UMI_GTK4_AUTOMATION_ID_KEY);
     if (id != NULL && strcmp(id, target_id) == 0 && search->found != widget) {
         ++search->matches;
         if (search->found == NULL) search->found = g_object_ref(widget);
@@ -70,7 +78,47 @@ static void automation_find_widgets(GtkWidget *widget, const char *target_id,
     for (child = gtk_widget_get_first_child(widget); child != NULL;
          child = gtk_widget_get_next_sibling(child))
         automation_find_widgets(child, target_id, excluded, depth + 1U, search);
+    /* GtkExpander owns its content even while the collapsed content is absent
+     * from the rendered widget tree. Inspect that logical child once, without
+     * expanding it; visible-action checks still require a mapped widget. */
+    if (GTK_IS_EXPANDER(widget)) {
+        GtkWidget *content = gtk_expander_get_child(GTK_EXPANDER(widget));
+        if (content != NULL && !gtk_widget_is_ancestor(content, widget))
+            automation_find_widgets(content, target_id, excluded, depth + 1U, search);
+    }
 }
+
+/* A fixture may inspect an unpresented panel without activating it. Borrow
+ * the unique result from the caller-owned tree; traversal itself retains a
+ * reference only long enough to detect ambiguity safely. */
+void *umi_gtk4_automation_find_tagged_widget(void *native_root, const char *automation_id)
+{
+    if (native_root == NULL || !GTK_IS_WIDGET(native_root) ||
+        automation_id == NULL || automation_id[0] == '\0') return NULL;
+    AutomationSearch search = {0};
+    automation_find_widgets(GTK_WIDGET(native_root), automation_id, NULL, 0U, &search);
+    GtkWidget *result = search.status == UMI_STATUS_OK && search.matches == 1U
+        ? search.found : NULL;
+    g_clear_object(&search.found);
+    return result;
+}
+
+/* Compatibility lookup shares the same bounds and logical-child traversal as
+ * tagged controls. It cannot broaden the driver to unrelated top-level windows. */
+void *umi_gtk4_automation_find_named_widget(void *native_root, const char *widget_name)
+{
+    if (native_root == NULL || !GTK_IS_WIDGET(native_root) ||
+        widget_name == NULL || widget_name[0] == '\0') return NULL;
+    AutomationSearch search = {0};
+    search.by_widget_name = true;
+    automation_find_widgets(GTK_WIDGET(native_root), widget_name, NULL, 0U, &search);
+    GtkWidget *result = search.status == UMI_STATUS_OK && search.matches == 1U
+        ? search.found : NULL;
+    g_clear_object(&search.found);
+    return result;
+}
+#endif
+#include "widget_lookup_internal.h"
 
 /* Check whether a top-level window belongs to the driver's window family. */
 static int automation_window_is_related(

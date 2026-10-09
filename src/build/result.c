@@ -79,6 +79,8 @@ void umi_build_result_finish(UmiBuildResult *result,
     }
 }
 
+/* Completed summaries now disclose records that did not fit the diagnostic representation. The earlier summary remains for compatibility review. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_result_summary(const UmiBuildResult *result,
                                    char *out_text,
                                    size_t capacity)
@@ -102,6 +104,36 @@ UmiStatus umi_build_result_summary(const UmiBuildResult *result,
             &result->diagnostics,
             UMI_BUILD_DIAGNOSTIC_ERROR
         )
+    );
+    return written < 0 || (size_t)written >= capacity
+        ? UMI_STATUS_CAPACITY_EXCEEDED
+        : UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_build_result_summary(const UmiBuildResult *result,
+                                   char *out_text,
+                                   size_t capacity)
+{
+    int written;
+    if (result == NULL || out_text == NULL || capacity == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    written = snprintf(
+        out_text,
+        capacity,
+        "Build %llu %s: %s, exit=%d, duration=%llums, "
+        "diagnostics=%zu, errors=%zu, unrepresented=%zu",
+        (unsigned long long)result->operation_id,
+        umi_build_phase_text(result->phase),
+        umi_build_state_text(result->state),
+        result->exit_code,
+        (unsigned long long)result->duration_ms,
+        result->diagnostics.count,
+        umi_build_diagnostic_list_count_severity(
+            &result->diagnostics,
+            UMI_BUILD_DIAGNOSTIC_ERROR
+        ),
+        result->diagnostics.dropped
     );
     return written < 0 || (size_t)written >= capacity
         ? UMI_STATUS_CAPACITY_EXCEEDED

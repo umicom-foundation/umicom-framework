@@ -175,6 +175,15 @@ UmiStatus UmiCreativeAuditionGtkLoadWave(GtkWidget *root, const void *bytes, siz
     UmiCreativeAudioDestroy(clip);
     if (status == UMI_STATUS_OK)
     {
+        /* Validate input first, then preflight the optional native backend.
+         * Keep an earlier preview intact when a component is missing. */
+        char diagnostic[512];
+        status = UmiCreativeAuditionGtkBackendStatus(diagnostic, sizeof(diagnostic));
+        if (status != UMI_STATUS_OK)
+            gtk_label_set_text(GTK_LABEL(state->status), diagnostic);
+    }
+    if (status == UMI_STATUS_OK)
+    {
         /* The shared renderer emits only PCM fmt/data chunks. Backend input has
          * no filename, remote location or optional metadata to interpret. */
         GBytes *owned = g_bytes_new(canonical.bytes, canonical.size);

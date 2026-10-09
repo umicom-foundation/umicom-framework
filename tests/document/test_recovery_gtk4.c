@@ -6,6 +6,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 
+#include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/document_recovery.h"
 #include "umicom/document/recovery_storage.h"
 #include "umicom/platform/rooted_files.h"
@@ -36,6 +37,8 @@ static void Complete(void *data, UmiStatus status)
     if (done->detach != NULL)
         (void)UmiGtk4AdapterBindDocumentEditing(done->detach, NULL, NULL, NULL);
 }
+/* The rendered-only search missed controls in collapsed review panels. The Framework logical-tree helper replaces it; retain the former traversal for review. */
+#if 0
 static GtkWidget *Find(GtkWidget *root, const char *id)
 {
     const char *tag = g_object_get_data(G_OBJECT(root), "umicom-automation-id");
@@ -49,6 +52,13 @@ static GtkWidget *Find(GtkWidget *root, const char *id)
             return found;
     }
     return NULL;
+}
+#endif
+/* Inspect logical ownership as well as rendered children. Finding a control
+ * does not grant permission to edit it or make a collapsed panel visible. */
+static GtkWidget *Find(GtkWidget *root, const char *id)
+{
+    return umi_gtk4_automation_find_tagged_widget(root, id);
 }
 static GtkWindow *Review(void)
 {
@@ -168,6 +178,9 @@ int main(int argc, char **argv)
         view.cursor_offset = strcmp(mode, "selection") == 0 ? 8U : 0U;
         view.selection_length = strcmp(mode, "selection") == 0 ? 6U : 0U;
         CHECK(UmiUiDocumentViewModelUpsertText(views, &view, source, strlen(source)) == UMI_STATUS_OK);
+    /* UpsertText copies its input; reload the owned preview before later
+     * metadata edits so this fixture cannot restore the previous draft. */
+    CHECK(umi_ui_document_view_model_find(views, view.view_id, &view) == UMI_STATUS_OK);
     }
     if (strcmp(mode, "capture") == 0)
         CHECK(umi_document_coordinator_sync_active(documents) == UMI_STATUS_OK);
@@ -280,7 +293,12 @@ int main(int argc, char **argv)
     if (strcmp(mode, "parent-close") == 0)
         gtk_window_destroy(GTK_WINDOW(umi_gtk4_adapter_native_window(adapter)));
     if (strcmp(mode, "change-selection") == 0)
+        /* GTK may ignore an invalid index on a nonempty list. An empty model
+         * exercises the no-selection path. Retain the former setup for review. */
+#if 0
         gtk_drop_down_set_selected(GTK_DROP_DOWN(choice), GTK_INVALID_LIST_POSITION);
+#endif
+        gtk_drop_down_set_model(GTK_DROP_DOWN(choice), NULL);
     CHECK(Wait(dialog));
     if (substitution != 0U)
         g_signal_handler_disconnect(gtk_text_view_get_buffer(GTK_TEXT_VIEW(preview)), substitution);

@@ -9,6 +9,7 @@
 #ifndef UMICOM_DATA_JOB_HISTORY_H
 #define UMICOM_DATA_JOB_HISTORY_H
 #include "umicom/data/data_server.h"
+#include "umicom/data/job_identity.h"
 #include <stdbool.h>
 #include <stdint.h>
 #ifdef __cplusplus
@@ -38,6 +39,9 @@ extern "C"
         UmiStatus result;
         char kind[UMI_JOB_HISTORY_KIND_CAPACITY];
         char label[UMI_JOB_HISTORY_LABEL_CAPACITY];
+        /* Appended evidence preserves earlier fields; rebuild consumers when
+         * adopting the larger record. Legacy stored entries leave this empty. */
+        UmiJobIdentity identity;
     } UmiJobHistoryEntry;
     typedef struct UmiJobHistorySnapshot
     {
@@ -59,6 +63,13 @@ extern "C"
  * Full history refuses new work; it never silently evicts unfinished evidence. */
     UmiStatus UmiJobHistoryBegin(UmiJobHistory *history, const char *kind, const char *label,
                                  unsigned total_steps, UmiJobHistoryEntry *out_entry);
+    /** Begin with copied identity evidence in the same transaction as the job.
+     * A NULL identity preserves the legacy unrecorded workflow. Identity cannot
+     * be changed later to make an old result appear to apply to new inputs.
+     * Invalid evidence or failed persistence leaves out_entry unchanged. */
+    UmiStatus UmiJobHistoryBeginIdentified(UmiJobHistory *history, const char *kind,
+        const char *label, unsigned total_steps, const UmiJobIdentity *identity,
+        UmiJobHistoryEntry *out_entry);
     /* Compare the persisted revision before replacing it. Progress cannot move back.
  * PREPARED -> RUNNING -> terminal; PREPARED may fail/cancel before execution.
  * Success requires every step. Failure/cancellation retain actual progress.

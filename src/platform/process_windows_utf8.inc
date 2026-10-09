@@ -6,6 +6,8 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 
+/* Child environment preparation is shared with persistent language and debugger processes. The shared helper keeps Unicode conversion, inherited variables and bounded allocation consistent. The previous implementation is retained for engineering review. */
+#if 0
 /* All public text remains UTF-8. CreateProcessW requires writable UTF-16. */
 static UmiStatus UmiWindowsUtf16(const char *text, wchar_t **out)
 {
@@ -115,6 +117,9 @@ done:
     return status;
 }
 
+
+#endif
+#include "process_windows_environment.inc"
 /* Resolve before CreateProcess so an executable containing spaces is never
  * interpreted as several possible filenames. Prefer explicit tool paths. */
 static UmiStatus UmiWindowsProgram(const UmiProcessRequest *request, wchar_t **out)

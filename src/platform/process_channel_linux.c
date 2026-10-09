@@ -66,6 +66,8 @@ static void Reap(UmiProcessChannel *c){
         c->snapshot.exitCode=WIFEXITED(status)?WEXITSTATUS(status):128+(WIFSIGNALED(status)?WTERMSIG(status):0);
     }
 }
+/* Native launch now accepts a privately prepared environment and protects private descriptors from standard-stream aliasing. The earlier restricted launch remains available through Open and is retained for review. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus UmiProcessChannelOpen(const UmiProcessChannelRequest *r,UmiProcessChannel **out){
     if(!out)return UMI_STATUS_INVALID_ARGUMENT;
     *out=NULL;
@@ -187,6 +189,168 @@ UmiStatus UmiProcessChannelOpen(const UmiProcessChannelRequest *r,UmiProcessChan
     UmiProcessChannelDestroy(c);
     return s;
 }
+#endif
+
+#include "process_posix_launch.inc"
+/* GUI hosts can have closed standard descriptors. Move every private descriptor
+ * above them before dup2, so redirecting stdin cannot overwrite an executable or
+ * a launch-error pipe. The prepared environment is owned by the caller. */
+static int ChannelDescriptorAboveStdio(int *descriptor)
+{
+    if (*descriptor > STDERR_FILENO) return 1;
+    if (*descriptor < 0) return 0;
+    int copy = fcntl(*descriptor, F_DUPFD_CLOEXEC, STDERR_FILENO + 1);
+    if (copy < 0) return 0;
+    (void)close(*descriptor);
+    *descriptor = copy;
+    return 1;
+}
+static UmiStatus ChannelOpenNative(const UmiProcessChannelRequest *r, char *const *environment, UmiProcessChannel **out){
+    if(!out)return UMI_STATUS_INVALID_ARGUMENT;
+    *out=NULL;
+    UmiStatus s=PcValidate(r);
+    if(s!=UMI_STATUS_OK)return s;
+    struct stat st;
+    int executable=open(r->program,O_RDONLY|O_CLOEXEC|O_NOFOLLOW);
+    if(executable>=0 && !ChannelDescriptorAboveStdio(&executable)){Close(&executable);return UMI_STATUS_IO_ERROR;}
+    unsigned char header[64];
+    ssize_t headerSize=executable<0?-1:pread(executable,header,sizeof header,0);
+    if(executable<0||fstat(executable,&st)||!S_ISREG(st.st_mode)||!(st.st_mode&0111)||headerSize!=64||memcmp(header,"\177ELF",4)||header[4]!=2||header[5]!=1){
+        if(executable>=0)close(executable);
+        return UMI_STATUS_UNAVAILABLE;
+    }
+#if defined(__x86_64__)
+    if(header[18]!=62||header[19]!=0){
+        close(executable);
+        return UMI_STATUS_UNAVAILABLE;
+    }
+#elif defined(__aarch64__)
+    if(header[18]!=183||header[19]!=0){
+        close(executable);
+        return UMI_STATUS_UNAVAILABLE;
+    }
+#endif
+    if(lstat(r->workingDirectory,&st)||!S_ISDIR(st.st_mode)){
+        close(executable);
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    char *argv[UMI_CHANNEL_MAX_ARGUMENTS+2U];
+    argv[0]=(char *)r->program;
+    for(size_t i=0;i<r->argumentCount;++i)argv[i+1U]=(char *)r->arguments[i];
+    argv[r->argumentCount+1U]=NULL;
+    int in[2]={
+        -1,-1
+    },o[2]={
+        -1,-1
+    },e[2]={
+        -1,-1
+    },launch[2]={
+        -1,-1
+    };
+    UmiProcessChannel *c=calloc(1,sizeof *c);
+    if(!c){
+        close(executable);
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    c->input=c->output=c->error=-1;
+    c->snapshot.exitCode=-1;
+    if(socketpair(AF_UNIX,SOCK_STREAM|SOCK_CLOEXEC,0,in)||!ChannelDescriptorAboveStdio(&in[0])||!ChannelDescriptorAboveStdio(&in[1])||!UmiPosixPipe(o)||!UmiPosixPipe(e)||!UmiPosixPipe(launch)){
+        s=UMI_STATUS_IO_ERROR;
+        goto failed;
+    }
+    long maxFd=sysconf(_SC_OPEN_MAX);
+    if(maxFd<0)maxFd=65536;
+    pid_t parent=getpid();
+    pid_t pid=fork();
+    if(pid<0){
+        s=UMI_STATUS_IO_ERROR;
+        goto failed;
+    }
+    if(pid==0){
+        int error=0;
+        close(launch[0]);
+        if(getppid()!=parent)_exit(125);
+        if(prctl(PR_SET_PDEATHSIG,SIGKILL)||setpgid(0,0)||chdir(r->workingDirectory)||dup2(in[1],STDIN_FILENO)<0||dup2(o[1],STDOUT_FILENO)<0||dup2(e[1],STDERR_FILENO)<0)error=errno;
+        for(int fd=3;fd<maxFd;++fd)if(fd!=launch[1]&&fd!=executable)close(fd);
+        if(getppid()!=parent)_exit(125);
+        if(!error)fexecve(executable,argv,environment);
+        if(!error)error=errno;
+        UmiPosixChildFail(launch[1],error);
+    }
+    Close(&executable);
+    c->process=pid;
+    c->snapshot.processId=(uint64_t)pid;
+    c->snapshot.running=1;
+    Close(&in[1]);
+    Close(&o[1]);
+    Close(&e[1]);
+    Close(&launch[1]);
+    int error=0;
+    ssize_t got;
+    do{
+        got=read(launch[0],&error,sizeof error);
+    }
+    while(got<0&&errno==EINTR);
+    Close(&launch[0]);
+    if(got!=0){
+        s=UMI_STATUS_UNAVAILABLE;
+        UmiProcessChannelTerminate(c);
+        goto failed;
+    }
+    c->input=in[0];
+    in[0]=-1;
+    c->output=o[0];
+    o[0]=-1;
+    c->error=e[0];
+    e[0]=-1;
+    if(fcntl(c->input,F_SETFL,O_NONBLOCK)<0||fcntl(c->output,F_SETFL,O_NONBLOCK)<0||fcntl(c->error,F_SETFL,O_NONBLOCK)<0){
+        s=UMI_STATUS_IO_ERROR;
+        goto failed;
+    }
+    *out=c;
+    return UMI_STATUS_OK;
+    failed:     Close(&executable);
+    Close(&in[0]);
+    Close(&in[1]);
+    Close(&o[0]);
+    Close(&o[1]);
+    Close(&e[0]);
+    Close(&e[1]);
+    Close(&launch[0]);
+    Close(&launch[1]);
+    UmiProcessChannelDestroy(c);
+    return s;
+}
+UmiStatus UmiProcessChannelOpen(const UmiProcessChannelRequest *request, UmiProcessChannel **out)
+{
+    char *environment[] = {"PATH=/usr/bin:/bin", "LANG=C.UTF-8", "LC_ALL=C.UTF-8", NULL};
+    return ChannelOpenNative(request, environment, out);
+}
+UmiStatus UmiProcessChannelOpenProgram(const UmiProcessChannelRequest *request,
+    const UmiEnvironmentVariable *environment, size_t count, UmiProcessChannel **out)
+{
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out = NULL;
+    UmiStatus status = PcValidate(request);
+    if (status == UMI_STATUS_OK) status = PcEnvironmentValidate(environment, count);
+    if (status != UMI_STATUS_OK) return status;
+    UmiProcessRequest values = {0};
+    values.program = request->program;
+    values.environment = environment;
+    values.environment_count = count;
+    UmiPosixLaunch launch;
+    status = UmiPosixLaunchPrepare(&values, &launch);
+    if (status == UMI_STATUS_OK) status = ChannelOpenNative(request, launch.environment, out);
+    UmiPosixLaunchClear(&launch);
+    return status;
+}
+UmiStatus UmiProcessChannelCloseInput(UmiProcessChannel *channel)
+{
+    if (channel == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    Close(&channel->input);
+    return UMI_STATUS_OK;
+}
+
 UmiStatus UmiProcessChannelRead(UmiProcessChannel *c,void *b,size_t cap,size_t *out,unsigned timeout){
     if(!c||!b||!cap||!out||cap>65536U||timeout>60000U)return UMI_STATUS_INVALID_ARGUMENT;
     *out=0;
@@ -219,8 +383,37 @@ UmiStatus UmiProcessChannelRead(UmiProcessChannel *c,void *b,size_t cap,size_t *
         if(poll(p,2,remaining)<0&&errno!=EINTR)return UMI_STATUS_IO_ERROR;
     }
 }
+/* An explicit stdin close must reject further writes before a descriptor can be reused. The earlier writer is retained for review. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus UmiProcessChannelWrite(UmiProcessChannel *c,const void *b,size_t n,unsigned timeout){
     if(!c||(!b&&n)||n>4096U||timeout>60000U)return UMI_STATUS_INVALID_ARGUMENT;
+    uint64_t end=PcMilliseconds()+timeout;
+    size_t used=0;
+    while(used<n){
+        Drain(c);
+        Reap(c);
+        if(!c->snapshot.running)return UMI_STATUS_INVALID_STATE;
+        ssize_t sent=send(c->input,(const char *)b+used,n-used,MSG_NOSIGNAL);
+        if(sent>0){
+            used+=(size_t)sent;
+            continue;
+        }
+        if(sent==0||(errno!=EINTR&&errno!=EAGAIN))return UMI_STATUS_IO_ERROR;
+        uint64_t now=PcMilliseconds();
+        if(now>=end)return UMI_STATUS_TIMEOUT;
+        struct pollfd p={
+            c->input,POLLOUT,0
+        };
+        int ms=(int)(end-now);
+        if(ms>25)ms=25;
+        if(poll(&p,1,ms)<0&&errno!=EINTR)return UMI_STATUS_IO_ERROR;
+    }
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus UmiProcessChannelWrite(UmiProcessChannel *c,const void *b,size_t n,unsigned timeout){
+    if(!c||(!b&&n)||n>4096U||timeout>60000U)return UMI_STATUS_INVALID_ARGUMENT;
+    if(c->input<0)return UMI_STATUS_INVALID_STATE;
     uint64_t end=PcMilliseconds()+timeout;
     size_t used=0;
     while(used<n){

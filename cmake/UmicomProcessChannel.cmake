@@ -5,6 +5,7 @@ include(GNUInstallDirs)
 find_package(Threads REQUIRED)
 set(_umi_channel_root "${CMAKE_CURRENT_LIST_DIR}/..")
 add_library(umicom_process_channel STATIC "${_umi_channel_root}/src/platform/process_channel.c")
+target_sources(umicom_process_channel PRIVATE "${_umi_channel_root}/src/platform/process_channel_environment.c")
 add_library(Umicom::process_channel ALIAS umicom_process_channel)
 set_target_properties(umicom_process_channel PROPERTIES EXPORT_NAME process_channel
     C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)

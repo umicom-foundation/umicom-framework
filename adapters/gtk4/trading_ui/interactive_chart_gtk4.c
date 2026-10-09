@@ -197,6 +197,8 @@ static void ChartRefresh(InteractiveChart *state)
 static gboolean ChartTick(gpointer data)
 { ChartRefresh(data); return G_SOURCE_CONTINUE; }
 
+/* The crosshair label inherited nonuniform chart scaling and became stretched on wide panels. Native text coordinates now preserve readable glyphs; the earlier drawing implementation remains for review. The previous implementation is retained for engineering review. */
+#if 0
 static void ChartDraw(GtkDrawingArea *area, cairo_t *cr, int width, int height, gpointer data)
 {
     InteractiveChart *state = data;
@@ -249,6 +251,68 @@ static void ChartDraw(GtkDrawingArea *area, cairo_t *cr, int width, int height, 
     (void)snprintf(label, sizeof label, "%.8g | %.63s UTC", point.value, time);
     cairo_set_source_rgb(cr, 0.9, 0.93, 0.98); cairo_set_font_size(cr, 12);
     cairo_move_to(cr, 25, 38); cairo_show_text(cr, label);
+    cairo_restore(cr);
+}
+#endif
+static void ChartDraw(GtkDrawingArea *area, cairo_t *cr, int width, int height, gpointer data)
+{
+    InteractiveChart *state = data;
+    (void)area;
+    if (width <= 0 || height <= 0) return;
+    cairo_set_source_rgb(cr, 0.045, 0.055, 0.075); cairo_paint(cr);
+    if (state->scene == NULL) return;
+    UmiChartCairoRendererContext context;
+    UmiChartRenderer renderer;
+    if (umi_chart_cairo_renderer_init(&context, cr, &renderer) == UMI_STATUS_OK)
+        (void)umi_chart_renderer_render_scene(&renderer, state->scene, width, height);
+    if (!state->have_pointer) return;
+    UmiChartPoint point;
+    if (UmiChartPlotUnmap(&state->info.price, state->pointer_x, state->pointer_y, &point) != UMI_STATUS_OK) return;
+    cairo_save(cr);
+    cairo_scale(cr, (double)width / UMI_TRADING_CHART_WIDTH, (double)height / UMI_TRADING_CHART_HEIGHT);
+    cairo_rectangle(cr, state->info.price.area.x, state->info.price.area.y,
+        state->info.price.area.width, state->info.price.area.height);
+    cairo_clip(cr);
+    double dash[] = {4, 4};
+    cairo_set_dash(cr, dash, 2, 0); cairo_set_line_width(cr, 1);
+    cairo_set_source_rgba(cr, 0.72, 0.77, 0.84, 0.75);
+    cairo_move_to(cr, state->pointer_x, 22); cairo_line_to(cr, state->pointer_x, 410);
+    cairo_move_to(cr, 18, state->pointer_y); cairo_line_to(cr, 894, state->pointer_y); cairo_stroke(cr);
+    cairo_set_dash(cr, NULL, 0, 0);
+    if (state->have_first) {
+        double x, y;
+        if (umi_chart_plot_map_time(&state->info.price, state->first_point.time_ms, &x) == UMI_STATUS_OK &&
+            umi_chart_plot_map_value(&state->info.price, state->first_point.value, &y) == UMI_STATUS_OK) {
+            cairo_set_source_rgb(cr, 0.98, 0.72, 0.2);
+/* Pending range and zone gestures show a box preview; line and ray gestures retain a line preview. The previous implementation remains for engineering review. */
+#if 0
+            cairo_move_to(cr, x, y); cairo_line_to(cr, state->pointer_x, state->pointer_y); cairo_stroke(cr);
+#endif
+            if(state->tool==6||state->tool==7)
+                cairo_rectangle(cr,fmin(x,state->pointer_x),fmin(y,state->pointer_y),fabs(state->pointer_x-x),fabs(state->pointer_y-y));
+            else {cairo_move_to(cr,x,y);cairo_line_to(cr,state->pointer_x,state->pointer_y);}
+            cairo_stroke(cr);
+        }
+    }
+    char label[96];
+/* Full UTC crosshair dates distinguish multi-day views and correctly format pre-epoch times through the shared formatter. The previous implementation remains for engineering review. */
+#if 0
+    (void)snprintf(label, sizeof label, "%.8g | %02d:%02d UTC", point.value,
+        (int)((point.time_ms / 3600000) % 24), (int)((point.time_ms / 60000) % 60));
+#endif
+    char time[64];
+    if (UmiChartTimeframeFormatUtc(point.time_ms, 0, time, sizeof time) != UMI_STATUS_OK)
+        (void)snprintf(time, sizeof time, "%s", "Time unavailable");
+    (void)snprintf(label, sizeof label, "%.8g | %.63s UTC", point.value, time);
+    /* Geometry uses logical chart coordinates. Restore the native drawing
+     * transform before text so wide or short panels cannot stretch glyphs. */
+    cairo_restore(cr);
+    cairo_save(cr);
+    cairo_set_source_rgb(cr, 0.9, 0.93, 0.98);
+    cairo_set_font_size(cr, 12);
+    cairo_move_to(cr, 25.0 * (double)width / UMI_TRADING_CHART_WIDTH,
+        22.0 * (double)height / UMI_TRADING_CHART_HEIGHT + 16.0);
+    cairo_show_text(cr, label);
     cairo_restore(cr);
 }
 static UmiStatus ChartNavigate(InteractiveChart *state, int zoom, int pan, int fit)
@@ -633,6 +697,8 @@ static void ChartSaveClicked(GtkButton *button, gpointer root)
         ChartMessage(state, message);
     }
 }
+/* Saved preview must reveal both its detail section and the enclosing drawing inspector. The prior single-level expansion is retained for review. The previous implementation is retained for engineering review. */
+#if 0
 static void ChartPreviewClicked(GtkButton *button, gpointer root)
 {
     (void)button; InteractiveChart *state = ChartState(root);
@@ -694,6 +760,70 @@ static void ChartPreviewClicked(GtkButton *button, gpointer root)
     if (status == UMI_STATUS_OK)
         gtk_expander_set_expanded(GTK_EXPANDER(state->preview_section), TRUE);
 }
+#endif
+static void ChartPreviewClicked(GtkButton *button, gpointer root)
+{
+    (void)button; InteractiveChart *state = ChartState(root);
+    if (!ChartPersistenceReady(state)) return;
+    state->preview_id = 0U; gtk_widget_set_sensitive(state->restore_button, FALSE);
+    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(state->preview_text));
+    gtk_text_buffer_set_text(buffer, "", -1);
+    UmiTradingChartPreview preview;
+    UmiStatus status = UmiTradingChartPersistencePreview(state->persistence, state->info.instrument_id, &preview);
+    if (status != UMI_STATUS_OK) {
+        ChartMessage(state, status == UMI_STATUS_NOT_FOUND ? "No saved chart for this instrument. Save chart keeps the current drawings and view."
+            : "The saved chart could not be read safely. Your current chart is unchanged; check the profile storage."); return;
+    }
+    GString *text = g_string_new(NULL);
+/* Saved navigation counts displayed candles; the review explains that count together with the persisted interval. The previous implementation remains for engineering review. */
+#if 0
+    g_string_append_printf(text, "Instrument: %s\nSaved drawings: %zu; current drawings: %zu\nVisible bars: %zu (0 means fit all retained bars)\nAnchor: %lld ms UTC; historical view: %s\nSaved at: %llu ms since the Unix epoch\nStorage: %s%s\n\n",
+        preview.saved.pane_id, preview.saved.drawing_count, preview.current.drawing_count,
+        preview.saved.navigation.visible_bars, (long long)preview.saved.navigation.anchor_ms,
+        preview.saved.navigation.pinned ? "yes" : "no", (unsigned long long)preview.storage.saved_at_ms,
+        preview.storage.durable ? "disk" : "memory only", preview.storage.recovered_last_good ? " (previous valid copy)" : "");
+#endif
+    g_string_append_printf(text, "Instrument: %s\nSaved drawings: %zu; current drawings: %zu\nVisible candles: %zu (0 means fit all candles in the saved timeframe)\nAnchor: %lld ms UTC; historical view: %s\nSaved at: %llu ms since the Unix epoch\nStorage: %s%s\n\n",
+        preview.saved.pane_id, preview.saved.drawing_count, preview.current.drawing_count,
+        preview.saved.navigation.visible_bars, (long long)preview.saved.navigation.anchor_ms,
+        preview.saved.navigation.pinned ? "yes" : "no", (unsigned long long)preview.storage.saved_at_ms,
+        preview.storage.durable ? "disk" : "memory only", preview.storage.recovered_last_good ? " (previous valid copy)" : "");
+    g_string_append_printf(text, "Saved timeframe: %s; current timeframe: %s\nRetained observations only; edge buckets may be incomplete.\n\n",
+        UmiChartTimeframeName(preview.saved.navigation.interval_ms), UmiChartTimeframeName(preview.current.navigation.interval_ms));
+    for (size_t i = 0U; i < preview.saved.drawing_count; ++i) {
+        UmiChartDrawingSnapshot drawing;
+        status = UmiTradingChartPersistencePreviewDrawing(state->persistence, preview.preview_id, i, &drawing);
+        if (status != UMI_STATUS_OK) break;
+/* Saved-chart review now includes visibility alongside retained geometry, selection and locking before an explicit restore. The previous implementation remains for engineering review. */
+#if 0
+        g_string_append_printf(text, "%s | %s | (%lld, %.17g) to (%lld, %.17g)%s%s\nStyle: %s\n",
+            drawing.id, drawing.tool, (long long)drawing.time1, drawing.value1,
+            (long long)drawing.time2, drawing.value2, drawing.locked ? " | locked" : "",
+            drawing.selected ? " | selected" : "", drawing.style);
+#endif
+        g_string_append_printf(text, "%s | %s | (%lld, %.17g) to (%lld, %.17g)%s%s%s\nStyle: %s\n",
+            drawing.id, drawing.tool, (long long)drawing.time1, drawing.value1,
+            (long long)drawing.time2, drawing.value2, drawing.locked ? " | locked" : "",
+            drawing.selected ? " | selected" : "",
+            (drawing.visibility_flags & UMI_CHART_DRAWING_VISIBILITY_HIDDEN) != 0U ? " | hidden" : " | visible", drawing.style);
+    }
+    if (status == UMI_STATUS_OK) {
+        char *display = g_utf8_make_valid(text->str, -1); gtk_text_buffer_set_text(buffer, display, -1); g_free(display);
+        state->preview_id = preview.preview_id; gtk_widget_set_sensitive(state->restore_button, TRUE);
+        ChartMessage(state, preview.storage.recovered_last_good
+            ? "Previous valid copy available. Review Saved chart details. Restore replaces this instrument's current drawings, including locked drawings, and view. Damaged storage remains unchanged."
+            : "Review Saved chart details. Restore replaces this instrument's current drawings, including locked drawings, and view. Save instead replaces the saved copy with your current chart.");
+    } else ChartMessage(state, "Preview changed. Preview the saved chart again before restoring.");
+    g_string_free(text, TRUE);
+    /* A successful Preview should show the evidence the user must review
+     * before Restore. GTK does not mount a collapsed expander's body in its
+     * child tree. Reveal this existing section only after a complete preview;
+     * this changes presentation, never drawings, saved data or an order. */
+    if (status == UMI_STATUS_OK)
+        gtk_expander_set_expanded(GTK_EXPANDER(state->preview_section), TRUE);
+    GtkWidget *inspector = umi_gtk4_automation_find_tagged_widget(state->root, "trading.chart.inspector");
+    if (GTK_IS_EXPANDER(inspector)) gtk_expander_set_expanded(GTK_EXPANDER(inspector), TRUE);
+}
 static void ChartRestoreClicked(GtkButton *button, gpointer root)
 {
     (void)button; InteractiveChart *state = ChartState(root);
@@ -714,6 +844,43 @@ static GtkWidget *ChartButton(GtkWidget *box, const char *label, const char *tag
     g_signal_connect_object(button, "clicked", callback, G_OBJECT(root), 0);
     return button;
 }
+
+/* A chart should spend its height on prices. The existing editing and storage
+ * controls remain in a collapsible inspector, with stable identities and signal
+ * owners; moving widgets does not recreate their drafts or lose selection. */
+static void ChartComposeInspector(InteractiveChart *state, GtkWidget *body)
+{
+    GtkWidget *section = gtk_expander_new("Drawings and saved charts");
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+    (void)umi_gtk4_automation_tag_widget(section, "trading.chart.inspector");
+    GtkWidget *child = gtk_widget_get_next_sibling(body);
+    while (child != NULL && child != state->status) {
+        GtkWidget *next = gtk_widget_get_next_sibling(child);
+        g_object_ref(child);
+        gtk_box_remove(GTK_BOX(state->root), child);
+        gtk_box_append(GTK_BOX(box), child);
+        g_object_unref(child);
+        child = next;
+    }
+    gtk_expander_set_child(GTK_EXPANDER(section), box);
+    gtk_box_insert_child_after(GTK_BOX(state->root), section, body);
+    gtk_widget_set_vexpand(body, TRUE);
+}
+/* Short marks keep a narrow rail; full names remain available to screen
+ * readers and in tooltips. Extending the tool catalogue must add all three. */
+static void ChartCompactTool(GtkWidget *button, const char *mark, const char *name)
+{
+    gtk_button_set_label(GTK_BUTTON(button), mark);
+    gtk_widget_set_size_request(button, 36, 32);
+    gtk_accessible_update_property(GTK_ACCESSIBLE(button), GTK_ACCESSIBLE_PROPERTY_LABEL, name, -1);
+    const char *help = gtk_widget_get_tooltip_text(button);
+    char *description = g_strdup_printf("%s — %s", name, help != NULL ? help : "");
+    gtk_widget_set_tooltip_text(button, description);
+    g_free(description);
+}
+
+/* The former full-width tool labels and always-visible property rows squeezed the price chart. The compact rail and expandable inspector retain every action and draft while allocating more space to the chart. The earlier composition is retained for review. The previous implementation is retained for engineering review. */
+#if 0
 GtkWidget *UmiGtk4TradingInteractiveChartCreate(UmiGtk4TradingPanelContext *context)
 {
     if (context == NULL || context->workspace == NULL) return NULL;
@@ -872,6 +1039,178 @@ GtkWidget *UmiGtk4TradingInteractiveChartCreate(UmiGtk4TradingPanelContext *cont
     gtk_widget_add_controller(state->area, key);
     g_signal_connect_object(state->studies, "notify::selected", G_CALLBACK(ChartStudyChanged), G_OBJECT(root), 0);
     g_signal_connect_object(state->period, "value-changed", G_CALLBACK(ChartPeriodChanged), G_OBJECT(root), 0);
+    ChartRefresh(state);
+    state->timer = g_timeout_add(1000, ChartTick, state);
+    return root;
+}
+#endif
+GtkWidget *UmiGtk4TradingInteractiveChartCreate(UmiGtk4TradingPanelContext *context)
+{
+    if (context == NULL || context->workspace == NULL) return NULL;
+    UmiTradingWorkspaceSnapshot snapshot;
+    if (umi_trading_workspace_snapshot(context->workspace, &snapshot) != UMI_STATUS_OK) return NULL;
+    InteractiveChart *state = g_try_new0(InteractiveChart, 1);
+    if (state == NULL) return NULL;
+    state->references = 1; state->context = context;
+    GtkWidget *root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+    state->root = root;
+    g_object_set_data_full(G_OBJECT(root), CHART_STATE, state, ChartRootDestroyed);
+    (void)umi_gtk4_automation_tag_widget(root, "trading.chart.panel");
+    GtkWidget *top = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
+    GtkWidget *toolbar_scroll = gtk_scrolled_window_new();
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(toolbar_scroll), GTK_POLICY_AUTOMATIC, GTK_POLICY_NEVER);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(toolbar_scroll), top);
+    gtk_box_append(GTK_BOX(root), toolbar_scroll);
+    const char *labels[] = {"+", "-", "Earlier", "Later", "Fit / Latest"};
+    const char *tags[] = {"trading.chart.zoom-in", "trading.chart.zoom-out", "trading.chart.earlier", "trading.chart.later", "trading.chart.fit"};
+    for (int i = 0; i < 5; ++i) {
+        GtkWidget *button = ChartButton(top, labels[i], tags[i], G_CALLBACK(ChartNavigateClicked), root);
+        g_object_set_data(G_OBJECT(button), "chart-action", GINT_TO_POINTER(i + 1));
+    }
+    ChartTimeframeCreate(state, top);
+/* The selector now exposes the shared candle studies without changing earlier choice indices.
+ * The previous implementation is retained for engineering review. */
+#if 0
+    const char *studies[] = {"Candles", "SMA", "EMA", NULL};
+#endif
+    const char *studies[] = {"Candles", "SMA", "EMA", "Rolling VWMA", "Bollinger bands", "Donchian channel", "Volume at bar close", NULL};
+    state->studies = gtk_drop_down_new_from_strings(studies);
+    gtk_widget_set_tooltip_text(state->studies,
+        "Period counts candles, or price buckets for Volume at bar close (an approximation). VWMA weights close by candle volume; this is not tick/session VWAP. "
+        "Bollinger uses two population standard deviations. Donchian uses the window's highest high and lowest low.");
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(state->studies), (guint)snapshot.chart_study);
+    state->period = gtk_spin_button_new_with_range(2, 200, 1);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(state->period), (double)snapshot.chart_study_period);
+/* Studies consume the same aggregate candles as the price chart, so period help names the selected timeframe. The previous implementation remains for engineering review. */
+#if 0
+    gtk_widget_set_tooltip_text(state->period, "Moving average period in retained bars");
+#endif
+/* The shared selector also controls band windows and profile buckets. Keep the
+ * previous moving-average help for review; the new wording describes each mode. */
+#if 0
+    gtk_widget_set_tooltip_text(state->period, "Moving average period in candles of the selected timeframe");
+#endif
+    gtk_widget_set_tooltip_text(state->period, "Study window in chart candles; for Volume at bar close, this is the number of price buckets");
+    gtk_box_append(GTK_BOX(top), state->studies); gtk_box_append(GTK_BOX(top), state->period);
+    (void)umi_gtk4_automation_tag_widget(state->studies, "trading.chart.study");
+    GtkWidget *body = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    GtkWidget *rail = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
+    gtk_box_append(GTK_BOX(root), body); gtk_box_append(GTK_BOX(body), rail);
+    const char *tools[] = {"Cursor", "Trend", "Support", "Resistance", "Buy limit", "Sell limit"};
+    const char *tool_tags[] = {"cursor", "trend", "support", "resistance", "buy-limit", "sell-limit"};
+    GtkToggleButton *group = NULL;
+    for (int i = 0; i < 6; ++i) {
+        GtkWidget *button = gtk_toggle_button_new_with_label(tools[i]);
+        state->tool_buttons[i]=button;
+        char tag[64]; (void)snprintf(tag, sizeof tag, "trading.chart.%s", tool_tags[i]);
+        (void)umi_gtk4_automation_tag_widget(button, tag);
+        if (group == NULL) group = GTK_TOGGLE_BUTTON(button);
+        else gtk_toggle_button_set_group(GTK_TOGGLE_BUTTON(button), group);
+        if (i == 0) gtk_toggle_button_set_active(group, TRUE);
+        g_object_set_data(G_OBJECT(button), "chart-tool", GINT_TO_POINTER(i));
+        if (i >= 4) gtk_widget_set_sensitive(button, context->controller != NULL);
+        gtk_widget_set_tooltip_text(button, i >= 4
+            ? "Choose this tool, then click a chart price to prepare the order ticket for review."
+            : i == 1 ? "Click two chart points to draw a trend line; Escape cancels an unfinished line."
+            : i == 0 ? "Drag to pan. Use the mouse wheel, + or - to zoom; Home fits retained bars."
+            : "Choose this tool, then click a chart price to mark a horizontal level.");
+        g_signal_connect_object(button, "toggled", G_CALLBACK(ChartToolChanged), G_OBJECT(root), 0);
+        gtk_box_append(GTK_BOX(rail), button);
+    }
+    const char *extraLabels[]={"Range", "Liquidity zone", "Ray"};
+    const char *extraTags[]={"range", "liquidity-zone", "ray"};
+    for(int i=0;i<3;++i){
+        GtkWidget *button=gtk_toggle_button_new_with_label(extraLabels[i]);state->tool_buttons[i+6]=button;
+        gtk_toggle_button_set_group(GTK_TOGGLE_BUTTON(button),group);
+        char tag[80];(void)snprintf(tag,sizeof(tag),"trading.chart.%s",extraTags[i]);
+        (void)umi_gtk4_automation_tag_widget(button,tag);
+        g_object_set_data(G_OBJECT(button),"chart-tool",GINT_TO_POINTER(i+6));
+        gtk_widget_set_tooltip_text(button,i==2?"Click the origin, then the direction point. The ray extends through that point.":
+            i==1?"Mark your own liquidity analysis with two corners. This is an annotation, not a liquidity measurement.":
+            "Click two opposite corners to mark a time and price range.");
+        g_signal_connect_object(button,"toggled",G_CALLBACK(ChartToolChanged),G_OBJECT(root),0);
+        gtk_box_append(GTK_BOX(rail),button);
+    }
+    state->area = gtk_drawing_area_new();
+    (void)umi_gtk4_automation_tag_widget(state->area, "trading.chart.canvas");
+    gtk_widget_set_focusable(state->area, TRUE);
+    gtk_widget_set_size_request(state->area, 300, 240);
+    gtk_widget_set_hexpand(state->area, TRUE); gtk_widget_set_vexpand(state->area, TRUE);
+    state->references++;
+    gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(state->area), ChartDraw, state, ChartRelease);
+    gtk_box_append(GTK_BOX(body), state->area);
+    GtkWidget *objects = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
+    state->objects = gtk_drop_down_new(NULL, NULL); gtk_widget_set_hexpand(state->objects, TRUE);
+    gtk_box_append(GTK_BOX(objects), gtk_label_new("Drawings")); gtk_box_append(GTK_BOX(objects), state->objects);
+    (void)umi_gtk4_automation_tag_widget(state->objects, "trading.chart.drawings");
+    (void)ChartButton(objects, "Remove selected", "trading.chart.remove-drawing", G_CALLBACK(ChartRemove), root);
+    gtk_box_append(GTK_BOX(root), objects);
+    GtkWidget *objectActions=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,4);
+    (void)ChartButton(objectActions,"Move selected","trading.chart.move-drawing",G_CALLBACK(ChartMoveClicked),root);
+    (void)ChartButton(objectActions,"Lock / Unlock","trading.chart.lock-drawing",G_CALLBACK(ChartLockClicked),root);
+    (void)ChartButton(objectActions,"Duplicate selected","trading.chart.duplicate-drawing",G_CALLBACK(ChartDuplicateClicked),root);
+    (void)ChartButton(objectActions, "Hide / Show", "trading.chart.hide-drawing", G_CALLBACK(ChartHideClicked), root);
+    GtkWidget *hideAll = ChartButton(objectActions, "Hide all", "trading.chart.hide-all", G_CALLBACK(ChartPaneVisibilityClicked), root);
+    g_object_set_data(G_OBJECT(hideAll), "hide-drawings", GINT_TO_POINTER(1));
+    (void)ChartButton(objectActions, "Show all", "trading.chart.show-all", G_CALLBACK(ChartPaneVisibilityClicked), root);
+    gtk_box_append(GTK_BOX(root),objectActions);
+    ChartAppearanceCreate(state);
+    ChartCoordinatesCreate(state);
+    ChartHistoryCreate(state);
+    g_signal_connect_object(state->objects,"notify::selected",G_CALLBACK(ChartObjectSelectionChanged),G_OBJECT(root),0);
+
+/* Chart drawings now have explicit profile persistence. Save and reviewed Restore replace the session-only guidance while order drafting remains unchanged. The previous implementation remains for engineering review. */
+#if 0
+    state->status = gtk_label_new(""); state->message = gtk_label_new("Drawings stay with this instrument during the workspace session. Chart orders prepare a ticket for review.");
+#endif
+    /* Chart persistence borrows the Framework service. It never saves on a
+     * timer, restores on selection, or changes an order as a side effect. */
+    GtkWidget *persistence = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
+    (void)ChartButton(persistence, "Save chart", "trading.chart.save", G_CALLBACK(ChartSaveClicked), root);
+    (void)ChartButton(persistence, "Preview saved chart", "trading.chart.preview", G_CALLBACK(ChartPreviewClicked), root);
+    state->restore_button = ChartButton(persistence, "Restore preview", "trading.chart.restore", G_CALLBACK(ChartRestoreClicked), root);
+    gtk_widget_set_sensitive(state->restore_button, FALSE); gtk_box_append(GTK_BOX(root), persistence);
+    GtkWidget *details = gtk_expander_new("Saved chart details");
+    state->preview_section = details;
+    (void)umi_gtk4_automation_tag_widget(details, "trading.chart.saved-review");
+    GtkWidget *scroll_preview = gtk_scrolled_window_new();
+    gtk_scrolled_window_set_min_content_height(GTK_SCROLLED_WINDOW(scroll_preview), 120);
+    gtk_scrolled_window_set_max_content_height(GTK_SCROLLED_WINDOW(scroll_preview), 200);
+    state->preview_text = gtk_text_view_new(); gtk_text_view_set_editable(GTK_TEXT_VIEW(state->preview_text), FALSE);
+    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(state->preview_text), GTK_WRAP_WORD_CHAR);
+    (void)umi_gtk4_automation_tag_widget(state->preview_text, "trading.chart.saved-details");
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll_preview), state->preview_text);
+    gtk_expander_set_child(GTK_EXPANDER(details), scroll_preview); gtk_box_append(GTK_BOX(root), details);
+    state->status = gtk_label_new(""); state->message = gtk_label_new("Save chart keeps this instrument's drawings and view. Preview a saved chart before restoring it. Chart orders prepare a ticket for review.");
+    gtk_label_set_wrap(GTK_LABEL(state->message), TRUE);
+    gtk_label_set_xalign(GTK_LABEL(state->status), 0); gtk_label_set_xalign(GTK_LABEL(state->message), 0);
+    gtk_box_append(GTK_BOX(root), state->status); gtk_box_append(GTK_BOX(root), state->message);
+    (void)umi_gtk4_automation_tag_widget(state->message, "trading.chart.message");
+    GtkEventController *motion = gtk_event_controller_motion_new();
+    g_signal_connect_object(motion, "motion", G_CALLBACK(ChartMotion), G_OBJECT(root), 0);
+    g_signal_connect_object(motion, "leave", G_CALLBACK(ChartAreaLeave), G_OBJECT(root), 0);
+    gtk_widget_add_controller(state->area, motion);
+    GtkEventController *scroll = gtk_event_controller_scroll_new(GTK_EVENT_CONTROLLER_SCROLL_VERTICAL);
+    g_signal_connect_object(scroll, "scroll", G_CALLBACK(ChartScroll), G_OBJECT(root), 0);
+    gtk_widget_add_controller(state->area, scroll);
+    GtkGesture *click = gtk_gesture_click_new(); gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(click), 1);
+    g_signal_connect_object(click, "pressed", G_CALLBACK(ChartClick), G_OBJECT(root), 0);
+    gtk_widget_add_controller(state->area, GTK_EVENT_CONTROLLER(click));
+    GtkGesture *drag = gtk_gesture_drag_new(); gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(drag), 1);
+    g_signal_connect_object(drag, "drag-begin", G_CALLBACK(ChartDragBegin), G_OBJECT(root), 0);
+    g_signal_connect_object(drag, "drag-end", G_CALLBACK(ChartDragEnd), G_OBJECT(root), 0);
+    gtk_widget_add_controller(state->area, GTK_EVENT_CONTROLLER(drag));
+    GtkEventController *key = gtk_event_controller_key_new();
+    g_signal_connect_object(key, "key-pressed", G_CALLBACK(ChartKey), G_OBJECT(root), 0);
+    gtk_widget_add_controller(state->area, key);
+    g_signal_connect_object(state->studies, "notify::selected", G_CALLBACK(ChartStudyChanged), G_OBJECT(root), 0);
+    g_signal_connect_object(state->period, "value-changed", G_CALLBACK(ChartPeriodChanged), G_OBJECT(root), 0);
+    ChartComposeInspector(state, body);
+    const char *marks[] = {"+", "/", "S", "R", "BL", "SL", "[]", "LQ", "->"};
+    const char *names[] = {"Cursor", "Trend line", "Support", "Resistance", "Buy limit draft",
+        "Sell limit draft", "Range", "Liquidity annotation", "Ray"};
+    for (size_t index = 0U; index < 9U; ++index)
+        ChartCompactTool(state->tool_buttons[index], marks[index], names[index]);
     ChartRefresh(state);
     state->timer = g_timeout_add(1000, ChartTick, state);
     return root;

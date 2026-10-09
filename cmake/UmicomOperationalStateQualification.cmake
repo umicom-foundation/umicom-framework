@@ -37,7 +37,8 @@ endfunction()
 
 umicom_add_operational_state_check(profile-store Umicom::build test_profile_store.c
     roundtrip corrupt boundaries atomicity durable arguments
-    stage-migrate stage-missing stage-downgrade stage-roundtrip)
+    stage-migrate stage-missing stage-downgrade stage-roundtrip
+    tool-migrate tool-missing tool-invalid tool-downgrade tool-roundtrip)
 # These checks only construct argument vectors; they never launch CMake or CTest.
 umicom_add_operational_state_check(stage-presets Umicom::build test_stage_presets.c
     configure build clean test fallback legacy invalid equal install run names boundary)

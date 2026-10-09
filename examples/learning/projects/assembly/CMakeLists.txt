@@ -36,3 +36,10 @@ if(BUILD_TESTING)
     add_test(NAME lesson.assembly.comparison COMMAND stock-total-checks)
     set_tests_properties(lesson.assembly.comparison PROPERTIES TIMEOUT 15)
 endif()
+
+# Install the teaching executable under an explicitly selected local prefix.
+# This adds a deployable example without installing test fixtures or quiz data.
+install(TARGETS umicom-stock-total RUNTIME DESTINATION bin)
+# Packaging uses the same install rules and keeps generated archives in the build tree.
+set(CPACK_GENERATOR "ZIP")
+include(CPack)

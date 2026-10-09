@@ -11,6 +11,7 @@
 #include "umicom/language_runtime/server_probe.h"
 #include "umicom/base/text.h"
 #include "umicom/platform/path.h"
+#include "umicom/platform/process_search_path.h"
 #include <string.h>
 
 typedef struct LanguageCheckRequest
@@ -19,6 +20,7 @@ typedef struct LanguageCheckRequest
     UmiCancellationToken *cancel;
     UmiLanguageServerProfile profile;
     char directory[UMI_LANGUAGE_RUNTIME_PATH_CAPACITY], root[UMI_LANGUAGE_RUNTIME_PATH_CAPACITY];
+    char toolDirectory[UMI_PATH_CAPACITY]; /* Copied before the worker starts. */
     UmiLanguageRuntimeProbeResult report;
     UmiStatus status;
     int stale; /* Read and written only on the GTK thread. */
@@ -26,6 +28,7 @@ typedef struct LanguageCheckRequest
 typedef struct LanguageCheckPanel
 {
     GtkWidget *panel, *program, *arguments, *directory, *check, *cancel, *message;
+    GtkWidget *toolDirectory;
     GPtrArray *controls;
     int needsCheck;
     LanguageCheckRequest *pending; /* Borrowed until main-context completion. */
@@ -105,8 +108,14 @@ static void LanguageCheckWorker(GTask *task, gpointer source, gpointer data, GCa
     LanguageCheckRequest *request = data;
     /* All configuration was copied before dispatch. No widget, application
      * service or mutable draft is accessed from this worker. */
+/* The worker receives a copied tool folder with the captured server and workspace. Child environment changes are owned by Framework, never by GTK callbacks. The previous implementation is retained for engineering review. */
+#if 0
     request->status = UmiLanguageRuntimeProbe(&request->profile, request->root, request->directory, 5000U,
                                               request->cancel, &request->report);
+#endif
+    request->status = UmiLanguageRuntimeProbeWithToolDirectory(&request->profile,
+        request->root, request->directory, request->toolDirectory, 5000U,
+        request->cancel, &request->report);
     g_task_return_boolean(task, TRUE);
 }
 static void LanguageCheckComplete(GObject *source, GAsyncResult *result, gpointer data)
@@ -202,6 +211,27 @@ static void LanguageCheckStart(GtkButton *button, gpointer data)
     if (status == UMI_STATUS_OK)
         status = umi_text_copy(request->directory, sizeof(request->directory),
                                gtk_editable_get_text(GTK_EDITABLE(panel->directory)));
+/* A selected tool folder allows a simple server name such as clangd. Resolve it to an absolute executable before dispatch, so the reviewed installation cannot fall back to another PATH entry. The previous implementation is retained for engineering review. */
+#if 0
+    if (status == UMI_STATUS_OK &&
+        (!umi_path_is_absolute(request->profile.executable) || !umi_path_is_absolute(request->directory)))
+        status = UMI_STATUS_INVALID_ARGUMENT;
+#endif
+    if (status == UMI_STATUS_OK)
+        status = umi_text_copy(request->toolDirectory, sizeof request->toolDirectory,
+            gtk_editable_get_text(GTK_EDITABLE(panel->toolDirectory)));
+    if (status == UMI_STATUS_OK && request->toolDirectory[0] != '\0')
+    {
+        status = UmiProcessSearchDirectoryValidate(request->toolDirectory);
+        if (status == UMI_STATUS_OK && !umi_path_is_absolute(request->profile.executable))
+        {
+            char selected[sizeof request->profile.executable];
+            status = UmiProcessToolProgram(request->toolDirectory, request->profile.executable,
+                selected, sizeof selected);
+            if (status == UMI_STATUS_OK)
+                memcpy(request->profile.executable, selected, strlen(selected) + 1U);
+        }
+    }
     if (status == UMI_STATUS_OK &&
         (!umi_path_is_absolute(request->profile.executable) || !umi_path_is_absolute(request->directory)))
         status = UMI_STATUS_INVALID_ARGUMENT;
@@ -270,6 +300,8 @@ static GtkWidget *LanguageEntry(LanguageCheckPanel *panel, const char *title, co
     g_signal_connect_object(entry, "changed", G_CALLBACK(LanguageDraftChanged), panel->panel, 0);
     return entry;
 }
+/* The reusable connection form accepts a copied project tool-folder draft. Creating the panel does not start a server or change process environment. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus UmiGtk4LanguageConnectionPanelCreate(const char *workspaceDirectory, GtkWidget **out)
 {
     if (out == NULL)
@@ -311,4 +343,57 @@ UmiStatus UmiGtk4LanguageConnectionPanelCreate(const char *workspaceDirectory, G
     g_signal_connect(panel->panel, "unmap", G_CALLBACK(LanguagePanelUnmapped), NULL);
     *out = panel->panel;
     return UMI_STATUS_OK;
+}
+#endif
+UmiStatus UmiGtk4LanguageConnectionPanelCreateWithToolDirectory(const char *workspaceDirectory, const char *toolDirectory, GtkWidget **out)
+{
+    if (out == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    *out = NULL;
+    LanguageCheckPanel *panel = g_try_new0(LanguageCheckPanel, 1U);
+    if (panel == NULL)
+        return UMI_STATUS_OUT_OF_MEMORY;
+    panel->panel = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
+    panel->controls = g_ptr_array_new_with_free_func(g_object_unref);
+    g_object_set_data_full(G_OBJECT(panel->panel), "umicom-language-connection", panel, LanguagePanelFree);
+    (void)umi_gtk4_automation_tag_widget(panel->panel, "language.connection.panel");
+    GtkWidget *intro =
+        gtk_label_new("Check a trusted local language server. The check starts it in the selected "
+                      "folder, reads its capabilities and closes it. No document text is sent, but the "
+                      "server can inspect that folder.");
+    gtk_label_set_wrap(GTK_LABEL(intro), TRUE);
+    gtk_label_set_xalign(GTK_LABEL(intro), 0.0F);
+    gtk_box_append(GTK_BOX(panel->panel), intro);
+    panel->program =
+        LanguageEntry(panel, "Server executable (absolute path, or name with tools folder)", "language.connection.executable", "");
+    panel->arguments = LanguageEntry(panel, "Arguments (quoted values; no shell expansion)",
+                                     "language.connection.arguments", "");
+    panel->directory = LanguageEntry(panel, "Project folder (absolute path)", "language.connection.directory",
+                                     workspaceDirectory);
+    panel->toolDirectory = LanguageEntry(panel,
+        "Tools folder (absolute; blank inherits PATH)", "language.connection.tools", toolDirectory);
+    gtk_widget_set_tooltip_text(panel->toolDirectory,
+        "Used only for this explicit connection check. Editing it cancels any earlier pending check.");
+    panel->check = LanguageControl(panel, gtk_button_new_with_label("Check language server"),
+                                   "language.connection.check");
+    panel->cancel =
+        LanguageControl(panel, gtk_button_new_with_label("Cancel check"), "language.connection.cancel");
+    panel->message =
+        LanguageControl(panel, gtk_label_new("No connection check has run."), "language.connection.result");
+    gtk_label_set_wrap(GTK_LABEL(panel->message), TRUE);
+    gtk_label_set_selectable(GTK_LABEL(panel->message), TRUE);
+    gtk_label_set_xalign(GTK_LABEL(panel->message), 0.0F);
+    gtk_widget_set_sensitive(panel->cancel, FALSE);
+    g_signal_connect_object(panel->check, "clicked", G_CALLBACK(LanguageCheckStart), panel->panel, 0);
+    g_signal_connect_object(panel->cancel, "clicked", G_CALLBACK(LanguageCheckCancel), panel->panel, 0);
+    g_signal_connect(panel->panel, "map", G_CALLBACK(LanguagePanelMapped), NULL);
+    g_signal_connect(panel->panel, "unmap", G_CALLBACK(LanguagePanelUnmapped), NULL);
+    *out = panel->panel;
+    return UMI_STATUS_OK;
+}
+
+/* Existing hosts begin with an empty tool-folder draft. */
+UmiStatus UmiGtk4LanguageConnectionPanelCreate(const char *workspaceDirectory, GtkWidget **out)
+{
+    return UmiGtk4LanguageConnectionPanelCreateWithToolDirectory(workspaceDirectory, NULL, out);
 }

@@ -33,7 +33,14 @@ int main(int argc, char **argv)
                   UMI_STATUS_OK);
         }
         CHECK(UmiDebugAdapterPreferencesDecode(encoded, size, &decoded) == UMI_STATUS_OK);
+/* The former byte comparison included stale bytes after cleared strings. Compare both persisted fields and retain the earlier assertion for review. */
+#if 0
         CHECK(memcmp(&preferences, &decoded, sizeof(decoded)) == 0);
+#endif
+        /* An empty executable means PATH discovery. Bytes after its terminator
+         * are not stored preferences and must not affect a successful round trip. */
+        CHECK(strcmp(preferences.kind, decoded.kind) == 0 &&
+              strcmp(preferences.executable, decoded.executable) == 0);
     }
     else if (strcmp(mode, "atomic-output") == 0)
     {

@@ -1,0 +1,21 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# Use a new build-directory fixture and namespace on every run.
+if(NOT DEFINED TEST_BINARY OR NOT DEFINED TEST_ROOT OR NOT DEFINED TEST_CASE)
+    message(FATAL_ERROR "Database fixture arguments are incomplete.")
+endif()
+get_filename_component(TEST_ROOT "${TEST_ROOT}" ABSOLUTE)
+string(RANDOM LENGTH 16 ALPHABET abcdef0123456789 token)
+set(fixture "${TEST_ROOT}/profile-database-${token}")
+file(MAKE_DIRECTORY "${fixture}")
+execute_process(COMMAND "${TEST_BINARY}" "${fixture}/local.sqlite" "${TEST_CASE}"
+    "org.umicom.fixture.${token}" RESULT_VARIABLE result TIMEOUT 60)
+if(result EQUAL 77)
+    message("UMICOM_PROFILE_DATABASE_UNAVAILABLE")
+elseif(NOT result EQUAL 0)
+    message(FATAL_ERROR "Database check failed: ${result}; fixture retained at ${fixture}")
+endif()
+get_filename_component(fixture_parent "${fixture}" DIRECTORY)
+if(NOT fixture_parent STREQUAL TEST_ROOT)
+    message(FATAL_ERROR "Refusing to remove a fixture outside the test directory.")
+endif()
+file(REMOVE_RECURSE "${fixture}")

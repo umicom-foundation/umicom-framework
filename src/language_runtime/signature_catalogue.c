@@ -165,6 +165,10 @@ static UmiStatus SignatureParameterRead(const UmiJsonTree *tree, int node, const
         status = UmiJsonTreeInteger(tree, first, &start);
         if (status == UMI_STATUS_OK)
             status = UmiJsonTreeInteger(tree, UmiJsonTreeNext(tree, first), &end);
+        /* A label range outside integer storage cannot identify a parameter.
+         * Report malformed signature input rather than an allocation limit. */
+        if (status == UMI_STATUS_CAPACITY_EXCEEDED)
+            status = UMI_STATUS_PARSE_ERROR;
         if (status == UMI_STATUS_OK && (start < 0 || end < start || end > INT32_MAX))
             status = UMI_STATUS_PARSE_ERROR;
         if (status == UMI_STATUS_OK)

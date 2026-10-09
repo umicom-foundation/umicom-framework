@@ -72,6 +72,19 @@ UmiStatus umi_toolchain_discover(
     UmiToolchainDiscoveryReport *out_report);
 
 /**
+ * Find a file in a caller-supplied host PATH list without executing it.
+ * Absolute executable paths are checked directly even when search_path is empty.
+ * Empty PATH entries are skipped. Windows also tries .exe for extensionless
+ * names. The first matching file wins; an output-capacity failure is reported
+ * instead of continuing to another installation. Output stays unchanged on
+ * failure. Paths use UTF-8, and the list is bounded to 128 KiB.
+ * Finding a file does not verify its executable permissions, architecture,
+ * dependencies or protocol support, and does not authorise running it.
+ */
+UmiStatus UmiToolchainFindInSearchPath(const char *executable, const char *search_path,
+    char *out_path, size_t capacity);
+
+/**
  * Provide the toolchain find on path operation used by this module and its client
  * applications.
  */

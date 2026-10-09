@@ -1,0 +1,22 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Finding a running process</title>
+<style>body{max-width:58rem;margin:3rem auto;padding:0 1rem;font:17px/1.6 system-ui;color:#172536}code{background:#edf2f6;padding:.1rem .3rem}h1,h2{line-height:1.2}</style>
+<h1>Finding a running process</h1>
+<p>A process is a running program. Its process ID, or PID, is a number assigned by the operating system. Numbers can be reused after a program exits, so a remembered PID alone does not identify the same program forever.</p>
+<h2>Choose a process in Studio</h2><ol>
+<li>Open a trusted workspace and select your configured native debug adapter in the Debug surface.</li>
+<li>Expand <strong>Attach to a running application</strong>, then <strong>Find a running process</strong>.</li>
+<li>Choose <strong>Refresh processes</strong>. Discovery runs in the background. Stop discovery cancels between native reads; it cannot interrupt an operating-system call already in progress.</li>
+<li>Filter by program name or PID. Names are matched without regard to letter case. Use <code>pid:123</code> for an exact PID. Previous processes and Next processes move through the captured matches.</li>
+<li>Choose <strong>Use process</strong> to fill the PID field. This does not attach a debugger. The optional executable or symbols path remains your choice.</li>
+<li>Review the PID and choose <strong>Attach to process</strong>. Studio checks the workspace and observed creation time again before requesting attachment. An exited, inaccessible or changed process requires a fresh selection.</li>
+<li>Use Stop in the debugger to request detachment. The debugger may have paused the application; a failed or interrupted detach cannot prove that it resumed.</li></ol>
+<h2>Understand the list</h2><p>The list is a capture, not a continuously updated view. It reads process names, parent PIDs and available creation identities. It does not read process command lines, environments, credentials or memory. Native enumeration is available on Windows and Linux, with a scan limit of 4,096 records and 20 displayed rows per page. A limit notice means the list is incomplete.</p>
+<p>Protected processes can have unknown creation times. They remain visible but cannot be selected. Linux zombie or exited processes and PIDs outside the debugger's positive signed-integer range cannot be selected. Process names use the existing desktop monitor's printable display form; unsupported name bytes appear as question marks.</p>
+<p>A process can exit or change between enumeration, the identity recheck and the debugger's request. The recheck reduces mistakes caused by PID reuse; it does not make attachment atomic. The selected adapter and operating system still decide whether attachment is permitted.</p>
+<h2>Manual PID entry</h2><p>You can still type a decimal PID directly. Editing the field discards any earlier captured creation identity. Manual entry has no process-capture recheck, so verify the target yourself before choosing Attach. Studio never automatically attaches on startup or when a workspace is reopened.</p>
+<h2>Use the shared Framework component</h2><ol>
+<li>Use <code>UmiDesktopProcessCatalogCapture</code> on a worker thread for native observations. A catalogue owns its copied rows; release it with <code>UmiDesktopProcessCatalogDestroy</code>.</li>
+<li>Inspect the capture report as well as the rows. Unreadable observations and incomplete scans are part of the result, not evidence that those processes do not exist.</li>
+<li>Use <code>UmiGtk4ProcessPickerCreate</code> when a native application needs filtering and explicit selection. The host callback must enforce its own workspace and action permissions. Choosing a row never grants authority to attach or terminate.</li>
+<li>A controlled provider can supply copied rows with <code>UmiDesktopProcessCatalogCreate</code>. Mark fixture observations explicitly. The picker displays those rows but disables selection. A supplied provider must honour cancellation and keep GTK calls on the main thread.</li></ol>
+<h2>When something goes wrong</h2><p>If a program is missing, refresh after starting it and check whether the scan was limited. If a creation time is unavailable, verify the program and operating-system permissions rather than treating the row as an authenticated identity. Changing workspace invalidates an earlier selected process. If discovery is still stopping, wait for its current operating-system read to finish before starting another capture.</p></html>

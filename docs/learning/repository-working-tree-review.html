@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reviewing repository and submodule changes</title>
+<style>body{font:17px/1.65 system-ui,sans-serif;max-width:960px;margin:auto;padding:2rem;color:#172331;background:#fafbfd}h1,h2{line-height:1.2}code,pre{font-family:ui-monospace,monospace}pre{padding:1rem;background:#eaf0f5;overflow:auto}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bfcbd5;padding:.7rem;text-align:left}</style>
+</head><body>
+<!-- Umicom Framework. Created by Sammy Hegab, Umicom Foundation. Licence: MIT. -->
+<h1>Reviewing repository and submodule changes</h1>
+<p>A repository can contain another repository as a <em>submodule</em>. The parent records a commit identifier for that child. It does not own the child's uncommitted files. This distinction explains why a parent can show “modified content” while Git reports that nothing is staged for a commit.</p>
+<h2>Inspect from Studio</h2>
+<ol>
+<li>Open your project and choose the Source Control surface.</li>
+<li>Expand <strong>Repository and submodule review</strong>. Check the displayed repository path.</li>
+<li>Select <strong>Inspect repository</strong>. The interface remains available while Framework reads local Git status.</li>
+<li>Read the summary, then use <strong>Next paths</strong> and <strong>Previous paths</strong> to review entries. Each page contains up to 50 paths.</li>
+<li>Select <strong>Stop</strong> to request cancellation. Hiding or closing the panel also requests cancellation. The process may take a short time to finish.</li>
+<li>Inspect again after editing, staging, switching branches or committing. Results describe one observation, not a live filesystem monitor.</li>
+</ol>
+<h2>Understand the result</h2>
+<table><thead><tr><th>Observation</th><th>Meaning</th></tr></thead><tbody>
+<tr><td>Staged change</td><td>The parent's index contains a change that can enter its next commit, unless unresolved conflicts prevent that commit.</td></tr>
+<tr><td>Child commit changed</td><td>The checked-out child revision differs from the revision recorded in the parent's index. Review the revision before staging the parent's submodule path.</td></tr>
+<tr><td>Child tracked files changed</td><td>Files already tracked inside the child have changed. Review and commit them in the child repository.</td></tr>
+<tr><td>Child untracked files</td><td>The child contains files that Git does not yet track. Review them there before deciding whether to add them.</td></tr>
+<tr><td>Detached HEAD</td><td>The checkout names a commit directly rather than a local branch. Decide how you will retain new commits before proceeding.</td></tr>
+<tr><td>Upstream comparison unavailable</td><td>Git did not report an ahead/behind comparison. This is not evidence that the checkout matches a remote server.</td></tr>
+</tbody></table>
+<p>The index and worktree codes come from Git: <code>.</code> unchanged, <code>M</code> modified, <code>A</code> added, <code>D</code> deleted, <code>T</code> type changed, <code>R</code> renamed and <code>C</code> copied. Untracked paths use <code>?</code>; ignored paths use <code>!</code>. Unmerged records identify unresolved conflicts separately.</p>
+<h2>Keep ownership clear</h2>
+<ol><li>Review files inside each changed child repository.</li><li>Commit and publish the intended child revisions using your normal repository workflow.</li><li>Return to the parent and inspect again. Review the child revision change before recording it in the parent.</li></ol>
+<p>The review panel never stages, commits, pushes or fetches. It cannot prove that a child commit has been published or that tests passed. Ahead/behind counts compare the locally recorded upstream; a remote may have changed since the last fetch.</p>
+<h2>Use the shared C interface</h2>
+<pre><code>#include "umicom/vcs/working_tree.h"
+
+UmiVcsWorkingTreeRequest request = {0};
+UmiVcsWorkingTree *tree = NULL;
+request.repository_root = absolute_project_path;
+request.timeout_ms = 30000U;
+UmiStatus status = UmiVcsWorkingTreeRead(&amp;request, &amp;tree);
+if (status == UMI_STATUS_OK) {
+    UmiVcsWorkingTreeSummary summary;
+    status = UmiVcsWorkingTreeDescribe(tree, &amp;summary);
+    /* Copy values needed by your application before releasing the observation. */
+}
+UmiVcsWorkingTreeDestroy(tree);</code></pre>
+<p>Call the synchronous reader from a worker. Interactive clients can use <code>UmiVcsWorkingTreeJobCreate</code>, <code>Submit</code>, <code>Read</code> and <code>Take</code> with a Framework task queue. Creation copies the root and executable strings. The task owns cancellation. Wait for a terminal state before destroying it; a cancelled task does not transfer a result.</p>
+<p>Results are immutable. Entry pointers remain valid until the containing observation is destroyed. A failed parse or read leaves the caller's output pointer unchanged. Destroy a previous successful result yourself before replacing your application's ownership.</p>
+<h2>Review from the native command</h2><p>Run <code>umicom repo review --root "C:\\Work\\My Project" --children</code> to focus on child repositories. Omit <code>--children</code> to see every changed path. Add <code>--timeout-ms 60000</code> for a slow local repository. The command reads status only; it does not stage, commit, fetch or push.</p><p>The native entry point captures Windows Unicode arguments before dispatch, so a path containing non-ASCII characters is passed to Git without the legacy command-line code page losing characters.</p><h2>Limits and troubleshooting</h2>
+<ul><li>Git must support its detailed porcelain status format. The reader invokes an argument vector with NUL-delimited output and optional index locking disabled.</li><li>The input limit is 32 MiB. The result limit is 4,096 changed paths; each stored path must fit the shared 2,048-byte path field, including its terminator. Exceeding a limit reports an error instead of silently omitting changes.</li><li>The default process timeout is 30 seconds. Core callers can set a longer explicit timeout for a large repository.</li><li>Filenames are stored exactly. Control characters are escaped in review text. Display labels are not paths to pass back to Git.</li><li>If a refresh fails, the panel preserves the previous observation and labels the failed refresh. Treat those older results as potentially stale.</li><li>The GTK adapter currently requires nonblocking native joins, supported on Windows and non-Android Linux. Other platforms can use the portable reader or job with their own frontend lifetime handling.</li><li>Do not stop the GTK main context while background inspection is draining. Closing a panel cancels its process without waiting inside the close handler.</li></ul>
+<p>For the underlying record definitions, see the <a href="https://git-scm.com/docs/git-status">Git status manual</a>.</p>
+</body></html>

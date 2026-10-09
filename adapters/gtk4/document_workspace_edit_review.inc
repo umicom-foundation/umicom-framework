@@ -244,7 +244,15 @@ static void WorkspacePanelRender(GtkWidget *window, WorkspaceEditPanel *panel)
         gtk_widget_set_sensitive(panel->next, ready && panel->selected + 1U < summary.document_count);
         gtk_widget_set_sensitive(panel->mark, ready && panel->presented == panel->selected &&
                                                   document.text_changes && !reviewed);
+/* Zero reviewed changes previously satisfied the equality gate and enabled approval. Require an actual text change while retaining the earlier gate for review. */
+#if 0
         int permitted = ready && summary.reviewed_count == summary.changed_count &&
+                        summary.confirmed_annotations == summary.required_annotations;
+#endif
+        /* An empty proposal has nothing to approve. Keep inspection and Close
+         * available without presenting a successful edit that changes no draft. */
+        int permitted = ready && summary.changed_count != 0U &&
+                        summary.reviewed_count == summary.changed_count &&
                         summary.confirmed_annotations == summary.required_annotations;
         gtk_widget_set_sensitive(panel->approval, permitted);
         gtk_widget_set_sensitive(panel->apply,
@@ -314,7 +322,18 @@ static void WorkspacePanelRespond(GtkButton *button, gpointer data)
                                  : UMI_STATUS_INVALID_STATE;
                 else if (GTK_WIDGET(button) == panel->apply)
                 {
+/* The callback enforces the same nonempty proposal rule as the controls. Retain the prior activation guard for review; model-level callers keep their existing API. */
+#if 0
                     status = panel->last_status == UMI_STATUS_OK && panel->presented != SIZE_MAX
+                                 ? UmiSourceWorkspaceEditReviewApply(
+                                       panel->model, summary.revision,
+                                       gtk_check_button_get_active(GTK_CHECK_BUTTON(panel->approval)))
+                                 : UMI_STATUS_INVALID_STATE;
+#endif
+                    /* Recheck the model at activation: retaining or emitting
+                     * a disabled button must not publish an empty operation. */
+                    status = panel->last_status == UMI_STATUS_OK &&
+                             panel->presented != SIZE_MAX && summary.changed_count != 0U
                                  ? UmiSourceWorkspaceEditReviewApply(
                                        panel->model, summary.revision,
                                        gtk_check_button_get_active(GTK_CHECK_BUTTON(panel->approval)))

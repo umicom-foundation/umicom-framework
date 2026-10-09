@@ -1,0 +1,22 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pause on exceptions</title><style>body{font:16px/1.6 system-ui;max-width:900px;margin:40px auto;padding:0 24px}code{overflow-wrap:anywhere}li{margin-bottom:12px}</style></head><body><h1>Pause on exceptions</h1>
+<p>A debugger can pause when a running program encounters an exception. Each adapter decides which exception filters it supports. Studio displays the adapter's own labels instead of assuming that every language has the same exception categories.</p>
+<h2>Choose filters in Studio</h2><ol>
+<li>Open a trusted project and start a native debug session, or attach to an application you are authorised to debug.</li>
+<li>Open the Debug surface and expand <strong>Pause on exceptions</strong>.</li>
+<li>Choose <strong>Refresh exception filters</strong>. If the adapter advertises no filters, Studio explains that there are no choices for this session.</li>
+<li>Select the filters you want and choose <strong>Apply exception filters</strong>. This replaces the complete selected set. Clearing every checkbox and applying sends an empty set.</li>
+<li>Read the result beneath each selected filter. <em>Verified by adapter</em> means that the adapter supplied positive per-filter verification. <em>Not verified by adapter</em> includes its explanation when available. <em>Accepted; individual verification not supplied</em> means that the request succeeded but the adapter omitted individual results.</li>
+</ol>
+<p>Changing a checkbox alone sends no request. Refresh discards unapplied checkbox changes. Choices are held for this connection and are not saved as a global debugger preference.</p>
+<h2>What happens when connecting</h2>
+<p>During native initialization, Framework reads the advertised catalogue. After the adapter signals that configuration can begin, Framework sends its advertised default selection before completing configuration. If no filters were advertised, it sends no exception-filter request. Existing source breakpoints still use their normal configuration sequence.</p>
+<h2>Stale selections and failed requests</h2>
+<p>A selection belongs to one session and one configuration revision. An older panel cannot silently reapply choices after another edit or a new session. Refresh and review the current choices when Studio reports that the state changed.</p>
+<p>An adapter refusal, malformed response or timeout leaves acknowledgement unavailable. The target may already have received the change, so Studio rereads its local request state without automatically resending it. The controls do not resume the target, evaluate an expression or terminate a process.</p>
+<h2>Framework integration</h2>
+<p><code>UmiDebugRuntimeExceptionFiltersRead</code> returns an owned copy of the catalogue, selection and acknowledgement. Modify only the selection's checkbox values, then pass it to <code>UmiDebugRuntimeExceptionFiltersApply</code> on the platform's owner thread. The platform checks session identity, revision, entry count and boolean values before sending anything. Hosts must also check their current workspace authority.</p>
+<p>The GTK panel accepts host Read and Apply callbacks. It owns the callback context until destruction, keeps callbacks on the GTK thread and refuses Apply from a hidden panel. Applications supply their own trust and lifecycle checks without duplicating the protocol layer.</p>
+<h2>Supported scope</h2>
+<p>The catalogue is bounded to 32 filters, with bounded UTF-8 text. Malformed, duplicate or oversized advertised entries are rejected rather than silently truncated. This implementation supports basic filter selection from the initialization catalogue. Filter conditions, exception path options and dynamic replacement of that catalogue are not exposed here. Reconnect after changing adapter configuration. Requests wait synchronously for bounded replies.</p>
+<p>The protocol mapping follows the official <a href="https://microsoft.github.io/debug-adapter-protocol/specification">Debug Adapter Protocol specification</a>: the advertised <code>exceptionBreakpointFilters</code> supply the IDs for <code>setExceptionBreakpoints</code>. Per-filter breakpoint verification is optional, which is why the interface reports missing verification separately from success or refusal.</p>
+</body></html>

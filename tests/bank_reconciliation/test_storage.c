@@ -39,6 +39,19 @@ int main(int argc, char **argv)
             "CREATE TRIGGER reconciliation_fail BEFORE UPDATE ON umicom_kv WHEN NEW.key='bank.operations.revision' BEGIN SELECT RAISE(ROLLBACK,'review failure'); END;";
         OK(umi_data_server_execute(f.bank->server, trigger));
         CHECK(UmiBankOperationsExecuteReviewed(f.bank, &f.operator, review, &receipt) != UMI_STATUS_OK && receipt.revision == 0U);
+/* The old fixture used cached state after a transaction-loss error. Reopen the poisoned handle and then check the same saved balances; retain the original assertion for review. */
+#if 0
+        CHECK(ReadBreak(&f).disposition == UMI_BANK_RECONCILIATION_UNREVIEWED);
+#endif
+        /* A whole-transaction abort leaves the banking handle deliberately
+         * poisoned. Reopen through durable replay before trusting its balances;
+         * statement-only ABORT still permits an explicit successful rollback. */
+        if (strcmp(name, "write-rollback") == 0) {
+            CHECK(f.bank->poisoned);
+            UmiBankOperationsDestroy(f.bank);
+            f.bank = NULL;
+            OK(UmiBankOperationsOpenSqlite(argv[2], &f.bank));
+        }
         CHECK(ReadBreak(&f).disposition == UMI_BANK_RECONCILIATION_UNREVIEWED);
         OK(UmiBankOperationsReload(f.bank)); CHECK(ReadBreak(&f).reviewedRevision == 0U);
         UmiBankCounts counts; OK(UmiBankOperationsCounts(f.bank, &counts)); CHECK(counts.revision == 5U && counts.journals == 1U);

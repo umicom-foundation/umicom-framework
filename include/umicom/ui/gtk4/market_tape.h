@@ -27,6 +27,14 @@ GtkWindow *UmiMarketTapeGtkCreate(GtkWindow *parent);
  * Already-parented content is returned unchanged. The existing content remains
  * the owner's workspace; this wrapper never changes its trading state. */
 GtkWidget *UmiMarketTapeGtkWrap(GtkWidget *content, GtkWindow *parent);
+/**
+ * @brief Create a compact entry button for the linked practice tape.
+ * @param parent Borrowed native window that owns any opened practice window.
+ * @return Floating GTK button, or NULL for an invalid parent.
+ * @details Call on the GTK thread and parent the returned button. Retaining the
+ * button after its native owner closes does not permit another window to open.
+ */
+GtkWidget *UmiMarketTapeGtkLauncherCreate(GtkWindow *parent);
 #ifdef __cplusplus
 }
 #endif

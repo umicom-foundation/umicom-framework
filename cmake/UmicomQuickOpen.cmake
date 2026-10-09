@@ -11,6 +11,17 @@ function(umicom_attach_quick_open)
     set_target_properties(umicom_ui_gtk4 PROPERTIES UMICOM_QUICK_OPEN_ATTACHED TRUE)
     target_sources(umicom_ui_gtk4 PRIVATE "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../adapters/gtk4/quick_open_gtk4.c")
     if(BUILD_TESTING)
+        # The selection test uses GLib directly. Enabling the GTK4 adapter does
+        # not guarantee that an imported target named PkgConfig::GLIB exists.
+        # Resolve the dependency in the directory that creates this test, rather
+        # than relying on Studio, another application, or cached GLIB_FOUND flags.
+        # Reuse a visible target when provided by a parent. The enclosing guards
+        # keep headless and non-testing builds free of this test-only dependency.
+        if(NOT TARGET PkgConfig::GLIB)
+            find_package(PkgConfig REQUIRED)
+            pkg_check_modules(GLIB REQUIRED IMPORTED_TARGET glib-2.0)
+        endif()
+
         add_executable(umicom-quick-open-selection-test "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../tests/developer_workbench/test_quick_open_selection.c")
         target_link_libraries(umicom-quick-open-selection-test PRIVATE Umicom::developer PkgConfig::GLIB)
         umicom_apply_warnings(umicom-quick-open-selection-test)

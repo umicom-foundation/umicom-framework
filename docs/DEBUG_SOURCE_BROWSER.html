@@ -1,0 +1,22 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Read debugger source</title><style>body{font:16px/1.6 system-ui;max-width:900px;margin:40px auto;padding:0 24px}code{overflow-wrap:anywhere}li{margin-bottom:12px}</style></head><body><h1>Read source supplied by a debugger</h1>
+<p>A debugger can describe source that is generated at runtime or stored on another machine. A positive source reference is a temporary handle that lets the adapter supply that text. It is not a local filename and is valid only for the connection that supplied it.</p>
+<h2>Browse in Studio</h2><ol>
+<li>Open a project, review its location and trust it. Start its native debugger or attach to an authorised process.</li>
+<li>In the Debug surface, expand <strong>Debugger sources</strong> and choose <strong>Refresh sources</strong>. The adapter must support listing loaded sources.</li>
+<li>Filter by name, path or origin. Use <strong>Next</strong> and <strong>Previous</strong> for the locally paged catalogue. Filtering does not contact the debugger.</li>
+<li>Choose <strong>View source</strong> beside an entry with a positive reference. The text appears in the read-only viewer below the catalogue. You can select and copy it; it does not replace an editor draft or save a file.</li>
+<li>After reconnecting or changing projects, refresh the catalogue. Old references cannot fetch text from the replacement connection.</li>
+</ol><h2>Understand the boundary</h2>
+<p>A row with <strong>No adapter source reference</strong> may describe an ordinary file. Open that file through the project editor after reviewing its path. This browser never opens a reported path automatically. A path may belong to another machine or describe a generated file that has no disk counterpart.</p>
+<p>The response is shown as plain text even when its reported MIME type is HTML. The source content is an observation at request time, not proof that it matches the executable or a local file. The catalogue remains captured until you refresh; changes reported by later adapter events do not automatically replace its rows.</p>
+<h2>Limits and troubleshooting</h2><ol>
+<li>The complete catalogue allows up to 128 top-level sources, presented 16 per page. The protocol has no catalogue pagination request. A larger reply is rejected with a capacity error rather than shown as a complete partial list.</li>
+<li>Related source descriptors are counted but are not expanded into additional rows. Their adapter-specific data is not saved. Text retrieval uses the positive reference alone.</li>
+<li>Source content allows 59,999 UTF-8 bytes plus its terminator. The existing debugger transport also bounds the encoded JSON frame, so heavily escaped text may reach that transport limit sooner. Embedded NUL characters, invalid Unicode and oversized fields are refused.</li>
+<li>If the adapter does not support source listing, use its normal stack/source facilities or the local editor. A session may support reading a known reference without supporting the complete list.</li>
+<li>On a timeout or rejected response, inspect the adapter's diagnostic output and request again only when appropriate. The browser does not retry automatically. Pending lifecycle events also block publication until the host processes them.</li>
+</ol><p>Requests are synchronous and bounded, so Studio may pause briefly while waiting. Browsing does not resume, pause, evaluate or modify the debugged program.</p>
+<h2>Reuse from Framework</h2>
+<p><code>UmiDebugRuntimeSourceCatalogRead</code> returns copied descriptors and a <code>UmiDebugConnectionIdentity</code>. Keep that identity with the selected reference when calling <code>UmiDebugRuntimeSourceContentRead</code>. Both calls belong on the runtime owner thread after a host checks its current workspace authority. Allocate the large output values on the heap; failures leave them unchanged.</p>
+<p><code>UmiGtk4DebugSourcesCreate</code> accepts host callbacks and owns their context after successful construction. Other applications can reuse the browser while enforcing their own workspace policy. Its local document editor remains independent.</p>
+<p>Protocol reference: <a href="https://microsoft.github.io/debug-adapter-protocol/specification#Requests_Source">Debug Adapter Protocol source request</a>.</p></body></html>

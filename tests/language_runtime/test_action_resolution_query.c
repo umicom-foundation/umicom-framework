@@ -409,13 +409,23 @@ int main(int argc, char **argv)
     }
     if (strcmp(mode, "timeout-resolve") == 0)
     {
+/* The fixture previously supplied all future responses during initialization, bypassing the intended resolve-time read failure. Bound reads so the response remains in the mock transport until requested; retain the former setup for review. */
+#if 0
         fixture.timeout_resolve = 1;
+#endif
+        fixture.timeout_resolve = 1;
+        fixture.fragment = 1U; /* Do not prefetch a future reply before the injected read failure. */
         request.timeout_ms = 5U;
         expected = UMI_STATUS_TIMEOUT;
     }
     if (strcmp(mode, "read-error") == 0)
     {
+/* The fixture previously supplied all future responses during initialization, bypassing the intended resolve-time read failure. Bound reads so the response remains in the mock transport until requested; retain the former setup for review. */
+#if 0
         fixture.fail_resolve_read = 1;
+#endif
+        fixture.fail_resolve_read = 1;
+        fixture.fragment = 1U; /* Do not prefetch a future reply before the injected read failure. */
         expected = UMI_STATUS_IO_ERROR;
     }
     if (strcmp(mode, "write-error") == 0)

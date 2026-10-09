@@ -60,3 +60,32 @@ add_test(NAME framework.build_review.practice_project
         "-DCTEST=${CMAKE_CTEST_COMMAND}" "-DGENERATOR=${CMAKE_GENERATOR}"
         -P "${CMAKE_CURRENT_LIST_DIR}/practice_project.cmake")
 set_tests_properties(framework.build_review.practice_project PROPERTIES TIMEOUT 120)
+
+# These cases call the shared parser and immutable review API. They do not need
+# a GTK display or a compiler process to exercise CMake transcript boundaries.
+add_executable(umicom-build-cmake-record-test "${CMAKE_CURRENT_LIST_DIR}/test_cmake_records.c")
+target_link_libraries(umicom-build-cmake-record-test PRIVATE Umicom::build_review)
+set_target_properties(umicom-build-cmake-record-test PROPERTIES
+    C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+if(COMMAND umicom_apply_warnings)
+    umicom_apply_warnings(umicom-build-cmake-record-test)
+endif()
+if(COMMAND umicom_apply_sanitizers)
+    umicom_apply_sanitizers(umicom-build-cmake-record-test)
+endif()
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-build-cmake-record-test)
+endif()
+function(umicom_cmake_record_cases group)
+    foreach(_case IN LISTS ARGN)
+        add_test(NAME framework.build_review.cmake_record.${group}.${_case}
+            COMMAND umicom-build-cmake-record-test "${group}" "${_case}")
+        set_tests_properties(framework.build_review.cmake_record.${group}.${_case}
+            PROPERTIES TIMEOUT 30 LABELS "framework;build-review;diagnostics;regression")
+    endforeach()
+endfunction()
+umicom_cmake_record_cases(grammar collision paragraphs crlf colour trailing-blank
+    next-header indented-header next-compiler header-only terminal-control false-header warning)
+umicom_cmake_record_cases(capacity exact-fit overflow long-continuation)
+umicom_cmake_record_cases(contract ordinary empty invalid)
+umicom_cmake_record_cases(review search report)

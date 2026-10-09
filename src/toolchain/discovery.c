@@ -52,6 +52,7 @@
 
 #include "umicom/platform/filesystem.h"
 #include "umicom/platform/process.h"
+#include "umicom/platform/process_search_path.h"
 
 /* Provide the toolchain emit operation used by this module and its client applications. */
 static void umi_toolchain_emit(const UmiToolchainDiscoveryRequest *request,
@@ -144,6 +145,8 @@ static UmiStatus umi_find_in_directory(const char *directory,
  * Provide the toolchain find on path operation used by this module and its client
  * applications.
  */
+/* Tool discovery now reads native Unicode PATH and recognises explicit absolute files without relying on PATH. A shared supplied-list search preserves ordering and reports capacity errors instead of selecting a different installation. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_toolchain_find_on_path(const char *executable,
                                      char *out_path,
                                      size_t capacity)
@@ -210,6 +213,82 @@ UmiStatus umi_toolchain_find_on_path(const char *executable,
     }
     free(copy);
     return UMI_STATUS_NOT_FOUND;
+}
+#endif
+/* Look up a candidate without executing it. Absolute selections do not need
+ * PATH at all, including in a GUI host with an empty environment. */
+static UmiStatus ToolchainCandidate(const char *path, char *out, size_t capacity)
+{
+    if (!umi_fs_is_file(path)) return UMI_STATUS_NOT_FOUND;
+    return umi_path_copy(out, capacity, path);
+}
+
+UmiStatus UmiToolchainFindInSearchPath(const char *executable, const char *searchPath,
+    char *out, size_t capacity)
+{
+    if (executable == NULL || executable[0] == '\0' || out == NULL || capacity == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (umi_fs_is_absolute(executable))
+        return ToolchainCandidate(executable, out, capacity);
+    if (searchPath == NULL || searchPath[0] == '\0') return UMI_STATUS_NOT_FOUND;
+    size_t length = 0U;
+    while (length < 131072U && searchPath[length] != '\0') ++length;
+    if (length == 131072U) return UMI_STATUS_CAPACITY_EXCEEDED;
+#ifdef _WIN32
+    const char delimiter = ';';
+#else
+    const char delimiter = ':';
+#endif
+    /* Visit PATH entries in their supplied order. Empty entries retain the
+     * previous discovery policy: they do not add an implicit current directory. */
+    const char *cursor = searchPath;
+    while (*cursor != '\0')
+    {
+        const char *end = strchr(cursor, delimiter);
+        if (end == NULL) end = cursor + strlen(cursor);
+        size_t count = (size_t)(end - cursor);
+        if (count != 0U)
+        {
+            char directory[UMI_PATH_CAPACITY];
+            if (count >= sizeof directory) return UMI_STATUS_CAPACITY_EXCEEDED;
+            memcpy(directory, cursor, count);
+            directory[count] = '\0';
+            UmiStatus status = umi_find_in_directory(directory, executable, out, capacity);
+            if (status == UMI_STATUS_OK || status == UMI_STATUS_CAPACITY_EXCEEDED) return status;
+#ifdef _WIN32
+            /* Native adapters use portable names such as gdb and clangd.
+             * Try .exe only for extensionless names; never execute a shell or
+             * infer a batch-script interpreter while merely discovering tools. */
+            const char *leaf = executable;
+            for (const char *p = executable; *p != '\0'; ++p)
+                if (*p == '/' || *p == '\\') leaf = p + 1U;
+            if (strchr(leaf, '.') == NULL)
+            {
+                char filename[UMI_PATH_CAPACITY];
+                int written = snprintf(filename, sizeof filename, "%s.exe", executable);
+                if (written < 0 || (size_t)written >= sizeof filename) return UMI_STATUS_CAPACITY_EXCEEDED;
+                status = umi_find_in_directory(directory, filename, out, capacity);
+                if (status == UMI_STATUS_OK || status == UMI_STATUS_CAPACITY_EXCEEDED) return status;
+            }
+#endif
+        }
+        cursor = *end == '\0' ? end : end + 1U;
+    }
+    return UMI_STATUS_NOT_FOUND;
+}
+
+UmiStatus umi_toolchain_find_on_path(const char *executable, char *out_path, size_t capacity)
+{
+    if (executable == NULL || executable[0] == '\0' || out_path == NULL || capacity == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (umi_fs_is_absolute(executable))
+        return UmiToolchainFindInSearchPath(executable, NULL, out_path, capacity);
+    char *path = NULL;
+    UmiStatus status = UmiProcessSearchPathRead(&path);
+    if (status == UMI_STATUS_OK)
+        status = UmiToolchainFindInSearchPath(executable, path, out_path, capacity);
+    UmiProcessSearchPathFree(path);
+    return status;
 }
 
 /*

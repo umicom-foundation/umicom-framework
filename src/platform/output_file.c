@@ -40,7 +40,14 @@ static bool ordinary_component(const char *text, size_t length)
     size_t stem = 0U;
     while (stem < length && text[stem] != '.') ++stem;
     while (stem != 0U && text[stem - 1U] == ' ') --stem;
+/* The former stem check rejected hidden application folders on Windows. The explicit leading-dot check below preserves device-name protection while allowing .cmake and .umicom paths; retain the old check for review. */
+#if 0
     if (stem == 0U) return false;
+#endif
+    /* A leading dot is an ordinary filename prefix, used by CMake and local
+     * application settings. Only an empty stem made from spaces is ambiguous;
+     * exact dot/dot-dot components and trailing dots were rejected above. */
+    if (stem == 0U) return text[0] == '.';
     if (stem > 7U) return true;
     char name[8] = {0};
     for (size_t index = 0U; index < stem; ++index) {

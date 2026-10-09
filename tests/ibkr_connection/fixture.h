@@ -49,7 +49,12 @@ static int Feed(Fixture *f,const char *const *fields,size_t count)
     for(size_t i=0;i<count;++i){size_t n=strlen(fields[i])+1U;memcpy(p,fields[i],n);p+=n;}
     f->inSize+=size+4U;return 0;
 }
+/* Use a fixture-specific temporary name so callers may name their domain records fields.
+ * The former macro is retained to document the strict-warning failure. */
+#if 0
 #define FEED(f,...) do{const char *fields[]={__VA_ARGS__};CHECK(Feed((f),fields,sizeof fields/sizeof fields[0])==0);}while(0)
+#endif
+#define FEED(f,...) do{const char *fixtureFeedFields[]={__VA_ARGS__};CHECK(Feed((f),fixtureFeedFields,sizeof fixtureFeedFields/sizeof fixtureFeedFields[0])==0);}while(0)
 static int Connect(Fixture *f)
 {
     CHECK(UmiIbkrConnectionOpen(f->c,0)==UMI_STATUS_OK);

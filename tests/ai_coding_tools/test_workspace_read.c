@@ -21,6 +21,8 @@
  * Start this command or application, report setup failures, and return a process exit code
  * to the operating system.
  */
+/* The original automatic fixture can exceed the native Windows stack before its first assertion. The replacement owns the same records on the heap; retain the earlier test and its comments for review. */
+#if 0
 int main(void)
 {
     ToolTestFixture f;
@@ -46,3 +48,50 @@ int main(void)
     return 0;
 }
 
+
+#endif
+#include <stdlib.h>
+#include <stdio.h>
+
+/* Large bounded records belong to this explicit fixture owner, not the native
+ * thread stack. Each process still creates a fresh independent model and runs
+ * the original semantic assertions; allocation failure is a test failure. */
+typedef struct FixtureStorage {
+    ToolTestFixture f;
+} FixtureStorage;
+
+static int CheckFixture(FixtureStorage *state)
+{
+    UmiAiCodingToolCall call = {0};
+    UmiAiCodingToolResult result;
+
+    assert(tool_test_fixture_init(&state->f) == UMI_STATUS_OK);
+    assert(test_workspace_add(
+        &state->f.workspace_storage,
+        "src/main.c",
+        "int main(void) { return 0; }\n") == UMI_STATUS_OK);
+
+    call.call_id = 1U;
+    (void)strcpy(call.tool_id, "workspace.read");
+    (void)strcpy(call.arguments_json, "{\"path\":\"src/main.c\"}");
+
+    assert(umi_ai_coding_tool_execute(
+        &state->f.executor, &call, &result) == UMI_STATUS_OK);
+    assert(result.state == UMI_AI_CODING_TOOL_CALL_SUCCEEDED);
+    assert(strstr(result.output, "int main") != NULL);
+
+    tool_test_fixture_deinit(&state->f);
+    return 0;
+}
+
+int main(void)
+{
+    FixtureStorage *state = calloc(1U, sizeof *state);
+    if (state == NULL) {
+        fputs("Cannot allocate fixture storage\n", stderr);
+        return 1;
+    }
+    int result = CheckFixture(state);
+    free(state);
+    return result;
+}

@@ -59,6 +59,23 @@ UmiStatus umi_debug_runtime_adapter_create_with_transport(
     UmiDebugRuntimeAdapter **out_adapter);
 
 /**
+ * Start the same owned DAP process with one project-selected tool folder.
+ * NULL/empty tool_directory retains inherited selection. A simple tool name
+ * resolves only inside an explicit absolute folder; an absolute executable is
+ * kept. Only the child receives the PATH prefix. No trust is granted here.
+ * Arguments and folder strings are borrowed until return. Failure clears the
+ * output; successful ownership follows the ordinary start-process contract.
+ */
+UmiStatus UmiDebugRuntimeAdapterStartProcessWithToolDirectory(
+    const char *adapter_id,
+    const char *program,
+    const char *const *arguments,
+    size_t argument_count,
+    const char *working_directory,
+    const char *tool_directory,
+    UmiDebugRuntimeAdapter **out_adapter);
+
+/**
  * Provide the debug runtime adapter start process operation used by this module and its
  * client applications.
  */
@@ -177,6 +194,20 @@ typedef UmiStatus (*UmiDebugRuntimeEventObserver)(void *context,
 UmiStatus UmiDebugRuntimeAdapterWaitObserved(UmiDebugRuntimeAdapter *adapter,uint64_t requestSequence,
     uint32_t timeoutMilliseconds,UmiDebugRuntimeEventObserver observer,void *context,
     UmiDebugRuntimeEnvelope *outResponse);
+
+/** Start the DAP adapter with reviewed child environment overrides.
+ * definitions follows UmiProcessEnvironmentValidate; NULL keeps inherited values.
+ * The tools directory, process lifetime and output ownership match the existing
+ * WithToolDirectory entry point. No host environment is changed. */
+UmiStatus UmiDebugRuntimeAdapterStartProcessWithEnvironment(
+    const char *adapter_id,
+    const char *program,
+    const char *const *arguments,
+    size_t argument_count,
+    const char *working_directory,
+    const char *tool_directory,
+    const char *definitions,
+    UmiDebugRuntimeAdapter **out_adapter);
 
 #ifdef __cplusplus
 }

@@ -12,7 +12,9 @@ if(BUILD_TESTING)
         umicom_register_validation_target(umicom-native-language-handshake)
     endif()
     add_dependencies(umicom-native-language-handshake umicom-language-process-fixture)
-    foreach(case valid unicode configured reuse stopped timeout error invalid probe probe-error probe-timeout probe-cancel probe-invalid)
+# Existing handshake cases remain; these additions use project-scoped tool selection.
+    foreach(case valid unicode configured reuse stopped timeout error invalid probe probe-error probe-timeout probe-cancel probe-invalid
+        tools-name tools-absolute tools-invalid tools-cancel tools-missing)
         file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/native-language/${case}")
         add_test(NAME framework.language_runtime.native_handshake.${case}
             COMMAND umicom-native-language-handshake ${case} "$<TARGET_FILE:umicom-language-process-fixture>")

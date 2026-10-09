@@ -5,6 +5,8 @@
  * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
+#include "umicom/ui/gtk4/selection_list.h"
+
 
 typedef struct DeveloperPresetRead
 {
@@ -67,7 +69,11 @@ static void DeveloperPresetDetails(GObject *object, GParamSpec *property, gpoint
         /* Ignore recursive selection changes while publishing these details. */
         dialog->presetChanging = 1;
         UmiProjectPresetChoice choice;
-        guint selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(dialog->presetPicker));
+    /* Treat the prompt as no preset selection. Keep the native-index read for review. */
+#if 0
+    guint selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(dialog->presetPicker));
+#endif
+    guint selected = UmiGtk4SelectionListSelected(GTK_DROP_DOWN(dialog->presetPicker));
         if (UmiProjectPresetCatalogueAt(dialog->presetCatalogue, (size_t)selected, &choice) == UMI_STATUS_OK)
         {
             /* Expanded rows carry their actual defining file and inherited
@@ -155,11 +161,20 @@ static void DeveloperPresetReadDone(GObject *source, GAsyncResult *result, gpoin
         dialog->presetCatalogue = read->catalogue;
         read->catalogue = NULL;
         memcpy(dialog->presetRoot, read->root, strlen(read->root) + 1U);
+/* Publish a prompt with the complete model so row zero requires an explicit choice. Keep the previous model-only publication for review. */
+#if 0
         gtk_drop_down_set_model(GTK_DROP_DOWN(dialog->presetPicker), G_LIST_MODEL(names));
+#endif
+        (void)UmiGtk4SelectionListPublish(GTK_DROP_DOWN(dialog->presetPicker), names,
+            GTK_INVALID_LIST_POSITION);
         g_object_unref(names); /* set_model borrows its input and retains its own reference. */
         if (!DeveloperVisible(dialog))
             goto done;
+/* An invalid GTK position can leave row zero selected. The shared publisher now owns the initial selection; preserve this former attempt for review. */
+#if 0
         gtk_drop_down_set_selected(GTK_DROP_DOWN(dialog->presetPicker), GTK_INVALID_LIST_POSITION);
+#endif
+        /* The selection-list publisher has already selected the prompt. */
         if (!DeveloperVisible(dialog))
             goto done;
         /* Report the scope actually read; a direct-only list must not look
@@ -285,7 +300,11 @@ static void DeveloperPresetUseClicked(GtkButton *button, gpointer context)
                    "The project folder changed. Read its preset files before choosing a name.");
         goto done;
     }
+/* Treat the prompt as no preset selection. Keep the native-index read for review. */
+#if 0
     guint index = gtk_drop_down_get_selected(GTK_DROP_DOWN(dialog->presetPicker));
+#endif
+    guint index = UmiGtk4SelectionListSelected(GTK_DROP_DOWN(dialog->presetPicker));
     UmiProjectPresetChoice choice;
     UmiBuildProfile current = dialog->profile, selected;
     current.preset[0] = '\0'; /* The visible legacy field was explicitly cleared above. */

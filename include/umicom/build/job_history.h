@@ -14,6 +14,14 @@
 extern "C"
 {
 #endif
+    /** Identify the resolved project directory and copied profile values.
+     * Paths are resolved when called, without reading source files or launching
+     * programs. Prefer absolute source directories in persistent hosts.
+     * Inputs remains empty: a settings match is not source/build qualification.
+     * Output is unchanged on failure. Hashes are not encryption; never put
+     * credentials in build settings. The phase is recorded separately by the
+     * job caption; this identity permits comparing settings across phases. */
+    UmiStatus UmiBuildProfileJobIdentity(const UmiBuildProfile *profile, UmiJobIdentity *out);
     typedef struct UmiBuildJobHistoryState
     {
         bool enabled;

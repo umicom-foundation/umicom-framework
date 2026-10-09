@@ -7,12 +7,15 @@
  *---------------------------------------------------------------------------*/
 /* Drawing undo/redo and its snapshot are declared by the shared history
  * contract; do not depend on another chart header including it incidentally. */
+#include "umicom/ui/gtk4/automation.h"
 #include "umicom/trading/chart_history.h"
 #include "../trading_execution/order_review_fixture.h"
 #include "umicom/trading_ui/gtk4/interactive_chart.h"
 #include "umicom/chart/drawing_appearance.h"
 #define CHECK REVIEW_CHECK
 #define OK(x) CHECK((x) == UMI_STATUS_OK)
+/* The rendered-child walk omitted controls owned by collapsed expanders. The shared bounded logical-tree lookup replaces it; retain the earlier traversal for review. */
+#if 0
 static GtkWidget *Find(GtkWidget *root, const char *id)
 {
     const char *tag = g_object_get_data(G_OBJECT(root), "umicom-automation-id");
@@ -21,6 +24,13 @@ static GtkWidget *Find(GtkWidget *root, const char *id)
         GtkWidget *found = Find(child, id); if (found != NULL) return found;
     }
     return NULL;
+}
+#endif
+/* Use the Framework logical tree so a collapsed panel can be inspected
+ * without changing the user's layout or overlooking an ambiguous identifier. */
+static GtkWidget *Find(GtkWidget *root, const char *id)
+{
+    return umi_gtk4_automation_find_tagged_widget(root, id);
 }
 
 int main(int argc, char **argv)

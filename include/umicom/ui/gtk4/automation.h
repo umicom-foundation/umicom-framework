@@ -70,6 +70,36 @@ UmiStatus umi_gtk4_automation_tag_widget(
     void *native_widget,
     const char *automation_id);
 
+/**
+ * @brief Find one tagged control in a caller-owned GTK tree.
+ * @param native_root A live GtkWidget, used only on its GTK owning thread.
+ * @param automation_id The nonempty identifier assigned to the control.
+ * @return A borrowed GtkWidget pointer, or NULL for absent, ambiguous or
+ * oversized trees and invalid arguments. Keep the root alive while using it.
+ *
+ * Collapsed expander content belongs to the logical tree and can be inspected
+ * without opening the panel. This function never activates, presents or changes
+ * a widget. User interaction must still check visibility and sensitivity.
+ */
+void *umi_gtk4_automation_find_tagged_widget(
+    void *native_root, const char *automation_id);
+
+
+/**
+ * @brief Find one explicitly named GTK control in a caller-owned logical tree.
+ * @param native_root A live GtkWidget on its GTK owning thread.
+ * @param widget_name A nonempty name assigned with gtk_widget_set_name.
+ * @return A borrowed GtkWidget, or NULL for invalid, absent, ambiguous or
+ * oversized input. Keep the root alive while using the returned control.
+ *
+ * This read-only lookup also reaches collapsed expander content. Names are a
+ * compatibility selector for existing controls; new interfaces should prefer
+ * stable automation IDs. Default class names are often ambiguous. This function
+ * never opens a panel or authorizes clicking an invisible or disabled control.
+ */
+void *umi_gtk4_automation_find_named_widget(
+    void *native_root, const char *widget_name);
+
 #ifdef __cplusplus
 }
 #endif

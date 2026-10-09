@@ -9,6 +9,7 @@
 #ifndef UMICOM_TESTING_ARCHIVE_H
 #define UMICOM_TESTING_ARCHIVE_H
 #include "umicom/data/data_server.h"
+#include "umicom/data/job_identity.h"
 #include "umicom/testing/ctest_capture.h"
 #ifdef __cplusplus
 extern "C"
@@ -26,6 +27,10 @@ extern "C"
         char source_revision[UMI_TEST_ARCHIVE_REVISION_CAPACITY];
         uint64_t workspace_generation;
         bool retain_output;
+        /* Copy this evidence when the run is accepted, not when Save is clicked.
+         * Empty identity keeps legacy callers valid. Inputs remain optional and
+         * describe only the caller's documented input set, not every build file. */
+        UmiJobIdentity identity;
     } UmiTestArchiveOrigin;
     typedef struct UmiTestArchiveEntry
     {
@@ -33,6 +38,10 @@ extern "C"
         UmiTestArchiveOrigin origin;
         UmiCtestJobPlanSnapshot plan;
         UmiCtestJobSnapshot run;
+        /* Computed from the actual ordered requests during the save transaction.
+         * Empty means an older record without this evidence. It is not a source
+         * fingerprint or proof that the recorded test binary is still current. */
+        char selection_digest[UMI_JOB_IDENTITY_DIGEST_CAPACITY];
     } UmiTestArchiveEntry;
     typedef struct UmiTestArchiveCatalog
     {
@@ -73,9 +82,33 @@ extern "C"
                                       UmiCtestJobRequest *out_request);
     UmiStatus UmiTestArchiveResultAt(UmiTestArchive *archive, uint64_t id, size_t index,
                                      UmiTestResult *out_result, uint32_t *out_attempt);
+    /** One completed attempt and its origin from a single database observation.
+     * This object contains a diagnostic tail; allocate it on the heap when the
+     * host has a small thread stack. It owns copies and borrows no archive data. */
+    typedef struct UmiTestArchiveAttempt
+    {
+        UmiTestArchiveEntry entry;
+        UmiCtestJobRequest request;
+        UmiTestResult result;
+        uint32_t attempt;
+    } UmiTestArchiveAttempt;
+    /** Read one completed attempt under one transaction. index is zero-based in
+     * recorded attempt order. Missing/corrupt records and cancellation preserve
+     * out_attempt. This performs storage I/O; interactive hosts should use the
+     * archive_reader.h worker. The output must not alias archive storage. */
+    UmiStatus UmiTestArchiveReadAttempt(UmiTestArchive *archive, uint64_t id, size_t index,
+        const UmiCancellationToken *cancellation, UmiTestArchiveAttempt *out_attempt);
     /* Explicitly remove exactly one saved run and its owned rows atomically.
  * This never touches source files, test executables or another archive scope. */
     UmiStatus UmiTestArchiveRemove(UmiTestArchive *archive, uint64_t id);
+    /** Remove one saved run with cooperative cancellation before transaction commit.
+     * Cancellation rolls back deleted rows. A Stop request received after commit
+     * does not reverse removal: OK still means the transaction committed. NULL
+     * cancellation retains the synchronous contract. This performs storage I/O;
+     * interactive hosts should use archive_removal.h to keep their event loop free. */
+    UmiStatus UmiTestArchiveRemoveWithCancellation(UmiTestArchive *archive, uint64_t id,
+        const UmiCancellationToken *cancellation);
+
 #ifdef __cplusplus
 }
 #endif

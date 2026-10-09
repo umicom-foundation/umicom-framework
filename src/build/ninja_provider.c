@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "umicom/build/tool_location.h"
 #include "umicom/build/ninja_provider.h"
 
 #include <stdio.h>
@@ -29,7 +30,14 @@ static UmiStatus ninja_command(const UmiBuildProfile *profile,
         phase != UMI_BUILD_PHASE_CLEAN) {
         return UMI_STATUS_NOT_IMPLEMENTED;
     }
+/* An explicit project tool folder selects this program directly. The original inherited-lookup call remains for review; empty tool folders preserve that behaviour. The previous implementation is retained for engineering review. */
+#if 0
     umi_build_command_init(out_command, "ninja");
+#endif
+    char tool[UMI_BUILD_PATH_CAPACITY];
+    UmiStatus tool_status = UmiBuildToolProgram(profile, "ninja", tool, sizeof tool);
+    if (tool_status != UMI_STATUS_OK) return tool_status;
+    umi_build_command_init(out_command, tool);
     if (!umi_build_command_set_working_directory(out_command,
                                                   profile->build_directory)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;

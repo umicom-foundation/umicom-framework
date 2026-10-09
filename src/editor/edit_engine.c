@@ -71,7 +71,14 @@ static UmiStatus builder_reserve(TextBuilder *builder, size_t required)
     char *replacement;
 
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+/* The old reserve shortcut treated a fresh zero-capacity builder as allocated. Require owned storage before reusing capacity; retain the earlier shortcut for review. */
+#if 0
     if (required <= builder->capacity) return UMI_STATUS_OK;
+#endif
+    /* Even an empty first append writes the string terminator. A zero
+     * capacity is not storage: allocate before returning an empty string so
+     * moving the first line and commenting from offset zero remain safe. */
+    if (builder->bytes != NULL && required <= builder->capacity) return UMI_STATUS_OK;
     capacity = builder->capacity > 0U ? builder->capacity : 256U;
     /*
      * Continue only while work remains available; the loop body advances the state on each

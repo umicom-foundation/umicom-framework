@@ -48,6 +48,12 @@ extern "C"
         /* Descriptions are caller-supplied labels, not verified source identities.
      * Empty revision labels never count as equal recorded revisions. */
         bool same_recorded_revision;
+        /* Context evidence does not certify either outcome. A settings/project
+         * mismatch changes the row classification; changed source inputs remain
+         * visible separately so real regressions between revisions can be read. */
+        UmiJobIdentityComparison identity_comparison;
+        bool selection_evidence_recorded;
+        bool same_recorded_selection;
     } UmiTestArchiveComparisonSummary;
     typedef struct UmiTestArchiveComparison UmiTestArchiveComparison;
     /* Read both immutable runs under one Data Server transaction. The result owns

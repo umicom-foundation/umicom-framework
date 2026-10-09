@@ -45,7 +45,11 @@ static const Example examples[] = {
      "value.\"},{\"label\":[10,15],\"documentation\":{\"kind\":\"markdown\",\"value\":\"**Second** "
      "value.\"}}]},{\"label\":\"sum(values)\",\"parameters\":[{\"label\":\"values\"}]}],\"activeParameter\":"
      "1,\"activeSignature\":1}",
+/* The overload input contains two signatures; index one selects the second. Keep both results in the catalogue and retain the earlier inconsistent count for review. */
+#if 0
      UMI_STATUS_OK, 1U, 1U, 0, 1, "values", 4U, 10U},
+#endif
+     UMI_STATUS_OK, 2U, 1U, 0, 1, "values", 4U, 10U},
     {"local-active",
      "{\"signatures\":[{\"label\":\"sum(left, right)\",\"documentation\":\"Add two "
      "values.\",\"parameters\":[{\"label\":\"left\",\"documentation\":\"First "

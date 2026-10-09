@@ -6,6 +6,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 
+#include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/document_recovery.h"
 #include "umicom/document/recovery_storage.h"
 #include "umicom/platform/output_file.h"
@@ -62,6 +63,8 @@ static void PumpFor(gint64 milliseconds)
         g_usleep(1000U);
     }
 }
+/* The rendered-only search missed controls in collapsed review panels. The Framework logical-tree helper replaces it; retain the former traversal for review. */
+#if 0
 static GtkWidget *Find(GtkWidget *root, const char *id)
 {
     const char *tag = g_object_get_data(G_OBJECT(root), "umicom-automation-id");
@@ -75,6 +78,13 @@ static GtkWidget *Find(GtkWidget *root, const char *id)
             return found;
     }
     return NULL;
+}
+#endif
+/* Inspect logical ownership as well as rendered children. Finding a control
+ * does not grant permission to edit it or make a collapsed panel visible. */
+static GtkWidget *Find(GtkWidget *root, const char *id)
+{
+    return umi_gtk4_automation_find_tagged_widget(root, id);
 }
 static GtkWindow *Review(void)
 {
@@ -137,6 +147,9 @@ int main(int argc, char **argv)
     view.dirty = 1;
     view.read_only = strcmp(mode, "read-only") == 0;
     CHECK(UmiUiDocumentViewModelUpsertText(views, &view, "draft source", 12U) == UMI_STATUS_OK);
+    /* UpsertText copies its input; reload the owned preview before later
+     * metadata edits so this fixture cannot restore the previous draft. */
+    CHECK(umi_ui_document_view_model_find(views, view.view_id, &view) == UMI_STATUS_OK);
     CHECK(UmiDocumentRecoveryDirectory("MonitorTest", base, directory, sizeof(directory)) == UMI_STATUS_OK);
     if (strcmp(mode, "form-enable") == 0 || strcmp(mode, "form-pause") == 0)
     {
@@ -216,6 +229,9 @@ int main(int argc, char **argv)
     {
         CHECK(umi_ui_document_view_model_find(views, view_id, &view) == UMI_STATUS_OK);
         CHECK(UmiUiDocumentViewModelUpsertText(views, &view, "newer source", 12U) == UMI_STATUS_OK);
+    /* UpsertText copies its input; reload the owned preview before later
+     * metadata edits so this fixture cannot restore the previous draft. */
+    CHECK(umi_ui_document_view_model_find(views, view.view_id, &view) == UMI_STATUS_OK);
         wanted = 2U;
         CHECK(WaitEvent(&event, wanted, 0));
     }
@@ -230,6 +246,9 @@ int main(int argc, char **argv)
         CHECK(UmiGtk4AdapterConfigureRecovery(adapter, "MonitorTest", base, 0, 1000U) == UMI_STATUS_OK);
         CHECK(umi_ui_document_view_model_find(views, view_id, &view) == UMI_STATUS_OK);
         CHECK(UmiUiDocumentViewModelUpsertText(views, &view, "later", 5U) == UMI_STATUS_OK);
+    /* UpsertText copies its input; reload the owned preview before later
+     * metadata edits so this fixture cannot restore the previous draft. */
+    CHECK(umi_ui_document_view_model_find(views, view.view_id, &view) == UMI_STATUS_OK);
         PumpFor(2200);
         CHECK(!event.last.enabled && event.last.saved_snapshots == 1U);
     }

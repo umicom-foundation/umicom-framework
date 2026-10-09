@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../theme_settings_gtk4.h"
 #include "umicom/ui/gtk4/workstation/appearance_editor.h"
 
 #include <stdint.h>
@@ -262,10 +263,18 @@ static UmiStatus apply_active_style(UmiGtk4AppearanceEditor *editor) {
    * used.
    */
   if (settings != NULL) {
+        /* The shared settings helper chooses the current property at runtime.
+         * Retain the previous write for review; older GTK still uses it through
+         * the helper's fallback without warning on newer installations. */
+#if 0
     g_object_set(settings, "gtk-application-prefer-dark-theme",
                  profile.mode == UMI_UI_THEME_MODE_DARK ||
                      profile.mode == UMI_UI_THEME_MODE_HIGH_CONTRAST,
                  NULL);
+#endif
+    umi_gtk4_settings_prefer_dark(settings,
+        profile.mode == UMI_UI_THEME_MODE_DARK ||
+        profile.mode == UMI_UI_THEME_MODE_HIGH_CONTRAST);
   }
   editor->revision += 1U;
   /* Observers run only after the profile is valid and visible. This prevents

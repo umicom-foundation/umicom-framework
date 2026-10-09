@@ -54,6 +54,21 @@ typedef struct UmiLanguageRuntimeProcessStreamConfig{const char*program;const ch
  */
 UmiStatus umi_language_runtime_process_stream_start(const UmiLanguageRuntimeProcessStreamConfig*c,UmiLanguageRuntimeProcessStream**out);
 /**
+ * Start a persistent child with one project-selected tool directory prepended to
+ * its PATH. NULL or empty directory retains the ordinary inherited launch.
+ * The directory must be absolute and contain one path, not a PATH list. A simple
+ * ASCII tool name resolves inside that folder (with .exe on Windows); an absolute
+ * executable remains authoritative. Relative executable paths are rejected.
+ * No fallback is attempted when the selected tool is absent. All strings are
+ * borrowed only until return; failure clears out. This grants no execution
+ * permission: callers must approve the project and selected tools beforehand.
+ * The direct-child lifetime, raw protocol streams and threading rules above apply.
+ */
+UmiStatus UmiLanguageRuntimeProcessStreamStartWithToolDirectory(
+    const UmiLanguageRuntimeProcessStreamConfig *config, const char *tool_directory,
+    UmiLanguageRuntimeProcessStream **out);
+
+/**
  * Release or reset state held by language runtime process stream so the same storage can
  * be reused safely.
  */
@@ -78,6 +93,16 @@ UmiStatus umi_language_runtime_process_stream_stop(UmiLanguageRuntimeProcessStre
  * its client applications.
  */
 int umi_language_runtime_process_stream_is_running(UmiLanguageRuntimeProcessStream*s);
+
+/** Start with reviewed NAME=VALUE overrides and an optional tools PATH prefix.
+ * Uses UmiProcessEnvironmentValidate syntax and never changes the host environment.
+ * The native child inherits other variables; input strings need live only for this
+ * call. Program selection and child-only lifetime follow StartWithToolDirectory.
+ * This may execute arbitrary configured code; the caller must authorize it. */
+UmiStatus UmiLanguageRuntimeProcessStreamStartWithEnvironment(
+    const UmiLanguageRuntimeProcessStreamConfig *config, const char *tool_directory,
+    const char *definitions, UmiLanguageRuntimeProcessStream **out);
+
 #ifdef __cplusplus
 }
 #endif

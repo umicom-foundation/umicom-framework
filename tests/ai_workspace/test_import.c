@@ -281,8 +281,13 @@ int main(int argc, char **argv)
     }
     if (strcmp(name, "sqlite-rollback") == 0)
     {
+/* Sources are stored as separate metadata and text records. Inject failure on the real text key after preceding writes, so the unchanged-state checks exercise rollback; retain the obsolete trigger for review. */
+#if 0
         OK(umi_data_server_execute(data, "CREATE TRIGGER fail_import BEFORE INSERT ON umicom_kv WHEN NEW.key "
                                          "LIKE '%/s/0' BEGIN SELECT RAISE(ABORT,'injected'); END;"));
+#endif
+        OK(umi_data_server_execute(data, "CREATE TRIGGER fail_import BEFORE INSERT ON umicom_kv WHEN NEW.key "
+                                         "LIKE '%/s/0/t' BEGIN SELECT RAISE(ABORT,'injected'); END;"));
         CHECK(UmiAiWorkspaceImportApply(workspace, import, true) != UMI_STATUS_OK);
         CHECK(umi_data_server_count(data) == 0U);
         OK(UmiAiWorkspaceReload(workspace));

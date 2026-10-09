@@ -488,17 +488,51 @@ UmiStatus umi_application_suite_gtk4_workstation_library_preview(
  * Layout Library. Review owns copied bytes; apply refuses a stale workspace.
  * Calls run on the GTK owner thread. They never save storage or place orders.
  * The caller destroys the review after apply or cancellation. */
+/**
+ * Serialise the current named-layout library into caller-owned bytes.
+ *
+ * Call on the GTK owner thread. The export reads the current layout model;
+ * it neither saves the library nor runs application commands. The caller owns
+ * the destination buffer and receives the encoded size through out_size.
+ */
 UmiStatus umi_application_suite_gtk4_workstation_library_export(
     UmiApplicationSuiteGtk4Workstation *workstation, char *bytes, size_t capacity, size_t *out_size);
+/**
+ * Decode a portable library into an owned review before changing the workspace.
+ *
+ * The input bytes are borrowed for this GTK owner-thread call. On success,
+ * out_review receives a review whose copied data survives the input buffer.
+ * Destroy that review after applying it or cancelling the operation.
+ */
 UmiStatus umi_application_suite_gtk4_workstation_library_import_review(
     UmiApplicationSuiteGtk4Workstation *workstation, const void *bytes, size_t size, UmiUiWorkspaceLibraryImport **out_review);
+/**
+ * Apply an imported library after checking the reviewed workspace revision.
+ *
+ * Call on the GTK owner thread with a live, caller-owned review. A stale review
+ * is refused; applying a valid review uses the same layout publication path as
+ * Layout Library. This does not save storage or execute product commands.
+ */
 UmiStatus umi_application_suite_gtk4_workstation_library_import_apply(
     UmiApplicationSuiteGtk4Workstation *workstation, const UmiUiWorkspaceLibraryImport *review);
 
 /* Session history owns only named layout arrangements. Navigation checks the
  * displayed model revision and never saves storage or runs product commands. */
+/**
+ * Copy the current session's layout-history navigation state.
+ *
+ * Call on the GTK owner thread. The copied state lets a host display available
+ * undo/redo actions without borrowing the internal history or persisting it.
+ */
 UmiStatus umi_application_suite_gtk4_workstation_library_history_read(
     UmiApplicationSuiteGtk4Workstation *workstation, UmiUiWorkspaceLibraryHistoryState *out_state);
+/**
+ * Navigate layout history only when expected_revision still names the model.
+ *
+ * Call on the GTK owner thread with the direction selected by the user and the
+ * revision they reviewed. Navigation changes named arrangements; it does not
+ * save the library, alter documents or submit business operations.
+ */
 UmiStatus umi_application_suite_gtk4_workstation_library_history_navigate(
     UmiApplicationSuiteGtk4Workstation *workstation, UmiUiWorkspaceLibraryHistoryDirection direction,
     uint64_t expected_revision);

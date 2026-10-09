@@ -21,6 +21,11 @@
  * Start this command or application, report setup failures, and return a process exit code
  * to the operating system.
  */
+/* The previous automatic-storage fixture is retained for review. Its large
+ * aggregate values can exhaust a native thread stack before the first check.
+ * The replacement owns those same records on the heap, checks allocation and
+ * releases them after the checks, including a failed assertion path. */
+#if 0
 int main(void)
 {
     UmiDataSchemaSnapshot before;
@@ -45,4 +50,47 @@ int main(void)
     assert(umi_data_schema_compare_model_select(model, 1U) == UMI_STATUS_OK);
     free(model);
     return 0;
+}
+
+#endif
+
+#include <stdio.h>
+
+/* Checks remain active in Release builds. A helper returns to the owner before
+ * memory is released, so every failed check follows the same cleanup path. */
+#define REQUIRE_SCHEMA(condition) do { if (!(condition)) { \
+    fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, #condition); return 1; \
+} } while (0)
+
+typedef struct SchemaCompareFixture {
+    UmiDataSchemaSnapshot before;
+    UmiDataSchemaSnapshot after;
+    UmiDataSchemaCompareModel model;
+} SchemaCompareFixture;
+
+static int CheckSchemaCompare(SchemaCompareFixture *fixture)
+{
+    UmiDataSchemaTable table;
+    umi_data_schema_snapshot_init(&fixture->before);
+    umi_data_schema_snapshot_init(&fixture->after);
+    REQUIRE_SCHEMA(umi_data_schema_table_init(&table, "customers", "customers") == UMI_STATUS_OK);
+    REQUIRE_SCHEMA(umi_data_schema_snapshot_add(&fixture->before, &table) == UMI_STATUS_OK);
+    REQUIRE_SCHEMA(umi_data_schema_snapshot_add(&fixture->after, &table) == UMI_STATUS_OK);
+    REQUIRE_SCHEMA(umi_data_schema_table_init(&table, "orders", "orders") == UMI_STATUS_OK);
+    REQUIRE_SCHEMA(umi_data_schema_snapshot_add(&fixture->after, &table) == UMI_STATUS_OK);
+    REQUIRE_SCHEMA(umi_data_schema_compare_model_build(&fixture->model,
+        &fixture->before, &fixture->after) == UMI_STATUS_OK);
+    REQUIRE_SCHEMA(fixture->model.summary.added_tables == 1U);
+    REQUIRE_SCHEMA(fixture->model.change_count == 2U);
+    REQUIRE_SCHEMA(umi_data_schema_compare_model_select(&fixture->model, 1U) == UMI_STATUS_OK);
+    return 0;
+}
+
+int main(void)
+{
+    SchemaCompareFixture *fixture = calloc(1U, sizeof *fixture);
+    if (fixture == NULL) { fputs("Cannot allocate schema comparison fixture\n", stderr); return 1; }
+    int result = CheckSchemaCompare(fixture);
+    free(fixture);
+    return result;
 }

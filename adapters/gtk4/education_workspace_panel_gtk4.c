@@ -97,7 +97,7 @@ static void LessonChanged(GObject *object,GParamSpec *spec,gpointer context)
 }
 UmiEducationGtkPanel *UmiEducationGtkCreate(void)
 {
-    UmiEducationGtkPanel *p=g_new0(UmiEducationGtkPanel,1U);g_weak_ref_init(&p->guardedWindow,NULL);
+    UmiEducationGtkPanel *p=g_new0(UmiEducationGtkPanel,1U);p->references=1U;g_weak_ref_init(&p->guardedWindow,NULL);
     p->root=g_object_ref_sink(gtk_box_new(GTK_ORIENTATION_VERTICAL,10));Tag(p->root,"education.workspace");
     gtk_widget_set_margin_start(p->root,18);gtk_widget_set_margin_end(p->root,18);
     gtk_widget_set_margin_top(p->root,18);gtk_widget_set_margin_bottom(p->root,18);
@@ -114,6 +114,15 @@ UmiEducationGtkPanel *UmiEducationGtkCreate(void)
     gtk_box_append(GTK_BOX(p->root),Label("Local self-study only. Quiz progress is not a compiled-code result or an authenticated certificate. Use fictional information; storage and notes are plaintext."));
     p->learnerId=Entry(p->root,"Learner ID to open (letters, numbers, hyphen or underscore)","learner","education.learner-id");
     p->displayName=Entry(p->root,"Display name for a new record","Workshop learner","education.display-name");
+    /* The database path is a user choice, separate from exported source folders.
+     * Leave it empty until selected; opening the panel never creates storage. */
+    p->storagePath=Entry(p->root,"Learning database file (absolute path; parent folder must exist)",
+        "","education.storage-path");
+    gtk_entry_set_placeholder_text(p->storagePath,"Choose a file such as C:/Projects/Learning/progress.sqlite");
+    p->storageLocation=GTK_LABEL(Label("No learning database selected. Existing records can be opened from their current file."));
+    Tag(GTK_WIDGET(p->storageLocation),"education.storage-location");
+    gtk_box_append(GTK_BOX(p->root),GTK_WIDGET(p->storageLocation));
+    EwGtkStorageControls(p);
     Button(p->root,"Open learner record","open",p);Button(p->root,"Reload saved record","reload",p);
     p->summary=GTK_LABEL(Label(""));gtk_box_append(GTK_BOX(p->root),GTK_WIDGET(p->summary));
     char *items[UMI_EDUCATION_LESSONS+1U]={0};
@@ -139,6 +148,16 @@ UmiEducationGtkPanel *UmiEducationGtkCreate(void)
     Button(p->root,"Save learning note","save-note",p);Button(p->root,"Discard note edits","discard-note",p);
     p->projectPath=Entry(p->root,"New project directory (absolute path; must not exist)","","education.project-path");
     Button(p->root,"Export this course project","export-project",p);
+    p->openProjectButton=gtk_button_new_with_label("Open last exported project in the IDE");
+    Tag(p->openProjectButton,"education.open-project");
+    g_object_set_data_full(G_OBJECT(p->openProjectButton),"education-action",g_strdup("open-project"),g_free);
+    g_signal_connect(p->openProjectButton,"clicked",G_CALLBACK(EwGtkAction),p);
+    gtk_widget_set_sensitive(p->openProjectButton,FALSE);
+    gtk_widget_set_visible(p->openProjectButton,FALSE);
+    gtk_box_append(GTK_BOX(p->root),p->openProjectButton);
+    p->exportedProjectLabel=GTK_LABEL(Label("No course project has been exported in this window."));
+    Tag(GTK_WIDGET(p->exportedProjectLabel),"education.exported-project");
+    gtk_box_append(GTK_BOX(p->root),GTK_WIDGET(p->exportedProjectLabel));
     p->reportPath=Entry(p->root,"New learning-record HTML file (absolute path; must not exist)","","education.report-path");
     Button(p->root,"Export learning record","export-record",p);
     p->status=GTK_LABEL(Label("No learning record has been opened. No compiler or student program runs inside this panel."));Tag(GTK_WIDGET(p->status),"education.status");gtk_box_append(GTK_BOX(p->root),GTK_WIDGET(p->status));
@@ -159,6 +178,8 @@ static void Disconnect(GtkWidget *widget,UmiEducationGtkPanel *p)
     }
     for(GtkWidget *child=gtk_widget_get_first_child(widget);child!=NULL;child=gtk_widget_get_next_sibling(child))Disconnect(child,p);
 }
+/* Project adoption now owns a weak host binding and copied export metadata. Release both with the existing panel lifecycle; preserve the previous destruction path for review. The previous implementation is retained for engineering review. */
+#if 0
 void UmiEducationGtkDestroy(UmiEducationGtkPanel *p)
 {
     if(p==NULL)return;
@@ -168,6 +189,90 @@ void UmiEducationGtkDestroy(UmiEducationGtkPanel *p)
     g_signal_handlers_disconnect_by_data(p->note,p);Disconnect(p->root,p);
     UmiEducationClose(p->workspace);if(p->ownsServer)umi_data_server_destroy(p->server);
     g_object_unref(p->root);g_free(p);
+}
+#endif
+/* Host project callbacks may close their learning panel. Immediate action disconnection with deferred controller release replaces immediate free; keep the former cleanup for ownership review. The previous implementation is retained for engineering review. */
+#if 0
+void UmiEducationGtkDestroy(UmiEducationGtkPanel *p)
+{
+    if(p==NULL)return;
+    GObject *window=g_weak_ref_get(&p->guardedWindow);
+    if(window!=NULL){if(p->closeHandler!=0U)g_signal_handler_disconnect(window,p->closeHandler);g_object_unref(window);}
+    g_weak_ref_clear(&p->guardedWindow);
+    g_signal_handlers_disconnect_by_data(p->note,p);Disconnect(p->root,p);
+    UmiEducationClose(p->workspace);if(p->ownsServer)umi_data_server_destroy(p->server);
+    /* Clear callback ownership before releasing widgets. An external host
+     * context must never observe a still-callable action during disposal. */
+    GDestroyNotify release=p->releaseProjectContext;
+    void *context=p->openProjectContext;
+    p->openProject=NULL;p->openProjectContext=NULL;p->releaseProjectContext=NULL;
+    g_free(p->exportedProject);
+    g_object_unref(p->root);g_free(p);
+    if(release!=NULL)release(context);
+}
+#endif
+/* The owner can close during a host callback or a GTK notification. Mark the
+ * panel closed and disconnect its actions immediately; active callbacks retain
+ * its data until they return, including the host's borrowed callback context. */
+UmiEducationGtkPanel *EwGtkAcquire(UmiEducationGtkPanel *p)
+{
+    if(p==NULL || p->closed)return NULL;
+    ++p->references;
+    return p;
+}
+/* The panel also owns the database file chooser cancellation object. Release it with the last callback reference; keep the previous owner teardown for review. The previous implementation is retained for engineering review. */
+#if 0
+void EwGtkRelease(UmiEducationGtkPanel *p)
+{
+    if(--p->references!=0U)return;
+    UmiEducationClose(p->workspace);
+    if(p->ownsServer)umi_data_server_destroy(p->server);
+    GDestroyNotify release=p->releaseProjectContext;
+    void *context=p->openProjectContext;
+    g_free(p->exportedProject);
+    g_object_unref(p->root);
+    g_free(p);
+    if(release!=NULL)release(context);
+}
+#endif
+void EwGtkRelease(UmiEducationGtkPanel *p)
+{
+    if(--p->references!=0U)return;
+    UmiEducationClose(p->workspace);
+    if(p->ownsServer)umi_data_server_destroy(p->server);
+    GDestroyNotify release=p->releaseProjectContext;
+    void *context=p->openProjectContext;
+    g_free(p->exportedProject);
+    g_clear_object(&p->storageChooserCancel);
+    g_object_unref(p->root);
+    g_free(p);
+    if(release!=NULL)release(context);
+}
+/* A pending database-file chooser now shares panel lifetime. Cancel its publication on close and let completion release the held controller; keep the preceding disposal path for review. The previous implementation is retained for engineering review. */
+#if 0
+void UmiEducationGtkDestroy(UmiEducationGtkPanel *p)
+{
+    if(p==NULL || p->closed)return;
+    p->closed=true;
+    GObject *window=g_weak_ref_get(&p->guardedWindow);
+    if(window!=NULL){if(p->closeHandler!=0U)g_signal_handler_disconnect(window,p->closeHandler);g_object_unref(window);}
+    g_weak_ref_clear(&p->guardedWindow);
+    g_signal_handlers_disconnect_by_data(p->note,p);
+    Disconnect(p->root,p);
+    EwGtkRelease(p);
+}
+#endif
+void UmiEducationGtkDestroy(UmiEducationGtkPanel *p)
+{
+    if(p==NULL || p->closed)return;
+    p->closed=true;
+    if(p->storageChooserCancel!=NULL)g_cancellable_cancel(p->storageChooserCancel);
+    GObject *window=g_weak_ref_get(&p->guardedWindow);
+    if(window!=NULL){if(p->closeHandler!=0U)g_signal_handler_disconnect(window,p->closeHandler);g_object_unref(window);}
+    g_weak_ref_clear(&p->guardedWindow);
+    g_signal_handlers_disconnect_by_data(p->note,p);
+    Disconnect(p->root,p);
+    EwGtkRelease(p);
 }
 static gboolean CloseGuard(GtkWindow *window,gpointer context)
 {
@@ -181,6 +286,8 @@ void UmiEducationGtkAttachCloseGuard(UmiEducationGtkPanel *p,GtkWindow *window)
     if(old!=NULL){if(p->closeHandler!=0U)g_signal_handler_disconnect(old,p->closeHandler);g_object_unref(old);}
     g_weak_ref_set(&p->guardedWindow,window);p->closeHandler=window!=NULL?g_signal_connect(window,"close-request",G_CALLBACK(CloseGuard),p):0U;
 }
+/* Embedded hosts retain their borrowed-connection API. Hold the panel across binding notifications and name the host-owned source so a former database path cannot mislabel the current learner. Keep the prior binder for review. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus UmiEducationGtkBind(UmiEducationGtkPanel *p,UmiDataServer *server,const char *id,const char *name)
 {
     if(p==NULL || server==NULL)return UMI_STATUS_INVALID_ARGUMENT;
@@ -191,4 +298,39 @@ UmiStatus UmiEducationGtkBind(UmiEducationGtkPanel *p,UmiDataServer *server,cons
     if(s!=UMI_STATUS_OK)return s;
     UmiEducationClose(p->workspace);if(p->ownsServer)umi_data_server_destroy(p->server);
     p->server=server;p->workspace=fresh;p->ownsServer=false;EwGtkRefresh(p,true);return UMI_STATUS_OK;
+}
+#endif
+UmiStatus UmiEducationGtkBind(UmiEducationGtkPanel *p,UmiDataServer *server,const char *id,const char *name)
+{
+    if(server==NULL || EwGtkAcquire(p)==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status=UMI_STATUS_OK;
+    if(p->dirty || p->storageChoosing)status=UMI_STATUS_BUSY;
+    /* Do not destroy an owned connection by rebinding that same pointer. */
+    if(status==UMI_STATUS_OK && p->ownsServer && p->server==server)status=UMI_STATUS_INVALID_ARGUMENT;
+    UmiEducationWorkspace *fresh=NULL;
+    if(status==UMI_STATUS_OK)status=UmiEducationOpen(server,id,name,&fresh);
+    if(status==UMI_STATUS_OK){
+        UmiEducationClose(p->workspace);
+        if(p->ownsServer)umi_data_server_destroy(p->server);
+        p->server=server;p->workspace=fresh;p->ownsServer=false;
+        gtk_label_set_text(p->storageLocation,"Active learning storage is supplied by this application's host.");
+        if(!p->closed)EwGtkRefresh(p,true);
+    }
+    EwGtkRelease(p);
+    return status;
+}
+
+/* Standalone education keeps its existing export workflow. Embedded IDE hosts
+ * opt in to one explicit adoption action and retain all trust/build decisions. */
+UmiStatus UmiEducationGtkSetProjectOpener(UmiEducationGtkPanel *p,
+    UmiEducationGtkProjectOpen open, void *context, GDestroyNotify release)
+{
+    if(p==NULL || open==NULL || p->closed)return UMI_STATUS_INVALID_ARGUMENT;
+    if(p->openProject!=NULL)return UMI_STATUS_ALREADY_EXISTS;
+    (void)EwGtkAcquire(p);
+    p->openProject=open;p->openProjectContext=context;p->releaseProjectContext=release;
+    gtk_widget_set_visible(p->openProjectButton,TRUE);
+    if(!p->closed)gtk_widget_set_sensitive(p->openProjectButton,p->exportedProjectReady);
+    EwGtkRelease(p);
+    return UMI_STATUS_OK;
 }

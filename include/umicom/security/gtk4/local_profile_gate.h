@@ -29,6 +29,16 @@ typedef struct UmiLocalProfileGateConfig {
 } UmiLocalProfileGateConfig;
 UmiStatus UmiLocalProfileGateCreate(const UmiLocalProfileGateConfig *config, UmiLocalProfileGate **out);
 GtkWidget *UmiLocalProfileGateWidget(UmiLocalProfileGate *gate);
+/**
+ * @brief Bind the optional Paper/Live launch choices on the GTK thread.
+ * @param gate A live, idle local-profile gate.
+ * @param action Callback receiving config.user_data and zero for Paper or one for Live.
+ * This only requests a connection screen. It cannot authenticate or authorise
+ * orders. The callback may destroy the gate. NULL disables the optional route.
+ */
+void UmiLocalProfileGateSetBrokerEnvironmentAction(UmiLocalProfileGate *gate,
+    void (*action)(void *, int));
+
 /* GTK thread only. Stops completion callbacks immediately, clears password
  * fields and releases widgets. A running vault operation may finish, but can
  * never open a workspace after this call. Retained buttons become inert. */

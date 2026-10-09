@@ -42,3 +42,6 @@ if(BUILD_TESTING)
     include("${_umi_review_root}/tests/build_review/CMakeLists.txt")
 endif()
 unset(_umi_review_root)
+
+# Verify optional module composition independently of the host application.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomBuildConfigurationChecks.cmake")

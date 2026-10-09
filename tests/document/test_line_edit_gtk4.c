@@ -187,6 +187,9 @@ int main(int argc, char **argv)
         changed = 0;
     }
     CHECK(UmiUiDocumentViewModelUpsertText(views, &view, source, strlen(source)) == UMI_STATUS_OK);
+    /* UpsertText copies its input; reload the owned preview before later
+     * metadata edits so this fixture cannot restore the previous draft. */
+    CHECK(umi_ui_document_view_model_find(views, view.view_id, &view) == UMI_STATUS_OK);
     CHECK(umi_document_coordinator_sync_active(documents) == UMI_STATUS_OK);
     CHECK(umi_gtk4_adapter_create(application, &result.adapter) == UMI_STATUS_OK);
     CHECK(umi_gtk4_adapter_prepare(result.adapter, shell) == UMI_STATUS_OK);

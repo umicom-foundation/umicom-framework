@@ -2,6 +2,10 @@
 # Persistence is an optional link dependency, separate from basic CTest execution.
 include_guard(GLOBAL)
 add_library(umicom_test_archive STATIC
+    "${CMAKE_CURRENT_LIST_DIR}/../src/testing/archive_removal.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/testing/archive_open.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/testing/archive_reader.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/testing/selection_identity.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/testing/archive.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/testing/archive_codec.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/testing/archive_records.c"
@@ -35,7 +39,32 @@ if(BUILD_TESTING)
         duplicate reordered duration revision invalid missing cancel transaction corrupt-summary missing-chunk
         detached self)
     set(review_cases created missing cancel success late-stop lifetime)
+    set(selection_cases known rediscovered padding order framing invalid bounds unterminated
+        name root configuration enabled timeout repeat stop count)
+    set(evidence_cases legacy codec truncated maximal invalid invalid-save store corrupt-selection corrupt-request)
+    list(APPEND compare_cases identity-settings identity-project identity-inputs identity-legacy identity-missing-inputs)
+    # The earlier test family list is retained below for review.
+    #[[
     foreach(kind codec store sqlite worker capture compare review)
+    ]]
+    set(reader_cases invalid created wrong-thread catalog attempt missing index cancel busy detached late-stop)
+    set(attempt_cases complete missing index cancel corrupt transaction)
+    # Reader lifecycle and atomic observations join the existing archive families.
+    #[[
+    foreach(kind codec store sqlite worker capture compare review selection evidence)
+    ]]
+    set(open_cases invalid created success reopen cancel late-stop retry missing-parent corrupt scope unclaimed wrong-thread taken-stop)
+    # Keep the former family list for review while queued opening joins ownership coverage.
+    #[[
+    foreach(kind codec store sqlite worker capture compare review selection evidence reader attempt)
+    ]]
+    set(removal_cases invalid created wrong-thread success missing cancel busy late-stop)
+    set(removal_transaction_cases success cancel-before cancel-requests cancel-publication delete-failure commit-failure)
+    # Preserve the previous family list while adding transaction and queue ownership coverage.
+    #[[
+    foreach(kind codec store sqlite worker capture compare review selection evidence reader attempt open)
+    ]]
+    foreach(kind codec store sqlite worker capture compare review selection evidence reader attempt open removal removal_transaction)
         set(target "umicom-test-archive-${kind}-test")
         add_executable(${target} "${CMAKE_CURRENT_LIST_DIR}/../tests/test_archive/test_${kind}.c")
         target_link_libraries(${target} PRIVATE Umicom::test_archive)

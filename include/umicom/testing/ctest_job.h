@@ -85,6 +85,14 @@ typedef struct UmiCtestJobSnapshot {
 UmiStatus UmiCtestJobCreate(const UmiCtestJobRequest *requests, size_t count,
     const UmiCtestJobOptions *options, UmiCtestJob **outJob);
 
+/** Create the same owned selection with an explicit absolute tool folder.
+ * Copy the directory before returning; NULL/empty keeps inherited PATH.
+ * This option applies to every attempt without changing archived test identities
+ * or the discovery build root. No process starts during creation. */
+UmiStatus UmiCtestJobCreateWithToolDirectory(const UmiCtestJobRequest *requests,
+    size_t count, const UmiCtestJobOptions *options, const char *directory,
+    UmiCtestJob **outJob);
+
 /** Submit once. A queue-full rejection leaves a CREATED job available to retry.
  * The queue must remain alive until its owner drains/shuts it down. Create,
  * Submit and Destroy belong to the creating thread; none joins a worker.

@@ -76,6 +76,15 @@ int main(int argc, char **argv)
     if (!gtk_init_check())
         return 77;
     const char *name = argv[1];
+    /* Native lifecycle checks require a usable backend. Report unavailable
+     * dependencies as skipped, never as a successful playback test. The separate
+     * backend-unavailable case still exercises the failure path without plugins. */
+    char backend_message[512];
+    if (strcmp(name, "empty") != 0 && strcmp(name, "backend-unavailable") != 0 &&
+        UmiCreativeAuditionGtkBackendStatus(backend_message, sizeof(backend_message)) != UMI_STATUS_OK) {
+        fprintf(stderr, "Native playback checks not run: %s\n", backend_message);
+        return 77;
+    }
     int failed = 0;
     GtkWidget *root = NULL, *second = NULL, *panel = NULL, *controls = NULL;
     GtkWindow *window = GTK_WINDOW(gtk_window_new());
@@ -113,6 +122,16 @@ int main(int argc, char **argv)
     g_object_ref(controls);
     CHECK(UmiCreativeAuditionGtkRead(root, &state) == UMI_STATUS_OK && !state.loaded && !state.playing);
     CHECK(gtk_media_controls_get_media_stream(GTK_MEDIA_CONTROLS(controls)) == NULL);
+    if (strcmp(name, "backend-unavailable") == 0) {
+        /* CTest selects GTK_MEDIA=none before GTK initializes. A missing backend
+         * leaves controls empty and returns a readable diagnostic, without abort. */
+        CHECK(UmiCreativeAuditionGtkBackendStatus(backend_message, sizeof(backend_message)) == UMI_STATUS_UNAVAILABLE);
+        CHECK(backend_message[0] != '\0');
+        CHECK(UmiCreativeAuditionGtkLoadWave(root, wave, sizeof(wave)) == UMI_STATUS_UNAVAILABLE);
+        CHECK(UmiCreativeAuditionGtkRead(root, &state) == UMI_STATUS_OK && !state.loaded && !state.playing);
+        CHECK(gtk_media_controls_get_media_stream(GTK_MEDIA_CONTROLS(controls)) == NULL);
+        goto cleanup;
+    }
     if (strcmp(name, "empty") == 0)
         goto cleanup;
     gtk_window_set_child(window, root);

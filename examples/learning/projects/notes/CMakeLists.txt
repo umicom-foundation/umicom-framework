@@ -25,3 +25,10 @@ if(BUILD_TESTING)
     add_test(NAME lesson.notes.contracts COMMAND notes-checks)
     set_tests_properties(lesson.notes.contracts PROPERTIES TIMEOUT 15)
 endif()
+
+# Install the teaching executable under an explicitly selected local prefix.
+# This adds a deployable example without installing test fixtures or quiz data.
+install(TARGETS umicom-notes RUNTIME DESTINATION bin)
+# Packaging uses the same install rules and keeps generated archives in the build tree.
+set(CPACK_GENERATOR "ZIP")
+include(CPack)

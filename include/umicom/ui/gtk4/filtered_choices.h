@@ -27,6 +27,9 @@ extern "C"
     /** Copy a UTF-8 snapshot, replace the visible list and clear selection. Empty
  * input clears the snapshot. Invalid data retains the previous one. The active
  * filter/order also applies to new rows. No selection crosses snapshot boundaries.
+ * A nonempty native model has an additional prompt after its data rows.
+ * Use SelectedSource to distinguish that prompt from a business choice; never
+ * treat the raw GtkDropDown index or its model count as a source-row identity.
  * This synchronous operation is bounded by UmiUiTextProjection limits. */
     UmiStatus UmiGtk4FilteredChoicesSetRows(GtkWidget *controls, const char *const *rows, size_t count);
     /** Return the original snapshot index, never the displayed row number.

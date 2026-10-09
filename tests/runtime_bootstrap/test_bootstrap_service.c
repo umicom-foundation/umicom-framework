@@ -35,6 +35,11 @@
  * Start this command or application, report setup failures, and return a process exit code
  * to the operating system.
  */
+/* The previous automatic-storage fixture is retained for review. Its large
+ * aggregate values can exhaust a native thread stack before the first check.
+ * The replacement owns those same records on the heap, checks allocation and
+ * releases them after the checks, including a failed assertion path. */
+#if 0
 int main(void) {
 
     UmiBootstrapContext ctx; UmiBootstrapServiceGraph graph; UmiBootstrapGraphNode node;
@@ -50,4 +55,49 @@ int main(void) {
     CHECK(umi_bootstrap_service_prepare(&ctx,&graph,&starters,&ac,&env,&features,&caps,&plan,&acplan,&issues)==UMI_STATUS_OK);
     CHECK(plan.count==6U && ctx.resolved_service_count==1U);
     return 0;
+}
+
+#endif
+
+#include <stdio.h>
+#include <stdlib.h>
+
+/* Auto-configuration embeds many condition sets. The fixture owns every input
+ * and output through one heap allocation rather than enlarging platform stacks. */
+typedef struct BootstrapServiceFixture {
+    UmiBootstrapContext context;
+    UmiBootstrapServiceGraph graph;
+    UmiBootstrapStarterCatalogue starters;
+    UmiBootstrapAutoConfigurationCatalogue configurations;
+    UmiBootstrapPropertySet environment;
+    UmiBootstrapIdList features, capabilities;
+    UmiBootstrapPlan plan;
+    UmiBootstrapAutoConfigurationPlan configuration_plan;
+    UmiBootstrapIssueReport issues;
+} BootstrapServiceFixture;
+
+static int CheckBootstrapService(BootstrapServiceFixture *fixture)
+{
+    UmiBootstrapGraphNode node;
+    CHECK(umi_bootstrap_context_init(&fixture->context, "app.studio", "windows", true) == UMI_STATUS_OK);
+    umi_bootstrap_service_graph_init(&fixture->graph);
+    CHECK(umi_bootstrap_graph_node_init(&node, "svc.runtime", 0, true) == UMI_STATUS_OK);
+    CHECK(umi_bootstrap_service_graph_add_node(&fixture->graph, &node) == UMI_STATUS_OK);
+    umi_bootstrap_starter_catalogue_init(&fixture->starters);
+    umi_bootstrap_auto_configuration_catalogue_init(&fixture->configurations);
+    CHECK(umi_bootstrap_service_prepare(&fixture->context, &fixture->graph,
+        &fixture->starters, &fixture->configurations, &fixture->environment,
+        &fixture->features, &fixture->capabilities, &fixture->plan,
+        &fixture->configuration_plan, &fixture->issues) == UMI_STATUS_OK);
+    CHECK(fixture->plan.count == 6U && fixture->context.resolved_service_count == 1U);
+    return 0;
+}
+
+int main(void)
+{
+    BootstrapServiceFixture *fixture = calloc(1U, sizeof *fixture);
+    if (fixture == NULL) { fputs("Cannot allocate bootstrap fixture\n", stderr); return 1; }
+    int result = CheckBootstrapService(fixture);
+    free(fixture);
+    return result;
 }

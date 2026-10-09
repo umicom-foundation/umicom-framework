@@ -51,6 +51,8 @@ extern "C"
     UmiStatus UmiJsonTreeText(const UmiJsonTree *tree, int node, char *out, size_t capacity);
     /* Integer requires integer spelling and range; no float coercion or saturation.
  * Typed readers leave their caller-owned output unchanged on failure. */
+    /* Wrong value kinds return PARSE_ERROR; invalid handles or NULL outputs
+     * return INVALID_ARGUMENT. Integer overflow returns CAPACITY_EXCEEDED. */
     UmiStatus UmiJsonTreeInteger(const UmiJsonTree *tree, int node, int64_t *out);
     UmiStatus UmiJsonTreeBoolean(const UmiJsonTree *tree, int node, int *out);
     /* Distinguish a JSON null from a missing member without coercing numbers,

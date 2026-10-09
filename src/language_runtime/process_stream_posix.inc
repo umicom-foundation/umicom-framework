@@ -71,6 +71,8 @@ failed:
     return 0;
 }
 
+/* Persistent tools now accept a child-only search-path snapshot. Common launch validation selects the executable first; pipe ownership and process lifetime remain with this backend. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_language_runtime_process_stream_start(const UmiLanguageRuntimeProcessStreamConfig *config,
                                                     UmiLanguageRuntimeProcessStream **out)
 {
@@ -90,6 +92,272 @@ UmiStatus umi_language_runtime_process_stream_start(const UmiLanguageRuntimeProc
     UmiPosixLaunch launch = {0};
     UmiProcessRequest request = {0};
     request.program = config->program;
+    status = UmiPosixLaunchPrepare(&request, &launch);
+    if (status != UMI_STATUS_OK)
+        goto done;
+    status = UMI_STATUS_IO_ERROR;
+    if (!LanguageProcessSocket(input) || !UmiPosixPipe(output) || !UmiPosixPipe(launchPipe))
+        goto done;
+    char *arguments[UMI_LANGUAGE_RUNTIME_MAX_ARGUMENTS + 2U];
+    char *scriptArguments[UMI_LANGUAGE_RUNTIME_MAX_ARGUMENTS + 3U];
+    arguments[0] = (char *)config->program;
+    scriptArguments[0] = (char *)"/bin/sh";
+    for (size_t i = 0U; i < config->argument_count; ++i)
+    {
+        arguments[i + 1U] = (char *)config->arguments[i];
+        scriptArguments[i + 2U] = (char *)config->arguments[i];
+    }
+    arguments[config->argument_count + 1U] = NULL;
+    scriptArguments[config->argument_count + 2U] = NULL;
+    pid_t process = fork();
+    if (process < 0)
+        goto done;
+    if (process == 0)
+    {
+        (void)close(launchPipe[0]);
+        if ((config->working_directory != NULL && config->working_directory[0] != '\0' &&
+             chdir(config->working_directory) != 0) ||
+            dup2(input[1], STDIN_FILENO) < 0 || dup2(output[1], STDOUT_FILENO) < 0 ||
+            (config->merge_stderr && dup2(output[1], STDERR_FILENO) < 0))
+            UmiPosixChildFail(launchPipe[1], errno);
+        (void)close(input[0]);
+        (void)close(input[1]);
+        (void)close(output[0]);
+        (void)close(output[1]);
+        int lastError = ENOENT, denied = 0;
+        for (size_t i = 0U; i < launch.pathCount; ++i)
+        {
+            execve(launch.paths[i], arguments, launch.environment);
+            lastError = errno;
+            /* Retain execvp's historical executable-text-file fallback. There
+             * is no constructed shell command; each argument remains literal. */
+            if (lastError == ENOEXEC)
+            {
+                scriptArguments[1] = launch.paths[i];
+                execve("/bin/sh", scriptArguments, launch.environment);
+                UmiPosixChildFail(launchPipe[1], errno);
+            }
+            if (lastError == EACCES)
+                denied = 1;
+            else if (lastError != ENOENT && lastError != ENOTDIR)
+                UmiPosixChildFail(launchPipe[1], lastError);
+        }
+        UmiPosixChildFail(launchPipe[1], denied ? EACCES : lastError);
+    }
+    stream->process = process;
+    LanguageProcessClose(&input[1]);
+    LanguageProcessClose(&output[1]);
+    LanguageProcessClose(&launchPipe[1]);
+    /* A successful exec closes this pipe. Child setup failures send errno
+     * first, so a missing server or invalid working directory cannot publish
+     * a process stream that was never usable. No protocol bytes are consumed. */
+    int launchError = 0;
+    size_t received = 0U;
+    for (;;)
+    {
+        ssize_t count = read(launchPipe[0], (char *)&launchError + received, sizeof(launchError) - received);
+        if (count < 0 && errno == EINTR)
+            continue;
+        if (count < 0)
+            goto done;
+        if (count == 0)
+        {
+            if (received != 0U)
+                goto done;
+            break;
+        }
+        received += (size_t)count;
+        if (received == sizeof(launchError))
+            goto done;
+    }
+    stream->input = input[0];
+    input[0] = -1;
+    stream->output = output[0];
+    output[0] = -1;
+    *out = stream;
+    stream = NULL;
+    status = UMI_STATUS_OK;
+done:
+    LanguageProcessClose(&input[0]);
+    LanguageProcessClose(&input[1]);
+    LanguageProcessClose(&output[0]);
+    LanguageProcessClose(&output[1]);
+    LanguageProcessClose(&launchPipe[0]);
+    LanguageProcessClose(&launchPipe[1]);
+    UmiPosixLaunchClear(&launch);
+    if (stream != NULL)
+    {
+        if (stream->process > 0)
+        {
+            (void)kill(stream->process, SIGKILL);
+            while (waitpid(stream->process, NULL, 0) < 0 && errno == EINTR)
+            {
+            }
+        }
+        free(stream);
+    }
+    return status;
+}
+#endif
+/* Native process creation now consumes a validated shared environment plan. The earlier PATH-only launcher is retained for review; native lifetime and stream ownership remain the same. The previous implementation is retained for engineering review. */
+#if 0
+static UmiStatus LanguageProcessStart(const UmiLanguageRuntimeProcessStreamConfig *config,
+                                                    const char *searchPath, UmiLanguageRuntimeProcessStream **out)
+{
+    UmiStatus status = LanguageProcessValidate(config, out);
+    if (status != UMI_STATUS_OK)
+        return status;
+#if !defined(MSG_NOSIGNAL) && !defined(SO_NOSIGPIPE)
+    /* Do not install a process-wide SIGPIPE workaround on an unsupported host. */
+    return UMI_STATUS_NOT_IMPLEMENTED;
+#endif
+    UmiLanguageRuntimeProcessStream *stream = calloc(1U, sizeof(*stream));
+    if (stream == NULL)
+        return UMI_STATUS_OUT_OF_MEMORY;
+    stream->process = -1;
+    stream->input = stream->output = -1;
+    int input[2] = {-1, -1}, output[2] = {-1, -1}, launchPipe[2] = {-1, -1};
+    UmiPosixLaunch launch = {0};
+    UmiProcessRequest request = {0};
+    request.program = config->program;
+    /* PATH belongs to this child launch. The caller holds its captured value
+     * until native process creation has consumed all borrowed request strings. */
+    UmiEnvironmentVariable pathOverride = {"PATH", searchPath};
+    if (searchPath != NULL)
+    {
+        request.environment = &pathOverride;
+        request.environment_count = 1U;
+    }
+    status = UmiPosixLaunchPrepare(&request, &launch);
+    if (status != UMI_STATUS_OK)
+        goto done;
+    status = UMI_STATUS_IO_ERROR;
+    if (!LanguageProcessSocket(input) || !UmiPosixPipe(output) || !UmiPosixPipe(launchPipe))
+        goto done;
+    char *arguments[UMI_LANGUAGE_RUNTIME_MAX_ARGUMENTS + 2U];
+    char *scriptArguments[UMI_LANGUAGE_RUNTIME_MAX_ARGUMENTS + 3U];
+    arguments[0] = (char *)config->program;
+    scriptArguments[0] = (char *)"/bin/sh";
+    for (size_t i = 0U; i < config->argument_count; ++i)
+    {
+        arguments[i + 1U] = (char *)config->arguments[i];
+        scriptArguments[i + 2U] = (char *)config->arguments[i];
+    }
+    arguments[config->argument_count + 1U] = NULL;
+    scriptArguments[config->argument_count + 2U] = NULL;
+    pid_t process = fork();
+    if (process < 0)
+        goto done;
+    if (process == 0)
+    {
+        (void)close(launchPipe[0]);
+        if ((config->working_directory != NULL && config->working_directory[0] != '\0' &&
+             chdir(config->working_directory) != 0) ||
+            dup2(input[1], STDIN_FILENO) < 0 || dup2(output[1], STDOUT_FILENO) < 0 ||
+            (config->merge_stderr && dup2(output[1], STDERR_FILENO) < 0))
+            UmiPosixChildFail(launchPipe[1], errno);
+        (void)close(input[0]);
+        (void)close(input[1]);
+        (void)close(output[0]);
+        (void)close(output[1]);
+        int lastError = ENOENT, denied = 0;
+        for (size_t i = 0U; i < launch.pathCount; ++i)
+        {
+            execve(launch.paths[i], arguments, launch.environment);
+            lastError = errno;
+            /* Retain execvp's historical executable-text-file fallback. There
+             * is no constructed shell command; each argument remains literal. */
+            if (lastError == ENOEXEC)
+            {
+                scriptArguments[1] = launch.paths[i];
+                execve("/bin/sh", scriptArguments, launch.environment);
+                UmiPosixChildFail(launchPipe[1], errno);
+            }
+            if (lastError == EACCES)
+                denied = 1;
+            else if (lastError != ENOENT && lastError != ENOTDIR)
+                UmiPosixChildFail(launchPipe[1], lastError);
+        }
+        UmiPosixChildFail(launchPipe[1], denied ? EACCES : lastError);
+    }
+    stream->process = process;
+    LanguageProcessClose(&input[1]);
+    LanguageProcessClose(&output[1]);
+    LanguageProcessClose(&launchPipe[1]);
+    /* A successful exec closes this pipe. Child setup failures send errno
+     * first, so a missing server or invalid working directory cannot publish
+     * a process stream that was never usable. No protocol bytes are consumed. */
+    int launchError = 0;
+    size_t received = 0U;
+    for (;;)
+    {
+        ssize_t count = read(launchPipe[0], (char *)&launchError + received, sizeof(launchError) - received);
+        if (count < 0 && errno == EINTR)
+            continue;
+        if (count < 0)
+            goto done;
+        if (count == 0)
+        {
+            if (received != 0U)
+                goto done;
+            break;
+        }
+        received += (size_t)count;
+        if (received == sizeof(launchError))
+            goto done;
+    }
+    stream->input = input[0];
+    input[0] = -1;
+    stream->output = output[0];
+    output[0] = -1;
+    *out = stream;
+    stream = NULL;
+    status = UMI_STATUS_OK;
+done:
+    LanguageProcessClose(&input[0]);
+    LanguageProcessClose(&input[1]);
+    LanguageProcessClose(&output[0]);
+    LanguageProcessClose(&output[1]);
+    LanguageProcessClose(&launchPipe[0]);
+    LanguageProcessClose(&launchPipe[1]);
+    UmiPosixLaunchClear(&launch);
+    if (stream != NULL)
+    {
+        if (stream->process > 0)
+        {
+            (void)kill(stream->process, SIGKILL);
+            while (waitpid(stream->process, NULL, 0) < 0 && errno == EINTR)
+            {
+            }
+        }
+        free(stream);
+    }
+    return status;
+}
+#endif
+static UmiStatus LanguageProcessStart(const UmiLanguageRuntimeProcessStreamConfig *config,
+                                                    const UmiEnvironmentVariable *variables, size_t variable_count, UmiLanguageRuntimeProcessStream **out)
+{
+    UmiStatus status = LanguageProcessValidate(config, out);
+    if (status != UMI_STATUS_OK)
+        return status;
+#if !defined(MSG_NOSIGNAL) && !defined(SO_NOSIGPIPE)
+    /* Do not install a process-wide SIGPIPE workaround on an unsupported host. */
+    return UMI_STATUS_NOT_IMPLEMENTED;
+#endif
+    UmiLanguageRuntimeProcessStream *stream = calloc(1U, sizeof(*stream));
+    if (stream == NULL)
+        return UMI_STATUS_OUT_OF_MEMORY;
+    stream->process = -1;
+    stream->input = stream->output = -1;
+    int input[2] = {-1, -1}, output[2] = {-1, -1}, launchPipe[2] = {-1, -1};
+    UmiPosixLaunch launch = {0};
+    UmiProcessRequest request = {0};
+    request.program = config->program;
+    /* PATH belongs to this child launch. The caller holds its captured value
+     * until native process creation has consumed all borrowed request strings. */
+    request.environment = variables;
+    request.environment_count = variable_count;
     status = UmiPosixLaunchPrepare(&request, &launch);
     if (status != UMI_STATUS_OK)
         goto done;

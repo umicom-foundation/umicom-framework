@@ -20,6 +20,16 @@ extern "C"
         UmiLanguageRuntimeInitializeResult capabilities;
         UmiLanguageRuntimeServerSnapshot connection;
     } UmiLanguageRuntimeProbeResult;
+    /**
+     * Run the connection probe with a selected child tool directory. This follows
+     * Probe's explicit trust, cancellation, cleanup and worker-thread rules.
+     * NULL/empty tool_directory retains inherited selection; otherwise use one
+     * absolute directory, not a PATH list. The server is closed before return.
+     * Nothing activates completion or records a persistent editor connection.
+     */
+    UmiStatus UmiLanguageRuntimeProbeWithToolDirectory(const UmiLanguageServerProfile *profile,
+        const char *root_uri, const char *working_directory, const char *tool_directory,
+        uint32_t timeout_ms, const UmiCancellationToken *cancel, UmiLanguageRuntimeProbeResult *out);
     /* Run only after the user selects a trusted local executable. This starts a
  * real child, completes initialization if possible, then shuts it down.
  * It does not activate editor completion, send document text, save settings or

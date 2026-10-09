@@ -30,6 +30,10 @@ int main(int argc, char **argv)
     CHECK(UmiTestArchiveCreate(server, "test", &archive) == UMI_STATUS_OK);
     UmiCtestJob *job = FixtureJob();
     UmiTestArchiveOrigin origin = FixtureOrigin(true);
+    /* Exercise durable context in success, rollback, contention and reopen cases. */
+    memset(origin.identity.subject, 'a', 64);
+    memset(origin.identity.configuration, 'b', 64);
+    memset(origin.identity.inputs, 'c', 64);
     UmiTestArchiveEntry entry = {0};
     entry.id = 999;
     if (strcmp(name, "write-failure") == 0 || strcmp(name, "commit-failure") == 0)
@@ -108,6 +112,9 @@ int main(int argc, char **argv)
     CHECK(UmiTestArchiveCompare(archive, 1, 1, NULL, &comparison) == UMI_STATUS_OK);
     CHECK(UmiTestArchiveComparisonRead(comparison, &compared) == UMI_STATUS_OK &&
           compared.counts[UMI_TEST_ARCHIVE_PERSISTING_FAILURE] == 2);
+    CHECK(compared.identity_comparison == UMI_JOB_IDENTITY_SAME_RECORDED_INPUTS);
+    CHECK(compared.same_recorded_selection && compared.selection_evidence_recorded);
+    CHECK(memcmp(&compared.baseline.origin.identity, &origin.identity, sizeof(origin.identity)) == 0);
     CHECK(UmiTestArchiveRemove(archive, 1) == UMI_STATUS_OK);
     UmiTestArchiveComparisonRow copied = {0};
     CHECK(UmiTestArchiveComparisonRowAt(comparison, 0, &copied) == UMI_STATUS_OK &&

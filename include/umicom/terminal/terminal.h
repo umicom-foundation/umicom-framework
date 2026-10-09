@@ -28,6 +28,8 @@
 #include "umicom/terminal/scan.h"
 #include "umicom/terminal/search.h"
 #include "umicom/terminal/session.h"
+#include "umicom/terminal/location.h"
+#include "umicom/terminal/execution.h"
 #include "umicom/terminal/shell.h"
 #include "umicom/terminal/split_model.h"
 #include "umicom/terminal/tab_model.h"

@@ -135,6 +135,8 @@ UmiStatus umi_terminal_manager_open(UmiTerminalManager *manager,
  * Provide the terminal manager close operation used by this module and its client
  * applications.
  */
+/* Manager removal now respects a running session reservation. The original unconditional removal is retained for review. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_terminal_manager_close(UmiTerminalManager *manager,
                                      const char *session_id)
 {
@@ -155,6 +157,50 @@ UmiStatus umi_terminal_manager_close(UmiTerminalManager *manager,
         /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(snapshot.session_id, session_id) == 0) {
             UmiTerminalSession *session = manager->sessions[index];
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+            if (index + 1U < manager->count) {
+                (void)memmove(&manager->sessions[index],
+                              &manager->sessions[index + 1U],
+                              (manager->count - index - 1U) *
+                                  sizeof(manager->sessions[0]));
+            }
+            manager->count -= 1U;
+            (void)umi_mutex_unlock(manager->mutex);
+            (void)umi_terminal_session_close(session);
+            umi_terminal_session_destroy(session);
+            return UMI_STATUS_OK;
+        }
+    }
+    (void)umi_mutex_unlock(manager->mutex);
+    return UMI_STATUS_NOT_FOUND;
+}
+#endif
+UmiStatus umi_terminal_manager_close(UmiTerminalManager *manager,
+                                     const char *session_id)
+{
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (manager == NULL || session_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    (void)umi_mutex_lock(manager->mutex);
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < manager->count; ++index) {
+        UmiTerminalSessionSnapshot snapshot;
+        (void)umi_terminal_session_snapshot(manager->sessions[index],
+                                             &snapshot);
+        /* Use the stable identifier comparison to choose the matching record or policy. */
+        if (strcmp(snapshot.session_id, session_id) == 0) {
+            UmiTerminalSession *session = manager->sessions[index];
+            /* Reject before removing the session; the caller can Stop and Poll
+             * without losing the only model which owns its running command. */
+            if (snapshot.state == UMI_TERMINAL_RUNNING) {
+                (void)umi_mutex_unlock(manager->mutex);
+                return UMI_STATUS_BUSY;
+            }
             /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (index + 1U < manager->count) {
                 (void)memmove(&manager->sessions[index],

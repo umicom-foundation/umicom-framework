@@ -54,4 +54,40 @@ depends on the filesystem and storage hardware; history is not a power-loss guar
 <p>Store only non-sensitive metadata. This database is not encrypted by the history API.
 Credentials, account details, prompts, signed URLs, command lines and raw output belong elsewhere.
 Captions are bounded byte strings; frontends should validate or repair UTF-8 before displaying them.</p>
+
+<p>The source guide <code>docs/guides/job-identity.md</code> explains the shared identity contract and explicit input sets.</p>
+<h2>Compare a saved job with the current project</h2>
+<p>A successful job describes a past operation. It does not establish that the current
+source code has been built or tested. Framework stores an optional identity alongside
+each job so applications can explain which settings produced that outcome.</p>
+<ol>
+<li>Create a <code>UmiJobIdentity</code>. Its subject identifies the project or resource;
+its configuration identifies the settings. Each nonempty field is a lowercase SHA-256
+digest: a compact identifier calculated from bytes.</li>
+<li>For build profiles, call <code>UmiBuildProfileJobIdentity</code>. It resolves the project
+root and hashes the reviewed profile values. It does not read source files, preset file
+contents, environment variables or compiler binaries. Its input digest is therefore empty.</li>
+<li>Pass an identity to <code>UmiJobHistoryBeginIdentified</code>. The job and its identity
+are committed in one transaction before work starts. Later progress updates retain that
+identity; a caller cannot relabel an earlier result with newer inputs.</li>
+<li>On review, call <code>UmiJobIdentityCompare</code>. Show the outcome and the comparison
+as separate facts. Missing input digests mean <em>input contents not recorded</em>,
+even when project settings match.</li>
+<li>Build sessions attached to history do these steps automatically. Studio shows the
+comparison when you choose <strong>Refresh saved jobs</strong> in the Output panel.</li>
+</ol>
+<p>Older records remain readable and show unavailable identity. When an application supplies
+input digests, it must document the complete input set and retain the same bytes for execution.
+The shared store validates digest syntax; it cannot prove that a caller hashed every dependency.
+A hash is not encryption or a signature. Keep credentials out of profiles, captions and history.</p>
+<h2>Keep queued phases on one project</h2>
+<p>A queued build captures its absolute source directory before the worker starts.
+Configure, Build and later phases use that root even if another host operation changes
+the process directory. Relative build and installation paths still resolve from the captured
+root. This does not lock source files or resolve symbolic links; external edits can still occur.</p>
+<p>The portable digest implementation is available through <code>Umicom::base</code> and
+<code>umicom/base/sha256.h</code>. Existing native-launcher digest functions remain available
+and delegate to the same implementation. Rebuild callers when adopting the enlarged
+<code>UmiJobHistoryEntry</code> record. The stored legacy format remains supported.</p>
+
 </main></body></html>

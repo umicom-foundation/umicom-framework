@@ -143,6 +143,24 @@ UmiIdeSurfaceRegistry *umi_ide_integration_platform_surfaces(
 const char *umi_ide_integration_platform_workspace_root(
     const UmiIdeIntegrationPlatform *platform);
 
+/**
+ * @brief Create IDE services for a welcome screen before a workspace is selected.
+ * @param bindings Borrowed canonical services; follow the normal platform lifetime.
+ * @param out_platform Receives an owned platform; destroy with the normal destructor.
+ * @return Initialization status. No path is inferred and no workspace is opened.
+ */
+UmiStatus umi_ide_integration_platform_create_closed(
+    const UmiIdeIntegrationBindings *bindings, UmiIdeIntegrationPlatform **out_platform);
+/**
+ * @brief Synchronize the identity of an already opened or closed workspace.
+ * @param platform Initialized owner-thread platform.
+ * @param workspace_root Copied path, or an empty string to record closure.
+ * @return OK on publication; failure retains the previous root and readiness.
+ * @details The caller remains responsible for opening, closing and trusting the
+ * authoritative workspace. This operation supplies identity to IDE surfaces.
+ */
+UmiStatus umi_ide_integration_platform_set_workspace(
+    UmiIdeIntegrationPlatform *platform, const char *workspace_root);
 #ifdef __cplusplus
 }
 #endif

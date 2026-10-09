@@ -72,6 +72,8 @@ UmiStatus umi_language_runtime_server_create_with_transport(const char *id,
 #if 0
 UmiStatus umi_language_runtime_server_start(const char*id,const UmiLanguageServerProfile*p,const char*root,const char*wd,UmiLanguageRuntimeServer**out){UmiLanguageRuntimeArguments a;UmiLanguageRuntimeProcessStreamConfig c={0};UmiLanguageRuntimeProcessStream*ps=NULL;UmiLanguageRuntimeTransport t;UmiStatus q;/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(!p||!p->executable[0])return UMI_STATUS_INVALID_ARGUMENT;q=umi_language_runtime_arguments_parse(p->arguments,&a);/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(q!=UMI_STATUS_OK)return q;c.program=p->executable;c.arguments=a.values;c.argument_count=a.count;c.working_directory=wd;q=umi_language_runtime_process_stream_start(&c,&ps);/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(q!=UMI_STATUS_OK)return q;q=umi_language_runtime_transport_from_process(ps,&t);/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(q!=UMI_STATUS_OK){umi_language_runtime_process_stream_destroy(ps);return q;}q=umi_language_runtime_server_create_with_transport(id,p,root,&t,out);/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(q!=UMI_STATUS_OK&&t.instance)t.destroy(t.instance);return q;}
 #endif
+/* Language-server startup shares project-scoped tool selection with DAP and build jobs without adding borrowed environment pointers to stored profiles. Identity checks and transport ownership remain common. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_language_runtime_server_start(const char *id, const UmiLanguageServerProfile *profile,
     const char *root, const char *workingDirectory, UmiLanguageRuntimeServer **out)
 {
@@ -98,6 +100,42 @@ UmiStatus umi_language_runtime_server_start(const char *id, const UmiLanguageSer
     status = umi_language_runtime_server_create_with_transport(id, profile, root, &transport, out);
     if (status != UMI_STATUS_OK && transport.instance != NULL) transport.destroy(transport.instance);
     return status;
+}
+#endif
+UmiStatus UmiLanguageRuntimeServerStartWithToolDirectory(const char *id, const UmiLanguageServerProfile *profile,
+    const char *root, const char *workingDirectory, const char *toolDirectory, UmiLanguageRuntimeServer **out)
+{
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out = NULL;
+    if (id == NULL || id[0] == '\0' || root == NULL || root[0] == '\0' ||
+        LanguageProfileText(profile) != UMI_STATUS_OK || profile->executable[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Reject identities that the session cannot hold before executing a tool. */
+    UmiLanguageClientSession session;
+    UmiStatus status = umi_language_client_session_init(&session, id, profile->id, root);
+    if (status != UMI_STATUS_OK) return status;
+    UmiLanguageRuntimeArguments arguments;
+    status = umi_language_runtime_arguments_parse(profile->arguments, &arguments);
+    if (status != UMI_STATUS_OK) return status;
+    UmiLanguageRuntimeProcessStreamConfig config = {profile->executable, arguments.values,
+        arguments.count, workingDirectory, 0};
+    UmiLanguageRuntimeProcessStream *process = NULL;
+    status = UmiLanguageRuntimeProcessStreamStartWithToolDirectory(&config, toolDirectory, &process);
+    if (status != UMI_STATUS_OK) return status;
+    UmiLanguageRuntimeTransport transport = {0};
+    status = umi_language_runtime_transport_from_process(process, &transport);
+    if (status != UMI_STATUS_OK) { umi_language_runtime_process_stream_destroy(process); return status; }
+    status = umi_language_runtime_server_create_with_transport(id, profile, root, &transport, out);
+    if (status != UMI_STATUS_OK && transport.instance != NULL) transport.destroy(transport.instance);
+    return status;
+}
+
+/* Existing servers inherit their host environment. */
+UmiStatus umi_language_runtime_server_start(const char *id, const UmiLanguageServerProfile *profile,
+    const char *root, const char *workingDirectory, UmiLanguageRuntimeServer **out)
+{
+    return UmiLanguageRuntimeServerStartWithToolDirectory(id, profile, root,
+        workingDirectory, NULL, out);
 }
 /*
  * Release or reset state held by language runtime server so the same storage can be reused

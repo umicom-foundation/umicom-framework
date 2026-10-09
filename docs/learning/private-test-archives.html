@@ -88,4 +88,44 @@ commit outcome uncertain; inspect the database before retrying rather than assum
 <p>Keep the archive and queue alive until the review is terminal. Request cancellation before closing, continue polling, then destroy the review. A pending destroy returns <code>BUSY</code>. Do not wait for a worker inside a GTK callback. Present results in bounded pages for large suites.</p>
 <p>If storage is busy, retry after the current transaction finishes. Missing or corrupt rows fail the entire comparison; no partial result is published. A comparison failure leaves the caller's existing comparison pointer unchanged. Preserve the database for diagnosis rather than removing individual storage keys.</p></section>
 
+<section><h2>Understand recorded context</h2>
+<p>A saved test outcome describes a past run. New saves include a fingerprint of the ordered selection: test names, build paths, configurations, enabled flags, timeouts, repeat count and early-stop policy. Rediscovered internal IDs do not change this fingerprint.</p>
+<p>A host may also record the project and build settings captured when the run was accepted. Matching settings without input evidence do not establish that source files or test binaries match. Older archives remain readable and show missing evidence explicitly. A comparison with different recorded projects or settings reports changed execution conditions.</p>
+<h3>Keep history browsing responsive</h3><ol>
+<li>Keep the archive and its Data Server alive while any archive worker exists.</li>
+<li>Create a reader with <code>UmiTestArchiveReaderCreate</code>. Choose a catalogue read, or an attempt read with the saved run ID and a zero-based attempt index.</li>
+<li>Submit it to the shared task queue. Poll <code>UmiTestArchiveReaderRead</code> from your event loop; this copies memory and does not query the database.</li>
+<li>When the observation is ready, use <code>UmiTestArchiveReaderCatalog</code> or <code>UmiTestArchiveReaderAttempt</code>. Allocate these output objects on the heap when thread stacks are small.</li>
+<li>On Stop, request cancellation and keep polling. Destroy the reader after it becomes terminal, then release the archive. A late cancellation does not erase an already completed observation.</li></ol>
+<p>An attempt read collects the origin, selected request and result in one transaction. Storage errors, missing rows and cancellation leave caller outputs unchanged. The archive is a local evidence store, not an authentication system: a digest cannot protect against someone who can rewrite both the data and its digest.</p>
+</section>
+<section><h2>Open an archive without waiting in a button handler</h2>
+<p>Opening SQLite can involve filesystem access and catalogue validation. Interactive hosts can use <code>umicom/testing/archive_open.h</code> to perform both on their shared worker queue.</p>
+<ol><li>Ask the user for an absolute filename in a private directory. Call <code>UmiTestArchiveOpenCreate</code> with that filename and your archive scope. Creation checks syntax and copies these inputs; it does not open the file.</li>
+<li>Call <code>UmiTestArchiveOpenSubmit</code>. Continue processing interface events and poll <code>UmiTestArchiveOpenRead</code>, which only copies progress from memory.</li>
+<li>After the task is terminal and <code>ready</code> is true, call <code>UmiTestArchiveOpenTake</code> on the creating thread. Pass two independent, initially null handles. Both handles transfer together; an error leaves them unchanged.</li>
+<li>Retire the previous attachment only after the new one is available and all its users have finished. Closing an old SQLite handle can perform storage cleanup. Keep database opening and catalogue reads on the queue.</li>
+<li>Destroy the opener after transfer. The transferred archive and Data Server remain valid. At final shutdown, stop their users, destroy the archive, then destroy its Data Server.</li></ol>
+<p><strong>Stop before attachment:</strong> call <code>UmiTestArchiveOpenCancel</code> and keep polling. Even if the worker completed just before Stop, an unclaimed attachment cannot be taken. After transfer, Stop cannot revoke handles already owned by the recipient.</p>
+<p>If opening fails or the catalogue is damaged, retain the old attachment and report the error. A cancelled or failed attempt may leave a newly created database on disk. The opener does not delete files, repair corrupt records, encrypt data or run tests. Destroying an unclaimed terminal opener closes its candidate handles. A pending destroy returns <code>BUSY</code>; it never joins a worker.</p>
+</section>
+<section><h2>Remove a saved run while the interface stays responsive</h2>
+<p>Removal deletes one run and its owned request and result rows in a single transaction.
+A transaction either commits the complete removal or rolls back the work before commit.
+It does not delete the database file, source files or live test results.</p>
+<ol><li>Include <code>umicom/testing/archive_removal.h</code>. Create a request with
+<code>UmiTestArchiveRemovalCreate</code>, passing the attached archive and the exact saved run ID.</li>
+<li>Submit it with <code>UmiTestArchiveRemovalSubmit</code>. Keep the archive and Data Server
+alive until the request is terminal. The worker owns storage access.</li>
+<li>Poll <code>UmiTestArchiveRemovalRead</code> from the event loop. This copies progress from memory.
+When the request finishes, inspect <code>committed</code> before describing the result.</li>
+<li>To stop, call <code>UmiTestArchiveRemovalCancel</code> and continue polling.
+Cancellation observed before commit rolls back the removed rows. A late Stop cannot undo a committed removal.</li>
+<li>Destroy the terminal request on its creating thread, then refresh the catalogue using an archive reader.
+A pending destroy returns <code>BUSY</code> instead of waiting for storage.</li></ol>
+<p>A missing ID returns <code>NOT_FOUND</code>. Storage contention returns <code>BUSY</code>;
+retry when the other transaction has finished. A storage error reports that removal did not confirm a commit.
+Preserve the database for diagnosis if rollback fails. The synchronous <code>UmiTestArchiveRemove</code>
+API remains available, and <code>UmiTestArchiveRemoveWithCancellation</code> exposes the same transaction
+to callers which already own a worker.</p></section>
 </body></html>

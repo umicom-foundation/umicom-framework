@@ -7,6 +7,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/security/local_profile.h"
+#include "local_profile_platform_internal.h"
 #include "umicom/security/secrets.h"
 #include <stdlib.h>
 #include <string.h>
@@ -146,6 +147,8 @@ static UmiStatus ProfileMutex(ProfilePlatform *platform, const wchar_t *applicat
     free(user); (void)CloseHandle(token); return status;
 }
 #endif
+/* The native backend is shared with local database persistence so password derivation is not duplicated. The previous vault constructor is retained; its public behavior remains available. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus UmiLocalProfileStorePlatform(const char *application_id, UmiLocalProfileStore **out)
 {
     if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
@@ -175,3 +178,62 @@ UmiStatus UmiLocalProfileStorePlatform(const char *application_id, UmiLocalProfi
     return UMI_STATUS_UNAVAILABLE;
 #endif
 }
+#endif
+UmiStatus UmiLocalProfilePlatformBackend(const char *application_id, UmiLocalProfileBackend *out)
+{
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    memset(out, 0, sizeof(*out));
+    if (application_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t length = 0U;
+    for (; length < 96U && application_id[length] != '\0'; ++length) {
+        char c = application_id[length];
+        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+            (c >= '0' && c <= '9') || c == '.' || c == '-' || c == '_')) return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (length == 0U || length == 96U) return UMI_STATUS_INVALID_ARGUMENT;
+#ifdef _WIN32
+    ProfilePlatform *platform = calloc(1U,sizeof(*platform));
+    if (platform == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    wchar_t app[96] = {0};
+    for (size_t i = 0U; i < length; ++i) app[i] = (wchar_t)(unsigned char)application_id[i];
+    (void)swprintf(platform->prefix,160U,L"Umicom/LocalProfile/%ls/",app);
+    UmiStatus status = ProfileMutex(platform,app);
+    if (status == UMI_STATUS_OK) {
+        UmiLocalProfileBackend backend = {platform,ProfileRead,ProfileCreate,ProfileRemove,ProfileRandom,ProfileDerive,ProfileDestroy};
+        *out = backend;
+    }
+    if (status != UMI_STATUS_OK) ProfileDestroy(platform);
+    return status;
+#else
+    return UMI_STATUS_UNAVAILABLE;
+#endif
+}
+UmiStatus UmiLocalProfileStorePlatform(const char *application_id, UmiLocalProfileStore **out)
+{
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out = NULL;
+    UmiLocalProfileBackend backend;
+    UmiStatus status = UmiLocalProfilePlatformBackend(application_id, &backend);
+    if (status != UMI_STATUS_OK) return status;
+    status = UmiLocalProfileStoreCreate(&backend, out);
+    if (status != UMI_STATUS_OK) backend.destroy(backend.context);
+    return status;
+}
+UmiStatus UmiLocalProfilePlatformEnter(void *context)
+{
+#ifdef _WIN32
+    return context != NULL ? ProfileEnter(context) : UMI_STATUS_INVALID_ARGUMENT;
+#else
+    (void)context;
+    return UMI_STATUS_UNAVAILABLE;
+#endif
+}
+void UmiLocalProfilePlatformLeave(void *context)
+{
+#ifdef _WIN32
+    if (context != NULL) (void)ReleaseMutex(((ProfilePlatform *)context)->mutex);
+#else
+    (void)context;
+#endif
+}
+

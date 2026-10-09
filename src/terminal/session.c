@@ -14,6 +14,9 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/terminal/session.h"
+#include "umicom/terminal/execution.h"
+#include "umicom/platform/path.h"
+#include "umicom/platform/filesystem.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,6 +36,11 @@ struct UmiTerminalSession {
     UmiTerminalEnvironment *environment;
     UmiTerminalTranscript *transcript;
     UmiMutex *mutex;
+    /* The worker owns its request and never reads this session. Only the owning
+     * application thread publishes snapshots and releases the borrowed job. */
+    UmiProcessSupervisor *job_supervisor;
+    UmiProcessJobId job_id;
+    UmiTerminalExecutionSnapshot execution;
 };
 
 /* Provide the now ns operation used by this module and its client applications. */
@@ -117,6 +125,8 @@ UmiStatus umi_terminal_session_create(
  * Release or reset state held by terminal session so the same storage can be reused
  * safely.
  */
+/* Session teardown now retires its supervised command before releasing local models. The prior teardown is retained for review. The previous implementation is retained for engineering review. */
+#if 0
 void umi_terminal_session_destroy(UmiTerminalSession *session)
 {
     /*
@@ -130,11 +140,33 @@ void umi_terminal_session_destroy(UmiTerminalSession *session)
         free(session);
     }
 }
+#endif
+void umi_terminal_session_destroy(UmiTerminalSession *session)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (session != NULL) {
+        /* A worker does not borrow the session, but its supervisor slot must
+         * be reclaimed before that supervisor's owner tears it down. */
+        if (session->job_id != 0U) {
+            (void)UmiTerminalSessionStopJob(session);
+            (void)UmiTerminalSessionWaitJob(session, 0U);
+        }
+        umi_terminal_transcript_destroy(session->transcript);
+        umi_terminal_environment_destroy(session->environment);
+        umi_mutex_destroy(session->mutex);
+        free(session);
+    }
+}
 
 /*
  * Provide the terminal session set working directory operation used by this module and its
  * client applications.
  */
+/* Supervised commands now reserve the session while running. The previous implementation is retained to document the original synchronous behavior. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_terminal_session_set_working_directory(
     UmiTerminalSession *session,
     const char *working_directory)
@@ -160,11 +192,44 @@ UmiStatus umi_terminal_session_set_working_directory(
     (void)umi_mutex_unlock(session->mutex);
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_terminal_session_set_working_directory(
+    UmiTerminalSession *session,
+    const char *working_directory)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (session == NULL || working_directory == NULL ||
+        working_directory[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (strlen(working_directory) + 1U >
+        sizeof(session->working_directory)) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    (void)umi_mutex_lock(session->mutex);
+    /* A running command keeps its directory and transcript owner stable. */
+    if (session->state == UMI_TERMINAL_RUNNING || session->job_id != 0U) {
+        (void)umi_mutex_unlock(session->mutex);
+        return UMI_STATUS_BUSY;
+    }
+    (void)snprintf(session->working_directory,
+                   sizeof(session->working_directory),
+                   "%s",
+                   working_directory);
+    (void)umi_mutex_unlock(session->mutex);
+    return UMI_STATUS_OK;
+}
 
 /*
  * Perform terminal session through the module contract so client applications do not
  * duplicate its policy.
  */
+/* Parsing another command must not change the state of a running command. The original path remains available for review. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_terminal_session_execute(UmiTerminalSession *session,
                                        const char *command_text,
                                        uint32_t timeout_ms,
@@ -193,11 +258,45 @@ UmiStatus umi_terminal_session_execute(UmiTerminalSession *session,
         session, &command, command_text, timeout_ms, cancellation,
         out_exit_code);
 }
+#endif
+UmiStatus umi_terminal_session_execute(UmiTerminalSession *session,
+                                       const char *command_text,
+                                       uint32_t timeout_ms,
+                                       UmiCancellationToken *cancellation,
+                                       int *out_exit_code)
+{
+    UmiTerminalCommand command;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (session == NULL || command_text == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    UmiTerminalSessionSnapshot active;
+    if (umi_terminal_session_snapshot(session, &active) == UMI_STATUS_OK &&
+        active.state == UMI_TERMINAL_RUNNING) return UMI_STATUS_BUSY;
+    status = umi_terminal_command_parse(&command, command_text);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) {
+        (void)umi_mutex_lock(session->mutex);
+        session->state = UMI_TERMINAL_FAILED;
+        (void)umi_mutex_unlock(session->mutex);
+        return status;
+    }
+    return umi_terminal_session_execute_prepared(
+        session, &command, command_text, timeout_ms, cancellation,
+        out_exit_code);
+}
 
 /*
  * Provide the terminal session execute prepared operation used by this module and its
  * client applications.
  */
+/* Supervised commands now reserve the session while running. The previous implementation is retained to document the original synchronous behavior. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_terminal_session_execute_prepared(
     UmiTerminalSession *session,
     const UmiTerminalCommand *command,
@@ -221,6 +320,111 @@ UmiStatus umi_terminal_session_execute_prepared(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)umi_mutex_lock(session->mutex);
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (session->state == UMI_TERMINAL_CLOSED) {
+        (void)umi_mutex_unlock(session->mutex);
+        return UMI_STATUS_INVALID_STATE;
+    }
+    session->state = UMI_TERMINAL_RUNNING;
+    (void)umi_mutex_unlock(session->mutex);
+
+    program = umi_terminal_command_program(command);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (program == NULL) {
+        (void)umi_mutex_lock(session->mutex);
+        session->state = UMI_TERMINAL_FAILED;
+        (void)umi_mutex_unlock(session->mutex);
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    (void)umi_terminal_transcript_append(session->transcript,
+                                         now_ns(session),
+                                         UMI_TERMINAL_STREAM_INPUT,
+                                         display_text);
+    status = umi_terminal_environment_export(session->environment,
+                                             variables,
+                                             UMI_TERMINAL_MAX_ENVIRONMENT,
+                                             &variable_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) {
+        (void)umi_mutex_lock(session->mutex);
+        session->state = UMI_TERMINAL_FAILED;
+        (void)umi_mutex_unlock(session->mutex);
+        return status;
+    }
+    (void)memset(&request, 0, sizeof(request));
+    request.program = program;
+    request.arguments = command->argument_count > 1U
+        ? &command->arguments[1]
+        : NULL;
+    request.argument_count = command->argument_count > 0U
+        ? command->argument_count - 1U
+        : 0U;
+    request.working_directory = session->working_directory;
+    request.environment = variables;
+    request.environment_count = variable_count;
+    request.capture_stdout = 1;
+    request.capture_stderr = 1;
+    request.timeout_ms = timeout_ms;
+    request.cancellation = cancellation;
+    status = umi_process_execute(&request, &result);
+
+    (void)umi_terminal_transcript_append(
+        session->transcript,
+        now_ns(session),
+        status == UMI_STATUS_OK
+            ? UMI_TERMINAL_STREAM_OUTPUT
+            : UMI_TERMINAL_STREAM_ERROR,
+        result.output
+    );
+    (void)umi_mutex_lock(session->mutex);
+    session->commands_executed += 1U;
+    session->last_exit_code = result.exit_code;
+    session->state = status == UMI_STATUS_OK
+        ? UMI_TERMINAL_READY
+        : UMI_TERMINAL_FAILED;
+    (void)umi_mutex_unlock(session->mutex);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (out_exit_code != NULL) {
+        *out_exit_code = result.exit_code;
+    }
+    return status;
+}
+#endif
+UmiStatus umi_terminal_session_execute_prepared(
+    UmiTerminalSession *session,
+    const UmiTerminalCommand *command,
+    const char *display_text,
+    uint32_t timeout_ms,
+    UmiCancellationToken *cancellation,
+    int *out_exit_code)
+{
+    UmiEnvironmentVariable variables[UMI_TERMINAL_MAX_ENVIRONMENT];
+    size_t variable_count = 0U;
+    UmiProcessRequest request;
+    UmiProcessResult result = {0};
+    const char *program;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (session == NULL || command == NULL || display_text == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    (void)umi_mutex_lock(session->mutex);
+    /* A running command keeps its directory and transcript owner stable. */
+    if (session->state == UMI_TERMINAL_RUNNING || session->job_id != 0U) {
+        (void)umi_mutex_unlock(session->mutex);
+        return UMI_STATUS_BUSY;
+    }
     /* Apply this branch only when its contract condition is satisfied. */
     if (session->state == UMI_TERMINAL_CLOSED) {
         (void)umi_mutex_unlock(session->mutex);
@@ -359,6 +563,8 @@ UmiTerminalTranscript *umi_terminal_session_transcript(
  * Provide the terminal session close operation used by this module and its client
  * applications.
  */
+/* Supervised commands now reserve the session while running. The previous implementation is retained to document the original synchronous behavior. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_terminal_session_close(UmiTerminalSession *session)
 {
     /*
@@ -377,3 +583,30 @@ UmiStatus umi_terminal_session_close(UmiTerminalSession *session)
                                          "Terminal session closed");
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_terminal_session_close(UmiTerminalSession *session)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (session == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    (void)umi_mutex_lock(session->mutex);
+    /* A running command keeps its directory and transcript owner stable. */
+    if (session->state == UMI_TERMINAL_RUNNING || session->job_id != 0U) {
+        (void)umi_mutex_unlock(session->mutex);
+        return UMI_STATUS_BUSY;
+    }
+    session->state = UMI_TERMINAL_CLOSED;
+    (void)umi_mutex_unlock(session->mutex);
+    (void)umi_terminal_transcript_append(session->transcript,
+                                         now_ns(session),
+                                         UMI_TERMINAL_STREAM_SYSTEM,
+                                         "Terminal session closed");
+    return UMI_STATUS_OK;
+}
+
+/* Supervised execution shares the session ownership boundary above. */
+#include "execution.inc"

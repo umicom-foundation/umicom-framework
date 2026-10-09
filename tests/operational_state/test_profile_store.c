@@ -144,7 +144,19 @@ static int StageStorage(const char *mode)
             CHECK(loaded.configure_preset[0] == '\0' && loaded.build_preset[0] == '\0' && loaded.test_preset[0] == '\0');
             CHECK(UmiBuildProfileStoreSave(server, &loaded, revision, &revision) == UMI_STATUS_OK);
             char marker[8];
+/* Migration now writes the required tool-folder field with the profile. The prior format expectation remains for storage compatibility review. The previous implementation is retained for engineering review. */
+#if 0
             CHECK(umi_data_server_get(server, schema, marker, sizeof(marker)) == UMI_STATUS_OK && strcmp(marker, "3") == 0);
+#endif
+/* Migration now writes the required configure-definitions field. Keep the preceding stored-format expectation for review. The previous implementation is retained for engineering review. */
+#if 0
+            CHECK(umi_data_server_get(server, schema, marker, sizeof(marker)) == UMI_STATUS_OK && strcmp(marker, "4") == 0);
+#endif
+/* Migration now retains launch environment settings as required fields. The preceding format expectation remains for compatibility review. The previous implementation is retained for engineering review. */
+#if 0
+            CHECK(umi_data_server_get(server, schema, marker, sizeof(marker)) == UMI_STATUS_OK && strcmp(marker, "5") == 0);
+#endif
+            CHECK(umi_data_server_get(server, schema, marker, sizeof(marker)) == UMI_STATUS_OK && strcmp(marker, "6") == 0);
         }
     } else if (strcmp(mode, "stage-missing") == 0) {
         CHECK(UmiBuildProfileStoreLoad(server, profile.source_directory, &loaded, &revision) == UMI_STATUS_OK);
@@ -175,6 +187,65 @@ static int StageStorage(const char *mode)
             CHECK(UmiBuildProfileStoreSave(server, &profile, 1U, &revision) == UMI_STATUS_INVALID_STATE);
             CHECK(UmiBuildProfileStoreLoad(server, profile.source_directory, &loaded, &revision) == UMI_STATUS_OK);
             CHECK(umi_build_profile_equal(&before, &loaded) && revision == 2U);
+        }
+    }
+    umi_data_server_destroy(server);
+    return EXIT_SUCCESS;
+}
+
+
+/* A tool change is a settings change, not a global environment mutation.
+ * Exercise migration and corruption through the public database contract
+ * used when Studio reopens a project. */
+static int ToolStorage(const char *mode)
+{
+    UmiDataServer *server = NULL;
+    UmiBuildProfile profile, loaded, before;
+    uint64_t revision = 0U;
+    char field[192], schema[192];
+    CHECK(umi_data_server_create_memory(&server) == UMI_STATUS_OK);
+    Profile(&profile, "Tool selection");
+    CHECK(UmiBuildProfileStoreSave(server,&profile,0U,&revision) == UMI_STATUS_OK);
+    CHECK(Key(profile.source_directory,"tool_directory",field) == EXIT_SUCCESS);
+    CHECK(Key(profile.source_directory,"schema",schema) == EXIT_SUCCESS);
+    CHECK(UmiBuildProfileStoreLoad(server,profile.source_directory,&loaded,&revision) == UMI_STATUS_OK);
+    before = loaded;
+    if (strcmp(mode,"tool-migrate") == 0) {
+        CHECK(umi_data_server_delete(server,field) == UMI_STATUS_OK);
+        CHECK(umi_data_server_set(server,schema,"3") == UMI_STATUS_OK);
+        CHECK(UmiBuildProfileStoreLoad(server,profile.source_directory,&loaded,&revision) == UMI_STATUS_OK);
+        CHECK(loaded.tool_directory[0] == '\0');
+        CHECK(UmiBuildProfileStoreSave(server,&loaded,revision,&revision) == UMI_STATUS_OK);
+        char value[8];
+        CHECK(umi_data_server_get(server,field,value,sizeof value) == UMI_STATUS_OK && value[0] == '\0');
+    } else if (strcmp(mode,"tool-missing") == 0) {
+        CHECK(umi_data_server_delete(server,field) == UMI_STATUS_OK);
+        CHECK(UmiBuildProfileStoreLoad(server,profile.source_directory,&loaded,&revision) == UMI_STATUS_PARSE_ERROR);
+        CHECK(memcmp(&loaded,&before,sizeof loaded) == 0);
+    } else if (strcmp(mode,"tool-invalid") == 0) {
+        CHECK(umi_data_server_set(server,field,"relative tools") == UMI_STATUS_OK);
+        CHECK(UmiBuildProfileStoreLoad(server,profile.source_directory,&loaded,&revision) == UMI_STATUS_PARSE_ERROR);
+        CHECK(memcmp(&loaded,&before,sizeof loaded) == 0);
+    } else {
+#ifdef _WIN32
+        strcpy(profile.tool_directory,"C:\\Developer Tools\\bin");
+#else
+        strcpy(profile.tool_directory,"/opt/developer tools/bin");
+#endif
+        CHECK(UmiBuildProfileStoreSave(server,&profile,revision,&revision) == UMI_STATUS_OK);
+        CHECK(UmiBuildProfileStoreLoad(server,profile.source_directory,&loaded,&revision) == UMI_STATUS_OK);
+        CHECK(strcmp(loaded.tool_directory,profile.tool_directory) == 0);
+        before=loaded;
+        if (strcmp(mode,"tool-downgrade") == 0) {
+            CHECK(umi_data_server_set(server,schema,"3") == UMI_STATUS_OK);
+            CHECK(UmiBuildProfileStoreLoad(server,profile.source_directory,&loaded,&revision) == UMI_STATUS_PARSE_ERROR);
+            CHECK(memcmp(&loaded,&before,sizeof loaded) == 0);
+        } else {
+            profile.tool_directory[0]='\0';
+            CHECK(!umi_build_profile_equal(&profile,&loaded));
+            CHECK(UmiBuildProfileStoreSave(server,&profile,revision,&revision) == UMI_STATUS_OK);
+            CHECK(UmiBuildProfileStoreLoad(server,profile.source_directory,&loaded,&revision) == UMI_STATUS_OK);
+            CHECK(loaded.tool_directory[0]=='\0');
         }
     }
     umi_data_server_destroy(server);
@@ -306,6 +377,11 @@ static int Durable(void)
     strcpy(original.build_preset, "sqlite-build");
     strcpy(original.test_preset, "sqlite-test");
     strcpy(original.run_working_directory, "data files");
+#ifdef _WIN32
+    strcpy(original.tool_directory,"C:\\Developer Tools\\bin");
+#else
+    strcpy(original.tool_directory,"/opt/developer tools/bin");
+#endif
     CHECK(UmiBuildProfileStoreSave(second, &original, 1U, &revision) == UMI_STATUS_OK && revision == 2U);
     loaded.parallel_jobs = 4U;
     CHECK(UmiBuildProfileStoreSave(first, &loaded, 1U, &revision) == UMI_STATUS_INVALID_STATE);
@@ -321,6 +397,7 @@ static int Durable(void)
     CHECK(strcmp(loaded.build_preset, original.build_preset) == 0);
     CHECK(strcmp(loaded.test_preset, original.test_preset) == 0);
     CHECK(strcmp(loaded.run_working_directory, original.run_working_directory) == 0);
+    CHECK(strcmp(loaded.tool_directory, original.tool_directory) == 0);
     CHECK(Key("Umicom Notes", "trust", trustKey) == EXIT_SUCCESS);
     CHECK(umi_data_server_get(first, trustKey, trustValue, sizeof(trustValue)) == UMI_STATUS_NOT_FOUND);
     umi_data_server_destroy(first); umi_data_server_destroy(second);
@@ -333,6 +410,7 @@ static int Durable(void)
 int main(int argc, char **argv)
 {
     if (argc != 2) return EXIT_FAILURE;
+    if (strncmp(argv[1], "tool-", 5U) == 0) return ToolStorage(argv[1]);
     if (strcmp(argv[1], "stage-migrate") == 0 || strcmp(argv[1], "stage-missing") == 0 ||
         strcmp(argv[1], "stage-downgrade") == 0 || strcmp(argv[1], "stage-roundtrip") == 0)
         return StageStorage(argv[1]);

@@ -111,10 +111,20 @@ static bool string_field(const char *value, size_t capacity, bool required)
 {
     return value != NULL && (!required || value[0] != '\0') && memchr(value, '\0', capacity) != NULL;
 }
+/* Origin validation now checks optional portable identity fields before persistence. The previous implementation is retained for engineering review. */
+#if 0
 bool UmiTestArchiveOriginValid(const UmiTestArchiveOrigin *origin)
 {
     return origin != NULL && string_field(origin->source_root, sizeof(origin->source_root), true) &&
            string_field(origin->source_revision, sizeof(origin->source_revision), false);
+}
+
+#endif
+bool UmiTestArchiveOriginValid(const UmiTestArchiveOrigin *origin)
+{
+    return origin != NULL && string_field(origin->source_root, sizeof(origin->source_root), true) &&
+           string_field(origin->source_revision, sizeof(origin->source_revision), false) &&
+           UmiJobIdentityValidate(&origin->identity) == UMI_STATUS_OK;
 }
 bool UmiTestArchiveRequestValid(const UmiCtestJobRequest *request)
 {
@@ -137,9 +147,28 @@ bool UmiTestArchiveResultValid(const UmiTestResult *result)
     /* A process/report error must never be recorded as a passing testcase. */
     return result->state != UMI_TEST_STATE_PASSED || result->status == UMI_STATUS_OK;
 }
+/* Archive evidence is optional for old records, but any supplied digest must
+ * be complete lowercase SHA-256 text. Never accept a partial digest as a match. */
+static bool selection_digest_valid(const char digest[UMI_JOB_IDENTITY_DIGEST_CAPACITY])
+{
+    const char *end = memchr(digest, '\0', UMI_JOB_IDENTITY_DIGEST_CAPACITY);
+    if (end == NULL)
+        return false;
+    size_t length = (size_t)(end - digest);
+    if (length == 0)
+        return true;
+    if (length != UMI_JOB_IDENTITY_DIGEST_CAPACITY - 1U)
+        return false;
+    for (size_t i = 0; i < length; ++i)
+        if (digit(digest[i]) < 0)
+            return false;
+    return true;
+}
 bool UmiTestArchiveEntryValid(const UmiTestArchiveEntry *entry)
 {
     if (entry == NULL || entry->id == 0 || !UmiTestArchiveOriginValid(&entry->origin))
+        return false;
+    if (!selection_digest_valid(entry->selection_digest))
         return false;
     const UmiCtestJobPlanSnapshot *plan = &entry->plan;
     const UmiCtestJobSnapshot *run = &entry->run;
@@ -169,6 +198,8 @@ bool UmiTestArchiveEntryValid(const UmiTestArchiveEntry *entry)
     }
     return left == 0;
 }
+/* The archive codec now stores portable job and selection evidence while decoding existing records. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus UmiTestArchiveEncodeEntry(const UmiTestArchiveEntry *entry, char *wire, size_t capacity)
 {
     if (wire == NULL || capacity == 0 || !UmiTestArchiveEntryValid(entry))
@@ -240,6 +271,103 @@ UmiStatus UmiTestArchiveDecodeEntry(const char *wire, UmiTestArchiveEntry *outpu
     if (!read_text(&cursor, entry.origin.source_root, sizeof(entry.origin.source_root)) ||
         !read_text(&cursor, entry.origin.source_revision, sizeof(entry.origin.source_revision)) ||
         *cursor != '\0' || !UmiTestArchiveEntryValid(&entry))
+        return UMI_STATUS_PARSE_ERROR;
+    *output = entry;
+    return UMI_STATUS_OK;
+}
+
+#endif
+UmiStatus UmiTestArchiveEncodeEntry(const UmiTestArchiveEntry *entry, char *wire, size_t capacity)
+{
+    if (wire == NULL || capacity == 0 || !UmiTestArchiveEntryValid(entry))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    ArchiveWriter writer = {wire, capacity, 0, true};
+    const UmiCtestJobSnapshot *run = &entry->run;
+    /* Keep legacy encoding for evidence-free caller objects. Saved jobs carry
+     * selection evidence and use the extended format; both formats decode. */
+    bool evidence = UmiJobIdentityIsRecorded(&entry->origin.identity) ||
+                    entry->selection_digest[0] != '\0';
+    const uint64_t fields[] = {evidence ? 2U : 1U,
+                               entry->id,
+                               entry->origin.workspace_generation,
+                               entry->origin.retain_output,
+                               entry->plan.request_count,
+                               entry->plan.repeat_count,
+                               entry->plan.stop_on_failure,
+                               run->task_id,
+                               (unsigned)run->state,
+                               (unsigned)run->status,
+                               (unsigned)run->first_error,
+                               run->planned,
+                               run->completed,
+                               run->passed,
+                               run->failed,
+                               run->skipped,
+                               run->cancelled,
+                               run->timed_out,
+                               run->not_run,
+                               run->duration_ms};
+    for (size_t i = 0; i < sizeof(fields) / sizeof(fields[0]); ++i)
+        number(&writer, fields[i]);
+    text(&writer, entry->origin.source_root);
+    text(&writer, entry->origin.source_revision);
+    if (evidence)
+    {
+        text(&writer, entry->origin.identity.subject);
+        text(&writer, entry->origin.identity.configuration);
+        text(&writer, entry->origin.identity.inputs);
+        text(&writer, entry->selection_digest);
+    }
+    return writer.valid ? UMI_STATUS_OK : UMI_STATUS_CAPACITY_EXCEEDED;
+}
+UmiStatus UmiTestArchiveDecodeEntry(const char *wire, UmiTestArchiveEntry *output)
+{
+    if (wire == NULL || output == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiTestArchiveEntry entry = {0};
+    uint64_t fields[20];
+    const char *cursor = wire;
+    for (size_t i = 0; i < 20U; ++i)
+        if (!read_number(&cursor, &fields[i]))
+            return UMI_STATUS_PARSE_ERROR;
+    if ((fields[0] != 1U && fields[0] != 2U) || fields[3] > 1U || fields[4] > UMI_CTEST_JOB_MAX_ATTEMPTS ||
+        fields[5] > UMI_CTEST_JOB_MAX_ATTEMPTS || fields[6] > 1U || fields[8] > UMI_TASK_CANCELLED ||
+        fields[9] > UMI_STATUS_BUSY || fields[10] > UMI_STATUS_BUSY)
+        return UMI_STATUS_PARSE_ERROR;
+    for (size_t i = 11U; i < 19U; ++i)
+        if (fields[i] > UMI_CTEST_JOB_MAX_ATTEMPTS)
+            return UMI_STATUS_PARSE_ERROR;
+    entry.id = fields[1];
+    entry.origin.workspace_generation = fields[2];
+    entry.origin.retain_output = fields[3] != 0;
+    entry.plan.request_count = (size_t)fields[4];
+    entry.plan.repeat_count = (uint32_t)fields[5];
+    entry.plan.stop_on_failure = fields[6] != 0;
+    entry.run.task_id = fields[7];
+    entry.run.state = (UmiTaskState)fields[8];
+    entry.run.status = (UmiStatus)fields[9];
+    entry.run.first_error = (UmiStatus)fields[10];
+    entry.run.planned = (size_t)fields[11];
+    entry.run.completed = (size_t)fields[12];
+    entry.run.passed = (size_t)fields[13];
+    entry.run.failed = (size_t)fields[14];
+    entry.run.skipped = (size_t)fields[15];
+    entry.run.cancelled = (size_t)fields[16];
+    entry.run.timed_out = (size_t)fields[17];
+    entry.run.not_run = (size_t)fields[18];
+    entry.run.duration_ms = fields[19];
+    if (!read_text(&cursor, entry.origin.source_root, sizeof(entry.origin.source_root)) ||
+        !read_text(&cursor, entry.origin.source_revision, sizeof(entry.origin.source_revision)))
+        return UMI_STATUS_PARSE_ERROR;
+    /* Stage optional evidence into the local object before validating it. A
+     * truncated extension must never turn into an evidence-free legacy row. */
+    if (fields[0] == 2U &&
+        (!read_text(&cursor, entry.origin.identity.subject, sizeof(entry.origin.identity.subject)) ||
+         !read_text(&cursor, entry.origin.identity.configuration, sizeof(entry.origin.identity.configuration)) ||
+         !read_text(&cursor, entry.origin.identity.inputs, sizeof(entry.origin.identity.inputs)) ||
+         !read_text(&cursor, entry.selection_digest, sizeof(entry.selection_digest))))
+        return UMI_STATUS_PARSE_ERROR;
+    if (*cursor != '\0' || !UmiTestArchiveEntryValid(&entry))
         return UMI_STATUS_PARSE_ERROR;
     *output = entry;
     return UMI_STATUS_OK;

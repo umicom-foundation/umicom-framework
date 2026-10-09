@@ -13,6 +13,9 @@ get_filename_component(FRAMEWORK "${FRAMEWORK}" ABSOLUTE)
 set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
+# Hash long source-directory prefixes before Windows reaches its object-path
+# limit. Spaces remain in the fixture paths to exercise argument quoting.
+set(CMAKE_OBJECT_PATH_MAX 240)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(MODE "deferred" CACHE STRING "deferred, immediate, mixed, repeated, missing or partial")
 option(PROBE_SANITIZERS "Instrument this exact dependency subset" OFF)
@@ -44,12 +47,41 @@ if(NOT MODE STREQUAL "missing")
     add_library(umicom_trading STATIC "${FRAMEWORK}/src/trading/quote.c"
         "${FRAMEWORK}/src/trading/market_data_quality.c"
         "${FRAMEWORK}/src/broker_connectivity/ibkr_adapter.c")
+    # Keep the probe small, but link the same concrete arithmetic and archive
+    # implementations used by the product. New component dependencies belong here
+    # as real sources, never success-only stubs that could hide a broken SDK.
+    target_sources(umicom_base PRIVATE "${FRAMEWORK}/src/base/value_archive.c")
+    target_sources(umicom_base PRIVATE "${FRAMEWORK}/src/base/csv_document.c")
+    target_sources(umicom_base PRIVATE "${FRAMEWORK}/src/base/sha256.c")
+    target_sources(umicom_trading PRIVATE
+        "${FRAMEWORK}/src/finance/decimal.c"
+        "${FRAMEWORK}/src/finance/decimal_arithmetic.c"
+        "${FRAMEWORK}/src/finance/decimal_scientific.c"
+        "${FRAMEWORK}/src/trading/price_increment.c"
+        "${FRAMEWORK}/src/broker_connectivity/order_observation.c")
+# The broker component now needs a platform output owner in partial compositions.
+# The earlier incomplete opening block is preserved as a bracket comment so it
+# cannot alter the nesting of the active CMake conditions.
+#[=[
     set(_owners base trading)
     if(NOT MODE STREQUAL "partial")
         add_library(umicom_platform STATIC "${FRAMEWORK}/src/platform/threading.c")
+]=]
+    # Broker report export now owns a native output handle. Supply that real
+    # platform dependency even when the probe omits replay and market tape.
+    add_library(umicom_platform STATIC
+        "${FRAMEWORK}/src/platform/threading.c"
+        "${FRAMEWORK}/src/platform/output_file.c"
+        "${FRAMEWORK}/src/platform/cancellation.c")
+    set(_owners base trading platform)
+    if(NOT MODE STREQUAL "partial")
         add_library(umicom_trading_ui STATIC "${FRAMEWORK}/src/strategy_research/backtest_engine.c")
         add_library(umicom_native_launcher STATIC "${FRAMEWORK}/src/native_launcher/sha256.c")
+# Platform is registered before the optional components so each owner is configured once; retain the former list for review.
+if(FALSE)
         list(APPEND _owners platform trading_ui native_launcher)
+endif()
+        list(APPEND _owners trading_ui native_launcher)
     endif()
     foreach(_owner IN LISTS _owners)
         add_library(Umicom::${_owner} ALIAS umicom_${_owner})
@@ -92,9 +124,19 @@ endif()
 if(NOT MODE STREQUAL "missing")
     foreach(_header IN ITEMS base/status.h finance/types.h trading/types.h trading/quote.h
         trading/market_data_quality.h broker_connectivity/ibkr_adapter.h platform/threading.h
+        base/sha256.h
         strategy_research/backtest_engine.h native_launcher/sha256.h)
         get_filename_component(_dir "${_header}" DIRECTORY)
         install(FILES "${FRAMEWORK}/include/umicom/${_header}" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/${_dir}")
+    endforeach()
+    # These transitive public contracts are needed by installed consumers too.
+    foreach(_header IN ITEMS base/value_archive.h finance/decimal.h
+        trading/price_increment.h broker_connectivity/order_observation.h
+        base/csv_document.h chart/candle.h chart/plot.h chart/render_scene.h
+        chart/types.h platform/cancellation.h platform/output_file.h)
+        get_filename_component(_dir "${_header}" DIRECTORY)
+        install(FILES "${FRAMEWORK}/include/umicom/${_header}"
+            DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/${_dir}")
     endforeach()
     install(EXPORT UmicomFrameworkTargets NAMESPACE Umicom:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework)
     configure_package_config_file("${CMAKE_CURRENT_LIST_DIR}/UmicomFrameworkConfig.cmake.in"

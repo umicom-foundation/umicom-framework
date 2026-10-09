@@ -7,6 +7,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "archive_internal.h"
+#include "selection_identity_internal.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -273,6 +274,10 @@ UmiStatus UmiTestArchiveSave(UmiTestArchive *archive, UmiCtestJob *source, const
         status = UMI_STATUS_CAPACITY_EXCEEDED;
     entry.id = records->next_id;
     char key[160];
+    /* Hash the same copied requests that are written below. A transaction
+     * publishes outcomes and selection evidence together, never in two stages. */
+    UmiTestSelectionHasher selection;
+    UmiTestSelectionBegin(&selection, &entry.plan);
     /* Requests preserve the entire intended selection, including disabled tests
      * and attempts that were never reached after cancellation or an early stop. */
     for (size_t i = 0; status == UMI_STATUS_OK && i < entry.plan.request_count; ++i)
@@ -288,10 +293,13 @@ UmiStatus UmiTestArchiveSave(UmiTestArchive *archive, UmiCtestJob *source, const
             status = UmiTestArchiveEncodeRequest(&request, records->wire, sizeof(records->wire));
         if (status == UMI_STATUS_OK)
         {
+            UmiTestSelectionAdd(&selection, &request);
             row_key(archive, entry.id, "request", i, key);
             status = umi_data_server_set(archive->server, key, records->wire);
         }
     }
+    if (status == UMI_STATUS_OK)
+        status = UmiTestSelectionFinish(&selection, entry.selection_digest);
     UmiCtestJobSnapshot total = {0};
     for (size_t i = 0; status == UMI_STATUS_OK && i < entry.run.completed; ++i)
     {
@@ -448,6 +456,48 @@ UmiStatus UmiTestArchiveResultAt(UmiTestArchive *archive, uint64_t id, size_t in
     free(records);
     return status;
 }
+/* Keep metadata, request and outcome inside one transaction. Reading them in
+ * separate UI calls could mix observations if another owner removed the run. */
+UmiStatus UmiTestArchiveReadAttempt(UmiTestArchive *archive, uint64_t id, size_t index,
+    const UmiCancellationToken *cancellation, UmiTestArchiveAttempt *out_attempt)
+{
+    if (archive == NULL || id == 0 || out_attempt == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (umi_cancellation_token_is_requested(cancellation))
+        return UMI_STATUS_CANCELLED;
+    ArchiveRecords *records = NULL;
+    UmiStatus status = start(archive, &records);
+    if (status != UMI_STATUS_OK)
+        return status;
+    UmiTestArchiveAttempt *copy = calloc(1U, sizeof(*copy));
+    size_t slot = find(records, id);
+    if (copy == NULL)
+        status = UMI_STATUS_OUT_OF_MEMORY;
+    else if (slot == UMI_TEST_ARCHIVE_CAPACITY)
+        status = UMI_STATUS_NOT_FOUND;
+    else
+    {
+        copy->entry = records->entries[slot];
+        status = result_read(archive, records, &copy->entry, index, &copy->result);
+        if (status == UMI_STATUS_OK && umi_cancellation_token_is_requested(cancellation))
+            status = UMI_STATUS_CANCELLED;
+        if (status == UMI_STATUS_OK)
+            status = request_read(archive, records, &copy->entry,
+                index % copy->entry.plan.request_count, &copy->request);
+        if (status == UMI_STATUS_OK)
+            copy->attempt = (uint32_t)(index / copy->entry.plan.request_count + 1U);
+    }
+    if (status == UMI_STATUS_OK && umi_cancellation_token_is_requested(cancellation))
+        status = UMI_STATUS_CANCELLED;
+    status = finish(archive, status);
+    if (status == UMI_STATUS_OK)
+        *out_attempt = *copy;
+    free(copy);
+    free(records);
+    return status;
+}
+/* Interactive clients need cooperative cancellation between storage operations. The cancellable transaction below preserves all-or-nothing removal; the original implementation remains for engineering review. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus UmiTestArchiveRemove(UmiTestArchive *archive, uint64_t id)
 {
     if (archive == NULL || id == 0)
@@ -485,6 +535,69 @@ UmiStatus UmiTestArchiveRemove(UmiTestArchive *archive, uint64_t id)
     status = finish(archive, status);
     free(records);
     return status;
+}
+#endif
+UmiStatus UmiTestArchiveRemoveWithCancellation(UmiTestArchive *archive, uint64_t id,
+    const UmiCancellationToken *cancellation)
+{
+    if (archive == NULL || id == 0)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (umi_cancellation_token_is_requested(cancellation))
+        return UMI_STATUS_CANCELLED;
+    ArchiveRecords *records = NULL;
+    UmiStatus status = start(archive, &records);
+    if (status != UMI_STATUS_OK)
+        return status;
+    size_t slot = find(records, id);
+    if (slot == UMI_TEST_ARCHIVE_CAPACITY)
+        status = UMI_STATUS_NOT_FOUND;
+    char key[160];
+    if (status == UMI_STATUS_OK)
+    {
+        const UmiTestArchiveEntry *entry = &records->entries[slot];
+        /* Counts were bounded by the metadata decoder. Delete only keys owned by
+         * this exact run. A missing row causes rollback rather than hiding an
+         * incomplete archive; corruption can be diagnosed without losing data. */
+        for (size_t i = 0; status == UMI_STATUS_OK && i < entry->run.completed; ++i)
+        {
+            if (umi_cancellation_token_is_requested(cancellation))
+            {
+                status = UMI_STATUS_CANCELLED;
+                break;
+            }
+            row_key(archive, id, "result", i, key);
+            status = UmiTestArchiveValueDelete(archive->server, key);
+        }
+        for (size_t i = 0; status == UMI_STATUS_OK && i < entry->plan.request_count; ++i)
+        {
+            if (umi_cancellation_token_is_requested(cancellation))
+            {
+                status = UMI_STATUS_CANCELLED;
+                break;
+            }
+            row_key(archive, id, "request", i, key);
+            status = umi_data_server_delete(archive->server, key);
+        }
+        if (status == UMI_STATUS_OK && umi_cancellation_token_is_requested(cancellation))
+            status = UMI_STATUS_CANCELLED;
+        if (status == UMI_STATUS_OK)
+        {
+            slot_key(archive, slot, key);
+            status = umi_data_server_delete(archive->server, key);
+        }
+    }
+    /* Cancellation before commit rolls back every owned row. After commit, a
+     * late request cannot undo the removal and must not hide that outcome. */
+    if (status == UMI_STATUS_OK && umi_cancellation_token_is_requested(cancellation))
+        status = UMI_STATUS_CANCELLED;
+    status = finish(archive, status);
+    free(records);
+    return status;
+}
+/* Existing headless callers keep the same transactional removal contract. */
+UmiStatus UmiTestArchiveRemove(UmiTestArchive *archive, uint64_t id)
+{
+    return UmiTestArchiveRemoveWithCancellation(archive, id, NULL);
 }
 
 /* Comparisons reuse the transaction owner above so both runs are observed together. */

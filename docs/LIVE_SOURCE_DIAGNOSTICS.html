@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Live source diagnostics</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:900px;margin:3rem auto;padding:0 1.5rem;color:#172535}h1,h2{line-height:1.2}code{background:#eef2f6;padding:.1rem .25rem}li{margin:.5rem 0}a{color:#075b9b}table{border-collapse:collapse}th,td{border:1px solid #cad4df;padding:.6rem;text-align:left}</style>
+</head><body><h1>Live source diagnostics</h1>
+<p>A language server is a separate program that analyses source code. Framework can keep one selected server running for one document while an editor sends updated drafts. Diagnostics are the warnings and errors returned by that program. They do not mean the project has been built or tested.</p>
+<h2>Use the native panel</h2><ol>
+<li>Open a named source file in a trusted project. Choose <strong>Live diagnostics…</strong> in Studio's code tools.</li>
+<li>Check the language-server program and its arguments. For C and C++, use an installed clangd executable. A selected tool folder controls local executable lookup; it is not a download or installation step.</li>
+<li>For clangd, inspect the project's <code>compile_commands.json</code> and use its folder in the arguments. See <a href="COMPILER_DATABASES.html">compiler database setup</a>. Do not pass clangd-specific arguments to another server.</li>
+<li>Choose <strong>Start live diagnostics</strong>. The selected local process receives a copy of the open draft. No source file is saved by this operation.</li>
+<li>Edit the document. The panel samples the draft approximately every 350 milliseconds while mapped. A changed draft clears the previous display; a report appears when the server publishes diagnostics for the new source version.</li>
+<li>Use <strong>Previous diagnostics</strong> and <strong>Next diagnostics</strong> for further pages. Each page shows up to 32 entries; very long messages are visibly shortened.</li>
+<li>To visit a reported location, choose its <strong>Diagnostic number</strong> and select <strong>Open source</strong>. The complete current draft must still match the report. Moving the caret or switching tabs is allowed; changed text is refused without moving to a different location.</li>
+<li>Choose <strong>Stop</strong> before changing the server settings. Closing or hiding the panel requests cancellation. Reopening a panel requires a fresh Start.</li>
+</ol>
+<h2>Connect another editor</h2><ol>
+<li>Create a <code>UmiLanguageDiagnosticMonitorConfig</code> with explicit project directory, root URI, document URI, language and initial source. Creation copies this data and starts no process.</li>
+<li>Run <code>UmiLanguageDiagnosticMonitorRun</code> once on a dedicated worker. Keep GTK widgets and document models on the editor thread. The worker alone owns the protocol session.</li>
+<li>Call <code>UmiLanguageDiagnosticMonitorSubmit</code> with complete UTF-8 snapshots. Keep the returned source sequence with the current draft. New pending text replaces older unsent text, so rapid typing does not create an unlimited queue.</li>
+<li>Read publications with <code>UmiLanguageDiagnosticMonitorTake</code>. Display only a catalogue whose returned sequence still matches your captured source. Destroy the catalogue after use. Clear any displayed catalogue immediately when your editor changes the draft or rejects a new submission.</li>
+<li>Call <code>UmiLanguageDiagnosticMonitorStop</code> when trust, document identity or workspace ownership changes. Join the worker before destroying the monitor. A completed flag does not replace joining the thread.</li>
+</ol>
+<p>The lower-level session API supports an exclusive caller-owned transport for other hosts. Once initialization begins, the session owns protocol sequencing and stops the transport when closing. The caller still destroys a borrowed server object; native sessions own their server object.</p>
+<h2>Protocol and ownership limits</h2>
+<p>The server must support opening documents and full or incremental text synchronization using UTF-16 positions. Incremental synchronization sends one range replacing the entire preceding document; this is valid incremental protocol, not an optimized edit differ. Each session tracks one document and increases its protocol version only when text changes.</p>
+<p>A publication must match the document URI and current version. An unversioned publication is accepted only before the first source change. After that, an unversioned report cannot prove which draft it describes and is ignored. Servers may skip intermediate drafts or publish nothing; an empty display is not proof that compilation would succeed.</p>
+<p>Source text and encoded protocol messages have bounded capacity below 64 KiB. JSON escaping adds bytes, so a source draft can exceed the wire limit before reaching the text limit. Invalid UTF-8, embedded NUL, unsupported synchronization, malformed ranges and unexpected server requests are reported rather than silently accepted. Dynamic registration, configuration requests, server-initiated edits and alternative position encodings are not implemented in this session.</p>
+<p>Cancellation is cooperative and uses the existing native process transport. The panel samples host authorization with the draft; it is not an instantaneous security boundary or a process sandbox. A language server can read files and run other programs with the user's permissions. Use a trusted executable and project. The transport's direct-child shutdown does not promise termination of every independently created descendant process.</p>
+<h2>Troubleshooting</h2><ol>
+<li>If startup reports a missing executable, choose its full path or the correct project tool directory.</li>
+<li>If C include files are unresolved, regenerate the compiler database and check its source-file entry and selected build directory.</li>
+<li>If changed drafts produce no output, check the status for unversioned reports and inspect the server's synchronization support. Stop, correct the settings and start a new session.</li>
+<li>If a draft exceeds capacity, stop this panel and use the project's compiler diagnostics. Source text is never truncated for analysis.</li>
+<li>If the document is renamed, closed or the project changes, reopen Live diagnostics from the intended document. A panel never silently follows a different tab.</li>
+</ol>
+<p>Protocol reference: <a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/">Language Server Protocol</a>. Server-specific details: <a href="https://clangd.llvm.org/extensions">clangd extensions and diagnostic behaviour</a>.</p>
+</body></html>

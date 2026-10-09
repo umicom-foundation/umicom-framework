@@ -8,6 +8,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/message.h"
+#include "umicom/platform/path.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,6 +37,9 @@ static int CheckLaunchArguments(const char *json)
     free(document);
     return valid;
 }
+
+#include "tool_path_peer.inc"
+#include "../run_environment/peer.inc"
 
 static uint64_t sequence = 1U;
 static int Write(const char *text) {
@@ -118,6 +122,8 @@ int main(int argc, char **argv) {
             }
         } else if(strcmp(cmd,"launch")==0) {
             if (!CheckLaunchArguments(json)) return 16;
+            if (!CheckLaunchToolPath(json)) return 17;
+            if (!CheckLaunchEnvironment(json)) return 21;
             launch=request.sequence;
             if(strcmp(mode,"reject-launch")==0) { if(!Response(launch,cmd,0,"{}")) return 5; }
             else if(strcmp(mode,"no-initialized")==0) { /* Keep the pipe open, no fabricated readiness. */ }

@@ -1,0 +1,20 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Inspect a stopped exception</title><style>body{font:16px/1.6 system-ui;max-width:900px;margin:40px auto;padding:0 24px}code{overflow-wrap:anywhere}li{margin-bottom:12px}</style></head><body><h1>Inspect a stopped exception</h1><p>An exception is a condition the debugger reports as interrupting normal execution. The exception viewer shows the description and nested causes supplied by the selected adapter. Availability depends on the language, target and adapter.</p>
+<h2>Use the viewer</h2><ol>
+<li>Open and trust your project. Start its native debugger or attach to a process you are authorised to inspect.</li>
+<li>If appropriate, use <strong>Exception filters</strong> to ask the adapter which exceptions should stop execution. Filter support and exception-detail support are separate capabilities.</li>
+<li>When the program stops because of an exception, open the Debug surface and expand <strong>Stopped exception</strong>.</li>
+<li>Choose <strong>Refresh exception</strong>. The request uses the observed stopped thread and current inspection revision.</li>
+<li>Read the exception identifier, description and break mode. Expand nested details to inspect messages, type names, inner causes and stack traces.</li>
+<li>After another stop, refresh again. The label describes a captured result; it does not claim the program is still at that stop.</li>
+</ol><h2>What the viewer does</h2>
+<p>All text is descriptive. An adapter may supply an expression naming an exception object, but the viewer does not evaluate it. Stack traces are plain read-only text, and their paths and links are not opened automatically. Refreshing never resumes the program or changes a breakpoint.</p>
+<p>The Framework checks the connection, stopped thread and inspection revision both before and after waiting. If a continued, stopped or exited event arrives during the request, the result is withheld until the host processes that event and you request current details.</p>
+<h2>When details are unavailable</h2><ol>
+<li>A normal breakpoint or manual pause is not necessarily an exception stop. Wait for an exception event before requesting details.</li>
+<li>The adapter must advertise exception-information support. Missing support is reported rather than replaced with invented information.</li>
+<li>A rejected response or timeout clears the previous displayed capture. Review the adapter output and the current program state before refreshing again.</li>
+<li>Replies allow 32 detail records and eight nesting levels. Each stack trace allows 8,191 UTF-8 bytes and each message 2,047. Larger or malformed replies fail explicitly; they are not silently shortened.</li>
+</ol><h2>Reuse from Framework</h2><p>Capture <code>UmiDebugRuntimeExceptionTargetRead</code> on the owner thread, then pass that target to <code>UmiDebugRuntimeExceptionInformationRead</code>. Recheck your application's workspace authority before requesting data. Allocate the large information result on the heap. Failed reads leave it unchanged.</p>
+<p><code>UmiGtk4DebugExceptionInformationCreate</code> hosts the same plain-text presentation for other development tools. Its callback must obtain a fresh authorised target; the widget owns its callback context until finalization.</p>
+<p>Requests are synchronous and bounded, so the current window may pause briefly while the adapter replies. No retry is automatic.</p>
+<p>Protocol reference: <a href="https://microsoft.github.io/debug-adapter-protocol/specification#Requests_ExceptionInfo">Debug Adapter Protocol exception information</a>.</p></body></html>

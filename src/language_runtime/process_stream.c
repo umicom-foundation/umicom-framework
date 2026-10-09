@@ -28,6 +28,9 @@
 #endif
 #endif
 #include "umicom/language_runtime/process_stream.h"
+#include "umicom/platform/process_search_path.h"
+#include "umicom/platform/process_environment.h"
+#include "umicom/platform/path.h"
 #include <stdlib.h>
 #include <string.h>
 /* The original launchers are retained for engineering review. The native
@@ -141,3 +144,80 @@ static UmiStatus LanguageProcessValidate(const UmiLanguageRuntimeProcessStreamCo
 #else
 #include "process_stream_posix.inc"
 #endif
+
+/* Keep executable selection and environment capture in Framework so LSP, DAP
+ * and future interactive tools share the same project-scoped launch rules.
+ * No process-wide PATH mutation is needed while other jobs may be running. */
+/* Persistent processes now share bounded environment ownership with ordinary Run. The previous tool-directory implementation remains below for review. The previous implementation is retained for engineering review. */
+#if 0
+UmiStatus UmiLanguageRuntimeProcessStreamStartWithToolDirectory(
+    const UmiLanguageRuntimeProcessStreamConfig *config, const char *toolDirectory,
+    UmiLanguageRuntimeProcessStream **out)
+{
+    UmiStatus status = LanguageProcessValidate(config, out);
+    if (status != UMI_STATUS_OK)
+        return status;
+    if (toolDirectory == NULL || toolDirectory[0] == '\0')
+        return LanguageProcessStart(config, NULL, out);
+    char *searchPath = NULL;
+    status = UmiProcessSearchPathCapture(toolDirectory, &searchPath);
+    if (status != UMI_STATUS_OK)
+        return status;
+    UmiLanguageRuntimeProcessStreamConfig selected = *config;
+    char program[UMI_PATH_CAPACITY];
+    /* An explicit absolute executable remains authoritative. A simple name
+     * resolves only in the selected folder, never to another PATH installation. */
+    if (!umi_path_is_absolute(config->program))
+    {
+        status = UmiProcessToolProgram(toolDirectory, config->program, program, sizeof program);
+        if (status == UMI_STATUS_OK)
+            selected.program = program;
+    }
+    if (status == UMI_STATUS_OK)
+        status = LanguageProcessStart(&selected, searchPath, out);
+    UmiProcessSearchPathFree(searchPath);
+    return status;
+}
+#endif
+UmiStatus UmiLanguageRuntimeProcessStreamStartWithEnvironment(
+    const UmiLanguageRuntimeProcessStreamConfig *config, const char *tool_directory,
+    const char *definitions, UmiLanguageRuntimeProcessStream **out)
+{
+    UmiStatus status = LanguageProcessValidate(config, out);
+    if (status != UMI_STATUS_OK) return status;
+    UmiProcessEnvironmentPlan *environment = NULL;
+    status = UmiProcessEnvironmentPlanCreate(definitions, tool_directory, &environment);
+    if (status != UMI_STATUS_OK) return status;
+    UmiLanguageRuntimeProcessStreamConfig selected = *config;
+    char program[UMI_PATH_CAPACITY];
+    /* Tool selection remains explicit. Program variables do not redirect an
+     * adapter to another installation when a tools folder was chosen. */
+    if (tool_directory != NULL && tool_directory[0] != '\0' &&
+        !umi_path_is_absolute(config->program)) {
+        status = UmiProcessToolProgram(tool_directory, config->program, program, sizeof program);
+        if (status == UMI_STATUS_OK) selected.program = program;
+    }
+    const UmiEnvironmentVariable *variables = NULL;
+    size_t count = 0U;
+    if (status == UMI_STATUS_OK)
+        status = UmiProcessEnvironmentPlanRead(environment, &variables, &count);
+    if (status == UMI_STATUS_OK)
+        status = LanguageProcessStart(&selected, variables, count, out);
+    UmiProcessEnvironmentPlanDestroy(environment);
+    return status;
+}
+/* Existing language-provider clients still request only their selected PATH. */
+UmiStatus UmiLanguageRuntimeProcessStreamStartWithToolDirectory(
+    const UmiLanguageRuntimeProcessStreamConfig *config, const char *toolDirectory,
+    UmiLanguageRuntimeProcessStream **out)
+{
+    return UmiLanguageRuntimeProcessStreamStartWithEnvironment(config, toolDirectory, NULL, out);
+}
+
+/* Existing clients inherit their environment exactly as before. */
+UmiStatus umi_language_runtime_process_stream_start(
+    const UmiLanguageRuntimeProcessStreamConfig *config,
+    UmiLanguageRuntimeProcessStream **out)
+{
+    return UmiLanguageRuntimeProcessStreamStartWithToolDirectory(config, NULL, out);
+}

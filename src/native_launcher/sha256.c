@@ -18,6 +18,12 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/native_launcher/sha256.h"
 #include <string.h>
+
+/* The portable algorithm now belongs to Base so ordinary data and build
+ * consumers do not depend on native installation tools. The previous algorithm
+ * stays below for review. These adapters retain the native API and struct tag;
+ * named-member copies avoid aliasing two distinct public context types. */
+#if 0
 static const uint32_t ROUND_CONSTANTS[64] = {
     0x428a2f98U,0x71374491U,0xb5c0fbcfU,0xe9b5dba5U,0x3956c25bU,0x59f111f1U,0x923f82a4U,0xab1c5ed5U,
     0xd807aa98U,0x12835b01U,0x243185beU,0x550c7dc3U,0x72be5d74U,0x80deb1feU,0x9bdc06a7U,0xc19bf174U,
@@ -116,4 +122,57 @@ UmiStatus UmiNativeSha256Buffer(const void *data, size_t length, char outHex[65]
     if (status == UMI_STATUS_OK) status = UmiNativeSha256Final(&context, digest);
     if (status == UMI_STATUS_OK) UmiNativeSha256Hex(digest, outHex);
     return status;
+}
+
+#endif
+#include "umicom/base/sha256.h"
+
+static void ImportContext(const UmiNativeSha256 *native, UmiSha256 *shared)
+{
+    memcpy(shared->words, native->words, sizeof(shared->words));
+    memcpy(shared->block, native->block, sizeof(shared->block));
+    shared->totalBytes = native->totalBytes;
+    shared->used = native->used;
+    shared->finalised = native->finalised;
+}
+static void ExportContext(const UmiSha256 *shared, UmiNativeSha256 *native)
+{
+    memcpy(native->words, shared->words, sizeof(native->words));
+    memcpy(native->block, shared->block, sizeof(native->block));
+    native->totalBytes = shared->totalBytes;
+    native->used = shared->used;
+    native->finalised = shared->finalised;
+}
+void UmiNativeSha256Init(UmiNativeSha256 *context)
+{
+    if (context == NULL) return;
+    UmiSha256 shared;
+    UmiSha256Init(&shared);
+    ExportContext(&shared, context);
+}
+UmiStatus UmiNativeSha256Update(UmiNativeSha256 *context, const void *data, size_t length)
+{
+    if (context == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiSha256 shared;
+    ImportContext(context, &shared);
+    UmiStatus status = UmiSha256Update(&shared, data, length);
+    if (status == UMI_STATUS_OK) ExportContext(&shared, context);
+    return status;
+}
+UmiStatus UmiNativeSha256Final(UmiNativeSha256 *context, unsigned char outDigest[32])
+{
+    if (context == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiSha256 shared;
+    ImportContext(context, &shared);
+    UmiStatus status = UmiSha256Final(&shared, outDigest);
+    if (status == UMI_STATUS_OK) ExportContext(&shared, context);
+    return status;
+}
+void UmiNativeSha256Hex(const unsigned char digest[32], char outHex[65])
+{
+    UmiSha256Hex(digest, outHex);
+}
+UmiStatus UmiNativeSha256Buffer(const void *data, size_t length, char outHex[65])
+{
+    return UmiSha256Buffer(data, length, outHex);
 }

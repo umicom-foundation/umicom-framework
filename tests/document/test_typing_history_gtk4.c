@@ -133,6 +133,9 @@ int main(int argc, char **argv)
     view.selection_length = selected;
     view.dirty = 1;
     CHECK(UmiUiDocumentViewModelUpsertText(views, &view, source, strlen(source)) == UMI_STATUS_OK);
+    /* UpsertText copies its input; reload the owned preview before later
+     * metadata edits so this fixture cannot restore the previous draft. */
+    CHECK(umi_ui_document_view_model_find(views, view.view_id, &view) == UMI_STATUS_OK);
     CHECK(umi_document_coordinator_sync_active(documents) == UMI_STATUS_OK);
     CHECK(umi_gtk4_adapter_create(application, &adapter) == UMI_STATUS_OK &&
           umi_gtk4_adapter_prepare(adapter, shell) == UMI_STATUS_OK);

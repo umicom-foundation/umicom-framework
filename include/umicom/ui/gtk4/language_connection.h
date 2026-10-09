@@ -23,6 +23,14 @@ extern "C"
  * completion. A worker may finish its native cleanup after the UI disappears.
  * Callers retain no controller handle or callback context. */
     UmiStatus UmiGtk4LanguageConnectionPanelCreate(const char *workspaceDirectory, GtkWidget **outPanel);
+    /**
+     * Create the connection panel with a copied tool-folder draft. NULL/empty
+     * retains inherited PATH. The user can edit it before explicitly checking
+     * the server; changing it invalidates a pending check. Opening the panel
+     * performs no launch or settings write. Widget ownership matches Create.
+     */
+    UmiStatus UmiGtk4LanguageConnectionPanelCreateWithToolDirectory(
+        const char *workspace_directory, const char *tool_directory, GtkWidget **out_panel);
 #ifdef __cplusplus
 }
 #endif

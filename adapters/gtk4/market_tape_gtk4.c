@@ -360,6 +360,18 @@ static void DisableEntry(GtkWidget *parent, gpointer data)
     (void)parent;
     gtk_widget_set_sensitive(GTK_WIDGET(data), FALSE);
 }
+/* Keep launcher ownership in Framework so applications can arrange compact
+ * toolbars without duplicating callbacks or retaining a closed native window. */
+GtkWidget *UmiMarketTapeGtkLauncherCreate(GtkWindow *parent)
+{
+    if (!GTK_IS_WINDOW(parent)) return NULL;
+    GtkWidget *button = gtk_button_new_with_label("Practice tape");
+    gtk_widget_set_tooltip_text(button, "Open fictional linked market observations.");
+    g_signal_connect_object(button, "clicked", G_CALLBACK(OpenPractice), parent, 0);
+    UmiGtk4ObserveWindowRemoval(parent, G_OBJECT(button), DisableEntry, button);
+    return button;
+}
+
 GtkWidget *UmiMarketTapeGtkWrap(GtkWidget *content, GtkWindow *parent)
 {
     if (content == NULL || parent == NULL || gtk_widget_get_parent(content) != NULL) return content;

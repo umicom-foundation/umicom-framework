@@ -11,6 +11,7 @@ set(_umi_desktop_system_root "${CMAKE_CURRENT_LIST_DIR}/..")
 add_library(umicom_desktop_system STATIC
     "${_umi_desktop_system_root}/src/desktop_system/parse.c"
     "${_umi_desktop_system_root}/src/desktop_system/monitor.c"
+    "${_umi_desktop_system_root}/src/desktop_system/process_catalog.c"
     "${_umi_desktop_system_root}/src/desktop_system/report.c"
     "${_umi_desktop_system_root}/src/desktop_system/session.c")
 add_library(Umicom::desktop_system ALIAS umicom_desktop_system)

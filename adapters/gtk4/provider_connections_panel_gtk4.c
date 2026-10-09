@@ -6,6 +6,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 
+#include "umicom/ui/gtk4/selection_list.h"
 #include "provider_connections_internal.h"
 #include "umicom/security/gtk4/profile_keys.h"
 #include "umicom/ui/gtk4/automation.h"
@@ -97,7 +98,15 @@ static void SelectWidget(UmiProviderConnectionsGtk *panel)
 {
     size_t index = Find(panel, panel->selected_id);
     panel->painting = true;
+/* GTK ignores an invalid selection on some nonempty models. Use the shared no-choice row instead; retain the former selection for review. */
+#if 0
     gtk_drop_down_set_selected(GTK_DROP_DOWN(panel->selector), index < panel->snapshot.count ? (guint)index : GTK_INVALID_LIST_POSITION);
+#endif
+    /* A nonempty list ends with its explicit prompt, so restoring a new
+     * draft never implicitly picks the first saved provider connection. */
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(panel->selector),
+        index < panel->snapshot.count ? (guint)index
+        : panel->snapshot.count != 0U ? (guint)panel->snapshot.count : GTK_INVALID_LIST_POSITION);
     panel->painting = false;
 }
 static void Fill(UmiProviderConnectionsGtk *panel, const UmiProviderConnection *connection)
@@ -128,7 +137,11 @@ static void SelectionChanged(GObject *object, GParamSpec *property, gpointer roo
     (void)object; (void)property;
     UmiProviderConnectionsGtk *panel = FromRoot(root);
     if (panel == NULL || panel->closed || panel->painting || panel->busy || !panel->loaded) return;
+/* Map the shared prompt back to no saved connection. Retain the native-index read for review. */
+#if 0
     guint index = gtk_drop_down_get_selected(GTK_DROP_DOWN(panel->selector));
+#endif
+    guint index = UmiGtk4SelectionListSelected(GTK_DROP_DOWN(panel->selector));
     if (!CanDiscard(panel)) { SelectWidget(panel); return; }
     Fill(panel, index < panel->snapshot.count ? &panel->snapshot.items[index] : NULL);
     Message(panel, "Loaded saved settings. Editing these settings does not connect to the provider.");
@@ -261,8 +274,16 @@ void UmiProviderEditorCompleted(UmiProviderConnectionsGtk *panel, const UmiProvi
     for (size_t i = 0U; i < panel->snapshot.count; ++i)
         labels[i] = g_strdup_printf("%s (%s)", panel->snapshot.items[i].label, panel->snapshot.items[i].id);
     panel->painting = true;
+/* Publish a complete replacement through Framework selection policy. Splicing the old model auto-selected row zero before the user chose it; retain that implementation for review. */
+#if 0
     GtkStringList *model = GTK_STRING_LIST(gtk_drop_down_get_model(GTK_DROP_DOWN(panel->selector)));
     gtk_string_list_splice(model, 0U, g_list_model_get_n_items(G_LIST_MODEL(model)), labels);
+#endif
+    GtkStringList *model = gtk_string_list_new(labels);
+    size_t selectedIndex = Find(panel, panel->selected_id);
+    (void)UmiGtk4SelectionListPublish(GTK_DROP_DOWN(panel->selector), model,
+        selectedIndex < panel->snapshot.count ? (guint)selectedIndex : GTK_INVALID_LIST_POSITION);
+    g_object_unref(model); /* The dropdown retains the published model. */
     panel->painting = false;
     for (size_t i = 0U; i < panel->snapshot.count; ++i) g_free((gpointer)labels[i]);
     gtk_check_button_set_active(GTK_CHECK_BUTTON(panel->confirm_review), FALSE);

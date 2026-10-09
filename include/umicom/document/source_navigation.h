@@ -31,6 +31,18 @@ extern "C"
                                                       UmiDocumentId document, UmiEditorTextPosition start,
                                                       UmiEditorTextPosition end, size_t *out_offset,
                                                       size_t *out_bytes);
+    /** Select a diagnostic or other captured range only while the named managed
+     * document still has the same URI and complete UTF-8 source bytes. A moved
+     * caret or changed active tab is allowed; a changed draft or renamed source
+     * returns INVALID_STATE without navigation. No disk read, save or text edit
+     * occurs. Read-only documents may be selected. This owner-thread call uses
+     * the existing range resolver and navigation history, and preserves optional
+     * outputs on failure. The caller keeps captured source alive through return. */
+    UmiStatus UmiDocumentCoordinatorSelectCapturedSourceRange(
+        UmiDocumentCoordinator *coordinator, UmiDocumentId document,
+        const char *captured_uri, const char *captured_source, size_t source_bytes,
+        UmiEditorTextPosition start, UmiEditorTextPosition end,
+        size_t *out_offset, size_t *out_bytes);
     /* Resolve an already open view by URI or normalized local path. Otherwise,
  * decode a local file URI and load through the coordinator's existing provider.
  * Resolve the requested range before creating a new tab. Existing unsaved

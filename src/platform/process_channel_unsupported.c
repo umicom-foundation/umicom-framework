@@ -44,3 +44,18 @@ UmiStatus UmiProcessChannelTerminate(UmiProcessChannel*c){
 void UmiProcessChannelDestroy(UmiProcessChannel*c){
     free(c);
 }
+
+/* Unsupported hosts report the same capability limit for the additive entry points. */
+UmiStatus UmiProcessChannelOpenProgram(const UmiProcessChannelRequest *request,
+    const UmiEnvironmentVariable *environment, size_t count, UmiProcessChannel **out)
+{
+    (void)request; (void)environment; (void)count;
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out = NULL;
+    return UMI_STATUS_UNAVAILABLE;
+}
+UmiStatus UmiProcessChannelCloseInput(UmiProcessChannel *channel)
+{
+    (void)channel;
+    return UMI_STATUS_UNAVAILABLE;
+}

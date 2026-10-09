@@ -561,6 +561,7 @@ static int verify_canvas_edit_controls(void)
     UmiApplicationSuiteLayoutRect original = { 0.125, 0.125, 0.50, 0.50 };
     UmiApplicationSuiteLayoutRect observed;
     GtkWidget *root = NULL;
+    GtkWindow *native_host = NULL;
     GtkWidget *canvas;
     GtkWidget *panel;
     GtkWidget *title;
@@ -588,6 +589,18 @@ static int verify_canvas_edit_controls(void)
     title = find_tag(root, "workstation.canvas.drag.alpha");
     REQUIRE(canvas != NULL && panel != NULL && title != NULL);
     REQUIRE(gtk_widget_get_focusable(title));
+    /* Public GTK hit testing requires mapped widgets. A real fixture host keeps
+     * the contains checks on the same path used by pointer input, instead of
+     * bypassing GTK through the class virtual method. No desktop input is sent. */
+    native_host = GTK_WINDOW(g_object_ref_sink(gtk_window_new()));
+    gtk_window_set_default_size(native_host, 1100, 900);
+    gtk_window_set_child(native_host, root);
+    gtk_window_present(native_host);
+    for (unsigned wait = 0U; wait < 5000U && !gtk_widget_get_mapped(canvas); ++wait) {
+        (void)g_main_context_iteration(NULL, FALSE);
+        g_usleep(1000U);
+    }
+    REQUIRE(gtk_widget_get_mapped(canvas));
     gtk_widget_allocate(canvas, 1000, 800, -1, NULL);
     for (index = 0U; index < sizeof(edges) / sizeof(edges[0]); ++index) {
         GtkWidget *handle;
@@ -596,6 +609,7 @@ static int verify_canvas_edit_controls(void)
         REQUIRE(written >= 0 && (size_t)written < sizeof(tag));
         handle = find_tag(root, tag);
         REQUIRE(handle != NULL && gtk_widget_get_visible(handle) && gtk_widget_get_sensitive(handle));
+        REQUIRE(gtk_widget_get_mapped(handle));
         REQUIRE(gtk_widget_compute_bounds(handle, panel, &bounds));
         REQUIRE(bounds.origin.x >= 0.0F && bounds.origin.y >= 0.0F);
         REQUIRE(bounds.size.width > 0.0F && bounds.size.height > 0.0F);
@@ -603,11 +617,31 @@ static int verify_canvas_edit_controls(void)
         REQUIRE(bounds.origin.y + bounds.size.height <= 400.0F);
         /* The square corner is a visual allocation, not a square hit target.
          * Interior chrome must remain reachable through its L-shaped border. */
+        /* Drawing bounds include CSS extents in panel coordinates. contains()
+         * expects the handle's content coordinates, which can be smaller.
+         * Keep the old assertions for review; the checks below preserve their
+         * border/interior intent and also reject points outside the content. */
+#if 0
         REQUIRE(gtk_widget_contains(handle, bounds.size.width / 2.0, bounds.size.height / 2.0) ==
             !((edges[index].left || edges[index].right) && (edges[index].top || edges[index].bottom)));
         REQUIRE(gtk_widget_contains(handle,
             edges[index].left ? 1.0 : bounds.size.width - 1.0,
             edges[index].top ? 1.0 : bounds.size.height - 1.0));
+#endif
+        {
+            const double content_width = gtk_widget_get_width(handle);
+            const double content_height = gtk_widget_get_height(handle);
+            REQUIRE(content_width > 0.0 && content_height > 0.0);
+            const double inset_x = MIN(1.0, content_width / 2.0);
+            const double inset_y = MIN(1.0, content_height / 2.0);
+            REQUIRE(gtk_widget_contains(handle, content_width / 2.0, content_height / 2.0) ==
+                !((edges[index].left || edges[index].right) && (edges[index].top || edges[index].bottom)));
+            REQUIRE(gtk_widget_contains(handle,
+                edges[index].left ? inset_x : content_width - inset_x,
+                edges[index].top ? inset_y : content_height - inset_y));
+            REQUIRE(!gtk_widget_contains(handle, -1.0, content_height / 2.0));
+            REQUIRE(!gtk_widget_contains(handle, content_width + 1.0, content_height / 2.0));
+        }
         {
             GtkWidget *close_button = find_tag(root, "alpha.action.close");
             graphene_point_t button_point;
@@ -713,6 +747,13 @@ static int verify_canvas_edit_controls(void)
     drain_ready_callbacks();
     REQUIRE(fixture.requests == before);
 cleanup:
+    /* Detach the retained root before retiring the native host. The workspace
+     * still releases its own controllers and provider content below. */
+    if (native_host != NULL) {
+        gtk_window_set_child(native_host, NULL);
+        gtk_window_destroy(native_host);
+        g_object_unref(native_host);
+    }
     umi_gtk4_workspace_layout_host_destroy(fixture.host);
     if (keys != NULL) g_object_unref(keys);
     if (focus != NULL) g_object_unref(focus);
@@ -724,8 +765,13 @@ cleanup:
     return failed;
 }
 
+/* The earlier fixture description is retained below for review. Hit-region
+ * checks now present a host because GTK does not hit-test unmapped widgets. */
+#if 0
 /* A display connection is required to construct GTK objects, but no window
  * is realized or presented. Missing display support is a skip, not a pass. */
+#endif
+/* Missing display support remains a skip rather than a successful check. */
 int main(void)
 {
     CanvasFixture fixture = {0};

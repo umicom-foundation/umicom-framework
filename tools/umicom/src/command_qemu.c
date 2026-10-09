@@ -17,6 +17,8 @@
 #include <stdlib.h>
 #endif
 
+/* The native command entry point now captures Unicode arguments in Framework for all commands. The former QEMU-only conversion is retained for review; this adapter forwards the already converted argument slice. The previous implementation is retained for engineering review. */
+#if 0
 int umi_cli_command_qemu(int argc, char **argv)
 {
 #ifdef _WIN32
@@ -55,4 +57,11 @@ done:
 #else
     return UmiVmBootMain(argc, argv);
 #endif
+}
+#endif
+int umi_cli_command_qemu(int argc, char **argv)
+{
+    /* The shared native entry point already owns the original argument vector.
+     * QEMU routing therefore follows the same Unicode boundary as repository and build commands. */
+    return UmiVmBootMain(argc, argv);
 }

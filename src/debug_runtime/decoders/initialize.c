@@ -70,6 +70,7 @@ UmiStatus umi_debug_runtime_decode_initialize(
     CAP(supports_terminate_threads_request, "supportsTerminateThreadsRequest");
     CAP(supports_goto_targets_request, "supportsGotoTargetsRequest");
     CAP(supports_log_points, "supportsLogPoints");
+    CAP(supports_exception_info_request, "supportsExceptionInfoRequest");
 #undef CAP
     return UMI_STATUS_OK;
 }

@@ -6,6 +6,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 
+#include "umicom/ui/gtk4/selection_list.h"
 #include "../bank_audit/fixture.h"
 static int VerifyNativeAudit(const char *name)
 {
@@ -26,7 +27,11 @@ static int VerifyNativeAudit(const char *name)
     Id(&f.operator.id,"operator");f.operator.capabilities=UMI_BANK_CAP_OPERATE|UMI_BANK_CAP_TEST_FUNDING;AuditPopulate(&f);
     GtkWidget *capture=ActivityFind(window,"bank.audit.capture");CHECK(GTK_IS_BUTTON(capture) && !gtk_widget_get_sensitive(ui->auditCopy));
     g_signal_emit_by_name(capture,"clicked");CHECK(ui->auditReport!=NULL && Contains(ui->auditSummary,"Captured revision: 9"));
+/* Check the absence of a business choice, including the explicit GTK prompt. Retain the earlier raw-index assertion for review. */
+#if 0
     CHECK(gtk_drop_down_get_selected(ui->auditRows)==GTK_INVALID_LIST_POSITION && gtk_widget_get_sensitive(ui->auditCopy));
+#endif
+    CHECK(UmiGtk4SelectionListSelected(ui->auditRows)==GTK_INVALID_LIST_POSITION && gtk_widget_get_sensitive(ui->auditCopy));
     UmiBankAuditReport *original=ui->auditReport;
     if(strcmp(name,"audit-capture")==0){CHECK(Contains(ui->auditSummary,"Matching accepted commands: 9 of 9"));}
     else if(strcmp(name,"audit-filters")==0){
@@ -35,7 +40,11 @@ static int VerifyNativeAudit(const char *name)
     }else if(strcmp(name,"audit-draft-filters")==0){
         gtk_drop_down_set_selected(ui->auditRows,5);CHECK(Contains(ui->auditDetail,"bank-journal-6"));
         gtk_editable_set_text(GTK_EDITABLE(ui->auditActor),"checker");CHECK(ui->auditReport==original && Contains(ui->auditDetail,"bank-journal-6"));
+/* Check the absence of a business choice, including the explicit GTK prompt. Retain the earlier raw-index assertion for review. */
+#if 0
         g_signal_emit_by_name(capture,"clicked");CHECK(AuditSummary(ui->auditReport).count==1 && gtk_drop_down_get_selected(ui->auditRows)==GTK_INVALID_LIST_POSITION);
+#endif
+        g_signal_emit_by_name(capture,"clicked");CHECK(AuditSummary(ui->auditReport).count==1 && UmiGtk4SelectionListSelected(ui->auditRows)==GTK_INVALID_LIST_POSITION);
         CHECK(!Contains(ui->auditDetail,"bank-journal-6"));
     }else if(strcmp(name,"audit-invalid")==0){
         gtk_editable_set_text(GTK_EDITABLE(ui->auditFrom),"2026-02-30");g_signal_emit_by_name(capture,"clicked");

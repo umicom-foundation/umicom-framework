@@ -44,6 +44,22 @@ typedef struct UmiCompilerDiagnosticFields {
 UmiStatus UmiCompilerDiagnosticParseText(const char *text,
     UmiCompilerDiagnosticFields *outFields);
 
+/** Read the first diagnostic record in a NUL-terminated transcript.
+ * CMake location headers collect following indented explanation paragraphs.
+ * Call stacks, unindented progress text and subsequent CMake headers remain
+ * separate records. Other supported formats consume one physical line.
+ *
+ * The input, fields and byte-count storage must be distinct. With valid
+ * arguments, outConsumed advances over the record (or the first ordinary
+ * line), including line endings, even when the record exceeds message capacity.
+ * It is zero only for empty input. Fields change only on OK. An oversized
+ * message returns CAPACITY_EXCEEDED without a cropped diagnostic; the caller
+ * can retain the original transcript and count the unrepresented record.
+ * Unsupported terminal control sequences are not interpreted as continuations.
+ * Invalid arguments leave both outputs unchanged. */
+UmiStatus UmiCompilerDiagnosticParseBlock(const char *text,
+    UmiCompilerDiagnosticFields *outFields, size_t *outConsumed);
+
 /**
  * Provide the compiler diagnostic parser operation used by this module and its client
  * applications.

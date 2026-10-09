@@ -707,6 +707,8 @@ int umi_path_equal(const char *left, const char *right)
 }
 
 /* Provide the path is within operation used by this module and its client applications. */
+/* Root directories already supply their boundary separator. The earlier extra-separator test rejected legitimate root children and is retained for review. The previous implementation is retained for engineering review. */
+#if 0
 int umi_path_is_within(const char *parent, const char *candidate)
 {
     char parent_normalised[UMI_PATH_CAPACITY];
@@ -739,5 +741,45 @@ int umi_path_is_within(const char *parent, const char *candidate)
     if (candidate_normalised[parent_length] == '\0') {
         return 1;
     }
+    return is_separator(candidate_normalised[parent_length]);
+}
+#endif
+int umi_path_is_within(const char *parent, const char *candidate)
+{
+    char parent_normalised[UMI_PATH_CAPACITY];
+    char candidate_normalised[UMI_PATH_CAPACITY];
+    size_t index;
+    size_t parent_length;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (umi_path_normalise(parent,
+                           parent_normalised,
+                           sizeof(parent_normalised)) != UMI_STATUS_OK ||
+        umi_path_normalise(candidate,
+                           candidate_normalised,
+                           sizeof(candidate_normalised)) != UMI_STATUS_OK) {
+        return 0;
+    }
+    parent_length = strlen(parent_normalised);
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (strlen(candidate_normalised) < parent_length) {
+        return 0;
+    }
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < parent_length; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (!path_character_equal(parent_normalised[index],
+                                  candidate_normalised[index])) {
+            return 0;
+        }
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (candidate_normalised[parent_length] == '\0') {
+        return 1;
+    }
+    /* A filesystem root already ends at a separator. Its children therefore do
+     * not need a second separator after the matched prefix ("/" contains "/src").
+     * Non-root parents still require a boundary so "project" excludes "project2". */
+    if (parent_length != 0U && is_separator(parent_normalised[parent_length - 1U]))
+        return 1;
     return is_separator(candidate_normalised[parent_length]);
 }

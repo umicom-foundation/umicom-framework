@@ -237,8 +237,15 @@ int main(int argc, char **argv)
     }
     if (strcmp(mode, "ignore-names") == 0)
     {
+/* The old mixed-case name aliases the saved key on Windows and overwrites its contents. Keep that setup for review; the new name still checks rejection of uppercase keys without colliding. */
+#if 0
         const char *names[] = {"source.c", "legacy.recovery", "../escape",
                                "0123456789ABCDEF0123456789abcdef.draft", "short.draft"};
+#endif
+        /* Use an invalid mixed-case key that is distinct even on case-insensitive
+         * filesystems. The unrelated-name probe must not replace the valid draft. */
+        const char *names[] = {"source.c", "legacy.recovery", "../escape",
+                               "1123456789ABCDEF0123456789abcdef.draft", "short.draft"};
         for (size_t i = 0U; i < sizeof(names) / sizeof(names[0]); ++i)
             if (i != 2U)
                 CHECK(UmiRootedFileWrite(directory, names[i], "x", 1U) == UMI_STATUS_OK);

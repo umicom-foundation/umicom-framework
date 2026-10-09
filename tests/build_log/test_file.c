@@ -16,6 +16,16 @@ int main(int argc, char **argv)
     if (argc != 2) return 2;
     const char *name = argv[1]; char root[UMI_PATH_CAPACITY], path[UMI_PATH_CAPACITY];
     FixtureDirectory(root); FixturePath(path, root, strcmp(name, "unicode") == 0 ? "caf\xc3\xa9.log" : "output.log");
+    /* Hidden project folders are valid path components. Validate them without
+     * creating those folders, and keep traversal/device rejection in the same
+     * regression so widening accepted names cannot weaken the path boundary. */
+    const char *hidden[] = {".cmake/api/v1/reply/index.json", ".umicom/recovery.log",
+        ".git/config", ".profile", ".CON"};
+    for (size_t index = 0U; index < sizeof(hidden) / sizeof(hidden[0]); ++index) {
+        char candidate[UMI_PATH_CAPACITY];
+        FixturePath(candidate, root, hidden[index]);
+        CHECK(UmiOutputFileValidatePath(candidate) == UMI_STATUS_OK);
+    }
     UmiOutputFile *file = NULL; UmiOutputFileSnapshot state;
     if (strcmp(name, "invalid") == 0) {
         CHECK(UmiOutputFileCreate("relative.log", &file) == UMI_STATUS_INVALID_ARGUMENT && file == NULL);

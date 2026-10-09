@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Use compiler settings with Studio source tools</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:900px;margin:3rem auto;padding:0 1.5rem;color:#172535}h1,h2{line-height:1.2}code{background:#eef2f6;padding:.1rem .25rem}li{margin:.5rem 0}a{color:#075b9b}table{border-collapse:collapse}th,td{border:1px solid #cad4df;padding:.6rem;text-align:left}</style>
+</head><body><h1>Use compiler settings with Studio source tools</h1>
+<p>A C source file often depends on include folders, preprocessor definitions and a language standard chosen by its build system. A compiler database records those choices in <code>compile_commands.json</code>. Framework reads the records for inspection; the source tools can then pass the database folder to clangd, a local language server.</p>
+<h2>Prepare the project</h2><ol>
+<li>Open your project in Studio and open <strong>Project Build Settings</strong>.</li>
+<li>Check the project, build folder and configure preset. When a preset chooses another build directory, make the displayed build folder match it.</li>
+<li>Choose <strong>Enable compiler database export</strong>. This prepares <code>-DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON</code> in the CMake definitions field. An existing definition of that name is replaced; other definitions remain.</li>
+<li>Review the draft, choose <strong>Apply Settings</strong>, then run <strong>Configure</strong>. Configure can execute the project's build scripts, so use a project you trust.</li>
+<li>Use a Ninja or Makefile generator. CMake does not provide this export for every generator. After successful configuration, the build directory should contain <code>compile_commands.json</code>.</li>
+</ol>
+<h2>Inspect the recorded settings</h2><ol>
+<li>In Build Settings, expand <strong>Inspect compiler database</strong>. The folder begins with the profile's build directory when the form opens. Edit it if you configured another build tree.</li>
+<li>Choose <strong>Read compiler database</strong>. Reading runs in the background and does not compile or execute any recorded command.</li>
+<li>Change <strong>Command row</strong> to inspect another entry. The preview shows its source path, working folder, optional output, and recorded arguments or command.</li>
+<li>To find a source, enter its absolute path in <strong>Find source file</strong> and read again. The inspector selects the first matching record. Several rows may compile the same source with different settings; those rows are retained.</li>
+<li>If inputs change or the panel is hidden during a read, read again. Cancel stops publication of the pending result; an operating-system file read may finish before cancellation is observed.</li>
+</ol>
+<h2>Use the folder in clangd</h2><ol>
+<li>Open a C-family source operation, such as completion, source diagnostics or definition lookup. Review the language server executable and use your installed <code>clangd</code>.</li>
+<li>Expand <strong>Compiler database (clangd)</strong>. Enter the absolute folder containing the database and choose <strong>Read compiler database</strong>.</li>
+<li>Inspect the rows, then choose <strong>Use this folder for clangd</strong>. This prepares one <code>--compile-commands-dir=</code> argument in the current source-operation form. Existing ordinary server arguments remain.</li>
+<li>Review the executable and arguments, then explicitly request the source operation. Preparing the arguments does not start a server, approve an edit or save settings.</li>
+<li>The existing <strong>Save server for this language</strong> control can save the argument draft. That setting is language-wide in the selected application settings store, not tied to one project. Recheck the database folder when changing projects.</li>
+</ol>
+<p>The helper is specifically for clangd. Other language servers may use different options. Existing response-file arguments, duplicate database options and an end-of-options marker are refused by the helper; inspect those settings manually. It does not enable clangd's compiler-query permission or start a compiler to discover system headers.</p>
+<h2>Understand the limits</h2>
+<table><tr><th>Input</th><th>Limit</th></tr><tr><td>Database file</td><td>64 MiB; 65,536 command rows</td></tr><tr><td>Arguments in one row</td><td>4,096</td></tr><tr><td>Each argument or recorded command</td><td>65,535 UTF-8 bytes</td></tr><tr><td>JSON parsing</td><td>2,097,152 nodes and 128 nested containers</td></tr><tr><td>Visible command preview</td><td>First 256 arguments and approximately 128 KiB; omitted text is labelled</td></tr></table>
+<p>The complete file is validated before any rows are offered. Malformed JSON, duplicate known fields, invalid paths and exceeded bounds reject the snapshot. A final symlink or device is refused by the regular-file reader; parent directory aliases may still be followed. Choose a folder you control.</p>
+<p>A successful read proves only that this file was readable and structurally supported. It does not prove the database is current, the compiler exists, all headers are available or the source will compile. Configure again after changing build settings. Headers may not have their own records; clangd can infer their settings from source files. This inspector does not select which variant clangd will use.</p>
+<h2>Troubleshooting</h2><ol>
+<li><strong>No database:</strong> check the export definition, selected generator and actual preset build folder, then configure again.</li>
+<li><strong>Source is not recorded:</strong> verify its absolute path and whether it belongs to a configured target. A header or generated file may be absent.</li>
+<li><strong>Includes still cannot be found:</strong> inspect the command for the expected include folders, select the correct build database and check that the SDK exists locally.</li>
+<li><strong>Database read rejected:</strong> regenerate it with the project's build tool. Do not edit a truncated file or assume a partially displayed list is complete; the inspector publishes no partial database.</li>
+</ol>
+<p>Further reading: <a href="https://cmake.org/cmake/help/latest/variable/CMAKE_EXPORT_COMPILE_COMMANDS.html">CMake compiler database export</a>, <a href="https://clang.llvm.org/docs/JSONCompilationDatabase.html">Clang database format</a>, and <a href="https://clangd.llvm.org/design/compile-commands">how clangd uses compile commands</a>.</p>
+</body></html>

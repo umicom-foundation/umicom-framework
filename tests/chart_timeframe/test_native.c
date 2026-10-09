@@ -7,8 +7,11 @@
  *---------------------------------------------------------------------------*/
 
 
+#include "umicom/ui/gtk4/automation.h"
 #include "fixture.h"
 #include "umicom/trading_ui/gtk4/interactive_chart.h"
+/* The chart inspector owns controls while collapsed. Shared logical lookup replaces the rendered-child walk, retained here for review. The previous implementation is retained for engineering review. */
+#if 0
 static GtkWidget *Find(GtkWidget *root,const char *id)
 {
     const char *tag=g_object_get_data(G_OBJECT(root),"umicom-automation-id");
@@ -16,6 +19,12 @@ static GtkWidget *Find(GtkWidget *root,const char *id)
     for(GtkWidget *child=gtk_widget_get_first_child(root);child!=NULL;child=gtk_widget_get_next_sibling(child)){
         GtkWidget *found=Find(child,id);if(found!=NULL)return found;
     }return NULL;
+}
+#endif
+static GtkWidget *Find(GtkWidget *root,const char *id)
+{
+    /* Read controls owned by collapsed chart inspectors without changing layout. */
+    return umi_gtk4_automation_find_tagged_widget(root, id);
 }
 int main(int argc,char **argv)
 {

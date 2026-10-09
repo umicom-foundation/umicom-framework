@@ -20,6 +20,20 @@ if(TARGET umicom_creative_workspace_gtk4)
     # Products share preview ownership and playback lifecycle through Framework.
     target_sources(umicom_creative_workspace_gtk4 PRIVATE
         "${_audio_root}/adapters/gtk4/creative_audition_gtk4.c")
+    # Detect optional playback separately from editing. Preflight avoids a fatal
+    # native backend constructor when a runtime plugin has not been installed.
+    target_sources(umicom_creative_workspace_gtk4 PRIVATE
+        "${_audio_root}/adapters/gtk4/creative_playback_backend.c")
+    find_package(PkgConfig QUIET)
+    if(PkgConfig_FOUND)
+        pkg_check_modules(UMICOM_CREATIVE_GSTREAMER QUIET IMPORTED_TARGET gstreamer-1.0)
+    endif()
+    if(TARGET PkgConfig::UMICOM_CREATIVE_GSTREAMER)
+        target_link_libraries(umicom_creative_workspace_gtk4 PRIVATE PkgConfig::UMICOM_CREATIVE_GSTREAMER)
+        target_compile_definitions(umicom_creative_workspace_gtk4 PRIVATE UMI_CREATIVE_HAS_GSTREAMER=1)
+        install(FILES "${_audio_root}/cmake/UmicomCreativePlaybackDependencies.cmake"
+            DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework" COMPONENT Framework)
+    endif()
     install(FILES "${_audio_root}/include/umicom/ui/gtk4/creative_audition.h"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)
     install(FILES "${_audio_root}/include/umicom/ui/gtk4/creative_audio.h"

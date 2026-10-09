@@ -13,6 +13,7 @@ struct UmiCtestDiscoveryJob {
     UmiTask *task;
     UmiTestPlatformCtestImportOptions options;
     UmiTestPlatformCtestDiscoveryOptions execution;
+    char toolDirectory[UMI_CTEST_JOB_PATH_CAPACITY];
     UmiTestPlatformItemRegistry *items, *stagedItems;
     UmiTestPlatformSuiteRegistry *suites, *stagedSuites;
     UmiTestPlatformDiscoveryRegistry *discoveries, *stagedDiscoveries;
@@ -46,6 +47,8 @@ static UmiStatus UmiCtestDiscoveryWorker(UmiTaskContext *context, void *payload)
     return job->workerStatus;
 }
 
+/* Discovery copies its tool directory before queuing so a settings edit or closed form cannot change a running request. The previous implementation is retained for engineering review. */
+#if 0
 UmiStatus UmiCtestDiscoveryJobStart(UmiTaskQueue *queue,
     const UmiTestPlatformCtestImportOptions *options,
     const UmiTestPlatformCtestDiscoveryOptions *execution,
@@ -72,6 +75,69 @@ UmiStatus UmiCtestDiscoveryJobStart(UmiTaskQueue *queue,
     if (job == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     job->options = *options;
     if (execution != NULL) job->execution = *execution;
+    job->items = items; job->suites = suites; job->discoveries = discoveries;
+    job->generation = generation; job->ownerThread = umi_thread_current_id();
+    job->itemRevision = umi_test_platform_item_registry_revision(items);
+    job->suiteRevision = umi_test_platform_suite_registry_revision(suites);
+    job->discoveryRevision = umi_test_platform_discovery_registry_revision(discoveries);
+    job->workerStatus = UMI_STATUS_BUSY; job->finalStatus = UMI_STATUS_BUSY;
+    status = UmiTestPlatformItemRegistryClone(items, &job->stagedItems);
+    if (status == UMI_STATUS_OK)
+        status = UmiTestPlatformSuiteRegistryClone(suites, &job->stagedSuites);
+    if (status == UMI_STATUS_OK)
+        status = UmiTestPlatformDiscoveryRegistryClone(discoveries, &job->stagedDiscoveries);
+    config.label = "CTest metadata discovery";
+    config.function = UmiCtestDiscoveryWorker; config.user_data = job;
+    if (status == UMI_STATUS_OK) status = umi_task_create(&config, &job->task);
+    if (status == UMI_STATUS_OK) status = umi_task_queue_submit(queue, job->task);
+    if (status != UMI_STATUS_OK) {
+        UmiCtestDiscoveryDispose(job);
+        return status;
+    }
+    *outJob = job;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus UmiCtestDiscoveryJobStart(UmiTaskQueue *queue,
+    const UmiTestPlatformCtestImportOptions *options,
+    const UmiTestPlatformCtestDiscoveryOptions *execution,
+    UmiTestPlatformItemRegistry *items, UmiTestPlatformSuiteRegistry *suites,
+    UmiTestPlatformDiscoveryRegistry *discoveries, uint64_t generation,
+    UmiCtestDiscoveryJob **outJob)
+{
+    UmiStatus status;
+    UmiCtestDiscoveryJob *job;
+    UmiTaskConfig config = {0};
+    if (outJob == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outJob = NULL;
+    if (queue == NULL || items == NULL || suites == NULL || discoveries == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = UmiCtestOptionsValidate(options);
+    if (status != UMI_STATUS_OK) return status;
+    if (execution != NULL && execution->cancellation != NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (execution != NULL &&
+        (execution->maximum_output_bytes > UMI_TEST_PLATFORM_CTEST_MAX_BYTES ||
+         execution->maximum_tests >= UMI_TEST_PLATFORM_ITEM_MAX_CAPACITY))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (execution != NULL && execution->tool_directory != NULL &&
+        execution->tool_directory[0] != '\0') {
+        status = UmiProcessSearchDirectoryValidate(execution->tool_directory);
+        if (status != UMI_STATUS_OK) return status;
+        if (strlen(execution->tool_directory) >= UMI_CTEST_JOB_PATH_CAPACITY)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    job = calloc(1U, sizeof(*job));
+    if (job == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    job->options = *options;
+    if (execution != NULL) {
+        job->execution = *execution;
+        if (execution->tool_directory != NULL)
+            memcpy(job->toolDirectory,execution->tool_directory,
+                strlen(execution->tool_directory)+1U);
+    }
+    /* The worker borrows only the job's string, never the settings form. */
+    job->execution.tool_directory = job->toolDirectory;
     job->items = items; job->suites = suites; job->discoveries = discoveries;
     job->generation = generation; job->ownerThread = umi_thread_current_id();
     job->itemRevision = umi_test_platform_item_registry_revision(items);

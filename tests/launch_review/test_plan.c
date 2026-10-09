@@ -8,6 +8,7 @@
 
 #include "umicom/build/launch_plan.h"
 #include "umicom/build/cmake_provider.h"
+#include "umicom/platform/path.h"
 #include <stdio.h>
 #include <string.h>
 #define CHECK(test)                                                                                          \
@@ -42,9 +43,18 @@ int main(int argc, char **argv)
         strcpy(profile.run_arguments, "--file \"notes for review.txt\" \"\" 'caf\xc3\xa9' '\"quoted\"'");
         strcpy(profile.run_working_directory, "sample data");
         CHECK(UmiBuildLaunchPlanCreate(&profile, ROOT, &plan) == UMI_STATUS_OK);
-        CHECK(strcmp(plan.run_program, ROOT "/bin/notes") == 0 &&
+        /* The shared path API produces native separators. Compare complete normalised paths without requiring slash spelling; retain the earlier assertion for review. */
+#if 0
+CHECK(strcmp(plan.run_program, ROOT "/bin/notes") == 0 &&
               strcmp(plan.debug_program, plan.run_program) == 0);
-        CHECK(strcmp(plan.working_directory, ROOT "/sample data") == 0 && !plan.run_uses_program_lookup);
+#endif
+CHECK(umi_path_equal(plan.run_program, ROOT "/bin/notes") &&
+              umi_path_equal(plan.debug_program, plan.run_program));
+        /* The shared path API produces native separators. Compare complete normalised paths without requiring slash spelling; retain the earlier assertion for review. */
+#if 0
+CHECK(strcmp(plan.working_directory, ROOT "/sample data") == 0 && !plan.run_uses_program_lookup);
+#endif
+CHECK(umi_path_equal(plan.working_directory, ROOT "/sample data") && !plan.run_uses_program_lookup);
         CHECK(plan.argument_count == 5U && strcmp(plan.arguments[0], "--file") == 0);
         CHECK(strcmp(plan.arguments[1], "notes for review.txt") == 0 && plan.arguments[2][0] == '\0');
         CHECK(strcmp(plan.arguments[3], "caf\xc3\xa9") == 0 && strcmp(plan.arguments[4], "\"quoted\"") == 0);
@@ -53,8 +63,13 @@ int main(int argc, char **argv)
             saved = plan;
             memset(&plan, 0, sizeof(plan));
             memset(&profile, 0, sizeof(profile));
-            CHECK(strcmp(saved.arguments[1], "notes for review.txt") == 0 &&
+            /* The shared path API produces native separators. Compare complete normalised paths without requiring slash spelling; retain the earlier assertion for review. */
+#if 0
+CHECK(strcmp(saved.arguments[1], "notes for review.txt") == 0 &&
                   strcmp(saved.debug_program, ROOT "/bin/notes") == 0);
+#endif
+CHECK(strcmp(saved.arguments[1], "notes for review.txt") == 0 &&
+                  umi_path_equal(saved.debug_program, ROOT "/bin/notes"));
         }
         if (strcmp(mode, "provider") == 0)
         {
@@ -63,8 +78,13 @@ int main(int argc, char **argv)
             strcpy(profile.run_program, plan.run_program);
             CHECK(umi_build_provider_create_command(&provider, &profile, UMI_BUILD_PHASE_RUN, &command) ==
                   UMI_STATUS_OK);
-            CHECK(strcmp(command.program, plan.run_program) == 0 &&
+            /* The shared path API produces native separators. Compare complete normalised paths without requiring slash spelling; retain the earlier assertion for review. */
+#if 0
+CHECK(strcmp(command.program, plan.run_program) == 0 &&
                   strcmp(command.working_directory, plan.working_directory) == 0);
+#endif
+CHECK(strcmp(command.program, plan.run_program) == 0 &&
+                  umi_path_equal(command.working_directory, plan.working_directory));
             CHECK(command.argument_count == plan.argument_count);
             for (size_t i = 0U; i < plan.argument_count; ++i)
                 CHECK(strcmp(command.arguments[i], plan.arguments[i]) == 0);
@@ -75,13 +95,21 @@ int main(int argc, char **argv)
         strcpy(profile.run_program, "notes");
         CHECK(UmiBuildLaunchPlanCreate(&profile, ROOT, &plan) == UMI_STATUS_OK);
         CHECK(plan.run_uses_program_lookup && strcmp(plan.run_program, "notes") == 0);
-        CHECK(strcmp(plan.debug_program, ROOT "/notes") == 0 && strcmp(plan.working_directory, ROOT) == 0);
+        /* The shared path API produces native separators. Compare complete normalised paths without requiring slash spelling; retain the earlier assertion for review. */
+#if 0
+CHECK(strcmp(plan.debug_program, ROOT "/notes") == 0 && strcmp(plan.working_directory, ROOT) == 0);
+#endif
+CHECK(umi_path_equal(plan.debug_program, ROOT "/notes") && umi_path_equal(plan.working_directory, ROOT));
     }
     else if (strcmp(mode, "dot-relative") == 0)
     {
         strcpy(profile.run_program, "./notes");
         CHECK(UmiBuildLaunchPlanCreate(&profile, ROOT, &plan) == UMI_STATUS_OK);
-        CHECK(!plan.run_uses_program_lookup && strcmp(plan.run_program, ROOT "/notes") == 0);
+        /* The shared path API produces native separators. Compare complete normalised paths without requiring slash spelling; retain the earlier assertion for review. */
+#if 0
+CHECK(!plan.run_uses_program_lookup && strcmp(plan.run_program, ROOT "/notes") == 0);
+#endif
+CHECK(!plan.run_uses_program_lookup && umi_path_equal(plan.run_program, ROOT "/notes"));
     }
     else if (strcmp(mode, "absolute") == 0)
     {
@@ -89,8 +117,13 @@ int main(int argc, char **argv)
         strcpy(profile.run_working_directory, ROOT "/data");
         strcpy(profile.run_argument, "--two words");
         CHECK(UmiBuildLaunchPlanCreate(&profile, ROOT, &plan) == UMI_STATUS_OK);
-        CHECK(!plan.run_uses_program_lookup && strcmp(plan.run_program, OTHER) == 0 &&
+        /* The shared path API produces native separators. Compare complete normalised paths without requiring slash spelling; retain the earlier assertion for review. */
+#if 0
+CHECK(!plan.run_uses_program_lookup && strcmp(plan.run_program, OTHER) == 0 &&
               strcmp(plan.debug_program, OTHER) == 0);
+#endif
+CHECK(!plan.run_uses_program_lookup && umi_path_equal(plan.run_program, OTHER) &&
+              umi_path_equal(plan.debug_program, OTHER));
         CHECK(plan.argument_count == 1U && strcmp(plan.arguments[0], "--two words") == 0);
     }
     else if (strcmp(mode, "missing") == 0 || strcmp(mode, "conflict") == 0 ||
