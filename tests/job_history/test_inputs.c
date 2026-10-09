@@ -103,11 +103,18 @@ int main(int argc, char **argv)
     else if (strcmp(mode, "invalid") == 0)
     {
         char longName[UMI_JOB_INPUT_NAME_CAPACITY];
+        char emptyDigest[UMI_JOB_IDENTITY_DIGEST_CAPACITY] = {0};
         memset(longName, 'x', sizeof(longName));
         CHECK(UmiJobInputsAddBytes(left, longName, NULL, 0U) == UMI_STATUS_CAPACITY_EXCEEDED);
         CHECK(UmiJobInputsAddBytes(left, "bad\nname", NULL, 0U) == UMI_STATUS_INVALID_ARGUMENT);
         CHECK(UmiJobInputsAddBytes(left, "name", NULL, 1U) == UMI_STATUS_INVALID_ARGUMENT);
+        /* Preserve empty-digest rejection while supplying the API's declared
+         * readable capacity. The original one-byte literal call is retained for
+         * review; the replacement still contains an empty, invalid digest. */
+#if 0
         CHECK(UmiJobInputsAddDigest(left, "name", "") == UMI_STATUS_INVALID_ARGUMENT);
+#endif
+        CHECK(UmiJobInputsAddDigest(left, "name", emptyDigest) == UMI_STATUS_INVALID_ARGUMENT);
         memset(digest, 'A', 64U);
         digest[64] = '\0';
         CHECK(UmiJobInputsAddDigest(left, "name", digest) == UMI_STATUS_INVALID_ARGUMENT);

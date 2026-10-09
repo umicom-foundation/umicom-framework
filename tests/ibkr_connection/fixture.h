@@ -14,9 +14,12 @@ typedef struct Fixture {
     UmiStatus openStatus,readyStatus,readStatus,writeStatus;
     bool eof,zeroWrite;
 } Fixture;
-static UmiStatus FOpen(void *p,uint16_t port){Fixture *f=p;(void)port;++f->opens;return f->openStatus;}
-static UmiStatus FReady(void *p){return ((Fixture *)p)->readyStatus;}
-static UmiStatus FRead(void *p,void *buffer,size_t count,size_t *out)
+/* Header-owned helpers keep internal linkage and their complete behaviour.
+ * Individual fixtures use different subsets; inline permits those unused
+ * definitions without weakening strict warnings or adding artificial calls. */
+static inline UmiStatus FOpen(void *p,uint16_t port){Fixture *f=p;(void)port;++f->opens;return f->openStatus;}
+static inline UmiStatus FReady(void *p){return ((Fixture *)p)->readyStatus;}
+static inline UmiStatus FRead(void *p,void *buffer,size_t count,size_t *out)
 {
     Fixture *f=p;*out=0;if(f->readStatus!=UMI_STATUS_OK)return f->readStatus;
     if(f->inAt==f->inSize)return f->eof?UMI_STATUS_OK:UMI_STATUS_BUSY;
@@ -24,7 +27,7 @@ static UmiStatus FRead(void *p,void *buffer,size_t count,size_t *out)
     if(f->readStep&&count>f->readStep)count=f->readStep;
     memcpy(buffer,f->input+f->inAt,count);f->inAt+=count;*out=count;return UMI_STATUS_OK;
 }
-static UmiStatus FWrite(void *p,const void *buffer,size_t count,size_t *out)
+static inline UmiStatus FWrite(void *p,const void *buffer,size_t count,size_t *out)
 {
     Fixture *f=p;*out=0;if(f->writeStatus!=UMI_STATUS_OK)return f->writeStatus;
     if(f->zeroWrite)return UMI_STATUS_OK;
@@ -32,16 +35,16 @@ static UmiStatus FWrite(void *p,const void *buffer,size_t count,size_t *out)
     if(count>sizeof f->output-f->outSize)return UMI_STATUS_CAPACITY_EXCEEDED;
     memcpy(f->output+f->outSize,buffer,count);f->outSize+=count;*out=count;return UMI_STATUS_OK;
 }
-static void FClose(void *p){++((Fixture *)p)->closes;}
-static Fixture *New(void)
+static inline void FClose(void *p){++((Fixture *)p)->closes;}
+static inline Fixture *New(void)
 {
     Fixture *f=calloc(1,sizeof *f);if(!f)return NULL;
     UmiIbkrConnectionOptions o=UmiIbkrConnectionOptionsDefault();
     UmiIbkrIo io={f,FOpen,FReady,FRead,FWrite,FClose};
     if(UmiIbkrConnectionCreateWithIo(&o,&io,&f->c)!=UMI_STATUS_OK){free(f);return NULL;}return f;
 }
-static void Delete(Fixture *f){if(f){UmiIbkrConnectionDestroy(f->c);free(f);}}
-static int Feed(Fixture *f,const char *const *fields,size_t count)
+static inline void Delete(Fixture *f){if(f){UmiIbkrConnectionDestroy(f->c);free(f);}}
+static inline int Feed(Fixture *f,const char *const *fields,size_t count)
 {
     size_t size=0;for(size_t i=0;i<count;++i)size+=strlen(fields[i])+1U;
     if(size+4U>sizeof f->input-f->inSize)return 1;
@@ -55,7 +58,7 @@ static int Feed(Fixture *f,const char *const *fields,size_t count)
 #define FEED(f,...) do{const char *fields[]={__VA_ARGS__};CHECK(Feed((f),fields,sizeof fields/sizeof fields[0])==0);}while(0)
 #endif
 #define FEED(f,...) do{const char *fixtureFeedFields[]={__VA_ARGS__};CHECK(Feed((f),fixtureFeedFields,sizeof fixtureFeedFields/sizeof fixtureFeedFields[0])==0);}while(0)
-static int Connect(Fixture *f)
+static inline int Connect(Fixture *f)
 {
     CHECK(UmiIbkrConnectionOpen(f->c,0)==UMI_STATUS_OK);
     CHECK(UmiIbkrConnectionPump(f->c,0)==UMI_STATUS_OK);
@@ -67,7 +70,7 @@ static int Connect(Fixture *f)
     FEED(f,"49","1","1790586000");CHECK(UmiIbkrConnectionPump(f->c,5)==UMI_STATUS_OK);
     CHECK(f->c->snapshot.state==UMI_IBKR_READY);return 0;
 }
-static int PositionFeed(Fixture *f,const char *account,const char *quantity,const char *cost)
+static inline int PositionFeed(Fixture *f,const char *account,const char *quantity,const char *cost)
 {
     const char *fields[]={"61","3",account,"123","WORKSHOP","STK","","0","","","SMART","GBP","WORKSHOP","WORKSHOP",quantity,cost};
     return Feed(f,fields,sizeof fields/sizeof fields[0]);

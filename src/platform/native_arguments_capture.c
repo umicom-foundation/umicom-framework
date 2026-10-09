@@ -12,9 +12,20 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
+/* The former include order exposed shellapi.h before its Windows SDK types and
+ * calling conventions. The ordered includes below replace it; retain this block
+ * for source review without changing native argument capture or its cleanup. */
+#if 0
 #include <shellapi.h>
 #include <stdlib.h>
 #include <windows.h>
+#endif
+
+/* Shell declarations depend on the base Windows SDK declarations even when
+ * WIN32_LEAN_AND_MEAN limits the headers pulled in by windows.h. */
+#include <windows.h>
+#include <shellapi.h>
+#include <stdlib.h>
 
 /* Windows' narrow main arguments may already have lost characters. Read the original
  * wide command line and reject invalid UTF-16 instead of substituting another filename. */

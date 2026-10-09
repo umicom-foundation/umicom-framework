@@ -45,6 +45,13 @@ extern "C"
         int verified[UMI_DEBUG_EXCEPTION_FILTER_LIMIT];
         char message[UMI_DEBUG_EXCEPTION_FILTER_LIMIT][512];
     } UmiDebugExceptionAcknowledgement;
+    /* The original aggregate reused the persisted exception-record name from
+     * debug/exception.h. That declaration is retained below for engineering review.
+     * UmiDebugExceptionFiltersSnapshot gives session filter state its own public
+     * identity while preserving all fields, their order and Framework ownership.
+     * Callers of filter APIs must use this aggregate; UmiDebugExceptionSnapshot
+     * continues to name the established record used by registries and archives. */
+#if 0
     typedef struct UmiDebugExceptionSnapshot
     {
         UmiDebugExceptionCatalog catalog;
@@ -52,6 +59,14 @@ extern "C"
         UmiDebugExceptionAcknowledgement acknowledgement;
         int acknowledged;
     } UmiDebugExceptionSnapshot;
+#endif
+    typedef struct UmiDebugExceptionFiltersSnapshot
+    {
+        UmiDebugExceptionCatalog catalog;
+        UmiDebugExceptionSelection selection;
+        UmiDebugExceptionAcknowledgement acknowledgement;
+        int acknowledged;
+    } UmiDebugExceptionFiltersSnapshot;
     /** Read exceptionBreakpointFilters from a complete successful initialize response.
  * Required IDs and labels must be unique (IDs), bounded, valid non-NUL UTF-8.
  * Missing filters mean an empty catalogue. Unknown optional metadata is ignored;
@@ -67,8 +82,15 @@ extern "C"
  * Session ID and revision bind a later Apply to this exact state. Before an active
  * session this returns NOT_FOUND; zero filters means this adapter did not advertise any.
  * acknowledged means a successful protocol response, not that every filter verified. */
+    /* Retain the superseded declaration for review. The function name and
+     * behaviour stay stable; its output now names the correct filter aggregate
+     * so callers cannot allocate the smaller persisted exception record. */
+#if 0
     UmiStatus UmiDebugRuntimeExceptionFiltersRead(const UmiDebugRuntimePlatform *platform,
                                                   UmiDebugExceptionSnapshot *out);
+#endif
+    UmiStatus UmiDebugRuntimeExceptionFiltersRead(const UmiDebugRuntimePlatform *platform,
+                                                  UmiDebugExceptionFiltersSnapshot *out);
     /** Replace the complete selection for the same active session and revision.
  * The caller explicitly authorizes this change and keeps the platform on its owner
  * thread. Only 0/1 values for advertised entries are accepted. No condition,

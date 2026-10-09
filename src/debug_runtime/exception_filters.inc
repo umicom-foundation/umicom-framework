@@ -78,8 +78,15 @@ static UmiStatus DebugExceptionConfigure(UmiDebugRuntimePlatform *platform,
     free(reply);
     return status;
 }
+/* Retain the former signature for engineering review. The shared implementation
+ * below copies the same session-owned filter aggregate using its distinct public
+ * type, preserving session checks, field layout and the callable API name. */
+#if 0
 UmiStatus UmiDebugRuntimeExceptionFiltersRead(const UmiDebugRuntimePlatform *platform,
                                               UmiDebugExceptionSnapshot *out)
+#endif
+UmiStatus UmiDebugRuntimeExceptionFiltersRead(const UmiDebugRuntimePlatform *platform,
+                                              UmiDebugExceptionFiltersSnapshot *out)
 {
     if (platform == NULL || out == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;

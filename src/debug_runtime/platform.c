@@ -61,7 +61,13 @@ struct UmiDebugRuntimePlatform {
     int restartConfigurationPending;
     DebugDeadline restartDeadline;
     /* Advertised exception choices belong to this adapter session, never a global profile. */
+    /* Retain the superseded member declaration for review. Session filter state
+     * uses its own aggregate; the exception registry retains its existing record
+     * layout and archive contract. */
+#if 0
     UmiDebugExceptionSnapshot exceptions;
+#endif
+    UmiDebugExceptionFiltersSnapshot exceptions;
     /* Requested function breakpoints never outlive their adapter session. */
     UmiDebugFunctionSnapshot functions;
     /* Module page requests remain tied to a connection even if its name is reused. */

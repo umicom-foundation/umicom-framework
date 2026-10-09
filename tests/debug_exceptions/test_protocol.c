@@ -41,7 +41,12 @@ int main(int argc, char **argv)
     char *log = NULL;
     size_t bytes = 0U;
     UmiDebugRuntimePlatform *platform = NULL;
+    /* Retain the prior declaration for review. The protocol checks still cover
+     * the same session state, now through the distinct filter aggregate type. */
+#if 0
     UmiDebugExceptionSnapshot *snapshot = calloc(1U, sizeof *snapshot);
+#endif
+    UmiDebugExceptionFiltersSnapshot *snapshot = calloc(1U, sizeof *snapshot);
     CHECK(snapshot != NULL);
     CHECK(umi_path_join(argv[3], "attach-fixture-mode.txt", settings, sizeof settings) ==
           UMI_STATUS_OK);

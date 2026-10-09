@@ -114,12 +114,30 @@ UmiStatus UmiVcsWorkingTreeEntryText(const UmiVcsWorkingTree *tree, size_t index
     entry = UmiVcsWorkingTreeEntryAt(tree, index);
     if (entry == NULL)
         return UMI_STATUS_NOT_FOUND;
+    /* Keep the snprintf destination in a separate allocation from both escaped
+     * names. This makes the formatting read/write regions unambiguously disjoint
+     * under the C restrict contract and GCC's object-size analysis, without
+     * changing path spelling, message bounds or atomic caller publication.
+     * The former shared-allocation layout is retained for engineering review. */
+#if 0
     storage = malloc(name_capacity * 2U + text_capacity);
     if (storage == NULL)
         return UMI_STATUS_OUT_OF_MEMORY;
     path = storage;
     original = path + name_capacity;
     text = original + name_capacity;
+#endif
+    storage = malloc(name_capacity * 2U);
+    if (storage == NULL)
+        return UMI_STATUS_OUT_OF_MEMORY;
+    text = malloc(text_capacity);
+    if (text == NULL)
+    {
+        free(storage);
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    path = storage;
+    original = path + name_capacity;
     DisplayName(entry->change.path, path);
     DisplayName(entry->change.original_path, original);
     written = snprintf(
@@ -139,6 +157,7 @@ UmiStatus UmiVcsWorkingTreeEntryText(const UmiVcsWorkingTree *tree, size_t index
         entry->child_untracked ? "The child has untracked files; review them within the child.\n"
                                : "");
     status = PublishText(text, written, text_capacity, output, capacity);
+    free(text);
     free(storage);
     return status;
 }

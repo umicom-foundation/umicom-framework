@@ -16,7 +16,12 @@ typedef struct ExceptionPanel
     GtkWidget *status;
     GtkWidget *apply_button;
     GtkWidget *checks[UMI_DEBUG_EXCEPTION_FILTER_LIMIT];
+    /* Retain the earlier member declaration for review. The panel owns a copy
+     * of session filter choices; persisted exception records remain separate. */
+#if 0
     UmiDebugExceptionSnapshot snapshot;
+#endif
+    UmiDebugExceptionFiltersSnapshot snapshot;
     UmiGtk4ExceptionFiltersRead read;
     UmiGtk4ExceptionFiltersApply apply;
     void *context;
@@ -40,7 +45,12 @@ static void ExceptionPanelClear(ExceptionPanel *panel)
     panel->captured = FALSE;
     gtk_widget_set_sensitive(panel->apply_button, FALSE);
 }
+/* Retain the former signature for review. Rendering consumes the Framework
+ * filter aggregate and keeps all existing labels, tooltips and lifetime rules. */
+#if 0
 static void ExceptionPanelRender(ExceptionPanel *panel, const UmiDebugExceptionSnapshot *snapshot)
+#endif
+static void ExceptionPanelRender(ExceptionPanel *panel, const UmiDebugExceptionFiltersSnapshot *snapshot)
 {
     ExceptionPanelClear(panel);
     panel->snapshot = *snapshot;
@@ -88,7 +98,12 @@ static void ExceptionPanelRender(ExceptionPanel *panel, const UmiDebugExceptionS
 }
 static UmiStatus ExceptionPanelRead(ExceptionPanel *panel)
 {
+    /* Retain the earlier allocation for review. Allocate the complete filter
+     * aggregate accepted by the host callback, not a persisted exception record. */
+#if 0
     UmiDebugExceptionSnapshot *snapshot = g_new0(UmiDebugExceptionSnapshot, 1);
+#endif
+    UmiDebugExceptionFiltersSnapshot *snapshot = g_new0(UmiDebugExceptionFiltersSnapshot, 1);
     UmiStatus status = panel->read(panel->context, snapshot);
     /* Even trusted host code can return an incomplete snapshot. Bound row
      * creation before indexing fixed arrays or passing strings to GTK. */

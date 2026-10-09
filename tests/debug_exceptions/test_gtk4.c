@@ -22,12 +22,22 @@
     } while (0)
 typedef struct Host
 {
+    /* Retain the former member declaration for review. Match the panel's
+     * filter aggregate while keeping every existing host/lifetime scenario. */
+#if 0
     UmiDebugExceptionSnapshot snapshot;
+#endif
+    UmiDebugExceptionFiltersSnapshot snapshot;
     GtkWindow *window;
     unsigned reads, applies, destroyed;
     bool deny, close_read, close_apply, invalid;
 } Host;
+/* Retain the superseded signature for review. The callback writes the complete
+ * filter aggregate required by UmiGtk4ExceptionFiltersRead. */
+#if 0
 static UmiStatus Read(void *data, UmiDebugExceptionSnapshot *out)
+#endif
+static UmiStatus Read(void *data, UmiDebugExceptionFiltersSnapshot *out)
 {
     Host *host = data;
     ++host->reads;

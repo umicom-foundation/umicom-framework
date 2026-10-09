@@ -8,6 +8,10 @@
 
 #ifndef UMICOM_LANGUAGE_RUNTIME_DIAGNOSTIC_SESSION_INTERNAL_H
 #define UMICOM_LANGUAGE_RUNTIME_DIAGNOSTIC_SESSION_INTERNAL_H
+/* Session URI storage uses the shared editor source-location contract. Include
+ * its owner directly so this internal header keeps the established bound without
+ * relying on an unrelated consumer to include it first. */
+#include "umicom/editor/source_location.h"
 #include "umicom/editor/text_position.h"
 #include "umicom/language_runtime/diagnostic_session.h"
 #include "umicom/platform/clock.h"

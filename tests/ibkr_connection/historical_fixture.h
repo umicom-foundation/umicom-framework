@@ -10,7 +10,9 @@
 #define UMICOM_TEST_HISTORICAL_FIXTURE_H
 #include "observation_fixture.h"
 #include "umicom/broker_connectivity/historical_chart.h"
-static UmiIbkrHistoricalQuery HistoricalQuery(void)
+/* Header-only historical fixtures may use any subset of these helpers. Keep
+ * their definitions and internal linkage while allowing unused inline bodies. */
+static inline UmiIbkrHistoricalQuery HistoricalQuery(void)
 {
     UmiIbkrHistoricalQuery q = {0};
     q.contract.contractId = 123U;
@@ -23,7 +25,7 @@ static UmiIbkrHistoricalQuery HistoricalQuery(void)
 }
 /* Fixture fields are written explicitly so a changed production offset cannot
  * silently change the expected protocol layout as well. */
-static int HistoricalFeed(Fixture *f, uint32_t request)
+static inline int HistoricalFeed(Fixture *f, uint32_t request)
 {
     char id[32];
     (void)snprintf(id, sizeof id, "%u", (unsigned)request);
@@ -50,14 +52,14 @@ static int HistoricalFeed(Fixture *f, uint32_t request)
                             "9"};
     return Feed(f, fields, sizeof fields / sizeof fields[0]);
 }
-static bool HistoricalKnownCase(const char *mode, const char *const *cases, size_t count)
+static inline bool HistoricalKnownCase(const char *mode, const char *const *cases, size_t count)
 {
     for (size_t i = 0U; i < count; ++i)
         if (!strcmp(mode, cases[i]))
             return true;
     return false;
 }
-static void HistoricalReferences(void)
+static inline void HistoricalReferences(void)
 {
     (void)ObserveWire;
     (void)PositionFeed;

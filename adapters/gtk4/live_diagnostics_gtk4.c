@@ -7,6 +7,10 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/base/text.h"
+/* The panel copies the same document URI as the Framework diagnostic session.
+ * Use the editor contract's owning header so the bound stays shared across
+ * frontends and remains independent of transitive GTK adapter includes. */
+#include "umicom/editor/source_location.h"
 #include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/compilation_database.h"
 #include "umicom/ui/gtk4/live_diagnostics.h"

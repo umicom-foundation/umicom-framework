@@ -14,7 +14,13 @@
 extern "C"
 {
 #endif
+    /* Retain the previous callback declaration for review. Use the Framework
+     * filter aggregate so host callbacks and the GTK panel share the same
+     * bounded storage without changing the persisted exception-record type. */
+#if 0
     typedef UmiStatus (*UmiGtk4ExceptionFiltersRead)(void *context, UmiDebugExceptionSnapshot *out);
+#endif
+    typedef UmiStatus (*UmiGtk4ExceptionFiltersRead)(void *context, UmiDebugExceptionFiltersSnapshot *out);
     typedef UmiStatus (*UmiGtk4ExceptionFiltersApply)(void *context,
                                                       const UmiDebugExceptionSelection *selection);
     /** Create a floating panel with explicit Refresh and Apply actions.

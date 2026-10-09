@@ -15,6 +15,8 @@ if(BUILD_TESTING)
     set(process_cases split-stream launch-failure not-launched exit-failure timeout cancel
         empty-output truncated-record overflow stderr-contamination)
     set(review_cases summary child-only escaped-path child-advice small-buffer legacy legacy-overflow)
+    # Preserve escaped rename text, immutable observations and atomic capacity refusal.
+    list(APPEND review_cases renamed-path maximum-paths exact-buffer)
     set(job_cases created cancel-created wrong-owner success late-stop cancel-running read-failure)
     foreach(kind IN ITEMS parser process review job)
         set(target "umicom-vcs-working-tree-${kind}-test")
