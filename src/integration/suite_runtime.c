@@ -24,6 +24,15 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * SOURCE PRESERVATION: The original counter-only lifecycle is retained here
+ * for engineering review. It accepted duplicate running/failed notices, which
+ * inflated counters and could mark a suite running after only one required
+ * member had started. The replacement below uses the EXISTING launch-plan
+ * item's disposition as per-member evidence in this runtime's PRIVATE COPY.
+ * Public structure sizes and the original C entry points are unchanged.
+ */
+#if 0
 /* Provide the find item operation used by this module and its client applications. */
 static const UmiIntegrationLaunchItem *find_item(
     const UmiIntegrationSuiteRuntime *runtime,
@@ -167,4 +176,184 @@ bool umi_integration_suite_runtime_is_usable(
            runtime->failed_required == 0U &&
            runtime->plan.missing_required == 0U &&
            runtime->state != UMI_INTEGRATION_SUITE_FAILED;
+}
+#endif
+
+/* This mutable lookup operates on the already-copied plan, never on the
+ * application's registry or another product's state. */
+static UmiIntegrationLaunchItem *FindRuntimeItem(UmiIntegrationSuiteRuntime *runtime,
+                                                const char *application_id)
+{
+    size_t index;
+    if (runtime->plan.count > UMI_INTEGRATION_MAX_MEMBERS)
+        return NULL;
+    for (index = 0U; index < runtime->plan.count; ++index) {
+        if (memchr(runtime->plan.items[index].application_id, '\0',
+                   sizeof(runtime->plan.items[index].application_id)) == NULL)
+            return NULL;
+        if (strcmp(runtime->plan.items[index].application_id, application_id) == 0)
+            return &runtime->plan.items[index];
+    }
+    return NULL;
+}
+
+/* Recompute ALL counts from unique per-member observations. This prevents
+ * overcounting after duplicate callbacks or a FAILED -> RUNNING recovery.
+ * Only the runtime COPY changes; a separately built launch plan remains a
+ * description of availability and is not rewritten during process activity. */
+static void RecomputeEvidence(UmiIntegrationSuiteRuntime *runtime)
+{
+    size_t index;
+    size_t required_total = 0U;
+
+    runtime->running_required = 0U;
+    runtime->running_optional = 0U;
+    runtime->failed_required = 0U;
+    runtime->failed_optional = 0U;
+    for (index = 0U; index < runtime->plan.count; ++index) {
+        const UmiIntegrationLaunchItem *item = &runtime->plan.items[index];
+        const bool required = item->kind == UMI_INTEGRATION_DEPENDENCY_REQUIRED;
+        const bool running = item->disposition == UMI_INTEGRATION_LAUNCH_ALREADY_RUNNING ||
+                             item->disposition == UMI_INTEGRATION_LAUNCH_OBSERVED_RUNNING;
+        const bool failed = item->disposition == UMI_INTEGRATION_LAUNCH_OBSERVED_FAILED;
+        if (required)
+            ++required_total;
+        if (running) {
+            if (required) ++runtime->running_required;
+            else ++runtime->running_optional;
+        }
+        if (failed) {
+            if (required) ++runtime->failed_required;
+            else ++runtime->failed_optional;
+        }
+    }
+
+    if (runtime->plan.missing_required > 0U || runtime->failed_required > 0U) {
+        runtime->state = UMI_INTEGRATION_SUITE_FAILED;
+    } else if (runtime->running_required == required_total &&
+               (runtime->running_required + runtime->running_optional) > 0U) {
+        runtime->state = (runtime->plan.missing_optional > 0U ||
+                          runtime->failed_optional > 0U)
+            ? UMI_INTEGRATION_SUITE_DEGRADED
+            : UMI_INTEGRATION_SUITE_RUNNING;
+    } else if (runtime->running_required + runtime->running_optional +
+               runtime->failed_optional > 0U) {
+        runtime->state = UMI_INTEGRATION_SUITE_STARTING;
+    } else {
+        runtime->state = UMI_INTEGRATION_SUITE_PREPARED;
+    }
+}
+
+/*
+ * Provide the integration suite runtime prepare operation used by this module and its
+ * client applications.
+ */
+UmiStatus umi_integration_suite_runtime_prepare(
+    UmiIntegrationSuiteRuntime *runtime,
+    const UmiIntegrationSuiteDefinition *suite,
+    const UmiIntegrationRegistry *registry)
+{
+    UmiIntegrationSuiteRuntime candidate = {0};
+    UmiStatus status;
+    size_t length;
+    if (runtime == NULL || suite == NULL || registry == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* The plan builder validates this same fixed-length suite ID. Copy only
+     * after the required terminator has been proved to be inside the field. */
+    if (memchr(suite->id, '\0', sizeof(suite->id)) == NULL)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    length = strlen(suite->id);
+    if (length == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memcpy(candidate.suite_id, suite->id, length + 1U);
+
+    status = umi_integration_launch_plan_build(suite, registry, &candidate.plan);
+    if (status != UMI_STATUS_OK && status != UMI_STATUS_UNAVAILABLE)
+        return status; /* Malformed source must not publish a half plan. */
+    RecomputeEvidence(&candidate);
+    *runtime = candidate;
+    return status; /* UNAVAILABLE retains the complete blocked plan. */
+}
+
+/* Caller-provided IDs may be short string literals. Never read a fixed
+ * 128-byte block past their terminator merely to search for NUL. */
+static bool ValidInputId(const char *text)
+{
+    size_t index;
+    if (text == NULL || text[0] == '\0')
+        return false;
+    for (index = 0U; index < UMI_INTEGRATION_ID_CAPACITY; ++index)
+        if (text[index] == '\0')
+            return true;
+    return false;
+}
+
+/*
+ * Provide the integration suite runtime mark running operation used by this module and its
+ * client applications.
+ */
+UmiStatus umi_integration_suite_runtime_mark_running(
+    UmiIntegrationSuiteRuntime *runtime,
+    const char *application_id)
+{
+    UmiIntegrationLaunchItem *item;
+    if (runtime == NULL || !ValidInputId(application_id))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (runtime->plan.count > UMI_INTEGRATION_MAX_MEMBERS)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    item = FindRuntimeItem(runtime, application_id);
+    if (item == NULL)
+        return UMI_STATUS_NOT_FOUND;
+    if (item->disposition != UMI_INTEGRATION_LAUNCH_READY &&
+        item->disposition != UMI_INTEGRATION_LAUNCH_OBSERVED_FAILED)
+        return UMI_STATUS_INVALID_STATE;
+    item->disposition = UMI_INTEGRATION_LAUNCH_OBSERVED_RUNNING;
+    RecomputeEvidence(runtime);
+    return UMI_STATUS_OK;
+}
+
+/*
+ * Provide the integration suite runtime mark failed operation used by this module and its
+ * client applications.
+ */
+UmiStatus umi_integration_suite_runtime_mark_failed(
+    UmiIntegrationSuiteRuntime *runtime,
+    const char *application_id)
+{
+    UmiIntegrationLaunchItem *item;
+    if (runtime == NULL || !ValidInputId(application_id))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (runtime->plan.count > UMI_INTEGRATION_MAX_MEMBERS)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    item = FindRuntimeItem(runtime, application_id);
+    if (item == NULL)
+        return UMI_STATUS_NOT_FOUND;
+    if (item->disposition != UMI_INTEGRATION_LAUNCH_READY &&
+        item->disposition != UMI_INTEGRATION_LAUNCH_ALREADY_RUNNING &&
+        item->disposition != UMI_INTEGRATION_LAUNCH_OBSERVED_RUNNING)
+        return UMI_STATUS_INVALID_STATE;
+    item->disposition = UMI_INTEGRATION_LAUNCH_OBSERVED_FAILED;
+    RecomputeEvidence(runtime);
+    return UMI_STATUS_OK;
+}
+
+/*
+ * Provide the integration suite runtime is usable operation used by this module and its
+ * client applications.
+ */
+bool umi_integration_suite_runtime_is_usable(
+    const UmiIntegrationSuiteRuntime *runtime)
+{
+    size_t index;
+    size_t required_total = 0U;
+    if (runtime == NULL || runtime->plan.count > UMI_INTEGRATION_MAX_MEMBERS ||
+        runtime->plan.missing_required != 0U || runtime->failed_required != 0U ||
+        (runtime->state != UMI_INTEGRATION_SUITE_RUNNING &&
+         runtime->state != UMI_INTEGRATION_SUITE_DEGRADED))
+        return false;
+    for (index = 0U; index < runtime->plan.count; ++index)
+        if (runtime->plan.items[index].kind == UMI_INTEGRATION_DEPENDENCY_REQUIRED)
+            ++required_total;
+    return runtime->running_required == required_total &&
+        runtime->running_required + runtime->running_optional > 0U;
 }

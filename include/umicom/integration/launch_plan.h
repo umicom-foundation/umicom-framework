@@ -34,7 +34,18 @@ typedef enum UmiIntegrationLaunchDisposition {
     UMI_INTEGRATION_LAUNCH_ALREADY_RUNNING,
     UMI_INTEGRATION_LAUNCH_OPTIONAL_MISSING,
     UMI_INTEGRATION_LAUNCH_REQUIRED_MISSING,
-    UMI_INTEGRATION_LAUNCH_DISABLED
+    UMI_INTEGRATION_LAUNCH_DISABLED,
+
+    /*
+     * A launch plan returned by umi_integration_launch_plan_build() contains
+     * only the original five values above. These additional values belong to
+     * the per-suite COPY of that plan, held by UmiIntegrationSuiteRuntime.
+     * They record explicit observations from the owning process supervisor.
+     * Adding enum values changes neither existing numeric values nor the
+     * layout of any public structure; this avoids a C ABI size change.
+     */
+    UMI_INTEGRATION_LAUNCH_OBSERVED_RUNNING,
+    UMI_INTEGRATION_LAUNCH_OBSERVED_FAILED
 } UmiIntegrationLaunchDisposition;
 
 /**
@@ -61,6 +72,12 @@ typedef struct UmiIntegrationLaunchPlan {
 /**
  * Provide the integration launch plan build operation used by this module and its client
  * applications.
+ */
+/*
+ * The builder validates bounded member IDs/kinds/counts and rejects duplicate
+ * members before publishing a complete plan. Absent REQUIRED members still
+ * return UNAVAILABLE and publish the complete diagnostic plan, preserving the
+ * established planning behaviour. Malformed source data leaves out_plan intact.
  */
 UmiStatus umi_integration_launch_plan_build(
     const UmiIntegrationSuiteDefinition *suite,

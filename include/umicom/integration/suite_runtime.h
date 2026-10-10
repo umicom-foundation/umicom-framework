@@ -56,6 +56,9 @@ typedef struct UmiIntegrationSuiteRuntime {
  * Provide the integration suite runtime prepare operation used by this module and its
  * client applications.
  */
+/* Preparation is evidence only. An already-running member in the registry is
+ * counted once; a ready-to-launch member is not counted as running. Incomplete
+ * required membership leaves the suite PREPARED or STARTING, never RUNNING. */
 UmiStatus umi_integration_suite_runtime_prepare(
     UmiIntegrationSuiteRuntime *runtime,
     const UmiIntegrationSuiteDefinition *suite,
@@ -64,6 +67,12 @@ UmiStatus umi_integration_suite_runtime_prepare(
  * Provide the integration suite runtime mark running operation used by this module and its
  * client applications.
  */
+/* These functions take observed lifecycle evidence from the owning supervisor.
+ * They never create/stop a process and never contact sibling products.
+ * Duplicate notifications return INVALID_STATE; this prevents counted duplicates
+ * from producing a false RUNNING status. An explicit RUNNING observation can
+ * recover a previously FAILED member. Failed/missing/disabled startup attempts
+ * are not silently retried by the Framework. */
 UmiStatus umi_integration_suite_runtime_mark_running(
     UmiIntegrationSuiteRuntime *runtime,
     const char *application_id);
@@ -78,6 +87,10 @@ UmiStatus umi_integration_suite_runtime_mark_failed(
  * Provide the integration suite runtime is usable operation used by this module and its
  * client applications.
  */
+/* Usable means every required member has RUNNING evidence and at least one
+ * member is running. Missing/failed required members are always fail-closed;
+ * an absent/failed optional member may yield DEGRADED. STARTING/IDLE/PREPARED
+ * are never a claim that a runnable application suite exists. */
 bool umi_integration_suite_runtime_is_usable(
     const UmiIntegrationSuiteRuntime *runtime);
 
