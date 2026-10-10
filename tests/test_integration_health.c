@@ -52,6 +52,39 @@ int main(void) {
     p.items[0].kind = UMI_INTEGRATION_DEPENDENCY_OPTIONAL;
     umi_integration_health_from_plan(&p, &h);
     CHECK(!h.healthy && h.degraded && h.missing_optional == 0U);
+    /* R02: A successful launch plan does NOT prove suite runtime readiness.
+     * A stopped/starting member retains its record but revokes usability. */
+    {
+        UmiIntegrationSuiteRuntime runtime = {0};
+        runtime.plan.count = 1U;
+        runtime.plan.items[0].kind = UMI_INTEGRATION_DEPENDENCY_REQUIRED;
+        runtime.plan.items[0].disposition = UMI_INTEGRATION_LAUNCH_READY;
+        runtime.state = UMI_INTEGRATION_SUITE_PREPARED;
+        umi_integration_health_from_runtime(&runtime, &h);
+        CHECK(!h.healthy && !h.degraded && h.available == 1U && h.running == 0U);
+        runtime.plan.items[0].disposition = UMI_INTEGRATION_LAUNCH_OBSERVED_STARTING;
+        runtime.state = UMI_INTEGRATION_SUITE_STARTING;
+        umi_integration_health_from_runtime(&runtime, &h);
+        CHECK(!h.healthy && !h.degraded);
+        runtime.plan.items[0].disposition = UMI_INTEGRATION_LAUNCH_OBSERVED_RUNNING;
+        runtime.running_required = 1U;
+        runtime.state = UMI_INTEGRATION_SUITE_RUNNING;
+        umi_integration_health_from_runtime(&runtime, &h);
+        CHECK(h.healthy && !h.degraded && h.running == 1U);
+        runtime.plan.items[0].disposition = UMI_INTEGRATION_LAUNCH_OBSERVED_STOPPED;
+        runtime.running_required = 0U;
+        runtime.state = UMI_INTEGRATION_SUITE_STOPPED;
+        umi_integration_health_from_runtime(&runtime, &h);
+        CHECK(!h.healthy && !h.degraded && h.running == 0U);
+        /* Malformed records have no publishable health claim. */
+        runtime.plan.count = UMI_INTEGRATION_MAX_MEMBERS + 1U;
+        umi_integration_health_from_runtime(&runtime, &h);
+        CHECK(!h.healthy && !h.degraded && h.running == 0U);
+        umi_integration_health_from_runtime(NULL, &h);
+        CHECK(!h.healthy && !h.degraded && h.running == 0U);
+        umi_integration_health_from_runtime(&runtime, NULL);
+    }
+
     p.count = UMI_INTEGRATION_MAX_MEMBERS + 1U;
     umi_integration_health_from_plan(&p, &h);
     CHECK(h.available == 0U && !h.healthy);

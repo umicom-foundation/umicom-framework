@@ -124,3 +124,27 @@ void umi_integration_health_from_plan(
                             !failed_required &&
                             (plan->missing_optional > 0U || failed_optional);
 }
+
+/* R02: Plan availability is separate from current service readiness.
+ * Reuse existing projection for stable counters but only mark healthy after
+ * confirmed required-member RUNNING observations. No launches or IPC here. */
+void umi_integration_health_from_runtime(
+    const UmiIntegrationSuiteRuntime *runtime,
+    UmiIntegrationHealthSummary *out_summary)
+{
+    if (out_summary == NULL)
+        return;
+    (void)memset(out_summary, 0, sizeof(*out_summary));
+    if (runtime == NULL || runtime->plan.count > UMI_INTEGRATION_MAX_MEMBERS)
+        return;
+    umi_integration_health_from_plan(&runtime->plan, out_summary);
+    /* A plan can be structurally complete before any process is running;
+     * the shared runtime is the source of lifecycle evidence. */
+    if (!umi_integration_suite_runtime_is_usable(runtime)) {
+        out_summary->healthy = false;
+        out_summary->degraded = false;
+    } else {
+        out_summary->healthy = runtime->state == UMI_INTEGRATION_SUITE_RUNNING;
+        out_summary->degraded = runtime->state == UMI_INTEGRATION_SUITE_DEGRADED;
+    }
+}

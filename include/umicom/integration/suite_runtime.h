@@ -76,6 +76,31 @@ UmiStatus umi_integration_suite_runtime_prepare(
 UmiStatus umi_integration_suite_runtime_mark_running(
     UmiIntegrationSuiteRuntime *runtime,
     const char *application_id);
+
+/* Record the owning supervisor's actual STARTING observation; this is NOT
+ * proof that a process can accept commands. Initial and recovery attempts may
+ * transition to STARTING explicitly. Duplicate notifications are refused.
+ * The caller must verify process identity before publishing an observation. */
+UmiStatus umi_integration_suite_runtime_mark_starting(
+    UmiIntegrationSuiteRuntime *runtime,
+    const char *application_id);
+
+/* A confirmed clean process exit removes RUNNING evidence, while retaining
+ * the fact that a product had been launched. It cannot claim that a product
+ * is stopped solely because its executable disappeared from disk. The caller
+ * must reconcile the process token in the existing Desk runtime first. */
+UmiStatus umi_integration_suite_runtime_mark_stopped(
+    UmiIntegrationSuiteRuntime *runtime,
+    const char *application_id);
+
+/* Translate an independently confirmed exit into STOPPED for zero status or
+ * FAILED for non-zero status; never automatically restart an application.
+ * A missing, duplicate or stale member produces the existing error status.
+ * The callback's owning host remains responsible for process-token checks. */
+UmiStatus umi_integration_suite_runtime_mark_exit(
+    UmiIntegrationSuiteRuntime *runtime,
+    const char *application_id,
+    int exit_code);
 /**
  * Provide the integration suite runtime mark failed operation used by this module and its
  * client applications.
@@ -89,8 +114,8 @@ UmiStatus umi_integration_suite_runtime_mark_failed(
  */
 /* Usable means every required member has RUNNING evidence and at least one
  * member is running. Missing/failed required members are always fail-closed;
- * an absent/failed optional member may yield DEGRADED. STARTING/IDLE/PREPARED
- * are never a claim that a runnable application suite exists. */
+ * an absent/failed optional member may yield DEGRADED. STARTING/IDLE/PREPARED/
+ * STOPPED are never a claim that a runnable application suite exists. */
 bool umi_integration_suite_runtime_is_usable(
     const UmiIntegrationSuiteRuntime *runtime);
 

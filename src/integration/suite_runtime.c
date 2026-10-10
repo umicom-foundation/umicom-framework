@@ -205,6 +205,8 @@ static void RecomputeEvidence(UmiIntegrationSuiteRuntime *runtime)
 {
     size_t index;
     size_t required_total = 0U;
+    size_t starting_total = 0U;
+    size_t stopped_total = 0U;
 
     runtime->running_required = 0U;
     runtime->running_optional = 0U;
@@ -216,6 +218,10 @@ static void RecomputeEvidence(UmiIntegrationSuiteRuntime *runtime)
         const bool running = item->disposition == UMI_INTEGRATION_LAUNCH_ALREADY_RUNNING ||
                              item->disposition == UMI_INTEGRATION_LAUNCH_OBSERVED_RUNNING;
         const bool failed = item->disposition == UMI_INTEGRATION_LAUNCH_OBSERVED_FAILED;
+        if (item->disposition == UMI_INTEGRATION_LAUNCH_OBSERVED_STARTING)
+            ++starting_total;
+        if (item->disposition == UMI_INTEGRATION_LAUNCH_OBSERVED_STOPPED)
+            ++stopped_total;
         if (required)
             ++required_total;
         if (running) {
@@ -237,7 +243,17 @@ static void RecomputeEvidence(UmiIntegrationSuiteRuntime *runtime)
             ? UMI_INTEGRATION_SUITE_DEGRADED
             : UMI_INTEGRATION_SUITE_RUNNING;
     } else if (runtime->running_required + runtime->running_optional +
-               runtime->failed_optional > 0U) {
+               starting_total > 0U) {
+        /* One member being alive or STARTING is not suite-wide readiness
+         * while any required member lacks RUNNING evidence. */
+        runtime->state = UMI_INTEGRATION_SUITE_STARTING;
+    } else if (stopped_total > 0U) {
+        /* Completed clean exits outrank historical optional failures when
+         * there are no observed live/starting suite processes. */
+        runtime->state = UMI_INTEGRATION_SUITE_STOPPED;
+    } else if (runtime->failed_optional > 0U) {
+        /* A failed optional launch without a required ready member is not a
+         * running or healthy suite. Preserve the failed member's evidence. */
         runtime->state = UMI_INTEGRATION_SUITE_STARTING;
     } else {
         runtime->state = UMI_INTEGRATION_SUITE_PREPARED;
@@ -305,6 +321,8 @@ UmiStatus umi_integration_suite_runtime_mark_running(
     if (item == NULL)
         return UMI_STATUS_NOT_FOUND;
     if (item->disposition != UMI_INTEGRATION_LAUNCH_READY &&
+        item->disposition != UMI_INTEGRATION_LAUNCH_OBSERVED_STARTING &&
+        item->disposition != UMI_INTEGRATION_LAUNCH_OBSERVED_STOPPED &&
         item->disposition != UMI_INTEGRATION_LAUNCH_OBSERVED_FAILED)
         return UMI_STATUS_INVALID_STATE;
     item->disposition = UMI_INTEGRATION_LAUNCH_OBSERVED_RUNNING;
@@ -329,12 +347,74 @@ UmiStatus umi_integration_suite_runtime_mark_failed(
     if (item == NULL)
         return UMI_STATUS_NOT_FOUND;
     if (item->disposition != UMI_INTEGRATION_LAUNCH_READY &&
+        item->disposition != UMI_INTEGRATION_LAUNCH_OBSERVED_STARTING &&
         item->disposition != UMI_INTEGRATION_LAUNCH_ALREADY_RUNNING &&
         item->disposition != UMI_INTEGRATION_LAUNCH_OBSERVED_RUNNING)
         return UMI_STATUS_INVALID_STATE;
     item->disposition = UMI_INTEGRATION_LAUNCH_OBSERVED_FAILED;
     RecomputeEvidence(runtime);
     return UMI_STATUS_OK;
+}
+
+/* R02: An actual process start is distinct from a launchable executable.
+ * The integration runtime records supervisor evidence but does not create
+ * another process supervisor or make a process readiness handshake claim. */
+UmiStatus umi_integration_suite_runtime_mark_starting(
+    UmiIntegrationSuiteRuntime *runtime,
+    const char *application_id)
+{
+    UmiIntegrationLaunchItem *item;
+    if (runtime == NULL || !ValidInputId(application_id))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (runtime->plan.count > UMI_INTEGRATION_MAX_MEMBERS)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    item = FindRuntimeItem(runtime, application_id);
+    if (item == NULL)
+        return UMI_STATUS_NOT_FOUND;
+    if (item->disposition != UMI_INTEGRATION_LAUNCH_READY &&
+        item->disposition != UMI_INTEGRATION_LAUNCH_OBSERVED_STOPPED &&
+        item->disposition != UMI_INTEGRATION_LAUNCH_OBSERVED_FAILED)
+        return UMI_STATUS_INVALID_STATE;
+    item->disposition = UMI_INTEGRATION_LAUNCH_OBSERVED_STARTING;
+    RecomputeEvidence(runtime);
+    return UMI_STATUS_OK;
+}
+
+/* R02: The caller must first match the authoritative child/process token.
+ * This function only changes the existing suite runtime's copied evidence.
+ * A disappeared executable is NOT a confirmed process exit. */
+UmiStatus umi_integration_suite_runtime_mark_stopped(
+    UmiIntegrationSuiteRuntime *runtime,
+    const char *application_id)
+{
+    UmiIntegrationLaunchItem *item;
+    if (runtime == NULL || !ValidInputId(application_id))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (runtime->plan.count > UMI_INTEGRATION_MAX_MEMBERS)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    item = FindRuntimeItem(runtime, application_id);
+    if (item == NULL)
+        return UMI_STATUS_NOT_FOUND;
+    if (item->disposition != UMI_INTEGRATION_LAUNCH_ALREADY_RUNNING &&
+        item->disposition != UMI_INTEGRATION_LAUNCH_OBSERVED_RUNNING &&
+        item->disposition != UMI_INTEGRATION_LAUNCH_OBSERVED_STARTING)
+        return UMI_STATUS_INVALID_STATE;
+    item->disposition = UMI_INTEGRATION_LAUNCH_OBSERVED_STOPPED;
+    RecomputeEvidence(runtime);
+    return UMI_STATUS_OK;
+}
+
+/* Exit codes are provided by the REAL owning supervisor. The supervisor
+ * must reject stale process tokens BEFORE invoking this translator. A clean
+ * exit is not a failure, but cannot leave a suite spuriously RUNNING. */
+UmiStatus umi_integration_suite_runtime_mark_exit(
+    UmiIntegrationSuiteRuntime *runtime,
+    const char *application_id,
+    int exit_code)
+{
+    if (exit_code == 0)
+        return umi_integration_suite_runtime_mark_stopped(runtime, application_id);
+    return umi_integration_suite_runtime_mark_failed(runtime, application_id);
 }
 
 /*

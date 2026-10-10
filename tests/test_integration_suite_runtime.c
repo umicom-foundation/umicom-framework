@@ -120,6 +120,98 @@ int main(void) {
     umi_integration_health_from_plan(&rt.plan, &h);
     CHECK(h.healthy && !h.degraded && h.running == 2U);
 
+    /* The owning supervisor observes STARTING, RUNNING, clean EXIT,
+     * failure and explicit restart; none is inferred from installed files.
+     * A stopped REQUIRED member must revoke suite usability immediately. */
+    CHECK(umi_integration_registry_set_state(&r,"core",UMI_INTEGRATION_APP_AVAILABLE)==UMI_STATUS_OK);
+    CHECK(umi_integration_registry_set_state(&r,"worker",UMI_INTEGRATION_APP_AVAILABLE)==UMI_STATUS_OK);
+    umi_integration_suite_init(&s, "suite.restart", "R02 restart and exit suite");
+    CHECK(umi_integration_suite_add_member(&s,"core",UMI_INTEGRATION_DEPENDENCY_REQUIRED,0U)==UMI_STATUS_OK);
+    CHECK(umi_integration_suite_add_member(&s,"worker",UMI_INTEGRATION_DEPENDENCY_REQUIRED,0U)==UMI_STATUS_OK);
+    CHECK(umi_integration_suite_add_member(&s,"media",UMI_INTEGRATION_DEPENDENCY_OPTIONAL,0U)==UMI_STATUS_OK);
+    CHECK(umi_integration_suite_runtime_prepare(&rt,&s,&r)==UMI_STATUS_OK);
+    CHECK(rt.state == UMI_INTEGRATION_SUITE_PREPARED);
+    CHECK(!umi_integration_suite_runtime_is_usable(&rt));
+    umi_integration_health_from_runtime(&rt, &h);
+    CHECK(!h.healthy && !h.degraded && h.running==0U);
+
+    CHECK(umi_integration_suite_runtime_mark_stopped(&rt,"core") == UMI_STATUS_INVALID_STATE);
+    unchanged = rt;
+    CHECK(umi_integration_suite_runtime_mark_starting(&rt,"ghost") == UMI_STATUS_NOT_FOUND);
+    CHECK(memcmp(&rt,&unchanged,sizeof(rt))==0);
+    CHECK(umi_integration_suite_runtime_mark_starting(&rt,"core") == UMI_STATUS_OK);
+    CHECK(rt.state == UMI_INTEGRATION_SUITE_STARTING && rt.running_required == 0U);
+    unchanged = rt;
+    CHECK(umi_integration_suite_runtime_mark_starting(&rt,"core") == UMI_STATUS_INVALID_STATE);
+    CHECK(memcmp(&rt,&unchanged,sizeof(rt)) == 0);
+    CHECK(umi_integration_suite_runtime_mark_running(&rt,"core") == UMI_STATUS_OK);
+    CHECK(rt.state == UMI_INTEGRATION_SUITE_STARTING);
+    CHECK(umi_integration_suite_runtime_mark_starting(&rt,"worker") == UMI_STATUS_OK);
+    CHECK(umi_integration_suite_runtime_mark_running(&rt,"worker") == UMI_STATUS_OK);
+    CHECK(rt.state == UMI_INTEGRATION_SUITE_RUNNING && rt.running_required == 2U);
+    CHECK(umi_integration_suite_runtime_is_usable(&rt));
+    umi_integration_health_from_runtime(&rt,&h);
+    CHECK(h.healthy && h.running == 2U);
+
+    CHECK(umi_integration_suite_runtime_mark_stopped(&rt,"core") == UMI_STATUS_OK);
+    CHECK(rt.running_required == 1U && rt.state == UMI_INTEGRATION_SUITE_STARTING);
+    CHECK(!umi_integration_suite_runtime_is_usable(&rt));
+    umi_integration_health_from_runtime(&rt,&h);
+    CHECK(!h.healthy && !h.degraded && h.running == 1U);
+    unchanged = rt;
+    CHECK(umi_integration_suite_runtime_mark_stopped(&rt,"core") == UMI_STATUS_INVALID_STATE);
+    CHECK(memcmp(&rt,&unchanged,sizeof(rt)) == 0);
+    CHECK(umi_integration_suite_runtime_mark_exit(&rt,"worker",0) == UMI_STATUS_OK);
+    CHECK(rt.running_required == 0U && rt.failed_required == 0U);
+    CHECK(rt.state == UMI_INTEGRATION_SUITE_STOPPED);
+    CHECK(!umi_integration_suite_runtime_is_usable(&rt));
+    CHECK(umi_integration_suite_runtime_mark_exit(&rt,"worker",0) == UMI_STATUS_INVALID_STATE);
+    umi_integration_health_from_runtime(&rt,&h);
+    CHECK(!h.healthy && !h.degraded && h.running == 0U);
+    /* Stopped members must be able to restart without rebuilding the suite. */
+    CHECK(umi_integration_suite_runtime_mark_starting(&rt,"worker") == UMI_STATUS_OK);
+    CHECK(rt.state == UMI_INTEGRATION_SUITE_STARTING);
+    CHECK(umi_integration_suite_runtime_mark_running(&rt,"worker") == UMI_STATUS_OK);
+    CHECK(rt.state == UMI_INTEGRATION_SUITE_STARTING);
+    CHECK(umi_integration_suite_runtime_mark_running(&rt,"core") == UMI_STATUS_OK);
+    CHECK(rt.state == UMI_INTEGRATION_SUITE_RUNNING);
+
+    /* Optional failure is degraded only while required members remain alive. */
+    CHECK(umi_integration_suite_runtime_mark_starting(&rt,"media") == UMI_STATUS_OK);
+    CHECK(umi_integration_suite_runtime_mark_exit(&rt,"media",42) == UMI_STATUS_OK);
+    CHECK(rt.failed_optional == 1U && rt.state == UMI_INTEGRATION_SUITE_DEGRADED);
+    CHECK(umi_integration_suite_runtime_is_usable(&rt));
+    umi_integration_health_from_runtime(&rt,&h);
+    CHECK(h.degraded && !h.healthy && h.running == 2U);
+    CHECK(umi_integration_suite_runtime_mark_starting(&rt,"media") == UMI_STATUS_OK);
+    CHECK(umi_integration_suite_runtime_mark_running(&rt,"media") == UMI_STATUS_OK);
+    CHECK(rt.failed_optional == 0U && rt.state == UMI_INTEGRATION_SUITE_RUNNING);
+    umi_integration_health_from_runtime(&rt,&h);
+    CHECK(h.healthy && h.running == 3U);
+
+    /* A required failure stays FAILED until a specific accepted restart. */
+    CHECK(umi_integration_suite_runtime_mark_exit(&rt,"core",19) == UMI_STATUS_OK);
+    CHECK(rt.state == UMI_INTEGRATION_SUITE_FAILED && rt.failed_required == 1U);
+    umi_integration_health_from_runtime(&rt,&h);
+    CHECK(!h.healthy && !h.degraded);
+    CHECK(umi_integration_suite_runtime_mark_stopped(&rt,"worker") == UMI_STATUS_OK);
+    CHECK(rt.state == UMI_INTEGRATION_SUITE_FAILED);
+    CHECK(umi_integration_suite_runtime_mark_starting(&rt,"core") == UMI_STATUS_OK);
+    CHECK(rt.state == UMI_INTEGRATION_SUITE_STARTING);
+    CHECK(umi_integration_suite_runtime_mark_running(&rt,"core") == UMI_STATUS_OK);
+    CHECK(rt.state == UMI_INTEGRATION_SUITE_STARTING);
+    CHECK(umi_integration_suite_runtime_mark_running(&rt,"worker") == UMI_STATUS_OK);
+    CHECK(rt.state == UMI_INTEGRATION_SUITE_RUNNING);
+    CHECK(rt.running_required == 2U && umi_integration_suite_runtime_is_usable(&rt));
+
+    /* All failures, including over-capacity runtime metadata, are non-mutating. */
+    unchanged = rt;
+    rt.plan.count = UMI_INTEGRATION_MAX_MEMBERS + 1U;
+    CHECK(umi_integration_suite_runtime_mark_starting(&rt,"core") == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(umi_integration_suite_runtime_mark_stopped(&rt,"core") == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(umi_integration_suite_runtime_mark_exit(&rt,"core",1) == UMI_STATUS_INVALID_ARGUMENT);
+    rt = unchanged;
+
     /* Malformed suite input must not corrupt a live runtime snapshot. */
     unchanged = rt;
     s.member_count = UMI_INTEGRATION_MAX_MEMBERS + 1U;
