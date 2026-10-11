@@ -21,6 +21,7 @@
 #include "umicom/education/binary_inspect.h"
 #include "umicom/education/archive_inspect.h"
 #include "umicom/education/elf_symbols.h"
+#include "umicom/education/elf_load_plan.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,6 +46,7 @@ static void EducationPrintHelp(void)
          "umicom-education binary --file OBJECT_OR_EXECUTABLE\n"
          "umicom-education archive --file STATIC_LIBRARY\n"
          "umicom-education symbols --file ELF_OBJECT_OR_IMAGE\n"
+         "umicom-education load-plan --file ELF_EXECUTABLE_OR_KERNEL\n"
          "umicom-education build   --repo REPOSITORY [--python PYTHON_EXECUTABLE]\n"
          "umicom-education serve   --repo REPOSITORY [--port 8765] [--directory SITE_DIRECTORY]\n"
          "umicom-education serve   --repo REPOSITORY --build [--python PYTHON_EXECUTABLE] [--port 8765]\n"
@@ -312,6 +314,58 @@ int main(int argc, char **argv)
         if (report.symbolCount > report.displayedCount)
             printf("  ... %llu additional symbol records not displayed\n",
                    (unsigned long long)(report.symbolCount - report.displayedCount));
+        return 0;
+    }
+    /* The load plan describes PT_LOAD file/memory extents, but intentionally
+     * does not act as the OS loader. The Framework parser owns every offset,
+     * arithmetic and overlap check; this application only prints the report. */
+    if (strcmp(argv[1], "load-plan") == 0) {
+        if (argc != 4 || strcmp(argv[2], "--file") != 0 || argv[3][0] == '\0') {
+            fputs("Usage: umicom-education load-plan --file ELF_EXECUTABLE\n", stderr);
+            return 2;
+        }
+        UmiEducationElfLoadPlan plan = {0};
+        const UmiStatus status = UmiEducationElfLoadPlanInspectFile(argv[3], &plan);
+        if (status != UMI_STATUS_OK) {
+            fprintf(stderr, "Cannot produce ELF load plan (status %d): %s\n",
+                    (int)status, argv[3]);
+            if (status == UMI_STATUS_NOT_IMPLEMENTED)
+                fputs("Only ELF32/ELF64 ET_EXEC and ET_DYN with ordinary "
+                      "programme-header counts are supported.\n", stderr);
+            return 1;
+        }
+        printf("ELF load plan: ELF%u (%s-endian)\n"
+               "Machine: %u | ELF type: %u\n"
+               "File size: %llu bytes | Programme headers: %u\n"
+               "Entry address: 0x%llx | Inside executable segment: %s\n"
+               "Loadable segments: %u | File-backed bytes: %llu | Zero-fill bytes: %llu\n"
+               "Virtual memory extent: [0x%llx, 0x%llx)\n",
+               (unsigned)plan.addressBits, plan.littleEndian ? "little" : "big",
+               (unsigned)plan.machine, (unsigned)plan.elfType,
+               (unsigned long long)plan.inputFileBytes,
+               (unsigned)plan.programHeaderCount,
+               (unsigned long long)plan.entryAddress,
+               plan.entryInExecutableSegment ? "yes" : "no (no entry declared)",
+               (unsigned)plan.segmentCount,
+               (unsigned long long)plan.fileBackedBytes,
+               (unsigned long long)plan.zeroFillBytes,
+               (unsigned long long)plan.minimumVirtualAddress,
+               (unsigned long long)plan.maximumVirtualAddressExclusive);
+        for (uint32_t i = 0U; i < plan.segmentCount; ++i) {
+            const UmiEducationElfLoadSegment *part = &plan.segments[i];
+            printf("  PT_LOAD %u: file=0x%llx bytes=%llu "
+                   "virtual=0x%llx memory=%llu permissions=%c%c%c alignment=%llu\n",
+                   (unsigned)(i + 1U),
+                   (unsigned long long)part->fileOffset,
+                   (unsigned long long)part->fileBytes,
+                   (unsigned long long)part->virtualAddress,
+                   (unsigned long long)part->memoryBytes,
+                   (part->flags & UMI_EDUCATION_ELF_SEGMENT_READ) ? 'R' : '-',
+                   (part->flags & UMI_EDUCATION_ELF_SEGMENT_WRITE) ? 'W' : '-',
+                   (part->flags & UMI_EDUCATION_ELF_SEGMENT_EXECUTE) ? 'X' : '-',
+                   (unsigned long long)part->alignment);
+        }
+        puts("Educational metadata only: no memory mapping or execution performed.");
         return 0;
     }
     const char *command = argv[1];

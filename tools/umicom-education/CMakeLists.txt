@@ -27,6 +27,7 @@ add_library(umicom_education_site STATIC
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/binary_inspect.c"
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/archive_inspect.c"
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/elf_symbols.c"
+    "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/elf_load_plan.c"
     # Keep hashing with the existing Framework base implementation. This
     # standalone learning build deliberately does not duplicate its algorithm.
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/base/sha256.c")
@@ -199,6 +200,30 @@ if(BUILD_TESTING)
         FIXTURES_REQUIRED education_elf_fixture
         PASS_REGULAR_EXPRESSION "Format: ELF64")
 
+    # Plan ELF PT_LOAD ranges from a deterministic RV64 fixture, including a
+    # filename with spaces. CTest fixture ordering keeps parallel runs safe.
+    add_executable(umicom-education-load-plan-test
+        "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/tests/education/test_elf_load_plan.c")
+    target_link_libraries(umicom-education-load-plan-test PRIVATE Umicom::education_site)
+    if(MSVC)
+        target_compile_options(umicom-education-load-plan-test PRIVATE /W4)
+    else()
+        target_compile_options(umicom-education-load-plan-test PRIVATE
+            -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    endif()
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/education-load-plan-test/fixture with spaces")
+    set(_education_load_plan_fixture
+        "${CMAKE_BINARY_DIR}/education-load-plan-test/fixture with spaces/umicom kernel.elf")
+    add_test(NAME framework.education.elf_load_plan
+        COMMAND umicom-education-load-plan-test "${_education_load_plan_fixture}")
+    add_test(NAME framework.education.load_plan.cli
+        COMMAND umicom-education load-plan --file "${_education_load_plan_fixture}")
+    set_tests_properties(framework.education.elf_load_plan PROPERTIES
+        FIXTURES_SETUP education_load_plan_fixture)
+    set_tests_properties(framework.education.load_plan.cli PROPERTIES
+        FIXTURES_REQUIRED education_load_plan_fixture
+        PASS_REGULAR_EXPRESSION "ELF load plan: ELF64")
+
     add_test(NAME framework.education.cli.help COMMAND umicom-education --help)
 
     # Real native CLI preflight: refuse to serve a missing site and propagate
@@ -217,6 +242,7 @@ if(BUILD_TESTING)
         framework.education.binary_inspect framework.education.binary.cli
         framework.education.archive_inspect framework.education.archive.cli
         framework.education.elf_symbols framework.education.symbols.cli
+        framework.education.elf_load_plan framework.education.load_plan.cli
         PROPERTIES LABELS "education;framework;native;safe-c")
 endif()
 
