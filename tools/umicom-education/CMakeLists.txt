@@ -25,6 +25,7 @@ add_library(umicom_education_site STATIC
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/publication.c"
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/nav_audit.c"
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/binary_inspect.c"
+    "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/archive_inspect.c"
     # Keep hashing with the existing Framework base implementation. This
     # standalone learning build deliberately does not duplicate its algorithm.
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/base/sha256.c")
@@ -147,6 +148,31 @@ if(BUILD_TESTING)
     set_tests_properties(framework.education.binary.cli PROPERTIES
         PASS_REGULAR_EXPRESSION "Format: (ELF|PE)")
 
+    # A real C23 object in a static archive supplements hand-built header
+    # fixtures, proving that GCC/Clang ar output uses the same parser.
+    add_library(umicom-education-archive-fixture STATIC
+        "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/tests/education/archive_fixture.c")
+    add_executable(umicom-education-archive-test
+        "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/tests/education/test_archive_inspect.c")
+    target_link_libraries(umicom-education-archive-test PRIVATE Umicom::education_site)
+    foreach(target IN ITEMS umicom-education-archive-fixture umicom-education-archive-test)
+        if(MSVC)
+            target_compile_options(${target} PRIVATE /W4)
+        else()
+            target_compile_options(${target} PRIVATE
+                -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+        endif()
+    endforeach()
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/education-archive-test/fixture with spaces")
+    add_test(NAME framework.education.archive_inspect
+        COMMAND umicom-education-archive-test
+            "${CMAKE_BINARY_DIR}/education-archive-test/fixture with spaces/lesson sample.a")
+    add_test(NAME framework.education.archive.cli
+        COMMAND umicom-education archive
+            --file "$<TARGET_FILE:umicom-education-archive-fixture>")
+    set_tests_properties(framework.education.archive.cli PROPERTIES
+        PASS_REGULAR_EXPRESSION "Format: ar")
+
     add_test(NAME framework.education.cli.help COMMAND umicom-education --help)
 
     # Real native CLI preflight: refuse to serve a missing site and propagate
@@ -163,6 +189,7 @@ if(BUILD_TESTING)
         framework.education.publication_manifest framework.education.serve.preflight
         framework.education.navigation_audit
         framework.education.binary_inspect framework.education.binary.cli
+        framework.education.archive_inspect framework.education.archive.cli
         PROPERTIES LABELS "education;framework;native;safe-c")
 endif()
 

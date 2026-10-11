@@ -19,6 +19,7 @@
 #include "umicom/education/publication.h"
 #include "umicom/education/nav_audit.h"
 #include "umicom/education/binary_inspect.h"
+#include "umicom/education/archive_inspect.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,6 +42,7 @@ static void EducationPrintHelp(void)
          "umicom-education verify  --repo REPOSITORY\n"
          "umicom-education audit   --repo REPOSITORY   (native navigation preflight)\n"
          "umicom-education binary --file OBJECT_OR_EXECUTABLE\n"
+         "umicom-education archive --file STATIC_LIBRARY\n"
          "umicom-education build   --repo REPOSITORY [--python PYTHON_EXECUTABLE]\n"
          "umicom-education serve   --repo REPOSITORY [--port 8765] [--directory SITE_DIRECTORY]\n"
          "umicom-education serve   --repo REPOSITORY --build [--python PYTHON_EXECUTABLE] [--port 8765]\n"
@@ -218,6 +220,40 @@ int main(int argc, char **argv)
                    (unsigned long long)header.entryPoint);
         printf("File size: %llu bytes\n",
                (unsigned long long)header.fileBytes);
+        return 0;
+    }
+    /* A static archive is a container of object-file members, not itself an
+     * ELF/PE/COFF image. Keep this separate from binary inspection while using
+     * the same read-only native education command and error policy. */
+    if (strcmp(argv[1], "archive") == 0) {
+        if (argc != 4 || strcmp(argv[2], "--file") != 0 || argv[3][0] == '\0') {
+            fputs("Usage: umicom-education archive --file PATH\n", stderr);
+            return 2;
+        }
+        UmiEducationArchiveReport report = {0};
+        UmiStatus status = UmiEducationArchiveInspectFile(argv[3], &report);
+        if (status != UMI_STATUS_OK) {
+            fprintf(stderr, "Cannot inspect ordinary ar archive (status %d): %s\n",
+                    (int)status, argv[3]);
+            if (status == UMI_STATUS_NOT_IMPLEMENTED)
+                fputs("Thin archives reference other files and are not inspected.\n", stderr);
+            return 1;
+        }
+        printf("Format: ar\nArchive size: %llu bytes\n"
+               "Members: %u\nObject members: %u\nIndex/name-table members: %u\n",
+               (unsigned long long)report.archiveBytes,
+               (unsigned)report.memberCount,
+               (unsigned)report.objectCount,
+               (unsigned)report.metadataCount);
+        for (uint32_t i = 0U; i < report.recordedCount; ++i) {
+            const UmiEducationArchiveMember *member = &report.members[i];
+            printf("  %s : %llu bytes%s\n", member->name,
+                   (unsigned long long)member->bodyBytes,
+                   member->objectFile ? " (object)" : "");
+        }
+        if (report.memberCount > report.recordedCount)
+            printf("  ... %u additional members not listed\n",
+                   (unsigned)(report.memberCount - report.recordedCount));
         return 0;
     }
     const char *command = argv[1];
