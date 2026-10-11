@@ -33,6 +33,8 @@ cd "$HOME/umicom/Umicom-Applications"
 cmake -S framework/tools/umicom-education -B build/umicom-education -G Ninja -DBUILD_TESTING=ON
 cmake --build build/umicom-education --parallel 2
 ctest --test-dir build/umicom-education --output-on-failure
+```
+
 ## Solve `No module named mkdocs`
 
 The original `build` subcommand selected the first `python` executable on
@@ -56,7 +58,10 @@ py -3 -m venv .venv
 If the Python launcher is not installed, substitute a known Windows Python
 interpreter path for `py -3`. Do not install packages into the MSYS2 toolchain
 interpreter unless that is your intended documentation environment.
+<!-- The shell example now closes beside its commands. This former closing
+fence is retained for source review so it cannot hide the following guide.
 ```
+-->
 
 ## Commands
 
@@ -94,6 +99,8 @@ if ($LASTEXITCODE -ne 0) { throw "The website was not built." }
 
 The `--repo` argument identifies the existing Bits2Banking checkout. The
 publication owner writes to its approved `content` subdirectories and never
+changes the original book sources.
+
 The `--python` option can specify an interpreter even if no `.venv` exists:
 
 ```powershell
@@ -148,18 +155,88 @@ full native publishing are future changes.
 
 Original documents, scripts, working CMake projects, source comments and
 application functionality have not been removed or disabled by this batch.
-### Security and portability
-The preview binds to IPv4 loopback, accepts read-only GET/HEAD and rejects
-unrecognised Host/Origin values, dot-prefixed paths, encoded separators,
-filesystem traversal and directory listings. It follows POSIX directory handles
-with `openat`/`O_NOFOLLOW` on Linux. The initial Windows implementation uses
-narrow Win32 paths and attribute checks. It is intended for a trusted local
-build directory, **not** an untrusted concurrently writable tree or an
-Internet-facing service. Unicode Windows paths, detailed request logging,
-accessibility preview diagnostics, cancellation and final integration with the
-canonical Web Server remain separate milestones.
 
-The current `verify` is a presence check, not full Markdown link validation.
-The original Python and PowerShell tools are retained until feature parity is
-measured. No current command generates PDF or DOCX natively, installs
-third-party dependencies, or deploys to GitHub Pages.
+## Site publication manifest (after MkDocs and BookForge)
+
+The publication integrity service is Framework-owned. It reuses
+`src/base/sha256.c` rather than introducing a second SHA-256 implementation.
+It works on the combined `site/` directory, including the historical book
+archive. It does not run GitHub Actions or publish files to the Internet.
+
+```powershell
+Set-Location "C:\umicom\Umicom-Applications"
+$Education = ".\build\umicom-education\bin\umicom-education.exe"
+$Books = "C:\umicom\Umicom-Bits2Banking"
+& $Education publish manifest --repo $Books
+& $Education publish verify --repo $Books
+```
+
+The digest list is generated at `output/native-publication/site.sha256`. A
+changed file refuses verification. A changed manifest cannot be overwritten
+without the explicit `publish manifest --refresh` option. Neither operation
+changes manuscripts, lessons, video scripts or source files.
+
+`framework.education.publication_manifest` tests a complete manifest, altered
+bytes, added files, refused manifest replacement and linked-file rejection
+(on platforms that support symbolic links).
+
+The consolidated GitHub Pages publisher is maintained by Bits2Banking under
+`.github/workflows/learning-pages.yml`. It builds the former BookForge output
+and the MkDocs site independently, then combines them. The older book artifact
+jobs remain available; they no longer independently deploy to GitHub Pages.
+
+## Renderer regression: executable and directory paths containing spaces
+
+`framework.education.renderer` tests a native mock Python process. Earlier
+Windows UCRT64 runs failed when the test executable lived in a directory with
+spaces, even though the unrelated test cases passed. The standalone education
+launcher now uses an explicit Windows Unicode executable path and safely quoted
+arguments via `CreateProcessW` rather than the previous `_spawnvp` path.
+
+The executable name and the MkDocs `--config-file` and `--site-dir` values each
+receive a regression case with spaces. The fake renderer verifies the exact argv
+fields and can report success without writing `index.html`; the education
+builder must reject that incomplete result. These tests do not install or
+execute the real MkDocs package.
+
+To run the focused test from Windows PowerShell:
+
+```powershell
+Set-Location "C:\umicom\Umicom-Applications"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake --build ".\build\umicom-education" --parallel 2
+ctest --test-dir ".\build\umicom-education" `
+    -R "^framework\.education\.renderer$" -V
+```
+
+For real website acceptance, use the repository-local Python interpreter with
+`umicom-education build --repo PATH --python PATH`. The existing Python and
+MkDocs installation is not modified by the test. The platform-wide process
+API remains `umi_process_execute`; application modules must not copy the
+standalone education launch adapter.
+
+## Update 06: build an HTML site before previewing it
+
+A successful `doctor` check means the MkDocs renderer is available. It does not
+create `site/index.html`. The `serve` command continues to reject missing
+pages rather than incorrectly treating unbuilt Markdown as a website.
+
+To build once and then start the read-only native preview in one explicit step:
+
+```powershell
+Set-Location "C:\umicom\Umicom-Applications"
+$Education = ".\build\umicom-education\bin\umicom-education.exe"
+$Books = "C:\umicom\Umicom-Bits2Banking"
+$Python = "$Books\.venv\Scripts\python.exe"
+& $Education serve --repo $Books --build --python $Python --port 8765
+```
+
+The same action can be performed as two commands: `build` followed by `serve`.
+`--build` is permitted only for `serve`, and it is incompatible with
+`--directory`, which selects an existing export. A failed MkDocs invocation
+prevents server startup. Existing publishing and manuscript files remain
+untouched; this only generates the normal MkDocs site output.
+
+CTest now includes `framework.education.serve.preflight` to verify that a
+missing homepage gives an actionable diagnostic, failed renderer selection
+cannot start the socket, and unrelated commands reject `--build`.

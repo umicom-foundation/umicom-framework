@@ -21,7 +21,11 @@ add_library(umicom_education_site STATIC
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/site_preview.c"
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/site_content.c"
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/site_renderer.c"
-    "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/book.c")
+    "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/book.c"
+    "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/publication.c"
+    # Keep hashing with the existing Framework base implementation. This
+    # standalone learning build deliberately does not duplicate its algorithm.
+    "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/base/sha256.c")
 add_library(Umicom::education_site ALIAS umicom_education_site)
 target_include_directories(umicom_education_site PUBLIC
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/include")
@@ -71,6 +75,17 @@ if(BUILD_TESTING)
 
     add_executable(umicom-education-test-python
         "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/tests/education/mock_python.c")
+    add_executable(umicom-education-publication-test
+        "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/tests/education/test_publication.c")
+    target_link_libraries(umicom-education-publication-test PRIVATE Umicom::education_site)
+    if(NOT WIN32)
+        target_compile_definitions(umicom-education-publication-test PRIVATE _GNU_SOURCE=1)
+    endif()
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/education-publication-test")
+    add_test(NAME framework.education.publication_manifest
+        COMMAND umicom-education-publication-test
+                "${CMAKE_BINARY_DIR}/education-publication-test")
+
     add_executable(umicom-education-renderer-test
         "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/tests/education/test_renderer.c")
     target_link_libraries(umicom-education-renderer-test PRIVATE Umicom::education_site)
@@ -84,7 +99,8 @@ if(BUILD_TESTING)
           "$<TARGET_FILE:umicom-education-test-python>")
 
     foreach(test_target IN ITEMS umicom-education-book-test
-             umicom-education-test-python umicom-education-renderer-test)
+             umicom-education-test-python umicom-education-renderer-test
+             umicom-education-publication-test)
         if(MSVC)
             target_compile_options(${test_target} PRIVATE /W4)
         else()
@@ -94,9 +110,19 @@ if(BUILD_TESTING)
     endforeach()
 
     add_test(NAME framework.education.cli.help COMMAND umicom-education --help)
+
+    # Real native CLI preflight: refuse to serve a missing site and propagate
+    # an explicitly requested renderer failure without opening a socket.
+    # CMake's execute_process preserves paths with spaces on Windows and Linux.
+    add_test(NAME framework.education.serve.preflight
+        COMMAND "${CMAKE_COMMAND}"
+            "-DEDUCATION_PROGRAM=$<TARGET_FILE:umicom-education>"
+            "-DEDUCATION_FIXTURE_ROOT=${CMAKE_BINARY_DIR}/education-serve-preflight"
+            -P "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/tests/education/test_serve_preflight.cmake")
     set_tests_properties(framework.education.site_paths
         framework.education.publication framework.education.cli.help
         framework.education.book framework.education.renderer
+        framework.education.publication_manifest framework.education.serve.preflight
         PROPERTIES LABELS "education;framework;native;safe-c")
 endif()
 

@@ -6,6 +6,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 
+
 #include "captions_internal.h"
 #include <stdlib.h>
 #include <string.h>

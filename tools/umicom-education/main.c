@@ -16,6 +16,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/education/site.h"
+#include "umicom/education/publication.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,6 +39,9 @@ static void EducationPrintHelp(void)
          "umicom-education verify  --repo REPOSITORY\n"
          "umicom-education build   --repo REPOSITORY [--python PYTHON_EXECUTABLE]\n"
          "umicom-education serve   --repo REPOSITORY [--port 8765] [--directory SITE_DIRECTORY]\n"
+         "umicom-education serve   --repo REPOSITORY --build [--python PYTHON_EXECUTABLE] [--port 8765]\n"
+         "umicom-education publish manifest --repo REPOSITORY [--refresh]\n"
+         "umicom-education publish verify --repo REPOSITORY\n"
          "umicom-education book list --repo REPOSITORY\n"
          "umicom-education book check --repo REPOSITORY --volume SLUG\n"
          "umicom-education book assemble --repo REPOSITORY --volume SLUG [--refresh]\n"
@@ -48,7 +52,9 @@ static void EducationPrintHelp(void)
          "\n"
          "For deterministic smoke tests, serve also accepts --once.\n"
          "Build searches .venv first, then a Python installation with MkDocs and Material.\n"
-         "Use a repository-local Python virtual environment to avoid MSYS2 PATH conflicts.\n");
+         "Use a repository-local Python virtual environment to avoid MSYS2 PATH conflicts.\n"
+         "Serve never builds implicitly. Choose serve --build to build then preview;\n"
+         "--build leaves historical book sources untouched and retains MkDocs as renderer.\n");
 }
 
 static int EducationIsDirectory(const char *path)
@@ -179,6 +185,15 @@ int main(int argc, char **argv)
     const char *command = argv[1];
     const char *bookCommand = NULL;
     int firstOption = 2;
+    if (strcmp(command, "publish") == 0) {
+        if (argc < 3 || (strcmp(argv[2], "manifest") != 0 &&
+                         strcmp(argv[2], "verify") != 0)) {
+            fputs("Use `publish manifest` or `publish verify`.\n", stderr);
+            return 2;
+        }
+        bookCommand = argv[2]; /* One bounded subcommand at a time. */
+        firstOption = 3;
+    }
     if (strcmp(command, "book") == 0) {
         if (argc < 3 || (strcmp(argv[2], "list") != 0 &&
                          strcmp(argv[2], "check") != 0 &&
@@ -197,6 +212,7 @@ int main(int argc, char **argv)
     uint16_t port = 8765U;
     int refresh = 0;
     int once = 0;
+    int buildBeforeServe = 0;
     for (int i = firstOption; i < argc; ++i) {
         if (strcmp(argv[i], "--repo") == 0 && i + 1 < argc) {
             requestedRepository = argv[++i];
@@ -217,10 +233,19 @@ int main(int argc, char **argv)
             refresh = 1;
         } else if (strcmp(argv[i], "--once") == 0) {
             once = 1;
+        } else if (strcmp(argv[i], "--build") == 0) {
+            buildBeforeServe = 1;
         } else {
             fprintf(stderr, "Unknown option: %s\n", argv[i]);
             return 2;
         }
+    }
+    /* A build request is meaningful only for the explicit local preview. The
+     * independent `build` command remains the primary publishing operation.
+     * Rejecting this early prevents other commands from ignoring --build. */
+    if (buildBeforeServe && strcmp(command, "serve") != 0) {
+        fputs("--build applies only to serve; use the build command otherwise.\n", stderr);
+        return 2;
     }
     if (requestedRepository == NULL) {
         fputs("Specify the Bits2Banking checkout with --repo PATH.\n", stderr);
@@ -262,6 +287,20 @@ int main(int argc, char **argv)
         }
         return UmicomEducationBuildSiteWithPython(repositoryRoot, requestedPython);
     }
+    if (strcmp(command, "publish") == 0) {
+        if (requestedPython != NULL || requestedVolume != NULL ||
+            requestedBrand != NULL || requestedDirectory != NULL || once) {
+            fputs("This option does not apply to publication verification.\n", stderr);
+            return 2;
+        }
+        if (strcmp(bookCommand, "manifest") == 0)
+            return UmicomEducationPublicationManifest(repositoryRoot, refresh);
+        if (refresh) {
+            fputs("`publish verify` is read-only; --refresh is not applicable.\n", stderr);
+            return 2;
+        }
+        return UmicomEducationPublicationVerify(repositoryRoot);
+    }
     if (strcmp(command, "book") == 0) {
         if (requestedPython != NULL || requestedDirectory != NULL || once ||
             (strcmp(bookCommand, "list") == 0 && (requestedVolume != NULL || refresh)))
@@ -282,7 +321,23 @@ int main(int argc, char **argv)
         return UmicomEducationBookAssemble(repositoryRoot, requestedVolume, refresh);
     }
     if (strcmp(command, "serve") == 0) {
-        if (refresh || requestedVolume != NULL || requestedPython != NULL) return 2;
+        if (refresh || requestedVolume != NULL ||
+            (requestedPython != NULL && !buildBeforeServe) ||
+            (requestedDirectory != NULL && buildBeforeServe)) {
+            fputs("serve --build uses the repository's configured site folder; "
+                  "--directory is for existing exports only.\n", stderr);
+            return 2;
+        }
+        /* The site's renderer is selected through the same Framework service
+         * as `umicom-education build`, including support for spaces in Windows
+         * executable paths. No second MkDocs launcher is introduced here.
+         * The user explicitly opted into building before starting the server. */
+        if (buildBeforeServe) {
+            if (UmicomEducationBuildSiteWithPython(repositoryRoot, requestedPython) != 0) {
+                fputs("Site build failed; the local server was not started.\n", stderr);
+                return 1;
+            }
+        }
         char site[UMICOM_EDUCATION_PATH_CAPACITY];
         if (requestedDirectory == NULL) {
             if (!EducationPathJoin(site, sizeof(site), repositoryRoot, "site")) return 2;
@@ -294,8 +349,11 @@ int main(int argc, char **argv)
         if (!EducationIsDirectory(site) ||
             !EducationPathJoin(indexPage, sizeof(indexPage), site, "index.html") ||
             !EducationIsFile(indexPage)) {
-            fputs("The website home page is missing. Install MkDocs in the project .venv,\n"
-                  "then run `build` before `serve`. See `umicom-education --help`.\n", stderr);
+            fprintf(stderr, "The website home page is missing: %s\n", indexPage);
+            fputs("The C web server is ready, but no generated website exists at this path.\n"
+                  "Run `umicom-education build --repo REPOSITORY --python PYTHON` first,\n"
+                  "or choose `umicom-education serve --repo REPOSITORY --build --python PYTHON`.\n"
+                  "The 'doctor' command checks dependencies; it does not build pages.\n", stderr);
             return 2;
         }
         return UmicomEducationServeSite(site, port, once);

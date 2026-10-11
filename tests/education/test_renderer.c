@@ -242,6 +242,39 @@ int main(int argc, char **argv)
     EDUCATION_CHECK(CopyExecutableChecked(argv[2], spacedInterpreter));
     EDUCATION_CHECK(UmicomEducationCheckRenderer(argv[1], spacedInterpreter) == 0);
 
-    puts("[OK] Renderer argv boundary, local venv, failure and publication tests.");
+    /* The original regression checked only the probe. Build in the same
+     * spaced directory so both --config-file and --site-dir must survive
+     * Win32 argv translation as intact, separate arguments. */
+    EDUCATION_CHECK(snprintf(configuration, sizeof(configuration),
+                             "%s/mkdocs.yml", spacedFolder) > 0);
+    file = fopen(configuration, "wb");
+    EDUCATION_CHECK(file != NULL);
+    EDUCATION_CHECK(fputs("site_name: Spaced renderer fixture\n", file) >= 0);
+    EDUCATION_CHECK(fclose(file) == 0);
+    EDUCATION_CHECK(UmicomEducationBuildSiteWithPython(spacedFolder, spacedInterpreter) == 0);
+    EDUCATION_CHECK(snprintf(page, sizeof(page), "%s/site/index.html", spacedFolder) > 0);
+    EDUCATION_CHECK(FileExists(page));
+
+    /* A success exit code is not enough. Test the negative postcondition in
+     * an isolated folder, where the old rendered page cannot mask failure. */
+    char noOutputFolder[UMICOM_EDUCATION_PATH_CAPACITY];
+    EDUCATION_CHECK(snprintf(noOutputFolder, sizeof(noOutputFolder),
+                             "%s/no-output-case", argv[1]) > 0);
+    EDUCATION_CHECK(MakeFolderChecked(noOutputFolder));
+    EDUCATION_CHECK(snprintf(configuration, sizeof(configuration),
+                             "%s/mkdocs.yml", noOutputFolder) > 0);
+    file = fopen(configuration, "wb");
+    EDUCATION_CHECK(file != NULL);
+    EDUCATION_CHECK(fputs("site_name: Empty child output\n", file) >= 0);
+    EDUCATION_CHECK(fclose(file) == 0);
+    EDUCATION_CHECK(snprintf(page, sizeof(page), "%s/site/index.html", noOutputFolder) > 0);
+    /* Only the disposable CTest fixture may be cleaned. Do not touch the
+     * learner's real website or an existing repository build directory. */
+    if (FileExists(page)) EDUCATION_CHECK(remove(page) == 0);
+    EDUCATION_CHECK(SetEnvironmentChecked("UMICOM_EDUCATION_TEST_NO_SITE_OUTPUT", "1"));
+    EDUCATION_CHECK(UmicomEducationBuildSiteWithPython(noOutputFolder, argv[2]) == 1);
+    EDUCATION_CHECK(ClearEnvironmentChecked("UMICOM_EDUCATION_TEST_NO_SITE_OUTPUT"));
+
+    puts("[OK] Renderer argv boundaries, spaced paths, local venv and failure evidence.");
     return 0;
 }

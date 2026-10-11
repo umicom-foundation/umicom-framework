@@ -22,6 +22,9 @@
 #include <sys/stat.h>
 #if defined(_WIN32)
 # include <process.h>
+# include <windows.h>
+# include <wchar.h>
+# include <limits.h>
 #else
 # include <spawn.h>
 # include <sys/wait.h>
@@ -105,6 +108,14 @@ static int EducationFileExists(const char *path)
 #endif
 }
 
+/* The first renderer launcher used _spawnvp. Its CRT-specific handling of a
+ * quoted executable path failed for the Windows test fixture whose filename
+ * contains spaces. The full Framework has umi_process_execute, which owns the
+ * general-purpose process policy. This small bootstrap-only implementation
+ * must also work before that larger library has been linked into the
+ * standalone education tool. Do not add another general-purpose process API.
+ * Retain the original launcher for source review. */
+#if 0
 /* Return the process exit code, or -1 when a child could not be started/waited.
  * Never interpret a user-supplied interpreter path as shell syntax. */
 static int EducationSpawn(const char *executable, const char *const arguments[])
@@ -112,6 +123,166 @@ static int EducationSpawn(const char *executable, const char *const arguments[])
 #if defined(_WIN32)
     intptr_t outcome = _spawnvp(_P_WAIT, executable, arguments);
     return outcome < 0 ? -1 : (int)outcome;
+#else
+    pid_t child = 0;
+    int spawnResult = posix_spawnp(&child, executable, NULL, NULL,
+                                  (char *const *)arguments, environ);
+    if (spawnResult != 0) return -1;
+    int status = 0;
+    while (waitpid(child, &status, 0) < 0) {
+        if (errno == EINTR) continue;
+        return -1;
+    }
+    return WIFEXITED(status) ? WEXITSTATUS(status) : -1;
+#endif
+}
+
+#endif
+
+#if defined(_WIN32)
+/* CreateProcessW accepts an explicit executable independently from its command
+ * line. Windows still passes argv as a command string, so each UTF-16 argument
+ * must be encoded according to the C-runtime quote/backslash rules. No shell,
+ * variable expansion, command substitution, or process-wide PATH changes. */
+static wchar_t *EducationToWide(const char *utf8)
+{
+    if (utf8 == NULL) return NULL;
+    int length = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8, -1, NULL, 0);
+    if (length <= 0 || length >= 32767) return NULL;
+    wchar_t *wide = calloc((size_t)length, sizeof(*wide));
+    if (wide == NULL) return NULL;
+    if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8, -1,
+                            wide, length) != length)
+    {
+        free(wide);
+        return NULL;
+    }
+    return wide;
+}
+
+static int EducationPutWide(wchar_t *buffer, size_t capacity,
+                            size_t *used, wchar_t value)
+{
+    if (*used >= capacity - 1U) return 0;
+    buffer[(*used)++] = value;
+    buffer[*used] = L'\0';
+    return 1;
+}
+
+static int EducationPutRepeated(wchar_t *buffer, size_t capacity,
+                                size_t *used, wchar_t value, size_t count)
+{
+    if (count > capacity - 1U - *used) return 0;
+    for (size_t i = 0U; i < count; ++i) buffer[(*used)++] = value;
+    buffer[*used] = L'\0';
+    return 1;
+}
+
+/* Quote every argument, including empty arguments, to make boundaries explicit.
+ * Double backslashes before quotes and at the end of quoted arguments. This
+ * keeps a literal path containing spaces in precisely one child argv slot. */
+static int EducationQuoteWide(wchar_t *buffer, size_t capacity,
+                              size_t *used, const wchar_t *argument)
+{
+    if (!EducationPutWide(buffer, capacity, used, L'"')) return 0;
+    size_t slashes = 0U;
+    for (const wchar_t *cursor = argument;; ++cursor)
+    {
+        if (*cursor == L'\\') { ++slashes; continue; }
+        if (*cursor == L'"')
+        {
+            if (!EducationPutRepeated(buffer, capacity, used, L'\\',
+                                      slashes * 2U + 1U) ||
+                !EducationPutWide(buffer, capacity, used, L'"')) return 0;
+            slashes = 0U;
+            continue;
+        }
+        if (*cursor == L'\0')
+        {
+            if (!EducationPutRepeated(buffer, capacity, used, L'\\',
+                                      slashes * 2U)) return 0;
+            break;
+        }
+        if (!EducationPutRepeated(buffer, capacity, used, L'\\', slashes) ||
+            !EducationPutWide(buffer, capacity, used, *cursor)) return 0;
+        slashes = 0U;
+    }
+    return EducationPutWide(buffer, capacity, used, L'"');
+}
+
+static int EducationSpawnWindows(const char *executable,
+                                 const char *const arguments[])
+{
+    enum { WINDOWS_COMMAND_UNITS = 32767, MAX_ARGUMENTS = 16 };
+    if (executable == NULL || arguments == NULL || arguments[0] == NULL) return -1;
+    wchar_t *wideExecutable = EducationToWide(executable);
+    wchar_t *command = calloc(WINDOWS_COMMAND_UNITS, sizeof(*command));
+    if (wideExecutable == NULL || command == NULL)
+    {
+        free(wideExecutable); free(command);
+        fputs("Cannot encode the Python command as UTF-16.\n", stderr);
+        return -1;
+    }
+    size_t used = 0U;
+    int ok = 1;
+    unsigned argumentCount = 0U;
+    while (argumentCount < MAX_ARGUMENTS && arguments[argumentCount] != NULL)
+    {
+        wchar_t *wideArgument = EducationToWide(arguments[argumentCount]);
+        if (wideArgument == NULL ||
+            (argumentCount != 0U && !EducationPutWide(command, WINDOWS_COMMAND_UNITS,
+                                                      &used, L' ')) ||
+            !EducationQuoteWide(command, WINDOWS_COMMAND_UNITS, &used, wideArgument))
+            ok = 0;
+        free(wideArgument);
+        if (!ok) break;
+        ++argumentCount;
+    }
+    if (argumentCount == MAX_ARGUMENTS) ok = 0;
+    if (!ok)
+    {
+        fputs("Invalid or oversized Python child argument vector.\n", stderr);
+        free(command); free(wideExecutable);
+        return -1;
+    }
+    STARTUPINFOW startup = {0};
+    PROCESS_INFORMATION child = {0};
+    startup.cb = sizeof(startup);
+    /* Use lpApplicationName for explicit paths: a filename containing spaces
+     * must never be reinterpreted as several executable candidates. Bare
+     * launcher names such as 'py' are resolved by CreateProcessW instead. */
+    const wchar_t *application = wcspbrk(wideExecutable, L"\\/:") != NULL
+        ? wideExecutable : NULL;
+    BOOL started = CreateProcessW(application, command, NULL, NULL, FALSE,
+                                  0U, NULL, NULL, &startup, &child);
+    free(command);
+    free(wideExecutable);
+    if (!started)
+    {
+        fprintf(stderr, "Cannot start Python renderer (Windows error %lu).\n",
+                (unsigned long)GetLastError());
+        return -1;
+    }
+    DWORD waited = WaitForSingleObject(child.hProcess, INFINITE);
+    DWORD exitCode = 0U;
+    BOOL checked = waited == WAIT_OBJECT_0 && GetExitCodeProcess(child.hProcess, &exitCode);
+    (void)CloseHandle(child.hThread);
+    (void)CloseHandle(child.hProcess);
+    if (!checked || exitCode > (DWORD)INT_MAX)
+    {
+        fputs("Unable to obtain the Python renderer exit status.\n", stderr);
+        return -1;
+    }
+    return (int)exitCode;
+}
+#endif
+
+/* Exit codes are kept distinct from launch failure. The caller can distinguish
+ * an invalid interpreter from a valid interpreter whose MkDocs build failed. */
+static int EducationSpawn(const char *executable, const char *const arguments[])
+{
+#if defined(_WIN32)
+    return EducationSpawnWindows(executable, arguments);
 #else
     pid_t child = 0;
     int spawnResult = posix_spawnp(&child, executable, NULL, NULL,
