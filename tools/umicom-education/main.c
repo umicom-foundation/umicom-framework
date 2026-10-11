@@ -26,6 +26,7 @@
 #include "umicom/education/ipc_trace.h"
 #include "umicom/education/schedule_trace.h"
 #include "umicom/education/timer_trace.h"
+#include "umicom/education/interrupt_trace.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,6 +56,7 @@ static void EducationPrintHelp(void)
          "umicom-education ipc-trace --file EDUCATIONAL_TRACE_FILE\n"
          "umicom-education schedule-trace --file EDUCATIONAL_SCHEDULE_FILE\n"
          "umicom-education timer-trace --file EDUCATIONAL_TIMER_FILE\n"
+         "umicom-education interrupt-trace --file EDUCATIONAL_IRQ_FILE\n"
          "umicom-education build   --repo REPOSITORY [--python PYTHON_EXECUTABLE]\n"
          "umicom-education serve   --repo REPOSITORY [--port 8765] [--directory SITE_DIRECTORY]\n"
          "umicom-education serve   --repo REPOSITORY --build [--python PYTHON_EXECUTABLE] [--port 8765]\n"
@@ -499,6 +501,36 @@ int main(int argc, char **argv)
                (unsigned long long)report.lastTick,
                (unsigned long long)report.nextFiniteDeadline);
         puts("Teaching trace only: no Kernel timer or user process was controlled.");
+        return 0;
+    }
+    /* Interpret only an explicitly versioned classroom trace. This operation
+     * cannot program CSRs, admit privileged handlers, or claim Kernel leases. */
+    if (strcmp(argv[1], "interrupt-trace") == 0) {
+        if (argc != 4 || strcmp(argv[2], "--file") != 0 || argv[3][0] == '\0') {
+            fputs("Usage: umicom-education interrupt-trace --file TEACHING_TRACE_FILE\n", stderr);
+            return 2;
+        }
+        UmiEducationInterruptReport report = {0};
+        const UmiStatus status = UmiEducationInterruptTraceInspectFile(argv[3], &report);
+        if (status != UMI_STATUS_OK) {
+            fprintf(stderr, "Cannot inspect interrupt teaching trace (status %d): %s\n",
+                    (int)status, argv[3]);
+            return 1;
+        }
+        printf("Interrupt trace: %u records\n"
+               "Claims: %u | Arms: %u | Entries: %u | Acknowledgements: %u\n"
+               "Returns: %u | Cancels: %u | Faults: %u | Recoveries: %u | Releases: %u\n"
+               "Peak owned: %u | Final owned: %u | Active: %u | Faulted: %u\n"
+               "Last logical tick: %llu\n",
+               (unsigned)report.recordCount, (unsigned)report.claims,
+               (unsigned)report.arms, (unsigned)report.entries,
+               (unsigned)report.acknowledgements, (unsigned)report.returns,
+               (unsigned)report.cancellations, (unsigned)report.faults,
+               (unsigned)report.recoveries, (unsigned)report.releases,
+               (unsigned)report.peakOwned, (unsigned)report.ownedAtEnd,
+               (unsigned)report.activeAtEnd, (unsigned)report.faultedAtEnd,
+               (unsigned long long)report.lastTick);
+        puts("Classroom simulation only: no Kernel CSR or interrupt source was touched.");
         return 0;
     }
     const char *command = argv[1];
