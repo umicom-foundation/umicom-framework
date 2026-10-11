@@ -18,6 +18,7 @@
 #include "umicom/education/site.h"
 #include "umicom/education/publication.h"
 #include "umicom/education/nav_audit.h"
+#include "umicom/education/binary_inspect.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,6 +40,7 @@ static void EducationPrintHelp(void)
          "umicom-education prepare --repo REPOSITORY [--brand BRAND_DIRECTORY] [--refresh]\n"
          "umicom-education verify  --repo REPOSITORY\n"
          "umicom-education audit   --repo REPOSITORY   (native navigation preflight)\n"
+         "umicom-education binary --file OBJECT_OR_EXECUTABLE\n"
          "umicom-education build   --repo REPOSITORY [--python PYTHON_EXECUTABLE]\n"
          "umicom-education serve   --repo REPOSITORY [--port 8765] [--directory SITE_DIRECTORY]\n"
          "umicom-education serve   --repo REPOSITORY --build [--python PYTHON_EXECUTABLE] [--port 8765]\n"
@@ -182,6 +184,40 @@ int main(int argc, char **argv)
 {
     if (argc < 2 || strcmp(argv[1], "help") == 0 || strcmp(argv[1], "--help") == 0) {
         EducationPrintHelp();
+        return 0;
+    }
+    /* Read-only native file inspection does not require a Bits2Banking checkout.
+     * This independent command never loads executable bytes as a program and
+     * cannot accidentally use a build/serve option. The parser is reusable
+     * Framework code; the CLI owns only text presentation. */
+    if (strcmp(argv[1], "binary") == 0) {
+        if (argc != 4 || strcmp(argv[2], "--file") != 0 || argv[3][0] == '\0') {
+            fputs("Usage: umicom-education binary --file PATH\n", stderr);
+            return 2;
+        }
+        UmiEducationBinaryHeader header = {0};
+        UmiStatus status = UmiEducationBinaryInspectFile(argv[3], &header);
+        if (status != UMI_STATUS_OK) {
+            fprintf(stderr, "Cannot inspect binary header (status %d): %s\n",
+                    (int)status, argv[3]);
+            return 1;
+        }
+        printf("Format: %s\nType: %s\nArchitecture: %s\n"
+               "Address width: %u bits\nEndianness: %s\n"
+               "Sections: %u%s\n",
+               UmiEducationBinaryFormatText(header.format),
+               UmiEducationBinaryTypeText(&header),
+               UmiEducationBinaryMachineText(&header),
+               (unsigned)header.addressBits,
+               header.littleEndian ? "little" : "big",
+               (unsigned)header.sections,
+               header.sectionCountExtended ? " (extended count)" : "");
+        if (header.format != UMI_EDUCATION_BINARY_COFF)
+            printf("Entry point (%s): 0x%llx\n",
+                   header.entryIsRva ? "RVA" : "address",
+                   (unsigned long long)header.entryPoint);
+        printf("File size: %llu bytes\n",
+               (unsigned long long)header.fileBytes);
         return 0;
     }
     const char *command = argv[1];

@@ -24,6 +24,7 @@ add_library(umicom_education_site STATIC
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/book.c"
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/publication.c"
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/nav_audit.c"
+    "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/binary_inspect.c"
     # Keep hashing with the existing Framework base implementation. This
     # standalone learning build deliberately does not duplicate its algorithm.
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/base/sha256.c")
@@ -124,6 +125,28 @@ if(BUILD_TESTING)
         COMMAND umicom-education-navigation-test
             "${CMAKE_BINARY_DIR}/education-navigation-test")
 
+    # Inspect deterministic ELF/PE/COFF fixture headers, a compiler-produced
+    # executable and a named file whose path includes spaces. The production
+    # parser never executes the inspected file.
+    add_executable(umicom-education-binary-test
+        "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/tests/education/test_binary_inspect.c")
+    target_link_libraries(umicom-education-binary-test PRIVATE Umicom::education_site)
+    if(MSVC)
+        target_compile_options(umicom-education-binary-test PRIVATE /W4)
+    else()
+        target_compile_options(umicom-education-binary-test PRIVATE
+            -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    endif()
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/education-binary-test/fixture with spaces")
+    add_test(NAME framework.education.binary_inspect
+        COMMAND umicom-education-binary-test
+            "$<TARGET_FILE:umicom-education-binary-test>"
+            "${CMAKE_BINARY_DIR}/education-binary-test/fixture with spaces/sample.obj")
+    add_test(NAME framework.education.binary.cli
+        COMMAND umicom-education binary --file "$<TARGET_FILE:umicom-education>")
+    set_tests_properties(framework.education.binary.cli PROPERTIES
+        PASS_REGULAR_EXPRESSION "Format: (ELF|PE)")
+
     add_test(NAME framework.education.cli.help COMMAND umicom-education --help)
 
     # Real native CLI preflight: refuse to serve a missing site and propagate
@@ -139,6 +162,7 @@ if(BUILD_TESTING)
         framework.education.book framework.education.renderer
         framework.education.publication_manifest framework.education.serve.preflight
         framework.education.navigation_audit
+        framework.education.binary_inspect framework.education.binary.cli
         PROPERTIES LABELS "education;framework;native;safe-c")
 endif()
 
