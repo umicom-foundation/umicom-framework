@@ -218,7 +218,8 @@ static void RecomputeEvidence(UmiIntegrationSuiteRuntime *runtime)
         const bool running = item->disposition == UMI_INTEGRATION_LAUNCH_ALREADY_RUNNING ||
                              item->disposition == UMI_INTEGRATION_LAUNCH_OBSERVED_RUNNING;
         const bool failed = item->disposition == UMI_INTEGRATION_LAUNCH_OBSERVED_FAILED;
-        if (item->disposition == UMI_INTEGRATION_LAUNCH_OBSERVED_STARTING)
+        if (item->disposition == UMI_INTEGRATION_LAUNCH_OBSERVED_STARTING ||
+            item->disposition == UMI_INTEGRATION_LAUNCH_OBSERVED_STOPPING)
             ++starting_total;
         if (item->disposition == UMI_INTEGRATION_LAUNCH_OBSERVED_STOPPED)
             ++stopped_total;
@@ -349,14 +350,15 @@ UmiStatus umi_integration_suite_runtime_mark_failed(
     if (item->disposition != UMI_INTEGRATION_LAUNCH_READY &&
         item->disposition != UMI_INTEGRATION_LAUNCH_OBSERVED_STARTING &&
         item->disposition != UMI_INTEGRATION_LAUNCH_ALREADY_RUNNING &&
-        item->disposition != UMI_INTEGRATION_LAUNCH_OBSERVED_RUNNING)
+        item->disposition != UMI_INTEGRATION_LAUNCH_OBSERVED_RUNNING &&
+        item->disposition != UMI_INTEGRATION_LAUNCH_OBSERVED_STOPPING)
         return UMI_STATUS_INVALID_STATE;
     item->disposition = UMI_INTEGRATION_LAUNCH_OBSERVED_FAILED;
     RecomputeEvidence(runtime);
     return UMI_STATUS_OK;
 }
 
-/* R02: An actual process start is distinct from a launchable executable.
+/* An actual process start is distinct from a launchable executable.
  * The integration runtime records supervisor evidence but does not create
  * another process supervisor or make a process readiness handshake claim. */
 UmiStatus umi_integration_suite_runtime_mark_starting(
@@ -380,7 +382,7 @@ UmiStatus umi_integration_suite_runtime_mark_starting(
     return UMI_STATUS_OK;
 }
 
-/* R02: The caller must first match the authoritative child/process token.
+/* The caller must first match the authoritative child/process token.
  * This function only changes the existing suite runtime's copied evidence.
  * A disappeared executable is NOT a confirmed process exit. */
 UmiStatus umi_integration_suite_runtime_mark_stopped(
@@ -397,7 +399,8 @@ UmiStatus umi_integration_suite_runtime_mark_stopped(
         return UMI_STATUS_NOT_FOUND;
     if (item->disposition != UMI_INTEGRATION_LAUNCH_ALREADY_RUNNING &&
         item->disposition != UMI_INTEGRATION_LAUNCH_OBSERVED_RUNNING &&
-        item->disposition != UMI_INTEGRATION_LAUNCH_OBSERVED_STARTING)
+        item->disposition != UMI_INTEGRATION_LAUNCH_OBSERVED_STARTING &&
+        item->disposition != UMI_INTEGRATION_LAUNCH_OBSERVED_STOPPING)
         return UMI_STATUS_INVALID_STATE;
     item->disposition = UMI_INTEGRATION_LAUNCH_OBSERVED_STOPPED;
     RecomputeEvidence(runtime);
@@ -436,4 +439,127 @@ bool umi_integration_suite_runtime_is_usable(
             ++required_total;
     return runtime->running_required == required_total &&
         runtime->running_required + runtime->running_optional > 0U;
+}
+
+/* Turn an authoritative registry state into the same per-member disposition
+ * already used by the suite lifecycle. UNKNOWN/DISCOVERED are not proof that
+ * a product can be launched, while STOPPING never proves an observed exit. */
+static UmiStatus MapRegisteredState(const UmiIntegrationRegistryEntry *entry,
+                                    UmiIntegrationDependencyKind kind,
+                                    UmiIntegrationLaunchDisposition *outDisposition)
+{
+    if (outDisposition == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (entry == NULL || entry->state == UMI_INTEGRATION_APP_UNKNOWN ||
+        entry->state == UMI_INTEGRATION_APP_DISCOVERED) {
+        *outDisposition = kind == UMI_INTEGRATION_DEPENDENCY_REQUIRED
+            ? UMI_INTEGRATION_LAUNCH_REQUIRED_MISSING
+            : UMI_INTEGRATION_LAUNCH_OPTIONAL_MISSING;
+        return UMI_STATUS_OK;
+    }
+    if (!entry->application.enabled) {
+        *outDisposition = UMI_INTEGRATION_LAUNCH_DISABLED;
+        return UMI_STATUS_OK;
+    }
+    switch (entry->state) {
+        case UMI_INTEGRATION_APP_AVAILABLE:
+            *outDisposition = UMI_INTEGRATION_LAUNCH_READY;
+            return UMI_STATUS_OK;
+        case UMI_INTEGRATION_APP_STARTING:
+            *outDisposition = UMI_INTEGRATION_LAUNCH_OBSERVED_STARTING;
+            return UMI_STATUS_OK;
+        case UMI_INTEGRATION_APP_RUNNING:
+            *outDisposition = UMI_INTEGRATION_LAUNCH_OBSERVED_RUNNING;
+            return UMI_STATUS_OK;
+        case UMI_INTEGRATION_APP_STOPPING:
+            *outDisposition = UMI_INTEGRATION_LAUNCH_OBSERVED_STOPPING;
+            return UMI_STATUS_OK;
+        case UMI_INTEGRATION_APP_STOPPED:
+            *outDisposition = UMI_INTEGRATION_LAUNCH_OBSERVED_STOPPED;
+            return UMI_STATUS_OK;
+        case UMI_INTEGRATION_APP_FAILED:
+            *outDisposition = UMI_INTEGRATION_LAUNCH_OBSERVED_FAILED;
+            return UMI_STATUS_OK;
+        default:
+            return UMI_STATUS_INVALID_ARGUMENT;
+    }
+}
+
+/* An application registry is caller-mutable public C data. Check it before
+ * calling the established find function, which intentionally uses strcmp.
+ * Checking ALL entries prevents a corrupted unused entry from becoming an
+ * unbounded read when the registry is searched. */
+static UmiStatus ValidateRegistrySnapshot(const UmiIntegrationRegistry *registry)
+{
+    if (registry == NULL || registry->count > UMI_INTEGRATION_MAX_APPLICATIONS)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t entryIndex = 0U; entryIndex < registry->count; ++entryIndex) {
+        const UmiIntegrationRegistryEntry *entry = &registry->entries[entryIndex];
+        const char *id = entry->application.id;
+        if (id[0] == '\0' || memchr(id, '\0', sizeof(entry->application.id)) == NULL ||
+            entry->state < UMI_INTEGRATION_APP_UNKNOWN ||
+            entry->state > UMI_INTEGRATION_APP_FAILED)
+            return UMI_STATUS_INVALID_ARGUMENT;
+        for (size_t priorIndex = 0U; priorIndex < entryIndex; ++priorIndex)
+            if (strcmp(registry->entries[priorIndex].application.id, id) == 0)
+                return UMI_STATUS_ALREADY_EXISTS;
+    }
+    return UMI_STATUS_OK;
+}
+
+/* There is deliberately no second plan builder. This reconciles only the
+ * existing suite's private plan copy and preserves its IDs, kinds and frontend
+ * preferences. A new suite still uses umi_integration_suite_runtime_prepare.
+ *
+ * No publication occurs until all validation and mapping has succeeded. */
+UmiStatus umi_integration_suite_runtime_reconcile(
+    UmiIntegrationSuiteRuntime *runtime,
+    const UmiIntegrationRegistry *registry)
+{
+    UmiIntegrationSuiteRuntime candidate;
+    UmiStatus status;
+    if (runtime == NULL || registry == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (runtime->plan.count > UMI_INTEGRATION_MAX_MEMBERS ||
+        runtime->suite_id[0] == '\0' ||
+        memchr(runtime->suite_id, '\0', sizeof(runtime->suite_id)) == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = ValidateRegistrySnapshot(registry);
+    if (status != UMI_STATUS_OK)
+        return status;
+    candidate = *runtime;
+    candidate.plan.ready_count = 0U;
+    candidate.plan.missing_required = 0U;
+    candidate.plan.missing_optional = 0U;
+    for (size_t itemIndex = 0U; itemIndex < candidate.plan.count; ++itemIndex) {
+        UmiIntegrationLaunchItem *item = &candidate.plan.items[itemIndex];
+        const UmiIntegrationRegistryEntry *entry;
+        if (item->application_id[0] == '\0' ||
+            memchr(item->application_id, '\0', sizeof(item->application_id)) == NULL ||
+            (item->kind != UMI_INTEGRATION_DEPENDENCY_REQUIRED &&
+             item->kind != UMI_INTEGRATION_DEPENDENCY_OPTIONAL))
+            return UMI_STATUS_INVALID_ARGUMENT;
+        for (size_t priorIndex = 0U; priorIndex < itemIndex; ++priorIndex)
+            if (strcmp(item->application_id,
+                       candidate.plan.items[priorIndex].application_id) == 0)
+                return UMI_STATUS_ALREADY_EXISTS;
+        entry = umi_integration_registry_find_const(registry, item->application_id);
+        status = MapRegisteredState(entry, item->kind, &item->disposition);
+        if (status != UMI_STATUS_OK)
+            return status;
+        if (item->disposition == UMI_INTEGRATION_LAUNCH_REQUIRED_MISSING ||
+            (item->kind == UMI_INTEGRATION_DEPENDENCY_REQUIRED &&
+             item->disposition == UMI_INTEGRATION_LAUNCH_DISABLED))
+            ++candidate.plan.missing_required;
+        if (item->disposition == UMI_INTEGRATION_LAUNCH_OPTIONAL_MISSING ||
+            (item->kind == UMI_INTEGRATION_DEPENDENCY_OPTIONAL &&
+             item->disposition == UMI_INTEGRATION_LAUNCH_DISABLED))
+            ++candidate.plan.missing_optional;
+        if (item->disposition == UMI_INTEGRATION_LAUNCH_READY ||
+            item->disposition == UMI_INTEGRATION_LAUNCH_OBSERVED_RUNNING)
+            ++candidate.plan.ready_count;
+    }
+    RecomputeEvidence(&candidate);
+    *runtime = candidate;
+    return UMI_STATUS_OK;
 }

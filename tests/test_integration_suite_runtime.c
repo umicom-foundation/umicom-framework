@@ -125,7 +125,7 @@ int main(void) {
      * A stopped REQUIRED member must revoke suite usability immediately. */
     CHECK(umi_integration_registry_set_state(&r,"core",UMI_INTEGRATION_APP_AVAILABLE)==UMI_STATUS_OK);
     CHECK(umi_integration_registry_set_state(&r,"worker",UMI_INTEGRATION_APP_AVAILABLE)==UMI_STATUS_OK);
-    umi_integration_suite_init(&s, "suite.restart", "R02 restart and exit suite");
+    umi_integration_suite_init(&s, "suite.restart", "Restart and exit suite");
     CHECK(umi_integration_suite_add_member(&s,"core",UMI_INTEGRATION_DEPENDENCY_REQUIRED,0U)==UMI_STATUS_OK);
     CHECK(umi_integration_suite_add_member(&s,"worker",UMI_INTEGRATION_DEPENDENCY_REQUIRED,0U)==UMI_STATUS_OK);
     CHECK(umi_integration_suite_add_member(&s,"media",UMI_INTEGRATION_DEPENDENCY_OPTIONAL,0U)==UMI_STATUS_OK);
@@ -217,5 +217,117 @@ int main(void) {
     s.member_count = UMI_INTEGRATION_MAX_MEMBERS + 1U;
     CHECK(umi_integration_suite_runtime_prepare(&rt,&s,&r) == UMI_STATUS_CAPACITY_EXCEEDED);
     CHECK(memcmp(&rt,&unchanged,sizeof(rt)) == 0);
+
+    /* An owning host updates its existing registry after reconciling real
+     * process tokens. The suite projects those observations atomically. */
+    {
+        UmiIntegrationRegistry sourceRegistry;
+        UmiIntegrationSuiteDefinition sourceSuite;
+        UmiIntegrationSuiteRuntime projected;
+        UmiIntegrationSuiteRuntime preserved;
+        UmiIntegrationApplication candidateApp;
+        UmiIntegrationRegistryEntry *entry;
+        UmiIntegrationHealthSummary summary;
+
+        umi_integration_registry_init(&sourceRegistry);
+        umi_integration_application_init(&candidateApp);
+        CHECK(umi_integration_application_set_identity(&candidateApp, "bank", "Bank") == UMI_STATUS_OK);
+        candidateApp.enabled = true;
+        CHECK(umi_integration_registry_register(&sourceRegistry, &candidateApp) == UMI_STATUS_OK);
+        umi_integration_application_init(&candidateApp);
+        CHECK(umi_integration_application_set_identity(&candidateApp, "treasury", "Treasury") == UMI_STATUS_OK);
+        candidateApp.enabled = true;
+        CHECK(umi_integration_registry_register(&sourceRegistry, &candidateApp) == UMI_STATUS_OK);
+        umi_integration_suite_init(&sourceSuite, "finance", "Financial suite");
+        CHECK(umi_integration_suite_add_member(&sourceSuite, "bank", UMI_INTEGRATION_DEPENDENCY_REQUIRED, 0U) == UMI_STATUS_OK);
+        CHECK(umi_integration_suite_add_member(&sourceSuite, "treasury", UMI_INTEGRATION_DEPENDENCY_REQUIRED, 0U) == UMI_STATUS_OK);
+        CHECK(umi_integration_suite_add_member(&sourceSuite, "media", UMI_INTEGRATION_DEPENDENCY_OPTIONAL, 0U) == UMI_STATUS_OK);
+        CHECK(umi_integration_suite_runtime_prepare(&projected, &sourceSuite, &sourceRegistry) == UMI_STATUS_OK);
+        CHECK(umi_integration_suite_runtime_reconcile(&projected, &sourceRegistry) == UMI_STATUS_OK);
+        CHECK(projected.plan.missing_required == 2U && projected.plan.missing_optional == 1U);
+        CHECK(projected.state == UMI_INTEGRATION_SUITE_FAILED && !umi_integration_suite_runtime_is_usable(&projected));
+        preserved = projected;
+        CHECK(umi_integration_suite_runtime_reconcile(&projected, &sourceRegistry) == UMI_STATUS_OK);
+        CHECK(memcmp(&projected, &preserved, sizeof(projected)) == 0);
+
+        CHECK(umi_integration_registry_set_state(&sourceRegistry, "bank", UMI_INTEGRATION_APP_RUNNING) == UMI_STATUS_OK);
+        CHECK(umi_integration_registry_set_state(&sourceRegistry, "treasury", UMI_INTEGRATION_APP_STARTING) == UMI_STATUS_OK);
+        CHECK(umi_integration_suite_runtime_reconcile(&projected, &sourceRegistry) == UMI_STATUS_OK);
+        CHECK(projected.running_required == 1U && projected.plan.missing_required == 0U);
+        CHECK(projected.state == UMI_INTEGRATION_SUITE_STARTING && !umi_integration_suite_runtime_is_usable(&projected));
+        CHECK(umi_integration_registry_set_state(&sourceRegistry, "treasury", UMI_INTEGRATION_APP_RUNNING) == UMI_STATUS_OK);
+        CHECK(umi_integration_suite_runtime_reconcile(&projected, &sourceRegistry) == UMI_STATUS_OK);
+        CHECK(projected.running_required == 2U && projected.running_optional == 0U);
+        CHECK(projected.state == UMI_INTEGRATION_SUITE_DEGRADED && umi_integration_suite_runtime_is_usable(&projected));
+        umi_integration_health_from_runtime(&projected, &summary);
+        CHECK(summary.degraded && summary.running == 2U && summary.missing_optional == 1U);
+
+        umi_integration_application_init(&candidateApp);
+        CHECK(umi_integration_application_set_identity(&candidateApp, "media", "Media") == UMI_STATUS_OK);
+        candidateApp.enabled = true;
+        CHECK(umi_integration_registry_register(&sourceRegistry, &candidateApp) == UMI_STATUS_OK);
+        CHECK(umi_integration_registry_set_state(&sourceRegistry, "media", UMI_INTEGRATION_APP_AVAILABLE) == UMI_STATUS_OK);
+        CHECK(umi_integration_suite_runtime_reconcile(&projected, &sourceRegistry) == UMI_STATUS_OK);
+        CHECK(projected.plan.missing_optional == 0U && projected.state == UMI_INTEGRATION_SUITE_RUNNING);
+        CHECK(umi_integration_registry_set_state(&sourceRegistry, "bank", UMI_INTEGRATION_APP_STOPPING) == UMI_STATUS_OK);
+        CHECK(umi_integration_suite_runtime_reconcile(&projected, &sourceRegistry) == UMI_STATUS_OK);
+        CHECK(projected.running_required == 1U && projected.state == UMI_INTEGRATION_SUITE_STARTING);
+        CHECK(projected.plan.items[0].disposition == UMI_INTEGRATION_LAUNCH_OBSERVED_STOPPING);
+        CHECK(!umi_integration_suite_runtime_is_usable(&projected));
+        /* The confirmed exit callback is valid even after an earlier
+         * STOPPING observation; a duplicate exit remains rejected. */
+        CHECK(umi_integration_suite_runtime_mark_exit(&projected, "bank", 0) == UMI_STATUS_OK);
+        CHECK(umi_integration_suite_runtime_mark_exit(&projected, "bank", 0) == UMI_STATUS_INVALID_STATE);
+        CHECK(projected.plan.items[0].disposition == UMI_INTEGRATION_LAUNCH_OBSERVED_STOPPED);
+        CHECK(umi_integration_registry_set_state(&sourceRegistry, "bank", UMI_INTEGRATION_APP_STOPPED) == UMI_STATUS_OK);
+        CHECK(umi_integration_suite_runtime_reconcile(&projected, &sourceRegistry) == UMI_STATUS_OK);
+        CHECK(projected.running_required == 1U && !umi_integration_suite_runtime_is_usable(&projected));
+        CHECK(umi_integration_registry_set_state(&sourceRegistry, "bank", UMI_INTEGRATION_APP_RUNNING) == UMI_STATUS_OK);
+        CHECK(umi_integration_suite_runtime_reconcile(&projected, &sourceRegistry) == UMI_STATUS_OK);
+        CHECK(projected.state == UMI_INTEGRATION_SUITE_RUNNING && umi_integration_suite_runtime_is_usable(&projected));
+        CHECK(umi_integration_registry_set_state(&sourceRegistry, "treasury", UMI_INTEGRATION_APP_FAILED) == UMI_STATUS_OK);
+        CHECK(umi_integration_suite_runtime_reconcile(&projected, &sourceRegistry) == UMI_STATUS_OK);
+        CHECK(projected.failed_required == 1U && projected.state == UMI_INTEGRATION_SUITE_FAILED);
+        CHECK(umi_integration_registry_set_state(&sourceRegistry, "treasury", UMI_INTEGRATION_APP_RUNNING) == UMI_STATUS_OK);
+        CHECK(umi_integration_suite_runtime_reconcile(&projected, &sourceRegistry) == UMI_STATUS_OK);
+        CHECK(projected.failed_required == 0U && projected.state == UMI_INTEGRATION_SUITE_RUNNING);
+
+        entry = umi_integration_registry_find(&sourceRegistry, "bank");
+        CHECK(entry != NULL);
+        entry->application.enabled = false;
+        CHECK(umi_integration_suite_runtime_reconcile(&projected, &sourceRegistry) == UMI_STATUS_OK);
+        CHECK(projected.plan.missing_required == 1U && projected.state == UMI_INTEGRATION_SUITE_FAILED);
+        entry->application.enabled = true;
+        CHECK(umi_integration_suite_runtime_reconcile(&projected, &sourceRegistry) == UMI_STATUS_OK);
+        CHECK(projected.state == UMI_INTEGRATION_SUITE_RUNNING);
+
+        /* Invalid public-data snapshots cannot change the published suite. */
+        preserved = projected;
+        sourceRegistry.count = UMI_INTEGRATION_MAX_APPLICATIONS + 1U;
+        CHECK(umi_integration_suite_runtime_reconcile(&projected, &sourceRegistry) == UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(memcmp(&preserved, &projected, sizeof(projected)) == 0);
+        sourceRegistry.count = 3U;
+        entry->state = (UmiIntegrationApplicationState)9999;
+        CHECK(umi_integration_suite_runtime_reconcile(&projected, &sourceRegistry) == UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(memcmp(&preserved, &projected, sizeof(projected)) == 0);
+        entry->state = UMI_INTEGRATION_APP_RUNNING;
+        memset(entry->application.id, 'Z', sizeof(entry->application.id));
+        CHECK(umi_integration_suite_runtime_reconcile(&projected, &sourceRegistry) == UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(memcmp(&preserved, &projected, sizeof(projected)) == 0);
+        strcpy(entry->application.id, "bank");
+        CHECK(umi_integration_suite_runtime_reconcile(&projected, &sourceRegistry) == UMI_STATUS_OK);
+        /* A duplicate registry ID or malformed suite member also refuses
+         * the complete publication, instead of counting a member twice. */
+        preserved = projected;
+        strcpy(sourceRegistry.entries[2].application.id, "bank");
+        CHECK(umi_integration_suite_runtime_reconcile(&projected, &sourceRegistry) == UMI_STATUS_ALREADY_EXISTS);
+        CHECK(memcmp(&projected, &preserved, sizeof(projected)) == 0);
+        strcpy(sourceRegistry.entries[2].application.id, "media");
+        projected.plan.items[1].kind = (UmiIntegrationDependencyKind)100;
+        CHECK(umi_integration_suite_runtime_reconcile(&projected, &sourceRegistry) == UMI_STATUS_INVALID_ARGUMENT);
+        projected = preserved;
+        CHECK(umi_integration_suite_runtime_reconcile(NULL, &sourceRegistry) == UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(umi_integration_suite_runtime_reconcile(&projected, NULL) == UMI_STATUS_INVALID_ARGUMENT);
+    }
     return 0;
 }

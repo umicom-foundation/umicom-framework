@@ -119,4 +119,26 @@ UmiStatus umi_integration_suite_runtime_mark_failed(
 bool umi_integration_suite_runtime_is_usable(
     const UmiIntegrationSuiteRuntime *runtime);
 
+/* Reconcile the existing suite runtime with a trusted, authoritative snapshot
+ * of the EXISTING Integration Registry. The caller must first reconcile native
+ * process tokens and lifecycle events with its real process supervisor; the
+ * registry's RUNNING state is not an authenticated IPC readiness handshake.
+ * This operation does not start processes, read files, perform networking,
+ * infer installation evidence, or create a competing application registry.
+ *
+ * Every member is re-evaluated, including previously missing/disabled ones.
+ * Failed and stopped members remain distinguishable; STOPPING never counts
+ * as RUNNING. Invalid bounds, identities or states abort atomically, without
+ * publishing a partial suite or changing the caller's runtime. Repeated
+ * identical snapshots leave observable state unchanged.
+ *
+ * A successful reconciliation returns OK even when the resulting suite is
+ * FAILED, STOPPED or unavailable. Inspect runtime->state and
+ * umi_integration_suite_runtime_is_usable() for real readiness. Both caller
+ * objects must remain stable throughout the call on their owning thread. */
+UmiStatus umi_integration_suite_runtime_reconcile(
+    UmiIntegrationSuiteRuntime *runtime,
+    const UmiIntegrationRegistry *registry);
+
+
 #endif

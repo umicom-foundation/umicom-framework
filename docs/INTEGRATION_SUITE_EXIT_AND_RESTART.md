@@ -78,7 +78,7 @@ health-gate contract. That is future Framework-owned integration work.
 
 The public suite runtime does **not** store process tokens. It relies on the
 current authorised application-process owner to refuse stale exit callbacks
-before they are relayed. This batch does not add an IPC transport, modify UI
+before they are relayed. This runtime does not add an IPC transport, modify UI
 or silently enable live financial operations.
 
 ## 4. State illustration
@@ -129,5 +129,7 @@ remote Framework checkout**. All 3 focused tests passed in each configuration.
 The complete MSYS2 Windows build and the full Umicom Applications CTest suite
 must still be run by a developer on the actual integrated repository.
 
-See the separately supplied Batch R02 merge guide for the complete explicit
-PowerShell commit and Framework-submodule update order.
+For the current native repository locking, Git commit and shared Framework
+synchronisation policy, see `SHARED_FRAMEWORK_SUBMODULE_UPDATE_POLICY.md`.
+The companion registry reconciliation contract is described in
+`INTEGRATION_SUITE_REGISTRY_RECONCILIATION.md`.

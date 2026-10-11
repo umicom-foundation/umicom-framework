@@ -47,12 +47,17 @@ typedef enum UmiIntegrationLaunchDisposition {
     UMI_INTEGRATION_LAUNCH_OBSERVED_RUNNING,
     UMI_INTEGRATION_LAUNCH_OBSERVED_FAILED,
 
-    /* R02 keeps launch attempts, clean exits and recoveries distinct from
+    /* Launch attempts, clean exits and recoveries remain distinct from
      * binary availability. Append only: all earlier enum values, sizes and
      * field offsets remain ABI compatible. These dispositions exist only in
      * the existing runtime's copied plan, never in a fresh launch plan. */
     UMI_INTEGRATION_LAUNCH_OBSERVED_STARTING,
-    UMI_INTEGRATION_LAUNCH_OBSERVED_STOPPED
+    UMI_INTEGRATION_LAUNCH_OBSERVED_STOPPED,
+
+    /* An accepted STOPPING observation is not a clean exit and is no longer
+     * RUNNING. Appending a new value preserves existing enum constants and
+     * the public C ABI layout used by existing application modules. */
+    UMI_INTEGRATION_LAUNCH_OBSERVED_STOPPING
 } UmiIntegrationLaunchDisposition;
 
 /**

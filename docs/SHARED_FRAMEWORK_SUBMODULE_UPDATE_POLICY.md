@@ -36,17 +36,22 @@ source files into each consumer's `framework/` would create divergent edits.
 3. At `Umicom-Applications\framework`, verify `git status`, make sure `main`
    is checked out, then run `git add -A`, `git diff --cached --check`,
    `git commit -m "..."`, and `git push origin main`.
-4. At `Umicom-Applications`, build/test the pinned integration, stage the
-   **Framework submodule gitlink** with `git add -A`, check the staged diff,
-   commit and push the parent repository.
+4. At `Umicom-Applications`, build/test the pinned integration, use the
+   **Framework-owned** `umicom repo verify .` for a read-only preview, then
+   `umicom repo lock .` to stage exact submodule gitlinks. Review the stage
+   carefully before `git add -A`, commit and push the parent repository.
+   Do not use the older PowerShell version-lock helper for this workflow.
 5. At `umicomOS\framework`, ensure the submodule worktree is clean, switch to
    `main` if necessary, then `git pull --ff-only origin main`. This is the
    same Framework source, so **do not merge copies of source files there**.
-6. At `umicomOS`, configure/build/test the OS host targets, stage the changed
-   Framework gitlink with `git add -A`, commit and push the OS parent repo.
+6. At `umicomOS`, configure/build/test the OS host targets, invoke
+   `umicom repo verify .` and `umicom repo lock .` from the OS root, then
+   inspect the staged pointer with Git before `git add -A`, commit and push
+   the OS parent repository.
 7. When independently cloned standalone app repositories (Studio IDE, Trader,
    Bank, TMS, etc.) also contain their OWN root `framework/` submodule,
-   explicitly update each **only if it exists locally**, test, then commit
+   explicitly update each **only if it exists locally**, test, run the same
+   native `umicom repo lock .` at the standalone parent, then commit/push
    its parent gitlink. Thin application modules under
    `Umicom-Applications\applications\` do NOT each carry a separate
    Framework checkout; they use the single parent Framework target.
@@ -68,9 +73,27 @@ source files into each consumer's `framework/` would create divergent edits.
   mismatch indicates that at least one checkout remains on a different
   revision and is NOT automatically fixed by updating another repository.
 - A clean test run is a prerequisite for publishing a changed integration pin.
-- Check `git diff --cached --stat` before every `git commit`: `git add -A` stages
-  all working-tree changes in the current repository, including unrelated edits.
+- Check `git diff --cached --stat` and `git diff --cached --submodule=log`
+  before every commit: `git add -A` stages all working-tree changes in the
+  current repository, including unrelated edits.
+- The native lock command **does not perform Git pull, commit or push**. It
+  stages the current HEAD of all initialised submodules; never assume this
+  means a submodule has been updated to remote `main`.
+- Use `umicom repo verify .` to preview lock actions without changing the
+  index; use `umicom repo lock .` only after reviewing working-tree state.
 
-The full batch-specific Windows commands, including OS build, target selection,
-Git commit messages and optional standalone product repositories, are in the
-associated Batch R02 merge guide.
+## Native repository lock from the existing Applications checkout
+
+Run in PowerShell after building the native Framework command:
+
+```powershell
+Set-Location "C:\umicom\Umicom-Applications"
+$umicom = ".\build\windows-ucrt64-all-debug\bin\umicom.exe"
+& $umicom repo verify .
+& $umicom repo lock .
+git diff --cached --submodule=log
+```
+
+In Umicom OS, call the **same installed or built Umicom command** using its
+absolute path from the OS root; the OS does not own a second implementation
+of repository locking.
