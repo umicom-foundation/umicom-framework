@@ -31,6 +31,12 @@ add_library(umicom_vm_manager STATIC
     "${_umi_vm_root}/src/vm_manager/boot_profile_cli.c"
     "${_umi_vm_root}/src/vm_manager/boot_cli.c"
     "${_umi_vm_root}/src/vm_manager/cli.c")
+# The console-journey protocol is a reusable VM Manager service, not CLI-only
+# behaviour. Applications and Umicom OS adapters can use the same C23 API.
+# All original VM sources, targets and life cycles remain unchanged.
+target_sources(umicom_vm_manager PRIVATE
+    "${_umi_vm_root}/src/vm_manager/console_journey.c"
+    "${_umi_vm_root}/src/vm_manager/console_journey_native.c")
 add_library(Umicom::vm_manager ALIAS umicom_vm_manager)
 set_target_properties(umicom_vm_manager PROPERTIES EXPORT_NAME vm_manager C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
 target_include_directories(umicom_vm_manager PUBLIC
