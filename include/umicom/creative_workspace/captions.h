@@ -62,6 +62,28 @@ extern "C"
     UmiStatus UmiCaptionTrackParseSrt(const char *title, const void *bytes, size_t length,
                                       UmiCaptionTrack **out);
     /**
+ * Import the plain-text WebVTT subset into the shared immutable caption owner.
+ * Accept an optional UTF-8 BOM, the exact WEBVTT header, LF or CRLF, and a
+ * blank line before cues. Times may use MM:SS.mmm or HH:MM:SS.mmm, bounded by
+ * TIME_LIMIT. Overlapping cues retain their nondecreasing start order.
+ * Optional increasing positive numeric cue labels are accepted and renumbered
+ * on export. Named labels, header metadata, NOTE/STYLE/REGION blocks, cue
+ * settings, markup and entities are refused rather than silently discarded.
+ * This is an editing interchange reader, not a complete browser WebVTT parser.
+ * Initialise *out to NULL. Failure leaves it unchanged; no partial import.
+ */
+    UmiStatus UmiCaptionTrackParseWebVtt(const char *title, const void *bytes, size_t length,
+                                       UmiCaptionTrack **out);
+    /**
+ * Choose the plain-text reader from the document bytes, not the file extension.
+ * An initial WEBVTT signature (after an optional BOM) selects WebVTT; otherwise
+ * use SRT. The selected parser validates the whole document. Empty input means
+ * an empty SRT track. No fallback tries to reinterpret a malformed WebVTT file.
+ * Initialise *out to NULL; the caller owns a successful result.
+ */
+    UmiStatus UmiCaptionTrackParse(const char *title, const void *bytes, size_t length,
+                                 UmiCaptionTrack **out);
+    /**
  * Produce an independently owned shifted track. No cue is silently clipped:
  * any negative start or end beyond TIME_LIMIT refuses the whole operation.
  * The signed offset may be INT64_MIN; arithmetic remains checked.

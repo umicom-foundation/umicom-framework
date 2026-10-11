@@ -5,6 +5,7 @@ include_guard(GLOBAL)
 target_sources(umicom_creative_workspace PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/captions.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/captions_srt.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/captions_webvtt.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/captions_edit.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/captions_export.c")
 if(TARGET umicom_creative_workspace_gtk4)
@@ -14,6 +15,19 @@ if(TARGET umicom_creative_workspace_gtk4)
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)
 endif()
 if(BUILD_TESTING)
+
+    # Exercise portable interchange independently of GTK and provider services.
+    add_executable(umicom-caption-webvtt-test "${CMAKE_CURRENT_LIST_DIR}/../tests/creative_workspace/test_caption_webvtt.c")
+    target_link_libraries(umicom-caption-webvtt-test PRIVATE Umicom::creative_workspace)
+    umicom_creative_configure_target(umicom-caption-webvtt-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-caption-webvtt-test)
+    endif()
+    foreach(case import auto-vtt auto-srt short-time numeric-label crlf bom long-hour empty roundtrip null-byte text-capacity cue-capacity document-capacity live-output arguments header header-suffix header-text header-gap metadata note style region named-label duplicate-label zero-label label-overflow settings markup entity cr utf8 minute second hour millisecond arrow duration order empty-cue incomplete)
+        add_test(NAME "framework.captions.webvtt.${case}" COMMAND umicom-caption-webvtt-test "${case}")
+        set_tests_properties("framework.captions.webvtt.${case}" PROPERTIES
+            TIMEOUT 30 LABELS "framework;creative;captions;regression")
+    endforeach()
     add_executable(umicom-captions-test "${CMAKE_CURRENT_LIST_DIR}/../tests/creative_workspace/test_captions.c")
     target_link_libraries(umicom-captions-test PRIVATE Umicom::creative_workspace)
     umicom_creative_configure_target(umicom-captions-test)
@@ -38,6 +52,16 @@ if(BUILD_TESTING)
         if(COMMAND umicom_register_validation_target)
             umicom_register_validation_target(umicom-caption-files-gtk-test)
         endif()
+        foreach(case open-vtt open-vtt-invalid)
+            add_test(NAME "framework.captions.files.${case}" COMMAND umicom-caption-files-gtk-test "${case}")
+            set_tests_properties("framework.captions.files.${case}" PROPERTIES
+                TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;creative;captions;gtk4;file")
+        endforeach()
+        foreach(case prepare-vtt invalid-vtt)
+            add_test(NAME "framework.captions.gtk.${case}" COMMAND umicom-captions-gtk-test "${case}")
+            set_tests_properties("framework.captions.gtk.${case}" PROPERTIES
+                TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;creative;captions;gtk4;regression")
+        endforeach()
         foreach(case open open-invalid open-stale open-cancel save-srt save-vtt save-existing)
             add_test(NAME "framework.captions.files.${case}" COMMAND umicom-caption-files-gtk-test "${case}")
             set_tests_properties("framework.captions.files.${case}" PROPERTIES

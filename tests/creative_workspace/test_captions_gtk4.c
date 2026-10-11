@@ -95,6 +95,35 @@ int main(int argc, char **argv)
     Set(root, text);
     Click(root, "captions.prepare");
     const char *mode = argv[1];
+    /* Pasted WebVTT follows the same preparation path as a file import. A
+     * rejected styled draft stays visible and cannot export an older capture. */
+    if (!strcmp(mode, "prepare-vtt") || !strcmp(mode, "invalid-vtt"))
+    {
+        bool invalid = !strcmp(mode, "invalid-vtt");
+        const char *input = invalid
+            ? "WEBVTT\n\n00:01.000 --> 00:02.000 align:start\nKeep this draft\n"
+            : "WEBVTT\n\n00:01.000 --> 00:04.000\nFirst\n\n00:03.000 --> 00:05.000\nSecond\n\n";
+        Set(root, input);
+        Click(root, "captions.prepare");
+        char *actual = Read(editor);
+        CHECK(!strcmp(actual, invalid ? input : text));
+        g_free(actual);
+        if (invalid)
+        {
+            Click(root, "captions.save-vtt");
+            CHECK(strstr(gtk_label_get_text(GTK_LABEL(Get(root, "captions.message"))), "Prepare"));
+        }
+        else
+        {
+            gtk_spin_button_set_value(GTK_SPIN_BUTTON(Get(root, "captions.time")), 3500);
+            Click(root, "captions.preview");
+            actual = Read(output);
+            CHECK(!strcmp(actual, "First\n\nSecond"));
+            g_free(actual);
+        }
+        g_object_unref(root);
+        return 0;
+    }
     if (!strcmp(mode, "prepare"))
     {
         char *actual = Read(editor);

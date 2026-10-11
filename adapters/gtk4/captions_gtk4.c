@@ -208,7 +208,12 @@ static void Worker(GTask *task, gpointer source, gpointer data, GCancellable *un
         if (job->status == UMI_STATUS_OK)
             job->status = UmiCreativeAssetBytes(job->asset, &bytes, &size);
         if (job->status == UMI_STATUS_OK)
+            /* The shared reader now recognises both caption formats. Keep the SRT-only call for review; the worker still owns every import byte. */
+#if 0
             job->status = UmiCaptionTrackParseSrt("Captions", bytes, size, &job->track);
+#else
+            job->status = UmiCaptionTrackParse("Captions", bytes, size, &job->track);
+#endif
         if (job->status == UMI_STATUS_OK && umi_cancellation_token_is_requested(job->cancel))
             job->status = UMI_STATUS_CANCELLED;
     }
@@ -335,8 +340,14 @@ static void Action(GtkButton *button, gpointer root)
     if (!strcmp(action, "prepare"))
     {
         char *text = Source(panel);
+        /* Use the same reader for pasted drafts and opened files. The former SRT-only dispatch is retained for comparison. */
+#if 0
         status = text ? UmiCaptionTrackParseSrt("Captions", text, strlen(text), &next)
                       : UMI_STATUS_CAPACITY_EXCEEDED;
+#else
+        status = text ? UmiCaptionTrackParse("Captions", text, strlen(text), &next)
+                      : UMI_STATUS_CAPACITY_EXCEEDED;
+#endif
         g_free(text);
     }
     else if (!panel->track)
@@ -363,10 +374,18 @@ static void Action(GtkButton *button, gpointer root)
         status = Publish(panel, &next);
     UmiCaptionTrackDestroy(next);
     if (status != UMI_STATUS_OK)
+        /* Explain the accepted interchange subset. Retain the SRT-only message for review. */
+#if 0
         Message(panel, status == UMI_STATUS_PARSE_ERROR
                            ? "Check SRT numbering, timestamps and plain UTF-8 text. Formatting "
                              "tags are not supported."
                            : umi_status_text(status));
+#else
+        Message(panel, status == UMI_STATUS_PARSE_ERROR
+                           ? "Check the caption header, numbering, timestamps and plain UTF-8 text. "
+                             "WebVTT styles, settings, notes, named labels and markup are not supported."
+                           : umi_status_text(status));
+#endif
 }
 static GtkWidget *Button(CaptionPanel *panel, GtkWidget *box, const char *label, const char *action)
 {
@@ -408,13 +427,21 @@ UmiStatus UmiCaptionsGtkCreate(GtkWidget **out)
     panel->root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
     Tag(panel->root, "captions.panel");
     g_object_set_data_full(G_OBJECT(panel->root), CAPTION_PANEL_KEY, panel, Release);
+    /* Describe both supported import formats; retain the earlier caption for review. */
+#if 0
     Label(panel->root, "Captions: edit SRT text, adjust timing and export a subtitle file.");
+#else
+    Label(panel->root, "Captions: open SRT or WebVTT, adjust timing and export a subtitle file.");
+#endif
     panel->form = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
     Tag(panel->form, "captions.form");
     gtk_box_append(GTK_BOX(panel->root), panel->form);
     Label(panel->form,
           "Each caption has a number, a timing line such as "
           "00:00:01,000 --> 00:00:03,000, then text. Separate captions with a blank line.");
+    /* Canonical SRT keeps one editable representation after either import. */
+    Label(panel->form, "You can also paste plain WebVTT. Preparing converts it to editable SRT. "
+                       "Numeric labels are renumbered; styled captions and named labels are not supported.");
     panel->editor = View(panel->form, "captions.editor", true);
     Button(panel, panel->form, "Prepare captions", "prepare");
     panel->offset = Spin(panel, "Shift all captions by milliseconds (negative moves earlier)",
@@ -431,14 +458,24 @@ UmiStatus UmiCaptionsGtkCreate(GtkWidget **out)
     panel->time = Spin(panel, "Preview at millisecond", "captions.time", 0, 0);
     Button(panel, panel->form, "Preview active captions", "preview");
     panel->preview = View(panel->form, "captions.output", false);
+    /* Opening now recognises WebVTT from its contents. Preserve the previous label for review. */
+#if 0
     Label(panel->form, "Full local path to open .srt or save a new .srt / .vtt file");
+#else
+    Label(panel->form, "Full local path to open or save a new .srt / .vtt file");
+#endif
     panel->path = gtk_entry_new();
     Tag(panel->path, "captions.path");
     gtk_box_append(GTK_BOX(panel->form), panel->path);
     panel->approval = gtk_check_button_new_with_label("I saved my draft and approve replacing it");
     Tag(panel->approval, "captions.approval");
     gtk_box_append(GTK_BOX(panel->form), panel->approval);
+    /* The same action accepts either plain caption format; keep the earlier button wording for review. */
+#if 0
     Button(panel, panel->form, "Open SRT from path", "open");
+#else
+    Button(panel, panel->form, "Open SRT or WebVTT from path", "open");
+#endif
     Button(panel, panel->form, "Save new SRT file", "save-srt");
     Button(panel, panel->form, "Save new WebVTT file", "save-vtt");
     panel->stop = Button(panel, panel->root, "Stop file operation", "stop");

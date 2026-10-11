@@ -88,6 +88,12 @@ int main(int argc, char **argv)
     if (opening || !strcmp(mode, "save-existing"))
         CHECK(g_file_set_contents(path, !strcmp(mode, "open-invalid") ? "broken" : input, -1,
                                   &error));
+    /* Deliberately retain a .srt extension: document bytes, not a filename,
+     * choose the parser. Unsupported settings must preserve the current draft. */
+    if (!strcmp(mode, "open-vtt") || !strcmp(mode, "open-vtt-invalid"))
+        CHECK(g_file_set_contents(path, !strcmp(mode, "open-vtt-invalid")
+            ? "WEBVTT\n\n00:01.000 --> 00:02.000 align:start\nImported caption\n"
+            : "WEBVTT\n\n00:01.000 --> 00:02.000\nImported caption\n\n", -1, &error));
     GtkWidget *root = NULL;
     CHECK(UmiCaptionsGtkCreate(&root) == UMI_STATUS_OK);
     g_object_ref_sink(root);
@@ -105,7 +111,12 @@ int main(int argc, char **argv)
         Click(root, "captions.stop");
     Wait(root);
     char *actual = Read(root);
+    /* Both import formats must publish the same canonical draft. Retain the SRT-only assertion branch for review. */
+#if 0
     if (!strcmp(mode, "open"))
+#else
+    if (!strcmp(mode, "open") || !strcmp(mode, "open-vtt"))
+#endif
         CHECK(!strcmp(actual, input));
     else if (!strcmp(mode, "open-stale"))
         CHECK(!strcmp(actual, "Edited while reading"));
@@ -125,6 +136,18 @@ int main(int argc, char **argv)
                                    : draft;
         CHECK(length == strlen(expected) && !memcmp(bytes, expected, length));
         g_free(bytes);
+        /* Reopen the actual exported file after retiring the editor state.
+         * This proves the save/open path without relying on a synthetic input. */
+        if (!strcmp(mode, "save-vtt"))
+        {
+            Set(root, "");
+            Click(root, "captions.open");
+            CHECK(gtk_widget_get_sensitive(Get(root, "captions.stop")));
+            Wait(root);
+            actual = Read(root);
+            CHECK(!strcmp(actual, draft));
+            g_free(actual);
+        }
     }
     g_object_unref(root);
     /* These paths were created in this test's unique temporary directory. */

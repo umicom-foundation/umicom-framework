@@ -28,6 +28,12 @@ An incremental build does not require deleting the existing build directory.
 CTest includes tests for bounded HTTP paths, publication, native book assembly,
 renderer error handling and CLI help. The renderer tests use a native test double
 rather than installing MkDocs or contacting the Internet.
+```bash
+cd "$HOME/umicom/Umicom-Applications"
+cmake -S framework/tools/umicom-education -B build/umicom-education -G Ninja -DBUILD_TESTING=ON
+cmake --build build/umicom-education --parallel 2
+ctest --test-dir build/umicom-education --output-on-failure
+```
 
 ## Solve `No module named mkdocs`
 
@@ -52,6 +58,10 @@ py -3 -m venv .venv
 If the Python launcher is not installed, substitute a known Windows Python
 interpreter path for `py -3`. Do not install packages into the MSYS2 toolchain
 interpreter unless that is your intended documentation environment.
+<!-- The shell example now closes beside its commands. This former closing
+fence is retained for source review so it cannot hide the following guide.
+```
+-->
 
 ## Commands
 
@@ -79,12 +89,17 @@ $Education = ".\build\umicom-education\bin\umicom-education.exe"
 $Books = "C:\umicom\Umicom-Bits2Banking"
 
 & $Education doctor --repo $Books
+& $Education prepare --repo $Books
 & $Education verify --repo $Books
 & $Education build --repo $Books
 if ($LASTEXITCODE -ne 0) { throw "The website was not built." }
 
 & $Education serve --repo $Books --port 8765
 ```
+
+The `--repo` argument identifies the existing Bits2Banking checkout. The
+publication owner writes to its approved `content` subdirectories and never
+changes the original book sources.
 
 The `--python` option can specify an interpreter even if no `.venv` exists:
 
