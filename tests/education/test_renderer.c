@@ -21,6 +21,11 @@
 # define Mkdir(path) mkdir(path, 0755)
 #endif
 
+/* The previous assert-based test is retained for review. Its first failed
+ * renderer assertion aborted on Windows with 0xc0000409 and concealed the
+ * precise process-argument failure. The active test below prints a location
+ * and returns a normal failure status, making CTest diagnostics actionable. */
+#if 0
 static void CopyExecutable(const char *source, const char *destination)
 {
 #if defined(_WIN32)
@@ -103,5 +108,140 @@ int main(int argc, char **argv)
     ClearEnvironment("UMICOM_EDUCATION_TEST_NO_RENDERER");
     assert(UmicomEducationCheckRenderer(argv[1], "not-an-executable-education-fixture-404") == 1);
     puts("Interpreter discovery, child failure and website postcondition tests passed.");
+    return 0;
+}
+
+#endif
+
+#define EDUCATION_CHECK(expression) do { \
+    if (!(expression)) { \
+        fprintf(stderr, "[FAIL] %s:%d: %s\n", __FILE__, __LINE__, #expression); \
+        return 1; \
+    } \
+} while (0)
+
+static int CopyExecutableChecked(const char *source, const char *destination)
+{
+#if defined(_WIN32)
+    if (CopyFileA(source, destination, FALSE) == 0) {
+        fprintf(stderr, "Unable to copy mock Python to %s (error %lu).\n",
+                destination, (unsigned long)GetLastError());
+        return 0;
+    }
+    return 1;
+#else
+    FILE *from = fopen(source, "rb");
+    FILE *to = fopen(destination, "wb");
+    if (from == NULL || to == NULL) {
+        if (from != NULL) (void)fclose(from);
+        if (to != NULL) (void)fclose(to);
+        return 0;
+    }
+    unsigned char bytes[16384];
+    int valid = 1;
+    while (!feof(from)) {
+        size_t count = fread(bytes, 1U, sizeof(bytes), from);
+        if (count == 0U) break;
+        if (fwrite(bytes, 1U, count, to) != count) { valid = 0; break; }
+    }
+    if (ferror(from)) valid = 0;
+    if (fclose(from) != 0) valid = 0;
+    if (fclose(to) != 0) valid = 0;
+    return valid && chmod(destination, 0755) == 0;
+#endif
+}
+
+static int SetEnvironmentChecked(const char *name, const char *value)
+{
+#if defined(_WIN32)
+    return _putenv_s(name, value) == 0;
+#else
+    return setenv(name, value, 1) == 0;
+#endif
+}
+
+static int ClearEnvironmentChecked(const char *name)
+{
+#if defined(_WIN32)
+    return _putenv_s(name, "") == 0;
+#else
+    return unsetenv(name) == 0;
+#endif
+}
+
+static int MakeFolderChecked(const char *folder)
+{
+    if (Mkdir(folder) == 0) return 1;
+    if (errno == EEXIST) return 1;
+    fprintf(stderr, "Cannot create test directory: %s (errno %d).\n", folder, errno);
+    return 0;
+}
+
+static int FileExists(const char *name)
+{
+    FILE *file = fopen(name, "rb");
+    if (file == NULL) return 0;
+    return fclose(file) == 0;
+}
+
+int main(int argc, char **argv)
+{
+    EDUCATION_CHECK(argc == 3);
+    char configuration[UMICOM_EDUCATION_PATH_CAPACITY];
+    char page[UMICOM_EDUCATION_PATH_CAPACITY];
+    char environment[UMICOM_EDUCATION_PATH_CAPACITY];
+    char interpreter[UMICOM_EDUCATION_PATH_CAPACITY];
+    char spacedFolder[UMICOM_EDUCATION_PATH_CAPACITY];
+    char spacedInterpreter[UMICOM_EDUCATION_PATH_CAPACITY];
+    EDUCATION_CHECK(MakeFolderChecked(argv[1]));
+    EDUCATION_CHECK(snprintf(configuration, sizeof(configuration), "%s/mkdocs.yml", argv[1]) > 0);
+    FILE *file = fopen(configuration, "wb");
+    EDUCATION_CHECK(file != NULL);
+    EDUCATION_CHECK(fputs("site_name: Renderer test\n", file) >= 0);
+    EDUCATION_CHECK(fclose(file) == 0);
+    EDUCATION_CHECK(ClearEnvironmentChecked("UMICOM_EDUCATION_TEST_BUILD_FAIL"));
+    EDUCATION_CHECK(ClearEnvironmentChecked("UMICOM_EDUCATION_TEST_NO_RENDERER"));
+    EDUCATION_CHECK(UmicomEducationCheckRenderer(argv[1], argv[2]) == 0);
+    EDUCATION_CHECK(UmicomEducationBuildSiteWithPython(argv[1], argv[2]) == 0);
+
+    /* A repository-local .venv must override unrelated Python on PATH. */
+    EDUCATION_CHECK(snprintf(environment, sizeof(environment), "%s/.venv", argv[1]) > 0);
+    EDUCATION_CHECK(MakeFolderChecked(environment));
+#if defined(_WIN32)
+    EDUCATION_CHECK(snprintf(interpreter, sizeof(interpreter), "%s/.venv/Scripts", argv[1]) > 0);
+    EDUCATION_CHECK(MakeFolderChecked(interpreter));
+    EDUCATION_CHECK(snprintf(interpreter, sizeof(interpreter), "%s/.venv/Scripts/python.exe", argv[1]) > 0);
+#else
+    EDUCATION_CHECK(snprintf(interpreter, sizeof(interpreter), "%s/.venv/bin", argv[1]) > 0);
+    EDUCATION_CHECK(MakeFolderChecked(interpreter));
+    EDUCATION_CHECK(snprintf(interpreter, sizeof(interpreter), "%s/.venv/bin/python", argv[1]) > 0);
+#endif
+    EDUCATION_CHECK(CopyExecutableChecked(argv[2], interpreter));
+    EDUCATION_CHECK(SetEnvironmentChecked("UMICOM_EDUCATION_PYTHON", "intentionally-invalid-python-on-path"));
+    EDUCATION_CHECK(UmicomEducationBuildSite(argv[1]) == 0);
+    EDUCATION_CHECK(ClearEnvironmentChecked("UMICOM_EDUCATION_PYTHON"));
+
+    EDUCATION_CHECK(snprintf(page, sizeof(page), "%s/site/index.html", argv[1]) > 0);
+    EDUCATION_CHECK(FileExists(page));
+    EDUCATION_CHECK(SetEnvironmentChecked("UMICOM_EDUCATION_TEST_BUILD_FAIL", "1"));
+    EDUCATION_CHECK(UmicomEducationBuildSiteWithPython(argv[1], argv[2]) == 1);
+    EDUCATION_CHECK(ClearEnvironmentChecked("UMICOM_EDUCATION_TEST_BUILD_FAIL"));
+    EDUCATION_CHECK(SetEnvironmentChecked("UMICOM_EDUCATION_TEST_NO_RENDERER", "1"));
+    EDUCATION_CHECK(UmicomEducationBuildSiteWithPython(argv[1], argv[2]) == 1);
+    EDUCATION_CHECK(ClearEnvironmentChecked("UMICOM_EDUCATION_TEST_NO_RENDERER"));
+    EDUCATION_CHECK(UmicomEducationCheckRenderer(argv[1], "not-an-executable-education-fixture-404") == 1);
+
+    /* Paths containing spaces are allowed; arguments still stay separate. */
+    EDUCATION_CHECK(snprintf(spacedFolder, sizeof(spacedFolder), "%s/renderer fixture with spaces", argv[1]) > 0);
+    EDUCATION_CHECK(MakeFolderChecked(spacedFolder));
+#if defined(_WIN32)
+    EDUCATION_CHECK(snprintf(spacedInterpreter, sizeof(spacedInterpreter), "%s/python test.exe", spacedFolder) > 0);
+#else
+    EDUCATION_CHECK(snprintf(spacedInterpreter, sizeof(spacedInterpreter), "%s/python test", spacedFolder) > 0);
+#endif
+    EDUCATION_CHECK(CopyExecutableChecked(argv[2], spacedInterpreter));
+    EDUCATION_CHECK(UmicomEducationCheckRenderer(argv[1], spacedInterpreter) == 0);
+
+    puts("[OK] Renderer argv boundary, local venv, failure and publication tests.");
     return 0;
 }

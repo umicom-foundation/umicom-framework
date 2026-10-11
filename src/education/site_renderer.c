@@ -126,6 +126,11 @@ static int EducationSpawn(const char *executable, const char *const arguments[])
 #endif
 }
 
+/* Superseded probe retained for source review: the original -c expression had
+ * embedded spaces. On Windows it was split before reaching Python, so even a
+ * working repository .venv appeared to lack MkDocs and the renderer fixture
+ * aborted. The replacement below uses one whitespace-free argument. */
+#if 0
 static int EducationRun(const EducationPython *python, int probe,
                         const char *configFile, const char *siteDirectory)
 {
@@ -141,6 +146,38 @@ static int EducationRun(const EducationPython *python, int probe,
             "import importlib.util,sys;sys.exit(0 if "
             "importlib.util.find_spec('mkdocs') is not None and "
             "importlib.util.find_spec('material') is not None else 1)";
+    } else {
+        arguments[used++] = "-m";
+        arguments[used++] = "mkdocs";
+        arguments[used++] = "build";
+        arguments[used++] = "--strict";
+        arguments[used++] = "--config-file";
+        arguments[used++] = configFile;
+        arguments[used++] = "--site-dir";
+        arguments[used++] = siteDirectory;
+    }
+    arguments[used] = NULL;
+    return EducationSpawn(python->executable, arguments);
+}
+
+#endif
+static int EducationRun(const EducationPython *python, int probe,
+                        const char *configFile, const char *siteDirectory)
+{
+    const char *arguments[15];
+    size_t used = 0U;
+    arguments[used++] = python->executable;
+    if (python->launcherArgument) arguments[used++] = "-3";
+    if (probe) {
+        /* This check is deliberately quiet. Asking only `python --version`
+         * would falsely accept Python installations without the renderer. */
+        arguments[used++] = "-c";
+        /* Windows/MSYS2 C runtimes can split a -c argument that contains
+         * whitespace when constructing the child command line. The previous
+         * probe reached Python as `-c import`, which is a syntax error.
+         * This expression is a single whitespace-free argument, with no
+         * shell, filename creation or dependency on Python's search PATH. */
+        arguments[used++] = "__import__('mkdocs');__import__('material')";
     } else {
         arguments[used++] = "-m";
         arguments[used++] = "mkdocs";

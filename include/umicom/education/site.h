@@ -79,6 +79,11 @@ int UmicomEducationCheckRenderer(const char *repositoryRoot,
  * Markdown compilation to output/native-books/SLUG.md, rejecting different
  * existing outputs unless refresh is explicitly requested. This is an
  * intermediate manuscript, not a PDF/DOCX or a MkDocs replacement. */
+/* Validate a source volume's title, ordered list and chapter files without
+ * creating, changing or publishing any output. Returns nonzero on invalid or
+ * missing source inputs. It does not validate external hyperlinks or images. */
+int UmicomEducationBookCheck(const char *repositoryRoot,
+                             const char *volumeSlug);
 int UmicomEducationBookList(const char *repositoryRoot);
 int UmicomEducationBookAssemble(const char *repositoryRoot,
                                 const char *volumeSlug, int refresh);

@@ -365,6 +365,24 @@ int UmicomEducationBookAssemble(const char *repositoryRoot, const char *volumeSl
     return 0;
 }
 
+/* Read the same manifest contract used by `book assemble`, but do not write
+ * a manuscript. This gives a contributor a safe first validation command
+ * before choosing whether to generate publication output. */
+int UmicomEducationBookCheck(const char *repositoryRoot, const char *volumeSlug)
+{
+    if (repositoryRoot == NULL || *repositoryRoot == '\0' || !BookValidSlug(volumeSlug)) {
+        fputs("Provide a source repository and one safe book volume slug.\n", stderr);
+        return 2;
+    }
+    EducationBook book;
+    int status = BookLoadManifest(repositoryRoot, volumeSlug, &book);
+    if (status != 0) return status;
+    if (!BookAllChaptersExist(repositoryRoot, &book)) return 2;
+    printf("[OK] %s: %zu original chapters present; no files changed.\n",
+           book.slug, book.count);
+    return 0;
+}
+
 static int BookSortSlugs(const void *left, const void *right)
 {
     return strcmp((const char *)left, (const char *)right);

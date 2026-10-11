@@ -76,6 +76,23 @@ int main(int argc, char **argv)
     WriteText(first, "\xef\xbb\xbf# First chapter\nC23 records\n");
     WriteText(second, "# Second chapter\nThe working code\n");
     assert(UmicomEducationBookList(argv[1]) == 0);
+    /* The source check never creates or updates output. CTest may reuse its
+     * fixture directory, so compare presence/metadata rather than assuming
+     * no manuscript exists from an earlier successful run. */
+    struct stat beforeCheck, afterCheck;
+    int hadOutput = stat(output, &beforeCheck) == 0;
+    assert(UmicomEducationBookCheck(argv[1], "example") == 0);
+    assert((stat(output, &afterCheck) == 0) == hadOutput);
+    if (hadOutput) {
+        assert(beforeCheck.st_size == afterCheck.st_size);
+        assert(beforeCheck.st_mtime == afterCheck.st_mtime);
+    }
+    /* Superseded fixture-only assertion retained for review. The check above
+     * works on the first and subsequent test runs without deleting outputs. */
+#if 0
+    FILE *beforeAssemble = fopen(output, "rb");
+    assert(beforeAssemble == NULL);
+#endif
     assert(UmicomEducationBookAssemble(argv[1], "example", 1) == 0);
     CheckContains(output, "# Practical C Book", 1);
     CheckContains(output, "C23 records", 1);
@@ -88,11 +105,14 @@ int main(int argc, char **argv)
     assert(UmicomEducationBookAssemble(argv[1], "example", 1) == 0);
     CheckContains(output, "Edited after first publication", 1);
     WriteText(manifest, "title: Changed\nchapters:\n  - ../outside.md\n");
+    assert(UmicomEducationBookCheck(argv[1], "example") == 2);
     assert(UmicomEducationBookAssemble(argv[1], "example", 1) == 2);
     CheckContains(output, "Edited after first publication", 1);
     WriteText(manifest, "title: Changed\nchapters:\n  - missing.md\n");
+    assert(UmicomEducationBookCheck(argv[1], "example") == 2);
     assert(UmicomEducationBookAssemble(argv[1], "example", 1) == 2);
     CheckContains(output, "Edited after first publication", 1);
+    assert(UmicomEducationBookCheck(argv[1], "../escape") == 2);
     assert(UmicomEducationBookAssemble(argv[1], "../escape", 1) == 2);
     puts("Native book composition, preservation and invalid-input tests passed.");
     return 0;

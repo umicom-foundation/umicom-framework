@@ -39,6 +39,7 @@ static void EducationPrintHelp(void)
          "umicom-education build   --repo REPOSITORY [--python PYTHON_EXECUTABLE]\n"
          "umicom-education serve   --repo REPOSITORY [--port 8765] [--directory SITE_DIRECTORY]\n"
          "umicom-education book list --repo REPOSITORY\n"
+         "umicom-education book check --repo REPOSITORY --volume SLUG\n"
          "umicom-education book assemble --repo REPOSITORY --volume SLUG [--refresh]\n"
          "\n"
          "The original book manuscripts and Python/PowerShell build tools remain available.\n"
@@ -180,8 +181,9 @@ int main(int argc, char **argv)
     int firstOption = 2;
     if (strcmp(command, "book") == 0) {
         if (argc < 3 || (strcmp(argv[2], "list") != 0 &&
+                         strcmp(argv[2], "check") != 0 &&
                          strcmp(argv[2], "assemble") != 0)) {
-            fputs("Use `book list` or `book assemble --volume SLUG`.\n", stderr);
+            fputs("Use `book list`, `book check --volume SLUG`, or `book assemble --volume SLUG`.\n", stderr);
             return 2;
         }
         bookCommand = argv[2];
@@ -269,6 +271,13 @@ int main(int argc, char **argv)
         if (requestedVolume == NULL) {
             fputs("Specify a volume folder name with --volume SLUG.\n", stderr);
             return 2;
+        }
+        if (strcmp(bookCommand, "check") == 0) {
+            if (refresh) {
+                fputs("`book check` does not create output; --refresh is not applicable.\n", stderr);
+                return 2;
+            }
+            return UmicomEducationBookCheck(repositoryRoot, requestedVolume);
         }
         return UmicomEducationBookAssemble(repositoryRoot, requestedVolume, refresh);
     }
