@@ -50,6 +50,9 @@ static int Event(const char *name, const char *body)
                          (unsigned long long)sequence++, name, body);
     return bytes > 0 && (size_t)bytes < sizeof json && Send(json);
 }
+/* Instruction fixtures share this peer without changing existing protocol cases. */
+#include "instruction_fixture.inc"
+#include "control_fixture.inc"
 int main(void)
 {
 #ifdef _WIN32
@@ -102,6 +105,26 @@ int main(void)
             break;
         }
         int sent = 0;
+        if (strncmp(mode, "control-", 8U) == 0 &&
+            ControlFixtureCommand(mode, request, json, &sent))
+        {
+            /* Control fixtures share stack data with instruction cases, but
+             * their execution acknowledgements never affect a real process. */
+            if (!sent) { result = 7; break; }
+            continue;
+        }
+        if (strncmp(mode, "instructions", 12U) == 0 &&
+            InstructionFixtureCommand(mode, request, json, &sent))
+        {
+            /* Keep the established cases below unchanged. An instruction case
+             * handles its own reply, then returns to the framed input loop. */
+            if (!sent)
+            {
+                result = 7;
+                break;
+            }
+            continue;
+        }
         if (strcmp(request->command, "initialize") == 0)
             sent = Reply(
                 request->sequence, "initialize", 1,

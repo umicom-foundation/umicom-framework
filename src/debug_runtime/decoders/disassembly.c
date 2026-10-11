@@ -15,12 +15,16 @@
 #include "umicom/debug_runtime/decoders/disassembly.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+#include "../instruction_fields_internal.h"
 #include <string.h>
 
 /*
  * Provide the debug runtime decode disassembly operation used by this module and its
  * client applications.
  */
+/* Disassembly now shares strict field validation and heap-backed staging with captured instruction pages. Oversized or malformed replies fail without publishing a truncated or partial result. The earlier implementation is retained below for engineering review. */
+#if 0
 UmiStatus umi_debug_runtime_decode_disassembly(
     const char *json,
     UmiDebugRuntimeDisassembly *out_result)
@@ -87,4 +91,45 @@ UmiStatus umi_debug_runtime_decode_disassembly(
     }
 
     return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_debug_runtime_decode_disassembly(const char *json,
+                                               UmiDebugRuntimeDisassembly *out_result)
+{
+    if (json == NULL || out_result == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiDebugInstructionRecord *rows = calloc(UMI_DEBUG_RUNTIME_MAX_INSTRUCTIONS, sizeof *rows);
+    UmiDebugRuntimeDisassembly *result = calloc(1U, sizeof *result);
+    if (rows == NULL || result == NULL)
+    {
+        free(rows);
+        free(result);
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    UmiStatus status =
+        DebugInstructionArrayDecode(json, rows, UMI_DEBUG_RUNTIME_MAX_INSTRUCTIONS, &result->count);
+    for (size_t i = 0U; status == UMI_STATUS_OK && i < result->count; ++i)
+    {
+        UmiDebugRuntimeInstruction *item = &result->items[i];
+        if (rows[i].line > UINT32_MAX || rows[i].column > UINT32_MAX)
+        {
+            status = UMI_STATUS_CAPACITY_EXCEEDED;
+            break;
+        }
+        /* The existing result fields retain their order. Rich location metadata
+         * stays available through InstructionPageDecode for newer viewers. */
+        memcpy(item->address, rows[i].address, sizeof item->address);
+        memcpy(item->instruction_bytes, rows[i].bytes, sizeof item->instruction_bytes);
+        memcpy(item->instruction, rows[i].text, sizeof item->instruction);
+        memcpy(item->symbol, rows[i].symbol, sizeof item->symbol);
+        memcpy(item->presentation_hint, rows[i].presentation_hint, sizeof item->presentation_hint);
+        item->location = rows[i].source;
+        item->line = (uint32_t)rows[i].line;
+        item->column = (uint32_t)rows[i].column;
+    }
+    if (status == UMI_STATUS_OK)
+        *out_result = *result;
+    free(result);
+    free(rows);
+    return status;
 }

@@ -86,6 +86,7 @@ struct UmiDebugRuntimePlatform {
 #include "module_page.inc"
 #include "source_catalog.inc"
 #include "exception_inspection.inc"
+#include "instruction_inspection.inc"
 
 /*
  * Provide the project memory view operation used by this module and its client
@@ -2220,6 +2221,8 @@ UmiStatus umi_debug_runtime_platform_sync_breakpoints(
  * Provide the debug runtime platform refresh threads operation used by this module and its
  * client applications.
  */
+/* Native thread inspection now owns response collections on the heap and advances active-thread state only after successful publication. The earlier automatic-storage implementation remains for engineering review. The earlier implementation is retained below for engineering review. */
+#if 0
 UmiStatus umi_debug_runtime_platform_refresh_threads(
     UmiDebugRuntimePlatform *platform,
     uint32_t timeout_ms)
@@ -2272,11 +2275,52 @@ UmiStatus umi_debug_runtime_platform_refresh_threads(
     if (status == UMI_STATUS_OK) platform->revision += 1U;
     return status;
 }
+#endif
+UmiStatus umi_debug_runtime_platform_refresh_threads(UmiDebugRuntimePlatform *platform,
+                                                     uint32_t timeout_ms)
+{
+    if (platform == NULL || platform->adapter == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Bounded protocol collections can still be large. Their temporary owner
+     * lives on the heap so debugger actions do not depend on a UI thread's stack. */
+    struct ThreadExchange
+    {
+        UmiDebugRuntimeEnvelope response;
+        UmiDebugRuntimeThreadList result;
+    };
+    struct ThreadExchange *exchange = malloc(sizeof *exchange);
+    if (exchange == NULL)
+        return UMI_STATUS_OUT_OF_MEMORY;
+    uint64_t sequence = 0U;
+    UmiStatus status = umi_debug_runtime_request_threads(platform->adapter, &sequence);
+    if (status == UMI_STATUS_OK)
+        status = umi_debug_runtime_adapter_wait_response(platform->adapter, sequence, timeout_ms,
+                                                         &exchange->response);
+    if (status == UMI_STATUS_OK)
+        status = umi_debug_runtime_decode_threads(exchange->response.json, &exchange->result);
+    if (status == UMI_STATUS_OK)
+    {
+        uint64_t active_thread = platform->active_thread_id;
+        if (active_thread == 0U && exchange->result.count > 0U)
+            active_thread = exchange->result.items[0].id;
+        status = umi_debug_runtime_publish_threads(&platform->bridge, &exchange->result,
+                                                   active_thread, platform->paused);
+        if (status == UMI_STATUS_OK)
+        {
+            platform->active_thread_id = active_thread;
+            ++platform->revision;
+        }
+    }
+    free(exchange);
+    return status;
+}
 
 /*
  * Provide the debug runtime platform refresh stack operation used by this module and its
  * client applications.
  */
+/* Stack refresh now uses a scoped heap allocation for its large response collection and publishes before changing active-frame state. The previous stack allocation remains for engineering review. The earlier implementation is retained below for engineering review. */
+#if 0
 UmiStatus umi_debug_runtime_platform_refresh_stack(
     UmiDebugRuntimePlatform *platform,
     uint64_t thread_id,
@@ -2334,11 +2378,51 @@ UmiStatus umi_debug_runtime_platform_refresh_stack(
     if (status == UMI_STATUS_OK) platform->revision += 1U;
     return status;
 }
+#endif
+UmiStatus umi_debug_runtime_platform_refresh_stack(UmiDebugRuntimePlatform *platform,
+                                                   uint64_t thread_id, uint32_t timeout_ms)
+{
+    if (platform == NULL || platform->adapter == NULL || thread_id == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* A full stack collection includes source paths for every frame and exceeds
+     * common Windows thread stacks. One temporary heap owner covers all exits. */
+    struct StackExchange
+    {
+        UmiDebugRuntimeEnvelope response;
+        UmiDebugRuntimeStackTrace result;
+    };
+    struct StackExchange *exchange = malloc(sizeof *exchange);
+    if (exchange == NULL)
+        return UMI_STATUS_OUT_OF_MEMORY;
+    uint64_t sequence = 0U;
+    UmiStatus status = umi_debug_runtime_request_stack_trace(
+        platform->adapter, thread_id, 0U, UMI_DEBUG_RUNTIME_MAX_ITEMS, &sequence);
+    if (status == UMI_STATUS_OK)
+        status = umi_debug_runtime_adapter_wait_response(platform->adapter, sequence, timeout_ms,
+                                                         &exchange->response);
+    if (status == UMI_STATUS_OK)
+        status = umi_debug_runtime_decode_stack_trace(exchange->response.json, &exchange->result);
+    if (status == UMI_STATUS_OK)
+    {
+        status = umi_debug_runtime_publish_stack(&platform->bridge, thread_id, &exchange->result);
+        if (status == UMI_STATUS_OK)
+        {
+            platform->active_thread_id = thread_id;
+            if (exchange->result.count > 0U)
+                platform->active_frame_id = exchange->result.items[0].id;
+            ++platform->revision;
+        }
+    }
+    free(exchange);
+    return status;
+}
 
 /*
  * Provide the debug runtime platform refresh scopes operation used by this module and its
  * client applications.
  */
+/* Scope refresh now keeps its collection on the heap and commits active-frame state after publication. The earlier automatic-storage implementation is retained for engineering review. The earlier implementation is retained below for engineering review. */
+#if 0
 UmiStatus umi_debug_runtime_platform_refresh_scopes(
     UmiDebugRuntimePlatform *platform,
     uint64_t frame_id,
@@ -2385,6 +2469,41 @@ UmiStatus umi_debug_runtime_platform_refresh_scopes(
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) platform->revision += 1U;
+    return status;
+}
+#endif
+UmiStatus umi_debug_runtime_platform_refresh_scopes(UmiDebugRuntimePlatform *platform,
+                                                    uint64_t frame_id, uint32_t timeout_ms)
+{
+    if (platform == NULL || platform->adapter == NULL || frame_id > INT32_MAX)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Scope collections have the same bounded-but-large ownership as stack
+     * frames. Free their temporary storage regardless of request outcome. */
+    struct ScopeExchange
+    {
+        UmiDebugRuntimeEnvelope response;
+        UmiDebugRuntimeScopeList result;
+    };
+    struct ScopeExchange *exchange = malloc(sizeof *exchange);
+    if (exchange == NULL)
+        return UMI_STATUS_OUT_OF_MEMORY;
+    uint64_t sequence = 0U;
+    UmiStatus status = umi_debug_runtime_request_scopes(platform->adapter, frame_id, &sequence);
+    if (status == UMI_STATUS_OK)
+        status = umi_debug_runtime_adapter_wait_response(platform->adapter, sequence, timeout_ms,
+                                                         &exchange->response);
+    if (status == UMI_STATUS_OK)
+        status = umi_debug_runtime_decode_scopes(exchange->response.json, &exchange->result);
+    if (status == UMI_STATUS_OK)
+    {
+        status = umi_debug_runtime_publish_scopes(&platform->bridge, frame_id, &exchange->result);
+        if (status == UMI_STATUS_OK)
+        {
+            platform->active_frame_id = frame_id;
+            ++platform->revision;
+        }
+    }
+    free(exchange);
     return status;
 }
 
@@ -2541,6 +2660,8 @@ UmiStatus umi_debug_runtime_platform_evaluate_watch(
 
 
 /* Provide the thread control operation used by this module and its client applications. */
+/* The shared control boundary now retires paused inspection before any resume request and validates matching replies. The former post-response-only retirement is retained for review because a lost reply can still accompany resumed execution. The earlier implementation is retained below for engineering review. */
+#if 0
 static UmiStatus thread_control(
     UmiDebugRuntimePlatform *platform,
     uint64_t thread_id,
@@ -2592,6 +2713,8 @@ static UmiStatus thread_control(
     platform->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+#include "thread_control.inc"
 
 /*
  * Provide the debug runtime platform continue operation used by this module and its client
@@ -3238,6 +3361,8 @@ static void split_instruction(
  * Provide the project disassembly view operation used by this module and its client
  * applications.
  */
+/* Disassembly projections now retain the adapter filler classification and disable breakpoint actions on unavailable instructions. The earlier implementation is retained below for engineering review. */
+#if 0
 static UmiStatus project_disassembly_view(
     UmiDebugRuntimePlatform *platform,
     const UmiDebugRuntimeDisassembly *result)
@@ -3340,6 +3465,105 @@ static UmiStatus project_disassembly_view(
                 view, instruction.id);
             (void)umi_debug_disassembly_view_select(
                 view, instruction.id);
+        }
+    }
+
+    return UMI_STATUS_OK;
+}
+#endif
+static UmiStatus project_disassembly_view(UmiDebugRuntimePlatform *platform,
+                                          const UmiDebugRuntimeDisassembly *result)
+{
+    UmiDebugDisassemblyView *view;
+    size_t index;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (platform == NULL || result == NULL)
+    {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    view = umi_debug_inspection_session_disassembly(
+        umi_debug_advanced_platform_inspection(platform->advanced));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (view == NULL)
+        return UMI_STATUS_INVALID_STATE;
+
+    status = umi_debug_disassembly_view_clear(view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK)
+        return status;
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < result->count; ++index)
+    {
+        UmiDebugInstruction instruction;
+        uint64_t address = 0U;
+        /* Wider target addresses remain descriptive text. The established model
+         * can offer address-based actions only when conversion is lossless. */
+        const int address_fits =
+            DebugInstructionAddressRead(result->items[index].address, &address) == UMI_STATUS_OK;
+        int written;
+
+        (void)memset(&instruction, 0, sizeof(instruction));
+        instruction.struct_size = (uint32_t)sizeof(instruction);
+        instruction.api_version = UMI_DEBUG_DISASSEMBLY_VIEW_API_VERSION;
+
+        written = snprintf(instruction.id, sizeof(instruction.id), "instruction.%zu", index);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (written < 0 || (size_t)written >= sizeof(instruction.id))
+        {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+
+        (void)snprintf(instruction.session_id, sizeof(instruction.session_id), "%s",
+                       platform->active_session_id);
+        (void)snprintf(instruction.memory_reference, sizeof(instruction.memory_reference), "%s",
+                       result->items[index].address);
+        (void)umi_text_copy_truncated(instruction.instruction_bytes,
+                                      sizeof(instruction.instruction_bytes),
+                                      result->items[index].instruction_bytes);
+        split_instruction(result->items[index].instruction, instruction.mnemonic,
+                          sizeof(instruction.mnemonic), instruction.operands,
+                          sizeof(instruction.operands));
+        (void)snprintf(instruction.symbol, sizeof(instruction.symbol), "%s",
+                       result->items[index].symbol);
+        (void)umi_text_copy_truncated(instruction.source_uri, sizeof(instruction.source_uri),
+                                      result->items[index].location.path);
+
+        instruction.address = address;
+        instruction.instruction_offset = (int64_t)index;
+        instruction.source_line = result->items[index].line;
+        instruction.source_column = result->items[index].column;
+        instruction.sequence = platform->revision + index + 1U;
+        instruction.revision = instruction.sequence;
+        instruction.has_source = instruction.source_uri[0] != '\0';
+        instruction.current = index == 0U;
+        instruction.can_breakpoint = platform->capabilities.supports_instruction_breakpoints;
+        instruction.breakpoint = 0;
+        /* DAP filler describes unavailable code. It remains visible for review,
+         * but must not become an executable breakpoint target. */
+        instruction.valid =
+            address_fits && strcmp(result->items[index].presentation_hint, "invalid") != 0;
+        instruction.can_breakpoint = instruction.can_breakpoint && instruction.valid;
+
+        status = umi_debug_disassembly_view_upsert(view, &instruction);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK)
+            return status;
+
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (index == 0U)
+        {
+            (void)umi_debug_disassembly_view_set_current(view, instruction.id);
+            (void)umi_debug_disassembly_view_select(view, instruction.id);
         }
     }
 

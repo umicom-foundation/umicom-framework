@@ -55,6 +55,13 @@ typedef struct UmiIntegrationReadinessSnapshot {
 UmiStatus UmiIntegrationReadinessGateCreate(
     UmiIntegrationSuiteRuntime *runtime,
     UmiIntegrationReadinessGate **outGate);
+/**
+ * @brief Release the gate and erase its retained challenge bytes.
+ * @param gate Gate owned by the caller, or NULL.
+ * @details The borrowed suite runtime remains owned by the caller and is not
+ * freed or stopped. Call this before releasing that runtime. A replacement
+ * transport can reuse the runtime only after arranging its own peer checks.
+ */
 void UmiIntegrationReadinessGateDestroy(UmiIntegrationReadinessGate *gate);
 
 /* The owning Desk/supervisor MUST validate process_token and generation against

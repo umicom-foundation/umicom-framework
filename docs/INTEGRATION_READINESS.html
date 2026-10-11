@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checking application readiness</title>
+<style>
+body{max-width:60rem;margin:2rem auto;padding:0 1.5rem;font:1rem/1.65 system-ui,sans-serif;color:#20303c;background:#fafcfe}
+h1,h2{line-height:1.25;color:#173e65}code{background:#e8eef4;padding:.15rem .3rem;border-radius:.2rem}
+aside{border-left:4px solid #b66a13;padding:.5rem 1rem;background:#fff7e8}a{color:#145ca1}
+</style>
+</head>
+<body>
+<h1>Checking application readiness</h1>
+<p>A process can be running before it is ready to accept work. The integration
+readiness gate lets a supervising application record a confirmation from the
+particular process instance it started. It shares the existing suite runtime;
+it does not start processes or provide an authentication service.</p>
+<h2>Connect a supervisor to the gate</h2>
+<ol>
+<li>Prepare a suite runtime using the application registry and suite definition.
+Keep the runtime alive for as long as the gate uses it. Link your application to
+the public <code>Umicom::integration</code> target and include
+<code>umicom/integration/readiness_gate.h</code>.</li>
+<li>Create a gate with <code>UmiIntegrationReadinessGateCreate</code>. Keep gate
+calls and ordinary runtime changes on one owning thread, or arrange equivalent
+serialization in your supervisor.</li>
+<li>After starting a member, confirm its current process token and generation
+against the supervisor's process records. Generate a fresh 32-byte challenge
+using a cryptographically secure operating-system random source.</li>
+<li>Arm that member with its token, generation, challenge, monotonic clock time
+and a bounded wait. Send the challenge through the transport you already own.</li>
+<li>Verify the responding transport peer's identity and access rights before
+confirming the response. Matching challenge bytes alone do not authenticate a
+process. An unverified peer, stale process instance or expired response must
+not make the application ready.</li>
+<li>Use <code>UmiIntegrationReadinessGateIsReady</code> when this policy is required.
+A registry entry marked running is a different observation and does not replace
+the gate's confirmation.</li>
+<li>Pass accepted process exits to <code>UmiIntegrationReadinessGateExit</code>.
+Destroy the gate before freeing the runtime. Recreate it after preparing a new
+runtime or changing suite membership.</li>
+</ol>
+<aside>A fixed challenge is useful in an isolated test, but is not suitable for a
+real supervisor. Do not store challenge bytes in logs, snapshots or project
+configuration.</aside>
+<h2>Inspect readiness without exposing a challenge</h2>
+<p><code>UmiIntegrationReadinessGateSnapshot</code> copies the member identity,
+process token, generation, deadline and pending or confirmed flags. It deliberately
+omits the challenge. This is local state supplied by the supervisor; it is not
+independent evidence that a remote service authenticated or that a process ran.</p>
+<h2>Understand library and linker checks</h2>
+<p>The seven <code>UmiIntegrationReadinessGate</code> functions are implemented in
+<code>src/integration/suite_runtime.c</code> and belong to
+<code>umicom_integration</code>. Their declarations in the public header do not
+provide executable definitions. Consumers need the matching library.</p>
+<p>The integration archive symbol check includes all seven definitions. On
+supported GNU and Clang builds, a focused build of the suite runtime test or the
+readiness consumer also runs this check before linking. Its report is written
+under the build directory's <code>link-reports</code> folder. The check reads the
+archive; it does not alter it or substitute implementations.</p>
+<ol>
+<li>If a linker reports an undefined readiness function, check that the consumer
+links <code>Umicom::integration</code> from the same configured Framework checkout
+as its headers.</li>
+<li>Read the first archive or linker error. An archive report naming a missing
+symbol identifies an incomplete or mismatched library; adding another header
+include cannot repair it.</li>
+<li>Reconfigure the intended build tree after integrating source changes, then
+rebuild that consumer and its dependencies. Do not copy individual object files
+or libraries from a different checkout to make a link succeed.</li>
+<li>After the link succeeds, run
+<code>framework.integration.readiness.consumer</code> and
+<code>framework.integration.suite_runtime</code>. A successful symbol check
+confirms definitions, while these runtime cases exercise lifecycle behaviour.</li>
+</ol>
+<h2>Extend the workflow</h2>
+<p>Add process supervision and peer verification in their existing owners.
+Keep the gate focused on binding a readiness response to a member and process
+generation. Tests can inject a known challenge and peer decision, but production
+code must obtain both from trusted operating-system or authenticated transport
+facilities.</p>
+</body>
+</html>

@@ -175,6 +175,9 @@ typedef struct UmiDebugRuntimeInstruction {
     UmiDebugRuntimeSource location;
     uint32_t line;
     uint32_t column;
+    /* Preserve adapter filler hints so older model projections cannot mark an
+     * unavailable instruction as an executable breakpoint target. */
+    char presentation_hint[64];
 } UmiDebugRuntimeInstruction;
 
 /**

@@ -451,5 +451,7 @@
 #include "umicom/debug_runtime/connection_identity.h"
 #include "umicom/debug_runtime/source_catalog.h"
 #include "umicom/debug_runtime/exception_inspection.h"
+#include "umicom/debug_runtime/instruction_inspection.h"
+#include "umicom/creative_workspace/captions.h"
 #include "umicom/desktop_system/process_catalog.h"
 #endif
