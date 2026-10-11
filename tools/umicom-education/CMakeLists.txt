@@ -23,6 +23,7 @@ add_library(umicom_education_site STATIC
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/site_renderer.c"
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/book.c"
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/publication.c"
+    "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/nav_audit.c"
     # Keep hashing with the existing Framework base implementation. This
     # standalone learning build deliberately does not duplicate its algorithm.
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/base/sha256.c")
@@ -109,6 +110,20 @@ if(BUILD_TESTING)
         endif()
     endforeach()
 
+    add_executable(umicom-education-navigation-test
+        "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/tests/education/test_nav_audit.c")
+    target_link_libraries(umicom-education-navigation-test PRIVATE Umicom::education_site)
+    if(MSVC)
+        target_compile_options(umicom-education-navigation-test PRIVATE /W4)
+    else()
+        target_compile_options(umicom-education-navigation-test PRIVATE
+            -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    endif()
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/education-navigation-test")
+    add_test(NAME framework.education.navigation_audit
+        COMMAND umicom-education-navigation-test
+            "${CMAKE_BINARY_DIR}/education-navigation-test")
+
     add_test(NAME framework.education.cli.help COMMAND umicom-education --help)
 
     # Real native CLI preflight: refuse to serve a missing site and propagate
@@ -123,6 +138,7 @@ if(BUILD_TESTING)
         framework.education.publication framework.education.cli.help
         framework.education.book framework.education.renderer
         framework.education.publication_manifest framework.education.serve.preflight
+        framework.education.navigation_audit
         PROPERTIES LABELS "education;framework;native;safe-c")
 endif()
 

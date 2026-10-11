@@ -17,6 +17,7 @@
 
 #include "umicom/education/site.h"
 #include "umicom/education/publication.h"
+#include "umicom/education/nav_audit.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,6 +38,7 @@ static void EducationPrintHelp(void)
          "umicom-education doctor  --repo REPOSITORY [--brand BRAND_DIRECTORY]\n"
          "umicom-education prepare --repo REPOSITORY [--brand BRAND_DIRECTORY] [--refresh]\n"
          "umicom-education verify  --repo REPOSITORY\n"
+         "umicom-education audit   --repo REPOSITORY   (native navigation preflight)\n"
          "umicom-education build   --repo REPOSITORY [--python PYTHON_EXECUTABLE]\n"
          "umicom-education serve   --repo REPOSITORY [--port 8765] [--directory SITE_DIRECTORY]\n"
          "umicom-education serve   --repo REPOSITORY --build [--python PYTHON_EXECUTABLE] [--port 8765]\n"
@@ -319,6 +321,19 @@ int main(int argc, char **argv)
             return UmicomEducationBookCheck(repositoryRoot, requestedVolume);
         }
         return UmicomEducationBookAssemble(repositoryRoot, requestedVolume, refresh);
+    }
+    /* The navigation preflight is a Framework-owned, read-only C23 service.
+     * It checks paths and duplicates, while MkDocs retains responsibility for
+     * full YAML parsing and page rendering. Do not invent a second YAML parser. */
+    if (strcmp(command, "audit") == 0) {
+        if (requestedPython != NULL || requestedBrand != NULL ||
+            requestedDirectory != NULL || requestedVolume != NULL ||
+            refresh || once || buildBeforeServe) {
+            fputs("Use audit --repo REPOSITORY without build or output options.\n", stderr);
+            return 2;
+        }
+        UmiEducationNavReport report;
+        return UmiEducationAuditNavigation(repositoryRoot, &report, stdout);
     }
     if (strcmp(command, "serve") == 0) {
         if (refresh || requestedVolume != NULL ||

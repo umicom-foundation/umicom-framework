@@ -240,3 +240,13 @@ untouched; this only generates the normal MkDocs site output.
 CTest now includes `framework.education.serve.preflight` to verify that a
 missing homepage gives an actionable diagnostic, failed renderer selection
 cannot start the socket, and unrelated commands reject `--build`.
+
+## Audit local lesson navigation without Python
+
+After building this tool, run `umicom-education audit --repo C:\umicom\Umicom-Bits2Banking`.
+
+The Framework-owned C23 preflight checks the local Markdown targets in the
+`nav:` section of `mkdocs.yml`. It detects missing destinations, duplicate
+references and unsafe relative paths without running a Python interpreter or
+modifying the repository. It deliberately does not parse full YAML syntax or
+render the website. Run the existing MkDocs strict build for full validation.
