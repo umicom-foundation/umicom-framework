@@ -37,6 +37,7 @@
 #include "umicom/integration/suite.h"
 #include "umicom/integration/launch_plan.h"
 #include "umicom/integration/suite_runtime.h"
+#include "umicom/integration/readiness_gate.h"
 #include "umicom/integration/topology.h"
 #include "umicom/integration/contract.h"
 #include "umicom/integration/health.h"

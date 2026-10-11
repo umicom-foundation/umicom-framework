@@ -20,8 +20,10 @@
  */
 
 #include "umicom/integration/suite_runtime.h"
+#include "umicom/integration/readiness_gate.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /*
@@ -561,5 +563,297 @@ UmiStatus umi_integration_suite_runtime_reconcile(
     }
     RecomputeEvidence(&candidate);
     *runtime = candidate;
+    return UMI_STATUS_OK;
+}
+
+
+/* --------------------------------------------------------------------------
+ * Process-instance readiness gate
+ *
+ * Extends the EXISTING suite runtime; no competing registry, process launcher,
+ * network listener or IPC transport is created. This component is useful only
+ * when the host has independently authenticated the observed child process.
+ * -------------------------------------------------------------------------- */
+
+typedef struct UmiReadinessMember {
+    char applicationId[UMI_INTEGRATION_ID_CAPACITY];
+    UmiIntegrationDependencyKind kind;
+    uint64_t processToken;
+    uint64_t lastGeneration;
+    uint64_t expiresAtMs;
+    uint64_t armedAtMs;
+    uint8_t challenge[UMI_INTEGRATION_READINESS_CHALLENGE_BYTES];
+    bool pending;
+    bool confirmed;
+} UmiReadinessMember;
+
+struct UmiIntegrationReadinessGate {
+    UmiIntegrationSuiteRuntime *runtime; /* Borrowed, not owned. */
+    char suiteId[UMI_INTEGRATION_ID_CAPACITY];
+    size_t memberCount;
+    UmiReadinessMember members[UMI_INTEGRATION_MAX_MEMBERS];
+};
+
+/* Avoid compiler-elided ordinary memset for one-use transport challenges. */
+static void WipeReadinessChallenge(uint8_t *challenge)
+{
+    volatile uint8_t *bytes = challenge;
+    for (size_t i = 0U; i < UMI_INTEGRATION_READINESS_CHALLENGE_BYTES; ++i)
+        bytes[i] = 0U;
+}
+
+/* Every call verifies that the borrowed suite still contains exactly the
+ * same member identities and kinds. Refresh/reprepare MUST create a new gate;
+ * mere pointer identity is not proof that a changed plan remains compatible. */
+static UmiStatus ValidateReadinessBinding(const UmiIntegrationReadinessGate *gate)
+{
+    if (gate == NULL || gate->runtime == NULL ||
+        gate->memberCount == 0U || gate->memberCount > UMI_INTEGRATION_MAX_MEMBERS ||
+        gate->runtime->plan.count != gate->memberCount ||
+        memchr(gate->runtime->suite_id, '\0', sizeof(gate->runtime->suite_id)) == NULL ||
+        strcmp(gate->runtime->suite_id, gate->suiteId) != 0)
+        return UMI_STATUS_INVALID_STATE;
+    for (size_t i = 0U; i < gate->memberCount; ++i) {
+        const UmiIntegrationLaunchItem *item = &gate->runtime->plan.items[i];
+        if (memchr(item->application_id, '\0', sizeof(item->application_id)) == NULL ||
+            strcmp(item->application_id, gate->members[i].applicationId) != 0 ||
+            item->kind != gate->members[i].kind)
+            return UMI_STATUS_INVALID_STATE;
+    }
+    return UMI_STATUS_OK;
+}
+
+/* Never read an unbounded caller string through strcmp; identifiers may
+ * originate at an untrusted protocol/parser boundary. */
+static bool BoundedReadinessId(const char *id)
+{
+    if (id == NULL || id[0] == '\0')
+        return false;
+    for (size_t i = 0U; i < UMI_INTEGRATION_ID_CAPACITY; ++i)
+        if (id[i] == '\0') return true;
+    return false;
+}
+
+static UmiReadinessMember *FindReadinessMember(UmiIntegrationReadinessGate *gate,
+                                              const char *id)
+{
+    for (size_t i = 0U; i < gate->memberCount; ++i)
+        if (strcmp(gate->members[i].applicationId, id) == 0)
+            return &gate->members[i];
+    return NULL;
+}
+
+/* Comparison runtime should not vary with the index of the first mismatched
+ * byte. The challenge is an OS-CSPRNG nonce, not a user password or key. */
+/* Snapshot lookups never cast away the borrowed gate's const ownership. */
+static const UmiReadinessMember *FindReadinessMemberConst(
+    const UmiIntegrationReadinessGate *gate, const char *id)
+{
+    for (size_t i = 0U; i < gate->memberCount; ++i)
+        if (strcmp(gate->members[i].applicationId, id) == 0)
+            return &gate->members[i];
+    return NULL;
+}
+
+static bool SameReadinessChallenge(const uint8_t *left, const uint8_t *right)
+{
+    unsigned diff = 0U;
+    for (size_t i = 0U; i < UMI_INTEGRATION_READINESS_CHALLENGE_BYTES; ++i)
+        diff |= (unsigned)(left[i] ^ right[i]);
+    return diff == 0U;
+}
+
+UmiStatus UmiIntegrationReadinessGateCreate(
+    UmiIntegrationSuiteRuntime *runtime, UmiIntegrationReadinessGate **outGate)
+{
+    UmiIntegrationReadinessGate *candidate;
+    if (runtime == NULL || outGate == NULL || runtime->plan.count == 0U ||
+        runtime->plan.count > UMI_INTEGRATION_MAX_MEMBERS)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (runtime->suite_id[0] == '\0' ||
+        memchr(runtime->suite_id, '\0', sizeof(runtime->suite_id)) == NULL)
+        return UMI_STATUS_INVALID_STATE;
+    candidate = (UmiIntegrationReadinessGate *)calloc(1U, sizeof(*candidate));
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    candidate->runtime = runtime;
+    (void)memcpy(candidate->suiteId, runtime->suite_id,
+                 strlen(runtime->suite_id) + 1U);
+    candidate->memberCount = runtime->plan.count;
+    for (size_t i = 0U; i < candidate->memberCount; ++i) {
+        const UmiIntegrationLaunchItem *item = &runtime->plan.items[i];
+        if (!BoundedReadinessId(item->application_id) ||
+            (item->kind != UMI_INTEGRATION_DEPENDENCY_REQUIRED &&
+             item->kind != UMI_INTEGRATION_DEPENDENCY_OPTIONAL)) {
+            UmiIntegrationReadinessGateDestroy(candidate);
+            return UMI_STATUS_INVALID_STATE;
+        }
+        for (size_t j = 0U; j < i; ++j)
+            if (strcmp(item->application_id, candidate->members[j].applicationId) == 0) {
+                UmiIntegrationReadinessGateDestroy(candidate);
+                return UMI_STATUS_ALREADY_EXISTS;
+            }
+        (void)memcpy(candidate->members[i].applicationId, item->application_id,
+                     strlen(item->application_id) + 1U);
+        candidate->members[i].kind = item->kind;
+    }
+    *outGate = candidate;
+    return UMI_STATUS_OK;
+}
+
+void UmiIntegrationReadinessGateDestroy(UmiIntegrationReadinessGate *gate)
+{
+    if (gate == NULL) return;
+    for (size_t i = 0U; i < gate->memberCount; ++i)
+        WipeReadinessChallenge(gate->members[i].challenge);
+    free(gate);
+}
+
+UmiStatus UmiIntegrationReadinessGateArm(
+    UmiIntegrationReadinessGate *gate, const char *applicationId,
+    uint64_t processToken, uint64_t processGeneration,
+    const uint8_t challenge[UMI_INTEGRATION_READINESS_CHALLENGE_BYTES],
+    uint64_t nowMs, uint32_t waitMs)
+{
+    UmiReadinessMember *member;
+    UmiIntegrationSuiteRuntime candidate;
+    uint8_t zeros[UMI_INTEGRATION_READINESS_CHALLENGE_BYTES] = {0};
+    UmiStatus status;
+    if (gate == NULL || !BoundedReadinessId(applicationId) || challenge == NULL ||
+        processToken == 0U || processGeneration == 0U ||
+        waitMs == 0U || waitMs > UMI_INTEGRATION_READINESS_MAX_WAIT_MS ||
+        nowMs > UINT64_MAX - (uint64_t)waitMs ||
+        SameReadinessChallenge(challenge, zeros))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = ValidateReadinessBinding(gate);
+    if (status != UMI_STATUS_OK) return status;
+    member = FindReadinessMember(gate, applicationId);
+    if (member == NULL) return UMI_STATUS_NOT_FOUND;
+    if (member->pending || member->confirmed || processGeneration <= member->lastGeneration)
+        return UMI_STATUS_INVALID_STATE;
+    /* Reusing a still-active challenge between two suite members creates an
+     * ambiguous proof and is refused before either member's state is changed. */
+    for (size_t i = 0U; i < gate->memberCount; ++i) {
+        const UmiReadinessMember *other = &gate->members[i];
+        if (other != member && other->pending &&
+            SameReadinessChallenge(other->challenge, challenge))
+            return UMI_STATUS_ALREADY_EXISTS;
+    }
+    candidate = *gate->runtime;
+    status = umi_integration_suite_runtime_mark_starting(&candidate, applicationId);
+    if (status != UMI_STATUS_OK) return status;
+    /* Publish the suite copy and private nonce only after all checks pass. */
+    *gate->runtime = candidate;
+    member->processToken = processToken;
+    member->lastGeneration = processGeneration;
+    member->armedAtMs = nowMs;
+    member->expiresAtMs = nowMs + (uint64_t)waitMs;
+    (void)memcpy(member->challenge, challenge, sizeof(member->challenge));
+    member->pending = true;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiIntegrationReadinessGateConfirm(
+    UmiIntegrationReadinessGate *gate, const char *applicationId,
+    uint64_t processToken, uint64_t processGeneration,
+    const uint8_t response[UMI_INTEGRATION_READINESS_CHALLENGE_BYTES],
+    uint64_t nowMs, bool peerVerifiedByTransport)
+{
+    UmiIntegrationSuiteRuntime candidate;
+    UmiReadinessMember *member;
+    UmiStatus status;
+    if (gate == NULL || !BoundedReadinessId(applicationId) || response == NULL ||
+        processToken == 0U || processGeneration == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = ValidateReadinessBinding(gate);
+    if (status != UMI_STATUS_OK) return status;
+    member = FindReadinessMember(gate, applicationId);
+    if (member == NULL) return UMI_STATUS_NOT_FOUND;
+    if (!member->pending || member->confirmed)
+        return UMI_STATUS_INVALID_STATE;
+    if (processToken != member->processToken || processGeneration != member->lastGeneration ||
+        !peerVerifiedByTransport || !SameReadinessChallenge(member->challenge, response))
+        return UMI_STATUS_PERMISSION_DENIED;
+    if (nowMs < member->armedAtMs)
+        return UMI_STATUS_INVALID_STATE;
+    if (nowMs > member->expiresAtMs)
+        return UMI_STATUS_TIMEOUT;
+    candidate = *gate->runtime;
+    status = umi_integration_suite_runtime_mark_running(&candidate, applicationId);
+    if (status != UMI_STATUS_OK) return status;
+    *gate->runtime = candidate;
+    WipeReadinessChallenge(member->challenge);
+    member->pending = false;
+    member->confirmed = true;
+    member->expiresAtMs = 0U;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiIntegrationReadinessGateExit(
+    UmiIntegrationReadinessGate *gate, const char *applicationId,
+    uint64_t processToken, uint64_t processGeneration, int exitCode)
+{
+    UmiIntegrationSuiteRuntime candidate;
+    UmiReadinessMember *member;
+    UmiStatus status;
+    if (gate == NULL || !BoundedReadinessId(applicationId) ||
+        processToken == 0U || processGeneration == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = ValidateReadinessBinding(gate);
+    if (status != UMI_STATUS_OK) return status;
+    member = FindReadinessMember(gate, applicationId);
+    if (member == NULL) return UMI_STATUS_NOT_FOUND;
+    if (!member->pending && !member->confirmed)
+        return UMI_STATUS_INVALID_STATE;
+    if (member->processToken != processToken || member->lastGeneration != processGeneration)
+        return UMI_STATUS_PERMISSION_DENIED;
+    candidate = *gate->runtime;
+    status = umi_integration_suite_runtime_mark_exit(&candidate, applicationId, exitCode);
+    if (status != UMI_STATUS_OK) return status;
+    *gate->runtime = candidate;
+    WipeReadinessChallenge(member->challenge);
+    member->pending = false;
+    member->confirmed = false;
+    member->processToken = 0U;
+    member->armedAtMs = 0U;
+    member->expiresAtMs = 0U;
+    return UMI_STATUS_OK;
+}
+
+bool UmiIntegrationReadinessGateIsReady(const UmiIntegrationReadinessGate *gate)
+{
+    if (ValidateReadinessBinding(gate) != UMI_STATUS_OK ||
+        !umi_integration_suite_runtime_is_usable(gate->runtime))
+        return false;
+    for (size_t i = 0U; i < gate->memberCount; ++i) {
+        const UmiReadinessMember *member = &gate->members[i];
+        if (member->kind == UMI_INTEGRATION_DEPENDENCY_REQUIRED &&
+            (!member->confirmed || member->processToken == 0U))
+            return false;
+    }
+    return true;
+}
+
+UmiStatus UmiIntegrationReadinessGateSnapshot(
+    const UmiIntegrationReadinessGate *gate, const char *applicationId,
+    UmiIntegrationReadinessSnapshot *outSnapshot)
+{
+    UmiIntegrationReadinessSnapshot candidate = {0};
+    const UmiReadinessMember *member;
+    UmiStatus status;
+    if (gate == NULL || !BoundedReadinessId(applicationId) || outSnapshot == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = ValidateReadinessBinding(gate);
+    if (status != UMI_STATUS_OK) return status;
+    member = FindReadinessMemberConst(gate, applicationId);
+    if (member == NULL) return UMI_STATUS_NOT_FOUND;
+    candidate.structureSize = (uint32_t)sizeof(candidate);
+    (void)memcpy(candidate.applicationId, member->applicationId,
+                 strlen(member->applicationId) + 1U);
+    candidate.processToken = member->processToken;
+    candidate.processGeneration = member->lastGeneration;
+    candidate.expiresAtMs = member->expiresAtMs;
+    candidate.pending = member->pending;
+    candidate.confirmed = member->confirmed;
+    *outSnapshot = candidate;
     return UMI_STATUS_OK;
 }
