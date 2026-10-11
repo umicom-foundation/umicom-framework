@@ -61,10 +61,27 @@ int UmicomEducationPrepareSite(const char *repositoryRoot,
  * documentation tests until equivalent native validation is implemented. */
 int UmicomEducationVerifySite(const char *repositoryRoot);
 
-/* Invokes the installed MkDocs renderer as a child process using an argument
- * array, never a shell command. This is transitional: it still needs Python
- * and MkDocs until the native documentation renderer is available. */
+/* Invokes MkDocs with an argv array (never through a shell) after verifying an
+ * interpreter actually has both MkDocs and Material installed. The default
+ * checks the repository .venv first, then the selected environment / host.
+ * --python selects an exact interpreter and disables automatic fallbacks.
+ * Build returns nonzero when the renderer fails or site/index.html is absent.
+ * The old entry point remains supported for existing callers. */
 int UmicomEducationBuildSite(const char *repositoryRoot);
+int UmicomEducationBuildSiteWithPython(const char *repositoryRoot,
+                                       const char *requestedPython);
+int UmicomEducationCheckRenderer(const char *repositoryRoot,
+                                 const char *requestedPython);
+
+/* Read only the title and ordered chapter list of the project's volume.yml
+ * manifests. Source chapters under dropzone/documents are never changed.
+ * `book list` inspects available volumes. `book assemble` writes a reviewable
+ * Markdown compilation to output/native-books/SLUG.md, rejecting different
+ * existing outputs unless refresh is explicitly requested. This is an
+ * intermediate manuscript, not a PDF/DOCX or a MkDocs replacement. */
+int UmicomEducationBookList(const char *repositoryRoot);
+int UmicomEducationBookAssemble(const char *repositoryRoot,
+                                const char *volumeSlug, int refresh);
 
 #ifdef __cplusplus
 }

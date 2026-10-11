@@ -20,7 +20,8 @@ get_filename_component(UMICOM_EDUCATION_FRAMEWORK_ROOT
 add_library(umicom_education_site STATIC
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/site_preview.c"
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/site_content.c"
-    "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/site_renderer.c")
+    "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/site_renderer.c"
+    "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/book.c")
 add_library(Umicom::education_site ALIAS umicom_education_site)
 target_include_directories(umicom_education_site PUBLIC
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/include")
@@ -61,9 +62,41 @@ if(BUILD_TESTING)
     add_test(NAME framework.education.publication
         COMMAND umicom-education-publish-test "${CMAKE_BINARY_DIR}/education-test-root")
 
+    add_executable(umicom-education-book-test
+        "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/tests/education/test_book.c")
+    target_link_libraries(umicom-education-book-test PRIVATE Umicom::education_site)
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/education-book-test")
+    add_test(NAME framework.education.book
+        COMMAND umicom-education-book-test "${CMAKE_BINARY_DIR}/education-book-test")
+
+    add_executable(umicom-education-test-python
+        "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/tests/education/mock_python.c")
+    add_executable(umicom-education-renderer-test
+        "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/tests/education/test_renderer.c")
+    target_link_libraries(umicom-education-renderer-test PRIVATE Umicom::education_site)
+    if(NOT WIN32)
+        target_compile_definitions(umicom-education-renderer-test PRIVATE _GNU_SOURCE=1)
+    endif()
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/education-renderer-test")
+    add_test(NAME framework.education.renderer
+        COMMAND umicom-education-renderer-test
+          "${CMAKE_BINARY_DIR}/education-renderer-test"
+          "$<TARGET_FILE:umicom-education-test-python>")
+
+    foreach(test_target IN ITEMS umicom-education-book-test
+             umicom-education-test-python umicom-education-renderer-test)
+        if(MSVC)
+            target_compile_options(${test_target} PRIVATE /W4)
+        else()
+            target_compile_options(${test_target} PRIVATE
+                -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+        endif()
+    endforeach()
+
     add_test(NAME framework.education.cli.help COMMAND umicom-education --help)
     set_tests_properties(framework.education.site_paths
         framework.education.publication framework.education.cli.help
+        framework.education.book framework.education.renderer
         PROPERTIES LABELS "education;framework;native;safe-c")
 endif()
 

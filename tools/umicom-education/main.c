@@ -36,14 +36,18 @@ static void EducationPrintHelp(void)
          "umicom-education doctor  --repo REPOSITORY [--brand BRAND_DIRECTORY]\n"
          "umicom-education prepare --repo REPOSITORY [--brand BRAND_DIRECTORY] [--refresh]\n"
          "umicom-education verify  --repo REPOSITORY\n"
-         "umicom-education build   --repo REPOSITORY\n"
+         "umicom-education build   --repo REPOSITORY [--python PYTHON_EXECUTABLE]\n"
          "umicom-education serve   --repo REPOSITORY [--port 8765] [--directory SITE_DIRECTORY]\n"
+         "umicom-education book list --repo REPOSITORY\n"
+         "umicom-education book assemble --repo REPOSITORY --volume SLUG [--refresh]\n"
          "\n"
          "The original book manuscripts and Python/PowerShell build tools remain available.\n"
          "The native preview is read-only and binds only to 127.0.0.1.\n"
          "Stop it with Ctrl+C. No public hosting, TLS, or PDF/DOCX generation.\n"
          "\n"
-         "For deterministic smoke tests, serve also accepts --once.\n");
+         "For deterministic smoke tests, serve also accepts --once.\n"
+         "Build searches .venv first, then a Python installation with MkDocs and Material.\n"
+         "Use a repository-local Python virtual environment to avoid MSYS2 PATH conflicts.\n");
 }
 
 static int EducationIsDirectory(const char *path)
@@ -139,7 +143,8 @@ static int EducationParsePort(const char *text, uint16_t *port)
     return 1;
 }
 
-static int EducationDoctor(const char *repositoryRoot, const char *brandRoot)
+static int EducationDoctor(const char *repositoryRoot, const char *brandRoot,
+                           const char *selectedPython)
 {
     static const char *const necessary[] = {
         "mkdocs.yml", "content/index.md", "dropzone/documents/islam_blueprint_for_life/volume.yml"
@@ -158,6 +163,8 @@ static int EducationDoctor(const char *repositoryRoot, const char *brandRoot)
     } else {
         printf("[OK] Official Framework brand: %s\n", brandRoot);
     }
+    if (UmicomEducationCheckRenderer(repositoryRoot, selectedPython) != 0)
+        failed = 1;
     puts("The native C build does not install Python, MkDocs, a C compiler, or a package manager.");
     return failed;
 }
@@ -169,19 +176,36 @@ int main(int argc, char **argv)
         return 0;
     }
     const char *command = argv[1];
+    const char *bookCommand = NULL;
+    int firstOption = 2;
+    if (strcmp(command, "book") == 0) {
+        if (argc < 3 || (strcmp(argv[2], "list") != 0 &&
+                         strcmp(argv[2], "assemble") != 0)) {
+            fputs("Use `book list` or `book assemble --volume SLUG`.\n", stderr);
+            return 2;
+        }
+        bookCommand = argv[2];
+        firstOption = 3;
+    }
     const char *requestedRepository = NULL;
+    const char *requestedPython = NULL;
+    const char *requestedVolume = NULL;
     const char *requestedBrand = NULL;
     const char *requestedDirectory = NULL;
     uint16_t port = 8765U;
     int refresh = 0;
     int once = 0;
-    for (int i = 2; i < argc; ++i) {
+    for (int i = firstOption; i < argc; ++i) {
         if (strcmp(argv[i], "--repo") == 0 && i + 1 < argc) {
             requestedRepository = argv[++i];
         } else if (strcmp(argv[i], "--brand") == 0 && i + 1 < argc) {
             requestedBrand = argv[++i];
         } else if (strcmp(argv[i], "--directory") == 0 && i + 1 < argc) {
             requestedDirectory = argv[++i];
+        } else if (strcmp(argv[i], "--python") == 0 && i + 1 < argc) {
+            requestedPython = argv[++i];
+        } else if (strcmp(argv[i], "--volume") == 0 && i + 1 < argc) {
+            requestedVolume = argv[++i];
         } else if (strcmp(argv[i], "--port") == 0 && i + 1 < argc) {
             if (!EducationParsePort(argv[++i], &port)) {
                 fputs("Port must be between 1024 and 65535.\n", stderr);
@@ -210,9 +234,14 @@ int main(int argc, char **argv)
     int brandFound = EducationFindBrand(repositoryRoot, requestedBrand,
                                        brandRoot, sizeof(brandRoot));
     if (strcmp(command, "doctor") == 0) {
-        return EducationDoctor(repositoryRoot, brandFound ? brandRoot : NULL);
+        if (requestedVolume != NULL || requestedDirectory != NULL || once || refresh)
+            return 2;
+        return EducationDoctor(repositoryRoot, brandFound ? brandRoot : NULL,
+                               requestedPython);
     }
     if (strcmp(command, "prepare") == 0) {
+        if (requestedPython != NULL || requestedVolume != NULL ||
+            requestedDirectory != NULL || once) return 2;
         if (!brandFound) {
             fputs("Cannot find Framework branding; use --brand PATH.\n", stderr);
             return 2;
@@ -220,16 +249,31 @@ int main(int argc, char **argv)
         return UmicomEducationPrepareSite(repositoryRoot, brandRoot, refresh);
     }
     if (strcmp(command, "verify") == 0) {
+        if (requestedPython != NULL || requestedVolume != NULL ||
+            requestedDirectory != NULL || once || refresh) return 2;
         return UmicomEducationVerifySite(repositoryRoot);
     }
     if (strcmp(command, "build") == 0) {
-        if (refresh || requestedDirectory != NULL || once) {
+        if (refresh || requestedDirectory != NULL || once || requestedVolume != NULL) {
             fputs("This option does not apply to build.\n", stderr);
             return 2;
         }
-        return UmicomEducationBuildSite(repositoryRoot);
+        return UmicomEducationBuildSiteWithPython(repositoryRoot, requestedPython);
+    }
+    if (strcmp(command, "book") == 0) {
+        if (requestedPython != NULL || requestedDirectory != NULL || once ||
+            (strcmp(bookCommand, "list") == 0 && (requestedVolume != NULL || refresh)))
+            return 2;
+        if (strcmp(bookCommand, "list") == 0)
+            return UmicomEducationBookList(repositoryRoot);
+        if (requestedVolume == NULL) {
+            fputs("Specify a volume folder name with --volume SLUG.\n", stderr);
+            return 2;
+        }
+        return UmicomEducationBookAssemble(repositoryRoot, requestedVolume, refresh);
     }
     if (strcmp(command, "serve") == 0) {
+        if (refresh || requestedVolume != NULL || requestedPython != NULL) return 2;
         char site[UMICOM_EDUCATION_PATH_CAPACITY];
         if (requestedDirectory == NULL) {
             if (!EducationPathJoin(site, sizeof(site), repositoryRoot, "site")) return 2;
@@ -237,8 +281,12 @@ int main(int argc, char **argv)
             fputs("The selected site directory does not exist.\n", stderr);
             return 2;
         }
-        if (!EducationIsDirectory(site)) {
-            fputs("The website is not built. Run `build` before `serve`.\n", stderr);
+        char indexPage[UMICOM_EDUCATION_PATH_CAPACITY];
+        if (!EducationIsDirectory(site) ||
+            !EducationPathJoin(indexPage, sizeof(indexPage), site, "index.html") ||
+            !EducationIsFile(indexPage)) {
+            fputs("The website home page is missing. Install MkDocs in the project .venv,\n"
+                  "then run `build` before `serve`. See `umicom-education --help`.\n", stderr);
             return 2;
         }
         return UmicomEducationServeSite(site, port, once);
