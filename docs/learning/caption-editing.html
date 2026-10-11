@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Edit captions and prepare a shorter clip</title><style>body{font:17px/1.65 system-ui,sans-serif;max-width:1000px;margin:32px auto;padding:0 24px;color:#213147}h1,h2{color:#194b69}pre{padding:16px;background:#edf2f5;overflow:auto}code{overflow-wrap:anywhere}li{margin:10px 0}table{border-collapse:collapse}td,th{border:1px solid #cad4df;padding:10px;text-align:left}</style></head><body><h1>Edit captions and prepare a shorter clip</h1>
+<p>A caption cue is a piece of text with a start and end time. The shared <strong>Captions</strong> page in the Media and Music creative workspace lets you write or import these cues, move their timing and save a subtitle file. It does not need a model, API key or online account.</p>
+<h2>Write or open captions</h2>
+<ol><li>Select <strong>Creative workbench</strong>, then open <strong>Captions</strong>.</li>
+<li>Paste plain SRT text into the editor. This example displays a caption from one to three seconds:</li></ol>
+<pre>1
+00:00:01,000 --&gt; 00:00:03,000
+Welcome to the lesson.
+
+2
+00:00:03,000 --&gt; 00:00:05,500
+Let us open the project.
+</pre>
+<ol start="3"><li>Alternatively, enter the full path to an existing UTF-8 <code>.srt</code> file and select <strong>Open SRT from path</strong>. Choose your own document folder. If the editor already has text, save it first and tick the replacement approval. An unsuccessful import leaves it unchanged.</li>
+<li>Select <strong>Prepare captions</strong> after editing. The editor shows normalised SRT, with cue numbers starting at one. The message shows the cue count and latest end time.</li>
+<li>Enter a preview time in milliseconds and select <strong>Preview active captions</strong>. One second is 1,000 milliseconds. All overlapping captions are shown; a caption disappears at its exact end time.</li></ol>
+<h2>Adjust timing and extract a short clip</h2>
+<ol><li>To move every caption later, enter a positive shift, for example <code>500</code>, and select <strong>Apply time shift</strong>. Use <code>-500</code> to move earlier. If any cue would start before zero, the whole shift is refused.</li>
+<li>For a video excerpt, enter its original begin and end times. An excerpt from 10 to 25 seconds uses <code>10000</code> and <code>25000</code>.</li>
+<li>Leave <strong>Start the extracted clip timeline at zero</strong> selected when the excerpt will be a new video. Clear it when you want the original time positions.</li>
+<li>Select <strong>Extract captions for this clip</strong>. Cues crossing either boundary are shortened. Cues entirely outside it are omitted from the new caption draft; the original file is unchanged.</li>
+<li>Use <strong>Undo / redo last prepared change</strong> to switch between the two most recent prepared states. This is one-step history. Manual edits retire the prepared state and its history; prepare again before exporting.</li></ol>
+<h2>Save the result</h2>
+<ol><li>Enter a new absolute path in your chosen folder. Use <code>.srt</code> for subtitle editors or <code>.vtt</code> for a web video text track. The selected save button determines the format; the extension is not changed automatically.</li>
+<li>Select <strong>Save new SRT file</strong> or <strong>Save new WebVTT file</strong>. The parent folder must already exist. An existing file is never replaced.</li>
+<li>Wait for the result message before closing the page. <strong>Stop file operation</strong> requests cancellation. A cancelled or failed write may leave a newly created partial file; the message identifies it for inspection.</li></ol>
+<p>Scene project saving does not save this independent caption draft. Export it explicitly before closing. Import is SRT only; WebVTT is currently an export format.</p>
+<h2>Supported input and troubleshooting</h2>
+<table><tr><th>Message or condition</th><th>What to do</th></tr>
+<tr><td>Parse error</td><td>Use increasing positive cue numbers, exact <code>HH:MM:SS,mmm --&gt; HH:MM:SS,mmm</code> timestamps, nonblank text and a blank line between cues. Minute and second fields must be below 60.</td></tr>
+<tr><td>Formatting tags or entities</td><td>This editor accepts plain text. Characters <code>&lt;</code>, <code>&gt;</code> and <code>&amp;</code> are refused rather than interpreted as styling. Keep a copy of styled captions in their original editor.</td></tr>
+<tr><td>Capacity exceeded</td><td>Split the document into smaller parts. Limits are 512 cues, 2,048 UTF-8 bytes per cue and a 2 MiB input file. Times range from zero through 99:59:59,999.</td></tr>
+<tr><td>File cannot be opened or saved</td><td>Check the full path, folder permissions and whether the destination already exists. Final symbolic links and special-device files are refused by the shared file service.</td></tr>
+<tr><td>Draft changed while opening</td><td>The late import is discarded. Save your newer draft and retry the open operation explicitly.</td></tr></table>
+<p>UTF-8 may have an initial byte-order mark. LF and CRLF line endings are accepted. Empty documents are valid. Cues may overlap or start together, but their start times must not move backwards. The editor does not transcribe audio, translate speech, generate voices, play video or burn subtitles into a video.</p>
+<h2>Extend the shared service</h2>
+<p>Include <code>umicom/creative_workspace/captions.h</code> and link <code>Umicom::creative_workspace</code>. Create or parse an immutable <code>UmiCaptionTrack</code>, then use the shift, clip, replace, insert and remove functions to obtain new tracks. Initialise each output pointer to <code>NULL</code>; destroy owned tracks when finished. Failed operations leave an existing input and the output pointer unchanged.</p>
+<p>The native adapter links <code>Umicom::creative_workspace_gtk4</code> and creates <code>UmiCaptionsGtkCreate</code>. Other frontends can reuse the same core without GTK. Provider transcription adapters should validate returned cues through this owner before showing a review. File operations belong on workers; credentials and network uploads do not belong in the caption document.</p>
+</body></html>

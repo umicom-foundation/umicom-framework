@@ -110,10 +110,19 @@ if(BUILD_TESTING)
     endforeach()
 
     add_test(NAME framework.education.cli.help COMMAND umicom-education --help)
+
+    # Real native CLI preflight: refuse to serve a missing site and propagate
+    # an explicitly requested renderer failure without opening a socket.
+    # CMake's execute_process preserves paths with spaces on Windows and Linux.
+    add_test(NAME framework.education.serve.preflight
+        COMMAND "${CMAKE_COMMAND}"
+            "-DEDUCATION_PROGRAM=$<TARGET_FILE:umicom-education>"
+            "-DEDUCATION_FIXTURE_ROOT=${CMAKE_BINARY_DIR}/education-serve-preflight"
+            -P "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/tests/education/test_serve_preflight.cmake")
     set_tests_properties(framework.education.site_paths
         framework.education.publication framework.education.cli.help
         framework.education.book framework.education.renderer
-        framework.education.publication_manifest
+        framework.education.publication_manifest framework.education.serve.preflight
         PROPERTIES LABELS "education;framework;native;safe-c")
 endif()
 

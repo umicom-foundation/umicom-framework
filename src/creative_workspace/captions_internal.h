@@ -6,12 +6,12 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 
-
 #ifndef UMICOM_CREATIVE_CAPTIONS_INTERNAL_H
 #define UMICOM_CREATIVE_CAPTIONS_INTERNAL_H
-#include "umicom/creative_workspace/captions.h"
 #include "internal.h"
-struct UmiCaptionTrack {
+#include "umicom/creative_workspace/captions.h"
+struct UmiCaptionTrack
+{
     UmiCaptionInfo info;
     UmiCaptionCue cues[UMI_CAPTION_CUE_LIMIT];
 };

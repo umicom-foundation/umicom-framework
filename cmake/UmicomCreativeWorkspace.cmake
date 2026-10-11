@@ -165,3 +165,6 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomSongPlan.cmake")
 
 # Timed audio assemblies reuse the library and the existing PCM decoder.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomAudioArrangement.cmake")
+
+# Caption ownership and timing are independent of the selected creative product.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomCaptions.cmake")

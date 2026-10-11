@@ -14,6 +14,7 @@
 #include "umicom/media_generation/seedream_gtk4.h"
 #include "umicom/media_generation/pixverse_gtk4.h"
 #include "umicom/ui/gtk4/song_plan_gtk4.h"
+#include "umicom/ui/gtk4/captions.h"
 #include <string.h>
 /* Each connected object is retained until its signal has been disconnected.
  * A caller retaining a button beyond the panel lifetime gets an inert widget. */
@@ -263,6 +264,16 @@ UmiStatus UmiCreativeGtkPanelCreate(UmiDataServer * server, const char * profile
         GtkWidget *arrangementPanel = UmiCreativeAudioArrangementGtkCreate();
         if (arrangementPanel != NULL) gtk_box_append(GTK_BOX(arrangementPage), arrangementPanel);
         else Text(arrangementPage, "The audio arrangement could not be created.");
+    }
+    /* Captions share one immutable document and file workflow across Media and
+     * Music. This page leaves scene persistence and the existing song planner
+     * intact; captions are exported explicitly to the user's chosen path. */
+    if (strcmp(profile, "media") == 0 || strcmp(profile, "music") == 0) {
+        GtkWidget *captionPage = Page(GTK_NOTEBOOK(notebook), "Captions");
+        GtkWidget *captionEditor = NULL;
+        if (UmiCaptionsGtkCreate(&captionEditor) == UMI_STATUS_OK)
+            gtk_box_append(GTK_BOX(captionPage), captionEditor);
+        else Text(captionPage, "The caption editor could not be created.");
     }
     GtkWidget * right = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
     gtk_paned_set_end_child(GTK_PANED(paned), right);

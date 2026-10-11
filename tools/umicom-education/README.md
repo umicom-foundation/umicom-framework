@@ -28,11 +28,7 @@ An incremental build does not require deleting the existing build directory.
 CTest includes tests for bounded HTTP paths, publication, native book assembly,
 renderer error handling and CLI help. The renderer tests use a native test double
 rather than installing MkDocs or contacting the Internet.
-```bash
-cd "$HOME/umicom/Umicom-Applications"
-cmake -S framework/tools/umicom-education -B build/umicom-education -G Ninja -DBUILD_TESTING=ON
-cmake --build build/umicom-education --parallel 2
-ctest --test-dir build/umicom-education --output-on-failure
+
 ## Solve `No module named mkdocs`
 
 The original `build` subcommand selected the first `python` executable on
@@ -56,7 +52,6 @@ py -3 -m venv .venv
 If the Python launcher is not installed, substitute a known Windows Python
 interpreter path for `py -3`. Do not install packages into the MSYS2 toolchain
 interpreter unless that is your intended documentation environment.
-```
 
 ## Commands
 
@@ -84,7 +79,6 @@ $Education = ".\build\umicom-education\bin\umicom-education.exe"
 $Books = "C:\umicom\Umicom-Bits2Banking"
 
 & $Education doctor --repo $Books
-& $Education prepare --repo $Books
 & $Education verify --repo $Books
 & $Education build --repo $Books
 if ($LASTEXITCODE -ne 0) { throw "The website was not built." }
@@ -92,8 +86,6 @@ if ($LASTEXITCODE -ne 0) { throw "The website was not built." }
 & $Education serve --repo $Books --port 8765
 ```
 
-The `--repo` argument identifies the existing Bits2Banking checkout. The
-publication owner writes to its approved `content` subdirectories and never
 The `--python` option can specify an interpreter even if no `.venv` exists:
 
 ```powershell
@@ -207,3 +199,29 @@ For real website acceptance, use the repository-local Python interpreter with
 MkDocs installation is not modified by the test. The platform-wide process
 API remains `umi_process_execute`; application modules must not copy the
 standalone education launch adapter.
+
+## Update 06: build an HTML site before previewing it
+
+A successful `doctor` check means the MkDocs renderer is available. It does not
+create `site/index.html`. The `serve` command continues to reject missing
+pages rather than incorrectly treating unbuilt Markdown as a website.
+
+To build once and then start the read-only native preview in one explicit step:
+
+```powershell
+Set-Location "C:\umicom\Umicom-Applications"
+$Education = ".\build\umicom-education\bin\umicom-education.exe"
+$Books = "C:\umicom\Umicom-Bits2Banking"
+$Python = "$Books\.venv\Scripts\python.exe"
+& $Education serve --repo $Books --build --python $Python --port 8765
+```
+
+The same action can be performed as two commands: `build` followed by `serve`.
+`--build` is permitted only for `serve`, and it is incompatible with
+`--directory`, which selects an existing export. A failed MkDocs invocation
+prevents server startup. Existing publishing and manuscript files remain
+untouched; this only generates the normal MkDocs site output.
+
+CTest now includes `framework.education.serve.preflight` to verify that a
+missing homepage gives an actionable diagnostic, failed renderer selection
+cannot start the socket, and unrelated commands reject `--build`.
