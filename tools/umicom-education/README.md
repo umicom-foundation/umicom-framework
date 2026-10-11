@@ -254,3 +254,17 @@ outputs and the existing synthetic ELF fixture with spaces in its name.
 
 The full beginner explanation is published in Bits2Banking Lesson 94, with
 additional page-fault and process-lifecycle models in the education repository.
+
+## Inspect a synthetic C23 IPC trace
+
+The `ipc-trace --file PATH` command uses the reusable `UmiEducationIpcTraceInspect` contract. It checks a versioned binary **teaching format** with bounded record lengths, FIFO send/receive sequences and a fixed pending-message capacity. It does not use the live Umicom Kernel IPC ABI, grant privileges, communicate with another process or run code from the file.
+
+```powershell
+Set-Location "C:\umicom\Umicom-Applications"
+ctest --test-dir ".\build\umicom-education" --output-on-failure
+$Education = ".\build\umicom-education\bin\umicom-education.exe"
+$Trace = ".\build\umicom-education\education-ipc-trace-test\fixture with spaces\owned messages.ipc"
+& $Education ipc-trace --file $Trace
+```
+
+The CTest fixture and CLI regression are separately registered, with a fixture dependency so parallel CTest does not read a partially written file. See [Bits2Banking Lesson 99](https://github.com/umicom-foundation/Bits2Banking/blob/main/content/lessons/05-engineering/99-inspect-an-ipc-trace-with-c23.md).

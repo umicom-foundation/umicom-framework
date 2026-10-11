@@ -23,6 +23,7 @@
 #include "umicom/education/elf_symbols.h"
 #include "umicom/education/elf_load_plan.h"
 #include "umicom/education/memory_audit.h"
+#include "umicom/education/ipc_trace.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,6 +50,7 @@ static void EducationPrintHelp(void)
          "umicom-education symbols --file ELF_OBJECT_OR_IMAGE\n"
          "umicom-education load-plan --file ELF_EXECUTABLE_OR_KERNEL\n"
          "umicom-education memory-audit --file ELF_EXECUTABLE_OR_KERNEL\n"
+         "umicom-education ipc-trace --file EDUCATIONAL_TRACE_FILE\n"
          "umicom-education build   --repo REPOSITORY [--python PYTHON_EXECUTABLE]\n"
          "umicom-education serve   --repo REPOSITORY [--port 8765] [--directory SITE_DIRECTORY]\n"
          "umicom-education serve   --repo REPOSITORY --build [--python PYTHON_EXECUTABLE] [--port 8765]\n"
@@ -410,6 +412,29 @@ int main(int argc, char **argv)
                                          : "no W+X page conflict found");
         puts("Read-only teaching report: not loader approval or a kernel protection check.");
         return review ? 1 : 0;
+    }
+    /* Read-only inspection of a teaching trace. Unlike the actual Kernel
+     * message service, this code cannot send, receive or authorise IPC. */
+    if (strcmp(argv[1], "ipc-trace") == 0) {
+        if (argc != 4 || strcmp(argv[2], "--file") != 0 || argv[3][0] == '\0') {
+            fputs("Usage: umicom-education ipc-trace --file TRACE_FILE\n", stderr);
+            return 2;
+        }
+        UmiEducationIpcTraceReport report = {0};
+        const UmiStatus status = UmiEducationIpcTraceInspectFile(argv[3], &report);
+        if (status != UMI_STATUS_OK) {
+            fprintf(stderr, "Cannot inspect IPC teaching trace (status %d): %s\n",
+                    (int)status, argv[3]);
+            return 1;
+        }
+        printf("IPC trace: %u records\nSends: %u | Receives: %u\n"
+               "Pending: %u | High-water: %u\nCopied payload bytes: %llu\n",
+               (unsigned)report.recordCount, (unsigned)report.sendCount,
+               (unsigned)report.receiveCount, (unsigned)report.pendingCount,
+               (unsigned)report.highWater,
+               (unsigned long long)report.payloadBytes);
+        puts("Simulation only: no IPC or system call was executed.");
+        return 0;
     }
     const char *command = argv[1];
     const char *bookCommand = NULL;
