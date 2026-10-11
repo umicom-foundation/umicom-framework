@@ -232,6 +232,13 @@ UmiStatus umi_debug_runtime_platform_evaluate_watch(
  * Provide the debug runtime platform continue operation used by this module and its client
  * applications.
  */
+/* Continue and step requests require a settled paused adapter and a positive
+ * signed-32-bit thread ID. They retire watch values, threads, frames, scopes
+ * and variables before sending, including when a reply fails or times out.
+ * No automatic retry is made. Wait for a new stopped event and inspect again;
+ * if the session remains uncertain, explicitly stop it and reconnect.
+ * Pause requires a running adapter. Its acknowledgement alone is not a stop.
+ * All control calls require a nonzero timeout and remain owner-thread confined. */
 UmiStatus umi_debug_runtime_platform_continue(
     UmiDebugRuntimePlatform *platform,
     uint64_t thread_id,

@@ -16,6 +16,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/education/site.h"
+#include "umicom/education/publication.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,6 +39,8 @@ static void EducationPrintHelp(void)
          "umicom-education verify  --repo REPOSITORY\n"
          "umicom-education build   --repo REPOSITORY [--python PYTHON_EXECUTABLE]\n"
          "umicom-education serve   --repo REPOSITORY [--port 8765] [--directory SITE_DIRECTORY]\n"
+         "umicom-education publish manifest --repo REPOSITORY [--refresh]\n"
+         "umicom-education publish verify --repo REPOSITORY\n"
          "umicom-education book list --repo REPOSITORY\n"
          "umicom-education book check --repo REPOSITORY --volume SLUG\n"
          "umicom-education book assemble --repo REPOSITORY --volume SLUG [--refresh]\n"
@@ -179,6 +182,15 @@ int main(int argc, char **argv)
     const char *command = argv[1];
     const char *bookCommand = NULL;
     int firstOption = 2;
+    if (strcmp(command, "publish") == 0) {
+        if (argc < 3 || (strcmp(argv[2], "manifest") != 0 &&
+                         strcmp(argv[2], "verify") != 0)) {
+            fputs("Use `publish manifest` or `publish verify`.\n", stderr);
+            return 2;
+        }
+        bookCommand = argv[2]; /* One bounded subcommand at a time. */
+        firstOption = 3;
+    }
     if (strcmp(command, "book") == 0) {
         if (argc < 3 || (strcmp(argv[2], "list") != 0 &&
                          strcmp(argv[2], "check") != 0 &&
@@ -261,6 +273,20 @@ int main(int argc, char **argv)
             return 2;
         }
         return UmicomEducationBuildSiteWithPython(repositoryRoot, requestedPython);
+    }
+    if (strcmp(command, "publish") == 0) {
+        if (requestedPython != NULL || requestedVolume != NULL ||
+            requestedBrand != NULL || requestedDirectory != NULL || once) {
+            fputs("This option does not apply to publication verification.\n", stderr);
+            return 2;
+        }
+        if (strcmp(bookCommand, "manifest") == 0)
+            return UmicomEducationPublicationManifest(repositoryRoot, refresh);
+        if (refresh) {
+            fputs("`publish verify` is read-only; --refresh is not applicable.\n", stderr);
+            return 2;
+        }
+        return UmicomEducationPublicationVerify(repositoryRoot);
     }
     if (strcmp(command, "book") == 0) {
         if (requestedPython != NULL || requestedDirectory != NULL || once ||

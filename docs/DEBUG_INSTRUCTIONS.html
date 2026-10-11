@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Inspecting paused machine instructions</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:960px;margin:3rem auto;padding:0 1.5rem;color:#172638}code,pre{background:#eef2f6}pre{padding:1rem;overflow:auto}h1,h2{line-height:1.25}a{color:#165ca8}table{border-collapse:collapse}td,th{padding:.7rem;border:1px solid #ccd4de;text-align:left}</style></head>
+<body><main><h1>Inspecting paused machine instructions</h1>
+<p>A debugger translates source code into a view of a running program. Disassembly shows the machine instructions that the processor executes.
+Framework provides bounded, read-only instruction pages for a selected paused stack frame. A stack frame represents one active function call.</p>
+<h2>Capture a frame, then request a page</h2>
+<ol><li>Connect a native debug adapter, pause the program and refresh its threads, stack and scopes with <code>UmiDebugRuntimePlatformInspectStopped</code>.
+The selected Framework workspace must belong to the same debug service.</li>
+<li>Call <code>UmiDebugInstructionTargetCapture</code> with that workspace. Framework requests the selected frame's instruction reference using its stack position.
+The adapter must advertise <code>supportsDisassembleRequest</code> and return an <code>instructionPointerReference</code>.</li>
+<li>Allocate a <code>UmiDebugInstructionPage</code> on the heap. Call <code>UmiDebugInstructionPageRead</code> with the captured target, independent byte and instruction offsets, and a count from 1 to 64.</li>
+<li>Display the copied rows as text. A row marked <code>invalid</code> represents an unavailable instruction. Keep that row visible so the requested page retains its positions.</li>
+<li>Destroy the target with <code>UmiDebugInstructionTargetDestroy</code> when replacing the capture or closing the view. Free the page separately.</li></ol>
+<h2>Offsets and locations</h2>
+<p>The byte offset moves relative to the captured reference; the instruction offset then moves by instructions. Instruction sizes vary between architectures, so do not multiply an instruction offset by a guessed size.
+Signed offsets are bounded to the exact integer range used by the Debug Adapter Protocol. <code>UmiDebugInstructionOffsetRead</code> accepts decimal text and an optional leading minus sign.</p>
+<p>Addresses remain decimal or hexadecimal strings, including addresses wider than the host pointer size.
+Source locations are descriptive metadata. A location omitted on a later row inherits the previous row's location within that page; line and column fields remain independently optional.
+Source paths are not opened, and symbols and instruction text are not evaluated.</p>
+<h2>Lifetime and error handling</h2>
+<table><thead><tr><th>Result</th><th>What to do</th></tr></thead><tbody>
+<tr><td><code>NOT_IMPLEMENTED</code></td><td>The adapter did not advertise disassembly. Use its supported source-level tools.</td></tr>
+<tr><td><code>NOT_FOUND</code></td><td>The connection or selected frame has no usable reference. Pause and refresh the stack before capturing again.</td></tr>
+<tr><td><code>BUSY</code></td><td>Publish pending debugger events through the normal event pump, then explicitly refresh the capture. Events are left queued for the owner.</td></tr>
+<tr><td><code>INVALID_STATE</code></td><td>The connection, paused revision, selected frame or workspace changed. Capture the current frame again.</td></tr>
+<tr><td><code>PARSE_ERROR</code> or <code>CAPACITY_EXCEEDED</code></td><td>The adapter reply is malformed, incomplete or too large. The previous output value remains unchanged; show the failure instead of labelling it as a fresh result.</td></tr>
+<tr><td><code>TIMEOUT</code> or <code>UNAVAILABLE</code></td><td>The adapter did not reply in time or rejected the request. Inspection does not retry automatically.</td></tr>
+</tbody></table>
+<p>Calls run on the native debugger owner's thread. Supply a finite timeout and serialize access to that owner.
+A successful response must contain exactly the requested number of rows, with unavailable rows represented by the adapter's filler entries.
+Captures stay readable after closure, but they cannot authorize a new request against a later connection.</p>
+<h2>Adding a frontend</h2>
+<p><code>UmiGtk4DebugInstructionsCreate</code> accepts capture and page callbacks. A frontend binds those callbacks to its existing workspace and permission checks.
+The GTK panel clears old rows when request settings change and rejects callback results if settings change again or the panel closes.
+It owns the callback context only after successful creation. No source files, breakpoints, registers, memory or execution state are changed by the view.</p>
+<p>The legacy <code>umi_debug_runtime_decode_disassembly</code> entry point shares field validation and preserves its existing bounded result type.
+Line or column values outside that type's range are rejected instead of truncated. Invalid presentation hints are retained so an unavailable row cannot be offered as a breakpoint location.</p>
+<p>Protocol reference: <a href="https://microsoft.github.io/debug-adapter-protocol/specification">Debug Adapter Protocol specification</a>.</p>
+</main><h2>Continue, step and pause</h2>
+<p>Continuing or stepping retires the previous frame, scope and variable captures
+before the request is sent. A lost reply cannot make old instruction references
+current again. Wait for a fresh stop, select its frame and refresh the instruction
+view. If a control request fails and no new stop arrives, end the debugging
+session and reconnect before inspecting again.</p>
+<p>A Pause acknowledgement means the adapter accepted the request; Studio waits
+for the stop event before offering paused inspection. Retained text describes an
+earlier capture until you refresh it.</p>
+</body></html>

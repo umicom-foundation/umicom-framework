@@ -8,6 +8,7 @@
 #ifndef UMICOM_DEBUG_RESPONSE_FIELDS_INTERNAL_H
 #define UMICOM_DEBUG_RESPONSE_FIELDS_INTERNAL_H
 #include "umicom/base/status.h"
+#include "umicom/debug_runtime/types.h"
 #include "umicom/language_runtime/json_text.h"
 /* Find a validated object field by its decoded UTF-8 key, including JSON escapes. */
 int DebugResponseJsonField(const UmiLanguageRuntimeJsonDocument *document, int object,
@@ -19,4 +20,10 @@ UmiStatus DebugResponseJsonBoolean(const UmiLanguageRuntimeJsonDocument *documen
                                    const char *key, int required, int *out);
 UmiStatus DebugResponseJsonResponse(const UmiLanguageRuntimeJsonDocument *document,
                                     const char *command, int body_optional, int *body);
+/* Stage nonnegative protocol integers without coercing strings, booleans or fractions. */
+UmiStatus DebugResponseJsonUnsigned(const UmiLanguageRuntimeJsonDocument *document,int object,
+    const char *key,int required,uint64_t limit,uint64_t *out,int *known);
+/* Copy source metadata only; a path or source reference never authorizes file access. */
+UmiStatus DebugResponseJsonSource(const UmiLanguageRuntimeJsonDocument *document,int object,
+    UmiDebugRuntimeSource *out);
 #endif

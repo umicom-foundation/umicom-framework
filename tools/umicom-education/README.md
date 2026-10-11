@@ -148,18 +148,32 @@ full native publishing are future changes.
 
 Original documents, scripts, working CMake projects, source comments and
 application functionality have not been removed or disabled by this batch.
-### Security and portability
-The preview binds to IPv4 loopback, accepts read-only GET/HEAD and rejects
-unrecognised Host/Origin values, dot-prefixed paths, encoded separators,
-filesystem traversal and directory listings. It follows POSIX directory handles
-with `openat`/`O_NOFOLLOW` on Linux. The initial Windows implementation uses
-narrow Win32 paths and attribute checks. It is intended for a trusted local
-build directory, **not** an untrusted concurrently writable tree or an
-Internet-facing service. Unicode Windows paths, detailed request logging,
-accessibility preview diagnostics, cancellation and final integration with the
-canonical Web Server remain separate milestones.
 
-The current `verify` is a presence check, not full Markdown link validation.
-The original Python and PowerShell tools are retained until feature parity is
-measured. No current command generates PDF or DOCX natively, installs
-third-party dependencies, or deploys to GitHub Pages.
+## Site publication manifest (after MkDocs and BookForge)
+
+The publication integrity service is Framework-owned. It reuses
+`src/base/sha256.c` rather than introducing a second SHA-256 implementation.
+It works on the combined `site/` directory, including the historical book
+archive. It does not run GitHub Actions or publish files to the Internet.
+
+```powershell
+Set-Location "C:\umicom\Umicom-Applications"
+$Education = ".\build\umicom-education\bin\umicom-education.exe"
+$Books = "C:\umicom\Umicom-Bits2Banking"
+& $Education publish manifest --repo $Books
+& $Education publish verify --repo $Books
+```
+
+The digest list is generated at `output/native-publication/site.sha256`. A
+changed file refuses verification. A changed manifest cannot be overwritten
+without the explicit `publish manifest --refresh` option. Neither operation
+changes manuscripts, lessons, video scripts or source files.
+
+`framework.education.publication_manifest` tests a complete manifest, altered
+bytes, added files, refused manifest replacement and linked-file rejection
+(on platforms that support symbolic links).
+
+The consolidated GitHub Pages publisher is maintained by Bits2Banking under
+`.github/workflows/learning-pages.yml`. It builds the former BookForge output
+and the MkDocs site independently, then combines them. The older book artifact
+jobs remain available; they no longer independently deploy to GitHub Pages.

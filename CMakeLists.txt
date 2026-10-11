@@ -5747,3 +5747,9 @@ include(cmake/UmicomExceptionInformation.cmake)
 
 # Process discovery shares bounded native observations across developer interfaces.
 include(cmake/UmicomProcessCatalog.cmake)
+
+# Paused instruction pages share the native debugger connection and selection owners.
+include(cmake/UmicomDebugInstructions.cmake)
+
+# Readiness consumers verify the archive that owns the suite lifecycle.
+include(cmake/UmicomIntegrationReadiness.cmake)

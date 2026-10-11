@@ -22,6 +22,10 @@ extern "C" {
  * Provide the debug runtime decode disassembly operation used by this module and its
  * client applications.
  */
+/* Decode a complete successful DAP response before publishing output.
+ * Excess rows, invalid fields and coordinates wider than this legacy result
+ * are rejected. presentation_hint preserves unavailable filler instructions.
+ * Failure leaves caller output unchanged; allocate this result on the heap. */
 UmiStatus umi_debug_runtime_decode_disassembly(
     const char *json,
     UmiDebugRuntimeDisassembly *out_result);

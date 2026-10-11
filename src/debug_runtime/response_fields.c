@@ -124,3 +124,41 @@ UmiStatus DebugResponseJsonResponse(const UmiLanguageRuntimeJsonDocument *docume
     *body = DebugResponseJsonField(document, 0, "body");
     return *body < 0 && body_optional ? UMI_STATUS_OK : DebugResponseJsonObject(document, *body);
 }
+
+/* Keep numeric field policy shared by stack and instruction inspection. These
+ * helpers write temporary caller-owned fields; public decoders publish only
+ * after the complete response has been validated. */
+UmiStatus DebugResponseJsonUnsigned(const UmiLanguageRuntimeJsonDocument *document, int object,
+                                    const char *key, int required, uint64_t limit, uint64_t *out,
+                                    int *known)
+{
+    int token = DebugResponseJsonField(document, object, key);
+    *known = token >= 0;
+    *out = 0U;
+    if (token < 0)
+        return required ? UMI_STATUS_PARSE_ERROR : UMI_STATUS_OK;
+    int64_t value = 0;
+    UmiStatus status = umi_language_runtime_json_int64(document, token, &value);
+    if (status != UMI_STATUS_OK)
+        return status;
+    if (value < 0 || (uint64_t)value > limit)
+        return UMI_STATUS_PARSE_ERROR;
+    *out = (uint64_t)value;
+    return UMI_STATUS_OK;
+}
+/* Source fields describe adapter data. Validate recognized fields and duplicate
+ * keys while allowing future, unrecognized metadata to remain with the adapter. */
+UmiStatus DebugResponseJsonSource(const UmiLanguageRuntimeJsonDocument *document, int object,
+                                  UmiDebugRuntimeSource *out)
+{
+    UmiStatus status = DebugResponseJsonObject(document, object);
+    if (status == UMI_STATUS_OK)
+        status = DebugResponseJsonString(document, object, "name", 0, out->name, sizeof out->name);
+    if (status == UMI_STATUS_OK)
+        status = DebugResponseJsonString(document, object, "path", 0, out->path, sizeof out->path);
+    int known = 0;
+    if (status == UMI_STATUS_OK)
+        status = DebugResponseJsonUnsigned(document, object, "sourceReference", 0, INT32_MAX,
+                                           &out->source_reference, &known);
+    return status;
+}
