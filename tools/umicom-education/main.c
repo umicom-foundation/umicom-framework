@@ -24,6 +24,7 @@
 #include "umicom/education/elf_load_plan.h"
 #include "umicom/education/memory_audit.h"
 #include "umicom/education/ipc_trace.h"
+#include "umicom/education/schedule_trace.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,6 +52,7 @@ static void EducationPrintHelp(void)
          "umicom-education load-plan --file ELF_EXECUTABLE_OR_KERNEL\n"
          "umicom-education memory-audit --file ELF_EXECUTABLE_OR_KERNEL\n"
          "umicom-education ipc-trace --file EDUCATIONAL_TRACE_FILE\n"
+         "umicom-education schedule-trace --file EDUCATIONAL_SCHEDULE_FILE\n"
          "umicom-education build   --repo REPOSITORY [--python PYTHON_EXECUTABLE]\n"
          "umicom-education serve   --repo REPOSITORY [--port 8765] [--directory SITE_DIRECTORY]\n"
          "umicom-education serve   --repo REPOSITORY --build [--python PYTHON_EXECUTABLE] [--port 8765]\n"
@@ -434,6 +436,38 @@ int main(int argc, char **argv)
                (unsigned)report.highWater,
                (unsigned long long)report.payloadBytes);
         puts("Simulation only: no IPC or system call was executed.");
+        return 0;
+    }
+    /* Teaching records describe ready/waiting transitions, not actual Kernel
+     * dispatch, timing or privilege. Keep this read-only inspector separate
+     * from the privileged scheduler and from the IPC trace format. */
+    if (strcmp(argv[1], "schedule-trace") == 0) {
+        if (argc != 4 || strcmp(argv[2], "--file") != 0 || argv[3][0] == '\0') {
+            fputs("Usage: umicom-education schedule-trace --file TRACE_FILE\n", stderr);
+            return 2;
+        }
+        UmiEducationScheduleReport report = {0};
+        const UmiStatus status = UmiEducationScheduleTraceInspectFile(argv[3], &report);
+        if (status != UMI_STATUS_OK) {
+            fprintf(stderr, "Cannot inspect scheduling teaching trace (status %d): %s\n",
+                    (int)status, argv[3]);
+            return 1;
+        }
+        printf("Scheduler trace: %u records\n"
+               "Admitted: %u | Dispatched: %u | Yielded: %u\n"
+               "Waits: %u | Wakes: %u | Exits: %u | Cancelled: %u\n"
+               "Peak ready: %u | Peak waiting: %u\n"
+               "Final ready: %u | Waiting: %u | Live: %u | Running task: %u\n"
+               "Last logical tick: %llu\n",
+               (unsigned)report.recordCount, (unsigned)report.admitted,
+               (unsigned)report.dispatched, (unsigned)report.yielded,
+               (unsigned)report.waited, (unsigned)report.awakened,
+               (unsigned)report.exited, (unsigned)report.cancelled,
+               (unsigned)report.readyPeak, (unsigned)report.waitingPeak,
+               (unsigned)report.readyAtEnd, (unsigned)report.waitingAtEnd,
+               (unsigned)report.liveAtEnd, (unsigned)report.runningAtEnd,
+               (unsigned long long)report.lastTick);
+        puts("Read-only simulation: no real task or Kernel scheduling operation executed.");
         return 0;
     }
     const char *command = argv[1];

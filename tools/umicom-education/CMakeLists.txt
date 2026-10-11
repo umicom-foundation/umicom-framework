@@ -30,6 +30,7 @@ add_library(umicom_education_site STATIC
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/elf_load_plan.c"
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/memory_audit.c"
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/ipc_trace.c"
+    "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/schedule_trace.c"
     # Keep hashing with the existing Framework base implementation. This
     # standalone learning build deliberately does not duplicate its algorithm.
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/base/sha256.c")
@@ -270,6 +271,31 @@ if(BUILD_TESTING)
         FIXTURES_REQUIRED education_ipc_trace_fixture
         PASS_REGULAR_EXPRESSION "IPC trace: 4 records")
 
+    # A classroom schedule trace is a distinct wire format, never a Kernel
+    # trace or an IPC capture. The library test creates the immutable fixture
+    # before the independent CLI test is allowed to inspect it in parallel.
+    add_executable(umicom-education-schedule-trace-test
+        "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/tests/education/test_schedule_trace.c")
+    target_link_libraries(umicom-education-schedule-trace-test PRIVATE Umicom::education_site)
+    if(MSVC)
+        target_compile_options(umicom-education-schedule-trace-test PRIVATE /W4)
+    else()
+        target_compile_options(umicom-education-schedule-trace-test PRIVATE
+            -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    endif()
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/education-schedule-trace-test/fixture with spaces")
+    set(_education_schedule_fixture
+        "${CMAKE_BINARY_DIR}/education-schedule-trace-test/fixture with spaces/round robin.sch")
+    add_test(NAME framework.education.schedule_trace
+        COMMAND umicom-education-schedule-trace-test "${_education_schedule_fixture}")
+    add_test(NAME framework.education.schedule_trace.cli
+        COMMAND umicom-education schedule-trace --file "${_education_schedule_fixture}")
+    set_tests_properties(framework.education.schedule_trace PROPERTIES
+        FIXTURES_SETUP education_schedule_trace_fixture)
+    set_tests_properties(framework.education.schedule_trace.cli PROPERTIES
+        FIXTURES_REQUIRED education_schedule_trace_fixture
+        PASS_REGULAR_EXPRESSION "Scheduler trace: 11 records")
+
     add_test(NAME framework.education.cli.help COMMAND umicom-education --help)
 
     # Real native CLI preflight: refuse to serve a missing site and propagate
@@ -291,6 +317,7 @@ if(BUILD_TESTING)
         framework.education.elf_load_plan framework.education.load_plan.cli
         framework.education.memory_audit framework.education.memory_audit.cli
         framework.education.ipc_trace framework.education.ipc_trace.cli
+        framework.education.schedule_trace framework.education.schedule_trace.cli
         PROPERTIES LABELS "education;framework;native;safe-c")
 endif()
 

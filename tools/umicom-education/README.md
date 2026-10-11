@@ -268,3 +268,24 @@ $Trace = ".\build\umicom-education\education-ipc-trace-test\fixture with spaces\
 ```
 
 The CTest fixture and CLI regression are separately registered, with a fixture dependency so parallel CTest does not read a partially written file. See [Bits2Banking Lesson 99](https://github.com/umicom-foundation/Bits2Banking/blob/main/content/lessons/05-engineering/99-inspect-an-ipc-trace-with-c23.md).
+
+## Inspect a classroom scheduling trace
+
+The read-only C23 `schedule-trace --file FILE` command checks the `UMISCH1`
+fixed-size educational trace format. It checks exactly ordered records, FIFO
+ready-queue selection, live task generations (unique task IDs within one file),
+matching wait and wake keys, and cancellation. It never starts a task, sleeps
+a thread or transmits an IPC message. The report is left unchanged if a
+record is malformed. No Python or external interpreter is needed.
+
+```powershell
+Set-Location "C:\umicom\Umicom-Applications"
+ctest --test-dir ".\build\umicom-education" -R "framework\.education\.schedule_trace" --output-on-failure
+& ".\build\umicom-education\bin\umicom-education.exe" schedule-trace --file ".\build\umicom-education\education-schedule-trace-test\fixture with spaces\round robin.sch"
+```
+
+The first command creates the synthetic fixture. `UmiEducationScheduleTraceInspect`
+and `UmiEducationScheduleTraceInspectFile` are the shared Framework C23 APIs.
+This is deliberately separate from the real Umicom Kernel user scheduler and
+its privileged process/IPC lifetimes.
+
