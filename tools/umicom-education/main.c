@@ -20,6 +20,7 @@
 #include "umicom/education/nav_audit.h"
 #include "umicom/education/binary_inspect.h"
 #include "umicom/education/archive_inspect.h"
+#include "umicom/education/elf_symbols.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,6 +44,7 @@ static void EducationPrintHelp(void)
          "umicom-education audit   --repo REPOSITORY   (native navigation preflight)\n"
          "umicom-education binary --file OBJECT_OR_EXECUTABLE\n"
          "umicom-education archive --file STATIC_LIBRARY\n"
+         "umicom-education symbols --file ELF_OBJECT_OR_IMAGE\n"
          "umicom-education build   --repo REPOSITORY [--python PYTHON_EXECUTABLE]\n"
          "umicom-education serve   --repo REPOSITORY [--port 8765] [--directory SITE_DIRECTORY]\n"
          "umicom-education serve   --repo REPOSITORY --build [--python PYTHON_EXECUTABLE] [--port 8765]\n"
@@ -254,6 +256,62 @@ int main(int argc, char **argv)
         if (report.memberCount > report.recordedCount)
             printf("  ... %u additional members not listed\n",
                    (unsigned)(report.memberCount - report.recordedCount));
+        return 0;
+    }
+    /* ELF symbol and relocation metadata belong to the reusable Framework
+     * parser. This read-only educational command is intentionally separate
+     * from the executable-header and static-archive commands above; it never
+     * asks the operating system to load or execute the inspected file. */
+    if (strcmp(argv[1], "symbols") == 0) {
+        if (argc != 4 || strcmp(argv[2], "--file") != 0 || argv[3][0] == '\0') {
+            fputs("Usage: umicom-education symbols --file ELF_PATH\n", stderr);
+            return 2;
+        }
+        UmiEducationElfReport report = {0};
+        const UmiStatus status = UmiEducationElfInspectFile(argv[3], &report);
+        if (status != UMI_STATUS_OK) {
+            fprintf(stderr, "Cannot inspect ELF symbols (status %d): %s\n",
+                    (int)status, argv[3]);
+            if (status == UMI_STATUS_NOT_IMPLEMENTED)
+                fputs("This command accepts ELF32/ELF64 only. COFF/PE symbol "
+                      "inspection is a separate future feature.\n", stderr);
+            return 1;
+        }
+        printf("Format: ELF%u (%s-endian)\n"
+               "Machine: %u\nType: %u\nSections: %u\n"
+               "Static symbol tables: %u\nDynamic symbol tables: %u\n"
+               "Symbols: %llu\nDefined: %llu\nUndefined: %llu\n"
+               "Local: %llu\nGlobal: %llu\nWeak: %llu\nOther binding: %llu\n"
+               "Functions: %llu\nObjects: %llu\n"
+               "Relocations: %llu (REL %llu, RELA %llu)\n",
+               (unsigned)report.addressBits,
+               report.littleEndian ? "little" : "big",
+               (unsigned)report.machine, (unsigned)report.elfType,
+               (unsigned)report.sectionCount, (unsigned)report.staticSymbolTables,
+               (unsigned)report.dynamicSymbolTables,
+               (unsigned long long)report.symbolCount,
+               (unsigned long long)report.definedCount,
+               (unsigned long long)report.undefinedCount,
+               (unsigned long long)report.localCount,
+               (unsigned long long)report.globalCount,
+               (unsigned long long)report.weakCount,
+               (unsigned long long)report.otherBindingCount,
+               (unsigned long long)report.functionCount,
+               (unsigned long long)report.objectCount,
+               (unsigned long long)report.relocationCount,
+               (unsigned long long)report.relCount,
+               (unsigned long long)report.relaCount);
+        for (uint32_t i = 0U; i < report.displayedCount; ++i) {
+            const UmiEducationElfSymbol *symbol = &report.displayed[i];
+            printf("  %-34s binding=%u type=%u section=%u%s\n",
+                   symbol->name[0] != '\0' ? symbol->name : "(unnamed)",
+                   (unsigned)symbol->binding, (unsigned)symbol->kind,
+                   (unsigned)symbol->sectionIndex,
+                   symbol->nameTruncated ? " (name shortened)" : "");
+        }
+        if (report.symbolCount > report.displayedCount)
+            printf("  ... %llu additional symbol records not displayed\n",
+                   (unsigned long long)(report.symbolCount - report.displayedCount));
         return 0;
     }
     const char *command = argv[1];
