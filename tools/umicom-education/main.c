@@ -22,6 +22,7 @@
 #include "umicom/education/archive_inspect.h"
 #include "umicom/education/elf_symbols.h"
 #include "umicom/education/elf_load_plan.h"
+#include "umicom/education/memory_audit.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,6 +48,7 @@ static void EducationPrintHelp(void)
          "umicom-education archive --file STATIC_LIBRARY\n"
          "umicom-education symbols --file ELF_OBJECT_OR_IMAGE\n"
          "umicom-education load-plan --file ELF_EXECUTABLE_OR_KERNEL\n"
+         "umicom-education memory-audit --file ELF_EXECUTABLE_OR_KERNEL\n"
          "umicom-education build   --repo REPOSITORY [--python PYTHON_EXECUTABLE]\n"
          "umicom-education serve   --repo REPOSITORY [--port 8765] [--directory SITE_DIRECTORY]\n"
          "umicom-education serve   --repo REPOSITORY --build [--python PYTHON_EXECUTABLE] [--port 8765]\n"
@@ -367,6 +369,47 @@ int main(int argc, char **argv)
         }
         puts("Educational metadata only: no memory mapping or execution performed.");
         return 0;
+    }
+    /* The canonical load-plan inspector owns ELF parsing; this dedicated C23
+     * review adds conservative 4 KiB page-granularity W^X checks. It does
+     * not mmap, run or change the inspected executable or operating system. */
+    if (strcmp(argv[1], "memory-audit") == 0) {
+        if (argc != 4 || strcmp(argv[2], "--file") != 0 || argv[3][0] == '\0') {
+            fputs("Usage: umicom-education memory-audit --file ELF_EXECUTABLE\n", stderr);
+            return 2;
+        }
+        UmiEducationMemoryAudit report = {0};
+        const UmiStatus status = UmiEducationMemoryAuditFile(argv[3], &report);
+        if (status != UMI_STATUS_OK) {
+            fprintf(stderr, "Cannot inspect ELF memory permissions (status %d): %s\n",
+                    (int)status, argv[3]);
+            return 1;
+        }
+        printf("ELF memory audit: %llu-byte pages\n"
+               "Machine: %u | ELF type: %u | Address width: %u bits\n"
+               "Loadable segments: %u | Mapped virtual pages: %llu\n"
+               "Readable pages: %llu | Writable pages: %llu | Executable pages: %llu\n"
+               "Shared pages: %llu | Mixed-permission pages: %llu\n"
+               "Writable and executable pages: %llu\n"
+               "W+X segments: %u | Unknown-permission segments: %u\n",
+               (unsigned long long)UMI_EDUCATION_MEMORY_PAGE_BYTES,
+               (unsigned)report.machine, (unsigned)report.elfType,
+               (unsigned)report.addressBits, (unsigned)report.loadSegments,
+               (unsigned long long)report.mappedPages,
+               (unsigned long long)report.readablePages,
+               (unsigned long long)report.writablePages,
+               (unsigned long long)report.executablePages,
+               (unsigned long long)report.sharedPages,
+               (unsigned long long)report.mixedPermissionPages,
+               (unsigned long long)report.writeExecutePages,
+               (unsigned)report.writableExecutableSegments,
+               (unsigned)report.unknownPermissionSegments);
+        const int review = report.writeExecutePages != 0U ||
+                           report.unknownPermissionSegments != 0U;
+        printf("Policy: %s\n", review ? "REVIEW REQUIRED (W+X or unknown flags)"
+                                         : "no W+X page conflict found");
+        puts("Read-only teaching report: not loader approval or a kernel protection check.");
+        return review ? 1 : 0;
     }
     const char *command = argv[1];
     const char *bookCommand = NULL;

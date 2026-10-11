@@ -28,12 +28,6 @@ An incremental build does not require deleting the existing build directory.
 CTest includes tests for bounded HTTP paths, publication, native book assembly,
 renderer error handling and CLI help. The renderer tests use a native test double
 rather than installing MkDocs or contacting the Internet.
-```bash
-cd "$HOME/umicom/Umicom-Applications"
-cmake -S framework/tools/umicom-education -B build/umicom-education -G Ninja -DBUILD_TESTING=ON
-cmake --build build/umicom-education --parallel 2
-ctest --test-dir build/umicom-education --output-on-failure
-```
 
 ## Solve `No module named mkdocs`
 
@@ -58,10 +52,6 @@ py -3 -m venv .venv
 If the Python launcher is not installed, substitute a known Windows Python
 interpreter path for `py -3`. Do not install packages into the MSYS2 toolchain
 interpreter unless that is your intended documentation environment.
-<!-- The shell example now closes beside its commands. This former closing
-fence is retained for source review so it cannot hide the following guide.
-```
--->
 
 ## Commands
 
@@ -89,17 +79,12 @@ $Education = ".\build\umicom-education\bin\umicom-education.exe"
 $Books = "C:\umicom\Umicom-Bits2Banking"
 
 & $Education doctor --repo $Books
-& $Education prepare --repo $Books
 & $Education verify --repo $Books
 & $Education build --repo $Books
 if ($LASTEXITCODE -ne 0) { throw "The website was not built." }
 
 & $Education serve --repo $Books --port 8765
 ```
-
-The `--repo` argument identifies the existing Bits2Banking checkout. The
-publication owner writes to its approved `content` subdirectories and never
-changes the original book sources.
 
 The `--python` option can specify an interpreter even if no `.venv` exists:
 
@@ -250,3 +235,22 @@ The Framework-owned C23 preflight checks the local Markdown targets in the
 references and unsafe relative paths without running a Python interpreter or
 modifying the repository. It deliberately does not parse full YAML syntax or
 render the website. Run the existing MkDocs strict build for full validation.
+
+## Update 13: conservative ELF page-permission review
+
+`umicom-education memory-audit --file FILE.elf` reads ELF loadable-segment
+metadata through the existing Framework `elf_load_plan` API, rounds occupied
+virtual ranges to 4 KiB pages and reports any page that would require both
+write and execute permissions. The operation never launches a binary or alters
+an operating-system address space. A W+X finding or unknown permission flag
+makes the command return nonzero for build qualification; a clean result is not
+security certification.
+
+The native library API is in `include/umicom/education/memory_audit.h`; its
+implementation is `src/education/memory_audit.c`. It adds no new external
+dependencies. The standalone CMake project includes tests for aligned and
+shared-page layouts, large declared address ranges, unchanged-on-failure
+outputs and the existing synthetic ELF fixture with spaces in its name.
+
+The full beginner explanation is published in Bits2Banking Lesson 94, with
+additional page-fault and process-lifecycle models in the education repository.
