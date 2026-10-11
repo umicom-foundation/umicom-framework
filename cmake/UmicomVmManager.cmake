@@ -98,3 +98,11 @@ install(FILES "${_umi_vm_root}/docs/learning/boot-kernels-and-linux-with-qemu.ht
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)
 
 unset(_umi_vm_root)
+
+# Qualified FAT16 durability uses Framework's already-owned QMP session,
+# the existing checked file-copy and process services, and a pure C23 policy
+# for the owned QEMU argument vector. Standard snapshot-based boots remain
+# unchanged. Kernel and Umicom OS stay independent of this hosted service.
+target_sources(umicom_vm_manager PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vm_manager/kernel_disk_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/vm_manager/kernel_disk_qualification.c")

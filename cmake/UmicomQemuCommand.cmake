@@ -96,3 +96,57 @@ if(TARGET umicom)
             LABELS "framework;vm-manager;command;kernel" TIMEOUT 15)
     endif()
 endif()
+
+# C23 scratch-disk qualification is a hosted Umicom command; it borrows
+# Framework VM Manager and does not install a PowerShell or other host script.
+# Keep production QEMU boot defaults and ordinary application composition.
+if(TARGET umicom)
+    target_sources(umicom PRIVATE
+        "${CMAKE_CURRENT_LIST_DIR}/../tools/umicom/src/command_kernel_disk.c")
+    if(BUILD_TESTING)
+        # Test the exact argument-vector safety policy without QEMU, host
+        # media or a guest. The full run is an explicit Windows acceptance.
+        add_executable(umicom-kernel-disk-plan-tests
+            "${CMAKE_CURRENT_LIST_DIR}/../src/vm_manager/kernel_disk_plan.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/vm_manager/test_kernel_disk_plan.c")
+        target_include_directories(umicom-kernel-disk-plan-tests PRIVATE
+            "${CMAKE_CURRENT_LIST_DIR}/../src/vm_manager")
+        set_target_properties(umicom-kernel-disk-plan-tests PROPERTIES
+            C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(umicom-kernel-disk-plan-tests)
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(umicom-kernel-disk-plan-tests)
+        endif()
+        # Exercise the real C23 coordinator with deterministic substitutes for
+        # QEMU, the read-only verifier, and filesystem services. The explicit
+        # on-machine QEMU acceptance remains a separate validation gate.
+        add_executable(umicom-kernel-disk-qualification-tests
+            "${CMAKE_CURRENT_LIST_DIR}/../src/vm_manager/kernel_disk_plan.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../src/vm_manager/kernel_disk_qualification.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/vm_manager/test_kernel_disk_qualification.c")
+        target_include_directories(umicom-kernel-disk-qualification-tests PRIVATE
+            "${CMAKE_CURRENT_LIST_DIR}/../include"
+            "${CMAKE_CURRENT_LIST_DIR}/../src/vm_manager")
+        set_target_properties(umicom-kernel-disk-qualification-tests PROPERTIES
+            C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(umicom-kernel-disk-qualification-tests)
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(umicom-kernel-disk-qualification-tests)
+        endif()
+        add_test(NAME framework.command.qemu.kernel_disk_service
+            COMMAND umicom-kernel-disk-qualification-tests)
+        set_tests_properties(framework.command.qemu.kernel_disk_service
+            PROPERTIES LABELS "framework;vm-manager;command;kernel" TIMEOUT 15)
+        add_test(NAME framework.command.qemu.kernel_disk_policy
+            COMMAND umicom-kernel-disk-plan-tests)
+        add_test(NAME framework.command.qemu.kernel_disk_help
+            COMMAND umicom qemu kernel-disk --help)
+        set_tests_properties(framework.command.qemu.kernel_disk_policy
+            framework.command.qemu.kernel_disk_help PROPERTIES
+            LABELS "framework;vm-manager;command;kernel" TIMEOUT 15)
+    endif()
+endif()

@@ -66,8 +66,14 @@ done:
 int umi_cli_command_kernel_qualification(int argc, char **argv);
 /* The native console check is a bounded VM Manager consumer, not a script. */
 int umi_cli_command_kernel_console(int argc, char **argv);
+/* Dedicated C23 FAT16 scratch-disk qualification. */
+int umi_cli_command_kernel_disk(int argc, char **argv);
 int umi_cli_command_qemu(int argc, char **argv)
 {
+    /* The owned scratch-disk acceptance has a distinct, explicit C23 entry. */
+    if (argc > 0 && argv && argv[0] &&
+        strcmp(argv[0], "kernel-disk") == 0)
+        return umi_cli_command_kernel_disk(argc - 1, argv + 1);
     if (argc > 0 && argv && argv[0] &&
         strcmp(argv[0], "kernel-qualify") == 0)
         return umi_cli_command_kernel_qualification(argc - 1, argv + 1);
@@ -81,6 +87,9 @@ int umi_cli_command_qemu(int argc, char **argv)
     if (argc == 0 || (argc == 1 && argv && argv[0] &&
         (strcmp(argv[0], "help") == 0 || strcmp(argv[0], "--help") == 0)))
         (void)puts("Also: umicom qemu kernel-console --help");
+    if (argc == 0 || (argc == 1 && argv && argv[0] &&
+        (strcmp(argv[0], "help") == 0 || strcmp(argv[0], "--help") == 0)))
+        (void)puts("Also: umicom qemu kernel-disk --help");
     /* The shared native entry point already owns the original argument vector.
      * QEMU routing therefore follows the same Unicode boundary as repository and build commands. */
     return UmiVmBootMain(argc, argv);
