@@ -1,0 +1,249 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tools/umicom-education/main.c
+ *
+ * PURPOSE:
+ *   Provide one explicit C23 command for preparing, checking, building and
+ *   serving the Bits2Banking learning website. The tool is standalone during
+ *   qualification; a future `umicom education` routing adapter may call the
+ *   same Framework-owned services without copying their implementation.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+#include "umicom/education/site.h"
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+
+#if defined(_WIN32)
+# include <windows.h>
+#else
+# include <limits.h>
+# include <unistd.h>
+#endif
+
+static void EducationPrintHelp(void)
+{
+    puts("Umicom Education — C23 learning-site tools\n"
+         "\n"
+         "umicom-education doctor  --repo REPOSITORY [--brand BRAND_DIRECTORY]\n"
+         "umicom-education prepare --repo REPOSITORY [--brand BRAND_DIRECTORY] [--refresh]\n"
+         "umicom-education verify  --repo REPOSITORY\n"
+         "umicom-education build   --repo REPOSITORY\n"
+         "umicom-education serve   --repo REPOSITORY [--port 8765] [--directory SITE_DIRECTORY]\n"
+         "\n"
+         "The original book manuscripts and Python/PowerShell build tools remain available.\n"
+         "The native preview is read-only and binds only to 127.0.0.1.\n"
+         "Stop it with Ctrl+C. No public hosting, TLS, or PDF/DOCX generation.\n"
+         "\n"
+         "For deterministic smoke tests, serve also accepts --once.\n");
+}
+
+static int EducationIsDirectory(const char *path)
+{
+    struct stat info;
+#if defined(_WIN32)
+    return stat(path, &info) == 0 && (info.st_mode & _S_IFMT) == _S_IFDIR;
+#else
+    return stat(path, &info) == 0 && S_ISDIR(info.st_mode);
+#endif
+}
+
+static int EducationIsFile(const char *path)
+{
+    struct stat info;
+#if defined(_WIN32)
+    return stat(path, &info) == 0 && (info.st_mode & _S_IFMT) == _S_IFREG;
+#else
+    return stat(path, &info) == 0 && S_ISREG(info.st_mode);
+#endif
+}
+
+static int EducationPathJoin(char *output, size_t capacity, const char *root, const char *relative)
+{
+    int count = snprintf(output, capacity, "%s/%s", root, relative);
+    return count >= 0 && (size_t)count < capacity;
+}
+
+static int EducationAbsolutePath(const char *input, char *output, size_t capacity)
+{
+    if (input == NULL || output == NULL) return 0;
+#if defined(_WIN32)
+    DWORD used = GetFullPathNameA(input, (DWORD)capacity, output, NULL);
+    return used > 0U && (size_t)used < capacity;
+#else
+    char *resolved = realpath(input, NULL);
+    if (resolved == NULL) return 0;
+    size_t length = strlen(resolved);
+    if (length + 1U > capacity) {
+        free(resolved);
+        return 0;
+    }
+    memcpy(output, resolved, length + 1U);
+    free(resolved);
+    return 1;
+#endif
+}
+
+static int EducationParentOf(char *output, size_t capacity, const char *path)
+{
+    size_t length = strlen(path);
+    if (length >= capacity) return 0;
+    memcpy(output, path, length + 1U);
+    while (length > 0U && output[length - 1U] != '/' && output[length - 1U] != '\\')
+        --length;
+    if (length == 0U) return 0;
+    if (length == 1U) length = 1U;
+    else length -= 1U;
+    output[length] = '\0';
+    return 1;
+}
+
+static int EducationFindBrand(const char *repositoryRoot, const char *chosen,
+                              char *output, size_t capacity)
+{
+    if (chosen != NULL) return EducationAbsolutePath(chosen, output, capacity) && EducationIsDirectory(output);
+    char parent[UMICOM_EDUCATION_PATH_CAPACITY];
+    if (!EducationParentOf(parent, sizeof(parent), repositoryRoot)) return 0;
+    static const char *const candidates[] = {
+        "Umicom-Applications/framework/resources/brand",
+        "umicom-applications/framework/resources/brand",
+        "umicomOS/framework/resources/brand"
+    };
+    for (size_t i = 0U; i < sizeof(candidates) / sizeof(candidates[0]); ++i) {
+        if (EducationPathJoin(output, capacity, parent, candidates[i]) &&
+            EducationIsDirectory(output)) return 1;
+    }
+    return 0;
+}
+
+static int EducationParsePort(const char *text, uint16_t *port)
+{
+    if (text == NULL || *text == '\0') return 0;
+    unsigned value = 0U;
+    for (const char *p = text; *p != '\0'; ++p) {
+        if (*p < '0' || *p > '9') return 0;
+        unsigned digit = (unsigned)(*p - '0');
+        if (value > (65535U - digit) / 10U) return 0;
+        value = 10U * value + digit;
+    }
+    if (value < 1024U) return 0;
+    *port = (uint16_t)value;
+    return 1;
+}
+
+static int EducationDoctor(const char *repositoryRoot, const char *brandRoot)
+{
+    static const char *const necessary[] = {
+        "mkdocs.yml", "content/index.md", "dropzone/documents/islam_blueprint_for_life/volume.yml"
+    };
+    int failed = 0;
+    for (size_t i = 0U; i < sizeof(necessary) / sizeof(necessary[0]); ++i) {
+        char path[UMICOM_EDUCATION_PATH_CAPACITY];
+        if (!EducationPathJoin(path, sizeof(path), repositoryRoot, necessary[i])) return 2;
+        int present = EducationIsFile(path);
+        printf("[%s] %s\n", present ? "OK" : "MISSING", path);
+        if (!present) failed = 1;
+    }
+    if (brandRoot == NULL) {
+        puts("[MISSING] Official Framework brand directory; pass --brand with its path.");
+        failed = 1;
+    } else {
+        printf("[OK] Official Framework brand: %s\n", brandRoot);
+    }
+    puts("The native C build does not install Python, MkDocs, a C compiler, or a package manager.");
+    return failed;
+}
+
+int main(int argc, char **argv)
+{
+    if (argc < 2 || strcmp(argv[1], "help") == 0 || strcmp(argv[1], "--help") == 0) {
+        EducationPrintHelp();
+        return 0;
+    }
+    const char *command = argv[1];
+    const char *requestedRepository = NULL;
+    const char *requestedBrand = NULL;
+    const char *requestedDirectory = NULL;
+    uint16_t port = 8765U;
+    int refresh = 0;
+    int once = 0;
+    for (int i = 2; i < argc; ++i) {
+        if (strcmp(argv[i], "--repo") == 0 && i + 1 < argc) {
+            requestedRepository = argv[++i];
+        } else if (strcmp(argv[i], "--brand") == 0 && i + 1 < argc) {
+            requestedBrand = argv[++i];
+        } else if (strcmp(argv[i], "--directory") == 0 && i + 1 < argc) {
+            requestedDirectory = argv[++i];
+        } else if (strcmp(argv[i], "--port") == 0 && i + 1 < argc) {
+            if (!EducationParsePort(argv[++i], &port)) {
+                fputs("Port must be between 1024 and 65535.\n", stderr);
+                return 2;
+            }
+        } else if (strcmp(argv[i], "--refresh") == 0) {
+            refresh = 1;
+        } else if (strcmp(argv[i], "--once") == 0) {
+            once = 1;
+        } else {
+            fprintf(stderr, "Unknown option: %s\n", argv[i]);
+            return 2;
+        }
+    }
+    if (requestedRepository == NULL) {
+        fputs("Specify the Bits2Banking checkout with --repo PATH.\n", stderr);
+        return 2;
+    }
+    char repositoryRoot[UMICOM_EDUCATION_PATH_CAPACITY];
+    if (!EducationAbsolutePath(requestedRepository, repositoryRoot, sizeof(repositoryRoot)) ||
+        !EducationIsDirectory(repositoryRoot)) {
+        fputs("The repository directory does not exist.\n", stderr);
+        return 2;
+    }
+    char brandRoot[UMICOM_EDUCATION_PATH_CAPACITY];
+    int brandFound = EducationFindBrand(repositoryRoot, requestedBrand,
+                                       brandRoot, sizeof(brandRoot));
+    if (strcmp(command, "doctor") == 0) {
+        return EducationDoctor(repositoryRoot, brandFound ? brandRoot : NULL);
+    }
+    if (strcmp(command, "prepare") == 0) {
+        if (!brandFound) {
+            fputs("Cannot find Framework branding; use --brand PATH.\n", stderr);
+            return 2;
+        }
+        return UmicomEducationPrepareSite(repositoryRoot, brandRoot, refresh);
+    }
+    if (strcmp(command, "verify") == 0) {
+        return UmicomEducationVerifySite(repositoryRoot);
+    }
+    if (strcmp(command, "build") == 0) {
+        if (refresh || requestedDirectory != NULL || once) {
+            fputs("This option does not apply to build.\n", stderr);
+            return 2;
+        }
+        return UmicomEducationBuildSite(repositoryRoot);
+    }
+    if (strcmp(command, "serve") == 0) {
+        char site[UMICOM_EDUCATION_PATH_CAPACITY];
+        if (requestedDirectory == NULL) {
+            if (!EducationPathJoin(site, sizeof(site), repositoryRoot, "site")) return 2;
+        } else if (!EducationAbsolutePath(requestedDirectory, site, sizeof(site))) {
+            fputs("The selected site directory does not exist.\n", stderr);
+            return 2;
+        }
+        if (!EducationIsDirectory(site)) {
+            fputs("The website is not built. Run `build` before `serve`.\n", stderr);
+            return 2;
+        }
+        return UmicomEducationServeSite(site, port, once);
+    }
+    fprintf(stderr, "Unknown Umicom Education command: %s\n", command);
+    EducationPrintHelp();
+    return 2;
+}
