@@ -177,3 +177,33 @@ The consolidated GitHub Pages publisher is maintained by Bits2Banking under
 `.github/workflows/learning-pages.yml`. It builds the former BookForge output
 and the MkDocs site independently, then combines them. The older book artifact
 jobs remain available; they no longer independently deploy to GitHub Pages.
+
+## Renderer regression: executable and directory paths containing spaces
+
+`framework.education.renderer` tests a native mock Python process. Earlier
+Windows UCRT64 runs failed when the test executable lived in a directory with
+spaces, even though the unrelated test cases passed. The standalone education
+launcher now uses an explicit Windows Unicode executable path and safely quoted
+arguments via `CreateProcessW` rather than the previous `_spawnvp` path.
+
+The executable name and the MkDocs `--config-file` and `--site-dir` values each
+receive a regression case with spaces. The fake renderer verifies the exact argv
+fields and can report success without writing `index.html`; the education
+builder must reject that incomplete result. These tests do not install or
+execute the real MkDocs package.
+
+To run the focused test from Windows PowerShell:
+
+```powershell
+Set-Location "C:\umicom\Umicom-Applications"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake --build ".\build\umicom-education" --parallel 2
+ctest --test-dir ".\build\umicom-education" `
+    -R "^framework\.education\.renderer$" -V
+```
+
+For real website acceptance, use the repository-local Python interpreter with
+`umicom-education build --repo PATH --python PATH`. The existing Python and
+MkDocs installation is not modified by the test. The platform-wide process
+API remains `umi_process_execute`; application modules must not copy the
+standalone education launch adapter.

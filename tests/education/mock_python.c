@@ -25,6 +25,10 @@ int main(int argc, char **argv)
 {
     if (argc == 3 && strcmp(argv[1], "-c") == 0)
         return getenv("UMICOM_EDUCATION_TEST_NO_RENDERER") != NULL ? 1 : 0;
+    /* The previous mock accepted argc > 9 and ignored --config-file. That
+     * could hide space splitting in the build argument vector. Preserve the
+     * earlier tolerant behaviour for engineering review only. */
+#if 0
     if (argc < 9 || strcmp(argv[1], "-m") != 0 ||
         strcmp(argv[2], "mkdocs") != 0 || strcmp(argv[3], "build") != 0)
         return 2;
@@ -33,6 +37,29 @@ int main(int argc, char **argv)
     for (int i = 4; i + 1 < argc; ++i)
         if (strcmp(argv[i], "--site-dir") == 0) outputDirectory = argv[++i];
     if (outputDirectory == NULL) return 2;
+#endif
+    if (argc != 9 || strcmp(argv[1], "-m") != 0 ||
+        strcmp(argv[2], "mkdocs") != 0 ||
+        strcmp(argv[3], "build") != 0 ||
+        strcmp(argv[4], "--strict") != 0 ||
+        strcmp(argv[5], "--config-file") != 0 ||
+        strcmp(argv[7], "--site-dir") != 0)
+    {
+        fprintf(stderr, "[FAIL] MkDocs argv boundaries changed (%d arguments).\n", argc);
+        for (int i = 1; i < argc; ++i)
+            fprintf(stderr, "  argv[%d]=<%s>\n", i, argv[i]);
+        return 2;
+    }
+    FILE *configuration = fopen(argv[6], "rb");
+    if (configuration == NULL)
+    {
+        fprintf(stderr, "[FAIL] Mock cannot read the exact --config-file argument: <%s>.\n", argv[6]);
+        return 2;
+    }
+    if (fclose(configuration) != 0) return 2;
+    if (getenv("UMICOM_EDUCATION_TEST_BUILD_FAIL") != NULL) return 3;
+    if (getenv("UMICOM_EDUCATION_TEST_NO_SITE_OUTPUT") != NULL) return 0;
+    const char *outputDirectory = argv[8];
     if (MakeDirectoryLocal(outputDirectory) != 0 && errno != EEXIST) return 1;
     char indexPage[4096];
     int result = snprintf(indexPage, sizeof(indexPage), "%s/index.html", outputDirectory);
@@ -61,6 +88,10 @@ int main(int argc, char **argv)
         }
         return getenv("UMICOM_EDUCATION_TEST_NO_RENDERER") != NULL ? 1 : 0;
     }
+    /* The previous mock accepted argc > 9 and ignored --config-file. That
+     * could hide space splitting in the build argument vector. Preserve the
+     * earlier tolerant behaviour for engineering review only. */
+#if 0
     if (argc < 9 || strcmp(argv[1], "-m") != 0 ||
         strcmp(argv[2], "mkdocs") != 0 || strcmp(argv[3], "build") != 0)
         return 2;
@@ -69,6 +100,29 @@ int main(int argc, char **argv)
     for (int i = 4; i + 1 < argc; ++i)
         if (strcmp(argv[i], "--site-dir") == 0) outputDirectory = argv[++i];
     if (outputDirectory == NULL) return 2;
+#endif
+    if (argc != 9 || strcmp(argv[1], "-m") != 0 ||
+        strcmp(argv[2], "mkdocs") != 0 ||
+        strcmp(argv[3], "build") != 0 ||
+        strcmp(argv[4], "--strict") != 0 ||
+        strcmp(argv[5], "--config-file") != 0 ||
+        strcmp(argv[7], "--site-dir") != 0)
+    {
+        fprintf(stderr, "[FAIL] MkDocs argv boundaries changed (%d arguments).\n", argc);
+        for (int i = 1; i < argc; ++i)
+            fprintf(stderr, "  argv[%d]=<%s>\n", i, argv[i]);
+        return 2;
+    }
+    FILE *configuration = fopen(argv[6], "rb");
+    if (configuration == NULL)
+    {
+        fprintf(stderr, "[FAIL] Mock cannot read the exact --config-file argument: <%s>.\n", argv[6]);
+        return 2;
+    }
+    if (fclose(configuration) != 0) return 2;
+    if (getenv("UMICOM_EDUCATION_TEST_BUILD_FAIL") != NULL) return 3;
+    if (getenv("UMICOM_EDUCATION_TEST_NO_SITE_OUTPUT") != NULL) return 0;
+    const char *outputDirectory = argv[8];
     if (MakeDirectoryLocal(outputDirectory) != 0 && errno != EEXIST) return 1;
     char indexPage[4096];
     int result = snprintf(indexPage, sizeof(indexPage), "%s/index.html", outputDirectory);
