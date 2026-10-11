@@ -25,6 +25,7 @@
 #include "umicom/education/memory_audit.h"
 #include "umicom/education/ipc_trace.h"
 #include "umicom/education/schedule_trace.h"
+#include "umicom/education/timer_trace.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,6 +54,7 @@ static void EducationPrintHelp(void)
          "umicom-education memory-audit --file ELF_EXECUTABLE_OR_KERNEL\n"
          "umicom-education ipc-trace --file EDUCATIONAL_TRACE_FILE\n"
          "umicom-education schedule-trace --file EDUCATIONAL_SCHEDULE_FILE\n"
+         "umicom-education timer-trace --file EDUCATIONAL_TIMER_FILE\n"
          "umicom-education build   --repo REPOSITORY [--python PYTHON_EXECUTABLE]\n"
          "umicom-education serve   --repo REPOSITORY [--port 8765] [--directory SITE_DIRECTORY]\n"
          "umicom-education serve   --repo REPOSITORY --build [--python PYTHON_EXECUTABLE] [--port 8765]\n"
@@ -468,6 +470,35 @@ int main(int argc, char **argv)
                (unsigned)report.liveAtEnd, (unsigned)report.runningAtEnd,
                (unsigned long long)report.lastTick);
         puts("Read-only simulation: no real task or Kernel scheduling operation executed.");
+        return 0;
+    }
+    /* Timer/event traces are separate from runnable work, scheduler traces
+     * and real platform timer interrupts. A report cannot modify either. */
+    if (strcmp(argv[1], "timer-trace") == 0) {
+        if (argc != 4 || strcmp(argv[2], "--file") != 0 || argv[3][0] == '\0') {
+            fputs("Usage: umicom-education timer-trace --file TEACHING_TRACE_FILE\n", stderr);
+            return 2;
+        }
+        UmiEducationTimerReport report = {0};
+        const UmiStatus status = UmiEducationTimerTraceInspectFile(argv[3], &report);
+        if (status != UMI_STATUS_OK) {
+            fprintf(stderr, "Cannot inspect timer teaching trace (status %d): %s\n",
+                    (int)status, argv[3]);
+            return 1;
+        }
+        printf("Timer trace: %u records\n"
+               "Waits: %u | Signals: %u | Timed out: %u | Cancelled: %u\n"
+               "Clock advances: %u | Peak pending: %u | Final pending: %u\n"
+               "Distinct identities: %u | Last logical tick: %llu\n"
+               "Next finite deadline: %llu (0 means none)\n",
+               (unsigned)report.recordCount, (unsigned)report.waits,
+               (unsigned)report.signalled, (unsigned)report.timedOut,
+               (unsigned)report.cancelled, (unsigned)report.advances,
+               (unsigned)report.peakPending, (unsigned)report.pendingAtEnd,
+               (unsigned)report.distinctIdentities,
+               (unsigned long long)report.lastTick,
+               (unsigned long long)report.nextFiniteDeadline);
+        puts("Teaching trace only: no Kernel timer or user process was controlled.");
         return 0;
     }
     const char *command = argv[1];

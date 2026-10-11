@@ -31,6 +31,7 @@ add_library(umicom_education_site STATIC
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/memory_audit.c"
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/ipc_trace.c"
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/schedule_trace.c"
+    "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/timer_trace.c"
     # Keep hashing with the existing Framework base implementation. This
     # standalone learning build deliberately does not duplicate its algorithm.
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/base/sha256.c")
@@ -296,6 +297,31 @@ if(BUILD_TESTING)
         FIXTURES_REQUIRED education_schedule_trace_fixture
         PASS_REGULAR_EXPRESSION "Scheduler trace: 11 records")
 
+    # Explicitly monotonic classroom timer/event format. The parser test
+    # creates the bounded fixture before the independent CLI case reads it.
+    # No Kernel trace or machine interrupt is involved in these tests.
+    add_executable(umicom-education-timer-trace-test
+        "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/tests/education/test_timer_trace.c")
+    target_link_libraries(umicom-education-timer-trace-test PRIVATE Umicom::education_site)
+    if(MSVC)
+        target_compile_options(umicom-education-timer-trace-test PRIVATE /W4)
+    else()
+        target_compile_options(umicom-education-timer-trace-test PRIVATE
+            -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    endif()
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/education-timer-trace-test/fixture with spaces")
+    set(_education_timer_fixture
+        "${CMAKE_BINARY_DIR}/education-timer-trace-test/fixture with spaces/clock events.tmr")
+    add_test(NAME framework.education.timer_trace
+        COMMAND umicom-education-timer-trace-test "${_education_timer_fixture}")
+    add_test(NAME framework.education.timer_trace.cli
+        COMMAND umicom-education timer-trace --file "${_education_timer_fixture}")
+    set_tests_properties(framework.education.timer_trace PROPERTIES
+        FIXTURES_SETUP education_timer_trace_fixture)
+    set_tests_properties(framework.education.timer_trace.cli PROPERTIES
+        FIXTURES_REQUIRED education_timer_trace_fixture
+        PASS_REGULAR_EXPRESSION "Timer trace: 11 records")
+
     add_test(NAME framework.education.cli.help COMMAND umicom-education --help)
 
     # Real native CLI preflight: refuse to serve a missing site and propagate
@@ -318,6 +344,7 @@ if(BUILD_TESTING)
         framework.education.memory_audit framework.education.memory_audit.cli
         framework.education.ipc_trace framework.education.ipc_trace.cli
         framework.education.schedule_trace framework.education.schedule_trace.cli
+        framework.education.timer_trace framework.education.timer_trace.cli
         PROPERTIES LABELS "education;framework;native;safe-c")
 endif()
 
