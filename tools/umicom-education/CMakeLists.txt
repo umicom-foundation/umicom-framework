@@ -34,6 +34,7 @@ add_library(umicom_education_site STATIC
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/timer_trace.c"
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/interrupt_trace.c"
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/evidence_trace.c"
+    "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/device_io_trace.c"
     # Keep hashing with the existing Framework base implementation. This
     # standalone learning build deliberately does not duplicate its algorithm.
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/base/sha256.c")
@@ -348,6 +349,31 @@ if(BUILD_TESTING)
     set_tests_properties(framework.education.interrupt_trace.cli PROPERTIES
         FIXTURES_REQUIRED education_interrupt_trace_fixture
         PASS_REGULAR_EXPRESSION "Interrupt trace: 20 records")
+
+    # Device request acceptance and completion are distinct events. The CTest
+    # parser fixture writes the trace and validates it before the separate CLI
+    # consumer executes, even under parallel CTest. No physical I/O is issued.
+    add_executable(umicom-education-device-io-trace-test
+        "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/tests/education/test_device_io_trace.c")
+    target_link_libraries(umicom-education-device-io-trace-test PRIVATE Umicom::education_site)
+    if(MSVC)
+        target_compile_options(umicom-education-device-io-trace-test PRIVATE /W4)
+    else()
+        target_compile_options(umicom-education-device-io-trace-test PRIVATE
+            -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    endif()
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/education-device-io-test/fixture with spaces")
+    set(_education_device_io_fixture
+        "${CMAKE_BINARY_DIR}/education-device-io-test/fixture with spaces/driver requests.dio")
+    add_test(NAME framework.education.device_io_trace
+        COMMAND umicom-education-device-io-trace-test "${_education_device_io_fixture}")
+    add_test(NAME framework.education.device_io_trace.cli
+        COMMAND umicom-education device-io-trace --file "${_education_device_io_fixture}")
+    set_tests_properties(framework.education.device_io_trace PROPERTIES
+        FIXTURES_SETUP education_device_io_fixture)
+    set_tests_properties(framework.education.device_io_trace.cli PROPERTIES
+        FIXTURES_REQUIRED education_device_io_fixture
+        PASS_REGULAR_EXPRESSION "Device I/O trace: 27 records")
 
     # Keep fixtures deterministic and owned by a single writer. The CLI
     # consumer executes only after CTest confirms that writer's successful run.

@@ -28,6 +28,7 @@
 #include "umicom/education/timer_trace.h"
 #include "umicom/education/interrupt_trace.h"
 #include "umicom/education/evidence_trace.h"
+#include "umicom/education/device_io_trace.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -59,6 +60,7 @@ static void EducationPrintHelp(void)
          "umicom-education timer-trace --file EDUCATIONAL_TIMER_FILE\n"
          "umicom-education interrupt-trace --file EDUCATIONAL_IRQ_FILE\n"
          "umicom-education evidence-trace --file EDUCATIONAL_EVIDENCE_FILE\n"
+         "umicom-education device-io-trace --file EDUCATIONAL_TRACE_FILE\n"
          "umicom-education build   --repo REPOSITORY [--python PYTHON_EXECUTABLE]\n"
          "umicom-education serve   --repo REPOSITORY [--port 8765] [--directory SITE_DIRECTORY]\n"
          "umicom-education serve   --repo REPOSITORY --build [--python PYTHON_EXECUTABLE] [--port 8765]\n"
@@ -565,6 +567,46 @@ int main(int argc, char **argv)
                (unsigned long long)report.lastObservationId,
                (unsigned long long)report.lastTick);
         puts("SHA-256 links checked. No signer, source identity or actual device recovery verified.");
+        return 0;
+    }
+    /* A device completion is not the same event as requesting cancellation.
+     * This independent teaching trace checks accepted completions and FIFO
+     * consumption without submitting I/O, opening a device or borrowing a
+     * Kernel handle. The parser is the reusable Framework owner. */
+    if (strcmp(argv[1], "device-io-trace") == 0) {
+        if (argc != 4 || strcmp(argv[2], "--file") != 0 || argv[3][0] == '\0') {
+            fputs("Usage: umicom-education device-io-trace --file TEACHING_TRACE_FILE\n", stderr);
+            return 2;
+        }
+        UmiEducationDeviceIoReport report = {0};
+        const UmiStatus status = UmiEducationDeviceIoTraceInspectFile(argv[3], &report);
+        if (status != UMI_STATUS_OK) {
+            fprintf(stderr, "Cannot inspect device I/O trace (status %d): %s\n",
+                    (int)status, argv[3]);
+            return 1;
+        }
+        printf("Device I/O trace: %u records\n"
+               "Attach: %u | Submit: %u | Complete: %u | Reap: %u\n"
+               "Cancel requests: %u | Cancel acknowledgements: %u\n"
+               "Success: %u | Failure: %u | Quiesce: %u | Resume: %u | Detach: %u\n"
+               "Peak requests: %u | Peak completions: %u\n"
+               "Outstanding: %u | Completions ready: %u | Live devices: %u\n"
+               "Requested bytes: %llu | Completed bytes: %llu | Last tick: %llu\n",
+               (unsigned)report.recordCount, (unsigned)report.attachments,
+               (unsigned)report.submissions, (unsigned)report.completions,
+               (unsigned)report.reaped, (unsigned)report.cancellationRequests,
+               (unsigned)report.cancellationAcknowledgements,
+               (unsigned)report.succeeded, (unsigned)report.failed,
+               (unsigned)report.quiesced, (unsigned)report.resumed,
+               (unsigned)report.detached, (unsigned)report.peakOutstanding,
+               (unsigned)report.peakReadyCompletions,
+               (unsigned)report.outstandingAtEnd,
+               (unsigned)report.readyCompletionsAtEnd,
+               (unsigned)report.liveDevicesAtEnd,
+               (unsigned long long)report.bytesRequested,
+               (unsigned long long)report.bytesCompleted,
+               (unsigned long long)report.lastTick);
+        puts("Teaching trace only: no physical I/O, kernel request or cancellation was executed.");
         return 0;
     }
     const char *command = argv[1];
