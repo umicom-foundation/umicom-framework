@@ -27,6 +27,7 @@
 #include "umicom/education/schedule_trace.h"
 #include "umicom/education/timer_trace.h"
 #include "umicom/education/interrupt_trace.h"
+#include "umicom/education/evidence_trace.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -57,6 +58,7 @@ static void EducationPrintHelp(void)
          "umicom-education schedule-trace --file EDUCATIONAL_SCHEDULE_FILE\n"
          "umicom-education timer-trace --file EDUCATIONAL_TIMER_FILE\n"
          "umicom-education interrupt-trace --file EDUCATIONAL_IRQ_FILE\n"
+         "umicom-education evidence-trace --file EDUCATIONAL_EVIDENCE_FILE\n"
          "umicom-education build   --repo REPOSITORY [--python PYTHON_EXECUTABLE]\n"
          "umicom-education serve   --repo REPOSITORY [--port 8765] [--directory SITE_DIRECTORY]\n"
          "umicom-education serve   --repo REPOSITORY --build [--python PYTHON_EXECUTABLE] [--port 8765]\n"
@@ -531,6 +533,38 @@ int main(int argc, char **argv)
                (unsigned)report.activeAtEnd, (unsigned)report.faultedAtEnd,
                (unsigned long long)report.lastTick);
         puts("Classroom simulation only: no Kernel CSR or interrupt source was touched.");
+        return 0;
+    }
+    /* Diagnostic observations and reviewed restart checkpoints belong to a
+     * bounded teaching file, not a real driver. A digest chain is neither
+     * signature authentication nor proof that recovery restored hardware. */
+    if (strcmp(argv[1], "evidence-trace") == 0) {
+        if (argc != 4 || strcmp(argv[2], "--file") != 0 || argv[3][0] == '\0') {
+            fputs("Usage: umicom-education evidence-trace --file TEACHING_TRACE_FILE\n", stderr);
+            return 2;
+        }
+        UmiEducationEvidenceReport report = {0};
+        const UmiStatus status = UmiEducationEvidenceTraceInspectFile(argv[3], &report);
+        if (status != UMI_STATUS_OK) {
+            fprintf(stderr, "Cannot inspect driver evidence trace (status %d): %s\n",
+                    (int)status, argv[3]);
+            return 1;
+        }
+        printf("Evidence trace: %u records\n"
+               "Attach: %u | Ready: %u | Observations: %u | Checkpoints: %u\n"
+               "Faults: %u | Recoveries: %u | Quiesce: %u | Stop: %u | Release: %u\n"
+               "Peak drivers: %u | Live: %u | Faulted: %u | Stopped: %u\n"
+               "Last observation: %llu | Last logical tick: %llu\n",
+               (unsigned)report.recordCount, (unsigned)report.attached,
+               (unsigned)report.ready, (unsigned)report.observations,
+               (unsigned)report.checkpoints, (unsigned)report.faults,
+               (unsigned)report.recoveries, (unsigned)report.quiesced,
+               (unsigned)report.stopped, (unsigned)report.released,
+               (unsigned)report.peakLive, (unsigned)report.liveAtEnd,
+               (unsigned)report.faultedAtEnd, (unsigned)report.stoppedAtEnd,
+               (unsigned long long)report.lastObservationId,
+               (unsigned long long)report.lastTick);
+        puts("SHA-256 links checked. No signer, source identity or actual device recovery verified.");
         return 0;
     }
     const char *command = argv[1];

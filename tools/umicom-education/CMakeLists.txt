@@ -33,6 +33,7 @@ add_library(umicom_education_site STATIC
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/schedule_trace.c"
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/timer_trace.c"
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/interrupt_trace.c"
+    "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/evidence_trace.c"
     # Keep hashing with the existing Framework base implementation. This
     # standalone learning build deliberately does not duplicate its algorithm.
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/base/sha256.c")
@@ -348,6 +349,30 @@ if(BUILD_TESTING)
         FIXTURES_REQUIRED education_interrupt_trace_fixture
         PASS_REGULAR_EXPRESSION "Interrupt trace: 20 records")
 
+    # Keep fixtures deterministic and owned by a single writer. The CLI
+    # consumer executes only after CTest confirms that writer's successful run.
+    add_executable(umicom-education-evidence-trace-test
+        "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/tests/education/test_evidence_trace.c")
+    target_link_libraries(umicom-education-evidence-trace-test PRIVATE Umicom::education_site)
+    if(MSVC)
+        target_compile_options(umicom-education-evidence-trace-test PRIVATE /W4)
+    else()
+        target_compile_options(umicom-education-evidence-trace-test PRIVATE
+            -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    endif()
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/education-evidence-trace-test/fixture with spaces")
+    set(_education_evidence_fixture
+        "${CMAKE_BINARY_DIR}/education-evidence-trace-test/fixture with spaces/driver evidence.evd")
+    add_test(NAME framework.education.evidence_trace
+        COMMAND umicom-education-evidence-trace-test "${_education_evidence_fixture}")
+    add_test(NAME framework.education.evidence_trace.cli
+        COMMAND umicom-education evidence-trace --file "${_education_evidence_fixture}")
+    set_tests_properties(framework.education.evidence_trace PROPERTIES
+        FIXTURES_SETUP education_evidence_trace_fixture)
+    set_tests_properties(framework.education.evidence_trace.cli PROPERTIES
+        FIXTURES_REQUIRED education_evidence_trace_fixture
+        PASS_REGULAR_EXPRESSION "Evidence trace: 20 records")
+
     add_test(NAME framework.education.cli.help COMMAND umicom-education --help)
 
     # Real native CLI preflight: refuse to serve a missing site and propagate
@@ -372,6 +397,7 @@ if(BUILD_TESTING)
         framework.education.schedule_trace framework.education.schedule_trace.cli
         framework.education.timer_trace framework.education.timer_trace.cli
         framework.education.interrupt_trace framework.education.interrupt_trace.cli
+        framework.education.evidence_trace framework.education.evidence_trace.cli
         PROPERTIES LABELS "education;framework;native;safe-c")
 endif()
 
