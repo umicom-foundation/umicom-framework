@@ -14,6 +14,17 @@ typedef struct DeveloperLaunchChoice
     char project[UMI_BUILD_PATH_CAPACITY];
 } DeveloperLaunchChoice;
 
+/* Resolve appended settings through the profile descriptor rather than a
+ * numeric widget slot. New profile fields can be added without shifting the
+ * review's meaning or copying settings logic into Studio. */
+static GtkWidget *DeveloperLaunchField(UmiGtk4DeveloperDialog *dialog, size_t offset)
+{
+    for (size_t i = 0U; i < G_N_ELEMENTS(PROFILE_FIELDS); ++i)
+        if (PROFILE_FIELDS[i].offset == offset)
+            return dialog->fields[i];
+    return NULL;
+}
+
 /* Read only the launch fields. Other unsaved build options are validated by
  * Apply Settings; reviewing a launch never adopts settings or execution trust. */
 static UmiStatus DeveloperLaunchInputs(UmiGtk4DeveloperDialog *dialog, UmiBuildProfile *out)
@@ -33,8 +44,22 @@ static UmiStatus DeveloperLaunchInputs(UmiGtk4DeveloperDialog *dialog, UmiBuildP
     if (status == UMI_STATUS_OK)
         status = umi_text_copy(out->run_working_directory, sizeof(out->run_working_directory),
                                gtk_editable_get_text(GTK_EDITABLE(dialog->runDirectory)));
+    /* Review the visible tool and environment fields, including unsaved edits.
+     * Validation below describes them without reading the host environment. */
+    GtkWidget *tools = DeveloperLaunchField(dialog, offsetof(UmiBuildProfile, tool_directory));
+    GtkWidget *environment = DeveloperLaunchField(dialog, offsetof(UmiBuildProfile, run_environment));
+    if (status == UMI_STATUS_OK && (tools == NULL || environment == NULL))
+        status = UMI_STATUS_INVALID_STATE;
+    if (status == UMI_STATUS_OK)
+        status = umi_text_copy(out->tool_directory, sizeof(out->tool_directory),
+            gtk_editable_get_text(GTK_EDITABLE(tools)));
+    if (status == UMI_STATUS_OK)
+        status = umi_text_copy(out->run_environment, sizeof(out->run_environment),
+            gtk_editable_get_text(GTK_EDITABLE(environment)));
     return status;
 }
+#include "developer_launch_inspection.inc"
+
 static void DeveloperLaunchInvalidate(GtkEditable *entry, gpointer context)
 {
     (void)entry;
@@ -42,6 +67,7 @@ static void DeveloperLaunchInvalidate(GtkEditable *entry, gpointer context)
     if (dialog == NULL)
         return;
     dialog->launchInvalidated = 1;
+    umi_cancellation_token_request(dialog->launchInspectCancel);
     if (!dialog->launchChanging)
     {
         dialog->launchChanging = 1;
@@ -75,6 +101,17 @@ static void DeveloperLaunchReview(GtkButton *button, gpointer context)
     UmiStatus status = DeveloperLaunchInputs(dialog, &profile);
     if (status == UMI_STATUS_OK)
         status = UmiBuildLaunchPlanCreate(&profile, profile.source_directory, &plan);
+    UmiProcessEnvironmentPlan *environment = NULL;
+    const UmiEnvironmentVariable *variables = NULL;
+    size_t variableCount = 0U;
+    if (status == UMI_STATUS_OK && profile.tool_directory[0] != '\0')
+        status = UmiProcessSearchDirectoryValidate(profile.tool_directory);
+    /* Passing no tools folder parses only the explicit overrides. The review
+     * must not capture inherited PATH or expose variable values in its summary. */
+    if (status == UMI_STATUS_OK)
+        status = UmiProcessEnvironmentPlanCreate(profile.run_environment, NULL, &environment);
+    if (status == UMI_STATUS_OK)
+        status = UmiProcessEnvironmentPlanRead(environment, &variables, &variableCount);
     GString *text = g_string_new(NULL);
     if (status != UMI_STATUS_OK)
         g_string_append_printf(text,
@@ -115,9 +152,19 @@ static void DeveloperLaunchReview(GtkButton *button, gpointer context)
             g_string_append(text, "Run uses operating-system program lookup for this bare name; native Debug "
                                   "uses the project file above. Choose an absolute executable or a path "
                                   "beginning with ./ to make both explicit.\n");
+        g_string_append_printf(text, "Explicit Run / Debug environment overrides: %zu (values hidden)\n",
+            variableCount);
+        for (size_t i = 0U; i < variableCount; ++i)
+            g_string_append_printf(text, "  %s\n", variables[i].name);
+        if (profile.tool_directory[0] != '\0')
+            g_string_append_printf(text, "Tools folder prepended to child PATH: %s\n",
+                profile.tool_directory);
+        else
+            g_string_append(text, "No tools folder prefix; child PATH follows the explicit override or inherited environment.\n");
         g_string_append(text, "Description only. Files, permissions, executable format and debugger "
                               "compatibility have not been checked. Apply Settings saves separately.");
     }
+    UmiProcessEnvironmentPlanDestroy(environment);
     gtk_label_set_text(GTK_LABEL(dialog->launchDetail), text->str);
     g_string_free(text, TRUE);
     if (DeveloperVisible(dialog) && dialog->launchInvalidated)
@@ -243,6 +290,8 @@ static void DeveloperLaunchVisibility(GObject *object, GParamSpec *property, gpo
     /* Visibility notifications occur after hiding, so retain directly instead
      * of using the visible-form acquisition helper. Cancellation may notify. */
     ++dialog->references;
+    if (!DeveloperVisible(dialog))
+        umi_cancellation_token_request(dialog->launchInspectCancel);
     if (!gtk_widget_get_visible(GTK_WIDGET(object)) && dialog->launchChooserCancel != NULL)
         g_cancellable_cancel(dialog->launchChooserCancel);
     DeveloperRelease(dialog);
@@ -266,14 +315,37 @@ static void DeveloperLaunchControls(UmiGtk4DeveloperDialog *dialog)
         (void)umi_gtk4_automation_tag_widget(controls[i], ids[i]);
         gtk_box_append(GTK_BOX(dialog->body), controls[i]);
     }
+    /* A separate action performs filesystem I/O on a worker. Lexical review
+     * remains available without touching the project filesystem. */
+    GtkWidget *inspect = gtk_button_new_with_label("Check launch files");
+    (void)umi_gtk4_automation_tag_widget(inspect, "developer.launch.inspect");
+    gtk_box_append(GTK_BOX(dialog->body), inspect);
+    DeveloperConnect(dialog, G_OBJECT(inspect), "clicked", G_CALLBACK(DeveloperLaunchInspectionStart));
     DeveloperConnect(dialog, G_OBJECT(dialog->chooseProgram), "clicked", G_CALLBACK(DeveloperLaunchChoose));
     DeveloperConnect(dialog, G_OBJECT(dialog->chooseWorkingDirectory), "clicked",
                      G_CALLBACK(DeveloperLaunchChoose));
     DeveloperConnect(dialog, G_OBJECT(dialog->reviewLaunch), "clicked", G_CALLBACK(DeveloperLaunchReview));
+    /* Tool and environment edits invalidate launch descriptions as well.
+     * Retain the original input list to document the previous review coverage. */
+#if 0
     GtkWidget *inputs[] = {dialog->fields[1], dialog->fields[8], dialog->fields[9], dialog->arguments,
                            dialog->runDirectory};
+#endif
+    GtkWidget *inputs[] = {dialog->fields[1], dialog->fields[8], dialog->fields[9], dialog->arguments,
+                           dialog->runDirectory,
+                           DeveloperLaunchField(dialog, offsetof(UmiBuildProfile, tool_directory)),
+                           DeveloperLaunchField(dialog, offsetof(UmiBuildProfile, run_environment))};
+    /* Follow the complete input array when shared launch settings expand.
+     * The earlier fixed bound is retained to explain the missed invalidation. */
+#if 0
     for (size_t i = 0U; i < 5U; ++i)
         DeveloperConnect(dialog, G_OBJECT(inputs[i]), "changed", G_CALLBACK(DeveloperLaunchInvalidate));
+#endif
+    for (size_t i = 0U; i < G_N_ELEMENTS(inputs); ++i)
+        if (inputs[i] != NULL)
+            DeveloperConnect(dialog, G_OBJECT(inputs[i]), "changed", G_CALLBACK(DeveloperLaunchInvalidate));
     DeveloperConnect(dialog, G_OBJECT(dialog->window), "notify::visible",
+                     G_CALLBACK(DeveloperLaunchVisibility));
+    DeveloperConnect(dialog, G_OBJECT(dialog->window), "notify::child",
                      G_CALLBACK(DeveloperLaunchVisibility));
 }

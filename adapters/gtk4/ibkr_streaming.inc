@@ -42,6 +42,10 @@ static void StreamingPublish(ConnectionUi *ui, uint64_t now)
             s.stale ? "Stale: waiting, stopped or no new bar within 15 seconds" : "Recent bar received",
             s.needsCancel ? "Cancel before replacing this subscription" : "No subscription to cancel");
     }
+    /* This window reports coverage only for the rolling retained series.
+     * Earlier discarded bars and request pacing remain in the existing summary. */
+    if (status == UMI_STATUS_OK && s.count != 0U)
+        BarCoverageAppend(ui, true, s.requestId, s.count, 5000U, text);
     if (status == UMI_STATUS_OK && !s.stale && s.count)
     {
         size_t visible = (size_t)gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(ui->streamVisible));
@@ -52,6 +56,10 @@ static void StreamingPublish(ConnectionUi *ui, uint64_t now)
         if (visible > end)
             visible = end;
         size_t first = end - visible;
+/* Measure the same selected rows before any presentation callback can run. */
+#ifdef UMI_IBKR_HAS_HISTORY_MODEL
+        BarRangeAppend(ui, true, s.requestId, first, visible, now, 15000U, text);
+#endif
 #ifdef UMI_IBKR_HAS_HISTORY_MODEL
         HistoricalCanvas *canvas = ui->streamCanvas;
         if (!canvas->scene || canvas->request != s.requestId || canvas->receivedBars != s.receivedBars ||

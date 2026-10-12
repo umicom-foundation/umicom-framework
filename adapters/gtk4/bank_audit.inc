@@ -138,6 +138,11 @@ static void AuditCreate(BankUi *ui)
     ui->auditHint=GTK_LABEL(QueueTag(gtk_label_new("Choose filters and Capture audit. IDs match exactly; entity IDs can occur in different workflows."),"bank.audit.hint"));
     gtk_label_set_wrap(ui->auditHint,TRUE);gtk_label_set_xalign(ui->auditHint,0);gtk_box_append(GTK_BOX(page),GTK_WIDGET(ui->auditHint));
     ui->auditSummary=AuditView(page,"bank.audit.summary",110);
+    /* Export the captured summary without querying or changing the ledger.
+     * Command and journal CSV clipboard actions remain available below. */
+    ui->auditExport = UmiTextExportGtk4CreateForBuffer(ui->auditSummary, "bank-audit-summary.txt");
+    g_object_ref_sink(ui->auditExport);
+    gtk_box_append(GTK_BOX(page), ui->auditExport);
     ui->auditRows=GTK_DROP_DOWN(QueueTag(gtk_drop_down_new(NULL,NULL),"bank.audit.rows"));gtk_box_append(GTK_BOX(page),GTK_WIDGET(ui->auditRows));
     gtk_accessible_update_property(GTK_ACCESSIBLE(ui->auditRows),GTK_ACCESSIBLE_PROPERTY_LABEL,"Captured audit command",-1);
     ui->auditDetail=AuditView(page,"bank.audit.detail",180);

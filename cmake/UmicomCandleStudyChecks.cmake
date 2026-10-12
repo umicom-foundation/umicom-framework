@@ -60,3 +60,38 @@ if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
         set_tests_properties(framework.chart.study_selector.gtk.${case} PROPERTIES TIMEOUT 20 SKIP_RETURN_CODE 77 LABELS "framework;chart;gtk4;ownership;regression")
     endforeach()
 endif()
+
+
+# The data inspector is independent of drawing and order mutation. These cases
+# also drive the native pointer controller against actual chart composition.
+if(BUILD_TESTING)
+    add_executable(umicom-candle-inspection-test "${CMAKE_CURRENT_LIST_DIR}/../tests/chart/test_candle_inspection.c")
+    target_link_libraries(umicom-candle-inspection-test PRIVATE Umicom::chart)
+    umicom_apply_warnings(umicom-candle-inspection-test)
+    umicom_apply_sanitizers(umicom-candle-inspection-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-candle-inspection-test)
+    endif()
+    foreach(case exact tie gap window extreme empty bounds capacity nan ohlc duplicate unsorted)
+        add_test(NAME framework.chart.candle_inspection.${case} COMMAND umicom-candle-inspection-test ${case})
+        set_tests_properties(framework.chart.candle_inspection.${case} PROPERTIES
+            TIMEOUT 20 LABELS "framework;chart;regression")
+    endforeach()
+endif()
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-candle-inspection-gtk-test "${CMAKE_CURRENT_LIST_DIR}/../tests/chart/test_candle_inspection_gtk4.c")
+    target_link_libraries(umicom-candle-inspection-gtk-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-candle-inspection-gtk-test)
+    umicom_apply_sanitizers(umicom-candle-inspection-gtk-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-candle-inspection-gtk-test)
+    endif()
+    foreach(case values gap outside leave refresh retained detached)
+        add_test(NAME framework.chart.candle_inspection.gtk.${case} COMMAND umicom-candle-inspection-gtk-test ${case})
+        set_tests_properties(framework.chart.candle_inspection.gtk.${case} PROPERTIES
+            TIMEOUT 20 SKIP_RETURN_CODE 77 LABELS "framework;chart;gtk4;ownership;regression")
+    endforeach()
+endif()
+
+# Range review uses the same portable chart and optional native targets.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomCandleRange.cmake")

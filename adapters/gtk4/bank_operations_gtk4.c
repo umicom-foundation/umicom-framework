@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 #include "window_removal_private.h"
 #include "umicom/ui/gtk4/bank_operations.h"
+#include "umicom/ui/gtk4/text_export.h"
 #include "umicom/ui/gtk4/payment_quote.h"
 #include "umicom/bank_operations/operations.h"
 #include "umicom/bank_operations/review.h"
@@ -35,6 +36,7 @@
 typedef struct BankUi {
     /* Immutable report ownership is independent of the mutable command form. */
     UmiBankAuditReport *auditReport;
+    GtkWidget *statementExport, *auditExport; /* Owned report controls, retired before services. */
     GtkEntry *auditActor,*auditEntity,*auditRequest,*auditFirst,*auditLast,*auditFrom,*auditTo;
     GtkDropDown *auditFamily,*auditAction,*auditRows;
     GtkTextBuffer *auditSummary,*auditDetail;
@@ -114,6 +116,8 @@ static void Message(BankUi *ui, UmiStatus status)
 static void UiFree(gpointer data)
 {
     BankUi *ui = data;
+    UmiTextExportGtk4Retire(ui->statementExport); UmiTextExportGtk4Retire(ui->auditExport);
+    g_clear_object(&ui->statementExport); g_clear_object(&ui->auditExport);
     UmiBankWorkQueueDestroy(ui->workQueue); ui->workQueue = NULL;
     UmiBankReservationsDestroy(ui->reservations); ui->reservations = NULL;
     UmiBankAuditDestroy(ui->auditReport); ui->auditReport = NULL;
@@ -137,6 +141,7 @@ static void UiClosed(GtkWidget *widget, gpointer data)
     BankUi *ui = data;
     (void)widget;
     ui->closed = true;
+    UmiTextExportGtk4Retire(ui->statementExport); UmiTextExportGtk4Retire(ui->auditExport);
     UmiBankWorkQueueDestroy(ui->workQueue); ui->workQueue = NULL;
     UmiBankReservationsDestroy(ui->reservations); ui->reservations = NULL;
     UmiBankAuditDestroy(ui->auditReport); ui->auditReport = NULL;
@@ -931,6 +936,11 @@ static void OpenWorkspace(GtkButton *button, gpointer data)
         gtk_text_buffer_set_text(ui->statementBuffer, "Choose an account and show a statement. The report is a copied snapshot; it does not update automatically.", -1);
         gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), view);
         gtk_widget_set_vexpand(scroll, TRUE); gtk_box_append(GTK_BOX(page), scroll);
+        /* The text exporter uses the displayed snapshot, while the existing
+         * CSV action intentionally reads the current range fields. */
+        ui->statementExport = UmiTextExportGtk4Create(view, "bank-statement.txt");
+        g_object_ref_sink(ui->statementExport);
+        gtk_box_append(GTK_BOX(page), ui->statementExport);
         ui->statementPage = gtk_notebook_append_page(ui->pages, page, gtk_label_new("Statement report"));
     }
 

@@ -32,6 +32,7 @@ typedef struct CashPanel
 {
     UmiCashPlan *plan, *previous, *pending;
     GtkWidget *fields[CASH_FIELDS], *scale, *receive, *enabled, *selector, *approval, *output, *note;
+    GtkWidget *textExport; /* Retained with the other controls. */
     GtkStringList *names;
     GPtrArray *retained;
     uint64_t generation;

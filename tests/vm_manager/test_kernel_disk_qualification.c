@@ -1,4 +1,11 @@
 /*-----------------------------------------------------------------------------
+ *
+ * File: tests/vm_manager/test_kernel_disk_qualification.c
+ *
+ * PURPOSE: Check disk qualification ownership and failure handling with simulated services.
+ *
+ * LICENCE: MIT
+ *
  * Umicom Framework - C23 Kernel disposable FAT16 qualification service tests.
  * Author: Sammy Hegab, Umicom Foundation. Licence: MIT.
  *

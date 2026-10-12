@@ -1,4 +1,9 @@
 /*-----------------------------------------------------------------------------
+ *
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ *
+ * LICENCE: MIT
+ *
  * Umicom Framework
  * File: tests/tool_location/test_stream.c
  * PURPOSE: Check persistent child tool selection, rejection and environment isolation through

@@ -193,6 +193,10 @@ UmiStatus UmiEducationScheduleTraceInspect(const void *bytes, size_t length,
     return UMI_STATUS_OK;
 }
 
+/* The earlier wrapper published before closing its input. Retain it for
+ * review; the replacement below stages the report until all file I/O succeeds,
+ * matching the shared inspection contract used by IDE and education clients. */
+#if 0
 UmiStatus UmiEducationScheduleTraceInspectFile(const char *path,
                                                 UmiEducationScheduleReport *report)
 {
@@ -218,5 +222,37 @@ UmiStatus UmiEducationScheduleTraceInspectFile(const char *path,
     }
     if (fclose(stream) != 0 && status == UMI_STATUS_OK)
         return UMI_STATUS_IO_ERROR;
+    return status;
+}
+#endif
+UmiStatus UmiEducationScheduleTraceInspectFile(const char *path,
+                                                UmiEducationScheduleReport *report)
+{
+    if (path == NULL || path[0] == '\0' || report == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    FILE *stream = fopen(path, "rb");
+    if (stream == NULL) return UMI_STATUS_NOT_FOUND;
+    UmiEducationScheduleReport candidate = {0};
+    UmiStatus status = UMI_STATUS_IO_ERROR;
+    if (fseek(stream, 0L, SEEK_END) == 0) {
+        const long end = ftell(stream);
+        if (end >= 0L && (unsigned long)end > UMI_EDUCATION_SCHEDULE_MAX_FILE_BYTES)
+            status = UMI_STATUS_CAPACITY_EXCEEDED;
+        else if (end >= 0L && fseek(stream, 0L, SEEK_SET) == 0) {
+            const size_t length = (size_t)end;
+            unsigned char *buffer = malloc(length != 0U ? length : 1U);
+            if (buffer == NULL) status = UMI_STATUS_OUT_OF_MEMORY;
+            else {
+                if (fread(buffer, 1U, length, stream) == length)
+                    status = UmiEducationScheduleTraceInspect(buffer, length, &candidate);
+                free(buffer);
+            }
+        }
+    }
+    if (fclose(stream) != 0 && status == UMI_STATUS_OK)
+        return UMI_STATUS_IO_ERROR;
+    /* Closing the input is part of the file operation. Only a complete read
+     * and successful close may replace the caller's previous report. */
+    if (status == UMI_STATUS_OK) *report = candidate;
     return status;
 }

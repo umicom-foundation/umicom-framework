@@ -1,4 +1,9 @@
 /*-----------------------------------------------------------------------------
+ *
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ *
+ * LICENCE: MIT
+ *
  * Umicom Framework
  * File: tests/test_archive/test_attempt.c
  * PURPOSE: Verify complete-attempt observations publish atomically or leave caller storage

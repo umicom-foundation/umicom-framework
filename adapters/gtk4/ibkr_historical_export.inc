@@ -104,6 +104,14 @@ static void HistoricalExportControls(GtkWindow *window, ConnectionUi *ui, GtkWid
     gtk_widget_set_name(ui->historyExportReport, "ibkr-history-export-report");
     gtk_widget_set_name(ui->historyExportStatus, "ibkr-history-export-status");
     gtk_box_append(GTK_BOX(box), ui->historyExportPath);
+    /* Selecting a filename never reads the account or starts the report.
+     * The existing export action captures provider observations explicitly. */
+    GtkWidget *browse = UmiPathPickerGtk4Create(GTK_ENTRY(ui->historyExportPath),
+        UMI_PATH_PICKER_NEW_FILE, "Choose a new report location", "historical-bars.csv");
+    if (browse != NULL) {
+        gtk_widget_set_name(browse, "ibkr-history-export-browse");
+        gtk_box_append(GTK_BOX(box), browse);
+    }
     gtk_box_append(GTK_BOX(box), ui->historyExportReport);
     gtk_box_append(GTK_BOX(box), ui->historyExportStatus);
     g_signal_connect_object(ui->historyExportReport, "clicked", G_CALLBACK(HistoricalExportClicked), window,

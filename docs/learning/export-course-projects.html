@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Export a course project and open it in Studio</title></head>
+<body>
+<h1>Export a course project and open it in Studio</h1>
+<p>The learning practicum can create editable copies of the Notes, Assembly stock
+totals and Framework storage courses. You choose where their source files live.
+Reading lessons and exporting source do not require opening a learner database.</p>
+<ol>
+<li>In Studio's Guided Learning panel, open the learning practicum. Select a lesson
+from the course you want to practise. All lessons in that course share its project.</li>
+<li>Find <strong>New project directory</strong>. You can type a complete path to a
+folder that does not exist, or expand <strong>Choose a parent folder and a new project
+name</strong>. Choose an existing parent folder, enter a new folder name, and select
+<strong>Use this project destination</strong>. This prepares the path without creating it.</li>
+<li>Read the prepared path above the chooser. For example, choose
+<code>C:\Projects\Learning</code> as the parent and <code>notes-practice</code> as the
+new name. The parent must already exist; the new project folder must not.</li>
+<li>Select <strong>Export this course project</strong>. Export uses the course and
+destination shown when you click. You may keep reading while files are written.
+Changing the lesson or path does not redirect the accepted export.</li>
+<li>Wait for the completed export message. When launched from Studio, select
+<strong>Open last exported project in the IDE</strong>. The action opens the directory
+that was successfully exported, even if you have since edited the destination field.
+The standalone practicum does not display this IDE action.</li>
+<li>In Studio, edit the project's <code>main.c</code> and supporting source files.
+Save changes before compiling. Review project trust and the compiler in
+<strong>Build &gt; Project Settings</strong>, then configure and build. The supplied
+profile uses Ninja, Debug, and <code>build/default</code>. Framework storage lessons
+also need an installed Framework data SDK selected in CMake settings.</li>
+<li>Run the configured executable after a successful build. To debug, configure a
+supported debug adapter and set a breakpoint. Review installation settings separately
+before deploying. Exporting or opening a project never grants trust or starts these actions.</li>
+</ol>
+<h2>If export cannot complete</h2>
+<p>An existing destination is refused, including an empty directory. Choose another
+new folder name; your existing files are kept. A missing parent folder, unavailable
+drive or write error can prevent completion. Check the displayed destination and the
+number of completely written files. A partial new folder is left for inspection and
+is not automatically deleted or adopted by Studio.</p>
+<p>Closing the practicum retires its controls. A write already accepted by the worker
+can finish while the application continues running. Closing the whole application or
+losing power can interrupt it; export does not promise transactional recovery.
+Inspect the chosen folder before retrying. Open a completed project through Studio's
+normal project workflow if its original practicum window has closed.</p>
+<p>Store projects in a trusted local folder. A path is not a filesystem sandbox:
+parent directory links and permissions are controlled by your operating system.
+Portable folder names reject path traversal and reserved device names. Advanced
+users can still type the full destination directly.</p>
+<p>Quiz progress records learning activity. It is separate from actual compiler,
+test and debugger results.</p>
+</body></html>

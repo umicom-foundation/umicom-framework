@@ -57,3 +57,40 @@ if(TARGET Umicom::ai_workspace_gtk4)
             LABELS "framework;ai-evidence;gtk4;lifecycle")
     endforeach()
 endif()
+
+# The report owns a capture and must remain readable after the workspace closes.
+add_executable(umicom-ai-evidence-export-test "${CMAKE_CURRENT_LIST_DIR}/test_export.c")
+target_link_libraries(umicom-ai-evidence-export-test PRIVATE Umicom::ai_workspace)
+umicom_ai_workspace_configure_target(umicom-ai-evidence-export-test)
+add_test(NAME framework.ai_evidence.export.file COMMAND umicom-ai-evidence-export-test
+    "${CMAKE_CURRENT_BINARY_DIR}/ai-evidence-export.txt")
+set_tests_properties(framework.ai_evidence.export.file PROPERTIES TIMEOUT 30
+    LABELS "framework;ai-evidence;export;filesystem")
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-ai-evidence-export-test)
+endif()
+
+add_executable(umicom-ai-evidence-export-failures-test "${CMAKE_CURRENT_LIST_DIR}/test_export_failures.c")
+target_link_libraries(umicom-ai-evidence-export-failures-test PRIVATE Umicom::ai_workspace)
+umicom_ai_workspace_configure_target(umicom-ai-evidence-export-failures-test)
+add_test(NAME framework.ai_evidence.export.failures COMMAND umicom-ai-evidence-export-failures-test)
+set_tests_properties(framework.ai_evidence.export.failures PROPERTIES TIMEOUT 30
+    LABELS "framework;ai-evidence;export;fault-injection")
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-ai-evidence-export-failures-test)
+endif()
+
+if(TARGET Umicom::ai_workspace_gtk4)
+    add_executable(umicom-ai-evidence-export-gtk-test "${CMAKE_CURRENT_LIST_DIR}/test_export_gtk.c")
+    target_link_libraries(umicom-ai-evidence-export-gtk-test PRIVATE Umicom::ai_workspace_gtk4)
+    umicom_ai_workspace_configure_target(umicom-ai-evidence-export-gtk-test)
+    foreach(case save collision invalid retained)
+        add_test(NAME framework.ai_evidence.export.gtk.${case}
+            COMMAND umicom-ai-evidence-export-gtk-test ${case})
+        set_tests_properties(framework.ai_evidence.export.gtk.${case} PROPERTIES
+            TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;ai-evidence;export;gtk4")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-ai-evidence-export-gtk-test)
+    endif()
+endif()

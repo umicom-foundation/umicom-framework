@@ -1,4 +1,9 @@
 /*-----------------------------------------------------------------------------
+ *
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ *
+ * LICENCE: MIT
+ *
  * Umicom Framework
  * File: src/platform/process_windows_environment.inc
  * PURPOSE: Share strict Unicode child-environment preparation between synchronous and persistent

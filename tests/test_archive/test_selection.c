@@ -1,4 +1,9 @@
 /*-----------------------------------------------------------------------------
+ *
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ *
+ * LICENCE: MIT
+ *
  * Umicom Framework
  * File: tests/test_archive/test_selection.c
  * PURPOSE: Exercise portable selection fingerprints with independent expected evidence and invalid

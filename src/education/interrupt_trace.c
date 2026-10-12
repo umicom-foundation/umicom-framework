@@ -176,6 +176,9 @@ UmiStatus UmiEducationInterruptTraceInspect(const void *bytes, size_t length,
     return UMI_STATUS_OK;
 }
 
+/* Retain the original file wrapper for review. The replacement stages its
+ * report until reading and closing succeed, like the other shared inspectors. */
+#if 0
 UmiStatus UmiEducationInterruptTraceInspectFile(const char *path,
                                                  UmiEducationInterruptReport *report)
 {
@@ -201,5 +204,36 @@ UmiStatus UmiEducationInterruptTraceInspectFile(const char *path,
     }
     if (fclose(stream) != 0 && status == UMI_STATUS_OK)
         return UMI_STATUS_IO_ERROR;
+    return status;
+}
+#endif
+UmiStatus UmiEducationInterruptTraceInspectFile(const char *path,
+                                                 UmiEducationInterruptReport *report)
+{
+    if (path == NULL || *path == '\0' || report == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    FILE *stream = fopen(path, "rb");
+    if (stream == NULL) return UMI_STATUS_NOT_FOUND;
+    UmiEducationInterruptReport candidate = {0};
+    UmiStatus status = UMI_STATUS_IO_ERROR;
+    if (fseek(stream, 0L, SEEK_END) == 0) {
+        const long end = ftell(stream);
+        if (end >= 0L && (unsigned long)end > UMI_EDUCATION_INTERRUPT_MAX_FILE_BYTES)
+            status = UMI_STATUS_CAPACITY_EXCEEDED;
+        else if (end >= 0L && fseek(stream, 0L, SEEK_SET) == 0) {
+            const size_t length = (size_t)end;
+            unsigned char *buffer = malloc(length != 0U ? length : 1U);
+            if (buffer == NULL) status = UMI_STATUS_OUT_OF_MEMORY;
+            else {
+                if (fread(buffer, 1U, length, stream) == length)
+                    status = UmiEducationInterruptTraceInspect(buffer, length, &candidate);
+                free(buffer);
+            }
+        }
+    }
+    if (fclose(stream) != 0 && status == UMI_STATUS_OK)
+        return UMI_STATUS_IO_ERROR;
+    /* A late close error must not replace a report already displayed by an IDE. */
+    if (status == UMI_STATUS_OK) *report = candidate;
     return status;
 }

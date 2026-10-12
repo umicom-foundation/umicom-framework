@@ -289,3 +289,36 @@ and `UmiEducationScheduleTraceInspectFile` are the shared Framework C23 APIs.
 This is deliberately separate from the real Umicom Kernel user scheduler and
 its privileged process/IPC lifetimes.
 
+
+## Preserve inspection results when a file operation fails
+
+The binary inspection API reads a bounded header from a caller-selected file.
+It publishes the result only after parsing and closing that file successfully.
+If opening, seeking, allocating memory, reading, parsing or closing fails, the
+caller's previous result stays unchanged. Check the returned status before
+presenting that result as an inspection of the newly selected file. When an
+earlier operation and closing both fail, the earlier status remains the result.
+
+The standalone education test project includes
+`framework.education.binary_file_failures`. It exercises successful and failed
+file closure alongside short reads, allocation failure, rejected headers and
+the 64 KiB read bound. Its file operations are controlled test substitutes;
+the existing `framework.education.binary_inspect` test covers actual files.
+Neither kind of inspection executes the selected binary.
+
+This guarantee concerns the output value and owned resources. It does not
+provide a snapshot of a file being changed by another process, validate the
+entire executable or remove the documented `long` file-seeking limit.
+
+## Shared inspection component
+
+Binary, archive, ELF, memory-permission and IPC-trace inspection now use
+the same `Umicom::education_inspection` library as normal Framework builds.
+The site-serving and manuscript operations remain in the existing education
+service. Parser tests are registered through one shared CMake module, preserving
+their existing CTest names and the standalone CLI checks.
+
+For application linkage, the installed example and input limits, see
+[Using the education inspection SDK](../../docs/guides/education-inspection.md).
+A standalone education-tool installation does not replace a full Framework SDK
+installation; use the main SDK package for `find_package(UmicomFramework)`.

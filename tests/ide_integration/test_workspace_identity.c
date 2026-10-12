@@ -1,4 +1,9 @@
 /*-----------------------------------------------------------------------------
+ *
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ *
+ * LICENCE: MIT
+ *
  * Umicom Framework
  * File: tests/ide_integration/test_workspace_identity.c
  * PURPOSE: Exercise closed, opened and rejected workspace identities without filesystem side

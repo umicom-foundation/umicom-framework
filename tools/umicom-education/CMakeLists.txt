@@ -17,6 +17,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 get_filename_component(UMICOM_EDUCATION_FRAMEWORK_ROOT
     "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
 
+# The original combined library is retained for engineering review. Inspection
+# sources now belong to the shared SDK target below, so the CLI and applications
+# cannot silently compile different lists of parser implementations.
+if(FALSE)
 add_library(umicom_education_site STATIC
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/site_preview.c"
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/site_content.c"
@@ -38,6 +42,19 @@ add_library(umicom_education_site STATIC
     # Keep hashing with the existing Framework base implementation. This
     # standalone learning build deliberately does not duplicate its algorithm.
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/base/sha256.c")
+endif()
+include("${UMICOM_EDUCATION_FRAMEWORK_ROOT}/cmake/UmicomEducationInspection.cmake")
+add_library(umicom_education_site STATIC
+    "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/site_preview.c"
+    "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/site_content.c"
+    "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/site_renderer.c"
+    "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/book.c"
+    "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/publication.c"
+    "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/education/nav_audit.c"
+    # Keep hashing with the existing Framework base implementation. This
+    # standalone learning build deliberately does not duplicate its algorithm.
+    "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/src/base/sha256.c")
+target_link_libraries(umicom_education_site PUBLIC Umicom::education_inspection)
 add_library(Umicom::education_site ALIAS umicom_education_site)
 target_include_directories(umicom_education_site PUBLIC
     "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/include")
@@ -135,6 +152,10 @@ if(BUILD_TESTING)
         COMMAND umicom-education-navigation-test
             "${CMAKE_BINARY_DIR}/education-navigation-test")
 
+    # The earlier registrations remain intact for engineering review. The shared
+    # module below preserves these test names while using the SDK's parser owner
+    # and exposing the same checks to normal Framework builds.
+    if(FALSE)
     # Inspect deterministic ELF/PE/COFF fixture headers, a compiler-produced
     # executable and a named file whose path includes spaces. The production
     # parser never executes the inspected file.
@@ -156,6 +177,22 @@ if(BUILD_TESTING)
         COMMAND umicom-education binary --file "$<TARGET_FILE:umicom-education>")
     set_tests_properties(framework.education.binary.cli PROPERTIES
         PASS_REGULAR_EXPRESSION "Format: (ELF|PE)")
+
+    # The fault test includes the production parser with local I/O substitutions.
+    # Keep it separate from education_site to avoid defining the parser twice.
+    # No filesystem access or fault-control hooks are added to the public API.
+    add_executable(umicom-education-binary-file-test
+        "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/tests/education/test_binary_file_failures.c")
+    target_include_directories(umicom-education-binary-file-test PRIVATE
+        "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/include")
+    if(MSVC)
+        target_compile_options(umicom-education-binary-file-test PRIVATE /W4)
+    else()
+        target_compile_options(umicom-education-binary-file-test PRIVATE
+            -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    endif()
+    add_test(NAME framework.education.binary_file_failures
+        COMMAND umicom-education-binary-file-test)
 
     # A real C23 object in a static archive supplements hand-built header
     # fixtures, proving that GCC/Clang ar output uses the same parser.
@@ -324,7 +361,12 @@ if(BUILD_TESTING)
     set_tests_properties(framework.education.timer_trace.cli PROPERTIES
         FIXTURES_REQUIRED education_timer_trace_fixture
         PASS_REGULAR_EXPRESSION "Timer trace: 11 records")
+    endif()
+    include("${UMICOM_EDUCATION_FRAMEWORK_ROOT}/cmake/UmicomEducationInspectionTests.cmake")
 
+    # Retain the upstream CLI-only registrations for comparison. The shared
+    # module now owns these fixtures in both SDK and standalone configurations.
+    if(FALSE)
     # The native teaching inspector never controls a real interrupt source.
     # The parser test publishes the file only after validating all records;
     # CTest's fixture contract orders the separate CLI consumer in parallel.
@@ -350,9 +392,35 @@ if(BUILD_TESTING)
         FIXTURES_REQUIRED education_interrupt_trace_fixture
         PASS_REGULAR_EXPRESSION "Interrupt trace: 20 records")
 
-    # Device request acceptance and completion are distinct events. The CTest
-    # parser fixture writes the trace and validates it before the separate CLI
-    # consumer executes, even under parallel CTest. No physical I/O is issued.
+    # Keep fixtures deterministic and owned by a single writer. The CLI
+    # consumer executes only after CTest confirms that writer's successful run.
+    add_executable(umicom-education-evidence-trace-test
+        "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/tests/education/test_evidence_trace.c")
+    target_link_libraries(umicom-education-evidence-trace-test PRIVATE Umicom::education_site)
+    if(MSVC)
+        target_compile_options(umicom-education-evidence-trace-test PRIVATE /W4)
+    else()
+        target_compile_options(umicom-education-evidence-trace-test PRIVATE
+            -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    endif()
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/education-evidence-trace-test/fixture with spaces")
+    set(_education_evidence_fixture
+        "${CMAKE_BINARY_DIR}/education-evidence-trace-test/fixture with spaces/driver evidence.evd")
+    add_test(NAME framework.education.evidence_trace
+        COMMAND umicom-education-evidence-trace-test "${_education_evidence_fixture}")
+    add_test(NAME framework.education.evidence_trace.cli
+        COMMAND umicom-education evidence-trace --file "${_education_evidence_fixture}")
+    set_tests_properties(framework.education.evidence_trace PROPERTIES
+        FIXTURES_SETUP education_evidence_trace_fixture)
+    set_tests_properties(framework.education.evidence_trace.cli PROPERTIES
+        FIXTURES_REQUIRED education_evidence_trace_fixture
+        PASS_REGULAR_EXPRESSION "Evidence trace: 20 records")
+
+    endif()
+
+    # The upstream standalone registration remains for review. Shared SDK tests
+    # now own device I/O fixtures in both standalone and full Framework builds.
+    if(FALSE)
     add_executable(umicom-education-device-io-trace-test
         "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/tests/education/test_device_io_trace.c")
     target_link_libraries(umicom-education-device-io-trace-test PRIVATE Umicom::education_site)
@@ -399,6 +467,8 @@ if(BUILD_TESTING)
         FIXTURES_REQUIRED education_evidence_trace_fixture
         PASS_REGULAR_EXPRESSION "Evidence trace: 20 records")
 
+    endif()
+
     add_test(NAME framework.education.cli.help COMMAND umicom-education --help)
 
     # Real native CLI preflight: refuse to serve a missing site and propagate
@@ -409,12 +479,17 @@ if(BUILD_TESTING)
             "-DEDUCATION_PROGRAM=$<TARGET_FILE:umicom-education>"
             "-DEDUCATION_FIXTURE_ROOT=${CMAKE_BINARY_DIR}/education-serve-preflight"
             -P "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/tests/education/test_serve_preflight.cmake")
+    # Keep the previous all-in-one label assignment for review. Shared parser
+    # tests now own their labels in the registering directory; these site tests
+    # remain local even when the SDK and command are composed together.
+    if(FALSE)
     set_tests_properties(framework.education.site_paths
         framework.education.publication framework.education.cli.help
         framework.education.book framework.education.renderer
         framework.education.publication_manifest framework.education.serve.preflight
         framework.education.navigation_audit
         framework.education.binary_inspect framework.education.binary.cli
+        framework.education.binary_file_failures
         framework.education.archive_inspect framework.education.archive.cli
         framework.education.elf_symbols framework.education.symbols.cli
         framework.education.elf_load_plan framework.education.load_plan.cli
@@ -422,8 +497,13 @@ if(BUILD_TESTING)
         framework.education.ipc_trace framework.education.ipc_trace.cli
         framework.education.schedule_trace framework.education.schedule_trace.cli
         framework.education.timer_trace framework.education.timer_trace.cli
-        framework.education.interrupt_trace framework.education.interrupt_trace.cli
-        framework.education.evidence_trace framework.education.evidence_trace.cli
+        PROPERTIES LABELS "education;framework;native;safe-c")
+    endif()
+    set_tests_properties(framework.education.site_paths
+        framework.education.publication framework.education.cli.help
+        framework.education.book framework.education.renderer
+        framework.education.publication_manifest framework.education.serve.preflight
+        framework.education.navigation_audit
         PROPERTIES LABELS "education;framework;native;safe-c")
 endif()
 

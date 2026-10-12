@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Review bank transaction reports</title><style>body{font:17px/1.6 system-ui,sans-serif;max-width:960px;margin:3rem auto;padding:0 1rem;color:#182b3e}pre{white-space:pre-wrap;background:#eef3f7;padding:1rem}h1,h2{line-height:1.2}a{color:#075aa7}table{border-collapse:collapse}td,th{border:1px solid #bdc9d4;padding:.6rem;text-align:left}</style></head><body><main><h1>Review bank transaction reports</h1>
+<p>The bank transaction inspector reads a saved Open Banking JSON response. It helps you inspect cash movements without entering them into a ledger. A local import does not authenticate a bank connection.</p>
+<h2>Import and inspect</h2><ol>
+<li>In Umicom Trader, open <strong>Bank transaction reports</strong> from the workspace toolbar.</li>
+<li>Choose a file in a folder you control, then select <strong>Import for review</strong>. The complete file is checked before any new rows appear. Changing the path clears the old report.</li>
+<li>Select an account and currency. The view shows booked credits, booked debits and their net movement. Pending movements appear separately. A mutable entry may change in a later bank response.</li>
+<li>Check the previous-page and next-page indicators. Even when both are absent, the import does not prove that the bank returned your complete history. Missing transaction IDs are counted because they cannot safely be matched to a later import.</li>
+<li>Use the export control to choose a new private <code>.csv</code> file. The export includes every account in the imported page, not just the current selection. Existing files are not overwritten.</li></ol>
+<p>Amounts retain decimal precision. GBP, EUR and other currencies are never added together. Net movement is not an opening balance, closing balance, available funds or a permission to spend. Source rows are displayed in their original order.</p>
+<h2>Supported input</h2>
+<p>The response must contain a <code>Data</code> object and may contain a <code>Transaction</code> array. Each row needs an account ID, amount and currency, credit/debit direction, posting status and booking timestamp. The inspector understands <code>BOOK</code>/<code>PDNG</code> and the older <code>Booked</code>/<code>Pending</code> spellings. Transaction ID, reference, narrative and mutability are optional. This is a selected-field reader, not a validator for the whole Open Banking standard.</p>
+<pre>{
+  "Data": {
+    "Transaction": [{
+      "AccountId": "practice-account",
+      "TransactionId": "practice-credit",
+      "CreditDebitIndicator": "Credit",
+      "Status": "BOOK",
+      "BookingDateTime": "2026-01-15T10:00:00Z",
+      "Amount": {"Amount": "12.50", "Currency": "GBP"},
+      "TransactionInformation": "Example receipt"
+    }]
+  }
+}</pre>
+<p>This invented example has one booked credit of GBP 12.50. Save it as a JSON file to explore the workflow without private account data.</p>
+<h2>Limits and recovery</h2>
+<p>Imports accept at most 4 MiB and 1,024 rows. Amount text contains 1–13 integer digits and at most five decimal places. Malformed dates, incorrect field types, duplicate known keys and duplicate nonempty transaction IDs within one account are rejected. Booking timestamps must use years 1600–9999, valid calendar dates, a <code>Z</code> or numeric timezone, and at most nine fractional-second digits. Control characters in selected text fields are refused. Unknown optional fields are discarded. Imported links are never followed. Amounts too large to sum are reported as unavailable; individual rows remain inspectable.</p>
+<p>If an import fails, check the source format and obtain a fresh export from your bank or authorised provider. Do not edit a real statement merely to make it pass. The reader does not accept PDF statements, arbitrary bank CSV layouts, or the proprietary Wise, Revolut Business and PayPal JSON formats. Those need separate mappings.</p>
+<p>Loading does not save data automatically. Clearing or closing the window removes its retained report. An export already accepted may finish after closing; an I/O failure may leave a partial new file. Inspect that file and choose a different filename when retrying.</p>
+<h2>For contributors</h2>
+<p>Use <code>Umicom::bank_feed</code> for parsing, row copies, account/currency totals and owned CSV reports. The GTK window adds file selection and asynchronous loading. Keep provider authentication outside this importer: a future connector must establish consent, validate account scope and preserve pagination before handing a response to a reader. Reuse Framework’s exact decimal and file owners when adding adapters.</p>
+<p>Reference: <a href="https://openbankinguk.github.io/read-write-api-site3/v4.0.1/resources-and-data-models/aisp/Transactions.html">Open Banking transaction resource</a>.</p>
+</main></body></html>

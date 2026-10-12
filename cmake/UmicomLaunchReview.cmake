@@ -2,7 +2,21 @@
 # Launch descriptions belong to the build owner and carry no GUI dependency.
 include_guard(GLOBAL)
 target_sources(umicom_build PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../src/build/launch_plan.c")
+# File observation is a separate operation from the existing lexical review.
+target_sources(umicom_build PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../src/build/launch_inspection.c")
 if(BUILD_TESTING)
+    add_executable(umicom-launch-inspection-test "${CMAKE_CURRENT_LIST_DIR}/../tests/launch_review/test_inspection.c")
+    target_link_libraries(umicom-launch-inspection-test PRIVATE Umicom::build)
+    umicom_apply_warnings(umicom-launch-inspection-test)
+    umicom_apply_sanitizers(umicom-launch-inspection-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-launch-inspection-test)
+    endif()
+    foreach(case regular relative missing wrong-kind bare invalid cancelled)
+        add_test(NAME framework.launch_review.inspection.${case} COMMAND umicom-launch-inspection-test ${case})
+        set_tests_properties(framework.launch_review.inspection.${case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;build;launch;filesystem;regression")
+    endforeach()
     add_executable(umicom-launch-plan-test "${CMAKE_CURRENT_LIST_DIR}/../tests/launch_review/test_plan.c")
     target_link_libraries(umicom-launch-plan-test PRIVATE Umicom::build)
     umicom_apply_warnings(umicom-launch-plan-test)
@@ -30,6 +44,17 @@ function(umicom_attach_launch_review_native_checks)
         umicom_register_validation_target(umicom-launch-review-gtk4-test)
     endif()
     foreach(case review-path review-bare review-invalid review-invalidate notify-destroy notify-edit notify-reentry program folder pending-destroy pending-hide pending-parent stale entry-reentry cancel remote)
+        add_test(NAME framework.launch_review.gtk4.${case} COMMAND umicom-launch-review-gtk4-test ${case})
+        set_tests_properties(framework.launch_review.gtk4.${case} PROPERTIES TIMEOUT 30 SKIP_RETURN_CODE 77
+            LABELS "framework;build;launch;gtk4;ownership;regression")
+    endforeach()
+    # Exercise unsaved launch dependencies through the same real controller.
+    foreach(case environment-review environment-invalid environment-invalidate tools-invalidate)
+        add_test(NAME framework.launch_review.gtk4.${case} COMMAND umicom-launch-review-gtk4-test ${case})
+        set_tests_properties(framework.launch_review.gtk4.${case} PROPERTIES TIMEOUT 30 SKIP_RETURN_CODE 77
+            LABELS "framework;build;launch;gtk4;environment;regression")
+    endforeach()
+    foreach(case inspect-paths inspect-edit inspect-reentry inspect-destroy inspect-hide)
         add_test(NAME framework.launch_review.gtk4.${case} COMMAND umicom-launch-review-gtk4-test ${case})
         set_tests_properties(framework.launch_review.gtk4.${case} PROPERTIES TIMEOUT 30 SKIP_RETURN_CODE 77
             LABELS "framework;build;launch;gtk4;ownership;regression")

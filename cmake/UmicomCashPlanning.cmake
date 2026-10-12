@@ -97,3 +97,21 @@ if(UMICOM_BUILD_LEARNING_EXAMPLES)
     umicom_apply_warnings(umicom-cash-planning-lesson)
     umicom_apply_sanitizers(umicom-cash-planning-lesson)
 endif()
+
+# Keep this host lifetime check with the cash UI owner, so focused builds that
+# omit cash planning do not accidentally acquire a reference to its launcher.
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-cash-report-lifetime-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/text_export/test_cash_lifetime.c")
+    target_link_libraries(umicom-cash-report-lifetime-test PRIVATE Umicom::ui_gtk4)
+    set_target_properties(umicom-cash-report-lifetime-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-cash-report-lifetime-test)
+    umicom_apply_sanitizers(umicom-cash-report-lifetime-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-cash-report-lifetime-test)
+    endif()
+    add_test(NAME framework.cash_planning.report_lifetime COMMAND umicom-cash-report-lifetime-test)
+    set_tests_properties(framework.cash_planning.report_lifetime PROPERTIES
+        TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;gtk4;cash;reports;ownership")
+endif()

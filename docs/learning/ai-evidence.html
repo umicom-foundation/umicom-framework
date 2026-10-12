@@ -219,4 +219,26 @@ cleanup:
 <p>The existing C provider, Data Server and job lifecycle are reused. There is no new model downloader, learned embedding engine, persistent vector index, large-file importer, autonomous editor or generation of images/audio in this update. Earlier scripts and examples remain alternatives; the new feature and primary fixtures are native C.</p>
 <p>The available automated evidence covers native execution, real local HTTP transport against an inert fixture, ownership, failure atomicity and SQLite reload. Windows, GTK and a genuine neural-model run need their own acceptance results. Build the whole Applications tree and exercise installed products before treating a focused test as release qualification.</p>
 <p>For developer contracts read <code>docs/development/ai-evidence.md</code>. For residual risks read <code>docs/development/ai-evidence-risk-review.md</code>. The separate Build-and-Git document contains the full build, test and publication sequence.</p>
-</section></main></div><footer>Sammy Hegab · Umicom Foundation · Public learning edition<br>Source implementation and examples: C23 · No model or private dataset included.</footer></body></html>
+</section><section>
+<h2>Save a job inspection to a file</h2>
+<ol>
+<li>Open the AI library you want to use, enter the saved Job ID and select the job's load action.</li>
+<li>Open <strong>Evidence inspection</strong>. Use <strong>Inspect selected job evidence</strong>
+to read the frozen passages, response and source comparison.</li>
+<li>Under the export controls, select <strong>Choose new location...</strong> and choose a new
+<code>.txt</code> filename in a folder you control. You can also type its full path.</li>
+<li>Select <strong>Save current job inspection</strong>. The report captures the selected job and
+currently loaded source comparison at this moment; it does not reuse an older inspection displayed above.</li>
+<li>Wait for the status to confirm that the captured inspection was saved. Review the file before sharing it:
+it includes the prompt, returned text and supplied source passages.</li>
+</ol>
+<p>The write runs on a file worker, so the application can keep responding.
+It does not call a model, refresh the database, approve a request or execute a tool.
+Changing the selected job or library after starting the write cannot change its captured contents.
+Closing the window does not undo a write you already requested.</p>
+<p>Existing files are never overwritten. If a filename is already used, choose a new one.
+If writing or closing fails, inspect any partial new file before retrying. The error status does not
+claim that all bytes were saved, and successful closing does not promise protection against power loss.</p>
+</section>
+</main></div><footer>Sammy Hegab · Umicom Foundation · Public learning edition<br>Source implementation and examples: C23 · No model or private dataset included.</footer>
+</body></html>

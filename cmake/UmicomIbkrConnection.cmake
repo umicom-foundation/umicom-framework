@@ -230,3 +230,12 @@ target_sources(umicom_ibkr_connection PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/scanner_catalog_decode.c")
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/broker_connectivity/scanner_catalog.h"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/broker_connectivity COMPONENT Framework)
+
+# Retained-series diagnostics are shared by native and headless broker hosts.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomBarCoverage.cmake")
+
+# Saved Web API metadata is an optional analysis service, not a TWS transport feature.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomIbkrRuleReports.cmake")
+
+# Account report choices share existing transport and exact provider values.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomIbkrAccountReports.cmake")

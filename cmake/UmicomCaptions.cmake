@@ -7,6 +7,7 @@ target_sources(umicom_creative_workspace PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/captions_srt.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/captions_webvtt.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/captions_edit.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/captions_rows.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/captions_export.c")
 if(TARGET umicom_creative_workspace_gtk4)
     target_sources(umicom_creative_workspace_gtk4 PRIVATE
@@ -76,3 +77,31 @@ if(BUILD_TESTING)
 endif()
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/caption-editing.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/learning" COMPONENT Learning)
+
+# Row editing stays in the portable caption owner; GTK only gathers a draft.
+if(BUILD_TESTING)
+    add_executable(umicom-caption-rows-test "${CMAKE_CURRENT_LIST_DIR}/../tests/creative_workspace/test_caption_rows.c")
+    target_link_libraries(umicom-caption-rows-test PRIVATE Umicom::creative_workspace)
+    umicom_creative_configure_target(umicom-caption-rows-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-caption-rows-test)
+    endif()
+    foreach(case split equal-start split-boundary split-order split-text merge merge-gap merge-enclosed merge-capacity cue-capacity arguments)
+        add_test(NAME "framework.captions.rows.${case}" COMMAND umicom-caption-rows-test "${case}")
+        set_tests_properties("framework.captions.rows.${case}" PROPERTIES
+            TIMEOUT 30 LABELS "framework;creative;captions;regression")
+    endforeach()
+    if(TARGET umicom_creative_workspace_gtk4)
+        add_executable(umicom-caption-rows-gtk-test "${CMAKE_CURRENT_LIST_DIR}/../tests/creative_workspace/test_caption_rows_gtk4.c")
+        target_link_libraries(umicom-caption-rows-gtk-test PRIVATE Umicom::creative_workspace_gtk4)
+        umicom_creative_configure_target(umicom-caption-rows-gtk-test)
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-caption-rows-gtk-test)
+        endif()
+        foreach(case load replace insert remove split merge undo invalid stale row-selection draft-change reentrant retained)
+            add_test(NAME "framework.captions.rows.gtk.${case}" COMMAND umicom-caption-rows-gtk-test "${case}")
+            set_tests_properties("framework.captions.rows.gtk.${case}" PROPERTIES
+                TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;creative;captions;gtk4;regression")
+        endforeach()
+    endif()
+endif()

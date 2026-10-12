@@ -65,7 +65,9 @@ foreach(course IN ITEMS notes assembly framework)
         DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/learning/projects" COMPONENT Learning)
 endforeach()
 if(TARGET Umicom::ui_gtk4)
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomPathPicker.cmake")
     add_library(umicom_education_workspace_gtk4 STATIC
+        "${_umicom_education_root}/adapters/gtk4/education_project_export_gtk4.c"
         "${_umicom_education_root}/adapters/gtk4/education_workspace_panel_gtk4.c"
         "${_umicom_education_root}/adapters/gtk4/education_workspace_commands_gtk4.c"
         "${_umicom_education_root}/adapters/gtk4/education_workspace_application_gtk4.c")
@@ -74,6 +76,8 @@ if(TARGET Umicom::ui_gtk4)
     target_link_libraries(umicom_education_workspace_gtk4 PUBLIC
         Umicom::education_workspace Umicom::ui_gtk4)
     umicom_education_configure_target(umicom_education_workspace_gtk4)
+    # Register the shared inspector beside this consumer, including focused builds.
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomEducationInspectionGtk4.cmake")
     install(TARGETS umicom_education_workspace_gtk4 EXPORT UmicomFrameworkTargets
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Framework)
     install(FILES "${_umicom_education_root}/include/umicom/ui/gtk4/education_workspace.h"
@@ -157,6 +161,26 @@ if(BUILD_TESTING)
         message(STATUS "Education independent output check not registered: Python3 interpreter unavailable")
     endif()
     if(TARGET Umicom::education_workspace_gtk4)
+        # These cases exercise the native asynchronous owner and exclusive writer.
+        add_executable(umicom-education-project-export-async-test
+            "${_umicom_education_root}/tests/education_workspace/test_project_export_async.c")
+        target_link_libraries(umicom-education-project-export-async-test PRIVATE Umicom::education_workspace_gtk4)
+        umicom_education_configure_target(umicom-education-project-export-async-test)
+        if(WIN32 AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+            target_link_options(umicom-education-project-export-async-test PRIVATE -municode)
+        endif()
+        foreach(case destination captured existing missing-parent close publication-close native-close)
+            set(directory "${CMAKE_CURRENT_BINARY_DIR}/education-tests/project-export-async/${case}")
+            file(MAKE_DIRECTORY "${directory}")
+            add_test(NAME framework.education_workspace.project_export_async.${case}
+                COMMAND umicom-education-project-export-async-test "${case}")
+            set_tests_properties(framework.education_workspace.project_export_async.${case} PROPERTIES
+                WORKING_DIRECTORY "${directory}" TIMEOUT 30 SKIP_RETURN_CODE 77
+                LABELS "framework;education-workspace;export;gtk4;lifetime")
+        endforeach()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-education-project-export-async-test)
+        endif()
         add_executable(umicom-education-project-workflow-gtk-test
             "${_umicom_education_root}/tests/education_workspace/test_project_workflow_gtk4.c")
         target_link_libraries(umicom-education-project-workflow-gtk-test PRIVATE Umicom::education_workspace_gtk4)
@@ -220,6 +244,7 @@ function(umicom_attach_education_workspace)
     endif()
 endfunction()
 install(FILES "${_umicom_education_root}/docs/learning/EDUCATION_WORKSPACE.html"
+    "${_umicom_education_root}/docs/learning/export-course-projects.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/learning" COMPONENT Learning)
 unset(_umicom_education_root)
 unset(_umicom_education_resources)

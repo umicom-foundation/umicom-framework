@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Edit a local video sequence — Umicom Framework</title>
+<style>body{font:17px/1.6 system-ui;max-width:900px;margin:40px auto;padding:0 24px;color:#213047}code{background:#edf2f6;padding:2px 5px}h1,h2{line-height:1.2}aside{padding:14px;background:#f3f6fa;border-left:4px solid #276cad}</style></head>
+<body><main><h1>Edit a local video sequence</h1>
+<p>The Video sequence page in Media and Music joins selected parts of local video files.
+A recipe records the order, trim ranges and output size. Editing a recipe leaves the source files unchanged.
+The shared Framework service supplies the same editing rules to both applications.</p>
+<aside>This editor supports six clips and a total of ten minutes. Export produces silent H.264 video
+in a fragmented MP4 container at 30 frames per second. Audio is attached in a separate export described below. Transitions, caption burn-in and multi-track
+video composition are not included in the sequence renderer. The separate audio and caption tools remain available.</aside>
+<h2>Choose clips and make edits</h2><ol>
+<li>Open the creative workspace and select <strong>Video sequence</strong>.</li>
+<li>Enter a unique clip ID, such as <code>intro</code>, then browse to a local video.
+Use an ordinary absolute file path; web addresses and network shares are not accepted.</li>
+<li>Set the source start and end in milliseconds. For example, 2000 to 6000 selects four seconds,
+beginning two seconds into the file. The end is excluded. Press <strong>Add</strong>.
+The summary shows the stored clip and its position in the assembled sequence.</li>
+<li>Select an existing clip to load its fields. Change the range and press <strong>Replace / trim</strong>.
+Typing alone does not change the saved edit.</li>
+<li>Expand <strong>Split and reorder</strong>. Split at a source time inside the selected clip,
+and give the right part a new ID. Move a clip to a position starting at 1. Use Undo and Redo
+to review the last sixteen changes. A fresh edit after Undo replaces the redo path.</li>
+<li>Expand <strong>Sequence settings</strong> to apply a title and even output dimensions.
+The supported dimensions run from 16 by 16 to 1920 by 1080 pixels.</li></ol>
+<h2>Preview a stored trim</h2>
+<p>Select an added clip and press <strong>Preview selected clip</strong>. Preview is muted to match
+the silent export. Playback depends on the installed GTK GStreamer backend and suitable codecs.
+The editor checks whether the backend can seek and whether the selected end is within its reported duration.
+Press Stop preview before moving on. This is a single-clip preview, not a preview of the entire assembled timeline.
+Backend timing is not a frame-accurate editing guarantee.</p>
+<h2>Save and reopen your recipe</h2><ol>
+<li>Choose a new JSON filename in a directory you control, then press <strong>Save new recipe</strong>.
+Existing files are preserved, so use a new filename for each saved revision.</li>
+<li>To reopen a recipe, enter or choose its existing path and press <strong>Open recipe</strong>.
+If you have unsaved edits, save them first or tick the replacement confirmation.</li>
+<li>An invalid or missing recipe leaves the current edits intact. Successful opening starts a fresh
+undo history. Source media is referenced by its absolute path and is not copied into the recipe.</li></ol>
+<p>Recipes contain local filenames in plain text. Keep them private when those paths reveal sensitive
+project information. Moving a recipe to another computer requires adjusting its clip paths.</p>
+<h2>Render a video</h2><ol>
+<li>Select a trusted native FFmpeg executable that includes the <code>libx264</code> encoder.
+Umicom does not download or install it. Native rendering currently uses the Framework process channel
+on Windows and Linux.</li>
+<li>Choose a new filename ending in <code>.mp4</code> in an existing directory you control.</li>
+<li>Press <strong>Render silent MP4</strong>. The job captures the current recipe, executable and path.
+Each clip uses its first video stream. Frames are scaled with letterboxing to preserve aspect ratio.</li>
+<li>Wait for the result. Cancel operation requests termination of this render's process group.
+A failed or cancelled render may leave a new partial file; it is retained for inspection.
+Use another output filename when trying again.</li>
+<li>Open the resulting MP4 in a video player and check the full sequence. Successful process completion
+and a container prefix do not replace playback verification.</li></ol>
+<h2>Add a local soundtrack</h2><ol>
+<li>Render the silent sequence first and check it in a player. You may also choose another
+video whose codec FFmpeg can copy into MP4.</li>
+<li>Expand <strong>Add soundtrack to a rendered video</strong>. Choose the rendered video
+and a local audio file, such as a WAV exported from Umicom's audio arrangement tools.</li>
+<li>Select a new output path and press <strong>Export with soundtrack</strong>.
+The selected FFmpeg executable must include AAC audio encoding.</li>
+<li>Open the new MP4 and check both picture and sound. The first video stream is copied without
+re-encoding. The first audio stream from the selected soundtrack replaces any original audio,
+starts at the beginning and ends with the video. A short soundtrack is padded with silence.</li></ol>
+<p>This is a separate operation; soundtrack paths are not saved in the video recipe.
+It does not mix existing sound, align lyrics, change volume or generate music.
+Missing required streams and incompatible codecs fail visibly. Both inputs remain unchanged,
+and cancellation can retain a partial new output just as with silent rendering.</p>
+<h2>If something does not work</h2>
+<p><strong>Preview unavailable:</strong> install matching GStreamer playback plugins and codecs.
+Editing and saving recipes remain available. <strong>Encoder missing:</strong> select the executable,
+not a folder or command string. <strong>Unknown encoder or filter:</strong> read the renderer diagnostics
+shown below the sequence summary and use a compatible FFmpeg build.</p>
+<p><strong>Range beyond the source:</strong> check the trim using preview. Render input is read when the job runs;
+a file changed or shortened since editing can produce a different or shorter result.
+<strong>Output already exists:</strong> select a fresh filename. Umicom never replaces it.
+Rendering is limited to fifteen minutes of elapsed work and 512 MiB of encoded output. A limit failure
+is reported and may retain partial output.</p>
+<h2>For contributors</h2>
+<p>Keep editing rules in <code>video_sequence.h</code>, persistence in the recipe service,
+and process ownership in <code>video_render.h</code>. Applications compose the native panel.
+New operations must validate a candidate before publication, retain previous edits on failure,
+and extend the recipe schema deliberately. Do not add user-supplied strings to FFmpeg filter expressions:
+paths belong in separate argument values. Decoder and encoder qualification should include decoded
+output checks, alongside cancellation, ownership and file-preservation coverage.</p>
+<p>Implementation references:
+<a href="https://ffmpeg.org/ffmpeg.html">FFmpeg command documentation</a>,
+<a href="https://ffmpeg.org/ffmpeg-filters.html#concat">concat and video filters</a>,
+<a href="https://ffmpeg.org/ffmpeg-formats.html#mov_002c-mp4_002c-ismv">fragmented MP4</a>,
+<a href="https://www.ffmpeg.org/ffmpeg-filters.html#apad">audio padding</a>,
+and <a href="https://docs.gtk.org/gtk4/class.MediaStream.html">GTK media streams</a>.</p>
+</main><section><h2>Add selectable captions</h2>
+<ol><li>Finish trimming and arranging the video. Render it, and add its soundtrack if needed.</li>
+<li>Use the captions editor to create or edit the words and cue timings, then export a UTF-8 SRT file.
+SRT, also called SubRip, stores a start time, end time and text for each caption.</li>
+<li>In <strong>Video sequence</strong>, open <strong>Add captions to a rendered video</strong>.
+Choose the finished video, the SRT file and a new output filename ending in <code>.mp4</code>.</li>
+<li>Check the trusted FFmpeg executable field and select <strong>Export with captions</strong>.
+Wait for the completion message. The operation uses the same Cancel button as rendering.</li>
+<li>Open the new file in a compatible video player and enable its subtitle track.
+Check the words, timing, full video length and sound before sharing it.</li></ol>
+<p>The export copies the first video stream and, when present, the first audio stream.
+Those streams must already use codecs supported in MP4. It adds one <code>mov_text</code>
+caption track and leaves out earlier subtitle tracks. FFmpeg must supply the SubRip decoder,
+mov_text encoder and MP4 writer.</p>
+<p>Captions remain selectable; they are not permanently drawn into the picture.
+Timing is not adjusted automatically, and a cue past the end of the video can extend
+the container's reported duration. Keep cues within the intended video timeline.
+If a player does not show the captions, check its subtitle controls and format support.</p>
+<p>The recipe, original video and SRT file are unchanged. An existing output filename
+is refused. A failed or cancelled export can leave a partial new file; choose another
+filename when retrying and read the renderer diagnostics. Caption paths are export inputs
+and are not saved inside the sequence recipe.</p></section>
+</body></html>

@@ -14,6 +14,8 @@
 #include "umicom/chart/drawing_tools.h"
 #include "umicom/trading/chart_timeframe.h"
 #include "umicom/trading/chart_history.h"
+#include "umicom/chart/candle_inspection.h"
+#include "umicom/chart/range_report.h"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -56,6 +58,19 @@ typedef struct InteractiveChart {
     size_t drawing_count;
     uint64_t drawing_revision;
     char objects_instrument[UMI_FINANCE_ID_CAPACITY];
+    /* The state is heap-owned. Keep the small retained history here rather than
+     * putting it on native callback stacks or borrowing mutable provider data. */
+    UmiChartCandle inspection_candles[UMI_TRADING_WORKSPACE_BAR_HISTORY_CAPACITY];
+    size_t inspection_count;
+    GtkWidget *inspection_label;
+    /* Captured chart evidence is independent of live provider updates. It is
+     * owned by this panel and released with its final retained drawing area. */
+    UmiChartRangeCapture *range_capture;
+    GtkWidget *range_label, *range_start, *range_end, *range_section;
+    char range_instrument[UMI_FINANCE_ID_CAPACITY];
+    uint32_t range_interval;
+    uint64_t range_captured_ms;
+    int range_pending, range_reveal;
     guint timer;
     int tool, have_first, have_pointer, dragging;
     double pointer_x, pointer_y;
@@ -68,6 +83,7 @@ static void ChartRelease(gpointer data)
     InteractiveChart *state = data;
     if (--state->references != 0) return;
     umi_chart_render_scene_destroy(state->scene);
+    UmiChartRangeCaptureDestroy(state->range_capture);
     g_free(state);
 }
 static void ChartRootDestroyed(gpointer data)
@@ -88,6 +104,9 @@ static void ChartMessage(InteractiveChart *state, const char *message)
  * teardown. The explicit detach contract makes all model actions inert. */
 static int ChartAttached(const InteractiveChart *state)
 { return state != NULL && state->context != NULL && state->root != NULL; }
+
+#include "candle_inspection_gtk4.inc"
+#include "candle_range_gtk4.inc"
 
 /* Finishing a captured move returns to Cursor. Later clicks must not silently
  * become creation gestures after the selected record or instrument changes. */
@@ -153,10 +172,14 @@ static void ChartTimeframeRefresh(InteractiveChart *state);
 static void ChartRefresh(InteractiveChart *state)
 {
     if (state == NULL || state->context == NULL) return;
+    /* Keep the panel storage alive while label notifications call host code.
+     * A detached panel is checked again before publishing the range result. */
+    GtkWidget *refresh_root = g_object_ref(state->root);
     UmiChartRenderScene *scene = NULL;
     UmiTradingChartSceneInfo info = {0};
     UmiStatus status = UmiTradingChartBuildScene(state->context->workspace, &info, &scene);
     if (status == UMI_STATUS_OK || status == UMI_STATUS_NOT_FOUND) {
+        ChartRangeBeforeRefresh(state, &info);
         if (strcmp(state->info.instrument_id, info.instrument_id) != 0) {
             ChartFinishMove(state);
             state->have_first = 0;
@@ -171,6 +194,7 @@ static void ChartRefresh(InteractiveChart *state)
         umi_chart_render_scene_destroy(state->scene);
         state->scene = scene;
         state->info = info;
+        ChartCaptureCandleInspection(state);
         char text[192];
 /* The chart status separates retained provider bars from the displayed aggregate candles and names the active interval. The previous implementation remains for engineering review. */
 #if 0
@@ -184,6 +208,7 @@ static void ChartRefresh(InteractiveChart *state)
         gtk_label_set_text(GTK_LABEL(state->status), text);
         ChartObjectsRefresh(state);
     } else {
+        ChartRangeClear(state);
         /* Never allow a gesture to use an older price mapping after a failure. */
         ChartFinishMove(state);
         umi_chart_render_scene_destroy(state->scene); state->scene = NULL;
@@ -193,6 +218,9 @@ static void ChartRefresh(InteractiveChart *state)
     ChartTimeframeRefresh(state);
     ChartHistoryRefresh(state);
     gtk_widget_queue_draw(state->area);
+    ChartRefreshCandleInspection(state);
+    if (ChartAttached(state)) ChartRangePublish(state);
+    g_object_unref(refresh_root);
 }
 static gboolean ChartTick(gpointer data)
 { ChartRefresh(data); return G_SOURCE_CONTINUE; }
@@ -265,6 +293,7 @@ static void ChartDraw(GtkDrawingArea *area, cairo_t *cr, int width, int height, 
     UmiChartRenderer renderer;
     if (umi_chart_cairo_renderer_init(&context, cr, &renderer) == UMI_STATUS_OK)
         (void)umi_chart_renderer_render_scene(&renderer, state->scene, width, height);
+    ChartRangeDraw(state, cr, width, height);
     if (!state->have_pointer) return;
     UmiChartPoint point;
     if (UmiChartPlotUnmap(&state->info.price, state->pointer_x, state->pointer_y, &point) != UMI_STATUS_OK) return;
@@ -386,6 +415,7 @@ static void ChartMotion(GtkEventControllerMotion *controller, double x, double y
     state->pointer_y = y * UMI_TRADING_CHART_HEIGHT / height;
     state->have_pointer = 1;
     gtk_widget_queue_draw(state->area);
+    ChartRefreshCandleInspection(state);
 }
 static void ChartAreaLeave(GtkEventControllerMotion *controller, gpointer root)
 {
@@ -393,6 +423,7 @@ static void ChartAreaLeave(GtkEventControllerMotion *controller, gpointer root)
     InteractiveChart *state = ChartState(root);
     if (!ChartAttached(state)) return;
     state->have_pointer = 0; gtk_widget_queue_draw(state->area);
+    ChartRefreshCandleInspection(state);
 }
 /* Native tool gestures now compose the shared six-tool model and guarded anchor edits. The original chart-ticket dispatch remains exclusive to Buy/Sell tools, preventing drawing tools from being interpreted as orders. The previous implementation remains for engineering review. */
 #if 0
@@ -470,6 +501,7 @@ static void ChartToolChanged(GtkToggleButton *button,gpointer root)
     InteractiveChart *state=ChartState(root);if(!ChartAttached(state))return;
     int tool=GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button),"chart-tool"));
     if(tool<0||tool>=9)return;
+    ChartRangeCancelPending(state);
     state->tool=tool;state->have_first=0;state->edit_id[0]='\0';
     static const char *messages[]={
         "Drag to pan; use the wheel or +/- buttons to zoom.",
@@ -497,6 +529,8 @@ static void ChartClick(GtkGestureClick *gesture,int presses,double x,double y,gp
         /* The existing ticket flow may replace the panel during dispatch. */
         (void)UmiTradingUiControllerPrepareChartLimit(controller,instrument,side,point.value);return;
     }
+    /* Measurement consumes this gesture before any drawing or order mutation. */
+    if (state->tool == 9) { ChartRangeClick(state, point.time_ms); return; }
     UmiChartDrawingKind kind=ChartToolKind(state->tool);
     const char *tool=UmiChartDrawingKindName(kind);if(tool==NULL)return;
     int twoPoints=kind!=UMI_CHART_DRAWING_SUPPORT&&kind!=UMI_CHART_DRAWING_RESISTANCE;
@@ -555,6 +589,9 @@ static gboolean ChartKey(GtkEventControllerKey *controller, guint key, guint cod
         if (lower == GDK_KEY_z || (lower == GDK_KEY_y && (mods & GDK_SHIFT_MASK) == 0U)) {
             ChartHistoryAction(state, lower == GDK_KEY_y || (mods & GDK_SHIFT_MASK) != 0U); return TRUE;
         }
+    }
+    if (key == GDK_KEY_Escape && state->range_pending) {
+        ChartRangeClear(state); gtk_widget_queue_draw(state->area); ChartRangePublish(state); return TRUE;
     }
     if (key == GDK_KEY_Escape) ChartFinishMove(state);
     if (key == GDK_KEY_Escape) { state->have_first = 0; ChartMessage(state, "Unfinished drawing cancelled."); gtk_widget_queue_draw(state->area); return TRUE; }
@@ -902,6 +939,7 @@ GtkWidget *UmiGtk4TradingInteractiveChartCreate(UmiGtk4TradingPanelContext *cont
         g_object_set_data(G_OBJECT(button), "chart-action", GINT_TO_POINTER(i + 1));
     }
     ChartTimeframeCreate(state, top);
+    ChartCreateCandleInspection(state);
 /* The selector now exposes the shared candle studies without changing earlier choice indices.
  * The previous implementation is retained for engineering review. */
 #if 0
@@ -1068,6 +1106,9 @@ GtkWidget *UmiGtk4TradingInteractiveChartCreate(UmiGtk4TradingPanelContext *cont
         g_object_set_data(G_OBJECT(button), "chart-action", GINT_TO_POINTER(i + 1));
     }
     ChartTimeframeCreate(state, top);
+    /* Compose the inspector in the active constructor as well as the retained
+     * historical constructor. Its label follows the same copied chart evidence. */
+    ChartCreateCandleInspection(state);
 /* The selector now exposes the shared candle studies without changing earlier choice indices.
  * The previous implementation is retained for engineering review. */
 #if 0
@@ -1206,6 +1247,7 @@ GtkWidget *UmiGtk4TradingInteractiveChartCreate(UmiGtk4TradingPanelContext *cont
     g_signal_connect_object(state->studies, "notify::selected", G_CALLBACK(ChartStudyChanged), G_OBJECT(root), 0);
     g_signal_connect_object(state->period, "value-changed", G_CALLBACK(ChartPeriodChanged), G_OBJECT(root), 0);
     ChartComposeInspector(state, body);
+    ChartRangeCreate(state, body, rail);
     const char *marks[] = {"+", "/", "S", "R", "BL", "SL", "[]", "LQ", "->"};
     const char *names[] = {"Cursor", "Trend line", "Support", "Resistance", "Buy limit draft",
         "Sell limit draft", "Range", "Liquidity annotation", "Ray"};
@@ -1240,5 +1282,6 @@ void UmiGtk4TradingInteractiveChartDetach(GtkWidget *chart)
     if (state->timer != 0U) g_source_remove(state->timer);
     state->timer = 0U; state->context = NULL; state->persistence = NULL;
     state->preview_id = 0U; state->have_first = 0;
+    ChartRangeClear(state);
     gtk_widget_set_sensitive(chart, FALSE);
 }

@@ -12,6 +12,7 @@
  * Reusable presentation belongs in Framework; application modules stay thin. */
 #include "education_workspace_private.h"
 #include "education_study_private.h"
+#include "umicom/ui/gtk4/education_inspection.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
@@ -30,11 +31,23 @@ static GtkEntry *Entry(GtkWidget *box,const char *label,const char *initial,cons
     gtk_box_append(GTK_BOX(box),Label(label));GtkWidget *entry=gtk_entry_new();
     gtk_editable_set_text(GTK_EDITABLE(entry),initial);Tag(entry,tag);gtk_box_append(GTK_BOX(box),entry);return GTK_ENTRY(entry);
 }
+/* Return the already-created control so asynchronous actions can expose their
+ * pending state. Other lesson actions keep the same callback and ownership. The
+ * preceding helper is retained for review of the original panel composition. */
+#if 0
 static void Button(GtkWidget *box,const char *label,const char *action,UmiEducationGtkPanel *panel)
 {
     GtkWidget *button=gtk_button_new_with_label(label);char *tag=g_strdup_printf("education.%s",action);
     Tag(button,tag);g_free(tag);g_object_set_data_full(G_OBJECT(button),"education-action",g_strdup(action),g_free);
     g_signal_connect(button,"clicked",G_CALLBACK(EwGtkAction),panel);gtk_box_append(GTK_BOX(box),button);
+}
+#endif
+static GtkWidget *Button(GtkWidget *box,const char *label,const char *action,UmiEducationGtkPanel *panel)
+{
+    GtkWidget *button=gtk_button_new_with_label(label);char *tag=g_strdup_printf("education.%s",action);
+    Tag(button,tag);g_free(tag);g_object_set_data_full(G_OBJECT(button),"education-action",g_strdup(action),g_free);
+    g_signal_connect(button,"clicked",G_CALLBACK(EwGtkAction),panel);gtk_box_append(GTK_BOX(box),button);
+    return button;
 }
 void EwGtkMessage(UmiEducationGtkPanel *p,const char *message){gtk_label_set_text(p->status,message);}
 void EwGtkStatus(UmiEducationGtkPanel *p,UmiStatus status,const char *success)
@@ -147,7 +160,13 @@ UmiEducationGtkPanel *UmiEducationGtkCreate(void)
     gtk_widget_set_size_request(view,-1,130);p->note=gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));gtk_box_append(GTK_BOX(p->root),view);
     Button(p->root,"Save learning note","save-note",p);Button(p->root,"Discard note edits","discard-note",p);
     p->projectPath=Entry(p->root,"New project directory (absolute path; must not exist)","","education.project-path");
+    EwGtkProjectDestinationControls(p);
+    /* Keep the original action for comparison; the returned control now shows
+     * when the copied export request is still writing its new folder. */
+#if 0
     Button(p->root,"Export this course project","export-project",p);
+#endif
+    p->exportProjectButton=Button(p->root,"Export this course project","export-project",p);
     p->openProjectButton=gtk_button_new_with_label("Open last exported project in the IDE");
     Tag(p->openProjectButton,"education.open-project");
     g_object_set_data_full(G_OBJECT(p->openProjectButton),"education-action",g_strdup("open-project"),g_free);
@@ -163,6 +182,12 @@ UmiEducationGtkPanel *UmiEducationGtkCreate(void)
     p->status=GTK_LABEL(Label("No learning record has been opened. No compiler or student program runs inside this panel."));Tag(GTK_WIDGET(p->status),"education.status");gtk_box_append(GTK_BOX(p->root),GTK_WIDGET(p->status));
     /* Append the shared study projection; retain all existing learner controls. */
     EwGtkStudyAppend(p);
+    /* The inspector is independent of saved learner progress. Sharing this
+     * widget gives Studio and standalone education the same bounded readers. */
+    GtkWidget *inspectionSection = gtk_expander_new("Inspect a teaching trace");
+    p->inspection = UmiEducationInspectionGtkCreate();
+    gtk_expander_set_child(GTK_EXPANDER(inspectionSection), p->inspection);
+    gtk_box_append(GTK_BOX(p->root), inspectionSection);
     g_signal_connect(p->lessonSelect,"notify::selected",G_CALLBACK(LessonChanged),p);
     g_signal_connect(p->note,"changed",G_CALLBACK(NoteChanged),p);EwGtkRefresh(p,true);return p;
 }
@@ -266,6 +291,7 @@ void UmiEducationGtkDestroy(UmiEducationGtkPanel *p)
 {
     if(p==NULL || p->closed)return;
     p->closed=true;
+    UmiEducationInspectionGtkRetire(p->inspection);
     if(p->storageChooserCancel!=NULL)g_cancellable_cancel(p->storageChooserCancel);
     GObject *window=g_weak_ref_get(&p->guardedWindow);
     if(window!=NULL){if(p->closeHandler!=0U)g_signal_handler_disconnect(window,p->closeHandler);g_object_unref(window);}

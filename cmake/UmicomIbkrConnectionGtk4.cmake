@@ -24,6 +24,10 @@ else()
     # frontend is disabled; otherwise its existing UI library owns these symbols.
     target_sources(umicom_ibkr_connection_gtk4 PRIVATE
         "${_ibkr_gtk_root}/adapters/gtk4/widget_lookup_gtk4.c")
+    # The small chooser has no full-workstation dependency. Standalone broker
+    # inspectors keep the same Browse workflow when the shared UI is disabled.
+    target_sources(umicom_ibkr_connection_gtk4 PRIVATE
+        "${_ibkr_gtk_root}/adapters/gtk4/path_picker_gtk4.c")
 endif()
 umicom_ibkr_target(umicom_ibkr_connection_gtk4)
 install(TARGETS umicom_ibkr_connection_gtk4 EXPORT UmicomFrameworkTargets
@@ -344,4 +348,65 @@ if(BUILD_TESTING)
         set_tests_properties(framework.ibkr_connection.gtk_${case} PROPERTIES
             SKIP_RETURN_CODE 77 TIMEOUT 20 LABELS "framework;broker;gtk4;ownership;regression")
     endforeach()
+endif()
+
+# This fixture formats actual retained-bar coverage with deterministic readers.
+if(BUILD_TESTING)
+    add_executable(umicom-bar-coverage-native-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ibkr_connection/test_bar_coverage_native.c")
+    target_link_libraries(umicom-bar-coverage-native-test PRIVATE Umicom::ibkr_connection PkgConfig::IBKR_GTK4)
+    umicom_ibkr_target(umicom-bar-coverage-native-test)
+    add_test(NAME framework.ibkr_bar_coverage.native_summary COMMAND umicom-bar-coverage-native-test)
+    set_tests_properties(framework.ibkr_bar_coverage.native_summary PROPERTIES
+        TIMEOUT 20 LABELS "framework;broker;chart;regression")
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-bar-coverage-native-test)
+    endif()
+endif()
+
+# Format actual decoded observations without launching a GTK window.
+if(BUILD_TESTING AND TARGET Umicom::ibkr_historical_chart)
+    add_executable(umicom-bar-range-native-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ibkr_connection/test_bar_range_native.c")
+    target_include_directories(umicom-bar-range-native-test PRIVATE
+        "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection")
+    target_link_libraries(umicom-bar-range-native-test PRIVATE
+        Umicom::ibkr_historical_chart PkgConfig::IBKR_GTK4)
+    umicom_ibkr_target(umicom-bar-range-native-test)
+    foreach(case values missing stale precision zero-open zero-volume)
+        add_test(NAME framework.ibkr_bar_range.native.${case}
+            COMMAND umicom-bar-range-native-test ${case})
+        set_tests_properties(framework.ibkr_bar_range.native.${case} PROPERTIES
+            TIMEOUT 20 LABELS "framework;broker;chart;measurements;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-bar-range-native-test)
+    endif()
+endif()
+
+# Importing a chosen local JSON file does not extend the broker endpoint allowlist.
+if(TARGET Umicom::ibkr_rule_report)
+    target_sources(umicom_ibkr_connection_gtk4 PRIVATE
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/ibkr_rule_report_gtk4.c")
+    target_link_libraries(umicom_ibkr_connection_gtk4 PRIVATE Umicom::ibkr_rule_report)
+    target_compile_definitions(umicom_ibkr_connection_gtk4 PRIVATE UMI_IBKR_HAS_RULE_REPORT=1)
+    install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/broker_connectivity/rule_report_gtk4.h"
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/broker_connectivity COMPONENT Framework)
+    if(BUILD_TESTING)
+        add_executable(umicom-ibkr-rule-report-native-test
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/ibkr_connection/test_rule_report_native.c")
+        target_link_libraries(umicom-ibkr-rule-report-native-test PRIVATE
+            Umicom::ibkr_connection_gtk4 Umicom::ibkr_rule_report)
+        umicom_ibkr_target(umicom-ibkr-rule-report-native-test)
+        foreach(case fields invalid-expectation import clear invalid-file path-change
+            mismatch retained close-loading reentrant close-notify policy-integration)
+            add_test(NAME framework.ibkr_rule_report.gtk4.${case}
+                COMMAND umicom-ibkr-rule-report-native-test ${case})
+            set_tests_properties(framework.ibkr_rule_report.gtk4.${case} PROPERTIES
+                TIMEOUT 20 SKIP_RETURN_CODE 77 LABELS "framework;broker;metadata;gtk4;ownership;regression")
+        endforeach()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-ibkr-rule-report-native-test)
+        endif()
+    endif()
 endif()

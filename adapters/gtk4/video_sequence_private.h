@@ -1,0 +1,33 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/video_sequence_private.h
+ * PURPOSE: Separate worker job ownership from GTK video editing state.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+
+#ifndef UMICOM_VIDEO_SEQUENCE_GTK_PRIVATE_H
+#define UMICOM_VIDEO_SEQUENCE_GTK_PRIVATE_H
+#include "umicom/creative_workspace/video_render.h"
+#include "umicom/ui/gtk4/path_picker.h"
+#include "umicom/ui/gtk4/video_sequence.h"
+typedef struct UmiVideoSequencePanel {
+  UmiVideoSequenceEditor *editor;
+  UmiVideoSequence saved; /* Last successfully saved/opened recipe, or initial empty state. */
+  GtkWidget *root, *form, *status, *summary, *selector, *title, *width, *height;
+  GtkWidget *id, *path, *begin, *end, *split, *rightId, *position;
+  GtkWidget *projectPath, *approval, *program, *output, *cancelButton, *video;
+  GtkWidget *soundtrackVideo, *soundtrackAudio, *soundtrackOutput;
+  GtkWidget *captionVideo, *captionSource, *captionOutput;
+  GtkMediaStream *stream;
+  UmiCancellationToken *cancel; /* Borrowed from the accepted job until completion. */
+  uint32_t previewBegin, previewEnd;
+  bool closed, busy, dirty, refreshing, changing, waitingForSeek, prepared;
+} UmiVideoSequencePanel;
+UmiVideoSequencePanel *UmiVideoSequenceGtkState(GtkWidget *root);
+void UmiVideoSequenceGtkRefresh(UmiVideoSequencePanel *panel);
+void UmiVideoSequenceGtkMessage(UmiVideoSequencePanel *panel, const char *message);
+void UmiVideoSequenceGtkJob(GtkButton *button, gpointer root);
+void UmiVideoSequenceGtkPreview(GtkButton *button, gpointer root);
+void UmiVideoSequenceGtkStopPreview(UmiVideoSequencePanel *panel);
+#endif

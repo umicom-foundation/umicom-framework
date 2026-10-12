@@ -1,0 +1,52 @@
+<!doctype html>
+<!-- Umicom Framework | Sammy Hegab, Umicom Foundation | MIT -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Measure chart candles</title>
+<style>body{font-family:system-ui,sans-serif;max-width:960px;margin:3rem auto;padding:0 1.2rem;line-height:1.65;color:#182c3b}h1,h2{line-height:1.2}table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:.7rem;border:1px solid #b5c7d3}code{background:#edf3f6;padding:.1rem .25rem}.note{border-left:4px solid #2373a3;padding:1rem;background:#edf6fb}</style>
+</head><body><h1>Measure chart candles</h1>
+<p>A candle summarises observed prices and volume for an interval. Umicom's shared trading chart can capture a group of candles and show its opening price, closing price, highest and lowest price, change, volume and elapsed opening time. Trader uses this Framework workflow without a separate calculation engine.</p>
+<p class="note">A measurement is a local snapshot. It does not request more market data, create a drawing, change an order ticket or place a trade. The chart can contain simulation data or observations supplied by its host; measuring it does not authenticate an account or establish a live feed.</p>
+<h2>Measure with the mouse</h2><ol>
+<li>Open a Chart panel and select the instrument and timeframe. Wait until candles are visible. Zoom or pan to the interval you want to inspect.</li>
+<li>Choose <strong>M — Measure candles</strong> on the drawing rail. Hover over the button to read its full name.</li>
+<li>Click inside the price chart near the starting candle. The chart copies the visible candle data and opens <strong>Candle measurement</strong>.</li>
+<li>Click near the ending candle. The nearest observed opening time is selected at each endpoint; an exact tie chooses the earlier candle. The interval includes both endpoint candles and is measured chronologically even if you click right to left.</li>
+<li>Read the captured result. A shaded interval marks its time range. A third click begins a new measurement. Use <strong>Clear measurement</strong> to discard the captured result.</li>
+</ol>
+<p><strong>Escape</strong> cancels an unfinished measurement. Changing instrument or timeframe clears the measurement. Pan, zoom or an automatic price-scale change cancels an unfinished two-click gesture, because its chart projection changed. A completed result stays captured through ordinary market updates and navigation; it is not recalculated in the background.</p>
+<h2>Measure without precise pointer placement</h2><ol>
+<li>Expand <strong>Candle measurement</strong>.</li><li>Choose <strong>Measure visible</strong> to capture all currently visible candles.</li>
+<li>For a smaller group, enter the first and last visible candle numbers and choose <strong>Measure rows</strong>. Number 1 is the leftmost visible candle. Reversed endpoints are accepted.</li>
+<li>If a number lies outside the current window, select an available number and try again. Numbers refer to the current visible window, so review them after navigation.</li></ol>
+<h2>Understand the result</h2><table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody>
+<tr><td>Open and close</td><td>First selected candle's opening price and last selected candle's closing price.</td></tr>
+<tr><td>Change</td><td>Close minus open, in the instrument's price units. It does not include commissions, currency conversion or a position's quantity.</td></tr>
+<tr><td>Percent</td><td>Change divided by the opening price, multiplied by 100. Unavailable for zero or negative opening prices, or when the percentage cannot be represented.</td></tr>
+<tr><td>High, low and price range</td><td>Highest high, lowest low, and their difference across the selected candles.</td></tr>
+<tr><td>Volume</td><td>Sum of reported candle volume in the provider's units. It is not cash turnover, order-book liquidity or a promise that an order can fill.</td></tr>
+<tr><td>Opening-time span</td><td>Last opening time minus first opening time. A single candle has a zero span; the final candle's duration is not included.</td></tr>
+<tr><td>Largest opening-time step</td><td>Largest gap between consecutive selected opening times. Market sessions and sparse observations can create gaps; this value does not establish a data outage.</td></tr>
+<tr><td>Rising, falling, unchanged</td><td>Candle counts comparing each candle's own close with its open.</td></tr>
+</tbody></table>
+<p>For example, three candles opening at 10:00, 10:01 and 10:07 have a seven-minute opening-time span and a six-minute largest step. If the first open is 100 and the last close is 101, the change is 1 and the percentage is 1%. No candles are invented for the gap.</p>
+<h2>Copy the evidence</h2><ol><li>Complete a measurement and choose <strong>Copy CSV</strong>. Copying is explicit because other applications may be able to read the system clipboard.</li><li>Paste into a plain-text editor and save a CSV file in a folder you choose, or import into a spreadsheet using comma-separated, quoted fields.</li><li>Keep the summary and candle rows together. Every row repeats the instrument, chart interval and monotonic capture time. Interval 0 means the source timeframe; monotonic capture time is not a calendar date.</li></ol>
+<p>The CSV uses a dot decimal separator, quotes text, and escapes potentially executable spreadsheet text. Numeric values are chart floating-point observations, not the broker's original exact-decimal report. Missing percentages are blank. The document contains one header, one summary and the selected candle rows.</p>
+<h2>Recover from an unavailable result</h2><ul>
+<li>Wait for retained candles when the chart is empty. Clicking the volume pane or outside the price plot does not choose an endpoint.</li>
+<li>If an unfinished selection disappears, the projection, instrument or timeframe changed. Choose the starting candle again.</li>
+<li>Refresh or correct the source when timestamps are duplicated or out of order, OHLC values are invalid, or a numeric total exceeds the supported range. The calculator rejects such evidence instead of silently repairing it.</li>
+<li>Capture again to include new prices. Measurements are temporary and are not saved by <strong>Save chart</strong>; copy the report before closing the panel.</li>
+</ul>
+<h2>Measure the visible Interactive Brokers bars</h2>
+<ol><li>Open the Interactive Brokers connection window and connect through your configured TWS or IB Gateway session.</li>
+<li>Open <strong>Historical candlestick chart</strong> or the five-second streaming chart. Request observations for the resolved contract and route using the existing controls.</li>
+<li>Adjust the visible-bar count and offset. Read <strong>Visible-bar measurement</strong> in the summary. It describes precisely that selected range, rather than all retained rows.</li>
+<li>Compare open, close, high, low, price change and candle direction counts. A volume total appears only when every selected bar has a usable value. A genuine reported zero remains zero.</li>
+<li>Check the capture status and contract beside the result. The summary updates as the visible range or retained stream changes. Use the existing broker report export when you need the original reported decimal values.</li></ol>
+<p>These broker summaries require a fresh observation according to the connection panel's age limit; a historical response must also be complete. Stale, cancelled or disconnected observations do not receive a new measurement. Response freshness does not establish current market activity, and a complete response can include a final candle that is still forming.</p>
+<p>The broker summary uses floating-point display values. Unrepresentable price decimals leave it unavailable; missing or unrepresentable volume leaves the total unavailable while valid price measurements remain visible. It cannot replace exact-decimal order calculations. The two-click measurement and its Copy CSV action belong to the separate workspace Chart panel.</p>
+
+<p>Contributors can use <code>UmiIbkrHistoricalRangeMeasure</code> or <code>UmiIbkrRealtimeRangeMeasure</code> from <code>umicom/broker_connectivity/bar_range.h</code>, linked through <code>Umicom::ibkr_historical_chart</code>. Call on the connection's owner thread, supply the freshness limit, and check status before publishing the copied result. Keep its contract, request and observation time alongside the measurements. The optional chart module owns this integration; the transport can still be built without chart presentation.</p>
+<h2>Extend the shared implementation</h2><p><code>UmiChartCandleRangeAnalyze</code> validates and measures a bounded array. <code>UmiChartRangeCapture</code> owns the evidence between gestures, and <code>UmiChartRangeReportCsv</code> creates a separate owned report. A future web or mobile host can use the same APIs, supply instrument and timeframe identity, and serialize calls on its model-owning thread. Release captures and reports when they are no longer needed.</p>
+<p>The portable limit is 4,096 candles; the current trading workspace retains up to 256 source bars per instrument. Aggregated edge candles can be incomplete. The workflow does not fetch additional history or infer missing observations.</p>
+</body></html>

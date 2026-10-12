@@ -7,6 +7,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/captions.h"
+#include "umicom/ui/gtk4/path_picker.h"
 #include <string.h>
 #define CAPTION_PANEL_KEY "umicom-caption-panel"
 typedef struct CaptionPanel
@@ -16,6 +17,10 @@ typedef struct CaptionPanel
     UmiCaptionTrack *track, *previous;
     UmiCancellationToken *pending;
     bool busy, painting;
+    /* Cue forms are drafts. A prepared-document change retires their loaded identity. */
+    GtkWidget *rowNumber, *rowBegin, *rowEnd, *rowText, *rowSecondText, *rowSplit;
+    size_t loadedRow;
+    bool rowLoaded, rowLoading;
 } CaptionPanel;
 typedef struct CaptionJob
 {
@@ -77,6 +82,7 @@ static char *Source(CaptionPanel *panel)
  * must not be used to export a newer, unvalidated draft. */
 static void Invalidate(CaptionPanel *panel)
 {
+    panel->rowLoaded = false;
     UmiCaptionTrackDestroy(panel->track);
     UmiCaptionTrackDestroy(panel->previous);
     panel->track = panel->previous = NULL;
@@ -172,6 +178,7 @@ static UmiStatus Publish(CaptionPanel *panel, UmiCaptionTrack **next)
         panel->previous = panel->track;
         panel->track = *next;
         *next = NULL;
+        panel->rowLoaded = false;
         panel->painting = true;
         Display(panel->editor, text);
         gtk_check_button_set_active(GTK_CHECK_BUTTON(panel->approval), FALSE);
@@ -301,6 +308,8 @@ static void Start(CaptionPanel *panel, bool opening, UmiCaptionFormat format)
 }
 /* Buttons call shared operations; no timing, provider or file policy is copied
  * into Media or Music. New frontends can use the same immutable track API. */
+#include "captions_rows_gtk4.inc"
+
 static void Action(GtkButton *button, gpointer root)
 {
     CaptionPanel *panel = Panel(root);
@@ -315,6 +324,13 @@ static void Action(GtkButton *button, gpointer root)
     }
     if (panel->busy || panel->painting)
         return;
+    /* A row operation uses the same prepared owner and publication path as
+     * shift/clip. Ignore reentrant actions while filling the row draft. */
+    if (panel->rowLoading) return;
+    if (g_str_has_prefix(action, "row-")) {
+        EditRow(panel, action);
+        return;
+    }
     if (!strcmp(action, "open"))
     {
         Start(panel, true, UMI_CAPTION_SRT);
@@ -419,6 +435,43 @@ static GtkWidget *View(GtkWidget *box, const char *id, bool editable)
     gtk_box_append(GTK_BOX(box), scroll);
     return view;
 }
+/* The form keeps numbering one-based for readers while the shared API stays
+ * zero-based. Loading is explicit, so typing never mutates the prepared track. */
+static void BuildRowForm(CaptionPanel *panel)
+{
+    GtkWidget *expander = gtk_expander_new("Edit an individual caption");
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+    gtk_expander_set_child(GTK_EXPANDER(expander), box);
+    gtk_box_append(GTK_BOX(panel->form), expander);
+    Label(box, "Prepare captions first. Choose a row, then load it before replacing, removing, splitting or merging.");
+    panel->rowNumber = gtk_spin_button_new_with_range(1, UMI_CAPTION_CUE_LIMIT + 1U, 1);
+    Tag(panel->rowNumber, "captions.row-number");
+    Label(box, "Caption number (count + 1 inserts at the end)");
+    gtk_box_append(GTK_BOX(box), panel->rowNumber);
+    Button(panel, box, "Load caption into form", "row-load");
+    panel->rowBegin = gtk_spin_button_new_with_range(0, UMI_CAPTION_TIME_LIMIT_MS, 1);
+    panel->rowEnd = gtk_spin_button_new_with_range(1, UMI_CAPTION_TIME_LIMIT_MS, 1);
+    Tag(panel->rowBegin, "captions.row-begin");
+    Tag(panel->rowEnd, "captions.row-end");
+    Label(box, "Begins at millisecond"); gtk_box_append(GTK_BOX(box), panel->rowBegin);
+    Label(box, "Ends at millisecond"); gtk_box_append(GTK_BOX(box), panel->rowEnd);
+    Label(box, "Plain caption text");
+    panel->rowText = View(box, "captions.row-text", true);
+    Button(panel, box, "Replace loaded caption", "row-replace");
+    Button(panel, box, "Insert before caption number", "row-insert");
+    Button(panel, box, "Remove loaded caption", "row-remove");
+    Label(box, "Split keeps the original time range. Text above belongs to the first half.");
+    panel->rowSplit = gtk_spin_button_new_with_range(0, UMI_CAPTION_TIME_LIMIT_MS, 1);
+    Tag(panel->rowSplit, "captions.row-split-time");
+    Label(box, "Split at millisecond"); gtk_box_append(GTK_BOX(box), panel->rowSplit);
+    Label(box, "Text for the second half");
+    panel->rowSecondText = View(box, "captions.row-second-text", true);
+    Button(panel, box, "Split loaded caption", "row-split");
+    Label(box, "Merge joins the loaded and following captions, including any silence between them. Unsaved form text is not used.");
+    Button(panel, box, "Merge loaded caption with next", "row-merge");
+    Label(box, "Each successful edit can be reversed using Undo / redo last prepared change. Save a new subtitle file to keep it.");
+}
+
 UmiStatus UmiCaptionsGtkCreate(GtkWidget **out)
 {
     if (!out || *out)
@@ -444,6 +497,7 @@ UmiStatus UmiCaptionsGtkCreate(GtkWidget **out)
                        "Numeric labels are renumbered; styled captions and named labels are not supported.");
     panel->editor = View(panel->form, "captions.editor", true);
     Button(panel, panel->form, "Prepare captions", "prepare");
+    BuildRowForm(panel);
     panel->offset = Spin(panel, "Shift all captions by milliseconds (negative moves earlier)",
                          "captions.offset", -(double)UMI_CAPTION_TIME_LIMIT_MS, 0);
     Button(panel, panel->form, "Apply time shift", "shift");
@@ -467,6 +521,15 @@ UmiStatus UmiCaptionsGtkCreate(GtkWidget **out)
     panel->path = gtk_entry_new();
     Tag(panel->path, "captions.path");
     gtk_box_append(GTK_BOX(panel->form), panel->path);
+    /* Native selection changes only the draft path; Open and Save retain their
+     * explicit approval, immutable input and exclusive-create behaviour. */
+    GtkWidget *openPath = UmiPathPickerGtk4Create(GTK_ENTRY(panel->path),
+        UMI_PATH_PICKER_EXISTING_FILE, "Choose a caption file to open", NULL);
+    GtkWidget *savePath = UmiPathPickerGtk4Create(GTK_ENTRY(panel->path),
+        UMI_PATH_PICKER_NEW_FILE, "Choose a new subtitle file", NULL);
+    if (openPath != NULL) gtk_box_append(GTK_BOX(panel->form), openPath);
+    if (savePath != NULL) gtk_box_append(GTK_BOX(panel->form), savePath);
+
     panel->approval = gtk_check_button_new_with_label("I saved my draft and approve replacing it");
     Tag(panel->approval, "captions.approval");
     gtk_box_append(GTK_BOX(panel->form), panel->approval);

@@ -15,6 +15,7 @@
 
 
 #include "umicom/ui/gtk4/ai_workspace.h"
+#include "umicom/ui/gtk4/text_export.h"
 #include "umicom/ai_workspace/evidence.h"
 #include <inttypes.h>
 #include <errno.h>
@@ -50,6 +51,8 @@ struct UmiAiWorkspaceGtkPanel {
     GtkTextBuffer *evidenceInspection;
     GtkWidget *importPanel; /* An owned section with independent file-worker lifetime. */
     GtkWidget *sourceLibrary; /* Owns reviewed source controls independently of borrowed services. */
+    GtkWidget *reviewExport; /* Owns displayed draft export, never model execution. */
+    GtkWidget *evidenceExport; /* Owns only export controls; writes own immutable captures. */
     bool closed;
 };
 static bool Available(UmiAiWorkspaceGtkPanel *panel) { return panel != NULL && !panel->closed && panel->worker == NULL; }
@@ -366,6 +369,7 @@ static void ProviderChanged(GObject *object, GParamSpec *parameter, gpointer dat
     gtk_editable_set_text(GTK_EDITABLE(panel->modelId), gtk_drop_down_get_selected(panel->provider) == 0U ? "extractive-preview" : "local-model");
 }
 #include "ai_workspace_import.inc"
+#include "ai_workspace_evidence_export.inc"
 #include "ai_workspace_source_library.inc"
 
 UmiStatus UmiAiWorkspaceGtkPanelCreate(UmiAiWorkspace *workspace, UmiAiRuntime *runtime,
@@ -426,6 +430,11 @@ UmiStatus UmiAiWorkspaceGtkPanelCreate(UmiAiWorkspace *workspace, UmiAiRuntime *
     panel->deny = GTK_BUTTON(Button(panel, row, "Reject selected job", "ai.job.reject", G_CALLBACK(Deny)));
     panel->run = GTK_BUTTON(Button(panel, row, "Run approved job", "ai.job.run", G_CALLBACK(Run)));
     panel->review = TextArea(drafts, "Frozen request, source references and returned draft", "ai.job.review", 230, false);
+    /* Saving this displayed review cannot submit a provider request or approve
+     * a tool action. It captures the draft and source references already shown. */
+    panel->reviewExport = UmiTextExportGtk4CreateForBuffer(panel->review, "ai-draft-review.txt");
+    g_object_ref_sink(panel->reviewExport);
+    gtk_box_append(GTK_BOX(drafts), panel->reviewExport);
     panel->history = TextArea(history, "Saved jobs — copy an ID to Load job on the Drafts page", "ai.history", 260, false);
     GtkWidget *evidencePage = Page(panel, "Evidence inspection");
     row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8); gtk_box_append(GTK_BOX(evidencePage), row);
@@ -433,6 +442,8 @@ UmiStatus UmiAiWorkspaceGtkPanelCreate(UmiAiWorkspace *workspace, UmiAiRuntime *
     panel->evidenceInspection = TextArea(evidencePage,
         "Frozen passages, current-source comparison and literal citation locations",
         "ai.evidence.report", 320, false);
+    panel->evidenceExport = AiEvidenceExportCreate(panel);
+    gtk_box_append(GTK_BOX(evidencePage), panel->evidenceExport);
     row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8); gtk_box_append(GTK_BOX(panel->forms), row);
     Button(panel, row, "Reload shared workspace", "ai.workspace.reload", G_CALLBACK(Reload));
     GtkWidget *notice = gtk_label_new("Editing the form does not change a saved job. Retrieved text and model output never authorise actions. Check the sources before using a draft.");
@@ -461,6 +472,9 @@ void UmiAiWorkspaceGtkPanelDestroy(UmiAiWorkspaceGtkPanel *panel)
     if (panel == NULL) return;
     panel->closed = true;
     g_object_set_data(G_OBJECT(panel->root), "umicom-ai-workspace-owner", NULL);
+    UmiTextExportGtk4Retire(panel->reviewExport); g_clear_object(&panel->reviewExport);
+    AiEvidenceExportRetire(panel->evidenceExport);
+    g_clear_object(&panel->evidenceExport);
     AiLibraryRetire(panel->sourceLibrary);
     g_clear_object(&panel->sourceLibrary);
     AiImportRetire(panel->importPanel);
@@ -476,4 +490,19 @@ void UmiAiWorkspaceGtkPanelDestroy(UmiAiWorkspaceGtkPanel *panel)
         g_signal_handlers_disconnect_by_data(g_ptr_array_index(panel->signalObjects, i), panel);
     g_ptr_array_unref(panel->signalObjects);
     g_object_unref(panel->root); g_free(panel);
+}
+
+/* A library switch must not race a model request or a file chooser/read. The
+ * import section owns its async work, so inspect its state on the GTK thread. */
+bool UmiAiWorkspaceGtkPanelBusy(const UmiAiWorkspaceGtkPanel *panel)
+{
+    if (panel == NULL || panel->closed) return false;
+    AiImportPanel *import = panel->importPanel != NULL ?
+        g_object_get_data(G_OBJECT(panel->importPanel), "umicom-ai-import") : NULL;
+    AiSourceLibrary *sources = panel->sourceLibrary != NULL ?
+        g_object_get_data(G_OBJECT(panel->sourceLibrary), "umicom-ai-library") : NULL;
+    /* A source-library notification can reenter the host on the GTK thread.
+     * Keep its borrowed workspace alive until that refresh or review finishes. */
+    return panel->worker != NULL || (sources != NULL && (sources->rendering || sources->refreshing)) ||
+        (import != NULL && (import->loading || import->rendering || import->chooser != NULL));
 }

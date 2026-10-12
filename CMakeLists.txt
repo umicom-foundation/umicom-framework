@@ -1868,6 +1868,10 @@ add_library(umicom_chart STATIC
     src/chart/model.c
     src/chart/indicator.c
     src/chart/candle_study.c
+    src/chart/candle_inspection.c
+    src/chart/candle_range.c
+    src/chart/range_capture.c
+    src/chart/range_report.c
     src/chart/volume_profile.c
     src/chart/snapshot.c
     src/chart/json.c
@@ -3232,6 +3236,9 @@ target_include_directories(umicom_social_engine PUBLIC
 umicom_apply_warnings(umicom_social_engine)
 umicom_apply_sanitizers(umicom_social_engine)
 
+# Educational binary inspection has the same owner in the SDK and learning CLI.
+include(cmake/UmicomEducationInspection.cmake)
+
 # The aggregate Framework target lets applications consume the complete
 # foundation with one target: Umicom::Framework.
 add_library(umicom_framework INTERFACE)
@@ -3239,6 +3246,7 @@ add_library(Umicom::Framework ALIAS umicom_framework)
 set_target_properties(umicom_framework PROPERTIES EXPORT_NAME Framework)
 target_link_libraries(umicom_framework INTERFACE
     Umicom::base
+    Umicom::education_inspection
     Umicom::diagnostics
     Umicom::messaging
     Umicom::data
@@ -5646,6 +5654,8 @@ include(cmake/UmicomRootedFileAccess.cmake)
 include(cmake/UmicomDebugAdapterPreferences.cmake)
 include(cmake/UmicomDebugSetup.cmake)
 include(cmake/UmicomCashPlanning.cmake)
+# External bank observations remain separate from local ledger postings.
+include(cmake/UmicomBankFeed.cmake)
 
 # Reversible drawing evidence stays with the canonical chart and workspace owners.
 include(cmake/UmicomDrawingHistory.cmake)
@@ -5753,3 +5763,13 @@ include(cmake/UmicomDebugInstructions.cmake)
 
 # Readiness consumers verify the archive that owns the suite lifecycle.
 include(cmake/UmicomIntegrationReadiness.cmake)
+
+# Parser and installed-consumer coverage is shared with the standalone learning tool.
+include(cmake/UmicomEducationInspectionTests.cmake)
+
+# File choosers collect paths without executing the host application action.
+include(cmake/UmicomPathPicker.cmake)
+include(cmake/UmicomTextExport.cmake)
+
+# Studio and education share the same read-only teaching trace surface.
+include(cmake/UmicomEducationInspectionGtk4.cmake)

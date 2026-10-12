@@ -11,6 +11,10 @@ target_sources(umicom_ai_workspace PRIVATE
     "${_umi_ai_evidence_root}/src/ai_workspace/evidence_selection.c"
     "${_umi_ai_evidence_root}/src/ai_workspace/evidence_review.c"
     "${_umi_ai_evidence_root}/src/ai_workspace/evidence_render.c")
+# Report files use the existing native file owner; AI retains no platform handles.
+target_sources(umicom_ai_workspace PRIVATE
+    "${_umi_ai_evidence_root}/src/ai_workspace/evidence_export.c")
+target_link_libraries(umicom_ai_workspace PUBLIC Umicom::platform)
 add_executable(umicom-ai-evidence
     "${_umi_ai_evidence_root}/examples/ai_evidence/main.c"
     "${_umi_ai_evidence_root}/examples/ai_evidence/lesson.c")

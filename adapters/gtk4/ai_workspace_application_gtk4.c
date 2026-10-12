@@ -26,7 +26,13 @@ typedef struct AiApplication {
     UmiAiWorkspaceCancellation *cancellation; UmiAiWorkspaceGtkPanel *panel;
     GtkWidget *wrapper, *original; GtkStack *pages;
     const char *applicationId; int failed;
+    /* The surface owns the replaceable library and all its borrowed services. */
+    UmiAiWorkspaceGtkSurface *surface;
 } AiApplication;
+/* The earlier eager per-user database host is retained for review. The
+ * selectable surface below owns the same providers, tools and existing layouts,
+ * but waits for an explicit library choice before opening persistent storage. */
+#if 0
 static void Release(void *data)
 {
     AiApplication *application = data;
@@ -100,6 +106,23 @@ static UmiStatus Build(GtkWindow *window, UmiApplicationProductGtk4Workstation *
     gtk_stack_add_titled(application->pages, original, "layouts", "Existing layouts");
     application->original = original; *outContent = application->wrapper;
     g_free(description); g_free(directory); g_free(path); return UMI_STATUS_OK;
+}
+#endif
+static void Release(void *data)
+{
+    AiApplication *application = data;
+    UmiAiWorkspaceGtkSurfaceDestroy(application->surface);
+    application->surface = NULL;
+}
+static UmiStatus Build(GtkWindow *window, UmiApplicationProductGtk4Workstation *workstation,
+    GtkWidget *original, void *data, GtkWidget **outContent)
+{
+    (void)window; (void)workstation;
+    AiApplication *application = data;
+    *outContent = NULL;
+    UmiStatus status = UmiAiWorkspaceGtkSurfaceCreate(original, application->applicationId, &application->surface);
+    if (status == UMI_STATUS_OK) *outContent = UmiAiWorkspaceGtkSurfaceWidget(application->surface);
+    return status;
 }
 int UmiAiWorkspaceGtkRun(const char *applicationId, const char *title, int argc, char **argv)
 {

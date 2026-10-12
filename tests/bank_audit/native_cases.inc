@@ -63,8 +63,11 @@ static int VerifyNativeAudit(const char *name)
         GdkClipboard *clipboard=gtk_widget_get_clipboard(copy);gdk_clipboard_set_text(clipboard,"before");g_signal_emit_by_name(copy,"clicked");char *text=ReportClipboard(clipboard);
         CHECK(strstr(text,"LOCAL PRACTICE") && strstr(text,strcmp(name,"audit-journals")==0?"bank-journal-6":"accepted-command") && !strstr(text,"\"later\""));g_free(text);
     }else if(strcmp(name,"audit-close")==0){
+        /* Retained report controls must be inert after the ledger owner closes. */
+        GtkWidget *reportExport = g_object_ref(ui->auditExport);
         GtkWidget *copy=g_object_ref(ui->auditCopy),*journals=g_object_ref(ui->auditJournalCopy),*entry=g_object_ref(GTK_WIDGET(ui->auditEntity));g_object_ref(capture);
         GdkClipboard *clipboard=g_object_ref(gtk_widget_get_clipboard(copy));gtk_window_destroy(GTK_WINDOW(window));CHECK(ui->closed && ui->operations==NULL && ui->auditReport==NULL);
+        CHECK(!gtk_widget_get_sensitive(reportExport)); g_object_unref(reportExport);
         gdk_clipboard_set_text(clipboard,"closed-audit-sentinel");g_signal_emit_by_name(capture,"clicked");g_signal_emit_by_name(copy,"clicked");gtk_editable_set_text(GTK_EDITABLE(entry),"retained");
         g_object_unref(window);window=NULL;g_signal_emit_by_name(capture,"clicked");g_signal_emit_by_name(journals,"clicked");
         char *text=ReportClipboard(clipboard);CHECK(strcmp(text,"closed-audit-sentinel")==0);g_free(text);

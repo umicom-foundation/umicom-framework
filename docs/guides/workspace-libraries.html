@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Choose a local workspace library</title>
+<style>body{font:18px/1.6 system-ui,sans-serif;max-width:900px;margin:3rem auto;padding:0 1.2rem;color:#152334;background:#f6f8fa}h1,h2{line-height:1.2}code{background:#e6edf2;padding:.15em .3em}aside{border-left:4px solid #2779ab;padding:1em;background:white}a{color:#12618e}</style>
+<h1>Choose a local workspace library</h1>
+<p>A library is a SQLite database file: one file that stores related work. You choose its location.
+Opening Media, Music, LLM, RAG or Creator does not create a project database in a hidden folder.</p>
+<h2>Create your first library</h2>
+<ol><li>In Media or Music, expand <strong>Project library location</strong>. In LLM, RAG or Creator, open <strong>Library location</strong>.</li>
+<li>Select <strong>Choose new location...</strong>. Choose an existing folder you can write to and a new filename such as <code>creative-work.sqlite3</code> or <code>research.sqlite3</code>. You can also type the full path.</li>
+<li>Select <strong>Create new</strong>. The active path appears when the database and workspace open successfully.</li>
+<li>For Media or Music, use the Project tab to create a Project ID. Choose <strong>Load starter into empty project</strong> to edit an example. Accepted project edits are saved to that library.</li>
+<li>For the AI applications, save a collection, add or import source passages, and prepare a job for review. A library choice alone does not contact a model.</li></ol>
+<h2>Reopen saved work</h2>
+<ol><li>Select <strong>Browse existing...</strong> and choose your database.</li>
+<li>Select <strong>Open existing</strong>. This action reports a missing file instead of creating a blank replacement.</li>
+<li>In Media or Music, enter the saved Project ID and select <strong>Open project by ID</strong>. The scene, motion and notes reopen. Undo history starts with the new session.</li>
+<li>In the AI applications, the saved collections, passages and job history become available. LLM, RAG and Creator can open the same AI library.</li></ol>
+<aside>Project libraries and AI libraries serve different purposes. A Media project library stores scenes, motion and notes. Asset-library files, audio arrangements, captions and provider settings keep their existing separate save workflows. Choosing a project library does not move those files or API credentials. Database contents are local and unencrypted.</aside>
+<h2>Change libraries during a session</h2>
+<p>Choose another path, then confirm closing the current forms and undo history. Unsaved form text is not transferred.
+Saved records remain in their original library. The application opens the candidate first: if it fails, the current workspace remains available.
+Finish or cancel a model request or document import before switching an AI library.</p>
+<p>Opening the active path again leaves the current workspace and form text unchanged. Use the existing reload action when you deliberately want to read newer saved records.</p>
+<h2>Existing installations</h2>
+<p>An existing default database may appear in the path field so you can open it deliberately.
+The <code>UMICOM_AI_WORKSPACE_DB</code> and <code>UMICOM_CREATIVE_WORKSPACE_DB</code> environment variables prefill a location;
+they do not automatically open or create a database. No existing database is moved or deleted.</p>
+<h2>If a library does not open</h2>
+<ul><li><strong>File already exists:</strong> use Open existing, or choose a different filename. Create never overwrites a database.</li>
+<li><strong>File or folder missing:</strong> check the absolute path. Parent folders are not created automatically.</li>
+<li><strong>Access denied:</strong> choose a writable local folder. Close another tool that may hold an exclusive lock.</li>
+<li><strong>SQLite unavailable:</strong> the application needs the Framework SQLite adapter enabled in its build.</li>
+<li><strong>Create failed after reserving a file:</strong> a newly created file may remain for inspection. Correct the reported configuration or permission issue, then try Open existing. Do not delete a file containing saved work.</li>
+<li><strong>Invalid or damaged database:</strong> keep the original for diagnosis. Opening another known library does not repair it.</li></ul>
+<p>Close the applications before copying a database for backup. Copy any SQLite sidecar files with it if they remain.
+Do not replace, rename or edit a database while an application is using it. For a library shared by several applications, explicitly reload after another writer changes its records.</p>
+<h2>Remember and reopen library locations</h2>
+<ol><li>After a library opens successfully, its path is added to <strong>Recent libraries on this computer</strong>. The history message reports whether that preference was saved.</li>
+<li>On the next launch, choose a recent path and select <strong>Use selected</strong>. This fills the path field without opening a database.</li>
+<li>Check the path, then select <strong>Open existing</strong>. A remembered path can still be missing, moved or inaccessible.</li>
+<li>Use <strong>Forget selected</strong> or <strong>Clear recent list</strong> to remove location records. Neither action deletes projects, changes the current library, nor signs out of a provider.</li></ol>
+<p>The list stores up to twelve recent locations for each application profile. Its full preferences filename is shown below the controls. Only that small metadata file normally lives in your user configuration directory; the project database stays where you chose. Paths are plaintext and may reveal folder or project names. Passwords and API keys are not included.</p>
+<p>For a portable setup, set <code>UMICOM_LIBRARY_HISTORY_FILE</code> to an absolute preferences filename before launching an application. Use separate files for separate profiles unless you want them to share the same list. Reading a missing preferences file creates nothing. A successful open or an explicit history edit may create its preferences folder. It never creates the parent folder of your project database.</p>
+<p>If saving the recent list fails, your open library remains usable. Check the displayed preferences path and its permissions, then select <strong>Remember current</strong> to retry. Damaged preferences are reported and preserved. Close applications using that file, keep a copy for inspection, and choose a new preferences filename to start a fresh list. Concurrent applications can replace each other's latest history changes; this convenience list is not a backup or a database lock.</p>
+<h2>Keep a report outside the library</h2><p>Creative project summaries and AI draft reviews offer <strong>Save displayed text</strong>. This writes a separate report to a location you choose; it does not copy or change the library database. See <a href="saving-displayed-reports.html">saving displayed reports</a>.</p>
+</html>

@@ -1,4 +1,11 @@
 /*-----------------------------------------------------------------------------
+ *
+ * File: tests/vm_manager/test_kernel_disk_plan.c
+ *
+ * PURPOSE: Check scratch-disk argument policies and refusal without changing caller data.
+ *
+ * LICENCE: MIT
+ *
  * Umicom Framework - native C23 Kernel scratch-disk QEMU policy regression.
  * Author: Sammy Hegab, Umicom Foundation. Licence: MIT.
  *

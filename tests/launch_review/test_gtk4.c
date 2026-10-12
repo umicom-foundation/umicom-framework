@@ -168,6 +168,28 @@ static void Drain(Fixture *f)
         g_usleep(1000U);
     }
 }
+/* Inspect the live controller during notifications rather than relying on
+ * filesystem timing. The worker receives its captured inputs before dispatch. */
+static void InspectNotify(GObject *object, GParamSpec *property, gpointer context)
+{
+    (void)object;
+    (void)property;
+    Fixture *f = context;
+    ++f->notifications;
+    if (strcmp(f->mode, "inspect-edit") == 0 && f->notifications == 1U)
+        gtk_editable_set_text(GTK_EDITABLE(f->entry), "changed/program");
+    else if (strcmp(f->mode, "inspect-destroy") == 0)
+        Dispose(f);
+    else if (strcmp(f->mode, "inspect-hide") == 0)
+        gtk_widget_set_visible(GTK_WIDGET(f->dialog->window), FALSE);
+    else if (strcmp(f->mode, "inspect-reentry") == 0)
+    {
+        GtkWidget *inspect = FindControl(GTK_WIDGET(f->dialog->window), "developer.launch.inspect");
+        g_signal_emit_by_name(inspect, "clicked");
+        g_signal_emit_by_name(f->accept, "clicked");
+        g_signal_emit_by_name(f->review, "clicked");
+    }
+}
 int main(int argc, char **argv)
 {
     int failed = 0;
@@ -206,6 +228,72 @@ int main(int argc, char **argv)
         g_object_ref(*controls[i]);
     }
     CHECK(requests == 0U && f.calls == 0U);
+    if (strncmp(f.mode, "inspect-", 8U) == 0)
+    {
+        GtkWidget *inspect = FindControl(GTK_WIDGET(form), "developer.launch.inspect");
+        CHECK(inspect != NULL);
+        g_signal_connect(detail, "notify::label", G_CALLBACK(InspectNotify), &f);
+        g_signal_emit_by_name(inspect, "clicked");
+        if (strcmp(f.mode, "inspect-destroy") == 0)
+            CHECK(f.dialog == NULL);
+        else if (strcmp(f.mode, "inspect-hide") == 0)
+            CHECK(!gtk_widget_get_visible(GTK_WIDGET(form)));
+        else
+        {
+            gint64 end = g_get_monotonic_time() + 5 * G_TIME_SPAN_SECOND;
+            while (f.dialog->launchChanging && g_get_monotonic_time() < end)
+            {
+                g_main_context_iteration(NULL, FALSE);
+                g_usleep(1000U);
+            }
+            CHECK(!f.dialog->launchChanging && f.dialog->launchInspectCancel == NULL);
+            const char *message = gtk_label_get_text(GTK_LABEL(detail));
+            if (strcmp(f.mode, "inspect-edit") == 0)
+            {
+                CHECK(strstr(message, "inputs changed") != NULL);
+                CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(f.entry)), "changed/program") == 0);
+            }
+            else
+            {
+                CHECK(strstr(message, "Native Debug program:") != NULL);
+                CHECK(strstr(message, "Nothing was launched or saved.") != NULL);
+            }
+            CHECK(umi_build_profile_equal(&f.dialog->profile, &profile));
+        }
+        CHECK(f.calls == 0U && requests == 0U);
+        goto cleanup;
+    }
+    /* Review must describe the visible overrides without exposing values or
+     * adopting the form. Editing either dependency then retires that review. */
+    if (strncmp(f.mode, "environment-", 12U) == 0 || strcmp(f.mode, "tools-invalidate") == 0)
+    {
+        GtkWidget *environment = DeveloperLaunchField(f.dialog, offsetof(UmiBuildProfile, run_environment));
+        GtkWidget *tools = DeveloperLaunchField(f.dialog, offsetof(UmiBuildProfile, tool_directory));
+        CHECK(environment != NULL && tools != NULL);
+        gtk_editable_set_text(GTK_EDITABLE(environment),
+            strcmp(f.mode, "environment-invalid") == 0 ? "bad-name=private-value" : "COURSE=private-value");
+        gtk_editable_set_text(GTK_EDITABLE(tools), ROOT);
+        g_signal_emit_by_name(f.review, "clicked");
+        const char *reviewText = gtk_label_get_text(GTK_LABEL(detail));
+        CHECK(strstr(reviewText, "private-value") == NULL);
+        if (strcmp(f.mode, "environment-invalid") == 0)
+            CHECK(strstr(reviewText, "Cannot describe") != NULL);
+        else
+        {
+            CHECK(strstr(reviewText, "overrides: 1 (values hidden)\n") != NULL);
+            CHECK(strstr(reviewText, "COURSE\n") != NULL);
+            CHECK(strstr(reviewText, "Tools folder prepended") != NULL);
+            if (strcmp(f.mode, "environment-invalidate") == 0 || strcmp(f.mode, "tools-invalidate") == 0)
+            {
+                gtk_editable_set_text(GTK_EDITABLE(strcmp(f.mode, "tools-invalidate") == 0 ? tools : environment),
+                    strcmp(f.mode, "tools-invalidate") == 0 ? ROOT "/tools" : "COURSE=another-value");
+                CHECK(strstr(gtk_label_get_text(GTK_LABEL(detail)), "inputs changed") != NULL);
+            }
+        }
+        CHECK(f.calls == 0U && requests == 0U);
+        CHECK(f.dialog->profile.run_environment[0] == '\0');
+        goto cleanup;
+    }
     if (strncmp(f.mode, "review-", 7U) == 0 || strncmp(f.mode, "notify-", 7U) == 0)
     {
         if (strcmp(f.mode, "review-bare") == 0)

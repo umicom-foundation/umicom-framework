@@ -166,6 +166,30 @@ UmiStatus umi_platform_recent_items_registry_load(
     UmiRecentItemRegistry **out_registry,
     int *out_loaded);
 
+/**
+ * Save metadata to an absolute local path using exclusive staging and replacement.
+ * The trusted parent directory must exist. No resource URI is opened. Windows
+ * paths are UTF-8. Existing links and directories are refused. Concurrent writers
+ * are last-writer-wins; this is not a power-loss durability guarantee. May block.
+ */
+UmiStatus UmiRecentItemsSaveLocal(const UmiRecentItemRegistry *registry, const char *path);
+
+/**
+ * Load metadata from an absolute regular local file, limited to four MiB before
+ * allocation. Missing files return an empty registry and out_loaded = 0; other
+ * I/O errors and malformed bytes fail without a partial registry. Embedded NULs
+ * are refused. Output storage follows registry_load; coordinate calls in a worker.
+ * Path validation and parent-alias limits follow UmiInputFileRead.
+ */
+UmiStatus UmiRecentItemsLoadLocal(const char *path, UmiRecentItemRegistry **out_registry, int *out_loaded);
+
+/**
+ * Remove oldest unpinned entries of one exact nonempty kind until its count
+ * reaches maximumCount. Other kinds are unchanged. Pinned entries survive even
+ * if they alone exceed the limit. No filesystem operation is performed.
+ */
+UmiStatus UmiRecentItemsTrimKind(UmiRecentItemRegistry *registry, const char *kind, size_t maximumCount);
+
 #ifdef __cplusplus
 }
 #endif

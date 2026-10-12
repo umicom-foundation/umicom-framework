@@ -107,6 +107,25 @@ extern "C"
     UmiStatus UmiCaptionTrackRemove(const UmiCaptionTrack *track, size_t index,
                                     UmiCaptionTrack **out);
     /**
+ * Split one cue at an interior millisecond, using explicitly supplied text for
+ * each half. Both texts follow the same UTF-8 and plain-text rules as Create.
+ * The second half stays next to the first; if its start would cross a later
+ * overlapping cue, refuse the edit rather than silently reorder the document.
+ * The source is unchanged. Initialise *out to NULL; failure preserves it.
+ */
+    UmiStatus UmiCaptionTrackSplit(const UmiCaptionTrack *track, size_t index,
+                                  uint32_t split_ms, const char *first_text,
+                                  const char *second_text, UmiCaptionTrack **out);
+    /**
+ * Merge index and its following cue into one independently owned track.
+ * Join both texts with a line break, keeping every byte, and span their full
+ * time range. A gap between them becomes covered by the combined caption.
+ * Refuse text beyond the cue capacity, or a row without a following cue.
+ * Initialise *out to NULL; failure preserves it and never changes the source.
+ */
+    UmiStatus UmiCaptionTrackMerge(const UmiCaptionTrack *track, size_t index,
+                                  UmiCaptionTrack **out);
+    /**
  * Build an immutable asset containing canonical UTF-8 SRT or plain WebVTT.
  * Use UmiCreativeAssetWriteNew for explicit file output. No source is replaced.
  * Initialise *out=NULL. Cancellation preserves it. The caller owns the result.

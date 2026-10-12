@@ -7,6 +7,8 @@
 #include "umicom/education_workspace/projects.h"
 struct UmiEducationGtkPanel {
     GtkWidget *root;
+    /* The trace viewer owns no learner or IDE state and retires with this host. */
+    GtkWidget *inspection;
     unsigned references;
     bool closed, actionRunning;
     GtkEntry *learnerId,*displayName,*projectPath,*reportPath;
@@ -31,6 +33,11 @@ struct UmiEducationGtkPanel {
     GtkWidget *openProjectButton;
     GtkLabel *exportedProjectLabel;
     bool exportedProjectReady;
+    /* The GTK owner publishes an immutable export result; the worker holds no
+     * application widgets. Destination drafts remain separate from active work. */
+    bool projectExporting;
+    GtkEntry *projectParent, *projectName;
+    GtkWidget *exportProjectButton;
     GWeakRef guardedWindow;
     gulong closeHandler;
 };
@@ -39,6 +46,10 @@ UmiEducationGtkPanel *EwGtkAcquire(UmiEducationGtkPanel *panel);
 void EwGtkRelease(UmiEducationGtkPanel *panel);
 /* File browsing only prepares the database path; opening is a separate action. */
 void EwGtkStorageControls(UmiEducationGtkPanel *panel);
+/* Destination selection performs no I/O. Export snapshots the accepted fields
+ * and completes on the GTK thread while the panel may continue teaching. */
+void EwGtkProjectDestinationControls(UmiEducationGtkPanel *panel);
+void EwGtkExportCourseProject(UmiEducationGtkPanel *panel, const UmiEducationLesson *lesson);
 void EwGtkMessage(UmiEducationGtkPanel *panel,const char *message);
 void EwGtkStatus(UmiEducationGtkPanel *panel,UmiStatus status,const char *success);
 void EwGtkRefresh(UmiEducationGtkPanel *panel,bool loadNote);

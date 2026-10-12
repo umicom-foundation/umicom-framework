@@ -69,6 +69,9 @@ int main(int argc, char **argv)
     GtkWidget *all = Find(GTK_WIDGET(window), "ibkr-completed-export-path");
     GtkWidget *output = Find(GTK_WIDGET(window), "ibkr-completed-export-status");
     CHECK(button && all && output);
+    /* A chooser is present without creating a broker session or a report.
+     * Its late completion and retained-widget rules are shared Framework tests. */
+    CHECK(Find(GTK_WIDGET(window), "ibkr-completed-export-browse") != NULL);
     g_object_ref(button);
     g_object_ref(output);
     Probe probe = {window, button, 0U, false};

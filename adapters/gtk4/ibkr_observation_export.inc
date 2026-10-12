@@ -133,6 +133,14 @@ static void ObservationExportControls(GtkWindow *window, ConnectionUi *ui, GtkWi
     ui->exportStatus = Text("No report has been written.");
     gtk_widget_set_name(ui->exportStatus, "ibkr-export-status");
     gtk_box_append(GTK_BOX(root), ui->exportPath);
+    /* Selecting a filename never reads the account or starts the report.
+     * The existing export action captures provider observations explicitly. */
+    GtkWidget *browse = UmiPathPickerGtk4Create(GTK_ENTRY(ui->exportPath),
+        UMI_PATH_PICKER_NEW_FILE, "Choose a new report location", "account-observations.csv");
+    if (browse != NULL) {
+        gtk_widget_set_name(browse, "ibkr-account-export-browse");
+        gtk_box_append(GTK_BOX(root), browse);
+    }
     gtk_box_append(GTK_BOX(root), ui->exportReport);
     gtk_box_append(GTK_BOX(root), ui->exportStatus);
     g_signal_connect_object(ui->exportReport, "clicked", G_CALLBACK(ObservationExportClicked), window, 0);

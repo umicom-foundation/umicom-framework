@@ -119,6 +119,14 @@ static void DiscoveryExportControls(GtkWindow *window, ConnectionUi *ui, GtkWidg
     gtk_box_append(GTK_BOX(box), Text("Export the retained request and result state to a new CSV file. "
                                       "Incomplete and stale evidence is labelled in the report."));
     gtk_box_append(GTK_BOX(box), ui->discoveryExportPath[slot]);
+    /* Browse fills the draft path only. The report action still captures
+     * its existing request identity and writes with no-overwrite semantics. */
+    GtkWidget *browse = UmiPathPickerGtk4Create(GTK_ENTRY(ui->discoveryExportPath[slot]),
+        UMI_PATH_PICKER_NEW_FILE, "Choose a new report location", slot ? "option-definitions.csv" : "scanner-results.csv");
+    if (browse != NULL) {
+        gtk_widget_set_name(browse, "ibkr-discovery-export-browse");
+        gtk_box_append(GTK_BOX(box), browse);
+    }
     gtk_box_append(GTK_BOX(box), ui->discoveryExportReport[slot]);
     gtk_box_append(GTK_BOX(box), ui->discoveryExportStatus[slot]);
     g_signal_connect_object(ui->discoveryExportReport[slot], "clicked", G_CALLBACK(DiscoveryExportClicked),

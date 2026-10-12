@@ -55,6 +55,8 @@ install(TARGETS umicom_creative_workspace EXPORT UmicomFrameworkTargets
 install(DIRECTORY "${_umicom_creative_root}/include/umicom/creative_workspace"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom" COMPONENT Framework)
 if(TARGET Umicom::ui_gtk4)
+    # Both hosts use the same explicit local library selection and file policy.
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkspaceLibrary.cmake")
     add_library(umicom_creative_workspace_gtk4 STATIC
         "${_umicom_creative_root}/adapters/gtk4/creative_workspace_panel_gtk4.c"
         "${_umicom_creative_root}/adapters/gtk4/creative_workspace_commands_gtk4.c"
@@ -62,6 +64,7 @@ if(TARGET Umicom::ui_gtk4)
         "${_umicom_creative_root}/adapters/gtk4/creative_workspace_surface_gtk4.c"
         "${_umicom_creative_root}/adapters/gtk4/creative_workspace_application_gtk4.c")
     add_library(Umicom::creative_workspace_gtk4 ALIAS umicom_creative_workspace_gtk4)
+    target_link_libraries(umicom_creative_workspace_gtk4 PUBLIC Umicom::workspace_library_gtk4)
     set_target_properties(umicom_creative_workspace_gtk4 PROPERTIES EXPORT_NAME creative_workspace_gtk4)
     target_link_libraries(umicom_creative_workspace_gtk4 PUBLIC Umicom::creative_workspace Umicom::ui_gtk4)
     umicom_creative_configure_target(umicom_creative_workspace_gtk4)
@@ -109,6 +112,16 @@ if(BUILD_TESTING)
             "${_umicom_creative_root}/tests/creative_workspace/test_panel_gtk4.c")
         target_link_libraries(umicom-creative-workspace-gtk-test PRIVATE Umicom::creative_workspace_gtk4)
         umicom_creative_configure_target(umicom-creative-workspace-gtk-test)
+        add_executable(umicom-creative-library-gtk-test
+            "${_umicom_creative_root}/tests/creative_workspace/test_library_gtk4.c")
+        target_link_libraries(umicom-creative-library-gtk-test PRIVATE Umicom::creative_workspace_gtk4)
+        umicom_creative_configure_target(umicom-creative-library-gtk-test)
+        add_test(NAME framework.creative_workspace.gtk.library COMMAND umicom-creative-library-gtk-test)
+        set_tests_properties(framework.creative_workspace.gtk.library PROPERTIES
+            TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;creative-workspace;gtk4;storage")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-creative-library-gtk-test)
+        endif()
         foreach(case workflow retained_controls surface_lifetime)
             add_test(NAME "framework.creative_workspace.gtk.${case}"
                 COMMAND umicom-creative-workspace-gtk-test "${case}")
@@ -168,3 +181,6 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomAudioArrangement.cmake")
 
 # Caption ownership and timing are independent of the selected creative product.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomCaptions.cmake")
+
+# Local video editing and rendering reuse the creative owner and native process channel.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomVideoSequence.cmake")

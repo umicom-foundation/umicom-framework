@@ -1,4 +1,9 @@
 /*-----------------------------------------------------------------------------
+ *
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ *
+ * LICENCE: MIT
+ *
  * Umicom Framework
  * File: tests/vcs_working_tree/test_gtk4.c
  * PURPOSE: Verify repository review pagination, failed refresh preservation and closed control

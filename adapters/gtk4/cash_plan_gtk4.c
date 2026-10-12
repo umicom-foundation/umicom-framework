@@ -7,6 +7,8 @@
  *---------------------------------------------------------------------------*/
 
 #include "cash_plan_private.h"
+#include "window_removal_private.h"
+#include "umicom/ui/gtk4/text_export.h"
 #include "umicom/ui/gtk4/drop_down.h"
 #include <stdlib.h>
 /* Retain controls as well as the root-owned model. A notification handler may
@@ -15,6 +17,7 @@
 static void Destroy(gpointer value)
 {
     CashPanel *panel = value;
+    UmiTextExportGtk4Retire(panel->textExport);
     UmiCashPlanDestroy(panel->plan);
     UmiCashPlanDestroy(panel->previous);
     UmiCashPlanDestroy(panel->pending);
@@ -437,11 +440,21 @@ UmiStatus UmiGtk4CashPlanCreate(GtkWidget **out)
     gtk_widget_set_size_request(scroll, -1, 220);
     gtk_widget_set_vexpand(scroll, TRUE);
     gtk_box_append(GTK_BOX(root), scroll);
+    /* Text reports include the assumptions and projection already on screen;
+     * JSON remains the editable plan format and CSV remains the table export. */
+    panel->textExport = Keep(panel, UmiTextExportGtk4Create(panel->output, "cash-projection.txt"), "cash.plan.text-export");
+    gtk_box_append(GTK_BOX(root), panel->textExport);
     --panel->updating;
     UmiCashPanelSync(panel);
     UmiCashPanelRender(panel);
     *out = root;
     return UMI_STATUS_OK;
+}
+static void CashWindowClosed(GtkWidget *window, gpointer root)
+{
+    (void)window;
+    CashPanel *panel = g_object_get_data(G_OBJECT(root), "umicom-cash-plan");
+    if (panel != NULL) UmiTextExportGtk4Retire(panel->textExport);
 }
 static void Open(GtkButton *button, gpointer unused)
 {
@@ -463,6 +476,11 @@ static void Open(GtkButton *button, gpointer unused)
         gtk_window_set_destroy_with_parent(GTK_WINDOW(window), TRUE);
     }
     gtk_window_set_child(GTK_WINDOW(window), content);
+    /* Retained widgets must not start new writes after their host has closed. */
+    g_signal_connect_object(window, "destroy", G_CALLBACK(CashWindowClosed), content, 0);
+    /* Native removal happens before finalisation when a caller retains a window.
+     * Observe that boundary too; retirement is deliberately idempotent. */
+    UmiGtk4ObserveWindowRemoval(GTK_WINDOW(window), G_OBJECT(content), CashWindowClosed, content);
     gtk_window_present(GTK_WINDOW(window));
 }
 GtkWidget *UmiGtk4CashPlanLauncherCreate(void)

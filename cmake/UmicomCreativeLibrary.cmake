@@ -57,6 +57,10 @@ if(BUILD_TESTING AND (WIN32 OR UNIX) AND NOT EMSCRIPTEN)
     endforeach()
 endif()
 
+# Workspace persistence already owns umicom-creative-library-gtk-test.
+# Keep its former asset-library registration disabled for review. The distinct
+# asset-library name below keeps both workflows and their existing CTest cases.
+if(FALSE)
 if(BUILD_TESTING AND (WIN32 OR UNIX) AND NOT EMSCRIPTEN AND TARGET Umicom::creative_workspace_gtk4)
     add_executable(umicom-creative-library-gtk-test "${CMAKE_CURRENT_LIST_DIR}/../tests/creative_library/test_gtk4.c")
     target_link_libraries(umicom-creative-library-gtk-test PRIVATE Umicom::creative_workspace_gtk4)
@@ -66,6 +70,21 @@ if(BUILD_TESTING AND (WIN32 OR UNIX) AND NOT EMSCRIPTEN AND TARGET Umicom::creat
     endif()
     foreach(case import duplicate reorder remove-undo save-reopen corrupt-retains cancel-import cancel-open busy open-approval approval-invalidation export existing-export editor-copy independent retained-control close-busy title)
         add_test(NAME framework.creative_library.gtk.${case} COMMAND umicom-creative-library-gtk-test ${case})
+        set_tests_properties(framework.creative_library.gtk.${case} PROPERTIES
+            TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;creative-library;gtk;regression")
+    endforeach()
+endif()
+endif()
+
+if(BUILD_TESTING AND (WIN32 OR UNIX) AND NOT EMSCRIPTEN AND TARGET Umicom::creative_workspace_gtk4)
+    add_executable(umicom-creative-asset-library-gtk-test "${CMAKE_CURRENT_LIST_DIR}/../tests/creative_library/test_gtk4.c")
+    target_link_libraries(umicom-creative-asset-library-gtk-test PRIVATE Umicom::creative_workspace_gtk4)
+    umicom_creative_configure_target(umicom-creative-asset-library-gtk-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-creative-asset-library-gtk-test)
+    endif()
+    foreach(case import duplicate reorder remove-undo save-reopen corrupt-retains cancel-import cancel-open busy open-approval approval-invalidation export existing-export editor-copy independent retained-control close-busy title)
+        add_test(NAME framework.creative_library.gtk.${case} COMMAND umicom-creative-asset-library-gtk-test ${case})
         set_tests_properties(framework.creative_library.gtk.${case} PROPERTIES
             TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;creative-library;gtk;regression")
     endforeach()

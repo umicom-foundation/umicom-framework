@@ -12,6 +12,8 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "umicom/platform/process_environment.h"
+#include "umicom/platform/process_search_path.h"
 #include "umicom/ui/gtk4/developer_dialog.h"
 #include "umicom/ui/gtk4/build_configurations.h"
 #include "umicom/ui/gtk4/compilation_database.h"
@@ -89,6 +91,8 @@ struct UmiGtk4DeveloperDialog {
     int installedLoading, installedChanging, installedInvalidated;
     GtkWidget *chooseProgram, *chooseWorkingDirectory, *reviewLaunch, *launchDetail;
     GCancellable *launchChooserCancel;
+    /* Borrowed from a file-check job until its completion releases the token. */
+    UmiCancellationToken *launchInspectCancel;
     int launchChoosing, launchChanging, launchInvalidated;
     const UmiDeveloperProjectTemplate *templates[UMI_DEVELOPER_PROJECT_TEMPLATE_CAPACITY];
     size_t templateCount;
@@ -1007,6 +1011,7 @@ void UmiGtk4DeveloperDialogDestroy(UmiGtk4DeveloperDialog *dialog)
     umi_cancellation_token_request(dialog->installedCancel);
     umi_cancellation_token_request(dialog->presetCancel);
     if (dialog->launchChooserCancel != NULL) g_cancellable_cancel(dialog->launchChooserCancel);
+    umi_cancellation_token_request(dialog->launchInspectCancel);
     if (dialog->projectChooserCancel != NULL) g_cancellable_cancel(dialog->projectChooserCancel);
     dialog->onApplied = NULL; dialog->onCreated = NULL; dialog->context = NULL;
     for (guint i = 0U; i < dialog->signalObjects->len; ++i)

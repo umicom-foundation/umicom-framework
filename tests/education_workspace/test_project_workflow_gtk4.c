@@ -59,6 +59,17 @@ static void Adopt(const UmiEducationProjectWorkflow *project, void *context)
         CHECK(strcmp(project->project.root, probe->expected) == 0);
     }
 }
+/* The export action returns before disk I/O completes. Pump the owning context
+ * with a deadline so this integration test exercises completion publication. */
+static void WaitForExport(GtkWidget *export)
+{
+    gint64 deadline = g_get_monotonic_time() + 5 * G_TIME_SPAN_SECOND;
+    while (!gtk_widget_get_sensitive(export) && g_get_monotonic_time() < deadline) {
+        while (g_main_context_iteration(NULL, FALSE)) {}
+        g_usleep(1000U);
+    }
+    CHECK(gtk_widget_get_sensitive(export));
+}
 static int ProgramMain(int argc, char **argv)
 {
     CHECK(argc == 2);
@@ -95,6 +106,7 @@ static int ProgramMain(int argc, char **argv)
     FixturePath(probe.expected, parent, "project caf\xc3\xa9");
     gtk_editable_set_text(GTK_EDITABLE(path), probe.expected);
     g_signal_emit_by_name(export, "clicked");
+    WaitForExport(export);
     CHECK(umi_fs_is_directory(probe.expected));
     CHECK(gtk_widget_get_sensitive(probe.open) == !unbound);
     CHECK(strcmp(gtk_label_get_text(GTK_LABEL(Find(root, "education.exported-project"))),
@@ -104,6 +116,7 @@ static int ProgramMain(int argc, char **argv)
         /* Exporting again must not overwrite the first project, and must not
          * leave Open enabled for a partially failed replacement operation. */
         g_signal_emit_by_name(export, "clicked");
+        WaitForExport(export);
         CHECK(!gtk_widget_get_sensitive(probe.open));
         g_signal_emit_by_name(probe.open, "clicked");
         CHECK(probe.calls == 0U && umi_fs_is_directory(probe.expected));

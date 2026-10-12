@@ -1,4 +1,11 @@
 /*-----------------------------------------------------------------------------
+ *
+ * File: src/vm_manager/kernel_disk_plan.c
+ *
+ * PURPOSE: Prepare bounded QEMU disk arguments for an owned scratch image.
+ *
+ * LICENCE: MIT
+ *
  * Umicom Framework - bounded transformation of owned QEMU arguments.
  * Author: Sammy Hegab, Umicom Foundation. Licence: MIT.
  *

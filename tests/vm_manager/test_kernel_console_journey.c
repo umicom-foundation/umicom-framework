@@ -1,4 +1,11 @@
 /*-----------------------------------------------------------------------------
+ *
+ * File: tests/vm_manager/test_kernel_console_journey.c
+ *
+ * PURPOSE: Check console protocol completion and failure handling using a simulated guest.
+ *
+ * LICENCE: MIT
+ *
  * Umicom Framework - Native VM console journey regression tests
  * Author: Sammy Hegab, Umicom Foundation. Licence: MIT.
  *

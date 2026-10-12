@@ -49,3 +49,34 @@ if(BUILD_TESTING)
         umicom_register_validation_target(umicom-ibkr-realtime_chart-test)
     endif()
 endif()
+
+# Bar measurements reuse chart arithmetic without coupling transport to a UI.
+target_sources(umicom_ibkr_historical_chart PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/bar_range.c")
+
+if(BUILD_TESTING)
+    add_executable(umicom-ibkr-bar-range-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ibkr_connection/test_bar_range.c")
+    target_include_directories(umicom-ibkr-bar-range-test PRIVATE
+        "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection")
+    target_link_libraries(umicom-ibkr-bar-range-test PRIVATE Umicom::ibkr_historical_chart)
+    umicom_ibkr_target(umicom-ibkr-bar-range-test)
+    foreach(kind historical streaming)
+        set(range_cases values subset pending stale disconnect price-precision
+            missing-volume volume-precision all-missing-volume zero-volume
+            negative-volume duplicate-time invalid-ohlc bounds zero-count capacity
+            null-output null-connection unknown-request owned unchanged-transport)
+        if(kind STREQUAL "streaming")
+            list(APPEND range_cases cancelled rolling eviction)
+        endif()
+        foreach(case IN LISTS range_cases)
+            add_test(NAME framework.ibkr_bar_range.${kind}.${case}
+                COMMAND umicom-ibkr-bar-range-test ${kind} ${case})
+            set_tests_properties(framework.ibkr_bar_range.${kind}.${case} PROPERTIES
+                TIMEOUT 20 LABELS "framework;broker;chart;measurements;regression")
+        endforeach()
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-ibkr-bar-range-test)
+    endif()
+endif()

@@ -1,0 +1,39 @@
+{
+  "Data": {
+    "Transaction": [
+      {
+        "AccountId": "lesson-account",
+        "TransactionId": "receipt",
+        "CreditDebitIndicator": "Credit",
+        "Status": "BOOK",
+        "BookingDateTime": "2026-10-12T10:00:00Z",
+        "Amount": {
+          "Amount": "12.50",
+          "Currency": "GBP"
+        }
+      },
+      {
+        "AccountId": "lesson-account",
+        "TransactionId": "payment",
+        "CreditDebitIndicator": "Debit",
+        "Status": "BOOK",
+        "BookingDateTime": "2026-10-12T11:00:00Z",
+        "Amount": {
+          "Amount": "2.25",
+          "Currency": "GBP"
+        }
+      },
+      {
+        "AccountId": "lesson-account",
+        "TransactionId": "pending",
+        "CreditDebitIndicator": "Debit",
+        "Status": "PDNG",
+        "BookingDateTime": "2026-10-12T12:00:00Z",
+        "Amount": {
+          "Amount": "999.00",
+          "Currency": "GBP"
+        }
+      }
+    ]
+  }
+}

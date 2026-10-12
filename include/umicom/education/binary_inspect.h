@@ -61,6 +61,9 @@ UmiStatus UmiEducationBinaryInspectBytes(const unsigned char *prefix,
  * caller chooses the path. Standard C long-size file seeking limits may apply
  * to files larger than LONG_MAX on some hosts. Returns a status and preserves
  * the output on failure. */
+/* Publication also waits for a successful file close, so a late close error
+ * preserves the caller's previous result. When parsing and closing both fail,
+ * the earlier failure is returned. */
 UmiStatus UmiEducationBinaryInspectFile(const char *path,
     UmiEducationBinaryHeader *outHeader);
 

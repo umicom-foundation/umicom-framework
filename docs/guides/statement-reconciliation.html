@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Compare statement balances</title><style>body{font:17px/1.6 system-ui,sans-serif;max-width:960px;margin:3rem auto;padding:0 1rem;color:#182b3e}pre{white-space:pre-wrap;background:#eef3f7;padding:1rem}h1,h2{line-height:1.2}a{color:#075aa7}table{border-collapse:collapse}td,th{border:1px solid #bdc9d4;padding:.6rem;text-align:left}</style></head><body><main><h1>Compare statement balances</h1><p>Reconciliation compares recorded activity with a statement balance. The review
+does not move money, authenticate a bank account or change the practice ledger.</p>
+<ol><li>In Trader, Bank or TMS, open <strong>Bank transaction reports</strong>.</li>
+<li>Choose a saved Open Banking transaction JSON response and select <strong>Import for review</strong>.
+This reader accepts the documented Open Banking transaction fields; arbitrary bank CSV and PDF
+statements need a separate converter. Select the required account and currency.</li>
+<li>Select <strong>Reconcile selected account</strong>. The new window owns a snapshot.
+Importing a different file later does not change it. Close and reopen the comparison to use fresh data.</li>
+<li>Enter the first and last booking dates as <code>YYYY-MM-DD</code>. Both dates are included.
+Use the calendar dates printed by the provider; timestamps are not converted to your computer's timezone.</li>
+<li>Enter the balance immediately before the first date and the reported balance after the last date.
+Use a dot decimal separator, with no currency symbol, thousands separator or exponent.</li>
+<li>Select <strong>Compare balances</strong>. Expected closing equals opening plus booked credits
+minus booked debits. Difference equals reported closing minus expected closing.</li>
+<li>Review pending entries, missing identifiers, mutable booked entries and previous/next-page flags.
+An arithmetic match alone does not establish a complete or authentic statement.</li>
+<li>Save the CSV to a private folder you choose. It includes the assumptions, comparison and selected
+period's transactions. Editing a date or balance disables the previous export until you compare again.</li></ol>
+<h2>Work through an example</h2><p>Choose the invented response at
+<code>C:\umicom\Umicom-Applications\framework\examples\bank_feed\statement.json</code>,
+select <code>lesson-account | GBP</code> and enter <code>2026-10-12</code> for both dates.</p><p>An opening balance of 100.00, a booked credit of 12.50 and
+a booked debit of 2.25 give an expected closing balance of 110.25. A pending debit of 999.00
+is counted but excluded. If the statement closes at 110.26, the reported difference is 0.01.</p>
+<h2>When a comparison is unavailable</h2><p>Check date spelling, account selection and amount precision.
+The reader allows at most 1,024 transactions in one saved response. Arithmetic uses checked decimal
+coefficients, not floating point. Very large totals are refused rather than rounded. Reports are never
+partially exported after a calculation failure.</p>
+<h2>Data and ownership</h2><p>Each account and currency is compared separately. There is no foreign-exchange
+conversion, automatic pagination or bank login. The local file is the evidence source; no provider URL in
+that file is followed. Closing the source window closes its comparison windows. Closing a window prevents
+new exports but does not undo a file write already accepted.</p>
+<h2>For contributors</h2><p>The portable contract is <code>umicom/bank_feed/statement.h</code>.
+Applications call the common GTK report launcher. Extend the shared selector and report together so
+arithmetic and exported rows always use the same account, currency and booking-date rules.
+Regression cases live in <code>tests/bank_feed/test_statement.c</code> and
+<code>tests/bank_feed/test_statement_native.c</code>.</p></main></body></html>

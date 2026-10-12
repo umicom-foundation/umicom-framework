@@ -206,6 +206,11 @@ UmiStatus UmiEducationBinaryInspectFile(const char *path, UmiEducationBinaryHead
     FILE *stream = fopen(path, "rb");
     if (stream == NULL) return UMI_STATUS_IO_ERROR;
     UmiStatus status = UMI_STATUS_IO_ERROR;
+    /* Keep the parsed header private while this function still owns the file.
+     * A later close error must leave the caller's previous result intact, just
+     * as a read or parse error does. Future inspection stages should also work
+     * on this candidate until all fallible work has finished. */
+    UmiEducationBinaryHeader candidate = {0};
     if (fseek(stream, 0L, SEEK_END) != 0) goto finished;
     const long end = ftell(stream);
     if (end < 0L || fseek(stream, 0L, SEEK_SET) != 0) goto finished;
@@ -213,13 +218,25 @@ UmiStatus UmiEducationBinaryInspectFile(const char *path, UmiEducationBinaryHead
         (size_t)end : UMI_EDUCATION_BINARY_PREFIX_LIMIT;
     unsigned char *bytes = malloc(prefixBytes == 0U ? 1U : prefixBytes);
     if (bytes == NULL) { status = UMI_STATUS_OUT_OF_MEMORY; goto finished; }
+    /* The direct publication path below is retained for engineering review.
+     * It was superseded by parsing into a candidate because fclose can fail
+     * after parsing succeeds, before the caller may safely use a new result. */
+#if 0
     if (fread(bytes, 1U, prefixBytes, stream) == prefixBytes)
         status = UmiEducationBinaryInspectBytes(bytes, prefixBytes,
             (uint64_t)(unsigned long)end, outHeader);
+#endif
+    if (fread(bytes, 1U, prefixBytes, stream) == prefixBytes)
+        status = UmiEducationBinaryInspectBytes(bytes, prefixBytes,
+            (uint64_t)(unsigned long)end, &candidate);
     free(bytes);
 finished:
     if (fclose(stream) != 0 && status == UMI_STATUS_OK)
         status = UMI_STATUS_IO_ERROR;
+    /* Publish once, after releasing every owned resource. Earlier failures
+     * retain their original status even when closing also reports an error. */
+    if (status == UMI_STATUS_OK)
+        *outHeader = candidate;
     return status;
 }
 

@@ -58,4 +58,23 @@ A second speaker can overlap the first.
 <p>Include <code>umicom/creative_workspace/captions.h</code> and link <code>Umicom::creative_workspace</code>. Create or parse an immutable <code>UmiCaptionTrack</code>, then use the shift, clip, replace, insert and remove functions to obtain new tracks. Initialise each output pointer to <code>NULL</code>; destroy owned tracks when finished. Failed operations leave an existing input and the output pointer unchanged.</p>
 <p>The native adapter links <code>Umicom::creative_workspace_gtk4</code> and creates <code>UmiCaptionsGtkCreate</code>. Other frontends can reuse the same core without GTK. Provider transcription adapters should validate returned cues through this owner before showing a review. File operations belong on workers; credentials and network uploads do not belong in the caption document.</p>
 <p>Use <code>UmiCaptionTrackParse</code> when a caller may supply either file format, or select <code>UmiCaptionTrackParseWebVtt</code> explicitly. Both publish a complete immutable track only after validation. Add new format adapters beside these readers and keep their parsing independent of the user interface.</p>
+
+
+<section>
+<h2>Edit individual captions</h2>
+<p>The caption form is shared by Media and Music. Each cue is one timed piece of subtitle text. Preparing a document validates it; saving a scene does not save captions.</p>
+<ol>
+<li>Open or paste plain SRT or WebVTT, then choose <strong>Prepare captions</strong>.</li>
+<li>Expand <strong>Edit an individual caption</strong>. Enter its caption number, starting at 1, and choose <strong>Load caption into form</strong>.</li>
+<li>Change its beginning, ending or text, then choose <strong>Replace loaded caption</strong>. The document changes only after the whole edit passes validation.</li>
+<li>To add a cue, fill in the form and choose <strong>Insert before caption number</strong>. Use the current number of cues plus one to append. Start times must stay in order; overlapping captions are allowed.</li>
+<li>Use <strong>Remove loaded caption</strong> to remove that cue. <strong>Undo / redo last prepared change</strong> reverses the latest successful edit.</li>
+<li>Choose a new output location and save SRT or WebVTT. Existing files are preserved. Browsing only fills in the path; use the separate Open or Save action to read or write.</li>
+</ol>
+<h3>Split and merge</h3>
+<p>To split a loaded cue, enter an interior split time. Put the first half's text in the main cue form and the second half's text in its separate field, then choose <strong>Split loaded caption</strong>. The original beginning and ending are retained. Split does not guess word timing. It refuses an edit that would move the second half past the start of the following cue.</p>
+<p><strong>Merge loaded caption with next</strong> joins the two prepared texts with a line break and covers their full time range, including any gap. It does not use unsaved text in the form. If the combined text exceeds 2048 UTF-8 bytes, shorten the captions or keep them separate; text is never silently cut.</p>
+<h3>Recover from a refused edit</h3>
+<p>If the row number or prepared document has changed, load the cue again. If you edited the subtitle source directly, prepare it again first. Check that beginning is less than ending and that start times remain in order. Plain captions do not support markup. A refused row edit preserves the prepared document; if another part of the application changes the text during publication, its newer draft is kept and must be prepared again.</p>
+</section>
 </body></html>

@@ -6,6 +6,9 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "creative_workspace_private.h"
+#include "umicom/ui/gtk4/video_sequence.h"
+#include "umicom/ui/gtk4/text_export.h"
+#include "umicom/ui/gtk4/path_picker.h"
 #include "umicom/ui/gtk4/creative_audio.h"
 #include "umicom/ui/gtk4/creative_assets.h"
 #include "umicom/ui/gtk4/creative_library.h"
@@ -162,6 +165,15 @@ static void BuildForms(UmiCreativeGtkPanel * p, GtkNotebook * notebook)
     Text(page, "Export uses the saved project, not unsaved form fields. SVG uses the displayed time. Storyboards sample start, middle and end. Existing files are never overwritten.");
     p -> exportKind = Choice(page, "Export format", "creative.export.kind", exports);
     p -> exportPath = Entry(page, "New absolute output file path", "creative.export.path", "");
+    /* The chosen export format still controls rendering. Browsing selects
+     * only a destination; the existing Write action performs the export. */
+    GtkWidget *browse = UmiPathPickerGtk4Create(GTK_ENTRY(p->exportPath),
+        UMI_PATH_PICKER_NEW_FILE, "Choose an export destination for the selected format", NULL);
+    if (browse != NULL) {
+        g_object_set_data_full(G_OBJECT(browse), "umicom-automation-id",
+            g_strdup("creative.export.browse"), g_free);
+        gtk_box_append(GTK_BOX(page), browse);
+    }
     Button(p, page, "Suggest an output path", "export.suggest");
     Button(p, page, "Write a new export file", "export.write");
     Text(page, "The page is a visual prototype, not a deployed website or mobile package. The storyboard is not a video. WAVE uses a simple sine-wave instrument.");
@@ -182,6 +194,27 @@ UmiStatus UmiCreativeGtkPanelCreate(UmiDataServer * server, const char * profile
     g_object_ref_sink(p -> root);
     Tag(p -> root, "creative.workspace");
     p -> storage = Text(p -> root, server!= NULL ? "Injected Data Server; no project is open." : "Local project storage opens only when you choose Create or Open. Projects are plaintext.");
+    /* Library selection is shared with the AI hosts. Existing databases are
+     * offered as visible paths, and are opened only by an explicit user action. */
+    if (server == NULL && UmiWorkspaceLibraryGtkCreate(UmiCreativeGtkOpenLibrary, p, &p->library) == UMI_STATUS_OK) {
+        /* Keep preferences separate for each creative product. Only this
+         * small location list uses the configuration directory; project content
+         * stays in the database explicitly selected by the user. */
+        const char *historyOverride = g_getenv("UMICOM_LIBRARY_HISTORY_FILE");
+        char *historyPath = historyOverride != NULL && historyOverride[0] != '\0' ? g_strdup(historyOverride) : g_build_filename(g_get_user_config_dir(), "umicom", "library-history", profile, "creative-libraries.txt", NULL);
+        (void)UmiWorkspaceLibraryGtkEnableHistory(p->library, historyPath);
+        g_free(historyPath);
+        GtkWidget *location = gtk_expander_new("Project library location");
+        gtk_expander_set_expanded(GTK_EXPANDER(location), TRUE);
+        gtk_expander_set_child(GTK_EXPANDER(location), UmiWorkspaceLibraryGtkWidget(p->library));
+        gtk_box_append(GTK_BOX(p->root), location);
+        const char *override = g_getenv("UMICOM_CREATIVE_WORKSPACE_DB");
+        char *previous = g_build_filename(g_get_user_data_dir(), "umicom", "creative-workspace", "projects.sqlite3", NULL);
+        if (override != NULL && override[0] != '\0') UmiWorkspaceLibraryGtkSetPath(p->library, override);
+        else if (g_file_test(previous, G_FILE_TEST_IS_REGULAR)) UmiWorkspaceLibraryGtkSetPath(p->library, previous);
+        g_free(previous);
+        gtk_label_set_text(GTK_LABEL(p->storage), "Choose a project library before creating or opening a project.");
+    }
     GtkWidget * toolbar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
     gtk_box_append(GTK_BOX(p -> root), toolbar);
     Button(p, toolbar, "Load starter into empty project", "project.starter");
@@ -275,6 +308,16 @@ UmiStatus UmiCreativeGtkPanelCreate(UmiDataServer * server, const char * profile
             gtk_box_append(GTK_BOX(captionPage), captionEditor);
         else Text(captionPage, "The caption editor could not be created.");
     }
+    /* Video sequences share the Framework editing and render owner. Existing
+     * scene, provider and audio pages keep their behaviour and tab positions. */
+    if (strcmp(profile, "media") == 0 || strcmp(profile, "music") == 0) {
+        GtkWidget *sequencePage = Page(GTK_NOTEBOOK(notebook), "Video sequence");
+        p->videoSequence = UmiVideoSequenceGtk4Create();
+        if (p->videoSequence != NULL) {
+            g_object_ref_sink(p->videoSequence);
+            gtk_box_append(GTK_BOX(sequencePage), p->videoSequence);
+        } else Text(sequencePage, "The video sequence editor could not be created.");
+    }
     GtkWidget * right = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
     gtk_paned_set_end_child(GTK_PANED(paned), right);
     p -> canvas = gtk_drawing_area_new();
@@ -304,6 +347,11 @@ UmiStatus UmiCreativeGtkPanelCreate(UmiDataServer * server, const char * profile
     gtk_widget_set_size_request(scroll, -1, 160);
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), p -> report);
     gtk_box_append(GTK_BOX(right), scroll);
+    /* A project summary can travel with a render or review without exporting
+     * the project database or borrowing mutable creative services. */
+    p->textExport = UmiTextExportGtk4Create(p->report, "creative-project-summary.txt");
+    g_object_ref_sink(p->textExport);
+    gtk_box_append(GTK_BOX(right), p->textExport);
     p -> status = Text(p -> root, "Create or open a project in the Project tab to begin.");
     Tag(p -> status, "creative.status");
     * out = p;
@@ -316,6 +364,13 @@ GtkWidget * UmiCreativeGtkPanelWidget(UmiCreativeGtkPanel * panel){return panel!
 void UmiCreativeGtkPanelDestroy(UmiCreativeGtkPanel * panel)
 {
     if (panel == NULL)return;
+    /* Retire accepted video work even if another host retains its controls. */
+    UmiVideoSequenceGtk4Retire(panel->videoSequence);
+    g_clear_object(&panel->videoSequence);
+    UmiTextExportGtk4Retire(panel->textExport); g_clear_object(&panel->textExport);
+    /* Retire chooser callbacks before their borrowed panel context. */
+    UmiWorkspaceLibraryGtkDestroy(panel->library);
+    panel->library = NULL;
     /* Disable drawing before releasing its context, even when the root or the
  * drawing area is retained by a window or an automation test. */
     gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(panel -> canvas), NULL, NULL, NULL);

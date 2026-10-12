@@ -82,6 +82,52 @@ static UmiStatus FillCurrentQuote(ConnectionUi *ui, uint64_t now, UmiIbkrQuoteSn
         return UMI_STATUS_UNAVAILABLE;
     return UmiIbkrQuoteCopy(ui->connection, ui->quoteRequest, now, 15000U, out);
 }
+
+#ifdef UMI_IBKR_HAS_RULE_REPORT
+/* Changes invalidate a captured comparison immediately. A report remains a
+ * historical file; the next explicit review must bind it to a current quote. */
+static void FillReportInvalidate(GtkWidget *widget, gpointer data)
+{
+    (void)widget;
+    ConnectionUi *ui = Owner(GTK_WINDOW(data));
+    if (ui != NULL && ui->ruleReportPanel != NULL) {
+        ui->ruleReportRequest = 0U;
+        UmiIbkrRuleReportGtk4ClearExpectation(ui->ruleReportPanel);
+    }
+}
+static void FillReportChoiceInvalidate(GObject *object, GParamSpec *property, gpointer data)
+{
+    (void)property;
+    FillReportInvalidate(GTK_WIDGET(object), data);
+}
+static void FillReportCapture(ConnectionUi *ui, const UmiFullQuantityPolicy *policy)
+{
+    UmiIbkrQuoteSnapshot quote;
+    if (FillCurrentQuote(ui, UmiIbkrMonotonicMilliseconds(), &quote) == UMI_STATUS_OK &&
+        quote.subscribed && !quote.failed) {
+        ui->ruleReportRequest = quote.requestId;
+        (void)UmiIbkrRuleReportGtk4SetExpectation(ui->ruleReportPanel,
+            quote.contract.contractId, policy->side, quote.contract.exchange);
+    } else {
+        ui->ruleReportRequest = 0U;
+        UmiIbkrRuleReportGtk4ClearExpectation(ui->ruleReportPanel);
+    }
+}
+/* A provider failure can retire a subscription without a button click. Poll only
+ * while an expectation exists; clearing it once avoids repainting large reports
+ * on every market-data update. The saved file itself remains historical evidence. */
+static void FillReportCheck(ConnectionUi *ui, uint64_t now)
+{
+    if (ui->ruleReportRequest == 0U || ui->closed) return;
+    UmiIbkrQuoteSnapshot quote;
+    if (FillCurrentQuote(ui, now, &quote) != UMI_STATUS_OK || !quote.subscribed ||
+        quote.failed || quote.requestId != ui->ruleReportRequest) {
+        ui->ruleReportRequest = 0U;
+        UmiIbkrRuleReportGtk4ClearExpectation(ui->ruleReportPanel);
+    }
+}
+#endif
+
 static void FillReviewClicked(GtkButton *button, gpointer data)
 {
     (void)button;
@@ -103,6 +149,9 @@ static void FillReviewClicked(GtkButton *button, gpointer data)
         if (status == UMI_STATUS_OK)
             status =
                 UmiIbkrReviewFullQuantity(&policy, &quote.contract, ui->quoteRequest, &quote, now, &review);
+#ifdef UMI_IBKR_HAS_RULE_REPORT
+        FillReportCapture(ui, &policy);
+#endif
         text = FillDescription(&policy, status == UMI_STATUS_OK
                                             ? UmiLiquidityAssessmentText(review.assessment)
                                             : "No usable bound quote is available for this review.");
@@ -292,4 +341,21 @@ static void FillPolicyControls(GtkWindow *window, ConnectionUi *ui, GtkWidget *r
         g_signal_connect_object(choices[i], "notify::selected", G_CALLBACK(FillChoiceChanged), window, 0);
     g_signal_connect_object(ui->fillAge, "value-changed", G_CALLBACK(FillChanged), window, 0);
     g_signal_connect_object(ui->fillSkew, "value-changed", G_CALLBACK(FillChanged), window, 0);
+#ifdef UMI_IBKR_HAS_RULE_REPORT
+    GtkWidget *reportSection = gtk_expander_new("Saved contract and route rules");
+    ui->ruleReportPanel = UmiIbkrRuleReportGtk4Create();
+    gtk_expander_set_child(GTK_EXPANDER(reportSection), ui->ruleReportPanel);
+    gtk_box_append(GTK_BOX(box), reportSection);
+    GtkWidget *reportInputs[] = {ui->quoteContract, ui->quoteExchange, ui->fillQuantity,
+        ui->fillPrice, ui->fillBuffer};
+    for (size_t i = 0U; i < G_N_ELEMENTS(reportInputs); ++i)
+        g_signal_connect_object(reportInputs[i], "changed", G_CALLBACK(FillReportInvalidate), window, 0);
+    GtkWidget *reportChoices[] = {ui->fillMode, ui->fillSide, ui->fillTif, ui->mode, ui->program};
+    for (size_t i = 0U; i < G_N_ELEMENTS(reportChoices); ++i)
+        g_signal_connect_object(reportChoices[i], "notify::selected", G_CALLBACK(FillReportChoiceInvalidate), window, 0);
+    g_signal_connect_object(ui->disconnect, "clicked", G_CALLBACK(FillReportInvalidate), window, 0);
+    g_signal_connect_object(ui->connect, "clicked", G_CALLBACK(FillReportInvalidate), window, 0);
+    g_signal_connect_object(ui->quoteStart, "clicked", G_CALLBACK(FillReportInvalidate), window, 0);
+    g_signal_connect_object(ui->quoteStop, "clicked", G_CALLBACK(FillReportInvalidate), window, 0);
+#endif
 }

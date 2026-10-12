@@ -110,3 +110,28 @@ UmiStatus UmiDecimalIsMultiple(UmiDecimal value, UmiDecimal increment, bool *out
     *out = remainder == 0U;
     return UMI_STATUS_OK;
 }
+
+/* Compare against representable limits before subtraction. Negating a debit
+ * first would overflow for INT64_MIN, which is a valid fixed-point coefficient.
+ * Shared arithmetic keeps statement, treasury and trading reviews consistent. */
+UmiStatus UmiDecimalSubtractExact(UmiDecimal left, UmiDecimal right, UmiDecimal *out)
+{
+    if (out == NULL || left.scale > 9U || right.scale > 9U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    const uint8_t scale = left.scale > right.scale ? left.scale : right.scale;
+    UmiDecimal a, b;
+    UmiStatus status = umi_decimal_rescale(left, scale, &a);
+    if (status != UMI_STATUS_OK)
+        return status;
+    status = umi_decimal_rescale(right, scale, &b);
+    if (status != UMI_STATUS_OK)
+        return status;
+    if ((b.coefficient > 0 && a.coefficient < INT64_MIN + b.coefficient) ||
+        (b.coefficient < 0 && a.coefficient > INT64_MAX + b.coefficient))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiDecimal difference = {0};
+    difference.coefficient = a.coefficient - b.coefficient;
+    difference.scale = scale;
+    *out = difference;
+    return UMI_STATUS_OK;
+}

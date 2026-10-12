@@ -24,6 +24,9 @@ UmiEducationGtkPanel *UmiEducationGtkCreate(void);
 GtkWidget *UmiEducationGtkWidget(UmiEducationGtkPanel *panel);
 /* Caller detaches the widget before Destroy. Signals and buffer callbacks are
  * disconnected even when a test or another view retains an old child widget. */
+/* Accepted project exports may finish after Destroy; no completion is shown in
+ * a closed panel. The GTK context must keep running to deliver their cleanup.
+ * Host callback context is released after any pending callback returns. */
 void UmiEducationGtkDestroy(UmiEducationGtkPanel *panel);
 /* Borrow a connection for embedded hosts/tests. It must outlive the panel or a
  * later successful Bind. Rebinding refuses unsaved note edits. */

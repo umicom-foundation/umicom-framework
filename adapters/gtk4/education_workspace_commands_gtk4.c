@@ -118,6 +118,10 @@ static UmiStatus ExportRecord(UmiEducationGtkPanel *p)
 }
 /* Export remains a separate user action. Its copied metadata records exactly
  * which directory was written; later entry/lesson edits cannot redirect Open. */
+/* Course files are now written from a copied worker request so slow storage
+ * cannot block reading or closing the practicum. The synchronous path is kept
+ * here for review; the shared export service and exclusive-write rules remain. */
+#if 0
 static void ExportCourseProject(UmiEducationGtkPanel *p,const UmiEducationLesson *lesson)
 {
     p->exportedProjectReady=false;
@@ -140,8 +144,15 @@ static void ExportCourseProject(UmiEducationGtkPanel *p,const UmiEducationLesson
             ?" This course needs an installed Framework data SDK.":"");
     EwGtkStatus(p,status,message);
 }
+#endif
+static void ExportCourseProject(UmiEducationGtkPanel *p, const UmiEducationLesson *lesson)
+{
+    EwGtkExportCourseProject(p, lesson);
+}
 static void OpenExportedProject(UmiEducationGtkPanel *p)
 {
+    /* Wait until the complete immutable result has reached the GTK thread. */
+    if(p->projectExporting)return;
     if(p->closed || !p->exportedProjectReady || p->openProject==NULL || p->exportedProject==NULL)return;
     UmiEducationProjectWorkflow *snapshot=g_try_new(UmiEducationProjectWorkflow,1U);
     if(snapshot==NULL){EwGtkStatus(p,UMI_STATUS_OUT_OF_MEMORY,"");return;}

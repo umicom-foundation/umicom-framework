@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Save a displayed report - Umicom Framework</title></head><body>
+<main><h1>Save a displayed report</h1>
+<p>Saving a displayed report creates a plain UTF-8 text file that you can read in a
+text editor or include in a review.</p>
+<h2>Where this is available</h2>
+<table><thead><tr><th>Workspace</th><th>Text saved</th></tr></thead><tbody>
+<tr><td>Bank statement</td><td>The displayed account statement and captured range.</td></tr>
+<tr><td>Bank audit investigation</td><td>The captured summary. Command and journal CSV actions remain separate.</td></tr>
+<tr><td>Cash planning in TMS, Trader and Bank</td><td>The displayed assumptions and projection. JSON saves the editable plan; CSV exports its table.</td></tr>
+<tr><td>Media and Music creative workspace</td><td>The project summary. This does not render video or export the project database.</td></tr>
+<tr><td>AI Drafts and review</td><td>The displayed request, source references and returned draft. Saving does not run a model or approve an action.</td></tr>
+<tr><td>Studio and Education teaching inspector</td><td>The labelled report for the last successfully inspected file.</td></tr>
+</tbody></table>
+<h2>Save the text</h2><ol>
+<li>Open the report and check its account, project, job or teaching-file identity.</li>
+<li>Expand <strong>Save displayed text</strong>. Enter a new absolute filename, or use
+the folder button to choose one. For example, choose
+<code>C:\Umicom Reports\cash-projection.txt</code> in a folder you have already created.</li>
+<li>Select <strong>Save displayed text</strong>. Choosing a filename alone does not save anything.</li>
+<li>Wait for the saved byte count and destination. Open the file in a text editor
+and check that it contains the report you intended to share.</li></ol>
+<p>The text is captured when you press Save. Later report or filename edits do not
+change that accepted write. Only one write runs per export control.
+Changing Bank audit filters does not change its earlier capture; choose Capture audit
+before saving a new summary.</p>
+<h2>If a save fails</h2><ul>
+<li><strong>Existing file:</strong> choose a new filename. The exporter never overwrites it.</li>
+<li><strong>Missing folder or denied access:</strong> choose an existing folder you control.</li>
+<li><strong>Empty or oversized text:</strong> display a useful report first. The control
+accepts at most 2,097,152 characters and 8,388,608 UTF-8 bytes; larger reports are refused.</li>
+<li><strong>Interrupted write:</strong> a partial new file can remain. The message shows
+its destination and bytes written. Inspect it before retrying with a different filename.</li></ul>
+<p>An accepted write may finish after its window closes. Closing prevents new captures;
+it does not undo an accepted write. Successful close does not guarantee survival of a
+later power failure.</p>
+<h2>For contributors</h2>
+<p>Use <code>UmiTextExportGtk4Create</code> for a GtkLabel or GtkTextView, or
+<code>UmiTextExportGtk4CreateForBuffer</code> for a report buffer. Both return a floating
+widget. The source is weakly observed; no worker borrows it. Retain the control if host
+disposal can precede service cleanup, call <code>UmiTextExportGtk4Retire</code> when
+closing, then release your reference. Keep report formatting in its existing owner.</p>
+<p>This is a text snapshot, not a signed audit record, accounting backup or broker
+instruction. Share it only with the intended recipient; reports can contain private information.</p>
+</main></body></html>

@@ -103,6 +103,14 @@ static void StreamingExportControls(GtkWindow *window, ConnectionUi *ui, GtkWidg
     gtk_widget_set_name(ui->streamExportReport, "ibkr-stream-export-report");
     gtk_widget_set_name(ui->streamExportStatus, "ibkr-stream-export-status");
     gtk_box_append(GTK_BOX(box), ui->streamExportPath);
+    /* Choose a destination without observing the broker or changing a pending
+     * report. The export action remains responsible for capturing its data. */
+    GtkWidget *browse = UmiPathPickerGtk4Create(GTK_ENTRY(ui->streamExportPath),
+        UMI_PATH_PICKER_NEW_FILE, "Choose a new streaming-bar report", "streaming-bars.csv");
+    if (browse != NULL) {
+        gtk_widget_set_name(browse, "ibkr-streaming-export-browse");
+        gtk_box_append(GTK_BOX(box), browse);
+    }
     gtk_box_append(GTK_BOX(box), ui->streamExportReport);
     gtk_box_append(GTK_BOX(box), ui->streamExportStatus);
     g_signal_connect_object(ui->streamExportReport, "clicked", G_CALLBACK(StreamingExportClicked), window, 0);

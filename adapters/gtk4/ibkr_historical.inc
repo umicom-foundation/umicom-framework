@@ -99,6 +99,11 @@ static void HistoricalPublish(ConnectionUi *ui, uint64_t now)
             (unsigned)capture.query.contract.contractId, capture.query.contract.exchange,
             (unsigned)capture.query.barSeconds, capture.count,
             capture.stale ? "stale or incomplete" : "captured; not live", capture.startText, capture.endText);
+    /* Describe retained timestamps separately from capture age and rendering.
+     * A complete response can still contain session gaps or an unfinished bar. */
+    if (status == UMI_STATUS_OK && capture.count != 0U)
+        BarCoverageAppend(ui, false, capture.requestId, capture.count,
+            capture.query.barSeconds * 1000U, text);
     if (status == UMI_STATUS_OK && capture.complete && !capture.stale && capture.count)
     {
         size_t visible = (size_t)gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(ui->historyVisible));
@@ -109,6 +114,10 @@ static void HistoricalPublish(ConnectionUi *ui, uint64_t now)
         if (visible > remaining)
             visible = remaining;
         size_t first = remaining - visible;
+/* Measure the same selected rows before any presentation callback can run. */
+#ifdef UMI_IBKR_HAS_HISTORY_MODEL
+        BarRangeAppend(ui, false, capture.requestId, first, visible, now, 300000U, text);
+#endif
 #ifdef UMI_IBKR_HAS_HISTORY_MODEL
         if (!canvas->scene || canvas->request != capture.requestId || canvas->first != first ||
             canvas->count != visible)

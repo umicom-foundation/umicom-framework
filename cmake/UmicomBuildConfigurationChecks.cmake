@@ -55,3 +55,21 @@ foreach(_surface IN ITEMS portfolio os missing undeclared alternate-declared)
     set_tests_properties(framework.build_configuration.surface.${_surface}
         PROPERTIES TIMEOUT 30 LABELS "framework;cmake;surface;regression")
 endforeach()
+
+# These modules coexist with older model and workspace tests. Configure both
+# include orders so a target rename cannot silently drop either test owner.
+foreach(_testing IN ITEMS ON OFF)
+    foreach(_order IN ITEMS core-first modules-first)
+        set(_case "libraries.${_testing}.${_order}")
+        add_test(NAME framework.build_configuration.${_case}
+            COMMAND "${CMAKE_COMMAND}"
+                "-DROOT=${CMAKE_CURRENT_LIST_DIR}/.."
+                "-DDEST=${CMAKE_CURRENT_BINARY_DIR}/configuration-${_case}"
+                "-DGENERATOR=${CMAKE_GENERATOR}"
+                "-DCOMPILER=${CMAKE_C_COMPILER}"
+                "-DTESTING=${_testing}" "-DORDER=${_order}" "-DKIND=libraries"
+                -P "${CMAKE_CURRENT_LIST_DIR}/../tests/build_configuration/check.cmake")
+        set_tests_properties(framework.build_configuration.${_case}
+            PROPERTIES TIMEOUT 90 LABELS "framework;cmake;composition;regression")
+    endforeach()
+endforeach()

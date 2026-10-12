@@ -171,6 +171,11 @@ git diff --check
 <p>For the Framework course, set <code>-DCMAKE_PREFIX_PATH="C:/SDKs/Umicom"</code> in Build Settings' CMake definitions field, using your installed SDK location. Select the desired optional GUI feature there as well. The definitions affect the next explicit configure action.</p><p>The Framework course also needs an installed Framework data SDK that CMake can find. Follow the SDK steps in this guide before configuring it. The optional graphical example needs the appropriate GTK runtime as well.</p>
 <p>The teaching projects provide install rules for their program and a ZIP package configuration. Installation copies to the prefix you select. Packaging follows those install rules; it does not collect every compiler or third-party runtime DLL automatically. Verify a package on the intended machine before distributing it.</p>
 <p>If opening in Studio fails, your exported source remains in the chosen folder. Correct the reported problem and retry Open, or open that folder manually. A standalone practicum still exports projects but shows no IDE adoption button unless its host supplies an opener.</p></section>
+<section><h2>Choose and export an editable course project</h2>
+<p><a href="export-course-projects.html">Follow the course-project workflow</a>
+to select your own folder, export while continuing to read, and open the completed
+project in Studio. Existing destinations are kept; failed partial exports remain
+available for inspection.</p></section>
 <section id="trouble"><h2>When something does not work</h2><table><thead><tr><th>What you see</th><th>What to check next</th></tr></thead><tbody>
 <tr><td>The quiz is not ready.</td><td>Mark the current lesson read and pass the preceding quiz in the same course. Choose all three answers before submitting.</td></tr>
 <tr><td>A lesson will not change.</td><td>There are unsaved note edits. Save them or deliberately discard them first.</td></tr>

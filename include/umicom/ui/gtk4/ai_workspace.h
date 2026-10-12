@@ -32,6 +32,24 @@ UmiStatus UmiAiWorkspaceGtkPanelCreate(UmiAiWorkspace *workspace, UmiAiRuntime *
 GtkWidget *UmiAiWorkspaceGtkPanelWidget(UmiAiWorkspaceGtkPanel *panel);
 void UmiAiWorkspaceGtkPanelDestroy(UmiAiWorkspaceGtkPanel *panel);
 int UmiAiWorkspaceGtkRun(const char *applicationId, const char *title, int argc, char **argv);
+
+/** A layout-preserving AI host that opens only user-selected libraries. */
+typedef struct UmiAiWorkspaceGtkSurface UmiAiWorkspaceGtkSurface;
+/** Report generation, file reading or chooser work that prevents library replacement. */
+bool UmiAiWorkspaceGtkPanelBusy(const UmiAiWorkspaceGtkPanel *panel);
+/** Create a library-selection surface; the original unparented widget is borrowed. */
+UmiStatus UmiAiWorkspaceGtkSurfaceCreate(GtkWidget *original, const char *applicationId,
+    UmiAiWorkspaceGtkSurface **outSurface);
+/** Return the borrowed surface widget. */
+GtkWidget *UmiAiWorkspaceGtkSurfaceWidget(UmiAiWorkspaceGtkSurface *surface);
+/**
+ * Open a chosen library after the caller has confirmed discarding unsaved forms.
+ * A failure leaves the current session unchanged; active work returns BUSY.
+ */
+UmiStatus UmiAiWorkspaceGtkSurfaceOpenLibrary(UmiAiWorkspaceGtkSurface *surface,
+    const char *path, bool create);
+/** Retire controls and services, then detach the borrowed original layout. */
+void UmiAiWorkspaceGtkSurfaceDestroy(UmiAiWorkspaceGtkSurface *surface);
 #ifdef __cplusplus
 }
 #endif

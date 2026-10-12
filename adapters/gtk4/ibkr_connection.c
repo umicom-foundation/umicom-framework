@@ -13,6 +13,7 @@
  *---------------------------------------------------------------------------*/
 #include "window_removal_private.h"
 #include "umicom/broker_connectivity/connection_gtk4.h"
+#include "umicom/ui/gtk4/path_picker.h"
 #include "umicom/broker_connectivity/connection.h"
 #include "umicom/broker_connectivity/quotes.h"
 #include "umicom/broker_connectivity/contract_details.h"
@@ -25,6 +26,7 @@
 #include "umicom/broker_connectivity/completed_orders.h"
 #include "umicom/broker_connectivity/completed_report.h"
 #include "umicom/broker_connectivity/historical_chart.h"
+#include "umicom/broker_connectivity/bar_coverage.h"
 #include "umicom/broker_connectivity/historical_report.h"
 #include "umicom/broker_connectivity/realtime_chart.h"
 #include "umicom/broker_connectivity/realtime_report.h"
@@ -50,6 +52,12 @@
 #include <string.h>
 #include "desktop_system_brand.inc"
 
+#ifdef UMI_IBKR_HAS_RULE_REPORT
+#include "umicom/broker_connectivity/rule_report_gtk4.h"
+#endif
+
+#include "umicom/broker_connectivity/account_query.h"
+
 #define UI_KEY "umicom-ibkr-connection-owner"
 typedef struct HistoricalCanvas HistoricalCanvas;
 typedef struct ConnectionUi {
@@ -57,6 +65,8 @@ typedef struct ConnectionUi {
     UmiIbkrConnectionSnapshot snapshot;
     GtkWidget *mode, *program, *port, *client, *ack;
     GtkWidget *connect, *disconnect, *read, *accounts, *status, *output;
+    /* Report selection is captured at Read; changing it never sends a request. */
+    GtkWidget *accountReportKind, *accountReportCurrency;
     guint source;
     gboolean closed, populated;
     uint64_t lastPaint;
@@ -71,6 +81,11 @@ typedef struct ConnectionUi {
     GtkWindow *window;
     GtkWidget *fillMode, *fillSide, *fillTif, *fillQuantity, *fillPrice, *fillBuffer;
     GtkWidget *fillAge, *fillSkew, *fillReview, *fillStart, *fillStop, *fillOutput;
+#ifdef UMI_IBKR_HAS_RULE_REPORT
+    /* The optional child panel owns saved metadata, never broker authority. */
+    GtkWidget *ruleReportPanel;
+    uint32_t ruleReportRequest;
+#endif
     UmiFullQuantityWatch *fillWatch;
     UmiFullQuantityPolicy fillPolicy;
     UmiIbkrQuoteContract fillContract;
@@ -155,6 +170,9 @@ static void FillWatchRetire(ConnectionUi *ui)
     ui->fillWatch = NULL;
     ui->fillRequest = 0U;
 }
+#ifdef UMI_IBKR_HAS_RULE_REPORT
+static void FillReportCheck(ConnectionUi *ui, uint64_t now);
+#endif
 static void FillWatchPaint(ConnectionUi *ui, uint64_t now);
 static void ContractDetailsPaint(ConnectionUi *ui, uint64_t now);
 static void MarketRulePaint(ConnectionUi *ui, uint64_t now);
@@ -217,6 +235,12 @@ static void Controls(ConnectionUi *ui)
     gtk_widget_set_sensitive(ui->read, canRead);
     if (ui->closed) return;
     gtk_widget_set_sensitive(ui->accounts, canRead);
+    if (ui->closed) return;
+    /* Freeze the requested report after capture so a visible selection cannot
+     * relabel observations that came from different account-summary tags. */
+    gtk_widget_set_sensitive(ui->accountReportKind, !ui->snapshot.requestIssued);
+    if (ui->closed) return;
+    gtk_widget_set_sensitive(ui->accountReportCurrency, !ui->snapshot.requestIssued);
     if (ui->closed) return;
     /* Quote inspection shares the existing connection but has its own request
      * lifetime. A failed quote remains cancellable without closing the account. */
@@ -351,6 +375,10 @@ static void Render(ConnectionUi *ui, uint64_t now)
     if (ui->closed) return;
     OptionChainPaint(ui, now);
     if (ui->closed) return;
+#ifdef UMI_IBKR_HAS_RULE_REPORT
+    FillReportCheck(ui, now);
+    if (ui->closed) return;
+#endif
     FillWatchPaint(ui, now);
 }
 /* Native label callbacks can remove a retained window during polling. The
@@ -535,7 +563,17 @@ static void ReadClicked(GtkButton *button, gpointer data)
     if (ui == NULL || !Connected(ui)) return;
     guint index = gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->accounts));
     if ((size_t)index >= ui->snapshot.accountCount) return;
+    /* Retain the overview-only call for review. The shared query owner now
+     * chooses documented margin or currency tags and keeps the same guards. */
+#if 0
     UmiStatus status = UmiIbkrConnectionReadAccount(ui->connection, ui->snapshot.accounts[index], UmiIbkrMonotonicMilliseconds());
+#endif
+    UmiIbkrAccountReportKind kind = (UmiIbkrAccountReportKind)
+        gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->accountReportKind));
+    const char *currency = kind == UMI_IBKR_ACCOUNT_CURRENCY
+        ? gtk_editable_get_text(GTK_EDITABLE(ui->accountReportCurrency)) : "";
+    UmiStatus status = UmiIbkrConnectionReadAccountReport(ui->connection,
+        ui->snapshot.accounts[index], kind, currency, UmiIbkrMonotonicMilliseconds());
     Render(ui, UmiIbkrMonotonicMilliseconds());
     if (status != UMI_STATUS_OK) gtk_label_set_text(GTK_LABEL(ui->status), umi_status_text(status));
 }
@@ -586,6 +624,8 @@ static void Field(GtkGrid *grid, const char *name, GtkWidget *widget, int row, c
 #include "ibkr_completed_export.inc"
 #include "ibkr_completed.inc"
 #include "ibkr_historical_export.inc"
+#include "ibkr_bar_coverage.inc"
+#include "ibkr_bar_range.inc"
 #include "ibkr_historical.inc"
 #include "ibkr_streaming_export.inc"
 #include "ibkr_streaming.inc"
@@ -653,6 +693,16 @@ GtkWindow *UmiIbkrGtkCreate(GtkWindow *parent)
     gtk_widget_set_name(ui->disconnect, "ibkr-disconnect");
     gtk_box_append(GTK_BOX(buttons), ui->connect); gtk_box_append(GTK_BOX(buttons), ui->disconnect);
     gtk_box_append(GTK_BOX(root), buttons);
+    const char *reportKinds[] = {"Account overview", "Balances and margin", "Cash in one currency", NULL};
+    ui->accountReportKind = gtk_drop_down_new_from_strings(reportKinds);
+    gtk_widget_set_name(ui->accountReportKind, "ibkr-account-report-kind");
+    ui->accountReportCurrency = gtk_entry_new();
+    gtk_widget_set_name(ui->accountReportCurrency, "ibkr-account-report-currency");
+    gtk_entry_set_max_length(GTK_ENTRY(ui->accountReportCurrency), 3);
+    gtk_entry_set_placeholder_text(GTK_ENTRY(ui->accountReportCurrency), "Currency code, for example GBP");
+    gtk_box_append(GTK_BOX(root), Text("Account report"));
+    gtk_box_append(GTK_BOX(root), ui->accountReportKind);
+    gtk_box_append(GTK_BOX(root), ui->accountReportCurrency);
     ui->accounts = gtk_drop_down_new(NULL, NULL);
     ui->read = gtk_button_new_with_label("Read selected account once");
     gtk_widget_set_name(ui->accounts, "ibkr-accounts"); gtk_widget_set_name(ui->read, "ibkr-read");
@@ -795,6 +845,16 @@ GtkWindow *UmiIbkrGtkCreate(GtkWindow *parent)
     gtk_expander_set_child(GTK_EXPANDER(tools), toolsRoot);
     gtk_box_append(GTK_BOX(root), tools);
     root = toolsRoot;
+    const char *reportKinds[] = {"Account overview", "Balances and margin", "Cash in one currency", NULL};
+    ui->accountReportKind = gtk_drop_down_new_from_strings(reportKinds);
+    gtk_widget_set_name(ui->accountReportKind, "ibkr-account-report-kind");
+    ui->accountReportCurrency = gtk_entry_new();
+    gtk_widget_set_name(ui->accountReportCurrency, "ibkr-account-report-currency");
+    gtk_entry_set_max_length(GTK_ENTRY(ui->accountReportCurrency), 3);
+    gtk_entry_set_placeholder_text(GTK_ENTRY(ui->accountReportCurrency), "Currency code, for example GBP");
+    gtk_box_append(GTK_BOX(root), Text("Account report"));
+    gtk_box_append(GTK_BOX(root), ui->accountReportKind);
+    gtk_box_append(GTK_BOX(root), ui->accountReportCurrency);
     ui->accounts = gtk_drop_down_new(NULL, NULL);
     ui->read = gtk_button_new_with_label("Read selected account once");
     gtk_widget_set_name(ui->accounts, "ibkr-accounts"); gtk_widget_set_name(ui->read, "ibkr-read");

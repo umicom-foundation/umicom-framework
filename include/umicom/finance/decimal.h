@@ -64,6 +64,12 @@ UmiStatus UmiDecimalCompare(UmiDecimal left, UmiDecimal right, int *outCompariso
 UmiStatus UmiDecimalAddExact(UmiDecimal left, UmiDecimal right, UmiDecimal *out);
 
 
+/** Subtract at the finer input scale, without negating the right operand.
+ * INT64_MIN is therefore accepted when the exact result fits. Overflow during
+ * rescaling or subtraction returns CAPACITY_EXCEEDED and preserves out.
+ * Like addition, intermediate rescaling must fit even if values would cancel. */
+UmiStatus UmiDecimalSubtractExact(UmiDecimal left, UmiDecimal right, UmiDecimal *out);
+
 /** Parse a provider's fixed or scientific decimal without floating point.
  * Input has 1..96 bytes, optional sign, digits, an optional fractional part,
  * and an optional signed exponent (magnitude at most 1000). Whitespace,

@@ -86,10 +86,15 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/umicom-ai-workspace-config/UmicomAiWo
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework" COMPONENT Framework)
 
 if(TARGET Umicom::ui_gtk4)
+    # Both hosts use the same explicit local library selection and file policy.
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkspaceLibrary.cmake")
     add_library(umicom_ai_workspace_gtk4 STATIC
         "${_umicom_ai_workspace_root}/adapters/gtk4/ai_workspace_panel_gtk4.c"
         "${_umicom_ai_workspace_root}/adapters/gtk4/ai_workspace_application_gtk4.c")
+    target_sources(umicom_ai_workspace_gtk4 PRIVATE
+        "${_umicom_ai_workspace_root}/adapters/gtk4/ai_workspace_surface_gtk4.c")
     add_library(Umicom::ai_workspace_gtk4 ALIAS umicom_ai_workspace_gtk4)
+    target_link_libraries(umicom_ai_workspace_gtk4 PUBLIC Umicom::workspace_library_gtk4)
     set_target_properties(umicom_ai_workspace_gtk4 PROPERTIES EXPORT_NAME ai_workspace_gtk4)
     target_link_libraries(umicom_ai_workspace_gtk4 PUBLIC Umicom::ai_workspace Umicom::ui_gtk4)
     umicom_ai_workspace_configure_target(umicom_ai_workspace_gtk4)
@@ -144,6 +149,17 @@ if(BUILD_TESTING)
         add_executable(umicom-ai-workspace-gtk-test "${_umicom_ai_workspace_root}/tests/ai_workspace/test_panel_gtk4.c")
         target_link_libraries(umicom-ai-workspace-gtk-test PRIVATE Umicom::ai_workspace_gtk4)
         umicom_ai_workspace_configure_target(umicom-ai-workspace-gtk-test)
+        # Exercise real file-backed surface replacement, without contacting a model.
+        add_executable(umicom-ai-library-gtk-test
+            "${_umicom_ai_workspace_root}/tests/ai_workspace/test_library_gtk4.c")
+        target_link_libraries(umicom-ai-library-gtk-test PRIVATE Umicom::ai_workspace_gtk4)
+        umicom_ai_workspace_configure_target(umicom-ai-library-gtk-test)
+        add_test(NAME framework.ai_workspace.gtk.library COMMAND umicom-ai-library-gtk-test)
+        set_tests_properties(framework.ai_workspace.gtk.library PROPERTIES
+            TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;ai-workspace;gtk4;storage")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-ai-library-gtk-test)
+        endif()
         foreach(case workflow close_during_request)
             add_test(NAME "framework.ai_workspace.gtk.${case}" COMMAND umicom-ai-workspace-gtk-test "${case}")
             set_tests_properties("framework.ai_workspace.gtk.${case}" PROPERTIES TIMEOUT 30 SKIP_RETURN_CODE 77

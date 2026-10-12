@@ -1,4 +1,11 @@
 /*-----------------------------------------------------------------------------
+ *
+ * File: tests/vm_manager/test_kernel_console_native.c
+ *
+ * PURPOSE: Check the native console adapter with controlled QMP and clock responses.
+ *
+ * LICENCE: MIT
+ *
  * Umicom Framework - Native QMP console adapter acceptance tests
  * Author: Sammy Hegab, Umicom Foundation. Licence: MIT.
  *

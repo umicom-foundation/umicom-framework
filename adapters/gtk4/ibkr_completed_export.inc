@@ -107,6 +107,14 @@ static void CompletedExportControls(GtkWindow *window, ConnectionUi *ui, GtkWidg
     gtk_widget_set_name(ui->completedExportReport, "ibkr-completed-export-report");
     gtk_widget_set_name(ui->completedExportStatus, "ibkr-completed-export-status");
     gtk_box_append(GTK_BOX(box), ui->completedExportPath);
+    /* Browse fills the draft path only. The report action still captures
+     * its existing request identity and writes with no-overwrite semantics. */
+    GtkWidget *browse = UmiPathPickerGtk4Create(GTK_ENTRY(ui->completedExportPath),
+        UMI_PATH_PICKER_NEW_FILE, "Choose a new report location", "completed-orders.csv");
+    if (browse != NULL) {
+        gtk_widget_set_name(browse, "ibkr-completed-export-browse");
+        gtk_box_append(GTK_BOX(box), browse);
+    }
     gtk_box_append(GTK_BOX(box), ui->completedExportReport);
     gtk_box_append(GTK_BOX(box), ui->completedExportStatus);
     g_signal_connect_object(ui->completedExportReport, "clicked", G_CALLBACK(CompletedExportClicked), window,

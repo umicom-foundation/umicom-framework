@@ -6,6 +6,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "education_workspace_private.h"
+#include "window_removal_private.h"
 #include "umicom/application/suite_layout/gtk4_product_content_extension.h"
 
 typedef struct EducationHost {
@@ -79,6 +80,10 @@ typedef struct EducationDialog {
     GtkScrolledWindow *scroll;
 } EducationDialog;
 
+/* Native window removal ends permission to use its controls even if another
+ * owner retains the GtkWindow. Final object release may happen much later;
+ * retain the former finalisation-only disposal path for ownership review. */
+#if 0
 static void DisposeDialog(gpointer context)
 {
     EducationDialog *dialog = context;
@@ -86,6 +91,27 @@ static void DisposeDialog(gpointer context)
      * detached from its window during native destruction. */
     gtk_scrolled_window_set_child(dialog->scroll, NULL);
     UmiEducationGtkDestroy(dialog->panel);
+    g_object_unref(dialog->scroll);
+    g_free(dialog);
+}
+
+#endif
+static void CloseDialog(GtkWidget *window, gpointer context)
+{
+    (void)window;
+    EducationDialog *dialog = context;
+    UmiEducationGtkPanel *panel = dialog->panel;
+    if (panel == NULL) return;
+    /* Clear the identity before detaching widgets, whose notifications may
+     * reenter window disposal. An accepted export can finish without this view. */
+    dialog->panel = NULL;
+    gtk_scrolled_window_set_child(dialog->scroll, NULL);
+    UmiEducationGtkDestroy(panel);
+}
+static void DisposeDialog(gpointer context)
+{
+    EducationDialog *dialog = context;
+    CloseDialog(NULL, dialog);
     g_object_unref(dialog->scroll);
     g_free(dialog);
 }
@@ -144,6 +170,7 @@ UmiStatus UmiEducationGtkOpenWithProjectOpener(GtkWindow *parent,
     gtk_window_set_child(GTK_WINDOW(window), GTK_WIDGET(dialog->scroll));
     UmiEducationGtkAttachCloseGuard(panel, GTK_WINDOW(window));
     g_object_set_data_full(G_OBJECT(window), "umicom-education-dialog", dialog, DisposeDialog);
+    UmiGtk4ObserveWindowRemoval(GTK_WINDOW(window), G_OBJECT(window), CloseDialog, dialog);
     gtk_window_present(GTK_WINDOW(window));
     return UMI_STATUS_OK;
 }

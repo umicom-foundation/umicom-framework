@@ -55,6 +55,10 @@ void UmiCreativeGtkStatus(UmiCreativeGtkPanel * p, UmiStatus status, const char 
     g_free(message);
 }
 
+/* The previous per-user fallback is retained for review. An explicit library
+ * selector now owns path choice; project actions must not create hidden storage
+ * merely because the user has not selected a location yet. */
+#if 0
 static UmiStatus EnsureServer(UmiCreativeGtkPanel * p)
 {
     if (p -> server!= NULL)return UMI_STATUS_OK;
@@ -70,6 +74,33 @@ static UmiStatus EnsureServer(UmiCreativeGtkPanel * p)
     g_free(path);
     g_free(directory);
     return status;
+}
+#endif
+static UmiStatus EnsureServer(UmiCreativeGtkPanel *p)
+{
+    return p->server != NULL ? UMI_STATUS_OK : UMI_STATUS_INVALID_STATE;
+}
+
+UmiStatus UmiCreativeGtkOpenLibrary(const char *path, bool create, void *context)
+{
+    UmiCreativeGtkPanel *p = context;
+    if (p == NULL || p->refreshing) return UMI_STATUS_BUSY;
+    /* A caller-supplied Data Server remains borrowed. Its host decides where
+     * persistence lives; the panel must never replace or destroy that service. */
+    if (p->server != NULL && !p->ownsServer) return UMI_STATUS_INVALID_STATE;
+    UmiDataServer *candidate = NULL;
+    UmiStatus status = UmiWorkspaceLibraryOpenData(path, create, &candidate);
+    if (status != UMI_STATUS_OK) return status;
+    UmiCreativeWorkspaceDestroy(p->workspace); p->workspace = NULL;
+    if (p->ownsServer) umi_data_server_destroy(p->server);
+    p->server = candidate; p->ownsServer = true;
+    memset(p->project, 0, sizeof(*p->project));
+    p->frameValid = false; p->playActive = false;
+    gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(p->report)), "", -1);
+    gtk_widget_queue_draw(p->canvas);
+    gtk_label_set_text(GTK_LABEL(p->storage), path);
+    gtk_label_set_text(GTK_LABEL(p->status), "Library open. Create a project or open a saved Project ID in the Project tab.");
+    return UMI_STATUS_OK;
 }
 
 static UmiStatus Settings(UmiCreativeGtkPanel * p, UmiCreativeSettings * settings)
@@ -243,6 +274,12 @@ void UmiCreativeGtkAction(GtkButton * button, gpointer data)
     UmiCreativeGtkPanel * p = data;
     const char * action = g_object_get_data(G_OBJECT(button), "creative-action");
     if (p -> refreshing || action == NULL)return;
+    /* Give a first-time user a direct next step before any project operation. */
+    if ((strcmp(action, "project.create") == 0 || strcmp(action, "project.open") == 0) && p->server == NULL) {
+        gtk_label_set_text(GTK_LABEL(p->status), "Choose a project library location, then use Create new or Open existing.");
+        return;
+    }
+
     UmiStatus status = UMI_STATUS_INVALID_STATE;
     if (strcmp(action, "project.create") == 0 || strcmp(action, "project.open") == 0)status = OpenProject(p, strcmp(action, "project.create") == 0);
     else if (p -> workspace!= NULL){

@@ -26,6 +26,8 @@
 #include <string.h>
 
 #include "umicom/platform/atomic_file.h"
+#include "umicom/platform/input_file.h"
+#include "umicom/platform/local_replace.h"
 #include "umicom/platform/filesystem.h"
 
 #define UMI_RECENT_ITEMS_FILE_MARKER "UMICOM_RECENT_ITEMS|1"
@@ -467,9 +469,15 @@ static void append_hex(char *output, size_t *offset, const char *text)
 }
 
 /* Serialize the complete registry and replace the destination atomically. */
+/* Preserve the public entry point below; a common serializer keeps the
+ * established representation identical for legacy and absolute-path storage. */
+#if 0
 UmiStatus umi_platform_recent_items_registry_save(
     const UmiRecentItemRegistry *registry,
     const char *path)
+#endif
+static UmiStatus recent_items_save(const UmiRecentItemRegistry *registry,
+                                   const char *path, int native_path)
 {
     size_t required = strlen(UMI_RECENT_ITEMS_FILE_HEADER) + 1U;
     size_t index;
@@ -529,7 +537,10 @@ UmiStatus umi_platform_recent_items_registry_save(
         offset += (size_t)written;
     }
 
-    status = umi_atomic_file_write(path, output, offset);
+    /* Native callers explicitly own an existing parent directory. They use
+     * exclusive staging and Unicode paths without creating hidden folders. */
+    if (native_path) status = UmiLocalFileReplace(path, output, offset);
+    else status = umi_atomic_file_write(path, output, offset);
     free(output);
     return status;
 }
@@ -657,10 +668,16 @@ static UmiStatus parse_record(UmiRecentItemRegistry *registry, char *line)
 }
 
 /* Build a temporary validated registry before returning it to the caller. */
+/* Both entry points share record validation; only their file ownership policy
+ * differs. Retain the previous declaration for public-interface review. */
+#if 0
 UmiStatus umi_platform_recent_items_registry_load(
     const char *path,
     UmiRecentItemRegistry **out_registry,
     int *out_loaded)
+#endif
+static UmiStatus recent_items_load(const char *path,
+    UmiRecentItemRegistry **out_registry, int *out_loaded, int native_path)
 {
     UmiRecentItemRegistry *registry = NULL;
     char *text = NULL;
@@ -677,6 +694,18 @@ UmiStatus umi_platform_recent_items_registry_load(
 
     status = umi_platform_recent_items_registry_create(&registry);
     if (status != UMI_STATUS_OK) return status;
+    /* Keep the permissive relative-path reader for existing callers. Native
+     * library history uses a bounded regular-file read and reports directories,
+     * links and access errors instead of pretending they are missing files. */
+    if (native_path) {
+        unsigned char *bytes = NULL;
+        status = UmiInputFileRead(path, UMI_RECENT_ITEMS_FILE_LIMIT, &bytes, &text_size);
+        if (status == UMI_STATUS_NOT_FOUND) {
+            *out_registry = registry;
+            return UMI_STATUS_OK;
+        }
+        text = (char *)bytes;
+    } else {
     if (!umi_fs_is_file(path)) {
         *out_registry = registry;
         return UMI_STATUS_OK;
@@ -686,6 +715,14 @@ UmiStatus umi_platform_recent_items_registry_load(
     if (status != UMI_STATUS_OK) {
         umi_platform_recent_items_registry_destroy(registry);
         return status;
+    }
+    }
+    if (status != UMI_STATUS_OK) goto load_failed;
+    /* An embedded NUL would otherwise hide a damaged suffix from line parsing.
+     * Native storage accepts the whole file or none of it. */
+    if (native_path && memchr(text, '\0', text_size) != NULL) {
+        status = UMI_STATUS_PARSE_ERROR;
+        goto load_failed;
     }
     if (text_size > UMI_RECENT_ITEMS_FILE_LIMIT || text_size <= marker_length ||
         memcmp(text, UMI_RECENT_ITEMS_FILE_MARKER, marker_length) != 0) {
@@ -731,4 +768,37 @@ load_failed:
     umi_fs_free_text(text);
     umi_platform_recent_items_registry_destroy(registry);
     return status;
+}
+
+/* Compatibility entry points retain their existing path and directory policy. */
+UmiStatus umi_platform_recent_items_registry_save(const UmiRecentItemRegistry *registry, const char *path)
+{ return recent_items_save(registry, path, 0); }
+UmiStatus umi_platform_recent_items_registry_load(const char *path, UmiRecentItemRegistry **out_registry, int *out_loaded)
+{ return recent_items_load(path, out_registry, out_loaded, 0); }
+
+/* Native desktop clients opt in to absolute paths, bounded reads and exclusive
+ * replacement. The registry owns metadata only; it never opens a listed item. */
+UmiStatus UmiRecentItemsSaveLocal(const UmiRecentItemRegistry *registry, const char *path)
+{ return recent_items_save(registry, path, 1); }
+UmiStatus UmiRecentItemsLoadLocal(const char *path, UmiRecentItemRegistry **out_registry, int *out_loaded)
+{ return recent_items_load(path, out_registry, out_loaded, 1); }
+
+/* A surface may share a preferences file with another product feature. Limit
+ * only its own family, preserving pinned records and every unrelated entry. */
+UmiStatus UmiRecentItemsTrimKind(UmiRecentItemRegistry *registry, const char *kind, size_t maximumCount)
+{
+    if (registry == NULL || kind == NULL || kind[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    for (;;) {
+        size_t count = 0U, oldest = SIZE_MAX;
+        for (size_t index = 0U; index < registry->count; ++index) {
+            const UmiRecentItemSnapshot *item = &registry->items[index];
+            if (strcmp(item->kind, kind) != 0) continue;
+            ++count;
+            if (item->pinned == 0 && (oldest == SIZE_MAX || item->last_opened < registry->items[oldest].last_opened)) oldest = index;
+        }
+        if (count <= maximumCount || oldest == SIZE_MAX) return UMI_STATUS_OK;
+        /* Removal compacts the catalogue, so find the next oldest entry afresh. */
+        UmiStatus status = umi_platform_recent_items_registry_remove(registry, registry->items[oldest].id);
+        if (status != UMI_STATUS_OK) return status;
+    }
 }
