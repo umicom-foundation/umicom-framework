@@ -20,7 +20,9 @@ endif()
 set(_umicom_healthcare_framework_root "${CMAKE_CURRENT_LIST_DIR}/..")
 
 add_library(umicom_healthcare_core STATIC
-    "${_umicom_healthcare_framework_root}/src/healthcare/synthetic_registry.c")
+    "${_umicom_healthcare_framework_root}/src/healthcare/synthetic_registry.c"
+    "${_umicom_healthcare_framework_root}/src/healthcare/synthetic_encounter.c"
+    "${_umicom_healthcare_framework_root}/src/healthcare/synthetic_routing.c")
 add_library(Umicom::healthcare_core ALIAS umicom_healthcare_core)
 set_target_properties(umicom_healthcare_core PROPERTIES
     EXPORT_NAME healthcare_core
@@ -45,6 +47,8 @@ install(TARGETS umicom_healthcare_core
     COMPONENT Framework)
 install(FILES
     "${_umicom_healthcare_framework_root}/include/umicom/healthcare/synthetic_registry.h"
+    "${_umicom_healthcare_framework_root}/include/umicom/healthcare/synthetic_encounter.h"
+    "${_umicom_healthcare_framework_root}/include/umicom/healthcare/synthetic_routing.h"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/healthcare"
     COMPONENT Framework)
 
@@ -62,6 +66,33 @@ if(BUILD_TESTING)
     add_test(NAME framework.healthcare.synthetic_registry
         COMMAND umicom-healthcare-core-test)
     set_tests_properties(framework.healthcare.synthetic_registry PROPERTIES
+        TIMEOUT 30 LABELS "framework;healthcare;synthetic;regression")
+
+    # Intake and manually selected worklist routing have separate test targets.
+    # They remain independent of any product's frontend or clinical decisions.
+    add_executable(umicom-healthcare-encounter-test
+        "${_umicom_healthcare_framework_root}/tests/healthcare/test_synthetic_encounter.c")
+    target_link_libraries(umicom-healthcare-encounter-test PRIVATE
+        Umicom::healthcare_core)
+    add_executable(umicom-healthcare-routing-test
+        "${_umicom_healthcare_framework_root}/tests/healthcare/test_synthetic_routing.c")
+    target_link_libraries(umicom-healthcare-routing-test PRIVATE
+        Umicom::healthcare_core)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-healthcare-encounter-test)
+        umicom_apply_warnings(umicom-healthcare-routing-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-healthcare-encounter-test)
+        umicom_apply_sanitizers(umicom-healthcare-routing-test)
+    endif()
+    add_test(NAME framework.healthcare.synthetic_encounter
+        COMMAND umicom-healthcare-encounter-test)
+    add_test(NAME framework.healthcare.synthetic_routing
+        COMMAND umicom-healthcare-routing-test)
+    set_tests_properties(
+        framework.healthcare.synthetic_encounter
+        framework.healthcare.synthetic_routing PROPERTIES
         TIMEOUT 30 LABELS "framework;healthcare;synthetic;regression")
 endif()
 
