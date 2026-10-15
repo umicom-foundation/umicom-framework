@@ -1,0 +1,17 @@
+# Give independent clones the same encoding and line-ending defaults as
+# submodule checkouts. Existing formatter files and source style determine
+# indentation; this file does not reformat or rewrite existing source.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+
+# Preserve intentional Markdown line breaks.
+[*.md]
+trim_trailing_whitespace = false
+
+# Match the repository's Git attributes for native Windows command files.
+[*.{ps1,bat,cmd,sln,vcxproj}]
+end_of_line = crlf
