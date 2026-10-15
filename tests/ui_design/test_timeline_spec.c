@@ -58,6 +58,13 @@ UMI_TEST_VALUE_TRANSFER(UmiDesignTimelineSpecTransferCases, UmiDesignTimelineSpe
     umi_design_timeline_spec_archive_encode, umi_design_timeline_spec_archive_decode,
     UmiDesignTimelineSpecTransferEqual, UmiDesignTimelineSpecTransferTails, UmiDesignTimelineSpecTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignTimelineSpecConditionalArchiveCases, UmiDesignTimelineSpec,
+    umi_design_timeline_spec_archive_encode, umi_design_timeline_spec_archive_decode_if_unchanged,
+    UmiDesignTimelineSpecTransferEqual, UmiDesignTimelineSpecTransferTails, UmiDesignTimelineSpecTransferMalformed)
+
+
 int main(void){UmiDesignTimelineSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_timeline_spec_init(&s,24U,8.0,1,1,1)!=UMI_STATUS_OK)return 1;
     if (UmiDesignTimelineSpecTransferCases(&s) != 0) return 1;
+    if (UmiDesignTimelineSpecConditionalArchiveCases(&s) != 0) return 1;
 return s.tracks==24U?0:2;}

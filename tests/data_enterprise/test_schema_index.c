@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/data/enterprise/schema_index.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -108,10 +109,72 @@ UMI_TEST_VALUE_TRANSFER(UmiDataSchemaIndexTransferCases, UmiDataSchemaIndex,
     umi_data_schema_index_archive_encode, umi_data_schema_index_archive_decode,
     UmiDataSchemaIndexTransferEqual, UmiDataSchemaIndexTransferTails, UmiDataSchemaIndexTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataSchemaIndexConditionalArchiveCases, UmiDataSchemaIndex,
+    umi_data_schema_index_archive_encode, umi_data_schema_index_archive_decode_if_unchanged,
+    UmiDataSchemaIndexTransferEqual, UmiDataSchemaIndexTransferTails, UmiDataSchemaIndexTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted schema index value. */
+static int UmiDataSchemaIndexConstructionCases(void)
+{
+    UmiDataSchemaIndex *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_data_schema_index_init(value, "orders.pk", "orders", "id", true) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->index_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_schema_index_init(value, oversized, "orders", "id", true) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_schema_index_init(value, value->index_id, "orders", "id", true) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->index_id, "orders.pk") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->table_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_schema_index_init(value, "orders.pk", oversized, "id", true) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_schema_index_init(value, "orders.pk", value->table_id, "id", true) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->table_id, "orders") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->key_expression) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_schema_index_init(value, "orders.pk", "orders", oversized, true) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_schema_index_init(value, "orders.pk", "orders", value->key_expression, true) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->key_expression, "id") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiDataSchemaIndexConstructionCases() != 0) return 1;
+
     UmiDataSchemaIndex item;
     CHECK(umi_data_schema_index_init(&item,"orders.pk","orders","id",true) == UMI_STATUS_OK);
     if (UmiDataSchemaIndexTransferCases(&item) != 0) return 1;
+    if (UmiDataSchemaIndexConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.unique);
     return 0;

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <math.h>
 #include <string.h>
@@ -29,6 +30,9 @@ int main(void)
     rate.rate = 1.25;
     rate.eventMilliseconds = 1000U;
     assert(umi_financial_rate_book_upsert(&book, &rate) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFinancialRateBook, &book,
+        (umi_financial_rate_book_upsert(&book, &rate)));
+
     assert(umi_financial_rate_book_convert(&book, "GBP", "USD", 100.0,
                                            &converted) == UMI_STATUS_OK);
     assert(fabs(converted - 125.0) < 0.001);

@@ -85,6 +85,13 @@ UMI_TEST_VALUE_TRANSFER(UmiUiEntAggregationDescriptorTransferCases, UmiUiEntAggr
     umi_ui_ent_aggregation_descriptor_archive_encode, umi_ui_ent_aggregation_descriptor_archive_decode,
     UmiUiEntAggregationDescriptorTransferEqual, UmiUiEntAggregationDescriptorTransferTails, UmiUiEntAggregationDescriptorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiEntAggregationDescriptorConditionalArchiveCases, UmiUiEntAggregationDescriptor,
+    umi_ui_ent_aggregation_descriptor_archive_encode, umi_ui_ent_aggregation_descriptor_archive_decode_if_unchanged,
+    UmiUiEntAggregationDescriptorTransferEqual, UmiUiEntAggregationDescriptorTransferTails, UmiUiEntAggregationDescriptorTransferMalformed)
+
+
 int main(void){UmiUiEntAggregationDescriptor v;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_aggregation_descriptor_init(&v)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_copy_text(v.aggregation_id,sizeof v.aggregation_id,"id")!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_copy_text(v.column_id,sizeof v.column_id,"value")!=UMI_STATUS_OK)return 3;v.kind=UMI_UI_ENT_AGG_SUM;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_ui_ent_aggregation_descriptor_validate(&v))return 9;
     if (UmiUiEntAggregationDescriptorTransferCases(&v) != 0) return 1;
+    if (UmiUiEntAggregationDescriptorConditionalArchiveCases(&v) != 0) return 1;
 puts("ok");return 0;}

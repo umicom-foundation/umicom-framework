@@ -20,6 +20,7 @@
  * into bounded storage, revisions advance on mutation, and callers retain
  * responsibility for higher-level threading and persistence policy.
  */
+#include "../base/conditional_archive_internal.h"
 #include "umicom/platform/resource_location.h"
 #include "../base/value_archive_internal.h"
 #include "../base/registry_archive_internal.h"
@@ -678,3 +679,8 @@ UMI_DEFINE_VALUE_ARCHIVE(umi_platform_resource_location_snapshot_archive_encode,
 UMI_DEFINE_REGISTRY_ARCHIVE(umi_platform_resource_location_registry_archive_encode, umi_platform_resource_location_registry_archive_restore,
     UmiResourceLocationRegistry, UmiResourceLocationSnapshot, UMI_PLATFORM_RESOURCE_LOCATION_CAPACITY, ArchiveSchema,
     umi_platform_resource_location_snapshot_archive_encode, umi_platform_resource_location_snapshot_archive_decode, umi_platform_resource_location_registry_replace_if_current)
+
+/* Guard snapshot import with the complete encoded value reviewed by the
+ * caller. Imported metadata remains evidence; registry publication is separate. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_platform_resource_location_snapshot_archive_decode_if_unchanged, umi_platform_resource_location_snapshot_archive_encode,
+    UmiResourceLocationSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)

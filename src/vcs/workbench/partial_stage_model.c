@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/vcs/workbench/partial_stage_model.h"
 
 #include <string.h>
@@ -73,10 +74,41 @@ UmiStatus umi_vcs_workbench_partial_stage_model_begin(
  * Add vcs workbench partial stage model only after its inputs and available capacity have
  * been checked.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_vcs_workbench_partial_stage_model_add(
     UmiVcsWorkbenchPartialStageModel *model,
     const UmiVcsAdvancedStagingHunk *hunk)
 {
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_vcs_advanced_partial_stage_plan_add(&model->plan, hunk);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    model->added_lines += hunk->added_lines;
+    model->deleted_lines += hunk->deleted_lines;
+    update_ready(model);
+    model->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_vcs_workbench_partial_stage_model_add(
+    UmiVcsWorkbenchPartialStageModel *model,
+    const UmiVcsAdvancedStagingHunk *hunk)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (model != NULL && model->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiStatus status;
 
     /*
@@ -98,6 +130,10 @@ UmiStatus umi_vcs_workbench_partial_stage_model_add(
  * Provide the vcs workbench partial stage model select operation used by this module and
  * its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_vcs_workbench_partial_stage_model_select(
     UmiVcsWorkbenchPartialStageModel *model,
     size_t index,
@@ -119,15 +155,80 @@ UmiStatus umi_vcs_workbench_partial_stage_model_select(
     model->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_vcs_workbench_partial_stage_model_select(
+    UmiVcsWorkbenchPartialStageModel *model,
+    size_t index,
+    int selected)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (model != NULL && model->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_vcs_advanced_partial_stage_plan_select(
+        &model->plan, index, selected);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    model->current_hunk = index;
+    update_ready(model);
+    model->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the vcs workbench partial stage model select all operation used by this module
  * and its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_vcs_workbench_partial_stage_model_select_all(
     UmiVcsWorkbenchPartialStageModel *model,
     int selected)
 {
+    size_t index;
+    UmiStatus status = UMI_STATUS_OK;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U;
+         status == UMI_STATUS_OK && index < model->plan.hunk_count;
+         ++index) {
+        status = umi_vcs_advanced_partial_stage_plan_select(
+            &model->plan, index, selected);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        update_ready(model);
+        model->revision += 1U;
+    }
+    return status;
+}
+#endif
+
+UmiStatus umi_vcs_workbench_partial_stage_model_select_all(
+    UmiVcsWorkbenchPartialStageModel *model,
+    int selected)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (model != NULL && model->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     UmiStatus status = UMI_STATUS_OK;
 

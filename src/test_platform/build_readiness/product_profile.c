@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/test_platform/build_readiness/product_profile.h"
 #include "../../base/value_archive_internal.h"
 
@@ -148,3 +149,8 @@ static UmiStatus UmiTestPlatformProductValidationProfileArchiveValidate(const Um
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_test_platform_product_validation_profile_archive_encode, umi_test_platform_product_validation_profile_archive_decode,
     UmiTestPlatformProductValidationProfile, UmiTestPlatformProductValidationProfileArchiveSchema, UmiTestPlatformProductValidationProfileArchiveBound, UmiTestPlatformProductValidationProfileArchiveWrite, UmiTestPlatformProductValidationProfileArchiveRead, UmiTestPlatformProductValidationProfileArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_test_platform_product_validation_profile_archive_decode_if_unchanged, umi_test_platform_product_validation_profile_archive_encode,
+    UmiTestPlatformProductValidationProfile, UmiTestPlatformProductValidationProfileArchiveSchema, UmiTestPlatformProductValidationProfileArchiveBound, UmiTestPlatformProductValidationProfileArchiveRead, UmiTestPlatformProductValidationProfileArchiveValidate)

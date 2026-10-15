@@ -107,12 +107,19 @@ UMI_TEST_VALUE_TRANSFER(UmiCommodityGradeSpecificationTransferCases, UmiCommodit
     umi_commodity_grade_specification_archive_encode, umi_commodity_grade_specification_archive_decode,
     UmiCommodityGradeSpecificationTransferEqual, UmiCommodityGradeSpecificationTransferTails, UmiCommodityGradeSpecificationTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCommodityGradeSpecificationConditionalArchiveCases, UmiCommodityGradeSpecification,
+    umi_commodity_grade_specification_archive_encode, umi_commodity_grade_specification_archive_decode_if_unchanged,
+    UmiCommodityGradeSpecificationTransferEqual, UmiCommodityGradeSpecificationTransferTails, UmiCommodityGradeSpecificationTransferMalformed)
+
+
 int main(void)
 {
     UmiCommodityGradeSpecification value;
     CHECK(umi_commodity_grade_specification_init(&value, "GRADE-BRENT", "CMD-BRENT", "BFOET") == UMI_STATUS_OK);
     CHECK(umi_commodity_grade_specification_valid(&value));
     if (UmiCommodityGradeSpecificationTransferCases(&value) != 0) return 1;
+    if (UmiCommodityGradeSpecificationConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(value.active);
     return 0;

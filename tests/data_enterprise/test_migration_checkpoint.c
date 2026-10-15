@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/data/enterprise/migration_checkpoint.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -92,10 +93,60 @@ UMI_TEST_VALUE_TRANSFER(UmiDataMigrationCheckpointTransferCases, UmiDataMigratio
     umi_data_migration_checkpoint_archive_encode, umi_data_migration_checkpoint_archive_decode,
     UmiDataMigrationCheckpointTransferEqual, UmiDataMigrationCheckpointTransferTails, UmiDataMigrationCheckpointTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataMigrationCheckpointConditionalArchiveCases, UmiDataMigrationCheckpoint,
+    umi_data_migration_checkpoint_archive_encode, umi_data_migration_checkpoint_archive_decode_if_unchanged,
+    UmiDataMigrationCheckpointTransferEqual, UmiDataMigrationCheckpointTransferTails, UmiDataMigrationCheckpointTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted migration checkpoint value. */
+static int UmiDataMigrationCheckpointConstructionCases(void)
+{
+    UmiDataMigrationCheckpoint *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_data_migration_checkpoint_init(value, "cp1", "mig1", 2U, 11U, 22U) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->checkpoint_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_migration_checkpoint_init(value, oversized, "mig1", 2U, 11U, 22U) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_migration_checkpoint_init(value, value->checkpoint_id, "mig1", 2U, 11U, 22U) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->checkpoint_id, "cp1") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->migration_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_migration_checkpoint_init(value, "cp1", oversized, 2U, 11U, 22U) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_migration_checkpoint_init(value, "cp1", value->migration_id, 2U, 11U, 22U) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->migration_id, "mig1") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiDataMigrationCheckpointConstructionCases() != 0) return 1;
+
     UmiDataMigrationCheckpoint item;
     CHECK(umi_data_migration_checkpoint_init(&item,"cp1","mig1",2U,11U,22U) == UMI_STATUS_OK);
     if (UmiDataMigrationCheckpointTransferCases(&item) != 0) return 1;
+    if (UmiDataMigrationCheckpointConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.completed_steps==2U);
     return 0;

@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "umicom/base/text.h"
 #include "umicom/vcs/advanced/partial_stage_plan.h"
 #include <string.h>
 /*
@@ -38,6 +39,9 @@ void umi_vcs_advanced_partial_stage_plan_init(UmiVcsAdvancedPartialStagePlan *pl
  * Provide the vcs advanced partial stage plan set root operation used by this module and
  * its client applications.
  */
+/* The presentation copy could erase a rejected field or overlap its input.
+ * Retain it for review; the replacement validates before publishing any text. */
+#if 0
 UmiStatus umi_vcs_advanced_partial_stage_plan_set_root(UmiVcsAdvancedPartialStagePlan *plan,
                                                         const char *root)
 {
@@ -47,6 +51,18 @@ UmiStatus umi_vcs_advanced_partial_stage_plan_set_root(UmiVcsAdvancedPartialStag
      */
     if (plan == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_vcs_advanced_copy_text(plan->repository_root, sizeof(plan->repository_root), root);
+}
+#endif
+
+UmiStatus umi_vcs_advanced_partial_stage_plan_set_root(UmiVcsAdvancedPartialStagePlan *plan,
+                                                        const char *root)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (plan == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_replace(plan->repository_root, sizeof(plan->repository_root), root != NULL ? root : "");
 }
 /*
  * Add vcs advanced partial stage plan only after its inputs and available capacity have

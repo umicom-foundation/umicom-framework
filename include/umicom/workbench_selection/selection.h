@@ -67,6 +67,9 @@ void umi_workbench_selection_init(
  * Provide the workbench selection set origin operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_selection_set_origin(
     UmiWorkbenchSelection *selection,
     const char *application_id,
@@ -76,6 +79,9 @@ UmiStatus umi_workbench_selection_set_origin(
  * Provide the workbench selection set subject operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_selection_set_subject(
     UmiWorkbenchSelection *selection,
     const char *subject_id,
@@ -84,6 +90,9 @@ UmiStatus umi_workbench_selection_set_subject(
  * Provide the workbench selection set location operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_selection_set_location(
     UmiWorkbenchSelection *selection,
     const char *path,
@@ -108,6 +117,9 @@ UmiStatus umi_workbench_selection_set_group_hint(
  * Provide the workbench selection add field operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_selection_add_field(
     UmiWorkbenchSelection *selection,
     const UmiWorkbenchSelectionField *field);

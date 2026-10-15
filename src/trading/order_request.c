@@ -17,6 +17,7 @@
  * This source implements the small deterministic core of order request. Product-specific UI and vendor details stay outside this file.
  */
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/trading/order_request.h"
 #include "../base/value_archive_internal.h"
 #include <math.h>
@@ -165,3 +166,8 @@ static UmiStatus UmiOrderRequestArchiveValidate(const UmiOrderRequest *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_order_request_archive_encode, umi_order_request_archive_decode,
     UmiOrderRequest, UmiOrderRequestArchiveSchema, UmiOrderRequestArchiveBound, UmiOrderRequestArchiveWrite, UmiOrderRequestArchiveRead, UmiOrderRequestArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_order_request_archive_decode_if_unchanged, umi_order_request_archive_encode,
+    UmiOrderRequest, UmiOrderRequestArchiveSchema, UmiOrderRequestArchiveBound, UmiOrderRequestArchiveRead, UmiOrderRequestArchiveValidate)

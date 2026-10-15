@@ -17,6 +17,7 @@
  * This source implements the small deterministic core of replay event. Product-specific UI and vendor details stay outside this file.
  */
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/trading/replay_event.h"
 #include "../base/value_archive_internal.h"
 /* Check that replay event satisfies its contract before another service relies on it. */
@@ -69,3 +70,8 @@ static UmiStatus UmiReplayEventArchiveValidate(const UmiReplayEvent *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_replay_event_archive_encode, umi_replay_event_archive_decode,
     UmiReplayEvent, UmiReplayEventArchiveSchema, UmiReplayEventArchiveBound, UmiReplayEventArchiveWrite, UmiReplayEventArchiveRead, UmiReplayEventArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_replay_event_archive_decode_if_unchanged, umi_replay_event_archive_encode,
+    UmiReplayEvent, UmiReplayEventArchiveSchema, UmiReplayEventArchiveBound, UmiReplayEventArchiveRead, UmiReplayEventArchiveValidate)

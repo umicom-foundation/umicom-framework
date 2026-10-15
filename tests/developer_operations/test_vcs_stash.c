@@ -17,6 +17,10 @@
 
 #include "umicom/developer_operations/vcs/stash.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(UmiDeveloperOperationsEvaluateVcsStashBatchCases, UmiDeveloperOperationsEvaluateVcsStash,
+    UmiDeveloperOperationsEvaluateVcsStashBatch, UmiDeveloperOperationInput, UmiDeveloperOperationSnapshot, baseline)
+
 int main(void)
 {
     UmiDeveloperOperationInput input;
@@ -32,6 +36,7 @@ int main(void)
     input.blocked = 0;
     input.revision = 7U;
 
+    if (UmiDeveloperOperationsEvaluateVcsStashBatchCases(&input) != 0) return 1;
     assert(UmiDeveloperOperationsEvaluateVcsStash(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "vcs.stash") == 0);
     assert(snapshot.revision == 7U);

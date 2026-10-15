@@ -18,6 +18,10 @@
 
 #include "umicom/trading_workstation/research/alert_trigger.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(umi_trading_professional_evaluate_research_alert_trigger_batch_cases, umi_trading_professional_evaluate_research_alert_trigger,
+    umi_trading_professional_evaluate_research_alert_trigger_batch, UmiTradingProfessionalInput, UmiTradingProfessionalSnapshot, bid)
+
 int main(void)
 {
     UmiTradingProfessionalInput input;
@@ -97,6 +101,7 @@ int main(void)
     input.canCancelOrder = 1;
     input.revision = 55U;
 
+    if (umi_trading_professional_evaluate_research_alert_trigger_batch_cases(&input) != 0) return 1;
     assert(umi_trading_professional_evaluate_research_alert_trigger(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "research.alert-trigger") == 0);
     assert(snapshot.revision == 55U);

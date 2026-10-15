@@ -104,6 +104,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadPropertyEditorDescriptorTransferCases, UmiRadPrope
     umi_rad_property_editor_descriptor_archive_encode, umi_rad_property_editor_descriptor_archive_decode,
     UmiRadPropertyEditorDescriptorTransferEqual, UmiRadPropertyEditorDescriptorTransferTails, UmiRadPropertyEditorDescriptorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadPropertyEditorDescriptorConditionalArchiveCases, UmiRadPropertyEditorDescriptor,
+    umi_rad_property_editor_descriptor_archive_encode, umi_rad_property_editor_descriptor_archive_decode_if_unchanged,
+    UmiRadPropertyEditorDescriptorTransferEqual, UmiRadPropertyEditorDescriptorTransferTails, UmiRadPropertyEditorDescriptorTransferMalformed)
+
+
 int main(void){UmiRadPropertyEditorDescriptor item;CHECK(umi_rad_property_editor_descriptor_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_property_editor_descriptor_is_valid(&item));
     if (UmiRadPropertyEditorDescriptorTransferCases(&item) != 0) return 1;
+    if (UmiRadPropertyEditorDescriptorConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

@@ -42,11 +42,17 @@ typedef struct UmiWsChartSurface {
  * Initialise ws chart surface from caller-provided values so later operations receive a
  * known state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_ws_chart_surface_init(UmiWsChartSurface *surface, const char *chart_id, const char *title);
 /**
  * Provide the ws chart surface set context group operation used by this module and its
  * client applications.
  */
+/** Failed edits preserve the complete value. Input may borrow this field;
+ * callers still serialize access. Existing empty/null input rules apply. */
 UmiStatus umi_ws_chart_surface_set_context_group(UmiWsChartSurface *surface, const char *group_id);
 /**
  * Provide the ws chart surface set interval operation used by this module and its client

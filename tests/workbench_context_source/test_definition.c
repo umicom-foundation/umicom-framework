@@ -151,6 +151,12 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextSourceDefinitionTransferCases, UmiWor
     umi_workbench_context_source_definition_archive_encode, umi_workbench_context_source_definition_archive_decode,
     UmiWorkbenchContextSourceDefinitionTransferEqual, UmiWorkbenchContextSourceDefinitionTransferTails, UmiWorkbenchContextSourceDefinitionTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextSourceDefinitionConditionalArchiveCases, UmiWorkbenchContextSourceDefinition,
+    umi_workbench_context_source_definition_archive_encode, umi_workbench_context_source_definition_archive_decode_if_unchanged,
+    UmiWorkbenchContextSourceDefinitionTransferEqual, UmiWorkbenchContextSourceDefinitionTransferTails, UmiWorkbenchContextSourceDefinitionTransferMalformed)
+
+
 int main(void)
 {
     UmiWorkbenchContextSourceDefinition definition;
@@ -168,6 +174,7 @@ int main(void)
     assert(umi_workbench_context_source_definition_validate(
         &definition) == UMI_STATUS_OK);
     if (UmiWorkbenchContextSourceDefinitionTransferCases(&definition) != 0) return 1;
+    if (UmiWorkbenchContextSourceDefinitionConditionalArchiveCases(&definition) != 0) return 1;
 
 
     umi_workbench_context_source_sample_init(

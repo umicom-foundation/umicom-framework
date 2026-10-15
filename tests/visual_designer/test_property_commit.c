@@ -121,6 +121,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadPropertyCommitTransferCases, UmiRadPropertyCommit,
     umi_rad_property_commit_archive_encode, umi_rad_property_commit_archive_decode,
     UmiRadPropertyCommitTransferEqual, UmiRadPropertyCommitTransferTails, UmiRadPropertyCommitTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadPropertyCommitConditionalArchiveCases, UmiRadPropertyCommit,
+    umi_rad_property_commit_archive_encode, umi_rad_property_commit_archive_decode_if_unchanged,
+    UmiRadPropertyCommitTransferEqual, UmiRadPropertyCommitTransferTails, UmiRadPropertyCommitTransferMalformed)
+
+
 int main(void){UmiRadPropertyCommit item;CHECK(umi_rad_property_commit_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_property_commit_is_valid(&item));
     if (UmiRadPropertyCommitTransferCases(&item) != 0) return 1;
+    if (UmiRadPropertyCommitConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

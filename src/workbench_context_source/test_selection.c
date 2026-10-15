@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/workbench_context_source/test_selection.h"
 #include "../base/value_archive_internal.h"
 #include "../base/record_update_internal.h"
@@ -274,3 +275,9 @@ UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_context_source_test_selection_archive_enc
  * all fields together without emitting events or changing any external service. */
 UMI_DEFINE_REVIEWED_IDENTITY_RECORD_EDIT(umi_workbench_context_source_test_selection_replace_if_current,
     UmiWorkbenchContextSourceTestSelection, record_id, UmiWorkbenchContextSourceTestSelectionArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_workbench_context_source_test_selection_archive_decode_if_unchanged, umi_workbench_context_source_test_selection_archive_encode,
+    UmiWorkbenchContextSourceTestSelection, UmiWorkbenchContextSourceTestSelectionArchiveSchema, UmiWorkbenchContextSourceTestSelectionArchiveBound, UmiWorkbenchContextSourceTestSelectionArchiveRead, UmiWorkbenchContextSourceTestSelectionArchiveValidate)

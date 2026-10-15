@@ -91,9 +91,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrDependencyManifestTransferCases, UmiDrDependencyMan
     umi_dr_dependency_manifest_archive_encode, umi_dr_dependency_manifest_archive_decode,
     UmiDrDependencyManifestTransferEqual, UmiDrDependencyManifestTransferTails, UmiDrDependencyManifestTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrDependencyManifestConditionalArchiveCases, UmiDrDependencyManifest,
+    umi_dr_dependency_manifest_archive_encode, umi_dr_dependency_manifest_archive_decode_if_unchanged,
+    UmiDrDependencyManifestTransferEqual, UmiDrDependencyManifestTransferTails, UmiDrDependencyManifestTransferMalformed)
+
+
 int main(void) {
     UmiDrDependencyManifest value; umi_dr_dependency_manifest_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"dep") == UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.package_id,sizeof(value.package_id),"framework") == UMI_STATUS_OK); CHECK(umi_dr_dependency_manifest_valid(&value));
     if (UmiDrDependencyManifestTransferCases(&value) != 0) return 1;
+    if (UmiDrDependencyManifestConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_dependency_manifest_fingerprint(&value) != 0U);
     return 0;
 }

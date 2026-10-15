@@ -17,6 +17,7 @@
  * This source implements the small deterministic core of risk limit. Product-specific UI and vendor details stay outside this file.
  */
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/trading/risk_limit.h"
 #include "../base/value_archive_internal.h"
 #include <math.h>
@@ -63,3 +64,8 @@ static UmiStatus UmiRiskLimitArchiveValidate(const UmiRiskLimit *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_risk_limit_archive_encode, umi_risk_limit_archive_decode,
     UmiRiskLimit, UmiRiskLimitArchiveSchema, UmiRiskLimitArchiveBound, UmiRiskLimitArchiveWrite, UmiRiskLimitArchiveRead, UmiRiskLimitArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_risk_limit_archive_decode_if_unchanged, umi_risk_limit_archive_encode,
+    UmiRiskLimit, UmiRiskLimitArchiveSchema, UmiRiskLimitArchiveBound, UmiRiskLimitArchiveRead, UmiRiskLimitArchiveValidate)

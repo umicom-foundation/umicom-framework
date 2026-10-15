@@ -45,6 +45,9 @@ typedef struct UmiBrokerPositionStore {
 } UmiBrokerPositionStore;
 
 void umi_broker_position_store_init(UmiBrokerPositionStore *store);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_broker_position_store_upsert(
     UmiBrokerPositionStore *store,
     const UmiBrokerPositionSnapshot *position);

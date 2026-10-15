@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/language/intelligence/document_routing.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -172,3 +173,8 @@ static UmiStatus UmiLanguageIntelligenceDocumentRoutingArchiveValidate(const Umi
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_language_intelligence_document_routing_archive_encode, umi_language_intelligence_document_routing_archive_decode,
     UmiLanguageIntelligenceDocumentRouting, UmiLanguageIntelligenceDocumentRoutingArchiveSchema, UmiLanguageIntelligenceDocumentRoutingArchiveBound, UmiLanguageIntelligenceDocumentRoutingArchiveWrite, UmiLanguageIntelligenceDocumentRoutingArchiveRead, UmiLanguageIntelligenceDocumentRoutingArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_language_intelligence_document_routing_archive_decode_if_unchanged, umi_language_intelligence_document_routing_archive_encode,
+    UmiLanguageIntelligenceDocumentRouting, UmiLanguageIntelligenceDocumentRoutingArchiveSchema, UmiLanguageIntelligenceDocumentRoutingArchiveBound, UmiLanguageIntelligenceDocumentRoutingArchiveRead, UmiLanguageIntelligenceDocumentRoutingArchiveValidate)

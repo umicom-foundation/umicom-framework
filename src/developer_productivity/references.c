@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/developer_productivity/references.h"
 
 #include <string.h>
@@ -36,10 +37,50 @@ void umi_developer_reference_set_init(
  * Add developer reference set only after its inputs and available capacity have been
  * checked.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_developer_reference_set_add(
     UmiDeveloperReferenceSet *set,
     const UmiDeveloperReference *reference)
 {
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (set == NULL || reference == NULL ||
+        reference->symbol_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    status = umi_developer_productivity_location_validate(
+        &reference->location);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (set->count >= UMI_DEVELOPER_REFERENCE_CAPACITY) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    set->references[set->count++] = *reference;
+    set->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_developer_reference_set_add(
+    UmiDeveloperReferenceSet *set,
+    const UmiDeveloperReference *reference)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (set != NULL && set->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiStatus status;
 
     /*

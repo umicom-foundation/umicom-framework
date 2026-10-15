@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/integration/fabric/delivery_policy.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -74,10 +75,48 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricDeliveryPolicyTransferCases, UmiFabricDeliveryP
     umi_fabric_delivery_policy_archive_encode, umi_fabric_delivery_policy_archive_decode,
     UmiFabricDeliveryPolicyTransferEqual, UmiFabricDeliveryPolicyTransferTails, UmiFabricDeliveryPolicyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricDeliveryPolicyConditionalArchiveCases, UmiFabricDeliveryPolicy,
+    umi_fabric_delivery_policy_archive_encode, umi_fabric_delivery_policy_archive_decode_if_unchanged,
+    UmiFabricDeliveryPolicyTransferEqual, UmiFabricDeliveryPolicyTransferTails, UmiFabricDeliveryPolicyTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted delivery policy value. */
+static int UmiFabricDeliveryPolicyConstructionCases(void)
+{
+    UmiFabricDeliveryPolicy *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_fabric_delivery_policy_init(value, "orders", UMI_FABRIC_DELIVERY_AT_LEAST_ONCE, 3U, 5000U, true) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->policy_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_delivery_policy_init(value, oversized, UMI_FABRIC_DELIVERY_AT_LEAST_ONCE, 3U, 5000U, true) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_delivery_policy_init(value, value->policy_id, UMI_FABRIC_DELIVERY_AT_LEAST_ONCE, 3U, 5000U, true) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->policy_id, "orders") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiFabricDeliveryPolicyConstructionCases() != 0) return 1;
+
     UmiFabricDeliveryPolicy item;
     CHECK(umi_fabric_delivery_policy_init(&item,"orders",UMI_FABRIC_DELIVERY_AT_LEAST_ONCE,3U,5000U,true)==UMI_STATUS_OK);
     if (UmiFabricDeliveryPolicyTransferCases(&item) != 0) return 1;
+    if (UmiFabricDeliveryPolicyConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.durable);
     return 0;

@@ -14,6 +14,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/editor/document.h"
 #include "umicom/finance/identifier.h"
 #include "umicom/teacher/learning_plan.h"
@@ -238,6 +239,9 @@ static int LearningIdentifierBounds(void)
     size_t index;
     umi_teacher_learning_plan_init(&sequence);
     CHECK(umi_teacher_learning_plan_append(&sequence, "first") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiTeacherLearningPlan, &sequence,
+        (umi_teacher_learning_plan_append(&sequence, "first")));
+
     memcpy(&before, &sequence, sizeof(before));
     memset(id, 'A', sizeof(id)); id[sizeof(id) - 1U] = '\0';
     CHECK(umi_teacher_learning_plan_append(&sequence, id) == UMI_STATUS_INVALID_ARGUMENT);

@@ -132,6 +132,12 @@ UMI_TEST_VALUE_TRANSFER(UmiPanelWorkspaceBindingTransferCases, UmiPanelWorkspace
     umi_panel_workspace_binding_archive_encode, umi_panel_workspace_binding_archive_decode,
     UmiPanelWorkspaceBindingTransferEqual, UmiPanelWorkspaceBindingTransferTails, UmiPanelWorkspaceBindingTransferMalformed)
 
+#include "../conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiPanelWorkspaceBindingConditionalArchiveCases, UmiPanelWorkspaceBinding,
+    umi_panel_workspace_binding_archive_encode, umi_panel_workspace_binding_archive_decode_if_unchanged,
+    UmiPanelWorkspaceBindingTransferEqual, UmiPanelWorkspaceBindingTransferTails, UmiPanelWorkspaceBindingTransferMalformed)
+
+
 int main(void)
 {
     UmiPanelWorkspaceBinding value;
@@ -145,6 +151,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_panel_workspace_binding_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiPanelWorkspaceBindingTransferCases(&value) != 0) return 1;
+    if (UmiPanelWorkspaceBindingConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

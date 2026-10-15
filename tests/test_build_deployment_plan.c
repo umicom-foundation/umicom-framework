@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 
@@ -60,6 +61,9 @@ int main(void)
     assert(plan.requires_approval != 0);
     assert(plan.approved == 0);
     assert(umi_build_deployment_plan_approve(&plan) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiBuildDeploymentPlan, &plan,
+        (umi_build_deployment_plan_approve(&plan)));
+
     assert(umi_build_deployment_plan_snapshot(&plan, &snapshot) ==
            UMI_STATUS_OK);
     assert(snapshot.valid != 0);

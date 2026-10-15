@@ -89,6 +89,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadDropTargetTransferCases, UmiRadDropTarget,
     umi_rad_drop_target_archive_encode, umi_rad_drop_target_archive_decode,
     UmiRadDropTargetTransferEqual, UmiRadDropTargetTransferTails, UmiRadDropTargetTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadDropTargetConditionalArchiveCases, UmiRadDropTarget,
+    umi_rad_drop_target_archive_encode, umi_rad_drop_target_archive_decode_if_unchanged,
+    UmiRadDropTargetTransferEqual, UmiRadDropTargetTransferTails, UmiRadDropTargetTransferMalformed)
+
+
 int main(void){UmiRadDropTarget item;CHECK(umi_rad_drop_target_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_drop_target_is_valid(&item));
     if (UmiRadDropTargetTransferCases(&item) != 0) return 1;
+    if (UmiRadDropTargetConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

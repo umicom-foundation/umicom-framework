@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 
 #include "umicom/vcs/workbench/review_session.h"
@@ -29,6 +30,11 @@ int main(void)
                &session, "thread-1", "src/a.c", 7U, 1,
                "comment-1", "reviewer", "Please explain this branch.", 10U) ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiVcsWorkbenchReviewSession, &session,
+        (umi_vcs_workbench_review_session_add_thread(
+               &session, "thread-1", "src/a.c", 7U, 1,
+               "comment-1", "reviewer", "Please explain this branch.", 10U)));
+
     assert(session.thread_count == 1U);
     assert(session.unresolved_count == 1U);
     assert(umi_vcs_workbench_review_session_set_decision(
@@ -36,8 +42,16 @@ int main(void)
            UMI_STATUS_INVALID_STATE);
     assert(umi_vcs_workbench_review_session_resolve_thread(
                &session, "thread-1", 1) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiVcsWorkbenchReviewSession, &session,
+        (umi_vcs_workbench_review_session_resolve_thread(
+               &session, "thread-1", 1)));
+
     assert(umi_vcs_workbench_review_session_set_decision(
                &session, UMI_VCS_WORKBENCH_REVIEW_APPROVED) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiVcsWorkbenchReviewSession, &session,
+        (umi_vcs_workbench_review_session_set_decision(
+               &session, UMI_VCS_WORKBENCH_REVIEW_APPROVED)));
+
     assert(umi_vcs_workbench_review_session_comment_at(&session, 0U) != NULL);
     return 0;
 }

@@ -17,6 +17,10 @@
 
 #include "umicom/developer_intelligence/language/c23_profile.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(UmiDeveloperIntelligenceEvaluateLanguageC23ProfileBatchCases, UmiDeveloperIntelligenceEvaluateLanguageC23Profile,
+    UmiDeveloperIntelligenceEvaluateLanguageC23ProfileBatch, UmiDeveloperIntelligenceInput, UmiDeveloperIntelligenceSnapshot, lexicalScore)
+
 int main(void)
 {
     UmiDeveloperIntelligenceInput input;
@@ -44,6 +48,7 @@ int main(void)
     input.active = 1;
     input.revision = 42U;
 
+    if (UmiDeveloperIntelligenceEvaluateLanguageC23ProfileBatchCases(&input) != 0) return 1;
     assert(UmiDeveloperIntelligenceEvaluateLanguageC23Profile(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "language.c23-profile") == 0);
     assert(snapshot.revision == 42U);

@@ -43,6 +43,9 @@ typedef struct UmiOpenTmsPositionBook {
 } UmiOpenTmsPositionBook;
 
 void umi_open_tms_position_book_init(UmiOpenTmsPositionBook *book);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_open_tms_position_book_upsert(
     UmiOpenTmsPositionBook *book,
     const UmiOpenTmsPosition *position);

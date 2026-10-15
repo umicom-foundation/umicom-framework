@@ -50,6 +50,12 @@ UMI_TEST_VALUE_TRANSFER(UmiTradingMarginProfileTransferCases, UmiTradingMarginPr
     umi_trading_margin_profile_archive_encode, umi_trading_margin_profile_archive_decode,
     UmiTradingMarginProfileTransferEqual, UmiTradingMarginProfileTransferTails, UmiTradingMarginProfileTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTradingMarginProfileConditionalArchiveCases, UmiTradingMarginProfile,
+    umi_trading_margin_profile_archive_encode, umi_trading_margin_profile_archive_decode_if_unchanged,
+    UmiTradingMarginProfileTransferEqual, UmiTradingMarginProfileTransferTails, UmiTradingMarginProfileTransferMalformed)
+
+
 int main(void) {
     UmiTradingMarginProfile v;
      /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -57,6 +63,7 @@ int main(void) {
      /* Apply this operation only while the related capability or state is available. */
      if(!umi_trading_margin_profile_valid(&v)) return 2;
     if (UmiTradingMarginProfileTransferCases(&v) != 0) return 1;
+    if (UmiTradingMarginProfileConditionalArchiveCases(&v) != 0) return 1;
 
      return 0;
 }

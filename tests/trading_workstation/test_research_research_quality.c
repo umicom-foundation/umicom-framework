@@ -18,6 +18,10 @@
 
 #include "umicom/trading_workstation/research/research_quality.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(umi_trading_professional_evaluate_research_research_quality_batch_cases, umi_trading_professional_evaluate_research_research_quality,
+    umi_trading_professional_evaluate_research_research_quality_batch, UmiTradingProfessionalInput, UmiTradingProfessionalSnapshot, bid)
+
 int main(void)
 {
     UmiTradingProfessionalInput input;
@@ -97,6 +101,7 @@ int main(void)
     input.canCancelOrder = 1;
     input.revision = 55U;
 
+    if (umi_trading_professional_evaluate_research_research_quality_batch_cases(&input) != 0) return 1;
     assert(umi_trading_professional_evaluate_research_research_quality(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "research.research-quality") == 0);
     assert(snapshot.revision == 55U);

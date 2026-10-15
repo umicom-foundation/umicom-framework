@@ -87,6 +87,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceRendererThemeProjectionTransferCases, UmiAp
     umi_appearance_renderer_theme_projection_archive_encode, umi_appearance_renderer_theme_projection_archive_decode,
     UmiAppearanceRendererThemeProjectionTransferEqual, UmiAppearanceRendererThemeProjectionTransferTails, UmiAppearanceRendererThemeProjectionTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceRendererThemeProjectionConditionalArchiveCases, UmiAppearanceRendererThemeProjection,
+    umi_appearance_renderer_theme_projection_archive_encode, umi_appearance_renderer_theme_projection_archive_decode_if_unchanged,
+    UmiAppearanceRendererThemeProjectionTransferEqual, UmiAppearanceRendererThemeProjectionTransferTails, UmiAppearanceRendererThemeProjectionTransferMalformed)
+
+
 int main(void) {
     UmiAppearanceRendererThemeProjection item;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -94,6 +100,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_renderer_theme_projection_is_valid(&item)) return 2;
     if (UmiAppearanceRendererThemeProjectionTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceRendererThemeProjectionConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;
 }

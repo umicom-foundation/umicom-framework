@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/workbench_selection_provider/freshness_record.h"
 #include "../base/value_archive_internal.h"
 #include "../base/record_update_internal.h"
@@ -299,3 +300,9 @@ UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_selection_provider_freshness_record_archi
  * all fields together without emitting events or changing any external service. */
 UMI_DEFINE_REVIEWED_IDENTITY_RECORD_EDIT(umi_workbench_selection_provider_freshness_record_replace_if_current,
     UmiWorkbenchSelectionProviderFreshnessRecord, record_id, UmiWorkbenchSelectionProviderFreshnessRecordArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_workbench_selection_provider_freshness_record_archive_decode_if_unchanged, umi_workbench_selection_provider_freshness_record_archive_encode,
+    UmiWorkbenchSelectionProviderFreshnessRecord, UmiWorkbenchSelectionProviderFreshnessRecordArchiveSchema, UmiWorkbenchSelectionProviderFreshnessRecordArchiveBound, UmiWorkbenchSelectionProviderFreshnessRecordArchiveRead, UmiWorkbenchSelectionProviderFreshnessRecordArchiveValidate)

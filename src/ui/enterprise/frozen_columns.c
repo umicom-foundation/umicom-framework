@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/enterprise/frozen_columns.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -62,3 +63,8 @@ static UmiStatus UmiUiEntFrozenColumnsArchiveValidate(const UmiUiEntFrozenColumn
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ui_ent_frozen_columns_archive_encode, umi_ui_ent_frozen_columns_archive_decode,
     UmiUiEntFrozenColumns, UmiUiEntFrozenColumnsArchiveSchema, UmiUiEntFrozenColumnsArchiveBound, UmiUiEntFrozenColumnsArchiveWrite, UmiUiEntFrozenColumnsArchiveRead, UmiUiEntFrozenColumnsArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_ent_frozen_columns_archive_decode_if_unchanged, umi_ui_ent_frozen_columns_archive_encode,
+    UmiUiEntFrozenColumns, UmiUiEntFrozenColumnsArchiveSchema, UmiUiEntFrozenColumnsArchiveBound, UmiUiEntFrozenColumnsArchiveRead, UmiUiEntFrozenColumnsArchiveValidate)

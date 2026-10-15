@@ -155,6 +155,12 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorSourceLocationTransferCases, UmiEditorSourceLoc
     umi_editor_source_location_archive_encode, umi_editor_source_location_archive_decode,
     UmiEditorSourceLocationTransferEqual, UmiEditorSourceLocationTransferTails, UmiEditorSourceLocationTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorSourceLocationConditionalArchiveCases, UmiEditorSourceLocation,
+    umi_editor_source_location_archive_encode, umi_editor_source_location_archive_decode_if_unchanged,
+    UmiEditorSourceLocationTransferEqual, UmiEditorSourceLocationTransferTails, UmiEditorSourceLocationTransferMalformed)
+
+
 int main(void)
 {
     UmiEditorNavigationHistory *history = NULL;
@@ -168,6 +174,7 @@ int main(void)
 
     assert(umi_editor_source_location_validate(&first) == UMI_STATUS_OK);
     if (UmiEditorSourceLocationTransferCases(&first) != 0) return 1;
+    if (UmiEditorSourceLocationConditionalArchiveCases(&first) != 0) return 1;
 
     assert(umi_editor_source_location_format(&first,
                                               formatted,

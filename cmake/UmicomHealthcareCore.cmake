@@ -20,6 +20,7 @@ endif()
 set(_umicom_healthcare_framework_root "${CMAKE_CURRENT_LIST_DIR}/..")
 
 add_library(umicom_healthcare_core STATIC
+    "${_umicom_healthcare_framework_root}/src/healthcare/synthetic_access.c"
     "${_umicom_healthcare_framework_root}/src/healthcare/synthetic_registry.c"
     "${_umicom_healthcare_framework_root}/src/healthcare/synthetic_encounter.c"
     "${_umicom_healthcare_framework_root}/src/healthcare/synthetic_routing.c")
@@ -46,6 +47,7 @@ install(TARGETS umicom_healthcare_core
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     COMPONENT Framework)
 install(FILES
+    "${_umicom_healthcare_framework_root}/include/umicom/healthcare/synthetic_access.h"
     "${_umicom_healthcare_framework_root}/include/umicom/healthcare/synthetic_registry.h"
     "${_umicom_healthcare_framework_root}/include/umicom/healthcare/synthetic_encounter.h"
     "${_umicom_healthcare_framework_root}/include/umicom/healthcare/synthetic_routing.h"
@@ -96,4 +98,65 @@ if(BUILD_TESTING)
         TIMEOUT 30 LABELS "framework;healthcare;synthetic;regression")
 endif()
 
+
+# Keep the native surface in Framework so Desk, the standalone product and
+# future embedding hosts exercise the same controller and ownership rules.
+if(TARGET Umicom::ui_gtk4)
+    add_library(umicom_healthcare_access_gtk4 STATIC
+        "${_umicom_healthcare_framework_root}/adapters/gtk4/healthcare_access_gtk4.c")
+    add_library(Umicom::healthcare_access_gtk4 ALIAS umicom_healthcare_access_gtk4)
+    set_target_properties(umicom_healthcare_access_gtk4 PROPERTIES
+        EXPORT_NAME healthcare_access_gtk4
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom_healthcare_access_gtk4 PUBLIC
+        Umicom::healthcare_core Umicom::ui_gtk4)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom_healthcare_access_gtk4)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom_healthcare_access_gtk4)
+    endif()
+    install(TARGETS umicom_healthcare_access_gtk4 EXPORT UmicomFrameworkTargets
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+    install(FILES "${_umicom_healthcare_framework_root}/include/umicom/healthcare/access_gtk4.h"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/healthcare" COMPONENT Framework)
+endif()
+
+if(BUILD_TESTING)
+    add_executable(umicom-healthcare-access-test
+        "${_umicom_healthcare_framework_root}/tests/healthcare/test_synthetic_access.c")
+    target_link_libraries(umicom-healthcare-access-test PRIVATE Umicom::healthcare_core)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-healthcare-access-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-healthcare-access-test)
+    endif()
+    foreach(access_case lifecycle partial unavailable expiry stale invalid capacity)
+        add_test(NAME framework.healthcare.access.${access_case}
+            COMMAND umicom-healthcare-access-test "${access_case}")
+        set_tests_properties(framework.healthcare.access.${access_case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;healthcare;synthetic;regression")
+    endforeach()
+    if(TARGET Umicom::healthcare_access_gtk4)
+        add_executable(umicom-healthcare-access-gtk-test
+            "${_umicom_healthcare_framework_root}/tests/healthcare/test_access_gtk4.c")
+        target_link_libraries(umicom-healthcare-access-gtk-test PRIVATE
+            Umicom::healthcare_access_gtk4)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(umicom-healthcare-access-gtk-test)
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(umicom-healthcare-access-gtk-test)
+        endif()
+        add_test(NAME framework.healthcare.access.gtk
+            COMMAND umicom-healthcare-access-gtk-test)
+        set_tests_properties(framework.healthcare.access.gtk PROPERTIES
+            TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;healthcare;gtk4;lifetime")
+    endif()
+endif()
+
+# Keep the workflow guide with the shared SDK, not inside programming lessons.
+install(FILES "${_umicom_healthcare_framework_root}/docs/healthcare/synthetic-access.html"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/healthcare" COMPONENT Framework)
 unset(_umicom_healthcare_framework_root)

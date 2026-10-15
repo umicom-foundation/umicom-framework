@@ -17,6 +17,7 @@
  * AuthorEngine is integrated through a process boundary, so Studio can reuse its capabilities without copying publishing logic into the IDE.
  */
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/ai/authorengine.h"
 #include "../base/value_archive_internal.h"
 #include <stddef.h>
@@ -276,3 +277,9 @@ static UmiStatus UmiAiAuthorEngineConfigArchiveValidate(const UmiAiAuthorEngineC
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ai_authorengine_archive_encode, umi_ai_authorengine_archive_decode,
     UmiAiAuthorEngineConfig, UmiAiAuthorEngineConfigArchiveSchema, UmiAiAuthorEngineConfigArchiveBound, UmiAiAuthorEngineConfigArchiveWrite, UmiAiAuthorEngineConfigArchiveRead, UmiAiAuthorEngineConfigArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ai_authorengine_archive_decode_if_unchanged, umi_ai_authorengine_archive_encode,
+    UmiAiAuthorEngineConfig, UmiAiAuthorEngineConfigArchiveSchema, UmiAiAuthorEngineConfigArchiveBound, UmiAiAuthorEngineConfigArchiveRead, UmiAiAuthorEngineConfigArchiveValidate)

@@ -132,6 +132,12 @@ UMI_TEST_VALUE_TRANSFER(UmiPanelBookmarkTransferCases, UmiPanelBookmark,
     umi_panel_bookmark_archive_encode, umi_panel_bookmark_archive_decode,
     UmiPanelBookmarkTransferEqual, UmiPanelBookmarkTransferTails, UmiPanelBookmarkTransferMalformed)
 
+#include "../conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiPanelBookmarkConditionalArchiveCases, UmiPanelBookmark,
+    umi_panel_bookmark_archive_encode, umi_panel_bookmark_archive_decode_if_unchanged,
+    UmiPanelBookmarkTransferEqual, UmiPanelBookmarkTransferTails, UmiPanelBookmarkTransferMalformed)
+
+
 int main(void)
 {
     UmiPanelBookmark value;
@@ -145,6 +151,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_panel_bookmark_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiPanelBookmarkTransferCases(&value) != 0) return 1;
+    if (UmiPanelBookmarkConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

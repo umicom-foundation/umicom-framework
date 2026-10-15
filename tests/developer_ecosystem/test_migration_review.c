@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 
 #include "umicom/developer/ecosystem/migration_review.h"
@@ -26,12 +27,26 @@ int main(void)
         "Upgrade manifest", "Move the contribution schema to version two.",
         UMI_ECOSYSTEM_MIGRATION_MANIFEST, UMI_ECOSYSTEM_REVIEW_WARNING,
         true, false) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiEcosystemMigrationReview, &review,
+        (umi_ecosystem_migration_review_add_step(&review, "manifest",
+        "Upgrade manifest", "Move the contribution schema to version two.",
+        UMI_ECOSYSTEM_MIGRATION_MANIFEST, UMI_ECOSYSTEM_REVIEW_WARNING,
+        true, false)));
+
     assert(!umi_ecosystem_migration_review_ready(&review));
     assert(umi_ecosystem_migration_review_set_accepted(&review, "manifest",
         true) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiEcosystemMigrationReview, &review,
+        (umi_ecosystem_migration_review_set_accepted(&review, "manifest",
+        true)));
+
     assert(umi_ecosystem_migration_review_ready(&review));
     assert(umi_ecosystem_migration_review_complete_step(&review, "manifest",
         UMI_STATUS_PARSE_ERROR) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiEcosystemMigrationReview, &review,
+        (umi_ecosystem_migration_review_complete_step(&review, "manifest",
+        UMI_STATUS_PARSE_ERROR)));
+
     assert(!umi_ecosystem_migration_review_ready(&review));
     assert(review.rollback_available);
     return 0;

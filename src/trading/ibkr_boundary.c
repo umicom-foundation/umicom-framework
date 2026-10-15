@@ -17,6 +17,7 @@
  * This source implements the small deterministic core of ibkr boundary. Product-specific UI and vendor details stay outside this file.
  */
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/trading/ibkr_boundary.h"
 #include "../base/value_archive_internal.h"
 /* Check that ibkr settings satisfies its contract before another service relies on it. */
@@ -67,3 +68,8 @@ static UmiStatus UmiIbkrConnectionSettingsArchiveValidate(const UmiIbkrConnectio
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ibkr_settings_archive_encode, umi_ibkr_settings_archive_decode,
     UmiIbkrConnectionSettings, UmiIbkrConnectionSettingsArchiveSchema, UmiIbkrConnectionSettingsArchiveBound, UmiIbkrConnectionSettingsArchiveWrite, UmiIbkrConnectionSettingsArchiveRead, UmiIbkrConnectionSettingsArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ibkr_settings_archive_decode_if_unchanged, umi_ibkr_settings_archive_encode,
+    UmiIbkrConnectionSettings, UmiIbkrConnectionSettingsArchiveSchema, UmiIbkrConnectionSettingsArchiveBound, UmiIbkrConnectionSettingsArchiveRead, UmiIbkrConnectionSettingsArchiveValidate)

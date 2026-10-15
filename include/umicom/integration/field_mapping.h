@@ -40,6 +40,10 @@ typedef struct UmiIntegrationFieldMapping {
  * Initialise integration field mapping from caller-provided values so later operations
  * receive a known state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_integration_field_mapping_init(UmiIntegrationFieldMapping *mapping,const char *id,const char *source_schema_id,const char *target_schema_id);
 /**
  * Add integration field mapping only after its inputs and available capacity have been

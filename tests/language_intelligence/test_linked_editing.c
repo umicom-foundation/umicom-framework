@@ -77,6 +77,12 @@ UMI_TEST_VALUE_TRANSFER(UmiLanguageIntelligenceLinkedEditingTransferCases, UmiLa
     umi_language_intelligence_linked_editing_archive_encode, umi_language_intelligence_linked_editing_archive_decode,
     UmiLanguageIntelligenceLinkedEditingTransferEqual, UmiLanguageIntelligenceLinkedEditingTransferTails, UmiLanguageIntelligenceLinkedEditingTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiLanguageIntelligenceLinkedEditingConditionalArchiveCases, UmiLanguageIntelligenceLinkedEditing,
+    umi_language_intelligence_linked_editing_archive_encode, umi_language_intelligence_linked_editing_archive_decode_if_unchanged,
+    UmiLanguageIntelligenceLinkedEditingTransferEqual, UmiLanguageIntelligenceLinkedEditingTransferTails, UmiLanguageIntelligenceLinkedEditingTransferMalformed)
+
+
 int main(void)
 {
     UmiLanguageIntelligenceLinkedEditing value;
@@ -88,6 +94,7 @@ int main(void)
     CHECK(umi_language_intelligence_linked_editing_set_ranges(&value, &primary, &parent) == UMI_STATUS_OK);
     CHECK(umi_language_intelligence_linked_editing_validate(&value) == UMI_STATUS_OK);
     if (UmiLanguageIntelligenceLinkedEditingTransferCases(&value) != 0) return 1;
+    if (UmiLanguageIntelligenceLinkedEditingConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_language_intelligence_linked_editing_is_nested(&value) != 0);
     return 0;

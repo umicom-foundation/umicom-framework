@@ -50,6 +50,12 @@ UMI_TEST_VALUE_TRANSFER(UmiTradingCommissionScheduleTransferCases, UmiTradingCom
     umi_trading_commission_schedule_archive_encode, umi_trading_commission_schedule_archive_decode,
     UmiTradingCommissionScheduleTransferEqual, UmiTradingCommissionScheduleTransferTails, UmiTradingCommissionScheduleTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTradingCommissionScheduleConditionalArchiveCases, UmiTradingCommissionSchedule,
+    umi_trading_commission_schedule_archive_encode, umi_trading_commission_schedule_archive_decode_if_unchanged,
+    UmiTradingCommissionScheduleTransferEqual, UmiTradingCommissionScheduleTransferTails, UmiTradingCommissionScheduleTransferMalformed)
+
+
 int main(void) {
     UmiTradingCommissionSchedule v;
      /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -57,6 +63,7 @@ int main(void) {
      /* Apply this operation only while the related capability or state is available. */
      if(!umi_trading_commission_schedule_valid(&v)) return 2;
     if (UmiTradingCommissionScheduleTransferCases(&v) != 0) return 1;
+    if (UmiTradingCommissionScheduleConditionalArchiveCases(&v) != 0) return 1;
 
      return 0;
 }

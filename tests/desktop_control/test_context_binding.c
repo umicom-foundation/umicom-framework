@@ -164,6 +164,8 @@ static void ArchiveFillUnusedText(UmiDesktopContextBindingSnapshot *value)
 #define ARCHIVE_TYPE UmiDesktopContextBindingSnapshot
 #define ARCHIVE_ENCODE umi_desktop_context_binding_archive_encode
 #define ARCHIVE_DECODE umi_desktop_context_binding_archive_decode
+/* Exercise guarded import through this domain's public snapshot codec. */
+#define ARCHIVE_CONDITIONAL_DECODE umi_desktop_context_binding_archive_decode_if_unchanged
 #define ARCHIVE_EQUAL RecordDefaultsEqual
 #include "../value_archive/record_cases.h"
 

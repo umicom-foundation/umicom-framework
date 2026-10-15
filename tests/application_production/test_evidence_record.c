@@ -89,11 +89,18 @@ UMI_TEST_VALUE_TRANSFER(UmiApplicationProductionEvidenceRecordTransferCases, Umi
     umi_application_production_evidence_record_archive_encode, umi_application_production_evidence_record_archive_decode,
     UmiApplicationProductionEvidenceRecordTransferEqual, UmiApplicationProductionEvidenceRecordTransferTails, UmiApplicationProductionEvidenceRecordTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiApplicationProductionEvidenceRecordConditionalArchiveCases, UmiApplicationProductionEvidenceRecord,
+    umi_application_production_evidence_record_archive_encode, umi_application_production_evidence_record_archive_decode_if_unchanged,
+    UmiApplicationProductionEvidenceRecordTransferEqual, UmiApplicationProductionEvidenceRecordTransferTails, UmiApplicationProductionEvidenceRecordTransferMalformed)
+
+
 int main(void) {
     UmiApplicationProductionEvidenceRecord record;
     assert(umi_application_production_evidence_record_set(&record, "org.umicom.studio:tests", UMI_APPLICATION_PRODUCTION_EVIDENCE_TEST, UMI_APPLICATION_PRODUCTION_EVIDENCE_ACCEPTED, "ctest:studio", 1U) == UMI_STATUS_OK);
     assert(umi_application_production_evidence_record_validate(&record) == UMI_STATUS_OK);
     if (UmiApplicationProductionEvidenceRecordTransferCases(&record) != 0) return 1;
+    if (UmiApplicationProductionEvidenceRecordConditionalArchiveCases(&record) != 0) return 1;
 
     return 0;
 }

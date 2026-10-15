@@ -22,6 +22,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/desktop/monitor_topology.h"
 
 #include <string.h>
@@ -82,10 +83,50 @@ void umi_desktop_monitor_topology_init(UmiDesktopMonitorTopology *topology)
  * Add desktop monitor topology only after its inputs and available capacity have been
  * checked.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_desktop_monitor_topology_add(
     UmiDesktopMonitorTopology *topology,
     const UmiDesktopMonitor *monitor)
 {
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (topology == NULL || !valid_monitor(monitor))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (find_monitor_index(topology, monitor->monitor_id) != SIZE_MAX)
+        return UMI_STATUS_ALREADY_EXISTS;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (topology->count >= UMI_DESKTOP_MAX_MONITORS)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (monitor->primary) {
+        /* Visit each bounded item once so every record receives the same rule. */
+        for (index = 0U; index < topology->count; ++index)
+            topology->monitors[index].primary = false;
+    }
+    topology->monitors[topology->count++] = *monitor;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (topology->count == 1U) topology->monitors[0].primary = true;
+    topology->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_desktop_monitor_topology_add(
+    UmiDesktopMonitorTopology *topology,
+    const UmiDesktopMonitor *monitor)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (topology != NULL && topology->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -146,10 +187,53 @@ UmiStatus umi_desktop_monitor_topology_update(
  * Remove desktop monitor topology while keeping the remaining records in a valid and
  * discoverable state.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_desktop_monitor_topology_remove(
     UmiDesktopMonitorTopology *topology,
     const char *monitor_id)
 {
+    size_t index;
+    bool removed_primary;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (topology == NULL || monitor_id == NULL || monitor_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    index = find_monitor_index(topology, monitor_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    removed_primary = topology->monitors[index].primary;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index + 1U < topology->count) {
+        (void)memmove(&topology->monitors[index],
+                      &topology->monitors[index + 1U],
+                      (topology->count - index - 1U) *
+                          sizeof(topology->monitors[0]));
+    }
+    topology->count -= 1U;
+    (void)memset(&topology->monitors[topology->count], 0,
+                 sizeof(topology->monitors[0]));
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (removed_primary && topology->count > 0U)
+        topology->monitors[0].primary = true;
+    topology->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_desktop_monitor_topology_remove(
+    UmiDesktopMonitorTopology *topology,
+    const char *monitor_id)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (topology != NULL && topology->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     bool removed_primary;
     /*
@@ -183,10 +267,42 @@ UmiStatus umi_desktop_monitor_topology_remove(
  * Provide the desktop monitor topology set primary operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_desktop_monitor_topology_set_primary(
     UmiDesktopMonitorTopology *topology,
     const char *monitor_id)
 {
+    size_t index;
+    size_t selected;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (topology == NULL || monitor_id == NULL || monitor_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    selected = find_monitor_index(topology, monitor_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (selected == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < topology->count; ++index)
+        topology->monitors[index].primary = index == selected;
+    topology->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_desktop_monitor_topology_set_primary(
+    UmiDesktopMonitorTopology *topology,
+    const char *monitor_id)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (topology != NULL && topology->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     size_t selected;
     /*

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/financial_platform/position_control_book.h"
 #include <string.h>
 
@@ -36,10 +37,47 @@ const UmiFinancialPositionControl *umi_financial_position_control_book_find(
     return NULL;
 }
 
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_financial_position_control_book_upsert(
     UmiFinancialPositionControlBook *book,
     const UmiFinancialPositionControl *position)
 {
+    size_t i;
+    if (book == NULL || position == NULL || position->accountId[0] == '\0' ||
+        position->instrumentId[0] == '\0' || position->currency[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    for (i = 0U; i < book->count; ++i) {
+        UmiFinancialPositionControl *current = &book->positions[i];
+        if (strcmp(current->accountId, position->accountId) == 0 &&
+            strcmp(current->instrumentId, position->instrumentId) == 0) {
+            if (position->sourceVersion < current->sourceVersion)
+                return UMI_STATUS_INVALID_STATE;
+            *current = *position;
+            book->revision += 1U;
+            return UMI_STATUS_OK;
+        }
+    }
+    if (book->count >= UMI_FINANCIAL_POSITION_CONTROL_CAPACITY)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    book->positions[book->count++] = *position;
+    book->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_financial_position_control_book_upsert(
+    UmiFinancialPositionControlBook *book,
+    const UmiFinancialPositionControl *position)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (book != NULL && book->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t i;
     if (book == NULL || position == NULL || position->accountId[0] == '\0' ||
         position->instrumentId[0] == '\0' || position->currency[0] == '\0') {

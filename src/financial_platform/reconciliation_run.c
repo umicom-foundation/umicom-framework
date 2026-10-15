@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/financial_platform/reconciliation_run.h"
 
 #include <math.h>
@@ -29,6 +30,10 @@ void umi_financial_reconciliation_run_init(
     run->revision = 1U;
 }
 
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_financial_reconciliation_run_add(
     UmiFinancialReconciliationRun *run,
     const UmiFinancialReconciliationItem *item)
@@ -50,11 +55,68 @@ UmiStatus umi_financial_reconciliation_run_add(
     run->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_financial_reconciliation_run_add(
+    UmiFinancialReconciliationRun *run,
+    const UmiFinancialReconciliationItem *item)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (run != NULL && run->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiFinancialReconciliationItem copy;
+    if (run == NULL || item == NULL || run->runId[0] == '\0' ||
+        item->itemId[0] == '\0' || item->sourceId[0] == '\0' ||
+        item->targetId[0] == '\0' || item->tolerance < 0.0) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (run->count >= UMI_FINANCIAL_RECONCILIATION_CAPACITY)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    copy = *item;
+    copy.matched =
+        fabs(copy.sourceValue - copy.targetValue) <= copy.tolerance;
+    if (copy.matched) run->matchedCount += 1U;
+    else run->breakCount += 1U;
+    run->items[run->count++] = copy;
+    run->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
+UmiStatus umi_financial_reconciliation_run_resolve(
+    UmiFinancialReconciliationRun *run,
+    const char *itemId)
+{
+    size_t i;
+    if (run == NULL || itemId == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    for (i = 0U; i < run->count; ++i) {
+        UmiFinancialReconciliationItem *item = &run->items[i];
+        if (strcmp(item->itemId, itemId) == 0) {
+            if (item->resolved) return UMI_STATUS_ALREADY_EXISTS;
+            item->resolved = 1;
+            if (!item->matched && run->breakCount > 0U) run->breakCount -= 1U;
+            run->revision += 1U;
+            return UMI_STATUS_OK;
+        }
+    }
+    return UMI_STATUS_NOT_FOUND;
+}
+#endif
 
 UmiStatus umi_financial_reconciliation_run_resolve(
     UmiFinancialReconciliationRun *run,
     const char *itemId)
 {
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (run != NULL && run->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t i;
     if (run == NULL || itemId == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     for (i = 0U; i < run->count; ++i) {

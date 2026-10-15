@@ -17,6 +17,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../base/conditional_archive_internal.h"
 #include "umicom/teacher/teacher_prompt.h"
 #include "../base/value_archive_internal.h"
 
@@ -174,3 +175,8 @@ static UmiStatus UmiTeacherTeacherPromptArchiveValidate(const UmiTeacherTeacherP
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_teacher_teacher_prompt_archive_encode, umi_teacher_teacher_prompt_archive_decode,
     UmiTeacherTeacherPrompt, UmiTeacherTeacherPromptArchiveSchema, UmiTeacherTeacherPromptArchiveBound, UmiTeacherTeacherPromptArchiveWrite, UmiTeacherTeacherPromptArchiveRead, UmiTeacherTeacherPromptArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_teacher_teacher_prompt_archive_decode_if_unchanged, umi_teacher_teacher_prompt_archive_encode,
+    UmiTeacherTeacherPrompt, UmiTeacherTeacherPromptArchiveSchema, UmiTeacherTeacherPromptArchiveBound, UmiTeacherTeacherPromptArchiveRead, UmiTeacherTeacherPromptArchiveValidate)

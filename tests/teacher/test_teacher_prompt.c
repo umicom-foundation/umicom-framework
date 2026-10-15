@@ -90,6 +90,12 @@ UMI_TEST_VALUE_TRANSFER(UmiTeacherTeacherPromptTransferCases, UmiTeacherTeacherP
     umi_teacher_teacher_prompt_archive_encode, umi_teacher_teacher_prompt_archive_decode,
     UmiTeacherTeacherPromptTransferEqual, UmiTeacherTeacherPromptTransferTails, UmiTeacherTeacherPromptTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTeacherTeacherPromptConditionalArchiveCases, UmiTeacherTeacherPrompt,
+    umi_teacher_teacher_prompt_archive_encode, umi_teacher_teacher_prompt_archive_decode_if_unchanged,
+    UmiTeacherTeacherPromptTransferEqual, UmiTeacherTeacherPromptTransferTails, UmiTeacherTeacherPromptTransferMalformed)
+
+
 int main(void) {
     UmiTeacherTeacherPrompt value;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -97,6 +103,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_teacher_teacher_prompt_validate(&value) != UMI_STATUS_OK) return 2;
     if (UmiTeacherTeacherPromptTransferCases(&value) != 0) return 1;
+    if (UmiTeacherTeacherPromptConditionalArchiveCases(&value) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (umi_teacher_teacher_prompt_priority(&value, 60U) != 70U) return 3;

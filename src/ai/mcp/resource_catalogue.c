@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include <stdint.h>
 #include "umicom/ai/mcp/resource_catalogue.h"
 
 #include <string.h>
@@ -71,10 +72,51 @@ const UmiAiMcpResourceDescriptor *umi_ai_mcp_resource_catalogue_find(
  * Add ai mcp resource catalogue only after its inputs and available capacity have been
  * checked.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ai_mcp_resource_catalogue_add(
     UmiAiMcpResourceCatalogue *catalogue,
     const UmiAiMcpResourceDescriptor *item)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (catalogue == NULL ||
+        item == NULL ||
+        item->uri[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (umi_ai_mcp_resource_catalogue_find(
+            catalogue,
+            item->uri) != NULL) {
+        return UMI_STATUS_ALREADY_EXISTS;
+    }
+
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (catalogue->count >= UMI_AI_MCP_MAX_RESOURCES) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    catalogue->items[catalogue->count++] = *item;
+    catalogue->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_ai_mcp_resource_catalogue_add(
+    UmiAiMcpResourceCatalogue *catalogue,
+    const UmiAiMcpResourceDescriptor *item)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (catalogue != NULL && catalogue->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.

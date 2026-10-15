@@ -17,6 +17,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/debug/workbench/breakpoint_hit_model.h"
 #include "../../base/value_archive_internal.h"
 
@@ -184,3 +185,9 @@ static UmiStatus UmiDebugWorkbenchBreakpointHitModelArchiveValidate(const UmiDeb
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_debug_workbench_breakpoint_hit_model_archive_encode, umi_debug_workbench_breakpoint_hit_model_archive_decode,
     UmiDebugWorkbenchBreakpointHitModel, UmiDebugWorkbenchBreakpointHitModelArchiveSchema, UmiDebugWorkbenchBreakpointHitModelArchiveBound, UmiDebugWorkbenchBreakpointHitModelArchiveWrite, UmiDebugWorkbenchBreakpointHitModelArchiveRead, UmiDebugWorkbenchBreakpointHitModelArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_debug_workbench_breakpoint_hit_model_archive_decode_if_unchanged, umi_debug_workbench_breakpoint_hit_model_archive_encode,
+    UmiDebugWorkbenchBreakpointHitModel, UmiDebugWorkbenchBreakpointHitModelArchiveSchema, UmiDebugWorkbenchBreakpointHitModelArchiveBound, UmiDebugWorkbenchBreakpointHitModelArchiveRead, UmiDebugWorkbenchBreakpointHitModelArchiveValidate)

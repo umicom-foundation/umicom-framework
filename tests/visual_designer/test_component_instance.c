@@ -107,6 +107,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadComponentInstanceTransferCases, UmiRadComponentIns
     umi_rad_component_instance_archive_encode, umi_rad_component_instance_archive_decode,
     UmiRadComponentInstanceTransferEqual, UmiRadComponentInstanceTransferTails, UmiRadComponentInstanceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadComponentInstanceConditionalArchiveCases, UmiRadComponentInstance,
+    umi_rad_component_instance_archive_encode, umi_rad_component_instance_archive_decode_if_unchanged,
+    UmiRadComponentInstanceTransferEqual, UmiRadComponentInstanceTransferTails, UmiRadComponentInstanceTransferMalformed)
+
+
 int main(void){UmiRadComponentInstance item;CHECK(umi_rad_component_instance_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_component_instance_is_valid(&item));
     if (UmiRadComponentInstanceTransferCases(&item) != 0) return 1;
+    if (UmiRadComponentInstanceConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

@@ -93,6 +93,13 @@ UMI_TEST_VALUE_TRANSFER(UmiDesignComponentDescriptorTransferCases, UmiDesignComp
     umi_design_component_descriptor_archive_encode, umi_design_component_descriptor_archive_decode,
     UmiDesignComponentDescriptorTransferEqual, UmiDesignComponentDescriptorTransferTails, UmiDesignComponentDescriptorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignComponentDescriptorConditionalArchiveCases, UmiDesignComponentDescriptor,
+    umi_design_component_descriptor_archive_encode, umi_design_component_descriptor_archive_decode_if_unchanged,
+    UmiDesignComponentDescriptorTransferEqual, UmiDesignComponentDescriptorTransferTails, UmiDesignComponentDescriptorTransferMalformed)
+
+
 int main(void){UmiDesignComponentDescriptor d;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_component_descriptor_init(&d,"button.primary","Primary Button",UMI_UI_COMPONENT_BUTTON,UMI_DESIGN_ROLE_PRIMARY,1)!=UMI_STATUS_OK)return 1;
     if (UmiDesignComponentDescriptorTransferCases(&d) != 0) return 1;
+    if (UmiDesignComponentDescriptorConditionalArchiveCases(&d) != 0) return 1;
 return umi_design_component_descriptor_valid(&d)?0:2;}

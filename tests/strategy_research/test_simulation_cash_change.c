@@ -18,6 +18,10 @@
 
 #include "umicom/strategy_research/simulation/cash_change.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(umi_strategy_research_evaluate_simulation_cash_change_batch_cases, umi_strategy_research_evaluate_simulation_cash_change,
+    umi_strategy_research_evaluate_simulation_cash_change_batch, UmiStrategyResearchInput, UmiStrategyResearchSnapshot, scoreOne)
+
 int main(void)
 {
     UmiStrategyResearchInput input;
@@ -108,6 +112,7 @@ int main(void)
     input.approved = 1;
     input.revision = 88U;
 
+    if (umi_strategy_research_evaluate_simulation_cash_change_batch_cases(&input) != 0) return 1;
     assert(umi_strategy_research_evaluate_simulation_cash_change(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "simulation.cash-change") == 0);
     assert(snapshot.revision == 88U);

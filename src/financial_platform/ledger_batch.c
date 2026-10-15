@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/financial_platform/ledger_batch.h"
 
 #include <math.h>
@@ -30,10 +31,43 @@ void umi_financial_ledger_batch_init(
     batch->revision = 1U;
 }
 
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_financial_ledger_batch_add(
     UmiFinancialLedgerBatch *batch,
     const UmiFinancialLedgerControlLine *line)
 {
+    if (batch == NULL || line == NULL ||
+        batch->batchId[0] == '\0' ||
+        line->accountId[0] == '\0' ||
+        line->currency[0] == '\0' ||
+        line->referenceId[0] == '\0' ||
+        line->debit < 0.0 || line->credit < 0.0 ||
+        (line->debit > 0.0 && line->credit > 0.0) ||
+        (line->debit == 0.0 && line->credit == 0.0) ||
+        batch->posted) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (batch->count >= UMI_FINANCIAL_LEDGER_LINE_CAPACITY) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    batch->lines[batch->count++] = *line;
+    batch->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_financial_ledger_batch_add(
+    UmiFinancialLedgerBatch *batch,
+    const UmiFinancialLedgerControlLine *line)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (batch != NULL && batch->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     if (batch == NULL || line == NULL ||
         batch->batchId[0] == '\0' ||
         line->accountId[0] == '\0' ||
@@ -91,6 +125,10 @@ UmiStatus umi_financial_ledger_batch_validate(
         : UMI_STATUS_INVALID_STATE;
 }
 
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_financial_ledger_batch_mark_approved(
     UmiFinancialLedgerBatch *batch)
 {
@@ -102,10 +140,49 @@ UmiStatus umi_financial_ledger_batch_mark_approved(
     batch->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_financial_ledger_batch_mark_approved(
+    UmiFinancialLedgerBatch *batch)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (batch != NULL && batch->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    if (batch == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (umi_financial_ledger_batch_validate(batch, 0.000001) != UMI_STATUS_OK) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    batch->approved = 1;
+    batch->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
+UmiStatus umi_financial_ledger_batch_mark_posted(
+    UmiFinancialLedgerBatch *batch)
+{
+    if (batch == NULL || !batch->approved || batch->posted) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    batch->posted = 1;
+    batch->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
 
 UmiStatus umi_financial_ledger_batch_mark_posted(
     UmiFinancialLedgerBatch *batch)
 {
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (batch != NULL && batch->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     if (batch == NULL || !batch->approved || batch->posted) {
         return UMI_STATUS_INVALID_STATE;
     }

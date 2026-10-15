@@ -13,12 +13,28 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/ir_block.h"
+#include "../../base/value_construction_internal.h"
 #include <string.h>
 /*
  * Initialise nc ir block from caller-provided values so later operations receive a known
  * state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_nc_ir_block_init(UmiNativeIrBlock *b,uint32_t id,const char *name){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(b==NULL||id==0U||name==NULL)return UMI_STATUS_INVALID_ARGUMENT;memset(b,0,sizeof(*b));b->id=id;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_copy_text(b->name,sizeof(b->name),name)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;return UMI_STATUS_OK;}
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_nc_ir_block_init_build_value(UmiNativeIrBlock *b,uint32_t id,const char *name){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(b==NULL||id==0U||name==NULL)return UMI_STATUS_INVALID_ARGUMENT;memset(b,0,sizeof(*b));b->id=id;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_copy_text(b->name,sizeof(b->name),name)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;return UMI_STATUS_OK;}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_nc_ir_block_init, UmiNativeIrBlock, b,
+    (UmiNativeIrBlock *b, uint32_t id, const char *name),
+    umi_nc_ir_block_init_build_value(candidate, id, name))
+
 /*
  * Provide the nc ir block terminated operation used by this module and its client
  * applications.

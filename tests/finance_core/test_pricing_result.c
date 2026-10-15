@@ -92,10 +92,17 @@ UMI_TEST_VALUE_TRANSFER(UmiPricingResultTransferCases, UmiPricingResult,
     umi_pricing_result_archive_encode, umi_pricing_result_archive_decode,
     UmiPricingResultTransferEqual, UmiPricingResultTransferTails, UmiPricingResultTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiPricingResultConditionalArchiveCases, UmiPricingResult,
+    umi_pricing_result_archive_encode, umi_pricing_result_archive_decode_if_unchanged,
+    UmiPricingResultTransferEqual, UmiPricingResultTransferTails, UmiPricingResultTransferMalformed)
+
+
 int main(void)
 {
     UmiPricingResult x; UmiMoney m={10,2U,{{'U','S','D','\0'}}}; CHECK(umi_pricing_result_init(&x,"ID",m,(UmiFinancialDate){2026,8U,25U},1U)==UMI_STATUS_OK); CHECK(umi_pricing_result_is_valid(&x));
     if (UmiPricingResultTransferCases(&x) != 0) return 1;
+    if (UmiPricingResultConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;
 }

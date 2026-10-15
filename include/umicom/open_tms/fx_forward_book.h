@@ -54,12 +54,18 @@ typedef struct UmiOpenTmsFxForwardBook {
 } UmiOpenTmsFxForwardBook;
 
 void umi_open_tms_fx_forward_book_init(UmiOpenTmsFxForwardBook *book);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_open_tms_fx_forward_book_add(
     UmiOpenTmsFxForwardBook *book,
     const UmiOpenTmsFxForward *trade);
 const UmiOpenTmsFxForward *umi_open_tms_fx_forward_book_find(
     const UmiOpenTmsFxForwardBook *book,
     const char *tradeId);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_open_tms_fx_forward_book_transition(
     UmiOpenTmsFxForwardBook *book,
     const char *tradeId,

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/data/enterprise/change_tracker.h"
 #include <stdio.h>
 #include <string.h>
@@ -23,6 +24,9 @@
  * to the operating system.
  */
 int main(void) {
-    UmiDataChangeTracker t; umi_data_change_tracker_init(&t); CHECK(umi_data_change_tracker_track(&t,"c1","Order","42",UMI_DATA_CHANGE_INSERT)==UMI_STATUS_OK); CHECK(umi_data_change_tracker_count_kind(&t,UMI_DATA_CHANGE_INSERT)==1U); CHECK(umi_data_change_tracker_track(&t,"c2","Order","42",UMI_DATA_CHANGE_UPDATE)==UMI_STATUS_OK); CHECK(umi_data_change_tracker_count_kind(&t,UMI_DATA_CHANGE_UPDATE)==1U);
+    UmiDataChangeTracker t; umi_data_change_tracker_init(&t); CHECK(umi_data_change_tracker_track(&t,"c1","Order","42",UMI_DATA_CHANGE_INSERT)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDataChangeTracker, &t,
+        (umi_data_change_tracker_track(&t,"c1","Order","42",UMI_DATA_CHANGE_INSERT)));
+ CHECK(umi_data_change_tracker_count_kind(&t,UMI_DATA_CHANGE_INSERT)==1U); CHECK(umi_data_change_tracker_track(&t,"c2","Order","42",UMI_DATA_CHANGE_UPDATE)==UMI_STATUS_OK); CHECK(umi_data_change_tracker_count_kind(&t,UMI_DATA_CHANGE_UPDATE)==1U);
     return 0;
 }

@@ -43,6 +43,9 @@ void umi_ai_coding_tool_chat_registry_init(
  * Provide the ai coding tool chat registry open operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ai_coding_tool_chat_registry_open(
     UmiAiCodingToolChatRegistry *registry,
     const char *session_id,
@@ -62,6 +65,9 @@ UmiAiCodingToolChatSession *umi_ai_coding_tool_chat_registry_find(
  * Provide the ai coding tool chat registry close operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ai_coding_tool_chat_registry_close(
     UmiAiCodingToolChatRegistry *registry,
     const char *session_id);

@@ -52,10 +52,17 @@ UMI_TEST_VALUE_TRANSFER(UmiFinancialPriceTransferCases, UmiFinancialPrice,
     umi_price_archive_encode, umi_price_archive_decode,
     UmiFinancialPriceTransferEqual, UmiFinancialPriceTransferTails, UmiFinancialPriceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFinancialPriceConditionalArchiveCases, UmiFinancialPrice,
+    umi_price_archive_encode, umi_price_archive_decode_if_unchanged,
+    UmiFinancialPriceTransferEqual, UmiFinancialPriceTransferTails, UmiFinancialPriceTransferMalformed)
+
+
 int main(void)
 {
     UmiFinancialPrice p; CHECK(umi_price_init(&p,101.25,2U)==UMI_STATUS_OK);
     if (UmiFinancialPriceTransferCases(&p) != 0) return 1;
+    if (UmiFinancialPriceConditionalArchiveCases(&p) != 0) return 1;
 
     return 0;
 }

@@ -109,12 +109,19 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalSigningRequestTransferCases, UmiDigitalSigning
     umi_digital_asset_signing_request_archive_encode, umi_digital_asset_signing_request_archive_decode,
     UmiDigitalSigningRequestTransferEqual, UmiDigitalSigningRequestTransferTails, UmiDigitalSigningRequestTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalSigningRequestConditionalArchiveCases, UmiDigitalSigningRequest,
+    umi_digital_asset_signing_request_archive_encode, umi_digital_asset_signing_request_archive_decode_if_unchanged,
+    UmiDigitalSigningRequestTransferEqual, UmiDigitalSigningRequestTransferTails, UmiDigitalSigningRequestTransferMalformed)
+
+
 int main(void)
 {
     UmiDigitalSigningRequest value;
     CHECK(umi_digital_asset_signing_request_init(&value, "SIGN-1", "TX-1", "POL-1", 2U) == UMI_STATUS_OK);
     CHECK(umi_digital_asset_signing_request_valid(&value));
     if (UmiDigitalSigningRequestTransferCases(&value) != 0) return 1;
+    if (UmiDigitalSigningRequestConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

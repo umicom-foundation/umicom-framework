@@ -21,6 +21,7 @@
  *   Describe reusable application starters built from feature packs and auto-configurations.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/starter_descriptor.h"
+#include "../../base/value_construction_internal.h"
 
 
 #include <string.h>
@@ -28,6 +29,11 @@
  * Initialise bootstrap starter descriptor from caller-provided values so later operations
  * receive a known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_bootstrap_starter_descriptor_init(
     UmiBootstrapStarterDescriptor *starter,
     const char *starter_id,
@@ -52,6 +58,39 @@ UmiStatus umi_bootstrap_starter_descriptor_init(
     starter->enabled = true;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_bootstrap_starter_descriptor_init_build_value(
+    UmiBootstrapStarterDescriptor *starter,
+    const char *starter_id,
+    const char *feature_pack_id,
+    int32_t priority) {
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (starter == NULL || !umi_bootstrap_id_valid(starter_id) ||
+        !umi_bootstrap_id_valid(feature_pack_id)) return UMI_STATUS_INVALID_ARGUMENT;
+    memset(starter, 0, sizeof(*starter));
+    status = umi_bootstrap_copy_text(starter->starter_id, sizeof(starter->starter_id), starter_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_bootstrap_copy_text(starter->feature_pack_id,
+        sizeof(starter->feature_pack_id), feature_pack_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    starter->priority = priority;
+    starter->enabled = true;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_bootstrap_starter_descriptor_init, UmiBootstrapStarterDescriptor, starter,
+    (UmiBootstrapStarterDescriptor *starter, const char *starter_id, const char *feature_pack_id, int32_t priority),
+    umi_bootstrap_starter_descriptor_init_build_value(candidate, starter_id, feature_pack_id, priority))
+
 /*
  * Provide the bootstrap starter descriptor add auto configuration operation used by this
  * module and its client applications.

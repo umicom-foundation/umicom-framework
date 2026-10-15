@@ -14,11 +14,17 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/panel_state.h"
+#include "../../base/value_construction_internal.h"
 
 /*
  * Initialise ws panel state from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_ws_panel_state_init(UmiWsPanelState *state, const char *surface_id, UmiWsDockRegion region) {
     UmiStatus status;
     /*
@@ -38,6 +44,34 @@ UmiStatus umi_ws_panel_state_init(UmiWsPanelState *state, const char *surface_id
     state->pinned = true;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_ws_panel_state_init_build_value(UmiWsPanelState *state, const char *surface_id, UmiWsDockRegion region) {
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (state == NULL || !umi_ws_id_valid(surface_id)) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (region < UMI_WS_DOCK_LEFT || region > UMI_WS_DOCK_FLOATING) return UMI_STATUS_INVALID_ARGUMENT;
+    *state = (UmiWsPanelState){0};
+    status = umi_ws_copy_text(state->surface_id, sizeof(state->surface_id), surface_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    state->mode = (region == UMI_WS_DOCK_FLOATING) ? UMI_WS_PANEL_FLOATING : UMI_WS_PANEL_DOCKED;
+    state->visibility = UMI_WS_VISIBILITY_VISIBLE;
+    state->region = region;
+    state->pinned = true;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_ws_panel_state_init, UmiWsPanelState, state,
+    (UmiWsPanelState *state, const char *surface_id, UmiWsDockRegion region),
+    umi_ws_panel_state_init_build_value(candidate, surface_id, region))
+
 
 /*
  * Provide the ws panel state set mode operation used by this module and its client

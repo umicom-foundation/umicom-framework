@@ -42,6 +42,9 @@ void umi_fabric_service_catalogue_init(UmiFabricServiceCatalogue *registry);
  * Add fabric service catalogue only after its inputs and available capacity have been
  * checked.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_fabric_service_catalogue_add(UmiFabricServiceCatalogue *registry,const UmiFabricServiceDescriptor *item);
 /**
  * Find fabric service catalogue while leaving the underlying catalogue or model owned by

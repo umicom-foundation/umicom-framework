@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/editor/intelligence_workbench/search_projection.h"
 
 #include <inttypes.h>
@@ -140,10 +141,95 @@ UmiStatus umi_editor_intel_search_projection_init(
  * Provide the editor intel search projection refresh operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_editor_intel_search_projection_refresh(
     UmiEditorIntelSearchProjection *projection,
     UmiEditorWorkspaceSearchOrchestration *orchestration)
 {
+    UmiEditorWorkspaceSearchQuery *query;
+    UmiEditorWorkspaceSearchQuerySnapshot query_snapshot;
+    size_t index;
+    size_t limit;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (projection == NULL || orchestration == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_editor_workspace_search_orchestration_snapshot(
+        orchestration, &projection->source_snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    query = umi_editor_workspace_search_orchestration_query(orchestration);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (query == NULL) return UMI_STATUS_INVALID_STATE;
+    status = umi_editor_workspace_search_query_snapshot(query, &query_snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    (void)umi_editor_intel_workspace_search_view_model_clear(
+        &projection->results);
+    (void)umi_editor_intel_search_result_group_clear(&projection->groups);
+    projection->has_selection = 0;
+    projection->selected_index = 0U;
+    limit = query_snapshot.result_count;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (limit > UMI_EDITOR_INTEL_MAX_ITEMS) {
+        limit = UMI_EDITOR_INTEL_MAX_ITEMS;
+        projection->truncated = 1;
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
+        projection->truncated = query_snapshot.truncated;
+    }
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < limit; ++index) {
+        UmiEditorWorkspaceSearchMatch match;
+        UmiEditorIntelEntry entry;
+
+        status = umi_editor_workspace_search_query_at(query, index, &match);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+        status = add_group(
+            projection, match.location.uri, query_snapshot.revision);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+        status = entry_from_match(&entry, &match);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+        status = umi_editor_intel_workspace_search_view_model_add(
+            &projection->results, &entry);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+        /* Use the stable identifier comparison to choose the matching record or policy. */
+        if (match.selected && !projection->has_selection) {
+            projection->selected_index = index;
+            projection->has_selection = 1;
+        }
+    }
+    projection->source_revision = query_snapshot.revision;
+    ++projection->revision;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_editor_intel_search_projection_refresh(
+    UmiEditorIntelSearchProjection *projection,
+    UmiEditorWorkspaceSearchOrchestration *orchestration)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (projection != NULL && projection->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiEditorWorkspaceSearchQuery *query;
     UmiEditorWorkspaceSearchQuerySnapshot query_snapshot;
     size_t index;

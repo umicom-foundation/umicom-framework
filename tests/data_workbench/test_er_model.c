@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 
 #include "umicom/data/workbench/er_model.h"
@@ -39,6 +40,9 @@ int main(void)
                "customers", "customer_id") == UMI_STATUS_OK);
     assert(umi_data_er_model_add_relation(&model, &foreign_key) ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDataErModel, &model,
+        (umi_data_er_model_add_relation(&model, &foreign_key)));
+
     assert(model.entity_count == 2U && model.relation_count == 1U);
     return 0;
 }

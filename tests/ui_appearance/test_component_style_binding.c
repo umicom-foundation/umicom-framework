@@ -101,6 +101,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceComponentStyleBindingTransferCases, UmiAppe
     umi_appearance_component_style_binding_archive_encode, umi_appearance_component_style_binding_archive_decode,
     UmiAppearanceComponentStyleBindingTransferEqual, UmiAppearanceComponentStyleBindingTransferTails, UmiAppearanceComponentStyleBindingTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceComponentStyleBindingConditionalArchiveCases, UmiAppearanceComponentStyleBinding,
+    umi_appearance_component_style_binding_archive_encode, umi_appearance_component_style_binding_archive_decode_if_unchanged,
+    UmiAppearanceComponentStyleBindingTransferEqual, UmiAppearanceComponentStyleBindingTransferTails, UmiAppearanceComponentStyleBindingTransferMalformed)
+
+
 int main(void) {
     UmiAppearanceComponentStyleBinding item;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -108,6 +114,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_component_style_binding_is_valid(&item)) return 2;
     if (UmiAppearanceComponentStyleBindingTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceComponentStyleBindingConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;
 }

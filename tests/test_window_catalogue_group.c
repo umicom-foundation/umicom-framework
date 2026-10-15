@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/ui/window_catalogue.h"
@@ -32,11 +33,20 @@ int main(void)
     UmiUiWindowGroupRole role = UMI_UI_WINDOW_GROUP_SOURCE;
     const UmiUiWindowGroup *assigned;
     assert(umi_ui_window_catalogue_register(&catalogue,&editor) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiUiWindowCatalogue, &catalogue,
+        (umi_ui_window_catalogue_register(&catalogue,&editor)));
+
     assert(umi_ui_window_catalogue_register(&catalogue,&profiler) == UMI_STATUS_OK);
     assert(umi_ui_window_catalogue_search(&catalogue,"memory",0,matches,4U) == 1U);
     assert(strcmp(matches[0]->tool_id,"profiler") == 0);
     assert(umi_ui_window_group_define(&groups,"project-blue","accent-blue",UMI_UI_WINDOW_CONTEXT_PROJECT) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiUiWindowGroupStore, &groups,
+        (umi_ui_window_group_define(&groups,"project-blue","accent-blue",UMI_UI_WINDOW_CONTEXT_PROJECT)));
+
     assert(umi_ui_window_group_join(&groups,"project-blue","explorer",UMI_UI_WINDOW_GROUP_SOURCE) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiUiWindowGroupStore, &groups,
+        (umi_ui_window_group_join(&groups,"project-blue","explorer",UMI_UI_WINDOW_GROUP_SOURCE)));
+
     assert(umi_ui_window_group_join(&groups,"project-blue","editor",UMI_UI_WINDOW_GROUP_DESTINATION) == UMI_STATUS_OK);
     assert(umi_ui_window_group_route(&groups,"project-blue","explorer",routes,4U) == 1U);
     assert(strcmp(routes[0],"editor") == 0);
@@ -50,6 +60,13 @@ int main(void)
                "project-green",
                "editor",
                UMI_UI_WINDOW_GROUP_BIDIRECTIONAL) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiUiWindowGroupStore, &groups,
+        (umi_ui_window_group_assign(
+               &groups,
+               "project-green",
+               "editor",
+               UMI_UI_WINDOW_GROUP_BIDIRECTIONAL)));
+
     assigned = umi_ui_window_group_for_window(&groups, "editor", &role);
     assert(assigned != NULL &&
            strcmp(assigned->group_id, "project-green") == 0 &&
@@ -57,6 +74,9 @@ int main(void)
     assert(umi_ui_window_group_route(
                &groups, "project-blue", "explorer", routes, 4U) == 0U);
     assert(umi_ui_window_group_unassign(&groups, "editor") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiUiWindowGroupStore, &groups,
+        (umi_ui_window_group_unassign(&groups, "editor")));
+
     assert(umi_ui_window_group_for_window(&groups, "editor", NULL) == NULL);
     return 0;
 }

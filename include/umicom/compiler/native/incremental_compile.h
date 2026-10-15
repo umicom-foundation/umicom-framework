@@ -29,6 +29,10 @@ typedef struct UmiNativeIncrementalUnit { char path[UMI_NC_PATH_CAPACITY]; uint6
  * Initialise nc incremental unit from caller-provided values so later operations receive a
  * known state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_nc_incremental_unit_init(UmiNativeIncrementalUnit *unit,const char *path,uint64_t source_hash,uint64_t options_hash,uint64_t dependency_hash);
 /**
  * Provide the nc incremental needs rebuild operation used by this module and its client

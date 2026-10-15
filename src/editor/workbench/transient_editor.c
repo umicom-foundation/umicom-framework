@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/editor/workbench/transient_editor.h"
 #include "../../base/value_archive_internal.h"
 
@@ -72,3 +73,8 @@ static UmiStatus UmiEditorWbTransientEditorArchiveValidate(const UmiEditorWbTran
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_editor_wb_transient_editor_archive_encode, umi_editor_wb_transient_editor_archive_decode,
     UmiEditorWbTransientEditor, UmiEditorWbTransientEditorArchiveSchema, UmiEditorWbTransientEditorArchiveBound, UmiEditorWbTransientEditorArchiveWrite, UmiEditorWbTransientEditorArchiveRead, UmiEditorWbTransientEditorArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_editor_wb_transient_editor_archive_decode_if_unchanged, umi_editor_wb_transient_editor_archive_encode,
+    UmiEditorWbTransientEditor, UmiEditorWbTransientEditorArchiveSchema, UmiEditorWbTransientEditorArchiveBound, UmiEditorWbTransientEditorArchiveRead, UmiEditorWbTransientEditorArchiveValidate)

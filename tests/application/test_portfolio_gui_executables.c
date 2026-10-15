@@ -34,6 +34,7 @@ int main(void)
         const char *id;
         const char *executable;
     } expected[] = {
+        {"org.umicom.healthcare", "umicom-healthcare"},
         {"org.umicom.desktop", "umicom-desk"},
         {"org.umicom.studio", "umicom-studio-ide"},
         {"org.umicom.trader", "umicom-trader"},
@@ -61,7 +62,11 @@ int main(void)
     };
     size_t index;
     size_t mapped = 0U;
+    /* Retain the previous coverage baseline; Healthcare adds one native host. */
+#if 0
     CHECK(sizeof(expected) / sizeof(expected[0]) == 24U);
+#endif
+    CHECK(sizeof(expected) / sizeof(expected[0]) == 25U);
     for (index = 0U; index < sizeof(expected) / sizeof(expected[0]); ++index) {
         const char *actual = umi_application_portfolio_gui_executable(expected[index].id);
         size_t previous;
@@ -84,7 +89,11 @@ int main(void)
             mapped += 1U;
         }
     }
+    /* Retain the previous coverage baseline; Healthcare adds one native host. */
+#if 0
     CHECK(mapped == 24U);
+#endif
+    CHECK(mapped == 25U);
     CHECK(umi_application_portfolio_gui_executable(NULL) == NULL);
     CHECK(umi_application_portfolio_gui_executable("") == NULL);
     CHECK(umi_application_portfolio_gui_executable("org.umicom.missing") == NULL);

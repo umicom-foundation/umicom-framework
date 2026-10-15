@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/editor/intelligence_workbench/search_result_item.h"
 #include "../../base/value_archive_internal.h"
 
@@ -123,3 +124,8 @@ static UmiStatus UmiEditorIntelSearchResultItemArchiveValidate(const UmiEditorIn
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_editor_intel_search_result_item_archive_encode, umi_editor_intel_search_result_item_archive_decode,
     UmiEditorIntelSearchResultItem, UmiEditorIntelSearchResultItemArchiveSchema, UmiEditorIntelSearchResultItemArchiveBound, UmiEditorIntelSearchResultItemArchiveWrite, UmiEditorIntelSearchResultItemArchiveRead, UmiEditorIntelSearchResultItemArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_editor_intel_search_result_item_archive_decode_if_unchanged, umi_editor_intel_search_result_item_archive_encode,
+    UmiEditorIntelSearchResultItem, UmiEditorIntelSearchResultItemArchiveSchema, UmiEditorIntelSearchResultItemArchiveBound, UmiEditorIntelSearchResultItemArchiveRead, UmiEditorIntelSearchResultItemArchiveValidate)

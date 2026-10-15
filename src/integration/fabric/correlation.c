@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "umicom/base/text.h"
 #include "umicom/integration/fabric/correlation.h"
 #include <string.h>
 #include <limits.h>
@@ -21,7 +22,13 @@
  * Provide the fabric correlation set causation operation used by this module and its
  * client applications.
  */
+/* The presentation copy could erase a rejected field or overlap its input.
+ * Retain it for review; the replacement validates before publishing any text. */
+#if 0
 UmiStatus umi_fabric_correlation_set_causation(UmiFabricMessageHeader *header,const char *causation_id) { /* Protect caller-owned memory by checking that required state is available before it is used. */ if(header==NULL)return UMI_STATUS_INVALID_ARGUMENT; return umi_fabric_copy_text(header->causation_id,sizeof(header->causation_id),causation_id); }
+#endif
+
+UmiStatus umi_fabric_correlation_set_causation(UmiFabricMessageHeader *header,const char *causation_id) { /* Protect caller-owned memory by checking that required state is available before it is used. */ if(header==NULL)return UMI_STATUS_INVALID_ARGUMENT; return umi_text_replace(header->causation_id,sizeof(header->causation_id),causation_id); }
 /*
  * Provide the fabric correlation matches operation used by this module and its client
  * applications.

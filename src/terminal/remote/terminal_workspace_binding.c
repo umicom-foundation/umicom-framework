@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/terminal/remote/terminal_workspace_binding.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -82,3 +83,8 @@ static UmiStatus UmiTerminalRemoteTerminalWorkspaceBindingArchiveValidate(const 
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_terminal_remote_terminal_workspace_binding_archive_encode, umi_terminal_remote_terminal_workspace_binding_archive_decode,
     UmiTerminalRemoteTerminalWorkspaceBinding, UmiTerminalRemoteTerminalWorkspaceBindingArchiveSchema, UmiTerminalRemoteTerminalWorkspaceBindingArchiveBound, UmiTerminalRemoteTerminalWorkspaceBindingArchiveWrite, UmiTerminalRemoteTerminalWorkspaceBindingArchiveRead, UmiTerminalRemoteTerminalWorkspaceBindingArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_terminal_remote_terminal_workspace_binding_archive_decode_if_unchanged, umi_terminal_remote_terminal_workspace_binding_archive_encode,
+    UmiTerminalRemoteTerminalWorkspaceBinding, UmiTerminalRemoteTerminalWorkspaceBindingArchiveSchema, UmiTerminalRemoteTerminalWorkspaceBindingArchiveBound, UmiTerminalRemoteTerminalWorkspaceBindingArchiveRead, UmiTerminalRemoteTerminalWorkspaceBindingArchiveValidate)

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 
@@ -32,6 +33,10 @@ int main(void)
 
     assert(umi_developer_project_model_add_language(
         &model, "developer.language.assembly") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDeveloperProjectModel, &model,
+        (umi_developer_project_model_add_language(
+        &model, "developer.language.assembly")));
+
     assert(model.secondary_language_count == 1U);
     assert(umi_developer_project_model_validate(
         &model, NULL, 0U) == UMI_STATUS_OK);

@@ -88,6 +88,13 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorWbEditorTabGroupTransferCases, UmiEditorWbEdito
     umi_editor_wb_editor_tab_group_archive_encode, umi_editor_wb_editor_tab_group_archive_decode,
     UmiEditorWbEditorTabGroupTransferEqual, UmiEditorWbEditorTabGroupTransferTails, UmiEditorWbEditorTabGroupTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorWbEditorTabGroupConditionalArchiveCases, UmiEditorWbEditorTabGroup,
+    umi_editor_wb_editor_tab_group_archive_encode, umi_editor_wb_editor_tab_group_archive_decode_if_unchanged,
+    UmiEditorWbEditorTabGroupTransferEqual, UmiEditorWbEditorTabGroupTransferTails, UmiEditorWbEditorTabGroupTransferMalformed)
+
+
 int main(void){ UmiEditorWbEditorTabGroup s; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_editor_tab_group_init(&s,"id","")!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_editor_tab_group_set_count(&s,3U,1U)!=UMI_STATUS_OK)return 2; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_wb_editor_tab_group_valid(&s)||s.active_index!=1U)return 3;
     if (UmiEditorWbEditorTabGroupTransferCases(&s) != 0) return 1;
+    if (UmiEditorWbEditorTabGroupConditionalArchiveCases(&s) != 0) return 1;
  return 0; }

@@ -39,6 +39,9 @@ typedef struct UmiDigitalSigningSession {
 UmiStatus umi_digital_asset_signing_session_init(UmiDigitalSigningSession *session, const UmiDigitalSigningRequest *request);
 
 /* Record one independent approval up to the configured threshold. */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_digital_asset_signing_session_approve(UmiDigitalSigningSession *session);
 
 /* Return true when the approval threshold is satisfied. */

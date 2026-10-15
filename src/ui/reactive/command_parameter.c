@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/reactive/command_parameter.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -86,3 +87,8 @@ static UmiStatus UmiUiReactiveCommandParameterArchiveValidate(const UmiUiReactiv
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ui_reactive_command_parameter_archive_encode, umi_ui_reactive_command_parameter_archive_decode,
     UmiUiReactiveCommandParameter, UmiUiReactiveCommandParameterArchiveSchema, UmiUiReactiveCommandParameterArchiveBound, UmiUiReactiveCommandParameterArchiveWrite, UmiUiReactiveCommandParameterArchiveRead, UmiUiReactiveCommandParameterArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_reactive_command_parameter_archive_decode_if_unchanged, umi_ui_reactive_command_parameter_archive_encode,
+    UmiUiReactiveCommandParameter, UmiUiReactiveCommandParameterArchiveSchema, UmiUiReactiveCommandParameterArchiveBound, UmiUiReactiveCommandParameterArchiveRead, UmiUiReactiveCommandParameterArchiveValidate)

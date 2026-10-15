@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/integration/fabric/schema_registry.h"
 #include <stdio.h>
 #include <string.h>
@@ -26,6 +27,9 @@ int main(void) {
     UmiFabricSchemaRegistry r; UmiFabricSchemaDescriptor item, found; umi_fabric_schema_registry_init(&r);
     CHECK(umi_fabric_schema_descriptor_init(&item,"trade.v1","Trade",(UmiFabricVersion){1U,0U,0U},123U,true,false)==UMI_STATUS_OK);
     CHECK(umi_fabric_schema_registry_add(&r,&item)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFabricSchemaRegistry, &r,
+        (umi_fabric_schema_registry_add(&r,&item)));
+
     CHECK(umi_fabric_schema_registry_add(&r,&item)==UMI_STATUS_ALREADY_EXISTS);
     CHECK(umi_fabric_schema_registry_find(&r,item.schema_id,&found)==UMI_STATUS_OK);
     CHECK(umi_fabric_schema_registry_count(&r)==1U);

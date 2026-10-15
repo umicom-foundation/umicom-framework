@@ -51,6 +51,13 @@ UMI_TEST_VALUE_TRANSFER(UmiAnalyticsThresholdBandTransferCases, UmiAnalyticsThre
     umi_analytics_threshold_band_archive_encode, umi_analytics_threshold_band_archive_decode,
     UmiAnalyticsThresholdBandTransferEqual, UmiAnalyticsThresholdBandTransferTails, UmiAnalyticsThresholdBandTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAnalyticsThresholdBandConditionalArchiveCases, UmiAnalyticsThresholdBand,
+    umi_analytics_threshold_band_archive_encode, umi_analytics_threshold_band_archive_decode_if_unchanged,
+    UmiAnalyticsThresholdBandTransferEqual, UmiAnalyticsThresholdBandTransferTails, UmiAnalyticsThresholdBandTransferMalformed)
+
+
 int main(void){UmiAnalyticsThresholdBand item;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_analytics_threshold_band_init(&item)!=UMI_STATUS_OK)return 1;
     if (UmiAnalyticsThresholdBandTransferCases(&item) != 0) return 1;
+    if (UmiAnalyticsThresholdBandConditionalArchiveCases(&item) != 0) return 1;
 return (umi_analytics_threshold_band_valid(&item))?0:2;}

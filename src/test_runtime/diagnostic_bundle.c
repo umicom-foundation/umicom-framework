@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/test_runtime/diagnostic_bundle.h"
 #include "../base/value_archive_internal.h"
 #include "umicom/base/text.h"
@@ -294,3 +295,8 @@ static UmiStatus ArchiveValidate(const UmiTestRuntimeDiagnosticBundle *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_test_runtime_diagnostic_bundle_archive_encode, umi_test_runtime_diagnostic_bundle_archive_decode,
     UmiTestRuntimeDiagnosticBundle, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Guard snapshot import with the complete encoded value reviewed by the
+ * caller. Imported metadata remains evidence; registry publication is separate. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_test_runtime_diagnostic_bundle_archive_decode_if_unchanged, umi_test_runtime_diagnostic_bundle_archive_encode,
+    UmiTestRuntimeDiagnosticBundle, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)

@@ -87,6 +87,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicPanelCapabilityTransferCases, UmiUiMosaicPane
     umi_ui_mosaic_panel_capability_archive_encode, umi_ui_mosaic_panel_capability_archive_decode,
     UmiUiMosaicPanelCapabilityTransferEqual, UmiUiMosaicPanelCapabilityTransferTails, UmiUiMosaicPanelCapabilityTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicPanelCapabilityConditionalArchiveCases, UmiUiMosaicPanelCapability,
+    umi_ui_mosaic_panel_capability_archive_encode, umi_ui_mosaic_panel_capability_archive_decode_if_unchanged,
+    UmiUiMosaicPanelCapabilityTransferEqual, UmiUiMosaicPanelCapabilityTransferTails, UmiUiMosaicPanelCapabilityTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicPanelCapability value;
     umi_ui_mosaic_panel_capability_init(&value);
@@ -95,6 +101,7 @@ int main(void) {
     value.priority = 10U;
     CHECK(umi_ui_mosaic_panel_capability_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicPanelCapabilityTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicPanelCapabilityConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_panel_capability_rank(&value, 5U) == 16U);
     return 0;

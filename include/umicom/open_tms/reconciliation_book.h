@@ -28,7 +28,13 @@ typedef struct UmiOpenTmsReconciliationBook {
  UmiOpenTmsReconciliationItem items[UMI_OPEN_TMS_RECONCILIATION_CAPACITY];size_t count;size_t matchedCount;size_t breakCount;uint64_t revision;
 } UmiOpenTmsReconciliationBook;
 void umi_open_tms_reconciliation_book_init(UmiOpenTmsReconciliationBook *book);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_open_tms_reconciliation_book_add(UmiOpenTmsReconciliationBook *book,const UmiOpenTmsReconciliationItem *item);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_open_tms_reconciliation_book_resolve(UmiOpenTmsReconciliationBook *book,const char *id);
 double umi_open_tms_reconciliation_book_coverage(const UmiOpenTmsReconciliationBook *book);
 #ifdef __cplusplus

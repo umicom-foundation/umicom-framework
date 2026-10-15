@@ -28,7 +28,11 @@ extern "C" {
         uint64_t metric;
     }
     UmiProjectWorkspaceWorkspaceTrustBridge;
-    UmiStatus umi_project_workspace_workspace_trust_bridge_init(UmiProjectWorkspaceWorkspaceTrustBridge *value,const char *id);
+    /** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
+UmiStatus umi_project_workspace_workspace_trust_bridge_init(UmiProjectWorkspaceWorkspaceTrustBridge *value,const char *id);
     UmiStatus umi_project_workspace_workspace_trust_bridge_validate(const UmiProjectWorkspaceWorkspaceTrustBridge *value);
     UmiStatus umi_project_workspace_workspace_trust_bridge_set_name(UmiProjectWorkspaceWorkspaceTrustBridge *value,const char *name);
     UmiStatus umi_project_workspace_workspace_trust_bridge_set_detail(UmiProjectWorkspaceWorkspaceTrustBridge *value,const char *detail);
@@ -45,6 +49,16 @@ UmiStatus umi_project_workspace_workspace_trust_bridge_archive_encode(const UmiP
     void *bytes, size_t capacity, size_t *out_size);
 UmiStatus umi_project_workspace_workspace_trust_bridge_archive_decode(const void *bytes, size_t byte_count,
     UmiProjectWorkspaceWorkspaceTrustBridge *value);
+
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the owner's publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_project_workspace_workspace_trust_bridge_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiProjectWorkspaceWorkspaceTrustBridge *expected, UmiProjectWorkspaceWorkspaceTrustBridge *value);
+
 
 #ifdef __cplusplus
 }

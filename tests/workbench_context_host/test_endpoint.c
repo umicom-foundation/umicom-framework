@@ -150,6 +150,12 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextHostEndpointTransferCases, UmiWorkben
     umi_workbench_context_host_endpoint_archive_encode, umi_workbench_context_host_endpoint_archive_decode,
     UmiWorkbenchContextHostEndpointTransferEqual, UmiWorkbenchContextHostEndpointTransferTails, UmiWorkbenchContextHostEndpointTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextHostEndpointConditionalArchiveCases, UmiWorkbenchContextHostEndpoint,
+    umi_workbench_context_host_endpoint_archive_encode, umi_workbench_context_host_endpoint_archive_decode_if_unchanged,
+    UmiWorkbenchContextHostEndpointTransferEqual, UmiWorkbenchContextHostEndpointTransferTails, UmiWorkbenchContextHostEndpointTransferMalformed)
+
+
 int main(void)
 {
 
@@ -167,6 +173,7 @@ int main(void)
         umi_workbench_context_host_kind_mask(UMI_CONTEXT_KIND_SELECTION);
     assert(umi_workbench_context_host_endpoint_validate(&endpoint) == UMI_STATUS_OK);
     if (UmiWorkbenchContextHostEndpointTransferCases(&endpoint) != 0) return 1;
+    if (UmiWorkbenchContextHostEndpointConditionalArchiveCases(&endpoint) != 0) return 1;
 
     assert(umi_workbench_context_host_endpoint_accepts(
         &endpoint, UMI_CONTEXT_KIND_SOURCE_LOCATION));

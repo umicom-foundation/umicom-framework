@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiCoverageFileModelTransferCases, UmiCoverageFileModel,
     umi_coverage_file_model_archive_encode, umi_coverage_file_model_archive_decode,
     UmiCoverageFileModelTransferEqual, UmiCoverageFileModelTransferTails, UmiCoverageFileModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCoverageFileModelConditionalArchiveCases, UmiCoverageFileModel,
+    umi_coverage_file_model_archive_encode, umi_coverage_file_model_archive_decode_if_unchanged,
+    UmiCoverageFileModelTransferEqual, UmiCoverageFileModelTransferTails, UmiCoverageFileModelTransferMalformed)
+
+
 int main(void){UmiCoverageFileModel m;assert(umi_coverage_file_model_init(&m,"coverage_file_model","Coverage File Model")==UMI_STATUS_OK);assert(umi_coverage_file_model_set_active(&m,true)==UMI_STATUS_OK);assert(umi_coverage_file_model_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_coverage_file_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_coverage_file_model_valid(&m));
     if (UmiCoverageFileModelTransferCases(&m) != 0) return 1;
+    if (UmiCoverageFileModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

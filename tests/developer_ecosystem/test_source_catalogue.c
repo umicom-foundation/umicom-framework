@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 
 #include "umicom/developer/ecosystem/source_catalogue.h"
@@ -32,11 +33,31 @@ int main(void)
         UMI_ECOSYSTEM_SOURCE_OFFLINE, "D:/umicom-feed");
     assert(umi_ecosystem_source_catalogue_upsert(&catalogue, &remote) ==
         UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiEcosystemSourceCatalogue, &catalogue,
+        (umi_ecosystem_source_catalogue_upsert(&catalogue, &remote)));
+    /* Replacing an existing child must not wrap its independent token. */
+    {
+        uint64_t input_revision = remote.revision;
+        uint64_t owner_revision = catalogue.revision;
+        unsigned char child_before[sizeof(catalogue.sources[0])];
+        memcpy(child_before, &catalogue.sources[0], sizeof(child_before));
+        remote.revision = UINT64_MAX;
+        UmiStatus replace_status = umi_ecosystem_source_catalogue_upsert(&catalogue, &remote);
+        remote.revision = input_revision;
+        if (replace_status != UMI_STATUS_CAPACITY_EXCEEDED ||
+            catalogue.revision != owner_revision ||
+            memcmp(child_before, &catalogue.sources[0], sizeof(child_before)) != 0)
+            return 1;
+    }
+
     assert(umi_ecosystem_source_catalogue_upsert(&catalogue, &offline) ==
         UMI_STATUS_OK);
     assert(umi_ecosystem_source_available_count(&catalogue) == 2U);
     assert(umi_ecosystem_source_catalogue_set_offline(&catalogue, true) ==
         UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiEcosystemSourceCatalogue, &catalogue,
+        (umi_ecosystem_source_catalogue_set_offline(&catalogue, true)));
+
     assert(umi_ecosystem_source_available_count(&catalogue) == 2U);
     remote.cache_path[0] = '\0';
     assert(umi_ecosystem_source_catalogue_upsert(&catalogue, &remote) ==
@@ -44,5 +65,9 @@ int main(void)
     assert(umi_ecosystem_source_available_count(&catalogue) == 1U);
     assert(umi_ecosystem_source_complete_sync(&catalogue, "media",
         UMI_STATUS_OK, 1000U) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiEcosystemSourceCatalogue, &catalogue,
+        (umi_ecosystem_source_complete_sync(&catalogue, "media",
+        UMI_STATUS_OK, 1000U)));
+
     return 0;
 }

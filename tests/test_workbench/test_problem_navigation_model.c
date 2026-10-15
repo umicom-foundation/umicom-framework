@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiProblemNavigationModelTransferCases, UmiProblemNaviga
     umi_problem_navigation_model_archive_encode, umi_problem_navigation_model_archive_decode,
     UmiProblemNavigationModelTransferEqual, UmiProblemNavigationModelTransferTails, UmiProblemNavigationModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiProblemNavigationModelConditionalArchiveCases, UmiProblemNavigationModel,
+    umi_problem_navigation_model_archive_encode, umi_problem_navigation_model_archive_decode_if_unchanged,
+    UmiProblemNavigationModelTransferEqual, UmiProblemNavigationModelTransferTails, UmiProblemNavigationModelTransferMalformed)
+
+
 int main(void){UmiProblemNavigationModel m;assert(umi_problem_navigation_model_init(&m,"problem_navigation_model","Problem Navigation Model")==UMI_STATUS_OK);assert(umi_problem_navigation_model_set_active(&m,true)==UMI_STATUS_OK);assert(umi_problem_navigation_model_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_problem_navigation_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_problem_navigation_model_valid(&m));
     if (UmiProblemNavigationModelTransferCases(&m) != 0) return 1;
+    if (UmiProblemNavigationModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

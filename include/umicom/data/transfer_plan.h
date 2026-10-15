@@ -23,6 +23,10 @@ typedef struct UmiDatabaseTransferPlan { char id[UMI_DATABASE_ID_CAPACITY]; UmiD
  * Initialise database transfer plan from caller-provided values so later operations
  * receive a known state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_database_transfer_plan_init(UmiDatabaseTransferPlan *plan,const char *id,UmiDatabaseTransferDirection direction,UmiDatabaseTransferFormat format,const char *table_name,const char *path);
 /**
  * Check that database transfer plan satisfies its contract before another service relies

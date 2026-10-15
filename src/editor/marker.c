@@ -17,6 +17,7 @@
  * This is a product-neutral C23 model. The registry owns snapshot copies by
  * value; callers own external resources and coordinate cross-thread mutation.
  */
+#include "../base/conditional_archive_internal.h"
 #include "umicom/editor/marker.h"
 #include "../base/value_archive_internal.h"
 #include "../base/registry_archive_internal.h"
@@ -202,3 +203,8 @@ UMI_DEFINE_VALUE_ARCHIVE(umi_editor_marker_snapshot_archive_encode, umi_editor_m
 UMI_DEFINE_REGISTRY_ARCHIVE(umi_editor_marker_registry_archive_encode, umi_editor_marker_registry_archive_restore,
     UmiEditorMarkerRegistry, UmiEditorMarkerSnapshot, UMI_EDITOR_MARKER_CAPACITY, ArchiveSchema,
     umi_editor_marker_snapshot_archive_encode, umi_editor_marker_snapshot_archive_decode, umi_editor_marker_registry_replace_if_current)
+
+/* Guard snapshot import with the complete encoded value reviewed by the
+ * caller. Imported metadata remains evidence; registry publication is separate. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_editor_marker_snapshot_archive_decode_if_unchanged, umi_editor_marker_snapshot_archive_encode,
+    UmiEditorMarkerSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)

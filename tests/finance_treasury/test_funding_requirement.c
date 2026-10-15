@@ -67,11 +67,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryFundingRequirementTransferCases, UmiTreasuryF
     umi_treasury_funding_requirement_archive_encode, umi_treasury_funding_requirement_archive_decode,
     UmiTreasuryFundingRequirementTransferEqual, UmiTreasuryFundingRequirementTransferTails, UmiTreasuryFundingRequirementTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryFundingRequirementConditionalArchiveCases, UmiTreasuryFundingRequirement,
+    umi_treasury_funding_requirement_archive_encode, umi_treasury_funding_requirement_archive_decode_if_unchanged,
+    UmiTreasuryFundingRequirementTransferEqual, UmiTreasuryFundingRequirementTransferTails, UmiTreasuryFundingRequirementTransferMalformed)
+
+
 int main(void) {
     UmiTreasuryFundingRequirement v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_funding_requirement_init(&v, "req", 1000, 725) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryFundingRequirementTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryFundingRequirementConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if(umi_treasury_funding_requirement_shortfall_minor(&v)!=275)return 2;

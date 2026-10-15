@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/data/enterprise/data_server_profile.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -75,10 +76,48 @@ UMI_TEST_VALUE_TRANSFER(UmiDataServerProfileTransferCases, UmiDataServerProfile,
     umi_data_data_server_profile_archive_encode, umi_data_data_server_profile_archive_decode,
     UmiDataServerProfileTransferEqual, UmiDataServerProfileTransferTails, UmiDataServerProfileTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataServerProfileConditionalArchiveCases, UmiDataServerProfile,
+    umi_data_data_server_profile_archive_encode, umi_data_data_server_profile_archive_decode_if_unchanged,
+    UmiDataServerProfileTransferEqual, UmiDataServerProfileTransferTails, UmiDataServerProfileTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted data server profile value. */
+static int UmiDataServerProfileConstructionCases(void)
+{
+    UmiDataServerProfile *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_data_data_server_profile_init(value, "production", 2U, 16U, 10000U) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->profile_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_data_server_profile_init(value, oversized, 2U, 16U, 10000U) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_data_server_profile_init(value, value->profile_id, 2U, 16U, 10000U) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->profile_id, "production") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiDataServerProfileConstructionCases() != 0) return 1;
+
     UmiDataServerProfile item;
     CHECK(umi_data_data_server_profile_init(&item,"production",2U,16U,10000U) == UMI_STATUS_OK);
     if (UmiDataServerProfileTransferCases(&item) != 0) return 1;
+    if (UmiDataServerProfileConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.migrations_enabled);
     return 0;

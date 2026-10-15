@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/designer/visual_designer/alignment_guide.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -83,3 +84,8 @@ static UmiStatus UmiRadAlignmentGuideArchiveValidate(const UmiRadAlignmentGuide 
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_rad_alignment_guide_archive_encode, umi_rad_alignment_guide_archive_decode,
     UmiRadAlignmentGuide, UmiRadAlignmentGuideArchiveSchema, UmiRadAlignmentGuideArchiveBound, UmiRadAlignmentGuideArchiveWrite, UmiRadAlignmentGuideArchiveRead, UmiRadAlignmentGuideArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_rad_alignment_guide_archive_decode_if_unchanged, umi_rad_alignment_guide_archive_encode,
+    UmiRadAlignmentGuide, UmiRadAlignmentGuideArchiveSchema, UmiRadAlignmentGuideArchiveBound, UmiRadAlignmentGuideArchiveRead, UmiRadAlignmentGuideArchiveValidate)

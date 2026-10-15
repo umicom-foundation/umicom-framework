@@ -17,6 +17,7 @@
  * The implementation is deliberately small and deterministic so callers can test currency behaviour without starting a complete product.
  */
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/finance/currency.h"
 #include "../base/value_archive_internal.h"
 /* Provide the upper ascii operation used by this module and its client applications. */
@@ -60,3 +61,9 @@ static UmiStatus UmiCurrencyArchiveValidate(const UmiCurrency *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_currency_archive_encode, umi_currency_archive_decode,
     UmiCurrency, UmiCurrencyArchiveSchema, UmiCurrencyArchiveBound, UmiCurrencyArchiveWrite, UmiCurrencyArchiveRead, UmiCurrencyArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_currency_archive_decode_if_unchanged, umi_currency_archive_encode,
+    UmiCurrency, UmiCurrencyArchiveSchema, UmiCurrencyArchiveBound, UmiCurrencyArchiveRead, UmiCurrencyArchiveValidate)

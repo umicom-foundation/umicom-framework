@@ -29,7 +29,11 @@ extern "C" {
         bool enabled;
     }
     UmiProjectWorkspaceWorkspaceMembership;
-    UmiStatus umi_project_workspace_workspace_membership_init(UmiProjectWorkspaceWorkspaceMembership *value,const char *owner_id,const char *target_id);
+    /** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
+UmiStatus umi_project_workspace_workspace_membership_init(UmiProjectWorkspaceWorkspaceMembership *value,const char *owner_id,const char *target_id);
     UmiStatus umi_project_workspace_workspace_membership_retarget(UmiProjectWorkspaceWorkspaceMembership *value,const char *target_id);
     bool umi_project_workspace_workspace_membership_matches(const UmiProjectWorkspaceWorkspaceMembership *value,const char *owner_id,const char *target_id);
 #ifdef __cplusplus

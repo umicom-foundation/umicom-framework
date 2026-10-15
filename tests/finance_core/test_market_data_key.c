@@ -106,10 +106,17 @@ UMI_TEST_VALUE_TRANSFER(UmiMarketDataKeyTransferCases, UmiMarketDataKey,
     umi_market_data_key_archive_encode, umi_market_data_key_archive_decode,
     UmiMarketDataKeyTransferEqual, UmiMarketDataKeyTransferTails, UmiMarketDataKeyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiMarketDataKeyConditionalArchiveCases, UmiMarketDataKey,
+    umi_market_data_key_archive_encode, umi_market_data_key_archive_decode_if_unchanged,
+    UmiMarketDataKeyTransferEqual, UmiMarketDataKeyTransferTails, UmiMarketDataKeyTransferMalformed)
+
+
 int main(void)
 {
     UmiMarketDataKey x; CHECK(umi_market_data_key_init(&x,"ID","Name","CODE",1U)==UMI_STATUS_OK); CHECK(umi_market_data_key_is_valid(&x));
     if (UmiMarketDataKeyTransferCases(&x) != 0) return 1;
+    if (UmiMarketDataKeyConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;
 }

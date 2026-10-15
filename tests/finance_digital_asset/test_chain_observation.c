@@ -90,12 +90,19 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalChainObservationTransferCases, UmiDigitalChain
     umi_digital_asset_chain_observation_archive_encode, umi_digital_asset_chain_observation_archive_decode,
     UmiDigitalChainObservationTransferEqual, UmiDigitalChainObservationTransferTails, UmiDigitalChainObservationTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalChainObservationConditionalArchiveCases, UmiDigitalChainObservation,
+    umi_digital_asset_chain_observation_archive_encode, umi_digital_asset_chain_observation_archive_decode_if_unchanged,
+    UmiDigitalChainObservationTransferEqual, UmiDigitalChainObservationTransferTails, UmiDigitalChainObservationTransferMalformed)
+
+
 int main(void)
 {
     UmiDigitalChainObservation value;
     CHECK(umi_digital_asset_chain_observation_init(&value, "BTC", 900000U, "000000abc", 1000) == UMI_STATUS_OK);
     CHECK(umi_digital_asset_chain_observation_valid(&value));
     if (UmiDigitalChainObservationTransferCases(&value) != 0) return 1;
+    if (UmiDigitalChainObservationConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

@@ -17,6 +17,10 @@
 
 #include "umicom/developer_intelligence/language/include_graph.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(UmiDeveloperIntelligenceEvaluateLanguageIncludeGraphBatchCases, UmiDeveloperIntelligenceEvaluateLanguageIncludeGraph,
+    UmiDeveloperIntelligenceEvaluateLanguageIncludeGraphBatch, UmiDeveloperIntelligenceInput, UmiDeveloperIntelligenceSnapshot, lexicalScore)
+
 int main(void)
 {
     UmiDeveloperIntelligenceInput input;
@@ -44,6 +48,7 @@ int main(void)
     input.active = 1;
     input.revision = 42U;
 
+    if (UmiDeveloperIntelligenceEvaluateLanguageIncludeGraphBatchCases(&input) != 0) return 1;
     assert(UmiDeveloperIntelligenceEvaluateLanguageIncludeGraph(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "language.include-graph") == 0);
     assert(snapshot.revision == 42U);

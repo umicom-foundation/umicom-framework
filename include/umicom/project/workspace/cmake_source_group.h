@@ -29,9 +29,15 @@ extern "C" {
     }
     UmiProjectWorkspaceCmakeSourceGroup;
     void umi_project_workspace_cmake_source_group_init(UmiProjectWorkspaceCmakeSourceGroup *value);
-    UmiStatus umi_project_workspace_cmake_source_group_add(UmiProjectWorkspaceCmakeSourceGroup *value, const char *text);
+    /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
+UmiStatus umi_project_workspace_cmake_source_group_add(UmiProjectWorkspaceCmakeSourceGroup *value, const char *text);
     bool umi_project_workspace_cmake_source_group_contains(const UmiProjectWorkspaceCmakeSourceGroup *value, const char *text);
-    UmiStatus umi_project_workspace_cmake_source_group_remove(UmiProjectWorkspaceCmakeSourceGroup *value, const char *text);
+    /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
+UmiStatus umi_project_workspace_cmake_source_group_remove(UmiProjectWorkspaceCmakeSourceGroup *value, const char *text);
 #ifdef __cplusplus
 }
 #endif

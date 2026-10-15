@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/developer/operation.h"
+#include "../base/value_construction_internal.h"
 
 #include <string.h>
 
@@ -48,6 +49,11 @@ static UmiStatus copy_text(char *destination, size_t capacity, const char *sourc
  * Initialise developer operation from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_developer_operation_init(
     UmiDeveloperOperationSnapshot *operation,
     const char *id,
@@ -79,6 +85,46 @@ UmiStatus umi_developer_operation_init(
     }
     return copy_text(operation->title, sizeof(operation->title), title);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_developer_operation_init_build_value(
+    UmiDeveloperOperationSnapshot *operation,
+    const char *id,
+    UmiDeveloperOperationKind kind,
+    const char *title)
+{
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (operation == NULL || id == NULL || title == NULL || id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    memset(operation, 0, sizeof(*operation));
+    operation->struct_size = (uint32_t)sizeof(*operation);
+    operation->api_version = UMI_DEVELOPER_OPERATION_API_VERSION;
+    operation->kind = kind;
+    operation->state = UMI_DEVELOPER_OPERATION_QUEUED;
+    operation->max_attempts = 1U;
+    operation->revision = 1U;
+
+    status = copy_text(operation->id, sizeof(operation->id), id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    return copy_text(operation->title, sizeof(operation->title), title);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_developer_operation_init, UmiDeveloperOperationSnapshot, operation,
+    (UmiDeveloperOperationSnapshot *operation, const char *id, UmiDeveloperOperationKind kind, const char *title),
+    umi_developer_operation_init_build_value(candidate, id, kind, title))
+
 
 /*
  * Provide the developer operation set program operation used by this module and its client

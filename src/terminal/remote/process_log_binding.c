@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/terminal/remote/process_log_binding.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -82,3 +83,8 @@ static UmiStatus UmiTerminalRemoteProcessLogBindingArchiveValidate(const UmiTerm
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_terminal_remote_process_log_binding_archive_encode, umi_terminal_remote_process_log_binding_archive_decode,
     UmiTerminalRemoteProcessLogBinding, UmiTerminalRemoteProcessLogBindingArchiveSchema, UmiTerminalRemoteProcessLogBindingArchiveBound, UmiTerminalRemoteProcessLogBindingArchiveWrite, UmiTerminalRemoteProcessLogBindingArchiveRead, UmiTerminalRemoteProcessLogBindingArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_terminal_remote_process_log_binding_archive_decode_if_unchanged, umi_terminal_remote_process_log_binding_archive_encode,
+    UmiTerminalRemoteProcessLogBinding, UmiTerminalRemoteProcessLogBindingArchiveSchema, UmiTerminalRemoteProcessLogBindingArchiveBound, UmiTerminalRemoteProcessLogBindingArchiveRead, UmiTerminalRemoteProcessLogBindingArchiveValidate)

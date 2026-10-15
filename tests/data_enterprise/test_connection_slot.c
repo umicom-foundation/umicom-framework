@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/data/enterprise/connection_slot.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -75,10 +76,48 @@ UMI_TEST_VALUE_TRANSFER(UmiDataConnectionSlotTransferCases, UmiDataConnectionSlo
     umi_data_connection_slot_archive_encode, umi_data_connection_slot_archive_decode,
     UmiDataConnectionSlotTransferEqual, UmiDataConnectionSlotTransferTails, UmiDataConnectionSlotTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataConnectionSlotConditionalArchiveCases, UmiDataConnectionSlot,
+    umi_data_connection_slot_archive_encode, umi_data_connection_slot_archive_decode_if_unchanged,
+    UmiDataConnectionSlotTransferEqual, UmiDataConnectionSlotTransferTails, UmiDataConnectionSlotTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted connection slot value. */
+static int UmiDataConnectionSlotConstructionCases(void)
+{
+    UmiDataConnectionSlot *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_data_connection_slot_init(value, "slot1", 100U) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->slot_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_connection_slot_init(value, oversized, 100U) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_connection_slot_init(value, value->slot_id, 100U) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->slot_id, "slot1") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiDataConnectionSlotConstructionCases() != 0) return 1;
+
     UmiDataConnectionSlot item;
     CHECK(umi_data_connection_slot_init(&item,"slot1",100U) == UMI_STATUS_OK);
     if (UmiDataConnectionSlotTransferCases(&item) != 0) return 1;
+    if (UmiDataConnectionSlotConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.healthy && !item.leased);
     return 0;

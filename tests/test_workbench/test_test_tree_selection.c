@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiTestTreeSelectionTransferCases, UmiTestTreeSelection,
     umi_test_tree_selection_archive_encode, umi_test_tree_selection_archive_decode,
     UmiTestTreeSelectionTransferEqual, UmiTestTreeSelectionTransferTails, UmiTestTreeSelectionTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestTreeSelectionConditionalArchiveCases, UmiTestTreeSelection,
+    umi_test_tree_selection_archive_encode, umi_test_tree_selection_archive_decode_if_unchanged,
+    UmiTestTreeSelectionTransferEqual, UmiTestTreeSelectionTransferTails, UmiTestTreeSelectionTransferMalformed)
+
+
 int main(void){UmiTestTreeSelection m;assert(umi_test_tree_selection_init(&m,"test_tree_selection","Test Tree Selection")==UMI_STATUS_OK);assert(umi_test_tree_selection_set_active(&m,true)==UMI_STATUS_OK);assert(umi_test_tree_selection_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_test_tree_selection_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_tree_selection_valid(&m));
     if (UmiTestTreeSelectionTransferCases(&m) != 0) return 1;
+    if (UmiTestTreeSelectionConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

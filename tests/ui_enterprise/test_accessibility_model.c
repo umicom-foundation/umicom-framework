@@ -106,6 +106,13 @@ UMI_TEST_VALUE_TRANSFER(UmiUiEntAccessibilityModelTransferCases, UmiUiEntAccessi
     umi_ui_ent_accessibility_model_archive_encode, umi_ui_ent_accessibility_model_archive_decode,
     UmiUiEntAccessibilityModelTransferEqual, UmiUiEntAccessibilityModelTransferTails, UmiUiEntAccessibilityModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiEntAccessibilityModelConditionalArchiveCases, UmiUiEntAccessibilityModel,
+    umi_ui_ent_accessibility_model_archive_encode, umi_ui_ent_accessibility_model_archive_decode_if_unchanged,
+    UmiUiEntAccessibilityModelTransferEqual, UmiUiEntAccessibilityModelTransferTails, UmiUiEntAccessibilityModelTransferMalformed)
+
+
 int main(void){UmiUiEntAccessibilityModel v;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_accessibility_model_init(&v)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_copy_text(v.role,sizeof v.role,"id")!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_copy_text(v.name,sizeof v.name,"Row")!=UMI_STATUS_OK)return 3;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_ui_ent_accessibility_model_validate(&v))return 9;
     if (UmiUiEntAccessibilityModelTransferCases(&v) != 0) return 1;
+    if (UmiUiEntAccessibilityModelConditionalArchiveCases(&v) != 0) return 1;
 puts("ok");return 0;}

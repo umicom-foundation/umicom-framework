@@ -54,9 +54,16 @@ UMI_TEST_VALUE_TRANSFER(UmiFcDockingContractTransferCases, UmiFcDockingContract,
     umi_fc_docking_contract_archive_encode, umi_fc_docking_contract_archive_decode,
     UmiFcDockingContractTransferEqual, UmiFcDockingContractTransferTails, UmiFcDockingContractTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFcDockingContractConditionalArchiveCases, UmiFcDockingContract,
+    umi_fc_docking_contract_archive_encode, umi_fc_docking_contract_archive_decode_if_unchanged,
+    UmiFcDockingContractTransferEqual, UmiFcDockingContractTransferTails, UmiFcDockingContractTransferMalformed)
+
+
 int main(void) {
     UmiFcDockingContract x={3U,31U,true}; CHECK(umi_fc_docking_contract_validate(&x));
     if (UmiFcDockingContractTransferCases(&x) != 0) return 1;
+    if (UmiFcDockingContractConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;
 }

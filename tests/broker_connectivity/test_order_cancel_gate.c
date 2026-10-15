@@ -17,6 +17,10 @@
 
 #include "umicom/broker_connectivity/order/cancel_gate.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(umi_broker_connectivity_evaluate_order_cancel_gate_batch_cases, umi_broker_connectivity_evaluate_order_cancel_gate,
+    umi_broker_connectivity_evaluate_order_cancel_gate_batch, UmiBrokerConnectivityInput, UmiBrokerConnectivitySnapshot, value)
+
 int main(void)
 {
     UmiBrokerConnectivityInput input;
@@ -85,6 +89,7 @@ int main(void)
     input.trusted = 1;
     input.revision = 123U;
 
+    if (umi_broker_connectivity_evaluate_order_cancel_gate_batch_cases(&input) != 0) return 1;
     assert(umi_broker_connectivity_evaluate_order_cancel_gate(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "order.cancel-gate") == 0);
     assert(snapshot.revision == 123U);

@@ -134,6 +134,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextHistoryEntryTransferCases, UmiContextHistoryEn
     umi_context_history_entry_archive_encode, umi_context_history_entry_archive_decode,
     UmiContextHistoryEntryTransferEqual, UmiContextHistoryEntryTransferTails, UmiContextHistoryEntryTransferMalformed)
 
+#include "../conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextHistoryEntryConditionalArchiveCases, UmiContextHistoryEntry,
+    umi_context_history_entry_archive_encode, umi_context_history_entry_archive_decode_if_unchanged,
+    UmiContextHistoryEntryTransferEqual, UmiContextHistoryEntryTransferTails, UmiContextHistoryEntryTransferMalformed)
+
+
 int main(void)
 {
     UmiContextHistoryEntry value;
@@ -148,6 +154,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_context_history_entry_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiContextHistoryEntryTransferCases(&value) != 0) return 1;
+    if (UmiContextHistoryEntryConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

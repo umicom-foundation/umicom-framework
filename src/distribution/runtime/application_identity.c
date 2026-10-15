@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/distribution/runtime/application_identity.h"
 #include "../../base/value_archive_internal.h"
 
@@ -89,3 +90,9 @@ static UmiStatus UmiDrApplicationIdentityArchiveValidate(const UmiDrApplicationI
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_dr_application_identity_archive_encode, umi_dr_application_identity_archive_decode,
     UmiDrApplicationIdentity, UmiDrApplicationIdentityArchiveSchema, UmiDrApplicationIdentityArchiveBound, UmiDrApplicationIdentityArchiveWrite, UmiDrApplicationIdentityArchiveRead, UmiDrApplicationIdentityArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_dr_application_identity_archive_decode_if_unchanged, umi_dr_application_identity_archive_encode,
+    UmiDrApplicationIdentity, UmiDrApplicationIdentityArchiveSchema, UmiDrApplicationIdentityArchiveBound, UmiDrApplicationIdentityArchiveRead, UmiDrApplicationIdentityArchiveValidate)

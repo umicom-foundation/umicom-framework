@@ -88,12 +88,19 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicDesignerSelectionTransferCases, UmiUiMosaicDe
     umi_ui_mosaic_designer_selection_archive_encode, umi_ui_mosaic_designer_selection_archive_decode,
     UmiUiMosaicDesignerSelectionTransferEqual, UmiUiMosaicDesignerSelectionTransferTails, UmiUiMosaicDesignerSelectionTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicDesignerSelectionConditionalArchiveCases, UmiUiMosaicDesignerSelection,
+    umi_ui_mosaic_designer_selection_archive_encode, umi_ui_mosaic_designer_selection_archive_decode_if_unchanged,
+    UmiUiMosaicDesignerSelectionTransferEqual, UmiUiMosaicDesignerSelectionTransferTails, UmiUiMosaicDesignerSelectionTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicDesignerSelection value;
     umi_ui_mosaic_designer_selection_init(&value);
     CHECK(umi_ui_mosaic_designer_selection_bind(&value, "workspace.main", "panel.active") == UMI_STATUS_OK);
     CHECK(umi_ui_mosaic_designer_selection_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicDesignerSelectionTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicDesignerSelectionConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_designer_selection_advance(&value) == UMI_STATUS_PERMISSION_DENIED);
     value.mode = UMI_UI_MOSAIC_EDIT_UNLOCKED;

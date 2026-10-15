@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include "umicom/ide_integration/workflow_report.h"
 /*
@@ -26,6 +27,10 @@ int main(void)
     assert(report.ready);
     assert(umi_ide_workflow_report_add(
         &report, "a", "A", "ok", UMI_IDE_GATE_PASS, 1) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiIdeWorkflowReport, &report,
+        (umi_ide_workflow_report_add(
+        &report, "a", "A", "ok", UMI_IDE_GATE_PASS, 1)));
+
     assert(umi_ide_workflow_report_add(
         &report, "b", "B", "bad", UMI_IDE_GATE_BLOCK, 1) == UMI_STATUS_OK);
     assert(!report.ready);

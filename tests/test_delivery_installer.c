@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include <assert.h>
+#include "value_archive/construction_cases.h"
 #include <string.h>
 #include "umicom/delivery/delivery.h"
 
@@ -146,8 +147,93 @@ UMI_TEST_VALUE_TRANSFER(UmiInstallerPlanTransferCases, UmiInstallerPlan,
     umi_installer_plan_archive_encode, umi_installer_plan_archive_decode,
     UmiInstallerPlanTransferEqual, UmiInstallerPlanTransferTails, UmiInstallerPlanTransferMalformed)
 
+#include "value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiInstallerPlanConditionalArchiveCases, UmiInstallerPlan,
+    umi_installer_plan_archive_encode, umi_installer_plan_archive_decode_if_unchanged,
+    UmiInstallerPlanTransferEqual, UmiInstallerPlanTransferTails, UmiInstallerPlanTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted installer value. */
+static int UmiInstallerPlanConstructionCases(void)
+{
+    UmiInstallerPlan *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_installer_plan_init(value, "Umicom Studio", "Umicom Foundation", "0.23.0", "Umicom Studio", "bin/umicom-studio-ide.exe", UMI_INSTALLER_WINDOWS, UMI_INSTALL_SCOPE_USER) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->product_name) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_installer_plan_init(value, oversized, "Umicom Foundation", "0.23.0", "Umicom Studio", "bin/umicom-studio-ide.exe", UMI_INSTALLER_WINDOWS, UMI_INSTALL_SCOPE_USER) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_installer_plan_init(value, value->product_name, "Umicom Foundation", "0.23.0", "Umicom Studio", "bin/umicom-studio-ide.exe", UMI_INSTALLER_WINDOWS, UMI_INSTALL_SCOPE_USER) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->product_name, "Umicom Studio") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->vendor) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_installer_plan_init(value, "Umicom Studio", oversized, "0.23.0", "Umicom Studio", "bin/umicom-studio-ide.exe", UMI_INSTALLER_WINDOWS, UMI_INSTALL_SCOPE_USER) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_installer_plan_init(value, "Umicom Studio", value->vendor, "0.23.0", "Umicom Studio", "bin/umicom-studio-ide.exe", UMI_INSTALLER_WINDOWS, UMI_INSTALL_SCOPE_USER) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->vendor, "Umicom Foundation") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->version) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_installer_plan_init(value, "Umicom Studio", "Umicom Foundation", oversized, "Umicom Studio", "bin/umicom-studio-ide.exe", UMI_INSTALLER_WINDOWS, UMI_INSTALL_SCOPE_USER) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_installer_plan_init(value, "Umicom Studio", "Umicom Foundation", value->version, "Umicom Studio", "bin/umicom-studio-ide.exe", UMI_INSTALLER_WINDOWS, UMI_INSTALL_SCOPE_USER) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->version, "0.23.0") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->install_directory) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_installer_plan_init(value, "Umicom Studio", "Umicom Foundation", "0.23.0", oversized, "bin/umicom-studio-ide.exe", UMI_INSTALLER_WINDOWS, UMI_INSTALL_SCOPE_USER) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_installer_plan_init(value, "Umicom Studio", "Umicom Foundation", "0.23.0", value->install_directory, "bin/umicom-studio-ide.exe", UMI_INSTALLER_WINDOWS, UMI_INSTALL_SCOPE_USER) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->install_directory, "Umicom Studio") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->entrypoint) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_installer_plan_init(value, "Umicom Studio", "Umicom Foundation", "0.23.0", "Umicom Studio", oversized, UMI_INSTALLER_WINDOWS, UMI_INSTALL_SCOPE_USER) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_installer_plan_init(value, "Umicom Studio", "Umicom Foundation", "0.23.0", "Umicom Studio", value->entrypoint, UMI_INSTALLER_WINDOWS, UMI_INSTALL_SCOPE_USER) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->entrypoint, "bin/umicom-studio-ide.exe") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void)
 {
+    if (UmiInstallerPlanConstructionCases() != 0) return 1;
+
     UmiInstallerPlan windows;
     UmiInstallerPlan linux;
     assert(umi_installer_plan_init(
@@ -157,6 +243,7 @@ int main(void)
            UMI_STATUS_OK);
     assert(umi_installer_plan_validate(&windows) == UMI_STATUS_OK);
     if (UmiInstallerPlanTransferCases(&windows) != 0) return 1;
+    if (UmiInstallerPlanConditionalArchiveCases(&windows) != 0) return 1;
 
     assert(strcmp(umi_installer_plan_generator(&windows), "NSIS") == 0);
     assert(umi_installer_plan_init(

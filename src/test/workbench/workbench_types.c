@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/test/workbench/workbench_types.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -106,3 +107,8 @@ static UmiStatus UmiTestWorkbenchEntryArchiveValidate(const UmiTestWorkbenchEntr
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_test_workbench_entry_archive_encode, umi_test_workbench_entry_archive_decode,
     UmiTestWorkbenchEntry, UmiTestWorkbenchEntryArchiveSchema, UmiTestWorkbenchEntryArchiveBound, UmiTestWorkbenchEntryArchiveWrite, UmiTestWorkbenchEntryArchiveRead, UmiTestWorkbenchEntryArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_test_workbench_entry_archive_decode_if_unchanged, umi_test_workbench_entry_archive_encode,
+    UmiTestWorkbenchEntry, UmiTestWorkbenchEntryArchiveSchema, UmiTestWorkbenchEntryArchiveBound, UmiTestWorkbenchEntryArchiveRead, UmiTestWorkbenchEntryArchiveValidate)

@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 
@@ -84,6 +85,10 @@ int main(void)
     assert(umi_ui_workspace_layout_set_locked(&layout, true) == UMI_STATUS_OK);
     assert(umi_ui_window_catalogue_record_open(
                &catalogue, "terminal", UINT64_C(1200)) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiUiWindowCatalogue, &catalogue,
+        (umi_ui_window_catalogue_record_open(
+               &catalogue, "terminal", UINT64_C(1200))));
+
 
     query = umi_ui_window_catalogue_query_default();
     assert(umi_ui_window_catalogue_query(

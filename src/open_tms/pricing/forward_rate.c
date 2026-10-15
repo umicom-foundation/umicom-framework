@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/policy_batch_internal.h"
 #include "umicom/open_tms/pricing/forward_rate.h"
 #include "../open_tms_internal.h"
 
@@ -32,3 +33,8 @@ UmiStatus umi_open_tms_evaluate_pricing_forward_rate(
     };
     return umi_open_tms_evaluate_policy(&policy, input, outSnapshot);
 }
+
+/* Reuse the scalar policy for complete table refreshes; the shared batch
+ * owner stages all rows before publishing a successful calculation. */
+UMI_DEFINE_POLICY_BATCH(umi_open_tms_evaluate_pricing_forward_rate_batch, umi_open_tms_evaluate_pricing_forward_rate,
+    UmiOpenTmsInput, UmiOpenTmsSnapshot)

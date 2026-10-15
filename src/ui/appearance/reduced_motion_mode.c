@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/appearance/reduced_motion_mode.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -89,3 +90,8 @@ static UmiStatus UmiAppearanceReducedMotionModeArchiveValidate(const UmiAppearan
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_appearance_reduced_motion_mode_archive_encode, umi_appearance_reduced_motion_mode_archive_decode,
     UmiAppearanceReducedMotionMode, UmiAppearanceReducedMotionModeArchiveSchema, UmiAppearanceReducedMotionModeArchiveBound, UmiAppearanceReducedMotionModeArchiveWrite, UmiAppearanceReducedMotionModeArchiveRead, UmiAppearanceReducedMotionModeArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_appearance_reduced_motion_mode_archive_decode_if_unchanged, umi_appearance_reduced_motion_mode_archive_encode,
+    UmiAppearanceReducedMotionMode, UmiAppearanceReducedMotionModeArchiveSchema, UmiAppearanceReducedMotionModeArchiveBound, UmiAppearanceReducedMotionModeArchiveRead, UmiAppearanceReducedMotionModeArchiveValidate)

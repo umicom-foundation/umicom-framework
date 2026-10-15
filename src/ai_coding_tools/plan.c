@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/plan.h"
+#include "../base/value_construction_internal.h"
 
 #include <string.h>
 
@@ -41,6 +42,11 @@ static UmiStatus copy_text(char *out, size_t capacity, const char *value)
  * Initialise ai coding tool plan from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_ai_coding_tool_plan_init(
     UmiAiCodingToolPlan *plan,
     const char *plan_id,
@@ -75,6 +81,49 @@ UmiStatus umi_ai_coding_tool_plan_init(
     plan->revision = 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_ai_coding_tool_plan_init_build_value(
+    UmiAiCodingToolPlan *plan,
+    const char *plan_id,
+    const char *title,
+    const char *rationale)
+{
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (plan == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
+    (void)memset(plan, 0, sizeof(*plan));
+
+    status = copy_text(plan->plan_id, sizeof(plan->plan_id), plan_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = copy_text(plan->title, sizeof(plan->title), title);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = copy_text(
+            plan->rationale,
+            sizeof(plan->rationale),
+            rationale);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    plan->revision = 1U;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_ai_coding_tool_plan_init, UmiAiCodingToolPlan, plan,
+    (UmiAiCodingToolPlan *plan, const char *plan_id, const char *title, const char *rationale),
+    umi_ai_coding_tool_plan_init_build_value(candidate, plan_id, title, rationale))
+
 
 /* Add ai coding tool plan only after its inputs and available capacity have been checked. */
 UmiStatus umi_ai_coding_tool_plan_add(

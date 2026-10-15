@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 
@@ -32,6 +33,10 @@ int main(void)
         &descriptor, "application", "panel", "Provider") == UMI_STATUS_OK);
     assert(umi_workbench_selection_provider_registry_upsert(
         &registry, &descriptor) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchSelectionProviderRegistry, &registry,
+        (umi_workbench_selection_provider_registry_upsert(
+        &registry, &descriptor)));
+
     assert(registry.count == 1U);
     assert(umi_workbench_selection_provider_registry_find_panel(
         &registry, "panel") != NULL);
@@ -41,6 +46,10 @@ int main(void)
     assert(registry.count == 1U);
     assert(umi_workbench_selection_provider_registry_remove(
         &registry, "provider") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchSelectionProviderRegistry, &registry,
+        (umi_workbench_selection_provider_registry_remove(
+        &registry, "provider")));
+
     umi_workbench_selection_provider_registry_destroy(&registry);
 
     return 0;

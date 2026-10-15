@@ -50,6 +50,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveBindingSchedulerTransferCases, UmiUiReactiv
     umi_ui_reactive_binding_scheduler_archive_encode, umi_ui_reactive_binding_scheduler_archive_decode,
     UmiUiReactiveBindingSchedulerTransferEqual, UmiUiReactiveBindingSchedulerTransferTails, UmiUiReactiveBindingSchedulerTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveBindingSchedulerConditionalArchiveCases, UmiUiReactiveBindingScheduler,
+    umi_ui_reactive_binding_scheduler_archive_encode, umi_ui_reactive_binding_scheduler_archive_decode_if_unchanged,
+    UmiUiReactiveBindingSchedulerTransferEqual, UmiUiReactiveBindingSchedulerTransferTails, UmiUiReactiveBindingSchedulerTransferMalformed)
+
+
 int main(void) { UmiUiReactiveBindingScheduler item; umi_ui_reactive_binding_scheduler_init(&item);
     /* Nonzero fields expose swapped or omitted values in a saved record.
      * The original initialized fixture remains available for its own checks. */
@@ -58,4 +64,5 @@ int main(void) { UmiUiReactiveBindingScheduler item; umi_ui_reactive_binding_sch
     populated.generation = (uint64_t)3;
     populated.suspended = true;
     if (UmiUiReactiveBindingSchedulerTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveBindingSchedulerConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_binding_scheduler_valid(&item) ? 0 : 1; }

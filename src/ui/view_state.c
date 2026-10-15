@@ -17,6 +17,7 @@
  * This module uses a small, explicit C API and bounded storage.  The public
  * contract does not expose toolkit objects, C++ types, or private structures.
  */
+#include "../base/conditional_archive_internal.h"
 #include "umicom/ui/view_state.h"
 #include "../base/value_archive_internal.h"
 #include "../base/registry_archive_internal.h"
@@ -313,3 +314,8 @@ UMI_DEFINE_VALUE_ARCHIVE(umi_ui_view_state_snapshot_archive_encode, umi_ui_view_
 UMI_DEFINE_REGISTRY_ARCHIVE(umi_ui_view_state_registry_archive_encode, umi_ui_view_state_registry_archive_restore,
     UmiUiViewStateRegistry, UmiUiViewStateSnapshot, UMI_UI_VIEW_STATE_CAPACITY, ArchiveSchema,
     umi_ui_view_state_snapshot_archive_encode, umi_ui_view_state_snapshot_archive_decode, umi_ui_view_state_registry_replace_if_current)
+
+/* Guard snapshot import with the complete encoded value reviewed by the
+ * caller. Imported metadata remains evidence; registry publication is separate. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_view_state_snapshot_archive_decode_if_unchanged, umi_ui_view_state_snapshot_archive_encode,
+    UmiUiViewStateSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)

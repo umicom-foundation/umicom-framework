@@ -166,6 +166,12 @@ UMI_TEST_VALUE_TRANSFER(UmiCommodityPhysicalContractTransferCases, UmiCommodityP
     umi_commodity_physical_contract_archive_encode, umi_commodity_physical_contract_archive_decode,
     UmiCommodityPhysicalContractTransferEqual, UmiCommodityPhysicalContractTransferTails, UmiCommodityPhysicalContractTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCommodityPhysicalContractConditionalArchiveCases, UmiCommodityPhysicalContract,
+    umi_commodity_physical_contract_archive_encode, umi_commodity_physical_contract_archive_decode_if_unchanged,
+    UmiCommodityPhysicalContractTransferEqual, UmiCommodityPhysicalContractTransferTails, UmiCommodityPhysicalContractTransferMalformed)
+
+
 int main(void)
 {
     UmiCommodityPhysicalContract value;
@@ -175,6 +181,7 @@ int main(void)
     CHECK(umi_commodity_physical_contract_init(&value, "CTR-1", "CMD-WTI", &buyer, &seller, 1000, 0, "BBL", &currency, 7500, 1000, 2000) == UMI_STATUS_OK);
     CHECK(umi_commodity_physical_contract_valid(&value));
     if (UmiCommodityPhysicalContractTransferCases(&value) != 0) return 1;
+    if (UmiCommodityPhysicalContractConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

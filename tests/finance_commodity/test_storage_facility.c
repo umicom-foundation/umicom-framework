@@ -109,12 +109,19 @@ UMI_TEST_VALUE_TRANSFER(UmiCommodityStorageFacilityTransferCases, UmiCommoditySt
     umi_commodity_storage_facility_archive_encode, umi_commodity_storage_facility_archive_decode,
     UmiCommodityStorageFacilityTransferEqual, UmiCommodityStorageFacilityTransferTails, UmiCommodityStorageFacilityTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCommodityStorageFacilityConditionalArchiveCases, UmiCommodityStorageFacility,
+    umi_commodity_storage_facility_archive_encode, umi_commodity_storage_facility_archive_decode_if_unchanged,
+    UmiCommodityStorageFacilityTransferEqual, UmiCommodityStorageFacilityTransferTails, UmiCommodityStorageFacilityTransferMalformed)
+
+
 int main(void)
 {
     UmiCommodityStorageFacility value;
     CHECK(umi_commodity_storage_facility_init(&value, "FAC-1", "LOC-1", 100000, 0, "BBL") == UMI_STATUS_OK);
     CHECK(umi_commodity_storage_facility_valid(&value));
     if (UmiCommodityStorageFacilityTransferCases(&value) != 0) return 1;
+    if (UmiCommodityStorageFacilityConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(value.capacity.units == 100000);
     return 0;

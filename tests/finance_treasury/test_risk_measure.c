@@ -68,11 +68,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryRiskMeasureTransferCases, UmiTreasuryRiskMeas
     umi_treasury_risk_measure_archive_encode, umi_treasury_risk_measure_archive_decode,
     UmiTreasuryRiskMeasureTransferEqual, UmiTreasuryRiskMeasureTransferTails, UmiTreasuryRiskMeasureTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryRiskMeasureConditionalArchiveCases, UmiTreasuryRiskMeasure,
+    umi_treasury_risk_measure_archive_encode, umi_treasury_risk_measure_archive_decode_if_unchanged,
+    UmiTreasuryRiskMeasureTransferEqual, UmiTreasuryRiskMeasureTransferTails, UmiTreasuryRiskMeasureTransferMalformed)
+
+
 int main(void) {
     UmiTreasuryRiskMeasure v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_risk_measure_init(&v, "VAR", -250, 9900U, 1U) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryRiskMeasureTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryRiskMeasureConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if(umi_treasury_risk_measure_absolute_value_minor(&v)!=250)return 2;

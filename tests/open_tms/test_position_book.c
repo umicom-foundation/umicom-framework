@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <math.h>
 #include <string.h>
@@ -26,6 +27,9 @@ int main(void)
     (void)strcpy(p.currency,"USD"); p.quantity=10.0; p.averagePrice=100.0;
     p.marketPrice=105.0; p.version=1U;
     assert(umi_open_tms_position_book_upsert(&book,&p)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiOpenTmsPositionBook, &book,
+        (umi_open_tms_position_book_upsert(&book,&p)));
+
     assert(fabs(umi_open_tms_position_book_gross(&book)-1050.0)<0.001);
     assert(fabs(umi_open_tms_position_book_unrealised_pnl(&book)-50.0)<0.001);
     return 0;

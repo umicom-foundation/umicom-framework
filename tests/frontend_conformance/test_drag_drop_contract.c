@@ -54,9 +54,16 @@ UMI_TEST_VALUE_TRANSFER(UmiFcDragDropContractTransferCases, UmiFcDragDropContrac
     umi_fc_drag_drop_contract_archive_encode, umi_fc_drag_drop_contract_archive_decode,
     UmiFcDragDropContractTransferEqual, UmiFcDragDropContractTransferTails, UmiFcDragDropContractTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFcDragDropContractConditionalArchiveCases, UmiFcDragDropContract,
+    umi_fc_drag_drop_contract_archive_encode, umi_fc_drag_drop_contract_archive_decode_if_unchanged,
+    UmiFcDragDropContractTransferEqual, UmiFcDragDropContractTransferTails, UmiFcDragDropContractTransferMalformed)
+
+
 int main(void) {
     UmiFcDragDropContract x={3U,true,true}; CHECK(umi_fc_drag_drop_contract_validate(&x));
     if (UmiFcDragDropContractTransferCases(&x) != 0) return 1;
+    if (UmiFcDragDropContractConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;
 }

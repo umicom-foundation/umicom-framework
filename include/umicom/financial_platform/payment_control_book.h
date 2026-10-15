@@ -53,9 +53,15 @@ typedef struct UmiFinancialPaymentControlBook {
 } UmiFinancialPaymentControlBook;
 
 void umi_financial_payment_control_book_init(UmiFinancialPaymentControlBook *book);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_financial_payment_control_book_add(
     UmiFinancialPaymentControlBook *book,
     const UmiFinancialPaymentControl *payment);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_financial_payment_control_book_transition(
     UmiFinancialPaymentControlBook *book,
     const char *paymentId,

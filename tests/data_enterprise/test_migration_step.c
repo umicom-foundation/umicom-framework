@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/data/enterprise/migration_step.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -91,10 +92,60 @@ UMI_TEST_VALUE_TRANSFER(UmiDataMigrationStepTransferCases, UmiDataMigrationStep,
     umi_data_migration_step_archive_encode, umi_data_migration_step_archive_decode,
     UmiDataMigrationStepTransferEqual, UmiDataMigrationStepTransferTails, UmiDataMigrationStepTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataMigrationStepConditionalArchiveCases, UmiDataMigrationStep,
+    umi_data_migration_step_archive_encode, umi_data_migration_step_archive_decode_if_unchanged,
+    UmiDataMigrationStepTransferEqual, UmiDataMigrationStepTransferTails, UmiDataMigrationStepTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted migration step value. */
+static int UmiDataMigrationStepConstructionCases(void)
+{
+    UmiDataMigrationStep *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_data_migration_step_init(value, "m1", "add orders status", 1U, true, false) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->step_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_migration_step_init(value, oversized, "add orders status", 1U, true, false) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_migration_step_init(value, value->step_id, "add orders status", 1U, true, false) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->step_id, "m1") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->description) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_migration_step_init(value, "m1", oversized, 1U, true, false) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_migration_step_init(value, "m1", value->description, 1U, true, false) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->description, "add orders status") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiDataMigrationStepConstructionCases() != 0) return 1;
+
     UmiDataMigrationStep item;
     CHECK(umi_data_migration_step_init(&item,"m1","add orders status",1U,true,false) == UMI_STATUS_OK);
     if (UmiDataMigrationStepTransferCases(&item) != 0) return 1;
+    if (UmiDataMigrationStepConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.reversible && !item.destructive);
     return 0;

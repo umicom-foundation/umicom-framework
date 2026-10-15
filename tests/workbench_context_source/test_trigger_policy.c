@@ -169,6 +169,12 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextSourceTriggerPolicyTransferCases, Umi
     umi_workbench_context_source_trigger_policy_archive_encode, umi_workbench_context_source_trigger_policy_archive_decode,
     UmiWorkbenchContextSourceTriggerPolicyTransferEqual, UmiWorkbenchContextSourceTriggerPolicyTransferTails, UmiWorkbenchContextSourceTriggerPolicyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextSourceTriggerPolicyConditionalArchiveCases, UmiWorkbenchContextSourceTriggerPolicy,
+    umi_workbench_context_source_trigger_policy_archive_encode, umi_workbench_context_source_trigger_policy_archive_decode_if_unchanged,
+    UmiWorkbenchContextSourceTriggerPolicyTransferEqual, UmiWorkbenchContextSourceTriggerPolicyTransferTails, UmiWorkbenchContextSourceTriggerPolicyTransferMalformed)
+
+
 /* Exercise the accepted domain fixture through reviewed publication and
  * legacy mutation boundaries. These checks stay active in release builds. */
 #include "../record_integrity/reviewed_value_cases.h"
@@ -202,6 +208,7 @@ int main(void)
     assert(umi_workbench_context_source_trigger_policy_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextSourceTriggerPolicyTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceTriggerPolicyConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextSourceTriggerPolicyReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextSourceTriggerPolicyMutationGuards(&record) != 0) return 1;
 

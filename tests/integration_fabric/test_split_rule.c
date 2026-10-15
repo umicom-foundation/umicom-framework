@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/integration/fabric/split_rule.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -90,10 +91,60 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricSplitRuleTransferCases, UmiFabricSplitRule,
     umi_fabric_split_rule_archive_encode, umi_fabric_split_rule_archive_decode,
     UmiFabricSplitRuleTransferEqual, UmiFabricSplitRuleTransferTails, UmiFabricSplitRuleTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricSplitRuleConditionalArchiveCases, UmiFabricSplitRule,
+    umi_fabric_split_rule_archive_encode, umi_fabric_split_rule_archive_decode_if_unchanged,
+    UmiFabricSplitRuleTransferEqual, UmiFabricSplitRuleTransferTails, UmiFabricSplitRuleTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted split rule value. */
+static int UmiFabricSplitRuleConstructionCases(void)
+{
+    UmiFabricSplitRule *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_fabric_split_rule_init(value, "s", "items[*]", 100U, true) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->rule_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_split_rule_init(value, oversized, "items[*]", 100U, true) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_split_rule_init(value, value->rule_id, "items[*]", 100U, true) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->rule_id, "s") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->expression) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_split_rule_init(value, "s", oversized, 100U, true) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_split_rule_init(value, "s", value->expression, 100U, true) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->expression, "items[*]") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiFabricSplitRuleConstructionCases() != 0) return 1;
+
     UmiFabricSplitRule item;
     CHECK(umi_fabric_split_rule_init(&item,"s","items[*]",100U,true)==UMI_STATUS_OK);
     if (UmiFabricSplitRuleTransferCases(&item) != 0) return 1;
+    if (UmiFabricSplitRuleConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.maximum_parts==100U);
     return 0;

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/designer/visual_designer/property_binding.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -90,3 +91,8 @@ static UmiStatus UmiRadPropertyBindingArchiveValidate(const UmiRadPropertyBindin
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_rad_property_binding_archive_encode, umi_rad_property_binding_archive_decode,
     UmiRadPropertyBinding, UmiRadPropertyBindingArchiveSchema, UmiRadPropertyBindingArchiveBound, UmiRadPropertyBindingArchiveWrite, UmiRadPropertyBindingArchiveRead, UmiRadPropertyBindingArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_rad_property_binding_archive_decode_if_unchanged, umi_rad_property_binding_archive_encode,
+    UmiRadPropertyBinding, UmiRadPropertyBindingArchiveSchema, UmiRadPropertyBindingArchiveBound, UmiRadPropertyBindingArchiveRead, UmiRadPropertyBindingArchiveValidate)

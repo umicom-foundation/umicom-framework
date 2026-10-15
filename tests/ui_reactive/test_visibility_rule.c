@@ -84,6 +84,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveVisibilityRuleTransferCases, UmiUiReactiveV
     umi_ui_reactive_visibility_rule_archive_encode, umi_ui_reactive_visibility_rule_archive_decode,
     UmiUiReactiveVisibilityRuleTransferEqual, UmiUiReactiveVisibilityRuleTransferTails, UmiUiReactiveVisibilityRuleTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveVisibilityRuleConditionalArchiveCases, UmiUiReactiveVisibilityRule,
+    umi_ui_reactive_visibility_rule_archive_encode, umi_ui_reactive_visibility_rule_archive_decode_if_unchanged,
+    UmiUiReactiveVisibilityRuleTransferEqual, UmiUiReactiveVisibilityRuleTransferTails, UmiUiReactiveVisibilityRuleTransferMalformed)
+
+
 int main(void) { UmiUiReactiveVisibilityRule item; umi_ui_reactive_visibility_rule_init(&item);
     /* Nonzero fields expose swapped or omitted values in a saved record.
      * The original initialized fixture remains available for its own checks. */
@@ -92,4 +98,5 @@ int main(void) { UmiUiReactiveVisibilityRule item; umi_ui_reactive_visibility_ru
     (void)snprintf(populated.expression, sizeof(populated.expression), "field-1");
     populated.visible = true;
     if (UmiUiReactiveVisibilityRuleTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveVisibilityRuleConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_visibility_rule_valid(&item) ? 0 : 1; }

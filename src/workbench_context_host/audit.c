@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include <stdint.h>
 #include "umicom/workbench_context_host/audit.h"
 
 #include <stdlib.h>
@@ -96,10 +97,41 @@ void umi_workbench_context_host_audit_log_destroy(
  * Add workbench context host audit log only after its inputs and available capacity have
  * been checked.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_context_host_audit_log_append(
     UmiWorkbenchContextHostAuditLog *log,
     const UmiWorkbenchContextHostAuditEntry *entry)
 {
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (log == NULL || entry == NULL ||
+        entry->audit_id[0] == '\0' || entry->action[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = grow(log);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    log->items[log->count++] = *entry;
+    ++log->revision;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_workbench_context_host_audit_log_append(
+    UmiWorkbenchContextHostAuditLog *log,
+    const UmiWorkbenchContextHostAuditEntry *entry)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (log != NULL && log->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiStatus status;
     /*
      * Protect caller-owned memory by checking that required state is available before it is

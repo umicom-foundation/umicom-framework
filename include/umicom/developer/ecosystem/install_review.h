@@ -64,6 +64,9 @@ UmiStatus umi_ecosystem_install_review_begin(
  * Provide the ecosystem install review add action operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ecosystem_install_review_add_action(
     UmiEcosystemInstallReview *review,
     UmiEcosystemActionKind kind,
@@ -76,6 +79,9 @@ UmiStatus umi_ecosystem_install_review_add_action(
  * Provide the ecosystem install review set approved operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ecosystem_install_review_set_approved(
     UmiEcosystemInstallReview *review,
     size_t action_index,
@@ -84,6 +90,9 @@ UmiStatus umi_ecosystem_install_review_set_approved(
  * Provide the ecosystem install review complete action operation used by this module and
  * its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ecosystem_install_review_complete_action(
     UmiEcosystemInstallReview *review,
     size_t action_index,

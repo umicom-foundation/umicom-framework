@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/workbench/data_editor.h"
+#include "../../base/value_construction_internal.h"
 
 #include <string.h>
 
@@ -52,6 +53,11 @@ static void refresh(UmiDataEditorModel *model)
  * Initialise data editor model from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_data_editor_model_init(
     UmiDataEditorModel *model,
     const char *table_name,
@@ -77,6 +83,40 @@ UmiStatus umi_data_editor_model_init(
     }
     return status;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_data_editor_model_init_build_value(
+    UmiDataEditorModel *model,
+    const char *table_name,
+    int transaction_required)
+{
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (model == NULL || table_name == NULL || table_name[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    (void)memset(model, 0, sizeof(*model));
+    model->struct_size = (uint32_t)sizeof(*model);
+    model->api_version = UMI_DATA_WORKBENCH_API_VERSION;
+    status = umi_data_workbench_copy_text(
+        model->table_name, sizeof(model->table_name), table_name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        model->transaction_required = transaction_required != 0;
+        model->revision = 1U;
+    }
+    return status;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_data_editor_model_init, UmiDataEditorModel, model,
+    (UmiDataEditorModel *model, const char *table_name, int transaction_required),
+    umi_data_editor_model_init_build_value(candidate, table_name, transaction_required))
+
 
 /*
  * Provide the data editor model stage operation used by this module and its client

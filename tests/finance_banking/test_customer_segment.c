@@ -84,6 +84,12 @@ UMI_TEST_VALUE_TRANSFER(UmiBankingCustomerSegmentTransferCases, UmiBankingCustom
     umi_banking_customer_segment_archive_encode, umi_banking_customer_segment_archive_decode,
     UmiBankingCustomerSegmentTransferEqual, UmiBankingCustomerSegmentTransferTails, UmiBankingCustomerSegmentTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiBankingCustomerSegmentConditionalArchiveCases, UmiBankingCustomerSegment,
+    umi_banking_customer_segment_archive_encode, umi_banking_customer_segment_archive_decode_if_unchanged,
+    UmiBankingCustomerSegmentTransferEqual, UmiBankingCustomerSegmentTransferTails, UmiBankingCustomerSegmentTransferMalformed)
+
+
 int main(void) {
     UmiBankingCustomerSegment v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -91,6 +97,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if(!umi_banking_customer_segment_valid(&v)) return 2;
     if (UmiBankingCustomerSegmentTransferCases(&v) != 0) return 1;
+    if (UmiBankingCustomerSegmentConditionalArchiveCases(&v) != 0) return 1;
 
     return 0;
 }

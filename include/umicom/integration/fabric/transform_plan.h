@@ -42,6 +42,9 @@ void umi_fabric_transform_plan_init(UmiFabricTransformPlan *registry);
  * Add fabric transform plan only after its inputs and available capacity have been
  * checked.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_fabric_transform_plan_add(UmiFabricTransformPlan *registry,const UmiFabricTransformRule *item);
 /**
  * Find fabric transform plan while leaving the underlying catalogue or model owned by this

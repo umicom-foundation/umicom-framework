@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/enterprise/data_delta.h"
 #include "../../base/value_archive_internal.h"
 /* Check that ui ent data delta satisfies its contract before another service relies on it. */
@@ -61,3 +62,8 @@ static UmiStatus UmiUiEntDataDeltaArchiveValidate(const UmiUiEntDataDelta *value
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ui_ent_data_delta_archive_encode, umi_ui_ent_data_delta_archive_decode,
     UmiUiEntDataDelta, UmiUiEntDataDeltaArchiveSchema, UmiUiEntDataDeltaArchiveBound, UmiUiEntDataDeltaArchiveWrite, UmiUiEntDataDeltaArchiveRead, UmiUiEntDataDeltaArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_ent_data_delta_archive_decode_if_unchanged, umi_ui_ent_data_delta_archive_encode,
+    UmiUiEntDataDelta, UmiUiEntDataDeltaArchiveSchema, UmiUiEntDataDeltaArchiveBound, UmiUiEntDataDeltaArchiveRead, UmiUiEntDataDeltaArchiveValidate)

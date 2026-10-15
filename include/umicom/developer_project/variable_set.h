@@ -43,6 +43,9 @@ void umi_developer_project_variable_set_init(
  * Copy developer project variable into module-owned storage so callers keep ownership of
  * their input values.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_developer_project_variable_set(
     UmiDeveloperProjectVariableSet *variables,
     const char *name,

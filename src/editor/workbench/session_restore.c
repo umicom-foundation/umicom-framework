@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/editor/workbench/session_restore.h"
 #include "../../base/value_archive_internal.h"
 
@@ -72,3 +73,8 @@ static UmiStatus UmiEditorWbSessionRestoreArchiveValidate(const UmiEditorWbSessi
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_editor_wb_session_restore_archive_encode, umi_editor_wb_session_restore_archive_decode,
     UmiEditorWbSessionRestore, UmiEditorWbSessionRestoreArchiveSchema, UmiEditorWbSessionRestoreArchiveBound, UmiEditorWbSessionRestoreArchiveWrite, UmiEditorWbSessionRestoreArchiveRead, UmiEditorWbSessionRestoreArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_editor_wb_session_restore_archive_decode_if_unchanged, umi_editor_wb_session_restore_archive_encode,
+    UmiEditorWbSessionRestore, UmiEditorWbSessionRestoreArchiveSchema, UmiEditorWbSessionRestoreArchiveBound, UmiEditorWbSessionRestoreArchiveRead, UmiEditorWbSessionRestoreArchiveValidate)

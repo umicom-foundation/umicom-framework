@@ -32,6 +32,10 @@ extern "C" {
  */
 typedef struct UmiNativeWebContextBinding { char element_id[UMI_NATIVE_WEB_ID_CAPACITY]; char channel_id[UMI_NATIVE_WEB_ID_CAPACITY]; char context_type[64]; bool bidirectional; } UmiNativeWebContextBinding;
 /* Initialise validated context binding state. */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_native_web_context_binding_init(UmiNativeWebContextBinding *binding, const char *element_id, const char *channel_id, const char *context_type, bool bidirectional);
 
 #ifdef __cplusplus

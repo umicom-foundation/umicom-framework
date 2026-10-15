@@ -12,11 +12,18 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/data/enterprise/restore_plan.h"
+#include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
 
 /* Initialisation centralises bounded text handling and defaults. */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_data_restore_plan_init(UmiDataRestorePlan *item, const char *restore_id, const char *backup_id, uint64_t expected_schema_fingerprint, bool verify_only) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -27,6 +34,25 @@ UmiStatus umi_data_restore_plan_init(UmiDataRestorePlan *item, const char *resto
     UmiStatus s=umi_data_enterprise_copy_text(item->restore_id,sizeof(item->restore_id),restore_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->backup_id,sizeof(item->backup_id),backup_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->expected_schema_fingerprint=expected_schema_fingerprint;item->verify_only=verify_only;item->preserve_existing=true;item->approved=false;
     return umi_data_restore_plan_validate(item);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_data_restore_plan_init_build_value(UmiDataRestorePlan *item, const char *restore_id, const char *backup_id, uint64_t expected_schema_fingerprint, bool verify_only) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(item, 0, sizeof(*item));
+    UmiStatus s=umi_data_enterprise_copy_text(item->restore_id,sizeof(item->restore_id),restore_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->backup_id,sizeof(item->backup_id),backup_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->expected_schema_fingerprint=expected_schema_fingerprint;item->verify_only=verify_only;item->preserve_existing=true;item->approved=false;
+    return umi_data_restore_plan_validate(item);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_data_restore_plan_init, UmiDataRestorePlan, item,
+    (UmiDataRestorePlan *item, const char *restore_id, const char *backup_id, uint64_t expected_schema_fingerprint, bool verify_only),
+    umi_data_restore_plan_init_build_value(candidate, restore_id, backup_id, expected_schema_fingerprint, verify_only))
+
 
 /* Validation prevents malformed metadata from leaking into later query/migration stages. */
 UmiStatus umi_data_restore_plan_validate(const UmiDataRestorePlan *item) {
@@ -93,3 +119,9 @@ static UmiStatus UmiDataRestorePlanArchiveValidate(const UmiDataRestorePlan *val
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_data_restore_plan_archive_encode, umi_data_restore_plan_archive_decode,
     UmiDataRestorePlan, UmiDataRestorePlanArchiveSchema, UmiDataRestorePlanArchiveBound, UmiDataRestorePlanArchiveWrite, UmiDataRestorePlanArchiveRead, UmiDataRestorePlanArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_data_restore_plan_archive_decode_if_unchanged, umi_data_restore_plan_archive_encode,
+    UmiDataRestorePlan, UmiDataRestorePlanArchiveSchema, UmiDataRestorePlanArchiveBound, UmiDataRestorePlanArchiveRead, UmiDataRestorePlanArchiveValidate)

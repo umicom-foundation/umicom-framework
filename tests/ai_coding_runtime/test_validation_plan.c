@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/ai_coding_runtime/validation_plan.h"
@@ -34,6 +35,9 @@ int main(void)
     step.enabled = 1;
     step.required = 1;
     assert(umi_ai_coding_validation_plan_add(&plan, &step) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiAiCodingValidationPlan, &plan,
+        (umi_ai_coding_validation_plan_add(&plan, &step)));
+
     assert(umi_ai_coding_validation_plan_at(&plan, 0U, &output) ==
            UMI_STATUS_OK);
     assert(strcmp(output.id, "build") == 0);

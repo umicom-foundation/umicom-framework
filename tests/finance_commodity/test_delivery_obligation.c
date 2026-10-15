@@ -110,12 +110,19 @@ UMI_TEST_VALUE_TRANSFER(UmiCommodityDeliveryObligationTransferCases, UmiCommodit
     umi_commodity_delivery_obligation_archive_encode, umi_commodity_delivery_obligation_archive_decode,
     UmiCommodityDeliveryObligationTransferEqual, UmiCommodityDeliveryObligationTransferTails, UmiCommodityDeliveryObligationTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCommodityDeliveryObligationConditionalArchiveCases, UmiCommodityDeliveryObligation,
+    umi_commodity_delivery_obligation_archive_encode, umi_commodity_delivery_obligation_archive_decode_if_unchanged,
+    UmiCommodityDeliveryObligationTransferEqual, UmiCommodityDeliveryObligationTransferTails, UmiCommodityDeliveryObligationTransferMalformed)
+
+
 int main(void)
 {
     UmiCommodityDeliveryObligation value;
     CHECK(umi_commodity_delivery_obligation_init(&value, "DEL-1", "CTR-1", 100, 0, "MT", 5000) == UMI_STATUS_OK);
     CHECK(umi_commodity_delivery_obligation_valid(&value));
     if (UmiCommodityDeliveryObligationTransferCases(&value) != 0) return 1;
+    if (UmiCommodityDeliveryObligationConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

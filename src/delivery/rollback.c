@@ -17,7 +17,9 @@
  * Rollback is an explicit operation with a reason and approval state rather than an ad-hoc file copy.
  */
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/delivery/rollback.h"
+#include "../base/value_construction_internal.h"
 #include "../base/value_archive_internal.h"
 #include "delivery_internal.h"
 #include <string.h>
@@ -26,6 +28,11 @@
  * Initialise rollback plan from caller-provided values so later operations receive a known
  * state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_rollback_plan_init(UmiRollbackPlan *plan,
                                  uint64_t current_generation,
                                  uint64_t target_generation,
@@ -43,6 +50,32 @@ UmiStatus umi_rollback_plan_init(UmiRollbackPlan *plan,
     plan->target_generation = target_generation;
     return umi_delivery_copy_text(plan->reason, sizeof(plan->reason), reason);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_rollback_plan_init_build_value(UmiRollbackPlan *plan,
+                                 uint64_t current_generation,
+                                 uint64_t target_generation,
+                                 const char *reason)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (plan == NULL || reason == NULL || target_generation >= current_generation) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    (void)memset(plan, 0, sizeof(*plan));
+    plan->current_generation = current_generation;
+    plan->target_generation = target_generation;
+    return umi_delivery_copy_text(plan->reason, sizeof(plan->reason), reason);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_rollback_plan_init, UmiRollbackPlan, plan,
+    (UmiRollbackPlan *plan, uint64_t current_generation, uint64_t target_generation, const char *reason),
+    umi_rollback_plan_init_build_value(candidate, current_generation, target_generation, reason))
+
 
 /*
  * Provide the rollback plan approve operation used by this module and its client
@@ -111,3 +144,8 @@ static UmiStatus UmiRollbackPlanArchiveValidate(const UmiRollbackPlan *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_rollback_plan_archive_encode, umi_rollback_plan_archive_decode,
     UmiRollbackPlan, UmiRollbackPlanArchiveSchema, UmiRollbackPlanArchiveBound, UmiRollbackPlanArchiveWrite, UmiRollbackPlanArchiveRead, UmiRollbackPlanArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_rollback_plan_archive_decode_if_unchanged, umi_rollback_plan_archive_encode,
+    UmiRollbackPlan, UmiRollbackPlanArchiveSchema, UmiRollbackPlanArchiveBound, UmiRollbackPlanArchiveRead, UmiRollbackPlanArchiveValidate)

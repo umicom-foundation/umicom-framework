@@ -17,6 +17,7 @@
  * This module uses a small, explicit C API and bounded storage.  The public
  * contract does not expose toolkit objects, C++ types, or private structures.
  */
+#include "../base/conditional_archive_internal.h"
 #include "umicom/test_platform/output.h"
 #include "../base/value_archive_internal.h"
 #include "../base/registry_archive_internal.h"
@@ -312,3 +313,8 @@ UMI_DEFINE_VALUE_ARCHIVE(umi_test_platform_output_snapshot_archive_encode, umi_t
 UMI_DEFINE_REGISTRY_ARCHIVE(umi_test_platform_output_registry_archive_encode, umi_test_platform_output_registry_archive_restore,
     UmiTestPlatformOutputRegistry, UmiTestPlatformOutputSnapshot, UMI_TEST_PLATFORM_OUTPUT_CAPACITY, ArchiveSchema,
     umi_test_platform_output_snapshot_archive_encode, umi_test_platform_output_snapshot_archive_decode, umi_test_platform_output_registry_replace_if_current)
+
+/* Guard snapshot import with the complete encoded value reviewed by the
+ * caller. Imported metadata remains evidence; registry publication is separate. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_test_platform_output_snapshot_archive_decode_if_unchanged, umi_test_platform_output_snapshot_archive_encode,
+    UmiTestPlatformOutputSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)

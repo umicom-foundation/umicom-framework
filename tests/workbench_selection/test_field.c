@@ -93,6 +93,12 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionFieldTransferCases, UmiWorkbenchSel
     umi_workbench_selection_field_archive_encode, umi_workbench_selection_field_archive_decode,
     UmiWorkbenchSelectionFieldTransferEqual, UmiWorkbenchSelectionFieldTransferTails, UmiWorkbenchSelectionFieldTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchSelectionFieldConditionalArchiveCases, UmiWorkbenchSelectionField,
+    umi_workbench_selection_field_archive_encode, umi_workbench_selection_field_archive_decode_if_unchanged,
+    UmiWorkbenchSelectionFieldTransferEqual, UmiWorkbenchSelectionFieldTransferTails, UmiWorkbenchSelectionFieldTransferMalformed)
+
+
 int main(void)
 {
     UmiWorkbenchSelectionField field;
@@ -102,6 +108,7 @@ int main(void)
     assert(umi_workbench_selection_field_validate(
         &field) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionFieldTransferCases(&field) != 0) return 1;
+    if (UmiWorkbenchSelectionFieldConditionalArchiveCases(&field) != 0) return 1;
 
     assert(field.kind == UMI_WORKBENCH_SELECTION_VALUE_TEXT);
     assert(strcmp(field.text, "main") == 0);

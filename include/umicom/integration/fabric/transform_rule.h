@@ -41,6 +41,10 @@ typedef struct UmiFabricTransformRule {
  * Initialise fabric transform rule from caller-provided values so later operations receive
  * a known state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_fabric_transform_rule_init(UmiFabricTransformRule *item, const char *rule_id, const char *source_path, const char *target_path, const char *operation, bool required);
 /**
  * Check that fabric transform rule satisfies its contract before another service relies on
@@ -58,6 +62,16 @@ UmiStatus umi_fabric_transform_rule_archive_encode(const UmiFabricTransformRule 
     void *bytes, size_t capacity, size_t *out_size);
 UmiStatus umi_fabric_transform_rule_archive_decode(const void *bytes, size_t byte_count,
     UmiFabricTransformRule *value);
+
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the owner's publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_fabric_transform_rule_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiFabricTransformRule *expected, UmiFabricTransformRule *value);
+
 
 #ifdef __cplusplus
 }

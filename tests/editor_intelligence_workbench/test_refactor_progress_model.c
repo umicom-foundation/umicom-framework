@@ -70,6 +70,13 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorIntelRefactorProgressModelTransferCases, UmiEdi
     umi_editor_intel_refactor_progress_model_archive_encode, umi_editor_intel_refactor_progress_model_archive_decode,
     UmiEditorIntelRefactorProgressModelTransferEqual, UmiEditorIntelRefactorProgressModelTransferTails, UmiEditorIntelRefactorProgressModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelRefactorProgressModelConditionalArchiveCases, UmiEditorIntelRefactorProgressModel,
+    umi_editor_intel_refactor_progress_model_archive_encode, umi_editor_intel_refactor_progress_model_archive_decode_if_unchanged,
+    UmiEditorIntelRefactorProgressModelTransferEqual, UmiEditorIntelRefactorProgressModelTransferTails, UmiEditorIntelRefactorProgressModelTransferMalformed)
+
+
 int main(void){UmiEditorIntelRefactorProgressModel session;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_progress_model_begin(&session,"session-1")!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_progress_model_set_ready(&session,3U)!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_intel_refactor_progress_model_valid(&session)||session.item_count!=3U)return 3;
     if (UmiEditorIntelRefactorProgressModelTransferCases(&session) != 0) return 1;
+    if (UmiEditorIntelRefactorProgressModelConditionalArchiveCases(&session) != 0) return 1;
 /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_progress_model_cancel(&session)!=UMI_STATUS_OK||session.phase!=UMI_EDITOR_INTEL_PHASE_CANCELLED)return 4;return 0;}

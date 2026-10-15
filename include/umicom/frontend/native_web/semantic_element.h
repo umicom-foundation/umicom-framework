@@ -49,6 +49,10 @@ typedef struct UmiNativeWebSemanticElement {
     uint64_t revision;
 } UmiNativeWebSemanticElement;
 /* Initialise a keyed semantic element with an HTML tag. */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_native_web_semantic_element_init(UmiNativeWebSemanticElement *element, const char *element_id, const char *tag);
 /* Validate stable element identity, tag and bounded attribute state. */
 UmiStatus umi_native_web_semantic_element_validate(const UmiNativeWebSemanticElement *element);

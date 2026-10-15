@@ -141,9 +141,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrBundleLayoutTransferCases, UmiDrBundleLayout,
     umi_dr_bundle_layout_archive_encode, umi_dr_bundle_layout_archive_decode,
     UmiDrBundleLayoutTransferEqual, UmiDrBundleLayoutTransferTails, UmiDrBundleLayoutTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrBundleLayoutConditionalArchiveCases, UmiDrBundleLayout,
+    umi_dr_bundle_layout_archive_encode, umi_dr_bundle_layout_archive_decode_if_unchanged,
+    UmiDrBundleLayoutTransferEqual, UmiDrBundleLayoutTransferTails, UmiDrBundleLayoutTransferMalformed)
+
+
 int main(void) {
     UmiDrBundleLayout value; umi_dr_bundle_layout_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"standard")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.bin_dir,sizeof(value.bin_dir),"bin")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.lib_dir,sizeof(value.lib_dir),"lib")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.share_dir,sizeof(value.share_dir),"share")==UMI_STATUS_OK); CHECK(umi_dr_bundle_layout_valid(&value));
     if (UmiDrBundleLayoutTransferCases(&value) != 0) return 1;
+    if (UmiDrBundleLayoutConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_bundle_layout_fingerprint(&value) != 0U);
     return 0;
 }

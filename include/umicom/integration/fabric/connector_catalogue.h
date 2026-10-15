@@ -43,6 +43,9 @@ void umi_fabric_connector_catalogue_init(UmiFabricConnectorCatalogue *registry);
  * Add fabric connector catalogue only after its inputs and available capacity have been
  * checked.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_fabric_connector_catalogue_add(UmiFabricConnectorCatalogue *registry,const UmiFabricConnectorDescriptor *item);
 /**
  * Find fabric connector catalogue while leaving the underlying catalogue or model owned by

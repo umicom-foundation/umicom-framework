@@ -51,6 +51,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactivePropagationResultTransferCases, UmiUiReacti
     umi_ui_reactive_propagation_result_archive_encode, umi_ui_reactive_propagation_result_archive_decode,
     UmiUiReactivePropagationResultTransferEqual, UmiUiReactivePropagationResultTransferTails, UmiUiReactivePropagationResultTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactivePropagationResultConditionalArchiveCases, UmiUiReactivePropagationResult,
+    umi_ui_reactive_propagation_result_archive_encode, umi_ui_reactive_propagation_result_archive_decode_if_unchanged,
+    UmiUiReactivePropagationResultTransferEqual, UmiUiReactivePropagationResultTransferTails, UmiUiReactivePropagationResultTransferMalformed)
+
+
 int main(void) { UmiUiReactivePropagationResult item; umi_ui_reactive_propagation_result_init(&item);
     /* Nonzero fields expose swapped or omitted values in a saved record.
      * The original initialized fixture remains available for its own checks. */
@@ -60,4 +66,5 @@ int main(void) { UmiUiReactivePropagationResult item; umi_ui_reactive_propagatio
     populated.failed = (size_t)4;
     populated.generation = (uint64_t)5;
     if (UmiUiReactivePropagationResultTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactivePropagationResultConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_propagation_result_valid(&item) ? 0 : 1; }

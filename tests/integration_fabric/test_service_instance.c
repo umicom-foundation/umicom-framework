@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/integration/fabric/service_instance.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -110,10 +111,72 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricServiceInstanceTransferCases, UmiFabricServiceI
     umi_fabric_service_instance_archive_encode, umi_fabric_service_instance_archive_decode,
     UmiFabricServiceInstanceTransferEqual, UmiFabricServiceInstanceTransferTails, UmiFabricServiceInstanceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricServiceInstanceConditionalArchiveCases, UmiFabricServiceInstance,
+    umi_fabric_service_instance_archive_encode, umi_fabric_service_instance_archive_decode_if_unchanged,
+    UmiFabricServiceInstanceTransferEqual, UmiFabricServiceInstanceTransferTails, UmiFabricServiceInstanceTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted service instance value. */
+static int UmiFabricServiceInstanceConstructionCases(void)
+{
+    UmiFabricServiceInstance *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_fabric_service_instance_init(value, "risk.1", "risk", "ep.1", 1U, 10U) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->instance_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_service_instance_init(value, oversized, "risk", "ep.1", 1U, 10U) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_service_instance_init(value, value->instance_id, "risk", "ep.1", 1U, 10U) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->instance_id, "risk.1") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->service_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_service_instance_init(value, "risk.1", oversized, "ep.1", 1U, 10U) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_service_instance_init(value, "risk.1", value->service_id, "ep.1", 1U, 10U) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->service_id, "risk") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->endpoint_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_service_instance_init(value, "risk.1", "risk", oversized, 1U, 10U) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_service_instance_init(value, "risk.1", "risk", value->endpoint_id, 1U, 10U) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->endpoint_id, "ep.1") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiFabricServiceInstanceConstructionCases() != 0) return 1;
+
     UmiFabricServiceInstance item;
     CHECK(umi_fabric_service_instance_init(&item,"risk.1","risk","ep.1",1U,10U)==UMI_STATUS_OK);
     if (UmiFabricServiceInstanceTransferCases(&item) != 0) return 1;
+    if (UmiFabricServiceInstanceConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.healthy);
     return 0;

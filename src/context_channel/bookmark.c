@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/context_channel/bookmark.h"
 #include "../base/value_archive_internal.h"
 #include <string.h>
@@ -255,3 +256,9 @@ static UmiStatus UmiContextBookmarkArchiveValidate(const UmiContextBookmark *val
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_context_bookmark_archive_encode, umi_context_bookmark_archive_decode,
     UmiContextBookmark, UmiContextBookmarkArchiveSchema, UmiContextBookmarkArchiveBound, UmiContextBookmarkArchiveWrite, UmiContextBookmarkArchiveRead, UmiContextBookmarkArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_context_bookmark_archive_decode_if_unchanged, umi_context_bookmark_archive_encode,
+    UmiContextBookmark, UmiContextBookmarkArchiveSchema, UmiContextBookmarkArchiveBound, UmiContextBookmarkArchiveRead, UmiContextBookmarkArchiveValidate)

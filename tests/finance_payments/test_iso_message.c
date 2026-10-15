@@ -119,6 +119,12 @@ UMI_TEST_VALUE_TRANSFER(UmiPaymentsIsoMessageTransferCases, UmiPaymentsIsoMessag
     umi_payments_iso_message_archive_encode, umi_payments_iso_message_archive_decode,
     UmiPaymentsIsoMessageTransferEqual, UmiPaymentsIsoMessageTransferTails, UmiPaymentsIsoMessageTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiPaymentsIsoMessageConditionalArchiveCases, UmiPaymentsIsoMessage,
+    umi_payments_iso_message_archive_encode, umi_payments_iso_message_archive_decode_if_unchanged,
+    UmiPaymentsIsoMessageTransferEqual, UmiPaymentsIsoMessageTransferTails, UmiPaymentsIsoMessageTransferMalformed)
+
+
 int main(void) {
     UmiPaymentsIsoMessage v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -126,6 +132,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if(!umi_payments_iso_message_valid(&v)) return 2;
     if (UmiPaymentsIsoMessageTransferCases(&v) != 0) return 1;
+    if (UmiPaymentsIsoMessageConditionalArchiveCases(&v) != 0) return 1;
 
     return 0;
 }

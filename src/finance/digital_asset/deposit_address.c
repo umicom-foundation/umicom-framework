@@ -16,6 +16,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/digital_asset/deposit_address.h"
 #include "../../base/value_archive_internal.h"
 
@@ -107,3 +108,9 @@ static UmiStatus UmiDigitalDepositAddressArchiveValidate(const UmiDigitalDeposit
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_digital_asset_deposit_address_archive_encode, umi_digital_asset_deposit_address_archive_decode,
     UmiDigitalDepositAddress, UmiDigitalDepositAddressArchiveSchema, UmiDigitalDepositAddressArchiveBound, UmiDigitalDepositAddressArchiveWrite, UmiDigitalDepositAddressArchiveRead, UmiDigitalDepositAddressArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_digital_asset_deposit_address_archive_decode_if_unchanged, umi_digital_asset_deposit_address_archive_encode,
+    UmiDigitalDepositAddress, UmiDigitalDepositAddressArchiveSchema, UmiDigitalDepositAddressArchiveBound, UmiDigitalDepositAddressArchiveRead, UmiDigitalDepositAddressArchiveValidate)

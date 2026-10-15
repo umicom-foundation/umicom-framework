@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/treasury/custody_account.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -103,3 +104,9 @@ static UmiStatus UmiTreasuryCustodyAccountArchiveValidate(const UmiTreasuryCusto
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_treasury_custody_account_archive_encode, umi_treasury_custody_account_archive_decode,
     UmiTreasuryCustodyAccount, UmiTreasuryCustodyAccountArchiveSchema, UmiTreasuryCustodyAccountArchiveBound, UmiTreasuryCustodyAccountArchiveWrite, UmiTreasuryCustodyAccountArchiveRead, UmiTreasuryCustodyAccountArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_treasury_custody_account_archive_decode_if_unchanged, umi_treasury_custody_account_archive_encode,
+    UmiTreasuryCustodyAccount, UmiTreasuryCustodyAccountArchiveSchema, UmiTreasuryCustodyAccountArchiveBound, UmiTreasuryCustodyAccountArchiveRead, UmiTreasuryCustodyAccountArchiveValidate)

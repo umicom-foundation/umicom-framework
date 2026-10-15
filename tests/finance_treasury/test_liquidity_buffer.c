@@ -67,11 +67,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryLiquidityBufferTransferCases, UmiTreasuryLiqu
     umi_treasury_liquidity_buffer_archive_encode, umi_treasury_liquidity_buffer_archive_decode,
     UmiTreasuryLiquidityBufferTransferEqual, UmiTreasuryLiquidityBufferTransferTails, UmiTreasuryLiquidityBufferTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryLiquidityBufferConditionalArchiveCases, UmiTreasuryLiquidityBuffer,
+    umi_treasury_liquidity_buffer_archive_encode, umi_treasury_liquidity_buffer_archive_decode_if_unchanged,
+    UmiTreasuryLiquidityBufferTransferEqual, UmiTreasuryLiquidityBufferTransferTails, UmiTreasuryLiquidityBufferTransferMalformed)
+
+
 int main(void) {
     UmiTreasuryLiquidityBuffer v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_liquidity_buffer_init(&v, "buffer", 1200, 900) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryLiquidityBufferTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryLiquidityBufferConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if(umi_treasury_liquidity_buffer_surplus_minor(&v)!=300)return 2;

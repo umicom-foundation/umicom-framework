@@ -58,6 +58,9 @@ void umi_developer_output_channels_init(
  * Add developer output channel only after its inputs and available capacity have been
  * checked.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_developer_output_channel_append(
     UmiDeveloperOutputChannels *channels,
     const char *channel_id,

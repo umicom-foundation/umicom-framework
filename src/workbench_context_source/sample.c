@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include <stdint.h>
 #include "umicom/workbench_context_source/sample.h"
 
 #include <string.h>
@@ -55,6 +56,10 @@ void umi_workbench_context_source_sample_init(
  * Provide the workbench context source sample set identity operation used by this module
  * and its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_context_source_sample_set_identity(
     UmiWorkbenchContextSourceSample *sample,
     const char *source_id,
@@ -96,11 +101,63 @@ UmiStatus umi_workbench_context_source_sample_set_identity(
     ++sample->revision;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_workbench_context_source_sample_set_identity(
+    UmiWorkbenchContextSourceSample *sample,
+    const char *source_id,
+    const char *application_id,
+    const char *panel_id,
+    const char *workspace_id)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (sample != NULL && sample->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (sample == NULL || source_id == NULL ||
+        application_id == NULL || panel_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_workbench_context_source_copy_text(
+        sample->source_id, sizeof(sample->source_id), source_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_workbench_context_source_copy_text(
+        sample->application_id, sizeof(sample->application_id), application_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_workbench_context_source_copy_text(
+        sample->panel_id, sizeof(sample->panel_id), panel_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace_id != NULL) {
+        status = umi_workbench_context_source_copy_text(
+            sample->workspace_id, sizeof(sample->workspace_id), workspace_id);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+    }
+    ++sample->revision;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the workbench context source sample set subject operation used by this module
  * and its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_context_source_sample_set_subject(
     UmiWorkbenchContextSourceSample *sample,
     const char *subject_id,
@@ -131,11 +188,52 @@ UmiStatus umi_workbench_context_source_sample_set_subject(
     ++sample->revision;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_workbench_context_source_sample_set_subject(
+    UmiWorkbenchContextSourceSample *sample,
+    const char *subject_id,
+    const char *secondary_id)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (sample != NULL && sample->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (sample == NULL || subject_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_workbench_context_source_copy_text(
+        sample->subject_id, sizeof(sample->subject_id), subject_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (secondary_id != NULL) {
+        status = umi_workbench_context_source_copy_text(
+            sample->secondary_id, sizeof(sample->secondary_id), secondary_id);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+    }
+    ++sample->revision;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the workbench context source sample set location operation used by this module
  * and its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_context_source_sample_set_location(
     UmiWorkbenchContextSourceSample *sample,
     const char *path,
@@ -170,16 +268,99 @@ UmiStatus umi_workbench_context_source_sample_set_location(
     ++sample->revision;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_workbench_context_source_sample_set_location(
+    UmiWorkbenchContextSourceSample *sample,
+    const char *path,
+    const char *symbol,
+    uint32_t line,
+    uint32_t column,
+    uint32_t selection_length)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (sample != NULL && sample->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (sample == NULL || path == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_workbench_context_source_copy_text(
+        sample->path, sizeof(sample->path), path);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (symbol != NULL) {
+        status = umi_workbench_context_source_copy_text(
+            sample->symbol, sizeof(sample->symbol), symbol);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+    }
+    sample->line = line;
+    sample->column = column;
+    sample->selection_length = selection_length;
+    ++sample->revision;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the workbench context source sample add metadata operation used by this module
  * and its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_context_source_sample_add_metadata(
     UmiWorkbenchContextSourceSample *sample,
     const char *name,
     const char *value)
 {
+    UmiWorkbenchContextEventMetadata *item;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (sample == NULL || name == NULL || value == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (sample->metadata_count >= UMI_WORKBENCH_CONTEXT_SOURCE_MAX_METADATA) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    item = &sample->metadata[sample->metadata_count];
+    status = umi_workbench_context_event_copy_text(
+        item->name, sizeof(item->name), name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_workbench_context_event_copy_text(
+        item->value, sizeof(item->value), value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    ++sample->metadata_count;
+    ++sample->revision;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_workbench_context_source_sample_add_metadata(
+    UmiWorkbenchContextSourceSample *sample,
+    const char *name,
+    const char *value)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (sample != NULL && sample->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiWorkbenchContextEventMetadata *item;
     UmiStatus status;
     /*

@@ -28,7 +28,11 @@ extern "C" {
         uint64_t metric;
     }
     UmiProjectWorkspaceCmakeTarget;
-    UmiStatus umi_project_workspace_cmake_target_init(UmiProjectWorkspaceCmakeTarget *value,const char *id);
+    /** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
+UmiStatus umi_project_workspace_cmake_target_init(UmiProjectWorkspaceCmakeTarget *value,const char *id);
     UmiStatus umi_project_workspace_cmake_target_validate(const UmiProjectWorkspaceCmakeTarget *value);
     UmiStatus umi_project_workspace_cmake_target_set_name(UmiProjectWorkspaceCmakeTarget *value,const char *name);
     UmiStatus umi_project_workspace_cmake_target_set_detail(UmiProjectWorkspaceCmakeTarget *value,const char *detail);
@@ -45,6 +49,16 @@ UmiStatus umi_project_workspace_cmake_target_archive_encode(const UmiProjectWork
     void *bytes, size_t capacity, size_t *out_size);
 UmiStatus umi_project_workspace_cmake_target_archive_decode(const void *bytes, size_t byte_count,
     UmiProjectWorkspaceCmakeTarget *value);
+
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the owner's publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_project_workspace_cmake_target_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiProjectWorkspaceCmakeTarget *expected, UmiProjectWorkspaceCmakeTarget *value);
+
 
 #ifdef __cplusplus
 }

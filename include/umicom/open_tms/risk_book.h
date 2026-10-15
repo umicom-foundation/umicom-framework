@@ -41,6 +41,9 @@ typedef struct UmiOpenTmsRiskBook {
 } UmiOpenTmsRiskBook;
 
 void umi_open_tms_risk_book_init(UmiOpenTmsRiskBook *book);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_open_tms_risk_book_upsert(
     UmiOpenTmsRiskBook *book,
     const UmiOpenTmsRiskLimit *limit);

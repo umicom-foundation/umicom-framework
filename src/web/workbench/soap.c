@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/web/workbench/soap.h"
 
 #include <stdio.h>
@@ -54,10 +55,49 @@ void umi_web_workbench_soap_catalogue_init(
  * Provide the web workbench soap catalogue upsert operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_web_workbench_soap_catalogue_upsert(
     UmiWebWorkbenchSoapCatalogue *catalogue,
     const UmiWebWorkbenchSoapOperation *operation)
 {
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (catalogue == NULL || operation == NULL || operation->operation_id[0] == '\0' ||
+        operation->name[0] == '\0' || operation->endpoint[0] == '\0' ||
+        operation->namespace_uri[0] == '\0' ||
+        operation->version > UMI_WEB_WORKBENCH_SOAP_12) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    index = operation_index(catalogue, operation->operation_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == catalogue->operation_count) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (index >= UMI_WEB_WORKBENCH_MAX_OPERATIONS) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        catalogue->operation_count++;
+    }
+    catalogue->operations[index] = *operation;
+    catalogue->revision++;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_web_workbench_soap_catalogue_upsert(
+    UmiWebWorkbenchSoapCatalogue *catalogue,
+    const UmiWebWorkbenchSoapOperation *operation)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (catalogue != NULL && catalogue->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is

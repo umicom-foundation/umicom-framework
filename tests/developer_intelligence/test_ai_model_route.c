@@ -17,6 +17,10 @@
 
 #include "umicom/developer_intelligence/ai/model_route.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(UmiDeveloperIntelligenceEvaluateAiModelRouteBatchCases, UmiDeveloperIntelligenceEvaluateAiModelRoute,
+    UmiDeveloperIntelligenceEvaluateAiModelRouteBatch, UmiDeveloperIntelligenceInput, UmiDeveloperIntelligenceSnapshot, lexicalScore)
+
 int main(void)
 {
     UmiDeveloperIntelligenceInput input;
@@ -44,6 +48,7 @@ int main(void)
     input.active = 1;
     input.revision = 42U;
 
+    if (UmiDeveloperIntelligenceEvaluateAiModelRouteBatchCases(&input) != 0) return 1;
     assert(UmiDeveloperIntelligenceEvaluateAiModelRoute(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "ai.model-route") == 0);
     assert(snapshot.revision == 42U);

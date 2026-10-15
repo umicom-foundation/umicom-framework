@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/developer_productivity/terminal_split.h"
@@ -35,6 +36,10 @@ int main(void)
 
     assert(umi_developer_terminal_split_model_add(
         &model, &split) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDeveloperTerminalSplitModel, &model,
+        (umi_developer_terminal_split_model_add(
+        &model, &split)));
+
     assert(model.count == 1U);
     return 0;
 }

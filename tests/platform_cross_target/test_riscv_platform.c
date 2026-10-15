@@ -83,6 +83,13 @@ UMI_TEST_VALUE_TRANSFER(UmiCtRiscvPlatformTransferCases, UmiCtRiscvPlatform,
     umi_ct_riscv_platform_archive_encode, umi_ct_riscv_platform_archive_decode,
     UmiCtRiscvPlatformTransferEqual, UmiCtRiscvPlatformTransferTails, UmiCtRiscvPlatformTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtRiscvPlatformConditionalArchiveCases, UmiCtRiscvPlatform,
+    umi_ct_riscv_platform_archive_encode, umi_ct_riscv_platform_archive_decode_if_unchanged,
+    UmiCtRiscvPlatformTransferEqual, UmiCtRiscvPlatformTransferTails, UmiCtRiscvPlatformTransferMalformed)
+
+
 int main(void){UmiCtRiscvPlatform p={"qemu.rv64",UMI_CT_RISCV_MACHINE_QEMU_VIRT,UINT64_C(512)*1024U*1024U,4U,true,true,true,true};CHECK(umi_ct_riscv_platform_validate(&p)==UMI_STATUS_OK);
     if (UmiCtRiscvPlatformTransferCases(&p) != 0) return 1;
+    if (UmiCtRiscvPlatformConditionalArchiveCases(&p) != 0) return 1;
 p.clint=false;CHECK(umi_ct_riscv_platform_validate(&p)==UMI_STATUS_INVALID_STATE);return 0;}

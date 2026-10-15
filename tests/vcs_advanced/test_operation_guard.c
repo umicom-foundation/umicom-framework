@@ -60,6 +60,12 @@ UMI_TEST_VALUE_TRANSFER(UmiVcsAdvancedOperationGuardTransferCases, UmiVcsAdvance
     umi_vcs_advanced_operation_guard_archive_encode, umi_vcs_advanced_operation_guard_archive_decode,
     UmiVcsAdvancedOperationGuardTransferEqual, UmiVcsAdvancedOperationGuardTransferTails, UmiVcsAdvancedOperationGuardTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiVcsAdvancedOperationGuardConditionalArchiveCases, UmiVcsAdvancedOperationGuard,
+    umi_vcs_advanced_operation_guard_archive_encode, umi_vcs_advanced_operation_guard_archive_decode_if_unchanged,
+    UmiVcsAdvancedOperationGuardTransferEqual, UmiVcsAdvancedOperationGuardTransferTails, UmiVcsAdvancedOperationGuardTransferMalformed)
+
+
 int main(void)
 {
     UmiVcsAdvancedOperationGuard value;
@@ -67,6 +73,7 @@ int main(void)
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_vcs_advanced_operation_guard_validate(&value) != UMI_STATUS_OK) return 2;
     if (UmiVcsAdvancedOperationGuardTransferCases(&value) != 0) return 1;
+    if (UmiVcsAdvancedOperationGuardConditionalArchiveCases(&value) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_vcs_advanced_operation_guard_allows(&value, 1, 0, 1, 0, 0)) return 3;

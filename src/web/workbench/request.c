@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/web/workbench/request.h"
 
 #include <string.h>
@@ -82,6 +83,10 @@ void umi_web_workbench_request_init(
  * Provide the web workbench request set header operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_web_workbench_request_set_header(
     UmiWebWorkbenchRequest *request,
     const char *name,
@@ -116,15 +121,93 @@ UmiStatus umi_web_workbench_request_set_header(
     request->revision++;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_web_workbench_request_set_header(
+    UmiWebWorkbenchRequest *request,
+    const char *name,
+    const char *value)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (request != NULL && request->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    size_t index;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (request == NULL || name == NULL || value == NULL || name[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Reject a corrupted public record before indexing its fixed header array. */
+    if (request->header_count > UMI_WEB_MAX_HEADERS)
+        return UMI_STATUS_INVALID_STATE;
+    index = header_index(request, name);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == request->header_count) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (index >= UMI_WEB_MAX_HEADERS) return UMI_STATUS_CAPACITY_EXCEEDED;
+        request->header_count++;
+    }
+    status = umi_web_header_set(&request->headers[index], name, value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (index + 1U == request->header_count) request->header_count--;
+        return status;
+    }
+    request->revision++;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the web workbench request remove header operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_web_workbench_request_remove_header(
     UmiWebWorkbenchRequest *request,
     const char *name)
 {
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (request == NULL || name == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Reject a corrupted public record before indexing its fixed header array. */
+    if (request->header_count > UMI_WEB_MAX_HEADERS)
+        return UMI_STATUS_INVALID_STATE;
+    index = header_index(request, name);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == request->header_count) return UMI_STATUS_NOT_FOUND;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index + 1U < request->header_count) {
+        memmove(&request->headers[index], &request->headers[index + 1U],
+            (request->header_count - index - 1U) * sizeof(request->headers[0]));
+    }
+    request->header_count--;
+    memset(&request->headers[request->header_count], 0, sizeof(request->headers[0]));
+    request->revision++;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_web_workbench_request_remove_header(
+    UmiWebWorkbenchRequest *request,
+    const char *name)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (request != NULL && request->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -172,11 +255,56 @@ const char *umi_web_workbench_request_header(
  * Provide the web workbench request set body operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_web_workbench_request_set_body(
     UmiWebWorkbenchRequest *request,
     UmiWebWorkbenchBodyKind kind,
     const char *body)
 {
+    size_t length;
+    UmiStatus status;
+    const char *content_type;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (request == NULL || body == NULL || kind > UMI_WEB_WORKBENCH_BODY_BINARY_REFERENCE) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    length = strlen(body);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (length >= sizeof(request->body)) return UMI_STATUS_CAPACITY_EXCEEDED;
+    memcpy(request->body, body, length + 1U);
+    request->body_length = length;
+    request->body_kind = kind;
+    content_type = body_content_type(kind);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (content_type != NULL && umi_web_workbench_request_header(request, "Content-Type") == NULL) {
+        status = umi_web_workbench_request_set_header(request, "Content-Type", content_type);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+    }
+    request->revision++;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_web_workbench_request_set_body(
+    UmiWebWorkbenchRequest *request,
+    UmiWebWorkbenchBodyKind kind,
+    const char *body)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (request != NULL && request->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t length;
     UmiStatus status;
     const char *content_type;

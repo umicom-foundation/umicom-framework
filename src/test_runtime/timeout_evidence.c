@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/test_runtime/timeout_evidence.h"
 #include "../base/value_archive_internal.h"
 #include "../base/record_update_internal.h"
@@ -318,3 +319,8 @@ static UmiStatus ArchiveValidate(const UmiTestRuntimeTimeoutEvidence *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_test_runtime_timeout_evidence_archive_encode, umi_test_runtime_timeout_evidence_archive_decode,
     UmiTestRuntimeTimeoutEvidence, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Guard snapshot import with the complete encoded value reviewed by the
+ * caller. Imported metadata remains evidence; registry publication is separate. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_test_runtime_timeout_evidence_archive_decode_if_unchanged, umi_test_runtime_timeout_evidence_archive_encode,
+    UmiTestRuntimeTimeoutEvidence, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)

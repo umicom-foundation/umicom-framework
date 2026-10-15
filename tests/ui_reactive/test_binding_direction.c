@@ -50,10 +50,17 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveBindingDirectionPolicyTransferCases, UmiUiR
     umi_ui_reactive_binding_direction_archive_encode, umi_ui_reactive_binding_direction_archive_decode,
     UmiUiReactiveBindingDirectionPolicyTransferEqual, UmiUiReactiveBindingDirectionPolicyTransferTails, UmiUiReactiveBindingDirectionPolicyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveBindingDirectionPolicyConditionalArchiveCases, UmiUiReactiveBindingDirectionPolicy,
+    umi_ui_reactive_binding_direction_archive_encode, umi_ui_reactive_binding_direction_archive_decode_if_unchanged,
+    UmiUiReactiveBindingDirectionPolicyTransferEqual, UmiUiReactiveBindingDirectionPolicyTransferTails, UmiUiReactiveBindingDirectionPolicyTransferMalformed)
+
+
 int main(void) { UmiUiReactiveBindingDirectionPolicy item; umi_ui_reactive_binding_direction_init(&item);
     /* Nonzero fields expose swapped or omitted values in a saved record.
      * The original initialized fixture remains available for its own checks. */
     UmiUiReactiveBindingDirectionPolicy populated = item;
     populated.propagate_initial = true;
     if (UmiUiReactiveBindingDirectionPolicyTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveBindingDirectionPolicyConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_binding_direction_valid(&item) ? 0 : 1; }

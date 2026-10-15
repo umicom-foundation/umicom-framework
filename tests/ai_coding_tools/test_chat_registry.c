@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include "umicom/ai_coding_tools/chat_registry.h"
 
@@ -28,12 +29,20 @@ int main(void)
     umi_ai_coding_tool_chat_registry_init(&registry);
     assert(umi_ai_coding_tool_chat_registry_open(
         &registry, "chat", "provider", "model", &session) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiAiCodingToolChatRegistry, &registry,
+        (umi_ai_coding_tool_chat_registry_open(
+        &registry, "chat", "provider", "model", &session)));
+
     assert(session != NULL);
     assert(registry.count == 1U);
     assert(umi_ai_coding_tool_chat_registry_find(
         &registry, "chat") == session);
     assert(umi_ai_coding_tool_chat_registry_close(
         &registry, "chat") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiAiCodingToolChatRegistry, &registry,
+        (umi_ai_coding_tool_chat_registry_close(
+        &registry, "chat")));
+
     assert(registry.count == 0U);
     return 0;
 }

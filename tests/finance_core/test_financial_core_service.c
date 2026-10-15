@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #define CHECK(expr) do { if (!(expr)) return 1; } while (0)
+#include "../value_archive/revision_cases.h"
 #include <string.h>
 #include "umicom/finance/core/financial_core_service.h"
 
@@ -22,6 +23,9 @@
  */
 int main(void)
 {
-    UmiFinancialCoreService s; umi_financial_core_service_init(&s); CHECK(umi_financial_core_service_start(&s)==UMI_STATUS_OK); CHECK(s.ready);
+    UmiFinancialCoreService s; umi_financial_core_service_init(&s); CHECK(umi_financial_core_service_start(&s)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFinancialCoreService, &s,
+        (umi_financial_core_service_start(&s)));
+ CHECK(s.ready);
     return 0;
 }

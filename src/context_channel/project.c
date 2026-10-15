@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/context_channel/project.h"
 #include "../base/value_archive_internal.h"
 #include <string.h>
@@ -237,3 +238,9 @@ static UmiStatus UmiProjectContextArchiveValidate(const UmiProjectContext *value
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_project_context_archive_encode, umi_project_context_archive_decode,
     UmiProjectContext, UmiProjectContextArchiveSchema, UmiProjectContextArchiveBound, UmiProjectContextArchiveWrite, UmiProjectContextArchiveRead, UmiProjectContextArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_project_context_archive_decode_if_unchanged, umi_project_context_archive_encode,
+    UmiProjectContext, UmiProjectContextArchiveSchema, UmiProjectContextArchiveBound, UmiProjectContextArchiveRead, UmiProjectContextArchiveValidate)

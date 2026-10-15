@@ -71,6 +71,12 @@ UMI_TEST_VALUE_TRANSFER(UmiCtOsArchitectureDecisionTransferCases, UmiCtOsArchite
     umi_ct_umicom_os_architecture_decision_archive_encode, umi_ct_umicom_os_architecture_decision_archive_decode,
     UmiCtOsArchitectureDecisionTransferEqual, UmiCtOsArchitectureDecisionTransferTails, UmiCtOsArchitectureDecisionTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtOsArchitectureDecisionConditionalArchiveCases, UmiCtOsArchitectureDecision,
+    umi_ct_umicom_os_architecture_decision_archive_encode, umi_ct_umicom_os_architecture_decision_archive_decode_if_unchanged,
+    UmiCtOsArchitectureDecisionTransferEqual, UmiCtOsArchitectureDecisionTransferTails, UmiCtOsArchitectureDecisionTransferMalformed)
+
+
 int main(void)
 {
     UmiCtOsArchitectureDecision decision;
@@ -84,6 +90,7 @@ int main(void)
     CHECK(umi_ct_umicom_os_architecture_decision_validate(&decision) ==
           UMI_STATUS_OK);
     if (UmiCtOsArchitectureDecisionTransferCases(&decision) != 0) return 1;
+    if (UmiCtOsArchitectureDecisionConditionalArchiveCases(&decision) != 0) return 1;
 
     CHECK(strcmp(umi_ct_os_foundation_text(
                      decision.production_foundation),

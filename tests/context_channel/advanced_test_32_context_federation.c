@@ -130,6 +130,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextFederationTransferCases, UmiContextFederation,
     umi_context_federation_archive_encode, umi_context_federation_archive_decode,
     UmiContextFederationTransferEqual, UmiContextFederationTransferTails, UmiContextFederationTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextFederationConditionalArchiveCases, UmiContextFederation,
+    umi_context_federation_archive_encode, umi_context_federation_archive_decode_if_unchanged,
+    UmiContextFederationTransferEqual, UmiContextFederationTransferTails, UmiContextFederationTransferMalformed)
+
+
 int main(void)
 {
     UmiContextFederation state;
@@ -144,6 +150,7 @@ int main(void)
     assert(umi_context_federation_covers_sequence(&state,11U));
     assert(umi_context_federation_validate(&state) == UMI_STATUS_OK);
     if (UmiContextFederationTransferCases(&state) != 0) return 1;
+    if (UmiContextFederationConditionalArchiveCases(&state) != 0) return 1;
 
     return 0;
 }

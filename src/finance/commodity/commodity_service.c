@@ -16,6 +16,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include <stdint.h>
 #include "umicom/finance/commodity/commodity_service.h"
 
 #include <string.h>
@@ -39,8 +40,30 @@ void umi_commodity_commodity_service_init(UmiCommodityService *service)
 }
 
 /* Start is explicit so dependency injection and runtime health can govern activation. */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_commodity_commodity_service_start(UmiCommodityService *service)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    service->started = true;
+    service->revision++;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_commodity_commodity_service_start(UmiCommodityService *service)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (service != NULL && service->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.

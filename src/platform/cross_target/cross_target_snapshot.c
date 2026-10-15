@@ -18,6 +18,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/platform/cross_target/cross_target_snapshot.h"
 #include "../../base/value_archive_internal.h"
 
@@ -122,3 +123,8 @@ static UmiStatus UmiCtCrossTargetSnapshotArchiveValidate(const UmiCtCrossTargetS
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ct_cross_target_snapshot_archive_encode, umi_ct_cross_target_snapshot_archive_decode,
     UmiCtCrossTargetSnapshot, UmiCtCrossTargetSnapshotArchiveSchema, UmiCtCrossTargetSnapshotArchiveBound, UmiCtCrossTargetSnapshotArchiveWrite, UmiCtCrossTargetSnapshotArchiveRead, UmiCtCrossTargetSnapshotArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ct_cross_target_snapshot_archive_decode_if_unchanged, umi_ct_cross_target_snapshot_archive_encode,
+    UmiCtCrossTargetSnapshot, UmiCtCrossTargetSnapshotArchiveSchema, UmiCtCrossTargetSnapshotArchiveBound, UmiCtCrossTargetSnapshotArchiveRead, UmiCtCrossTargetSnapshotArchiveValidate)

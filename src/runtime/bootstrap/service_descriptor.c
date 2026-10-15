@@ -20,7 +20,9 @@
  * PURPOSE:
  *   Describe Framework services, ownership scope and lifetime without global variables.
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/runtime/bootstrap/service_descriptor.h"
+#include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 #include "umicom/runtime/bootstrap/service_key.h"
 
@@ -31,6 +33,11 @@
  * Initialise bootstrap service descriptor from caller-provided values so later operations
  * receive a known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_bootstrap_service_descriptor_init(
     UmiBootstrapServiceDescriptor *descriptor,
     const char *service_id,
@@ -62,6 +69,46 @@ UmiStatus umi_bootstrap_service_descriptor_init(
     return umi_bootstrap_service_descriptor_valid(descriptor)
         ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_bootstrap_service_descriptor_init_build_value(
+    UmiBootstrapServiceDescriptor *descriptor,
+    const char *service_id,
+    const char *qualifier,
+    const char *provider_id,
+    UmiBootstrapScopeKind scope,
+    UmiBootstrapLifetimeKind lifetime,
+    int32_t priority) {
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (descriptor == NULL || !umi_bootstrap_id_valid(provider_id)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    memset(descriptor, 0, sizeof(*descriptor));
+    status = umi_bootstrap_service_key_init(&descriptor->key, service_id, qualifier);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_bootstrap_copy_text(descriptor->provider_id,
+                                     sizeof(descriptor->provider_id), provider_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    descriptor->scope = scope;
+    descriptor->lifetime = lifetime;
+    descriptor->priority = priority;
+    descriptor->enabled = true;
+    return umi_bootstrap_service_descriptor_valid(descriptor)
+        ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_bootstrap_service_descriptor_init, UmiBootstrapServiceDescriptor, descriptor,
+    (UmiBootstrapServiceDescriptor *descriptor, const char *service_id, const char *qualifier, const char *provider_id, UmiBootstrapScopeKind scope, UmiBootstrapLifetimeKind lifetime, int32_t priority),
+    umi_bootstrap_service_descriptor_init_build_value(candidate, service_id, qualifier, provider_id, scope, lifetime, priority))
+
 
 /*
  * Check that bootstrap service descriptor satisfies its contract before another service
@@ -145,3 +192,9 @@ static UmiStatus UmiBootstrapServiceDescriptorArchiveValidate(const UmiBootstrap
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_bootstrap_service_descriptor_archive_encode, umi_bootstrap_service_descriptor_archive_decode,
     UmiBootstrapServiceDescriptor, UmiBootstrapServiceDescriptorArchiveSchema, UmiBootstrapServiceDescriptorArchiveBound, UmiBootstrapServiceDescriptorArchiveWrite, UmiBootstrapServiceDescriptorArchiveRead, UmiBootstrapServiceDescriptorArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_bootstrap_service_descriptor_archive_decode_if_unchanged, umi_bootstrap_service_descriptor_archive_encode,
+    UmiBootstrapServiceDescriptor, UmiBootstrapServiceDescriptorArchiveSchema, UmiBootstrapServiceDescriptorArchiveBound, UmiBootstrapServiceDescriptorArchiveRead, UmiBootstrapServiceDescriptorArchiveValidate)

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/designer/visual_designer/resize_handle.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -72,3 +73,8 @@ static UmiStatus UmiRadResizeHandleArchiveValidate(const UmiRadResizeHandle *val
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_rad_resize_handle_archive_encode, umi_rad_resize_handle_archive_decode,
     UmiRadResizeHandle, UmiRadResizeHandleArchiveSchema, UmiRadResizeHandleArchiveBound, UmiRadResizeHandleArchiveWrite, UmiRadResizeHandleArchiveRead, UmiRadResizeHandleArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_rad_resize_handle_archive_decode_if_unchanged, umi_rad_resize_handle_archive_encode,
+    UmiRadResizeHandle, UmiRadResizeHandleArchiveSchema, UmiRadResizeHandleArchiveBound, UmiRadResizeHandleArchiveRead, UmiRadResizeHandleArchiveValidate)

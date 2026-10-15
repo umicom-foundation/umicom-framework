@@ -86,6 +86,13 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorWbEditorReopenTransferCases, UmiEditorWbEditorR
     umi_editor_wb_editor_reopen_archive_encode, umi_editor_wb_editor_reopen_archive_decode,
     UmiEditorWbEditorReopenTransferEqual, UmiEditorWbEditorReopenTransferTails, UmiEditorWbEditorReopenTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorWbEditorReopenConditionalArchiveCases, UmiEditorWbEditorReopen,
+    umi_editor_wb_editor_reopen_archive_encode, umi_editor_wb_editor_reopen_archive_decode_if_unchanged,
+    UmiEditorWbEditorReopenTransferEqual, UmiEditorWbEditorReopenTransferTails, UmiEditorWbEditorReopenTransferMalformed)
+
+
 int main(void){ UmiEditorWbEditorReopen s; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_editor_reopen_init(&s,"a.c","main")!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_wb_editor_reopen_valid(&s))return 2;
     if (UmiEditorWbEditorReopenTransferCases(&s) != 0) return 1;
+    if (UmiEditorWbEditorReopenConditionalArchiveCases(&s) != 0) return 1;
  return 0; }

@@ -117,6 +117,32 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkMetricTransferCases, UmiWorkbench
     umi_workbench_context_link_metric_archive_encode, umi_workbench_context_link_metric_archive_decode,
     UmiWorkbenchContextLinkMetricTransferEqual, UmiWorkbenchContextLinkMetricTransferTails, UmiWorkbenchContextLinkMetricTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkMetricConditionalArchiveCases, UmiWorkbenchContextLinkMetric,
+    umi_workbench_context_link_metric_archive_encode, umi_workbench_context_link_metric_archive_decode_if_unchanged,
+    UmiWorkbenchContextLinkMetricTransferEqual, UmiWorkbenchContextLinkMetricTransferTails, UmiWorkbenchContextLinkMetricTransferMalformed)
+
+
+/* Delayed context edits must preserve newer work and reject exhausted tokens. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextLinkMetricReviewedCases, UmiWorkbenchContextLinkMetric,
+    metric_id, unit, umi_workbench_context_link_metric_replace_if_current, UmiWorkbenchContextLinkMetricTransferEqual)
+static int UmiWorkbenchContextLinkMetricMutationGuards(const UmiWorkbenchContextLinkMetric *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkMetric, name, umi_workbench_context_link_metric_set_primary, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkMetric, unit, umi_workbench_context_link_metric_set_secondary, sample);
+    UmiWorkbenchContextLinkMetric value = *sample;
+    unsigned char before[sizeof(value)];
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_link_metric_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U ||
+        value.timestamp_ms != 44U) return 1;
+    memcpy(before, &value, sizeof(value));
+    umi_workbench_context_link_metric_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof(value)) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextLinkMetric record;
@@ -125,6 +151,9 @@ int main(void)
     umi_workbench_context_link_metric_init(&record, "metric-id");
     assert(umi_workbench_context_link_metric_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkMetricTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkMetricConditionalArchiveCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkMetricReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkMetricMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_context_link_metric_set_primary(&record, "primary") == UMI_STATUS_OK);
     assert(umi_workbench_context_link_metric_set_secondary(&record, "secondary") == UMI_STATUS_OK);

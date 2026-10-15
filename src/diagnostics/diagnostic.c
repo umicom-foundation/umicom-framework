@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/diagnostics/diagnostic.h"
+#include "../base/value_construction_internal.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -81,6 +82,11 @@ static int copy_text(char *destination, size_t capacity, const char *source)
  * Initialise diagnostic snapshot from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_diagnostic_snapshot_init(UmiDiagnosticSnapshot *snapshot,
                                        const char *id,
                                        UmiDiagnosticSeverity severity,
@@ -112,6 +118,46 @@ UmiStatus umi_diagnostic_snapshot_init(UmiDiagnosticSnapshot *snapshot,
     }
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_diagnostic_snapshot_init_build_value(UmiDiagnosticSnapshot *snapshot,
+                                       const char *id,
+                                       UmiDiagnosticSeverity severity,
+                                       UmiDiagnosticKind kind,
+                                       const char *source,
+                                       const char *message)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (snapshot == NULL || id == NULL || id[0] == '\0' ||
+        message == NULL || message[0] == '\0' ||
+        severity < UMI_DIAGNOSTIC_TRACE || severity > UMI_DIAGNOSTIC_FATAL ||
+        kind < UMI_DIAGNOSTIC_KIND_GENERAL || kind > UMI_DIAGNOSTIC_KIND_SECURITY) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    (void)memset(snapshot, 0, sizeof(*snapshot));
+    snapshot->struct_size = (uint32_t)sizeof(*snapshot);
+    snapshot->api_version = UMI_DIAGNOSTIC_API_VERSION;
+    snapshot->severity = severity;
+    snapshot->kind = kind;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (!copy_text(snapshot->id, sizeof(snapshot->id), id) ||
+        !copy_text(snapshot->source, sizeof(snapshot->source), source) ||
+        !copy_text(snapshot->message, sizeof(snapshot->message), message)) {
+        (void)memset(snapshot, 0, sizeof(*snapshot));
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_diagnostic_snapshot_init, UmiDiagnosticSnapshot, snapshot,
+    (UmiDiagnosticSnapshot *snapshot, const char *id, UmiDiagnosticSeverity severity, UmiDiagnosticKind kind, const char *source, const char *message),
+    umi_diagnostic_snapshot_init_build_value(candidate, id, severity, kind, source, message))
+
 
 /*
  * Check that diagnostic snapshot satisfies its contract before another service relies on

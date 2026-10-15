@@ -16,12 +16,39 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/construction_cases.h"
 #include "umicom/vcs/advanced/conflict_resolution.h"
 /*
  * Start this command or application, report setup failures, and return a process exit code
  * to the operating system.
  */
-int main(void){UmiVcsAdvancedConflictResolution r;UmiVcsAdvancedConflictHunk h;
+/* Exercise rejected edits and borrowed text through the public setter. */
+static int UmiVcsAdvancedConflictResolutionTextEditCases(void)
+{
+    UmiVcsAdvancedConflictResolution *value = calloc(1U, sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_vcs_advanced_conflict_resolution_set_path(value, "prefix-value") == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    char oversized[sizeof(value->path) + 1U];
+    memset(oversized, 'x', sizeof(oversized) - 1U);
+    oversized[sizeof(oversized) - 1U] = '\0';
+    UMI_CONSTRUCTION_REQUIRE(umi_vcs_advanced_conflict_resolution_set_path(value, oversized) != UMI_STATUS_OK);
+    UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+    UMI_CONSTRUCTION_REQUIRE(umi_vcs_advanced_conflict_resolution_set_path(value, value->path + 7U) == UMI_STATUS_OK);
+    UMI_CONSTRUCTION_REQUIRE(strcmp(value->path, "value") == 0);
+    UMI_CONSTRUCTION_REQUIRE(umi_vcs_advanced_conflict_resolution_set_path(NULL, "value") == UMI_STATUS_INVALID_ARGUMENT);
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
+int main(void){
+    if (UmiVcsAdvancedConflictResolutionTextEditCases() != 0) return 1;
+UmiVcsAdvancedConflictResolution r;UmiVcsAdvancedConflictHunk h;
     umi_vcs_advanced_conflict_resolution_init(&r);
     umi_vcs_advanced_conflict_hunk_init(&h);
 /* Preserve the original failure result so the caller can respond to the correct cause. */

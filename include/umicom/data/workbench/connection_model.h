@@ -63,6 +63,9 @@ UmiStatus umi_data_workbench_connection_model_set_filter(
  * Provide the data workbench connection model activate operation used by this module and
  * its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_data_workbench_connection_model_activate(
     UmiDataWorkbenchConnectionModel *model,
     const char *connection_id);

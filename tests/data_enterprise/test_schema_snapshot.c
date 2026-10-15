@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/data/enterprise/schema_snapshot.h"
 #include <stdio.h>
 #include <string.h>
@@ -29,6 +30,9 @@ int main(void) {
     umi_data_schema_snapshot_init(&registry);
     CHECK(umi_data_schema_table_init(&item,"orders","orders") == UMI_STATUS_OK);
     CHECK(umi_data_schema_snapshot_add(&registry, &item) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDataSchemaSnapshot, &registry,
+        (umi_data_schema_snapshot_add(&registry, &item)));
+
     CHECK(umi_data_schema_snapshot_add(&registry, &item) == UMI_STATUS_ALREADY_EXISTS);
     CHECK(umi_data_schema_snapshot_find(&registry, item.table_id, &found) == UMI_STATUS_OK);
     CHECK(strcmp(found.table_id, item.table_id) == 0);

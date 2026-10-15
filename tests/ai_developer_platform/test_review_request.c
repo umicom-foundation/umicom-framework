@@ -88,6 +88,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAiDevReviewRequestTransferCases, UmiAiDevReviewReques
     umi_ai_dev_review_request_archive_encode, umi_ai_dev_review_request_archive_decode,
     UmiAiDevReviewRequestTransferEqual, UmiAiDevReviewRequestTransferTails, UmiAiDevReviewRequestTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAiDevReviewRequestConditionalArchiveCases, UmiAiDevReviewRequest,
+    umi_ai_dev_review_request_archive_encode, umi_ai_dev_review_request_archive_decode_if_unchanged,
+    UmiAiDevReviewRequestTransferEqual, UmiAiDevReviewRequestTransferTails, UmiAiDevReviewRequestTransferMalformed)
+
+
 int main(void) {
     UmiAiDevReviewRequest v;
     umi_ai_dev_review_request_init(&v);
@@ -96,6 +102,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ai_dev_review_request_validate(&v) != UMI_STATUS_OK) return 2;
     if (UmiAiDevReviewRequestTransferCases(&v) != 0) return 1;
+    if (UmiAiDevReviewRequestConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ai_dev_review_request_evidence_score(&v, 50U) != 62U) return 3;

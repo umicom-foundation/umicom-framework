@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Umicom Framework | Workspace Migration Plan | MIT */
+#include <stdint.h>
 #include "umicom/project/workspace/workspace_migration_plan.h"
 #include "internal.h"
 #include <string.h>
@@ -35,7 +36,44 @@ void umi_project_workspace_workspace_migration_plan_init(UmiProjectWorkspaceWork
  * Add project workspace workspace migration plan only after its inputs and available
  * capacity have been checked.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_project_workspace_workspace_migration_plan_add(UmiProjectWorkspaceWorkspaceMigrationPlan *value,const char *id,const char *action,bool required) {
+    UmiProjectWorkspaceWorkspaceMigrationPlanStep *s;
+    size_t i;
+    UmiStatus st;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if(value==NULL||id==NULL||action==NULL||id[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if(value->count>=UMI_PROJECT_WORKSPACE_MEDIUM_CAPACITY)return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for(i=0U;i<value->count;++i)/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(strcmp(value->steps[i].id,id)==0)return UMI_STATUS_ALREADY_EXISTS;
+    s=&value->steps[value->count];
+    (void)memset(s,0,sizeof(*s));
+    st=umi_pw_copy(s->id,sizeof(s->id),id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if(st!=UMI_STATUS_OK)return st;
+    st=umi_pw_copy(s->action,sizeof(s->action),action);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if(st!=UMI_STATUS_OK)return st;
+    s->required=required;
+    value->count+=1U;
+    value->revision+=1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_project_workspace_workspace_migration_plan_add(UmiProjectWorkspaceWorkspaceMigrationPlan *value,const char *id,const char *action,bool required) {
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiProjectWorkspaceWorkspaceMigrationPlanStep *s;
     size_t i;
     UmiStatus st;
@@ -65,7 +103,37 @@ UmiStatus umi_project_workspace_workspace_migration_plan_add(UmiProjectWorkspace
  * Provide the project workspace workspace migration plan complete operation used by this
  * module and its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_project_workspace_workspace_migration_plan_complete(UmiProjectWorkspaceWorkspaceMigrationPlan *value,const char *id) {
+    size_t i;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if(value==NULL||id==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for(i=0U;i<value->count;++i)/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(strcmp(value->steps[i].id,id)==0) {
+        /* Apply this branch only when its contract condition is satisfied. */
+        if(!value->steps[i].completed) {
+            value->steps[i].completed=true;
+            value->completed_count+=1U;
+            value->revision+=1U;
+        }
+        return UMI_STATUS_OK;
+    }
+    return UMI_STATUS_NOT_FOUND;
+}
+#endif
+
+UmiStatus umi_project_workspace_workspace_migration_plan_complete(UmiProjectWorkspaceWorkspaceMigrationPlan *value,const char *id) {
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t i;
     /*
      * Protect caller-owned memory by checking that required state is available before it is

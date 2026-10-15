@@ -137,6 +137,12 @@ UMI_TEST_VALUE_TRANSFER(UmiDebugWorkbenchModuleItemTransferCases, UmiDebugWorkbe
     umi_debug_workbench_module_item_archive_encode, umi_debug_workbench_module_item_archive_decode,
     UmiDebugWorkbenchModuleItemTransferEqual, UmiDebugWorkbenchModuleItemTransferTails, UmiDebugWorkbenchModuleItemTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDebugWorkbenchModuleItemConditionalArchiveCases, UmiDebugWorkbenchModuleItem,
+    umi_debug_workbench_module_item_archive_encode, umi_debug_workbench_module_item_archive_decode_if_unchanged,
+    UmiDebugWorkbenchModuleItemTransferEqual, UmiDebugWorkbenchModuleItemTransferTails, UmiDebugWorkbenchModuleItemTransferMalformed)
+
+
 int main(void)
 {
     UmiDebugWorkbenchModuleItem model;
@@ -151,6 +157,7 @@ int main(void)
     UMI_TEST_CHECK(!model.enabled);
     UMI_TEST_CHECK(umi_debug_workbench_module_item_valid(&model));
     if (UmiDebugWorkbenchModuleItemTransferCases(&model) != 0) return 1;
+    if (UmiDebugWorkbenchModuleItemConditionalArchiveCases(&model) != 0) return 1;
 
     return 0;
 }

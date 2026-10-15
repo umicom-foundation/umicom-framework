@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/appearance/target_size_certification.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -98,3 +99,8 @@ static UmiStatus UmiAppearanceTargetSizeCertificationArchiveValidate(const UmiAp
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_appearance_target_size_certification_archive_encode, umi_appearance_target_size_certification_archive_decode,
     UmiAppearanceTargetSizeCertification, UmiAppearanceTargetSizeCertificationArchiveSchema, UmiAppearanceTargetSizeCertificationArchiveBound, UmiAppearanceTargetSizeCertificationArchiveWrite, UmiAppearanceTargetSizeCertificationArchiveRead, UmiAppearanceTargetSizeCertificationArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_appearance_target_size_certification_archive_decode_if_unchanged, umi_appearance_target_size_certification_archive_encode,
+    UmiAppearanceTargetSizeCertification, UmiAppearanceTargetSizeCertificationArchiveSchema, UmiAppearanceTargetSizeCertificationArchiveBound, UmiAppearanceTargetSizeCertificationArchiveRead, UmiAppearanceTargetSizeCertificationArchiveValidate)

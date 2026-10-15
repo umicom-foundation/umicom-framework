@@ -90,9 +90,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrArchitectureDescriptorTransferCases, UmiDrArchitect
     umi_dr_architecture_descriptor_archive_encode, umi_dr_architecture_descriptor_archive_decode,
     UmiDrArchitectureDescriptorTransferEqual, UmiDrArchitectureDescriptorTransferTails, UmiDrArchitectureDescriptorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrArchitectureDescriptorConditionalArchiveCases, UmiDrArchitectureDescriptor,
+    umi_dr_architecture_descriptor_archive_encode, umi_dr_architecture_descriptor_archive_decode_if_unchanged,
+    UmiDrArchitectureDescriptorTransferEqual, UmiDrArchitectureDescriptorTransferTails, UmiDrArchitectureDescriptorTransferMalformed)
+
+
 int main(void) {
     UmiDrArchitectureDescriptor value; umi_dr_architecture_descriptor_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"x86_64") == UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.abi,sizeof(value.abi),"gnu") == UMI_STATUS_OK); CHECK(umi_dr_architecture_descriptor_valid(&value));
     if (UmiDrArchitectureDescriptorTransferCases(&value) != 0) return 1;
+    if (UmiDrArchitectureDescriptorConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_architecture_descriptor_fingerprint(&value) != 0U);
     return 0;
 }

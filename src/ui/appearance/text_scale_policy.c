@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/appearance/text_scale_policy.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -94,3 +95,8 @@ static UmiStatus UmiAppearanceTextScalePolicyArchiveValidate(const UmiAppearance
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_appearance_text_scale_policy_archive_encode, umi_appearance_text_scale_policy_archive_decode,
     UmiAppearanceTextScalePolicy, UmiAppearanceTextScalePolicyArchiveSchema, UmiAppearanceTextScalePolicyArchiveBound, UmiAppearanceTextScalePolicyArchiveWrite, UmiAppearanceTextScalePolicyArchiveRead, UmiAppearanceTextScalePolicyArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_appearance_text_scale_policy_archive_decode_if_unchanged, umi_appearance_text_scale_policy_archive_encode,
+    UmiAppearanceTextScalePolicy, UmiAppearanceTextScalePolicyArchiveSchema, UmiAppearanceTextScalePolicyArchiveBound, UmiAppearanceTextScalePolicyArchiveRead, UmiAppearanceTextScalePolicyArchiveValidate)

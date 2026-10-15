@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/data/enterprise/entity_descriptor.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -108,10 +109,72 @@ UMI_TEST_VALUE_TRANSFER(UmiDataEntityDescriptorTransferCases, UmiDataEntityDescr
     umi_data_entity_descriptor_archive_encode, umi_data_entity_descriptor_archive_decode,
     UmiDataEntityDescriptorTransferEqual, UmiDataEntityDescriptorTransferTails, UmiDataEntityDescriptorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataEntityDescriptorConditionalArchiveCases, UmiDataEntityDescriptor,
+    umi_data_entity_descriptor_archive_encode, umi_data_entity_descriptor_archive_decode_if_unchanged,
+    UmiDataEntityDescriptorTransferEqual, UmiDataEntityDescriptorTransferTails, UmiDataEntityDescriptorTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted entity descriptor value. */
+static int UmiDataEntityDescriptorConstructionCases(void)
+{
+    UmiDataEntityDescriptor *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_data_entity_descriptor_init(value, "Order", "orders", "id") == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->entity_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_entity_descriptor_init(value, oversized, "orders", "id") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_entity_descriptor_init(value, value->entity_id, "orders", "id") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->entity_id, "Order") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->table_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_entity_descriptor_init(value, "Order", oversized, "id") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_entity_descriptor_init(value, "Order", value->table_id, "id") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->table_id, "orders") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->identity_field) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_entity_descriptor_init(value, "Order", "orders", oversized) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_entity_descriptor_init(value, "Order", "orders", value->identity_field) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->identity_field, "id") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiDataEntityDescriptorConstructionCases() != 0) return 1;
+
     UmiDataEntityDescriptor item;
     CHECK(umi_data_entity_descriptor_init(&item,"Order","orders","id") == UMI_STATUS_OK);
     if (UmiDataEntityDescriptorTransferCases(&item) != 0) return 1;
+    if (UmiDataEntityDescriptorConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(strcmp(item.table_id,"orders")==0);
     return 0;

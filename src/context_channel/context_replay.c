@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/context_channel/context_replay.h"
 #include "../base/value_archive_internal.h"
 #include <string.h>
@@ -233,3 +234,9 @@ static UmiStatus UmiContextReplayArchiveValidate(const UmiContextReplay *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_context_replay_archive_encode, umi_context_replay_archive_decode,
     UmiContextReplay, UmiContextReplayArchiveSchema, UmiContextReplayArchiveBound, UmiContextReplayArchiveWrite, UmiContextReplayArchiveRead, UmiContextReplayArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_context_replay_archive_decode_if_unchanged, umi_context_replay_archive_encode,
+    UmiContextReplay, UmiContextReplayArchiveSchema, UmiContextReplayArchiveBound, UmiContextReplayArchiveRead, UmiContextReplayArchiveValidate)

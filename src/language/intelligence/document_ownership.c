@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/language/intelligence/document_ownership.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -172,3 +173,8 @@ static UmiStatus UmiLanguageIntelligenceDocumentOwnershipArchiveValidate(const U
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_language_intelligence_document_ownership_archive_encode, umi_language_intelligence_document_ownership_archive_decode,
     UmiLanguageIntelligenceDocumentOwnership, UmiLanguageIntelligenceDocumentOwnershipArchiveSchema, UmiLanguageIntelligenceDocumentOwnershipArchiveBound, UmiLanguageIntelligenceDocumentOwnershipArchiveWrite, UmiLanguageIntelligenceDocumentOwnershipArchiveRead, UmiLanguageIntelligenceDocumentOwnershipArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_language_intelligence_document_ownership_archive_decode_if_unchanged, umi_language_intelligence_document_ownership_archive_encode,
+    UmiLanguageIntelligenceDocumentOwnership, UmiLanguageIntelligenceDocumentOwnershipArchiveSchema, UmiLanguageIntelligenceDocumentOwnershipArchiveBound, UmiLanguageIntelligenceDocumentOwnershipArchiveRead, UmiLanguageIntelligenceDocumentOwnershipArchiveValidate)

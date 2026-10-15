@@ -94,3 +94,6 @@
 #include "education/standard.inc"
 #include "education/focus.inc"
 /* clang-format on */
+#include "healthcare/learning.inc"
+#include "healthcare/standard.inc"
+#include "healthcare/focus.inc"

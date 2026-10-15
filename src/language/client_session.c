@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Umicom Framework language client lifecycle. Sammy Hegab, Umicom Foundation, MIT. */
+#include <stdint.h>
 #include "umicom/language/client_session.h"
 #include <stdio.h>
 #include <string.h>
@@ -74,9 +75,38 @@ UmiStatus umi_language_client_session_init(UmiLanguageClientSession *session,
  * Provide the language client session transition operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_language_client_session_transition(
     UmiLanguageClientSession *session, UmiLanguageClientState next_state)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (session == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (session->state == next_state) return UMI_STATUS_OK;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (!transition_allowed(session->state, next_state)) return UMI_STATUS_INVALID_STATE;
+    session->state = next_state;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (next_state == UMI_LANGUAGE_CLIENT_FAILED) session->failures += 1U;
+    session->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_language_client_session_transition(
+    UmiLanguageClientSession *session, UmiLanguageClientState next_state)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (session != NULL && session->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.

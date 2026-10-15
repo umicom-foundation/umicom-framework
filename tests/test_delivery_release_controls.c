@@ -23,6 +23,8 @@
 #undef NDEBUG
 #endif
 #include <assert.h>
+#include "value_archive/construction_cases.h"
+#include "value_archive/construction_cases.h"
 #include "umicom/delivery/promotion.h"
 #include "umicom/delivery/release_lock.h"
 #include "umicom/delivery/rollback_history.h"
@@ -76,7 +78,75 @@ UMI_TEST_VALUE_TRANSFER(UmiPromotionTransferCases, UmiPromotion,
     umi_promotion_direction_archive_encode, umi_promotion_direction_archive_decode,
     UmiPromotionTransferEqual, UmiPromotionTransferTails, UmiPromotionTransferMalformed)
 
+#include "value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiPromotionConditionalArchiveCases, UmiPromotion,
+    umi_promotion_direction_archive_encode, umi_promotion_direction_archive_decode_if_unchanged,
+    UmiPromotionTransferEqual, UmiPromotionTransferTails, UmiPromotionTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted promotion value. */
+static int UmiPromotionConstructionCases(void)
+{
+    UmiPromotion *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_promotion_init(value, "r", UMI_RELEASE_BETA, UMI_RELEASE_STABLE) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->release_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_promotion_init(value, oversized, UMI_RELEASE_BETA, UMI_RELEASE_STABLE) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_promotion_init(value, value->release_id, UMI_RELEASE_BETA, UMI_RELEASE_STABLE) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->release_id, "r") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
+
+/* A rejected replacement must preserve the previously accepted rollback value. */
+static int UmiRollbackPlanConstructionCases(void)
+{
+    UmiRollbackPlan *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_rollback_plan_init(value, 2U, 1U, "test") == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->reason) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_rollback_plan_init(value, 2U, 1U, oversized) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_rollback_plan_init(value, 2U, 1U, value->reason) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->reason, "test") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiRollbackPlanConstructionCases() != 0) return 1;
+
+    if (UmiPromotionConstructionCases() != 0) return 1;
+
     UmiPromotion promotion;
     UmiReleaseLock lock;
     UmiRollbackHistory history;
@@ -84,6 +154,7 @@ int main(void) {
     assert(umi_promotion_init(&promotion, "r", UMI_RELEASE_BETA, UMI_RELEASE_STABLE) == UMI_STATUS_OK);
     assert(umi_promotion_direction_valid(&promotion));
     if (UmiPromotionTransferCases(&promotion) != 0) return 1;
+    if (UmiPromotionConditionalArchiveCases(&promotion) != 0) return 1;
 
     umi_release_lock_init(&lock);
     assert(umi_release_lock_acquire(&lock, "studio") == UMI_STATUS_OK);

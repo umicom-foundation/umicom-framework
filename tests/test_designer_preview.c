@@ -20,6 +20,8 @@
  */
 
 #include "umicom/umicom.h"
+#include "value_archive/construction_cases.h"
+#include "value_archive/construction_cases.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -134,8 +136,106 @@ static void test_preview_profiles(void)
  * Start this command or application, report setup failures, and return a process exit code
  * to the operating system.
  */
+
+/* A rejected replacement must preserve the previously accepted component value. */
+static int UmiDeclComponentDescriptorConstructionCases(void)
+{
+    UmiDeclComponentDescriptor *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_decl_component_descriptor_init(value, "button", "Button", "Controls", 0) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->component_type) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_decl_component_descriptor_init(value, oversized, "Button", "Controls", 0) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_decl_component_descriptor_init(value, value->component_type, "Button", "Controls", 0) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->component_type, "button") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->display_name) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_decl_component_descriptor_init(value, "button", oversized, "Controls", 0) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_decl_component_descriptor_init(value, "button", value->display_name, "Controls", 0) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->display_name, "Button") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->category) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_decl_component_descriptor_init(value, "button", "Button", oversized, 0) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_decl_component_descriptor_init(value, "button", "Button", value->category, 0) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->category, "Controls") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
+
+/* A rejected replacement must preserve the previously accepted property value. */
+static int UmiDeclPropertyDescriptorConstructionCases(void)
+{
+    UmiDeclPropertyDescriptor *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_decl_property_descriptor_init(value, "visible", UMI_DECL_VALUE_BOOLEAN, "true", 0) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->name) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_decl_property_descriptor_init(value, oversized, UMI_DECL_VALUE_BOOLEAN, "true", 0) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_decl_property_descriptor_init(value, value->name, UMI_DECL_VALUE_BOOLEAN, "true", 0) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->name, "visible") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->default_value) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_decl_property_descriptor_init(value, "visible", UMI_DECL_VALUE_BOOLEAN, oversized, 0) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_decl_property_descriptor_init(value, "visible", UMI_DECL_VALUE_BOOLEAN, value->default_value, 0) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->default_value, "true") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void)
 {
+    if (UmiDeclPropertyDescriptorConstructionCases() != 0) return 1;
+
+    if (UmiDeclComponentDescriptorConstructionCases() != 0) return 1;
+
     UmiDeclComponentRegistry *registry = NULL;
     UmiDeclSchema schema;
     UmiDesignerDocument *document = NULL;

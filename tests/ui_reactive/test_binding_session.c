@@ -68,6 +68,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveBindingSessionTransferCases, UmiUiReactiveB
     umi_ui_reactive_binding_session_archive_encode, umi_ui_reactive_binding_session_archive_decode,
     UmiUiReactiveBindingSessionTransferEqual, UmiUiReactiveBindingSessionTransferTails, UmiUiReactiveBindingSessionTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveBindingSessionConditionalArchiveCases, UmiUiReactiveBindingSession,
+    umi_ui_reactive_binding_session_archive_encode, umi_ui_reactive_binding_session_archive_decode_if_unchanged,
+    UmiUiReactiveBindingSessionTransferEqual, UmiUiReactiveBindingSessionTransferTails, UmiUiReactiveBindingSessionTransferMalformed)
+
+
 int main(void) { UmiUiReactiveBindingSession item; umi_ui_reactive_binding_session_init(&item);
     /* Nonzero fields expose swapped or omitted values in a saved record.
      * The original initialized fixture remains available for its own checks. */
@@ -77,4 +83,5 @@ int main(void) { UmiUiReactiveBindingSession item; umi_ui_reactive_binding_sessi
     populated.revision = (uint64_t)4;
     populated.propagations = (size_t)5;
     if (UmiUiReactiveBindingSessionTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveBindingSessionConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_binding_session_valid(&item) ? 0 : 1; }

@@ -106,9 +106,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrConfigurationLayoutTransferCases, UmiDrConfiguratio
     umi_dr_configuration_layout_archive_encode, umi_dr_configuration_layout_archive_decode,
     UmiDrConfigurationLayoutTransferEqual, UmiDrConfigurationLayoutTransferTails, UmiDrConfigurationLayoutTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrConfigurationLayoutConditionalArchiveCases, UmiDrConfigurationLayout,
+    umi_dr_configuration_layout_archive_encode, umi_dr_configuration_layout_archive_decode_if_unchanged,
+    UmiDrConfigurationLayoutTransferEqual, UmiDrConfigurationLayoutTransferTails, UmiDrConfigurationLayoutTransferMalformed)
+
+
 int main(void) {
     UmiDrConfigurationLayout value; umi_dr_configuration_layout_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"config")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.user_root,sizeof(value.user_root),"config")==UMI_STATUS_OK); value.portable=true; CHECK(umi_dr_configuration_layout_valid(&value));
     if (UmiDrConfigurationLayoutTransferCases(&value) != 0) return 1;
+    if (UmiDrConfigurationLayoutConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_configuration_layout_fingerprint(&value) != 0U);
     return 0;
 }

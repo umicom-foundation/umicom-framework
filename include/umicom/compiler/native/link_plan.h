@@ -36,6 +36,10 @@ typedef struct UmiNativeLinkPlan { char output[UMI_NC_PATH_CAPACITY]; UmiNativeL
  * Initialise nc link plan from caller-provided values so later operations receive a known
  * state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_nc_link_plan_init(UmiNativeLinkPlan *plan,const char *output,UmiNativeLinkOutputKind kind);
 /**
  * Provide the nc link plan add input operation used by this module and its client

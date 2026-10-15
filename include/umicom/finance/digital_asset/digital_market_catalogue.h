@@ -41,6 +41,9 @@ typedef struct UmiDigitalMarketCatalogue {
 void umi_digital_asset_digital_market_catalogue_init(UmiDigitalMarketCatalogue *catalogue);
 
 /* Add a unique item and advance the deterministic catalogue revision. */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_digital_asset_digital_market_catalogue_add(UmiDigitalMarketCatalogue *catalogue, const UmiDigitalMarket *item);
 
 /* Resolve an item by its stable Framework identifier. */

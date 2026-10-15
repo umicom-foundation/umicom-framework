@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/frontend/conformance/drag_drop_contract.h"
 #include "../../base/value_archive_internal.h"
 
@@ -57,3 +58,9 @@ static UmiStatus UmiFcDragDropContractArchiveValidate(const UmiFcDragDropContrac
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_fc_drag_drop_contract_archive_encode, umi_fc_drag_drop_contract_archive_decode,
     UmiFcDragDropContract, UmiFcDragDropContractArchiveSchema, UmiFcDragDropContractArchiveBound, UmiFcDragDropContractArchiveWrite, UmiFcDragDropContractArchiveRead, UmiFcDragDropContractArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_fc_drag_drop_contract_archive_decode_if_unchanged, umi_fc_drag_drop_contract_archive_encode,
+    UmiFcDragDropContract, UmiFcDragDropContractArchiveSchema, UmiFcDragDropContractArchiveBound, UmiFcDragDropContractArchiveRead, UmiFcDragDropContractArchiveValidate)

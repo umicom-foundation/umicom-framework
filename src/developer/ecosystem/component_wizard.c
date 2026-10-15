@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/developer/ecosystem/component_wizard.h"
 
 #include <ctype.h>
@@ -74,10 +75,49 @@ void umi_ecosystem_component_wizard_init(UmiEcosystemComponentWizard *wizard)
  * Provide the ecosystem component wizard add template operation used by this module and
  * its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ecosystem_component_wizard_add_template(
     UmiEcosystemComponentWizard *wizard,
     const UmiEcosystemComponentTemplate *component_template)
 {
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (wizard == NULL || component_template == NULL ||
+        component_template->template_id[0] == '\0' ||
+        component_template->display_name[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < wizard->template_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(wizard->templates[index].template_id,
+            component_template->template_id) == 0) return UMI_STATUS_ALREADY_EXISTS;
+    }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (wizard->template_count >= UMI_ECOSYSTEM_MAX_TEMPLATES) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    wizard->templates[wizard->template_count++] = *component_template;
+    wizard->revision++;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_ecosystem_component_wizard_add_template(
+    UmiEcosystemComponentWizard *wizard,
+    const UmiEcosystemComponentTemplate *component_template)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (wizard != NULL && wizard->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -107,10 +147,43 @@ UmiStatus umi_ecosystem_component_wizard_add_template(
  * Provide the ecosystem component wizard select operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ecosystem_component_wizard_select(
     UmiEcosystemComponentWizard *wizard,
     const char *template_id)
 {
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (wizard == NULL || template_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < wizard->template_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(wizard->templates[index].template_id, template_id) == 0) {
+            wizard->selected_index = index;
+            wizard->has_selection = true;
+            wizard->revision++;
+            return UMI_STATUS_OK;
+        }
+    }
+    return UMI_STATUS_NOT_FOUND;
+}
+#endif
+
+UmiStatus umi_ecosystem_component_wizard_select(
+    UmiEcosystemComponentWizard *wizard,
+    const char *template_id)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (wizard != NULL && wizard->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is

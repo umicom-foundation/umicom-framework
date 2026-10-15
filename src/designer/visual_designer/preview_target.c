@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/designer/visual_designer/preview_target.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -85,3 +86,8 @@ static UmiStatus UmiRadPreviewTargetArchiveValidate(const UmiRadPreviewTarget *v
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_rad_preview_target_archive_encode, umi_rad_preview_target_archive_decode,
     UmiRadPreviewTarget, UmiRadPreviewTargetArchiveSchema, UmiRadPreviewTargetArchiveBound, UmiRadPreviewTargetArchiveWrite, UmiRadPreviewTargetArchiveRead, UmiRadPreviewTargetArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_rad_preview_target_archive_decode_if_unchanged, umi_rad_preview_target_archive_encode,
+    UmiRadPreviewTarget, UmiRadPreviewTargetArchiveSchema, UmiRadPreviewTargetArchiveBound, UmiRadPreviewTargetArchiveRead, UmiRadPreviewTargetArchiveValidate)

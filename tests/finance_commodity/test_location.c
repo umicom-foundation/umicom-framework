@@ -107,12 +107,19 @@ UMI_TEST_VALUE_TRANSFER(UmiCommodityLocationTransferCases, UmiCommodityLocation,
     umi_commodity_location_archive_encode, umi_commodity_location_archive_decode,
     UmiCommodityLocationTransferEqual, UmiCommodityLocationTransferTails, UmiCommodityLocationTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCommodityLocationConditionalArchiveCases, UmiCommodityLocation,
+    umi_commodity_location_archive_encode, umi_commodity_location_archive_decode_if_unchanged,
+    UmiCommodityLocationTransferEqual, UmiCommodityLocationTransferTails, UmiCommodityLocationTransferMalformed)
+
+
 int main(void)
 {
     UmiCommodityLocation value;
     CHECK(umi_commodity_location_init(&value, "LOC-CUSHING", "Cushing", "US") == UMI_STATUS_OK);
     CHECK(umi_commodity_location_valid(&value));
     if (UmiCommodityLocationTransferCases(&value) != 0) return 1;
+    if (UmiCommodityLocationConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

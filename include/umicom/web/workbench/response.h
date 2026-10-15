@@ -62,6 +62,9 @@ void umi_web_workbench_response_init(UmiWebWorkbenchResponse *response);
  * Provide the web workbench response set header operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_web_workbench_response_set_header(
     UmiWebWorkbenchResponse *response,
     const char *name,
@@ -77,6 +80,9 @@ const char *umi_web_workbench_response_header(
  * Provide the web workbench response set body operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_web_workbench_response_set_body(
     UmiWebWorkbenchResponse *response,
     const void *body,

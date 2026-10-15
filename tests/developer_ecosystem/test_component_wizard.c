@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 
 #include "umicom/developer/ecosystem/component_wizard.h"
@@ -31,8 +32,15 @@ int main(void)
         sizeof(component_template.required_sdk_id), "umicom-1") == UMI_STATUS_OK);
     assert(umi_ecosystem_component_wizard_add_template(&wizard,
         &component_template) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiEcosystemComponentWizard, &wizard,
+        (umi_ecosystem_component_wizard_add_template(&wizard,
+        &component_template)));
+
     assert(umi_ecosystem_component_wizard_select(&wizard, "framework-panel") ==
         UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiEcosystemComponentWizard, &wizard,
+        (umi_ecosystem_component_wizard_select(&wizard, "framework-panel")));
+
     assert(umi_ecosystem_component_wizard_build_plan(&wizard, "risk_panel",
         "Risk Panel", "umicom_risk", "C:/work/risk", false, false,
         &plan) == UMI_STATUS_OK);

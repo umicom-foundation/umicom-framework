@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/editor/workbench/editor_close_request.h"
 #include "../../base/value_archive_internal.h"
 
@@ -69,3 +70,8 @@ static UmiStatus UmiEditorWbEditorCloseRequestArchiveValidate(const UmiEditorWbE
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_editor_wb_editor_close_request_archive_encode, umi_editor_wb_editor_close_request_archive_decode,
     UmiEditorWbEditorCloseRequest, UmiEditorWbEditorCloseRequestArchiveSchema, UmiEditorWbEditorCloseRequestArchiveBound, UmiEditorWbEditorCloseRequestArchiveWrite, UmiEditorWbEditorCloseRequestArchiveRead, UmiEditorWbEditorCloseRequestArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_editor_wb_editor_close_request_archive_decode_if_unchanged, umi_editor_wb_editor_close_request_archive_encode,
+    UmiEditorWbEditorCloseRequest, UmiEditorWbEditorCloseRequestArchiveSchema, UmiEditorWbEditorCloseRequestArchiveBound, UmiEditorWbEditorCloseRequestArchiveRead, UmiEditorWbEditorCloseRequestArchiveValidate)

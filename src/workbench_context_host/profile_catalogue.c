@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include <stdint.h>
 #include "umicom/workbench_context_host/profile_catalogue.h"
 
 #include <stdlib.h>
@@ -115,10 +116,53 @@ umi_workbench_context_host_profile_catalogue_find(
  * Provide the workbench context host profile catalogue upsert operation used by this
  * module and its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_context_host_profile_catalogue_upsert(
     UmiWorkbenchContextHostProfileCatalogue *catalogue,
     const UmiWorkbenchContextHostProfile *profile)
 {
+    UmiStatus status;
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (catalogue == NULL || profile == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_workbench_context_host_profile_validate(profile);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < catalogue->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(catalogue->items[index].profile_id, profile->profile_id) == 0) {
+            catalogue->items[index] = *profile;
+            ++catalogue->revision;
+            return UMI_STATUS_OK;
+        }
+    }
+    status = grow(catalogue);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    catalogue->items[catalogue->count++] = *profile;
+    ++catalogue->revision;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_workbench_context_host_profile_catalogue_upsert(
+    UmiWorkbenchContextHostProfileCatalogue *catalogue,
+    const UmiWorkbenchContextHostProfile *profile)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (catalogue != NULL && catalogue->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiStatus status;
     size_t index;
     /*
@@ -152,10 +196,56 @@ UmiStatus umi_workbench_context_host_profile_catalogue_upsert(
  * Remove workbench context host profile catalogue while keeping the remaining records in a
  * valid and discoverable state.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_context_host_profile_catalogue_remove(
     UmiWorkbenchContextHostProfileCatalogue *catalogue,
     const char *profile_id)
 {
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (catalogue == NULL || profile_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < catalogue->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(catalogue->items[index].profile_id, profile_id) == 0) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+            if (index + 1U < catalogue->count) {
+                memmove(
+                    &catalogue->items[index],
+                    &catalogue->items[index + 1U],
+                    (catalogue->count - index - 1U) *
+                        sizeof(catalogue->items[0]));
+            }
+            --catalogue->count;
+            memset(
+                &catalogue->items[catalogue->count],
+                0,
+                sizeof(catalogue->items[0]));
+            ++catalogue->revision;
+            return UMI_STATUS_OK;
+        }
+    }
+    return UMI_STATUS_NOT_FOUND;
+}
+#endif
+
+UmiStatus umi_workbench_context_host_profile_catalogue_remove(
+    UmiWorkbenchContextHostProfileCatalogue *catalogue,
+    const char *profile_id)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (catalogue != NULL && catalogue->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is

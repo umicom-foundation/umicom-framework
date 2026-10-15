@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/integration/fabric/saga_plan.h"
 #include <stdio.h>
 #include <string.h>
@@ -26,6 +27,9 @@ int main(void) {
     UmiFabricSagaPlan r; UmiFabricSagaStep item, found; umi_fabric_saga_plan_init(&r);
     CHECK(umi_fabric_saga_step_init(&item,"a","do","undo",true)==UMI_STATUS_OK);
     CHECK(umi_fabric_saga_plan_add(&r,&item)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFabricSagaPlan, &r,
+        (umi_fabric_saga_plan_add(&r,&item)));
+
     CHECK(umi_fabric_saga_plan_add(&r,&item)==UMI_STATUS_ALREADY_EXISTS);
     CHECK(umi_fabric_saga_plan_find(&r,item.step_id,&found)==UMI_STATUS_OK);
     CHECK(umi_fabric_saga_plan_count(&r)==1U);

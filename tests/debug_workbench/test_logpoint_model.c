@@ -137,6 +137,12 @@ UMI_TEST_VALUE_TRANSFER(UmiDebugWorkbenchLogpointModelTransferCases, UmiDebugWor
     umi_debug_workbench_logpoint_model_archive_encode, umi_debug_workbench_logpoint_model_archive_decode,
     UmiDebugWorkbenchLogpointModelTransferEqual, UmiDebugWorkbenchLogpointModelTransferTails, UmiDebugWorkbenchLogpointModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDebugWorkbenchLogpointModelConditionalArchiveCases, UmiDebugWorkbenchLogpointModel,
+    umi_debug_workbench_logpoint_model_archive_encode, umi_debug_workbench_logpoint_model_archive_decode_if_unchanged,
+    UmiDebugWorkbenchLogpointModelTransferEqual, UmiDebugWorkbenchLogpointModelTransferTails, UmiDebugWorkbenchLogpointModelTransferMalformed)
+
+
 int main(void)
 {
     UmiDebugWorkbenchLogpointModel model;
@@ -151,6 +157,7 @@ int main(void)
     UMI_TEST_CHECK(!model.enabled);
     UMI_TEST_CHECK(umi_debug_workbench_logpoint_model_valid(&model));
     if (UmiDebugWorkbenchLogpointModelTransferCases(&model) != 0) return 1;
+    if (UmiDebugWorkbenchLogpointModelConditionalArchiveCases(&model) != 0) return 1;
 
     return 0;
 }

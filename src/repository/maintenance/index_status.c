@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/repository/index_status.h"
 #include "../../base/value_archive_internal.h"
 
@@ -96,3 +97,8 @@ static UmiStatus UmiRepositoryIndexStatusArchiveValidate(const UmiRepositoryInde
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_repository_index_status_archive_encode, umi_repository_index_status_archive_decode,
     UmiRepositoryIndexStatus, UmiRepositoryIndexStatusArchiveSchema, UmiRepositoryIndexStatusArchiveBound, UmiRepositoryIndexStatusArchiveWrite, UmiRepositoryIndexStatusArchiveRead, UmiRepositoryIndexStatusArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_repository_index_status_archive_decode_if_unchanged, umi_repository_index_status_archive_encode,
+    UmiRepositoryIndexStatus, UmiRepositoryIndexStatusArchiveSchema, UmiRepositoryIndexStatusArchiveBound, UmiRepositoryIndexStatusArchiveRead, UmiRepositoryIndexStatusArchiveValidate)

@@ -12,11 +12,18 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/data/enterprise/query_join.h"
+#include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
 
 /* Initialisation centralises bounded text handling and defaults. */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_data_query_join_init(UmiDataQueryJoin *item, const char *join_id, const char *left_table, const char *right_table, const char *condition, bool outer_join) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -27,6 +34,25 @@ UmiStatus umi_data_query_join_init(UmiDataQueryJoin *item, const char *join_id, 
     UmiStatus s=umi_data_enterprise_copy_text(item->join_id,sizeof(item->join_id),join_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->left_table,sizeof(item->left_table),left_table);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->right_table,sizeof(item->right_table),right_table);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->condition,sizeof(item->condition),condition);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->outer_join=outer_join;
     return umi_data_query_join_validate(item);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_data_query_join_init_build_value(UmiDataQueryJoin *item, const char *join_id, const char *left_table, const char *right_table, const char *condition, bool outer_join) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(item, 0, sizeof(*item));
+    UmiStatus s=umi_data_enterprise_copy_text(item->join_id,sizeof(item->join_id),join_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->left_table,sizeof(item->left_table),left_table);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->right_table,sizeof(item->right_table),right_table);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->condition,sizeof(item->condition),condition);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->outer_join=outer_join;
+    return umi_data_query_join_validate(item);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_data_query_join_init, UmiDataQueryJoin, item,
+    (UmiDataQueryJoin *item, const char *join_id, const char *left_table, const char *right_table, const char *condition, bool outer_join),
+    umi_data_query_join_init_build_value(candidate, join_id, left_table, right_table, condition, outer_join))
+
 
 /* Validation prevents malformed metadata from leaking into later query/migration stages. */
 UmiStatus umi_data_query_join_validate(const UmiDataQueryJoin *item) {
@@ -94,3 +120,9 @@ static UmiStatus UmiDataQueryJoinArchiveValidate(const UmiDataQueryJoin *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_data_query_join_archive_encode, umi_data_query_join_archive_decode,
     UmiDataQueryJoin, UmiDataQueryJoinArchiveSchema, UmiDataQueryJoinArchiveBound, UmiDataQueryJoinArchiveWrite, UmiDataQueryJoinArchiveRead, UmiDataQueryJoinArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_data_query_join_archive_decode_if_unchanged, umi_data_query_join_archive_encode,
+    UmiDataQueryJoin, UmiDataQueryJoinArchiveSchema, UmiDataQueryJoinArchiveBound, UmiDataQueryJoinArchiveRead, UmiDataQueryJoinArchiveValidate)

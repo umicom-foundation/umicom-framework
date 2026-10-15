@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/appearance/scale_factor.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -85,3 +86,8 @@ static UmiStatus UmiAppearanceScaleFactorArchiveValidate(const UmiAppearanceScal
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_appearance_scale_factor_archive_encode, umi_appearance_scale_factor_archive_decode,
     UmiAppearanceScaleFactor, UmiAppearanceScaleFactorArchiveSchema, UmiAppearanceScaleFactorArchiveBound, UmiAppearanceScaleFactorArchiveWrite, UmiAppearanceScaleFactorArchiveRead, UmiAppearanceScaleFactorArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_appearance_scale_factor_archive_decode_if_unchanged, umi_appearance_scale_factor_archive_encode,
+    UmiAppearanceScaleFactor, UmiAppearanceScaleFactorArchiveSchema, UmiAppearanceScaleFactorArchiveBound, UmiAppearanceScaleFactorArchiveRead, UmiAppearanceScaleFactorArchiveValidate)

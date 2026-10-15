@@ -57,6 +57,13 @@ UMI_TEST_VALUE_TRANSFER(UmiDesignDialogSpecTransferCases, UmiDesignDialogSpec,
     umi_design_dialog_spec_archive_encode, umi_design_dialog_spec_archive_decode,
     UmiDesignDialogSpecTransferEqual, UmiDesignDialogSpecTransferTails, UmiDesignDialogSpecTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignDialogSpecConditionalArchiveCases, UmiDesignDialogSpec,
+    umi_design_dialog_spec_archive_encode, umi_design_dialog_spec_archive_decode_if_unchanged,
+    UmiDesignDialogSpecTransferEqual, UmiDesignDialogSpecTransferTails, UmiDesignDialogSpecTransferMalformed)
+
+
 int main(void){UmiDesignDialogSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_dialog_spec_init(&s,UMI_DESIGN_SIZE_MEDIUM,2U,1,1)!=UMI_STATUS_OK)return 1;
     if (UmiDesignDialogSpecTransferCases(&s) != 0) return 1;
+    if (UmiDesignDialogSpecConditionalArchiveCases(&s) != 0) return 1;
 return s.modal?0:2;}

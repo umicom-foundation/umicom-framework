@@ -89,6 +89,13 @@ UMI_TEST_VALUE_TRANSFER(UmiTerminalRemoteRemoteToolchainTransferCases, UmiTermin
     umi_terminal_remote_remote_toolchain_archive_encode, umi_terminal_remote_remote_toolchain_archive_decode,
     UmiTerminalRemoteRemoteToolchainTransferEqual, UmiTerminalRemoteRemoteToolchainTransferTails, UmiTerminalRemoteRemoteToolchainTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTerminalRemoteRemoteToolchainConditionalArchiveCases, UmiTerminalRemoteRemoteToolchain,
+    umi_terminal_remote_remote_toolchain_archive_encode, umi_terminal_remote_remote_toolchain_archive_decode_if_unchanged,
+    UmiTerminalRemoteRemoteToolchainTransferEqual, UmiTerminalRemoteRemoteToolchainTransferTails, UmiTerminalRemoteRemoteToolchainTransferMalformed)
+
+
 int main(void) { UmiTerminalRemoteRemoteToolchain v; umi_terminal_remote_remote_toolchain_init(&v,"left","right"); /* Apply this operation only while the related capability or state is available. */ if(!umi_terminal_remote_remote_toolchain_valid(&v)) return 1;
     if (UmiTerminalRemoteRemoteToolchainTransferCases(&v) != 0) return 1;
+    if (UmiTerminalRemoteRemoteToolchainConditionalArchiveCases(&v) != 0) return 1;
  /* Apply this operation only while the related capability or state is available. */ if(umi_terminal_remote_remote_toolchain_fingerprint(&v)==0U) return 2; umi_terminal_remote_remote_toolchain_init(&v,"same","same"); return umi_terminal_remote_remote_toolchain_valid(&v)?3:0; }

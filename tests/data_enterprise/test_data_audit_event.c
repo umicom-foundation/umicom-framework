@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/data/enterprise/data_audit_event.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -126,10 +127,84 @@ UMI_TEST_VALUE_TRANSFER(UmiDataAuditEventTransferCases, UmiDataAuditEvent,
     umi_data_data_audit_event_archive_encode, umi_data_data_audit_event_archive_decode,
     UmiDataAuditEventTransferEqual, UmiDataAuditEventTransferTails, UmiDataAuditEventTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataAuditEventConditionalArchiveCases, UmiDataAuditEvent,
+    umi_data_data_audit_event_archive_encode, umi_data_data_audit_event_archive_decode_if_unchanged,
+    UmiDataAuditEventTransferEqual, UmiDataAuditEventTransferTails, UmiDataAuditEventTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted data audit event value. */
+static int UmiDataAuditEventConstructionCases(void)
+{
+    UmiDataAuditEvent *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_data_data_audit_event_init(value, "e1", "op1", "user", "query", 10U, UMI_STATUS_OK) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->event_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_data_audit_event_init(value, oversized, "op1", "user", "query", 10U, UMI_STATUS_OK) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_data_audit_event_init(value, value->event_id, "op1", "user", "query", 10U, UMI_STATUS_OK) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->event_id, "e1") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->operation_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_data_audit_event_init(value, "e1", oversized, "user", "query", 10U, UMI_STATUS_OK) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_data_audit_event_init(value, "e1", value->operation_id, "user", "query", 10U, UMI_STATUS_OK) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->operation_id, "op1") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->principal_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_data_audit_event_init(value, "e1", "op1", oversized, "query", 10U, UMI_STATUS_OK) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_data_audit_event_init(value, "e1", "op1", value->principal_id, "query", 10U, UMI_STATUS_OK) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->principal_id, "user") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->action) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_data_audit_event_init(value, "e1", "op1", "user", oversized, 10U, UMI_STATUS_OK) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_data_audit_event_init(value, "e1", "op1", "user", value->action, 10U, UMI_STATUS_OK) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->action, "query") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiDataAuditEventConstructionCases() != 0) return 1;
+
     UmiDataAuditEvent item;
     CHECK(umi_data_data_audit_event_init(&item,"e1","op1","user","query",10U,UMI_STATUS_OK) == UMI_STATUS_OK);
     if (UmiDataAuditEventTransferCases(&item) != 0) return 1;
+    if (UmiDataAuditEventConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.outcome==UMI_STATUS_OK);
     return 0;

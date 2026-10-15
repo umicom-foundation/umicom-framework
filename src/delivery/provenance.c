@@ -17,7 +17,9 @@
  * Provenance links a package back to the exact source and build environment that created it.
  */
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/delivery/provenance.h"
+#include "../base/value_construction_internal.h"
 #include "../base/value_archive_internal.h"
 #include "delivery_internal.h"
 #include <string.h>
@@ -26,6 +28,11 @@
  * Initialise provenance from caller-provided values so later operations receive a known
  * state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_provenance_init(UmiProvenance *provenance,
                               const char *source_revision,
                               const char *builder_id,
@@ -52,6 +59,41 @@ UmiStatus umi_provenance_init(UmiProvenance *provenance,
     }
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_provenance_init_build_value(UmiProvenance *provenance,
+                              const char *source_revision,
+                              const char *builder_id,
+                              const char *build_preset)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (provenance == NULL || source_revision == NULL || builder_id == NULL ||
+        build_preset == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(provenance, 0, sizeof(*provenance));
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (umi_delivery_copy_text(provenance->source_revision,
+                               sizeof(provenance->source_revision),
+                               source_revision) != UMI_STATUS_OK ||
+        umi_delivery_copy_text(provenance->builder_id,
+                               sizeof(provenance->builder_id),
+                               builder_id) != UMI_STATUS_OK ||
+        umi_delivery_copy_text(provenance->build_preset,
+                               sizeof(provenance->build_preset),
+                               build_preset) != UMI_STATUS_OK) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_provenance_init, UmiProvenance, provenance,
+    (UmiProvenance *provenance, const char *source_revision, const char *builder_id, const char *build_preset),
+    umi_provenance_init_build_value(candidate, source_revision, builder_id, build_preset))
+
 
 /* Check that provenance satisfies its contract before another service relies on it. */
 UmiStatus umi_provenance_validate(const UmiProvenance *provenance)
@@ -120,3 +162,8 @@ static UmiStatus UmiProvenanceArchiveValidate(const UmiProvenance *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_provenance_archive_encode, umi_provenance_archive_decode,
     UmiProvenance, UmiProvenanceArchiveSchema, UmiProvenanceArchiveBound, UmiProvenanceArchiveWrite, UmiProvenanceArchiveRead, UmiProvenanceArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_provenance_archive_decode_if_unchanged, umi_provenance_archive_encode,
+    UmiProvenance, UmiProvenanceArchiveSchema, UmiProvenanceArchiveBound, UmiProvenanceArchiveRead, UmiProvenanceArchiveValidate)

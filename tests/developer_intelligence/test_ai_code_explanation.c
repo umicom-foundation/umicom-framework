@@ -17,6 +17,10 @@
 
 #include "umicom/developer_intelligence/ai/code_explanation.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(UmiDeveloperIntelligenceEvaluateAiCodeExplanationBatchCases, UmiDeveloperIntelligenceEvaluateAiCodeExplanation,
+    UmiDeveloperIntelligenceEvaluateAiCodeExplanationBatch, UmiDeveloperIntelligenceInput, UmiDeveloperIntelligenceSnapshot, lexicalScore)
+
 int main(void)
 {
     UmiDeveloperIntelligenceInput input;
@@ -44,6 +48,7 @@ int main(void)
     input.active = 1;
     input.revision = 42U;
 
+    if (UmiDeveloperIntelligenceEvaluateAiCodeExplanationBatchCases(&input) != 0) return 1;
     assert(UmiDeveloperIntelligenceEvaluateAiCodeExplanation(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "ai.code-explanation") == 0);
     assert(snapshot.revision == 42U);

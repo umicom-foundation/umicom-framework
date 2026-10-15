@@ -120,6 +120,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadUndoCommandTransferCases, UmiRadUndoCommand,
     umi_rad_undo_command_archive_encode, umi_rad_undo_command_archive_decode,
     UmiRadUndoCommandTransferEqual, UmiRadUndoCommandTransferTails, UmiRadUndoCommandTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadUndoCommandConditionalArchiveCases, UmiRadUndoCommand,
+    umi_rad_undo_command_archive_encode, umi_rad_undo_command_archive_decode_if_unchanged,
+    UmiRadUndoCommandTransferEqual, UmiRadUndoCommandTransferTails, UmiRadUndoCommandTransferMalformed)
+
+
 int main(void){UmiRadUndoCommand item;CHECK(umi_rad_undo_command_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_undo_command_is_valid(&item));
     if (UmiRadUndoCommandTransferCases(&item) != 0) return 1;
+    if (UmiRadUndoCommandConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

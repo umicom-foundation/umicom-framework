@@ -12,11 +12,18 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/data/enterprise/query_projection.h"
+#include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
 
 /* Initialisation centralises bounded text handling and defaults. */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_data_query_projection_init(UmiDataQueryProjection *item, const char *projection_id, const char *field, const char *alias) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -27,6 +34,25 @@ UmiStatus umi_data_query_projection_init(UmiDataQueryProjection *item, const cha
     UmiStatus s=umi_data_enterprise_copy_text(item->projection_id,sizeof(item->projection_id),projection_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->field,sizeof(item->field),field);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->alias,sizeof(item->alias),alias);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->hidden=false;
     return umi_data_query_projection_validate(item);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_data_query_projection_init_build_value(UmiDataQueryProjection *item, const char *projection_id, const char *field, const char *alias) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(item, 0, sizeof(*item));
+    UmiStatus s=umi_data_enterprise_copy_text(item->projection_id,sizeof(item->projection_id),projection_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->field,sizeof(item->field),field);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->alias,sizeof(item->alias),alias);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->hidden=false;
+    return umi_data_query_projection_validate(item);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_data_query_projection_init, UmiDataQueryProjection, item,
+    (UmiDataQueryProjection *item, const char *projection_id, const char *field, const char *alias),
+    umi_data_query_projection_init_build_value(candidate, projection_id, field, alias))
+
 
 /* Validation prevents malformed metadata from leaking into later query/migration stages. */
 UmiStatus umi_data_query_projection_validate(const UmiDataQueryProjection *item) {
@@ -89,3 +115,9 @@ static UmiStatus UmiDataQueryProjectionArchiveValidate(const UmiDataQueryProject
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_data_query_projection_archive_encode, umi_data_query_projection_archive_decode,
     UmiDataQueryProjection, UmiDataQueryProjectionArchiveSchema, UmiDataQueryProjectionArchiveBound, UmiDataQueryProjectionArchiveWrite, UmiDataQueryProjectionArchiveRead, UmiDataQueryProjectionArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_data_query_projection_archive_decode_if_unchanged, umi_data_query_projection_archive_encode,
+    UmiDataQueryProjection, UmiDataQueryProjectionArchiveSchema, UmiDataQueryProjectionArchiveBound, UmiDataQueryProjectionArchiveRead, UmiDataQueryProjectionArchiveValidate)

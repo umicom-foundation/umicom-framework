@@ -15,12 +15,58 @@
     fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, #expression); return 1; \
 } } while (0)
 
+#ifdef ARCHIVE_CONDITIONAL_DECODE
+#include "conditional_cases.h"
+
+/* This fixture damages the public identity without reading outside its array. */
+static void ArchiveConditionalMalformed(ARCHIVE_TYPE *value)
+{
+    memset(value->id, 'x', sizeof(value->id));
+}
+UMI_TEST_CONDITIONAL_ARCHIVE(ArchiveConditionalCases, ARCHIVE_TYPE,
+    ARCHIVE_ENCODE, ARCHIVE_CONDITIONAL_DECODE, ARCHIVE_EQUAL,
+    ArchiveFillUnusedText, ArchiveConditionalMalformed)
+
+/* A changed revision is part of encoded evidence. It must refuse a delayed
+ * import, then allow the same bytes when the caller reviews the newer state. */
+static int ArchiveConditionalRevisionCases(const ARCHIVE_TYPE *sample)
+{
+    ARCHIVE_TYPE *value = malloc(sizeof(*value)), *expected = malloc(sizeof(*expected));
+    unsigned char *before = malloc(sizeof(*value)), *bytes = NULL;
+    size_t size = 0U, written = 0U;
+    int result = 1;
+    if (value == NULL || expected == NULL || before == NULL) goto construction_cleanup;
+    memcpy(value, sample, sizeof(*value));
+    memcpy(expected, sample, sizeof(*expected));
+    UMI_CONSTRUCTION_REQUIRE(sample->revision < UINT64_MAX);
+    ++value->revision;
+    memcpy(before, value, sizeof(*value));
+    UMI_CONSTRUCTION_REQUIRE(ARCHIVE_ENCODE(sample, NULL, 0U, &size) == UMI_STATUS_OK);
+    bytes = malloc(size);
+    if (bytes == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(ARCHIVE_ENCODE(sample, bytes, size, &written) == UMI_STATUS_OK);
+    UMI_CONSTRUCTION_REQUIRE(ARCHIVE_CONDITIONAL_DECODE(bytes, size, expected, value) == UMI_STATUS_INVALID_STATE);
+    UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+    memcpy(expected, value, sizeof(*expected));
+    UMI_CONSTRUCTION_REQUIRE(ARCHIVE_CONDITIONAL_DECODE(bytes, size, expected, value) == UMI_STATUS_OK);
+    UMI_CONSTRUCTION_REQUIRE(ARCHIVE_EQUAL(sample, value));
+    result = 0;
+construction_cleanup:
+    free(bytes); free(before); free(expected); free(value);
+    return result;
+}
+#endif
+
 /* Expected values come from the domain's member comparator, not a second
  * decoder. Byte comparisons are used only for deterministic output or for
  * the same destination object after an operation promises not to touch it. */
 static int ArchiveRecordCases(void)
 {
     ARCHIVE_TYPE value = ArchiveSample(), output = ArchiveSample();
+#ifdef ARCHIVE_CONDITIONAL_DECODE
+    if (ArchiveConditionalCases(&value) != 0 ||
+        ArchiveConditionalRevisionCases(&value) != 0) return 1;
+#endif
     size_t size = 0U, written = 99U;
     unsigned char original[sizeof(value)], before[sizeof(output)];
     memcpy(original, &value, sizeof(value));

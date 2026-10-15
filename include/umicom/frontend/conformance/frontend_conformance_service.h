@@ -40,6 +40,9 @@ void umi_fc_frontend_conformance_service_init(UmiFcFrontendConformanceService *s
  * Add fc frontend conformance service only after its inputs and available capacity have
  * been checked.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_fc_frontend_conformance_service_register(UmiFcFrontendConformanceService *service,const UmiFcRendererProfile *profile);
 /**
  * Provide the fc frontend conformance service evaluate operation used by this module and

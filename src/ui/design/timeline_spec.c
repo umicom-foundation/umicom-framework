@@ -17,6 +17,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/design/timeline_spec.h"
 #include "../../base/value_archive_internal.h"
 
@@ -84,3 +85,8 @@ static UmiStatus UmiDesignTimelineSpecArchiveValidate(const UmiDesignTimelineSpe
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_design_timeline_spec_archive_encode, umi_design_timeline_spec_archive_decode,
     UmiDesignTimelineSpec, UmiDesignTimelineSpecArchiveSchema, UmiDesignTimelineSpecArchiveBound, UmiDesignTimelineSpecArchiveWrite, UmiDesignTimelineSpecArchiveRead, UmiDesignTimelineSpecArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_design_timeline_spec_archive_decode_if_unchanged, umi_design_timeline_spec_archive_encode,
+    UmiDesignTimelineSpec, UmiDesignTimelineSpecArchiveSchema, UmiDesignTimelineSpecArchiveBound, UmiDesignTimelineSpecArchiveRead, UmiDesignTimelineSpecArchiveValidate)

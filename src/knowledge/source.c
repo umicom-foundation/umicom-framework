@@ -10,6 +10,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/knowledge/source.h"
+#include "../base/value_construction_internal.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -31,6 +32,11 @@ static int copy_text(char *destination, size_t capacity, const char *source)
  * Initialise knowledge source from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_knowledge_source_init(UmiKnowledgeSource *source,
                                     const char *source_id,
                                     const char *collection_id,
@@ -65,6 +71,49 @@ UmiStatus umi_knowledge_source_init(UmiKnowledgeSource *source,
     source->active = 1;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_knowledge_source_init_build_value(UmiKnowledgeSource *source,
+                                    const char *source_id,
+                                    const char *collection_id,
+                                    const char *title,
+                                    const char *uri,
+                                    UmiKnowledgeSourceKind kind)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (source == NULL || source_id == NULL || source_id[0] == '\0' ||
+        collection_id == NULL || collection_id[0] == '\0' ||
+        title == NULL || title[0] == '\0' || uri == NULL ||
+        uri[0] == '\0' || kind < UMI_KNOWLEDGE_SOURCE_DOCUMENT ||
+        kind > UMI_KNOWLEDGE_SOURCE_GENERATED) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    (void)memset(source, 0, sizeof(*source));
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (!copy_text(source->source_id, sizeof(source->source_id), source_id) ||
+        !copy_text(source->collection_id, sizeof(source->collection_id),
+                   collection_id) ||
+        !copy_text(source->title, sizeof(source->title), title) ||
+        !copy_text(source->uri, sizeof(source->uri), uri) ||
+        !copy_text(source->language, sizeof(source->language), "und") ||
+        !copy_text(source->media_type, sizeof(source->media_type),
+                   "text/plain")) return UMI_STATUS_CAPACITY_EXCEEDED;
+    source->kind = kind;
+    source->classification = UMI_AI_DATA_INTERNAL;
+    source->revision = 1U;
+    source->active = 1;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_knowledge_source_init, UmiKnowledgeSource, source,
+    (UmiKnowledgeSource *source, const char *source_id, const char *collection_id, const char *title, const char *uri, UmiKnowledgeSourceKind kind),
+    umi_knowledge_source_init_build_value(candidate, source_id, collection_id, title, uri, kind))
+
 
 /*
  * Provide the knowledge source refresh decision operation used by this module and its

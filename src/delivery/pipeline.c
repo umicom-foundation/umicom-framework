@@ -18,6 +18,7 @@
  */
 
 #include "umicom/delivery/pipeline.h"
+#include "../base/value_construction_internal.h"
 #include "delivery_internal.h"
 #include <string.h>
 
@@ -25,6 +26,11 @@
  * Initialise delivery pipeline from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_delivery_pipeline_init(UmiDeliveryPipeline *pipeline,
                                      const char *pipeline_id)
 {
@@ -38,6 +44,28 @@ UmiStatus umi_delivery_pipeline_init(UmiDeliveryPipeline *pipeline,
                                   sizeof(pipeline->pipeline_id),
                                   pipeline_id);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_delivery_pipeline_init_build_value(UmiDeliveryPipeline *pipeline,
+                                     const char *pipeline_id)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (pipeline == NULL || pipeline_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(pipeline, 0, sizeof(*pipeline));
+    return umi_delivery_copy_text(pipeline->pipeline_id,
+                                  sizeof(pipeline->pipeline_id),
+                                  pipeline_id);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_delivery_pipeline_init, UmiDeliveryPipeline, pipeline,
+    (UmiDeliveryPipeline *pipeline, const char *pipeline_id),
+    umi_delivery_pipeline_init_build_value(candidate, pipeline_id))
+
 
 /*
  * Provide the delivery pipeline add gate operation used by this module and its client

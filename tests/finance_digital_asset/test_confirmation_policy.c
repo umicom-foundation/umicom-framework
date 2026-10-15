@@ -73,12 +73,19 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalConfirmationPolicyTransferCases, UmiDigitalCon
     umi_digital_asset_confirmation_policy_archive_encode, umi_digital_asset_confirmation_policy_archive_decode,
     UmiDigitalConfirmationPolicyTransferEqual, UmiDigitalConfirmationPolicyTransferTails, UmiDigitalConfirmationPolicyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalConfirmationPolicyConditionalArchiveCases, UmiDigitalConfirmationPolicy,
+    umi_digital_asset_confirmation_policy_archive_encode, umi_digital_asset_confirmation_policy_archive_decode_if_unchanged,
+    UmiDigitalConfirmationPolicyTransferEqual, UmiDigitalConfirmationPolicyTransferTails, UmiDigitalConfirmationPolicyTransferMalformed)
+
+
 int main(void)
 {
     UmiDigitalConfirmationPolicy value;
     CHECK(umi_digital_asset_confirmation_policy_init(&value, "BTC", 1U, 6U) == UMI_STATUS_OK);
     CHECK(umi_digital_asset_confirmation_policy_valid(&value));
     if (UmiDigitalConfirmationPolicyTransferCases(&value) != 0) return 1;
+    if (UmiDigitalConfirmationPolicyConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

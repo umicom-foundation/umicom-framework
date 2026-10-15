@@ -13,6 +13,8 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <math.h>
+#include <string.h>
 #include "developer_intelligence_internal.h"
 
 #include <stdio.h>
@@ -44,6 +46,10 @@ static double WeightedScore(
     return ClampPercent(score / weight);
 }
 
+/* The direct writer is retained for review. Its calculation now runs on a
+ * private candidate so invalid observations cannot erase the previous result.
+ * The wrapper also rejects non-finite signals before domain arithmetic. */
+#if 0
 UmiStatus UmiDeveloperIntelligenceEvaluatePolicy(
     const UmiDeveloperIntelligencePolicy *policy,
     const UmiDeveloperIntelligenceInput *input,
@@ -197,4 +203,195 @@ UmiStatus UmiDeveloperIntelligenceEvaluatePolicy(
         outSnapshot->ready = 0;
     }
     return UmiDeveloperIntelligenceSnapshotValidate(outSnapshot);
+}
+#endif
+
+static UmiStatus UmiDeveloperIntelligenceEvaluatePolicyBuildCandidate(
+    const UmiDeveloperIntelligencePolicy *policy,
+    const UmiDeveloperIntelligenceInput *input,
+    UmiDeveloperIntelligenceSnapshot *outSnapshot)
+{
+    int sourceReady;
+    int trustReady;
+    int riskAcceptable;
+
+    if (policy == NULL || policy->id == NULL || policy->label == NULL ||
+        input == NULL || outSnapshot == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    UmiDeveloperIntelligenceSnapshotInit(outSnapshot);
+    (void)snprintf(outSnapshot->id, sizeof(outSnapshot->id), "%s", policy->id);
+    (void)snprintf(
+        outSnapshot->label,
+        sizeof(outSnapshot->label),
+        "%s",
+        input->label != NULL && input->label[0] != '\0'
+            ? input->label
+            : policy->label);
+
+    outSnapshot->score = WeightedScore(policy, input);
+    outSnapshot->confidence = ClampPercent(input->confidence);
+    outSnapshot->risk = ClampPercent(input->risk);
+    outSnapshot->delta = outSnapshot->score - input->baselineScore;
+    outSnapshot->matched = input->matched;
+    outSnapshot->total = input->total;
+    outSnapshot->conflicts = input->conflicts;
+    outSnapshot->citations = input->citations;
+    outSnapshot->sourceCount = input->sourceCount;
+    outSnapshot->budgetRemaining =
+        input->budgetUnits > input->usedUnits
+            ? input->budgetUnits - input->usedUnits
+            : 0U;
+    outSnapshot->revision = input->revision;
+    outSnapshot->localPreferred =
+        policy->preferLocal && input->localAvailable;
+    outSnapshot->remoteUsable =
+        input->remoteAvailable && input->remoteAllowed;
+
+    sourceReady =
+        policy->requiredSources == 0U ||
+        input->sourceCount >= policy->requiredSources;
+    trustReady = !policy->requireTrust || input->trusted;
+    riskAcceptable = outSnapshot->risk <= policy->maximumRisk;
+    outSnapshot->blocked = !trustReady;
+
+    switch (policy->kind) {
+    case UMI_DEVELOPER_INTELLIGENCE_SCORE:
+        outSnapshot->ready =
+            sourceReady && trustReady && riskAcceptable &&
+            outSnapshot->score >= policy->minimumScore;
+        outSnapshot->attention = !outSnapshot->ready;
+        break;
+
+    case UMI_DEVELOPER_INTELLIGENCE_ROUTE:
+        outSnapshot->ready =
+            trustReady && riskAcceptable &&
+            (input->localAvailable || outSnapshot->remoteUsable) &&
+            outSnapshot->score >= policy->minimumScore;
+        outSnapshot->attention = !outSnapshot->ready;
+        break;
+
+    case UMI_DEVELOPER_INTELLIGENCE_BUDGET:
+        outSnapshot->ready =
+            trustReady &&
+            (input->budgetUnits == 0U || input->usedUnits <= input->budgetUnits);
+        outSnapshot->attention =
+            input->budgetUnits > 0U && input->usedUnits > input->budgetUnits;
+        break;
+
+    case UMI_DEVELOPER_INTELLIGENCE_FRESHNESS:
+        outSnapshot->ready =
+            sourceReady && trustReady &&
+            outSnapshot->score >= policy->minimumScore &&
+            input->contextScore >= policy->minimumScore;
+        outSnapshot->attention = !outSnapshot->ready;
+        break;
+
+    case UMI_DEVELOPER_INTELLIGENCE_CONFLICT:
+        outSnapshot->ready =
+            trustReady && input->conflicts == 0U;
+        outSnapshot->attention = input->conflicts > 0U;
+        break;
+
+    case UMI_DEVELOPER_INTELLIGENCE_APPROVAL:
+        outSnapshot->approvalRequired =
+            (!riskAcceptable || input->conflicts > 0U) && !input->approved;
+        outSnapshot->ready =
+            sourceReady && trustReady &&
+            outSnapshot->score >= policy->minimumScore &&
+            !outSnapshot->approvalRequired &&
+            (riskAcceptable || input->approved);
+        outSnapshot->attention = outSnapshot->approvalRequired;
+        break;
+
+    case UMI_DEVELOPER_INTELLIGENCE_TRUST:
+        outSnapshot->approvalRequired =
+            input->risk > policy->maximumRisk && !input->approved;
+        outSnapshot->ready =
+            trustReady && !outSnapshot->approvalRequired;
+        outSnapshot->attention = !outSnapshot->ready;
+        break;
+
+    case UMI_DEVELOPER_INTELLIGENCE_RETRIEVAL:
+        outSnapshot->ready =
+            sourceReady && trustReady &&
+            input->matched > 0U &&
+            outSnapshot->score >= policy->minimumScore;
+        outSnapshot->attention = !outSnapshot->ready;
+        break;
+
+    case UMI_DEVELOPER_INTELLIGENCE_CITATION:
+        outSnapshot->ready =
+            sourceReady && trustReady &&
+            input->citations > 0U &&
+            input->citations <= input->sourceCount &&
+            outSnapshot->score >= policy->minimumScore;
+        outSnapshot->attention = !outSnapshot->ready;
+        break;
+
+    case UMI_DEVELOPER_INTELLIGENCE_RISK:
+        outSnapshot->approvalRequired =
+            !riskAcceptable && !input->approved;
+        outSnapshot->ready =
+            trustReady && !outSnapshot->approvalRequired &&
+            outSnapshot->score >= policy->minimumScore;
+        outSnapshot->attention = outSnapshot->approvalRequired;
+        break;
+
+    case UMI_DEVELOPER_INTELLIGENCE_MASTERY: {
+        double evidence = input->total > 0U
+            ? ((double)input->matched / (double)input->total) * 100.0
+            : 0.0;
+        if (evidence > outSnapshot->score) outSnapshot->score = ClampPercent(evidence);
+        outSnapshot->ready =
+            sourceReady && trustReady &&
+            outSnapshot->score >= policy->minimumScore;
+        outSnapshot->attention = !outSnapshot->ready;
+        break;
+    }
+
+    default:
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (outSnapshot->approvalRequired) {
+        outSnapshot->ready = 0;
+    }
+    return UmiDeveloperIntelligenceSnapshotValidate(outSnapshot);
+}
+/* These bounded value snapshots contain no owned resources. Keeping the result
+ * separate also permits input labels to borrow the previous output's storage. */
+UmiStatus UmiDeveloperIntelligenceEvaluatePolicy(
+    const UmiDeveloperIntelligencePolicy *policy,
+    const UmiDeveloperIntelligenceInput *input,
+    UmiDeveloperIntelligenceSnapshot *outSnapshot)
+{
+    if (policy == NULL || input == NULL || outSnapshot == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (!isfinite(input->lexicalScore) ||
+        !isfinite(input->semanticScore) ||
+        !isfinite(input->contextScore) ||
+        !isfinite(input->confidence) ||
+        !isfinite(input->risk) ||
+        !isfinite(input->baselineScore))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (input->label != NULL) {
+        size_t length = 0U;
+        while (length < sizeof(outSnapshot->label) && input->label[length] != '\0') ++length;
+        if (length == sizeof(outSnapshot->label)) return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    UmiDeveloperIntelligenceSnapshot candidate;
+    static_assert(sizeof(candidate) <= 4096U, "Use heap staging when extending this snapshot.");
+    UmiStatus status = UmiDeveloperIntelligenceEvaluatePolicyBuildCandidate(policy, input, &candidate);
+    if (status != UMI_STATUS_OK) return status;
+    /* Finite inputs can still overflow a derived calculation. Refuse that
+     * evidence instead of publishing an infinite balance, score or ratio. */
+    if (!isfinite(candidate.score) ||
+        !isfinite(candidate.confidence) ||
+        !isfinite(candidate.risk) ||
+        !isfinite(candidate.delta))
+        return UMI_STATUS_INVALID_STATE;
+    memcpy(outSnapshot, &candidate, sizeof(candidate));
+    return UMI_STATUS_OK;
 }

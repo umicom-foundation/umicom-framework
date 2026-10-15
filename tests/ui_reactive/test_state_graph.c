@@ -52,6 +52,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveStateGraphTransferCases, UmiUiReactiveState
     umi_ui_reactive_state_graph_archive_encode, umi_ui_reactive_state_graph_archive_decode,
     UmiUiReactiveStateGraphTransferEqual, UmiUiReactiveStateGraphTransferTails, UmiUiReactiveStateGraphTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveStateGraphConditionalArchiveCases, UmiUiReactiveStateGraph,
+    umi_ui_reactive_state_graph_archive_encode, umi_ui_reactive_state_graph_archive_decode_if_unchanged,
+    UmiUiReactiveStateGraphTransferEqual, UmiUiReactiveStateGraphTransferTails, UmiUiReactiveStateGraphTransferMalformed)
+
+
 int main(void) { UmiUiReactiveStateGraph item; umi_ui_reactive_state_graph_init(&item);
     /* Nonzero fields expose swapped or omitted values in a saved record.
      * The original initialized fixture remains available for its own checks. */
@@ -62,4 +68,5 @@ int main(void) { UmiUiReactiveStateGraph item; umi_ui_reactive_state_graph_init(
     populated.acyclic = true;
     populated.revision = (uint64_t)6;
     if (UmiUiReactiveStateGraphTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveStateGraphConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_state_graph_valid(&item) ? 0 : 1; }

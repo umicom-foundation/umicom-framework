@@ -86,6 +86,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadFormTemplateTransferCases, UmiRadFormTemplate,
     umi_rad_form_template_archive_encode, umi_rad_form_template_archive_decode,
     UmiRadFormTemplateTransferEqual, UmiRadFormTemplateTransferTails, UmiRadFormTemplateTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadFormTemplateConditionalArchiveCases, UmiRadFormTemplate,
+    umi_rad_form_template_archive_encode, umi_rad_form_template_archive_decode_if_unchanged,
+    UmiRadFormTemplateTransferEqual, UmiRadFormTemplateTransferTails, UmiRadFormTemplateTransferMalformed)
+
+
 int main(void){UmiRadFormTemplate item;CHECK(umi_rad_form_template_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_form_template_is_valid(&item));
     if (UmiRadFormTemplateTransferCases(&item) != 0) return 1;
+    if (UmiRadFormTemplateConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

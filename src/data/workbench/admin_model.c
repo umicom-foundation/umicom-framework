@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/data/workbench/admin_model.h"
 
 #include <string.h>
@@ -37,11 +38,55 @@ void umi_data_admin_model_init(UmiDataAdminModel *model)
  * Provide the data admin model refresh operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_data_admin_model_refresh(
     UmiDataAdminModel *model,
     const UmiDataServer *server,
     const UmiDataPlatformService *service)
 {
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (model == NULL || server == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_data_server_snapshot(server, &model->server);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    model->transaction_active = model->server.transaction_active;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (service != NULL) {
+        model->health = service->health;
+        model->queued_operations = service->queue.count;
+        model->service_started = service->started;
+        model->maintenance_mode = service->maintenance_mode;
+        model->healthy = service->started && !service->maintenance_mode &&
+            service->health.overall_state == UMI_DATA_ENTERPRISE_READY;
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
+        model->health.overall_state = UMI_DATA_ENTERPRISE_UNKNOWN;
+        model->healthy = model->server.last_error[0] == '\0';
+    }
+    model->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_data_admin_model_refresh(
+    UmiDataAdminModel *model,
+    const UmiDataServer *server,
+    const UmiDataPlatformService *service)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (model != NULL && model->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiStatus status;
     /*
      * Protect caller-owned memory by checking that required state is available before it is

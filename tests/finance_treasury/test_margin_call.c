@@ -68,11 +68,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryMarginCallTransferCases, UmiTreasuryMarginCal
     umi_treasury_margin_call_archive_encode, umi_treasury_margin_call_archive_decode,
     UmiTreasuryMarginCallTransferEqual, UmiTreasuryMarginCallTransferTails, UmiTreasuryMarginCallTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryMarginCallConditionalArchiveCases, UmiTreasuryMarginCall,
+    umi_treasury_margin_call_archive_encode, umi_treasury_margin_call_archive_decode_if_unchanged,
+    UmiTreasuryMarginCallTransferEqual, UmiTreasuryMarginCallTransferTails, UmiTreasuryMarginCallTransferMalformed)
+
+
 int main(void) {
     UmiTreasuryMarginCall v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_margin_call_init(&v, "mc", 1000, 900, UMI_TREASURY_MARGIN_AGREED) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryMarginCallTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryMarginCallConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if(umi_treasury_margin_call_unagreed_minor(&v)!=100)return 2;

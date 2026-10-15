@@ -75,9 +75,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrPlatformDescriptorTransferCases, UmiDrPlatformDescr
     umi_dr_platform_descriptor_archive_encode, umi_dr_platform_descriptor_archive_decode,
     UmiDrPlatformDescriptorTransferEqual, UmiDrPlatformDescriptorTransferTails, UmiDrPlatformDescriptorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrPlatformDescriptorConditionalArchiveCases, UmiDrPlatformDescriptor,
+    umi_dr_platform_descriptor_archive_encode, umi_dr_platform_descriptor_archive_decode_if_unchanged,
+    UmiDrPlatformDescriptorTransferEqual, UmiDrPlatformDescriptorTransferTails, UmiDrPlatformDescriptorTransferMalformed)
+
+
 int main(void) {
     UmiDrPlatformDescriptor value; umi_dr_platform_descriptor_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"linux") == UMI_STATUS_OK); value.platform=UMI_DR_PLATFORM_LINUX; CHECK(umi_dr_platform_descriptor_valid(&value));
     if (UmiDrPlatformDescriptorTransferCases(&value) != 0) return 1;
+    if (UmiDrPlatformDescriptorConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_platform_descriptor_fingerprint(&value) != 0U);
     return 0;
 }

@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiTestWorkspaceProfileTransferCases, UmiTestWorkspacePr
     umi_test_workspace_profile_archive_encode, umi_test_workspace_profile_archive_decode,
     UmiTestWorkspaceProfileTransferEqual, UmiTestWorkspaceProfileTransferTails, UmiTestWorkspaceProfileTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestWorkspaceProfileConditionalArchiveCases, UmiTestWorkspaceProfile,
+    umi_test_workspace_profile_archive_encode, umi_test_workspace_profile_archive_decode_if_unchanged,
+    UmiTestWorkspaceProfileTransferEqual, UmiTestWorkspaceProfileTransferTails, UmiTestWorkspaceProfileTransferMalformed)
+
+
 int main(void){UmiTestWorkspaceProfile m;assert(umi_test_workspace_profile_init(&m,"test_workspace_profile","Test Workspace Profile")==UMI_STATUS_OK);assert(umi_test_workspace_profile_set_active(&m,true)==UMI_STATUS_OK);assert(umi_test_workspace_profile_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_test_workspace_profile_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_workspace_profile_valid(&m));
     if (UmiTestWorkspaceProfileTransferCases(&m) != 0) return 1;
+    if (UmiTestWorkspaceProfileConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

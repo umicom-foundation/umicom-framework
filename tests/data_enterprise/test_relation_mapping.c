@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/data/enterprise/relation_mapping.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -126,10 +127,84 @@ UMI_TEST_VALUE_TRANSFER(UmiDataRelationMappingTransferCases, UmiDataRelationMapp
     umi_data_relation_mapping_archive_encode, umi_data_relation_mapping_archive_decode,
     UmiDataRelationMappingTransferEqual, UmiDataRelationMappingTransferTails, UmiDataRelationMappingTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataRelationMappingConditionalArchiveCases, UmiDataRelationMapping,
+    umi_data_relation_mapping_archive_encode, umi_data_relation_mapping_archive_decode_if_unchanged,
+    UmiDataRelationMappingTransferEqual, UmiDataRelationMappingTransferTails, UmiDataRelationMappingTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted relation mapping value. */
+static int UmiDataRelationMappingConstructionCases(void)
+{
+    UmiDataRelationMapping *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_data_relation_mapping_init(value, "Order.customer", "Order", "Customer", "customer_id", false) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->relation_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_relation_mapping_init(value, oversized, "Order", "Customer", "customer_id", false) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_relation_mapping_init(value, value->relation_id, "Order", "Customer", "customer_id", false) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->relation_id, "Order.customer") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->source_entity) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_relation_mapping_init(value, "Order.customer", oversized, "Customer", "customer_id", false) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_relation_mapping_init(value, "Order.customer", value->source_entity, "Customer", "customer_id", false) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->source_entity, "Order") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->target_entity) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_relation_mapping_init(value, "Order.customer", "Order", oversized, "customer_id", false) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_relation_mapping_init(value, "Order.customer", "Order", value->target_entity, "customer_id", false) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->target_entity, "Customer") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->source_field) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_relation_mapping_init(value, "Order.customer", "Order", "Customer", oversized, false) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_relation_mapping_init(value, "Order.customer", "Order", "Customer", value->source_field, false) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->source_field, "customer_id") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiDataRelationMappingConstructionCases() != 0) return 1;
+
     UmiDataRelationMapping item;
     CHECK(umi_data_relation_mapping_init(&item,"Order.customer","Order","Customer","customer_id",false) == UMI_STATUS_OK);
     if (UmiDataRelationMappingTransferCases(&item) != 0) return 1;
+    if (UmiDataRelationMappingConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(!item.collection);
     return 0;

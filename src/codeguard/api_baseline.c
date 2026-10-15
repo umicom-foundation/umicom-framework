@@ -14,10 +14,16 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/codeguard/api_baseline.h"
+#include "../base/value_construction_internal.h"
 
 #include <string.h>
 
 /* Initialise a clean baseline and copy its release identity into owned storage. */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_codeguard_api_baseline_init(
     UmiCodeGuardApiBaseline *baseline,
     const char *name,
@@ -40,6 +46,37 @@ UmiStatus umi_codeguard_api_baseline_init(
     baseline->minor = minor;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_codeguard_api_baseline_init_build_value(
+    UmiCodeGuardApiBaseline *baseline,
+    const char *name,
+    unsigned major,
+    unsigned minor)
+{
+    UmiStatus status;
+    /* A zero major release cannot act as a stable compatibility baseline. */
+    if (baseline == NULL || name == NULL || name[0] == '\0' || major == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    (void)memset(baseline, 0, sizeof(*baseline));
+    status = umi_codeguard_quality_copy(
+        baseline->name, sizeof(baseline->name), name);
+    /* Do not publish release numbers when the baseline identity did not fit. */
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    baseline->major = major;
+    baseline->minor = minor;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_codeguard_api_baseline_init, UmiCodeGuardApiBaseline, baseline,
+    (UmiCodeGuardApiBaseline *baseline, const char *name, unsigned major, unsigned minor),
+    umi_codeguard_api_baseline_init_build_value(candidate, name, major, minor))
+
 
 /* Search exact names because public symbol spelling is case-sensitive ABI state. */
 const UmiCodeGuardApiSymbol *umi_codeguard_api_baseline_find(

@@ -103,6 +103,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadComponentCatalogueBridgeTransferCases, UmiRadCompo
     umi_rad_component_catalogue_bridge_archive_encode, umi_rad_component_catalogue_bridge_archive_decode,
     UmiRadComponentCatalogueBridgeTransferEqual, UmiRadComponentCatalogueBridgeTransferTails, UmiRadComponentCatalogueBridgeTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadComponentCatalogueBridgeConditionalArchiveCases, UmiRadComponentCatalogueBridge,
+    umi_rad_component_catalogue_bridge_archive_encode, umi_rad_component_catalogue_bridge_archive_decode_if_unchanged,
+    UmiRadComponentCatalogueBridgeTransferEqual, UmiRadComponentCatalogueBridgeTransferTails, UmiRadComponentCatalogueBridgeTransferMalformed)
+
+
 int main(void){UmiRadComponentCatalogueBridge item;CHECK(umi_rad_component_catalogue_bridge_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_component_catalogue_bridge_is_valid(&item));
     if (UmiRadComponentCatalogueBridgeTransferCases(&item) != 0) return 1;
+    if (UmiRadComponentCatalogueBridgeConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

@@ -75,6 +75,13 @@ UMI_TEST_VALUE_TRANSFER(UmiDesignTypographyTransferCases, UmiDesignTypography,
     umi_design_typography_archive_encode, umi_design_typography_archive_decode,
     UmiDesignTypographyTransferEqual, UmiDesignTypographyTransferTails, UmiDesignTypographyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignTypographyConditionalArchiveCases, UmiDesignTypography,
+    umi_design_typography_archive_encode, umi_design_typography_archive_decode_if_unchanged,
+    UmiDesignTypographyTransferEqual, UmiDesignTypographyTransferTails, UmiDesignTypographyTransferMalformed)
+
+
 int main(void) { UmiDesignTypography t; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_typography_init(&t,"Sans",14.0,500U,1.4)!=UMI_STATUS_OK)return 1;
     if (UmiDesignTypographyTransferCases(&t) != 0) return 1;
+    if (UmiDesignTypographyConditionalArchiveCases(&t) != 0) return 1;
  return umi_design_typography_valid(&t)?0:2; }

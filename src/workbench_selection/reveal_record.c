@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/workbench_selection/reveal_record.h"
 #include "../base/value_archive_internal.h"
 #include "../base/record_update_internal.h"
@@ -272,3 +273,9 @@ UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_selection_reveal_record_archive_encode, u
  * all fields together without emitting events or changing any external service. */
 UMI_DEFINE_REVIEWED_IDENTITY_RECORD_EDIT(umi_workbench_selection_reveal_record_replace_if_current,
     UmiWorkbenchSelectionRevealRecord, record_id, UmiWorkbenchSelectionRevealRecordArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_workbench_selection_reveal_record_archive_decode_if_unchanged, umi_workbench_selection_reveal_record_archive_encode,
+    UmiWorkbenchSelectionRevealRecord, UmiWorkbenchSelectionRevealRecordArchiveSchema, UmiWorkbenchSelectionRevealRecordArchiveBound, UmiWorkbenchSelectionRevealRecordArchiveRead, UmiWorkbenchSelectionRevealRecordArchiveValidate)

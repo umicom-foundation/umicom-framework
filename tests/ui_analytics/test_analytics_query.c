@@ -105,6 +105,13 @@ UMI_TEST_VALUE_TRANSFER(UmiAnalyticsQueryTransferCases, UmiAnalyticsQuery,
     umi_analytics_query_archive_encode, umi_analytics_query_archive_decode,
     UmiAnalyticsQueryTransferEqual, UmiAnalyticsQueryTransferTails, UmiAnalyticsQueryTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAnalyticsQueryConditionalArchiveCases, UmiAnalyticsQuery,
+    umi_analytics_query_archive_encode, umi_analytics_query_archive_decode_if_unchanged,
+    UmiAnalyticsQueryTransferEqual, UmiAnalyticsQueryTransferTails, UmiAnalyticsQueryTransferMalformed)
+
+
 int main(void){UmiAnalyticsQuery q;/* Apply this operation only while the related capability or state is available. */ if(umi_analytics_query_init(&q,"market","price")!=0)return 1;
     if (UmiAnalyticsQueryTransferCases(&q) != 0) return 1;
+    if (UmiAnalyticsQueryConditionalArchiveCases(&q) != 0) return 1;
 return umi_analytics_query_valid(&q)?0:2;}

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/core/trade_id.h"
 #include "../../base/value_archive_internal.h"
 
@@ -54,3 +55,9 @@ static UmiStatus UmiTradeIdArchiveValidate(const UmiTradeId *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_trade_id_archive_encode, umi_trade_id_archive_decode,
     UmiTradeId, UmiTradeIdArchiveSchema, UmiTradeIdArchiveBound, UmiTradeIdArchiveWrite, UmiTradeIdArchiveRead, UmiTradeIdArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_trade_id_archive_decode_if_unchanged, umi_trade_id_archive_encode,
+    UmiTradeId, UmiTradeIdArchiveSchema, UmiTradeIdArchiveBound, UmiTradeIdArchiveRead, UmiTradeIdArchiveValidate)

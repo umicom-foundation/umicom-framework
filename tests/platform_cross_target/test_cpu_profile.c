@@ -80,6 +80,13 @@ UMI_TEST_VALUE_TRANSFER(UmiCtCpuProfileTransferCases, UmiCtCpuProfile,
     umi_ct_cpu_profile_archive_encode, umi_ct_cpu_profile_archive_decode,
     UmiCtCpuProfileTransferEqual, UmiCtCpuProfileTransferTails, UmiCtCpuProfileTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtCpuProfileConditionalArchiveCases, UmiCtCpuProfile,
+    umi_ct_cpu_profile_archive_encode, umi_ct_cpu_profile_archive_decode_if_unchanged,
+    UmiCtCpuProfileTransferEqual, UmiCtCpuProfileTransferTails, UmiCtCpuProfileTransferMalformed)
+
+
 int main(void){UmiCtCpuProfile p={"rv64-base",UMI_CT_ARCH_RISCV64,64U,{1U},2U};UmiCtCpuFeatureSet a={1U};CHECK(umi_ct_cpu_profile_validate(&p)==UMI_STATUS_OK);
     if (UmiCtCpuProfileTransferCases(&p) != 0) return 1;
+    if (UmiCtCpuProfileConditionalArchiveCases(&p) != 0) return 1;
 CHECK(umi_ct_cpu_profile_matches(&p,UMI_CT_ARCH_RISCV64,64U,4U,&a));CHECK(!umi_ct_cpu_profile_matches(&p,UMI_CT_ARCH_RISCV64,64U,1U,&a));return 0;}

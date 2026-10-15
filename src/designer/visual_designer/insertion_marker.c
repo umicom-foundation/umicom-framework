@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/designer/visual_designer/insertion_marker.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -90,3 +91,8 @@ static UmiStatus UmiRadInsertionMarkerArchiveValidate(const UmiRadInsertionMarke
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_rad_insertion_marker_archive_encode, umi_rad_insertion_marker_archive_decode,
     UmiRadInsertionMarker, UmiRadInsertionMarkerArchiveSchema, UmiRadInsertionMarkerArchiveBound, UmiRadInsertionMarkerArchiveWrite, UmiRadInsertionMarkerArchiveRead, UmiRadInsertionMarkerArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_rad_insertion_marker_archive_decode_if_unchanged, umi_rad_insertion_marker_archive_encode,
+    UmiRadInsertionMarker, UmiRadInsertionMarkerArchiveSchema, UmiRadInsertionMarkerArchiveBound, UmiRadInsertionMarkerArchiveRead, UmiRadInsertionMarkerArchiveValidate)

@@ -42,6 +42,10 @@ typedef struct UmiFabricTransportProfile {
  * Initialise fabric transport profile from caller-provided values so later operations
  * receive a known state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_fabric_transport_profile_init(UmiFabricTransportProfile *item, const char *profile_id, uint64_t max_frame_bytes, uint32_t heartbeat_ms, uint32_t idle_timeout_ms, bool compression_allowed, bool tls_required);
 /**
  * Check that fabric transport profile satisfies its contract before another service relies
@@ -59,6 +63,16 @@ UmiStatus umi_fabric_transport_profile_archive_encode(const UmiFabricTransportPr
     void *bytes, size_t capacity, size_t *out_size);
 UmiStatus umi_fabric_transport_profile_archive_decode(const void *bytes, size_t byte_count,
     UmiFabricTransportProfile *value);
+
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the owner's publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_fabric_transport_profile_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiFabricTransportProfile *expected, UmiFabricTransportProfile *value);
+
 
 #ifdef __cplusplus
 }

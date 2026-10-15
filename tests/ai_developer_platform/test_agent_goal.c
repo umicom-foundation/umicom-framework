@@ -88,6 +88,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAiDevAgentGoalTransferCases, UmiAiDevAgentGoal,
     umi_ai_dev_agent_goal_archive_encode, umi_ai_dev_agent_goal_archive_decode,
     UmiAiDevAgentGoalTransferEqual, UmiAiDevAgentGoalTransferTails, UmiAiDevAgentGoalTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAiDevAgentGoalConditionalArchiveCases, UmiAiDevAgentGoal,
+    umi_ai_dev_agent_goal_archive_encode, umi_ai_dev_agent_goal_archive_decode_if_unchanged,
+    UmiAiDevAgentGoalTransferEqual, UmiAiDevAgentGoalTransferTails, UmiAiDevAgentGoalTransferMalformed)
+
+
 int main(void) {
     UmiAiDevAgentGoal v;
     umi_ai_dev_agent_goal_init(&v);
@@ -96,6 +102,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ai_dev_agent_goal_validate(&v) != UMI_STATUS_OK) return 2;
     if (UmiAiDevAgentGoalTransferCases(&v) != 0) return 1;
+    if (UmiAiDevAgentGoalConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ai_dev_agent_goal_evidence_score(&v, 50U) != 62U) return 3;

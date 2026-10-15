@@ -14,13 +14,20 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Umicom Framework | Project Capability | Sammy Hegab | Umicom Foundation | MIT */
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/project/workspace/project_capability.h"
+#include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise project workspace project capability from caller-provided values so later
  * operations receive a known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_project_workspace_project_capability_init(UmiProjectWorkspaceProjectCapability *value,const char *id) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -30,6 +37,24 @@ UmiStatus umi_project_workspace_project_capability_init(UmiProjectWorkspaceProje
     (void)memset(value,0,sizeof(*value));
     return umi_project_workspace_named_state_init(&value->base,id);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_project_workspace_project_capability_init_build_value(UmiProjectWorkspaceProjectCapability *value,const char *id) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if(value==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(value,0,sizeof(*value));
+    return umi_project_workspace_named_state_init(&value->base,id);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_project_workspace_project_capability_init, UmiProjectWorkspaceProjectCapability, value,
+    (UmiProjectWorkspaceProjectCapability *value, const char *id),
+    umi_project_workspace_project_capability_init_build_value(candidate, id))
+
 /*
  * Check that project workspace project capability satisfies its contract before another
  * service relies on it.
@@ -148,3 +173,8 @@ static UmiStatus UmiProjectWorkspaceProjectCapabilityArchiveValidate(const UmiPr
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_project_workspace_project_capability_archive_encode, umi_project_workspace_project_capability_archive_decode,
     UmiProjectWorkspaceProjectCapability, UmiProjectWorkspaceProjectCapabilityArchiveSchema, UmiProjectWorkspaceProjectCapabilityArchiveBound, UmiProjectWorkspaceProjectCapabilityArchiveWrite, UmiProjectWorkspaceProjectCapabilityArchiveRead, UmiProjectWorkspaceProjectCapabilityArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_project_workspace_project_capability_archive_decode_if_unchanged, umi_project_workspace_project_capability_archive_encode,
+    UmiProjectWorkspaceProjectCapability, UmiProjectWorkspaceProjectCapabilityArchiveSchema, UmiProjectWorkspaceProjectCapabilityArchiveBound, UmiProjectWorkspaceProjectCapabilityArchiveRead, UmiProjectWorkspaceProjectCapabilityArchiveValidate)

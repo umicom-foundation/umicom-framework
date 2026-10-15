@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/test/workbench/test_run_request.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -112,3 +113,8 @@ static UmiStatus UmiTestRunRequestArchiveValidate(const UmiTestRunRequest *value
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_test_run_request_archive_encode, umi_test_run_request_archive_decode,
     UmiTestRunRequest, UmiTestRunRequestArchiveSchema, UmiTestRunRequestArchiveBound, UmiTestRunRequestArchiveWrite, UmiTestRunRequestArchiveRead, UmiTestRunRequestArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_test_run_request_archive_decode_if_unchanged, umi_test_run_request_archive_encode,
+    UmiTestRunRequest, UmiTestRunRequestArchiveSchema, UmiTestRunRequestArchiveBound, UmiTestRunRequestArchiveRead, UmiTestRunRequestArchiveValidate)

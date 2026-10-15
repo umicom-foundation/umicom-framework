@@ -134,6 +134,12 @@ UMI_TEST_VALUE_TRANSFER(UmiCrossApplicationPanelTransferCases, UmiCrossApplicati
     umi_context_panel_archive_encode, umi_context_panel_archive_decode,
     UmiCrossApplicationPanelTransferEqual, UmiCrossApplicationPanelTransferTails, UmiCrossApplicationPanelTransferMalformed)
 
+#include "../conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCrossApplicationPanelConditionalArchiveCases, UmiCrossApplicationPanel,
+    umi_context_panel_archive_encode, umi_context_panel_archive_decode_if_unchanged,
+    UmiCrossApplicationPanelTransferEqual, UmiCrossApplicationPanelTransferTails, UmiCrossApplicationPanelTransferMalformed)
+
+
 int main(void)
 {
     UmiCrossApplicationPanel value;
@@ -149,6 +155,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_context_panel_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiCrossApplicationPanelTransferCases(&value) != 0) return 1;
+    if (UmiCrossApplicationPanelConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

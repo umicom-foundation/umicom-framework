@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiQualityScoreModelTransferCases, UmiQualityScoreModel,
     umi_quality_score_model_archive_encode, umi_quality_score_model_archive_decode,
     UmiQualityScoreModelTransferEqual, UmiQualityScoreModelTransferTails, UmiQualityScoreModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiQualityScoreModelConditionalArchiveCases, UmiQualityScoreModel,
+    umi_quality_score_model_archive_encode, umi_quality_score_model_archive_decode_if_unchanged,
+    UmiQualityScoreModelTransferEqual, UmiQualityScoreModelTransferTails, UmiQualityScoreModelTransferMalformed)
+
+
 int main(void){UmiQualityScoreModel m;assert(umi_quality_score_model_init(&m,"quality_score_model","Quality Score Model")==UMI_STATUS_OK);assert(umi_quality_score_model_set_active(&m,true)==UMI_STATUS_OK);assert(umi_quality_score_model_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_quality_score_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_quality_score_model_valid(&m));
     if (UmiQualityScoreModelTransferCases(&m) != 0) return 1;
+    if (UmiQualityScoreModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

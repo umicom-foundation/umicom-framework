@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/workbench_context_link/payload_builder.h"
@@ -35,6 +36,11 @@ int main(void)
     assert(umi_workbench_context_link_service_bind_panel(
         &service, "explorer-binding", "project-explorer", "studio", "blue",
         UMI_CONTEXT_KIND_PROJECT, UMI_WORKBENCH_CONTEXT_LINK_MODE_PUBLISH) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchContextLinkService, &service,
+        (umi_workbench_context_link_service_bind_panel(
+        &service, "explorer-binding", "project-explorer", "studio", "blue",
+        UMI_CONTEXT_KIND_PROJECT, UMI_WORKBENCH_CONTEXT_LINK_MODE_PUBLISH)));
+
     assert(umi_workbench_context_link_service_bind_panel(
         &service, "editor-binding", "editor", "studio", "blue",
         UMI_CONTEXT_KIND_PROJECT, UMI_WORKBENCH_CONTEXT_LINK_MODE_FOLLOW) == UMI_STATUS_OK);

@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/repository/doctor_policy.h"
 #include "../../base/value_archive_internal.h"
 
@@ -88,3 +89,8 @@ static UmiStatus UmiRepositoryDoctorPolicyArchiveValidate(const UmiRepositoryDoc
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_repository_doctor_policy_archive_encode, umi_repository_doctor_policy_archive_decode,
     UmiRepositoryDoctorPolicy, UmiRepositoryDoctorPolicyArchiveSchema, UmiRepositoryDoctorPolicyArchiveBound, UmiRepositoryDoctorPolicyArchiveWrite, UmiRepositoryDoctorPolicyArchiveRead, UmiRepositoryDoctorPolicyArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_repository_doctor_policy_archive_decode_if_unchanged, umi_repository_doctor_policy_archive_encode,
+    UmiRepositoryDoctorPolicy, UmiRepositoryDoctorPolicyArchiveSchema, UmiRepositoryDoctorPolicyArchiveBound, UmiRepositoryDoctorPolicyArchiveRead, UmiRepositoryDoctorPolicyArchiveValidate)

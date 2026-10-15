@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../base/conditional_archive_internal.h"
 #include "umicom/ai/developer_platform/authorengine_bridge.h"
 #include "../base/value_archive_internal.h"
 
@@ -156,3 +157,9 @@ static UmiStatus UmiAiDevAuthorengineBridgeArchiveValidate(const UmiAiDevAuthore
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ai_dev_authorengine_bridge_archive_encode, umi_ai_dev_authorengine_bridge_archive_decode,
     UmiAiDevAuthorengineBridge, UmiAiDevAuthorengineBridgeArchiveSchema, UmiAiDevAuthorengineBridgeArchiveBound, UmiAiDevAuthorengineBridgeArchiveWrite, UmiAiDevAuthorengineBridgeArchiveRead, UmiAiDevAuthorengineBridgeArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ai_dev_authorengine_bridge_archive_decode_if_unchanged, umi_ai_dev_authorengine_bridge_archive_encode,
+    UmiAiDevAuthorengineBridge, UmiAiDevAuthorengineBridgeArchiveSchema, UmiAiDevAuthorengineBridgeArchiveBound, UmiAiDevAuthorengineBridgeArchiveRead, UmiAiDevAuthorengineBridgeArchiveValidate)

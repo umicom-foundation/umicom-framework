@@ -87,6 +87,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicTabGroupTransferCases, UmiUiMosaicTabGroup,
     umi_ui_mosaic_tab_group_archive_encode, umi_ui_mosaic_tab_group_archive_decode,
     UmiUiMosaicTabGroupTransferEqual, UmiUiMosaicTabGroupTransferTails, UmiUiMosaicTabGroupTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicTabGroupConditionalArchiveCases, UmiUiMosaicTabGroup,
+    umi_ui_mosaic_tab_group_archive_encode, umi_ui_mosaic_tab_group_archive_decode_if_unchanged,
+    UmiUiMosaicTabGroupTransferEqual, UmiUiMosaicTabGroupTransferTails, UmiUiMosaicTabGroupTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicTabGroup value;
     umi_ui_mosaic_tab_group_init(&value);
@@ -94,6 +100,7 @@ int main(void) {
     value.item_count = 4U;
     CHECK(umi_ui_mosaic_tab_group_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicTabGroupTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicTabGroupConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_tab_group_touch(&value) == UMI_STATUS_OK);
     CHECK(value.revision == 2U);

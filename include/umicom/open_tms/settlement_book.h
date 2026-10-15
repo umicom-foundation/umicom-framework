@@ -52,8 +52,14 @@ typedef struct UmiOpenTmsSettlementBook {
 } UmiOpenTmsSettlementBook;
 
 void umi_open_tms_settlement_book_init(UmiOpenTmsSettlementBook *book);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_open_tms_settlement_book_add(
     UmiOpenTmsSettlementBook *book,const UmiOpenTmsSettlementRecord *record);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_open_tms_settlement_book_transition(
     UmiOpenTmsSettlementBook *book,const char *id,
     UmiOpenTmsSettlementState state,uint64_t version);

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/developer_productivity/output_channels.h"
@@ -28,6 +29,10 @@ int main(void)
     umi_developer_output_channels_init(&channels);
     assert(umi_developer_output_channel_append(
         &channels, "build", "Build", "hello") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDeveloperOutputChannels, &channels,
+        (umi_developer_output_channel_append(
+        &channels, "build", "Build", "hello")));
+
     assert(umi_developer_output_channel_find(
         &channels, "build", &channel) == UMI_STATUS_OK);
     assert(strstr(channel.text, "hello") != NULL);

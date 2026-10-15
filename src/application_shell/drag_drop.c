@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/application_shell/drag_drop.h"
 
 #include <string.h>
@@ -92,9 +93,36 @@ UmiStatus umi_application_shell_drop_prepare(
  * Provide the application shell drop accept operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_application_shell_drop_accept(
     UmiApplicationShellDropTransaction *transaction)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (transaction == NULL || transaction->transaction_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    transaction->accepted = 1;
+    transaction->reason[0] = '\0';
+    transaction->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_application_shell_drop_accept(
+    UmiApplicationShellDropTransaction *transaction)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (transaction != NULL && transaction->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -113,10 +141,52 @@ UmiStatus umi_application_shell_drop_accept(
  * Provide the application shell drop reject operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_application_shell_drop_reject(
     UmiApplicationShellDropTransaction *transaction,
     const char *reason)
 {
+    size_t length;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (transaction == NULL || transaction->transaction_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    transaction->accepted = 0;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (reason == NULL) reason = "Drop rejected.";
+
+    length = strlen(reason);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (length >= sizeof(transaction->reason)) {
+        length = sizeof(transaction->reason) - 1U;
+    }
+    (void)memcpy(transaction->reason, reason, length);
+    transaction->reason[length] = '\0';
+    transaction->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_application_shell_drop_reject(
+    UmiApplicationShellDropTransaction *transaction,
+    const char *reason)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (transaction != NULL && transaction->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t length;
 
     /*

@@ -41,6 +41,9 @@ typedef struct UmiCommodityContractBook {
 void umi_commodity_contract_book_init(UmiCommodityContractBook *catalogue);
 
 /* Add a unique item and advance the deterministic catalogue revision. */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_commodity_contract_book_add(UmiCommodityContractBook *catalogue, const UmiCommodityPhysicalContract *item);
 
 /* Resolve an item by its stable Framework identifier. */

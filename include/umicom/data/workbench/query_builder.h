@@ -57,6 +57,9 @@ UmiStatus umi_data_query_builder_init(
  * Provide the data query builder add projection operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_data_query_builder_add_projection(
     UmiDataQueryBuilder *builder,
     const UmiDataQueryProjection *projection);
@@ -64,6 +67,9 @@ UmiStatus umi_data_query_builder_add_projection(
  * Provide the data query builder add predicate operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_data_query_builder_add_predicate(
     UmiDataQueryBuilder *builder,
     const UmiDataQueryExpression *predicate);
@@ -78,6 +84,9 @@ UmiStatus umi_data_query_builder_add_join(
  * Provide the data query builder add order operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_data_query_builder_add_order(
     UmiDataQueryBuilder *builder,
     const UmiDataQueryOrder *order);
@@ -85,6 +94,9 @@ UmiStatus umi_data_query_builder_add_order(
  * Provide the data query builder set limit operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_data_query_builder_set_limit(
     UmiDataQueryBuilder *builder,
     uint64_t row_limit);

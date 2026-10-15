@@ -18,6 +18,10 @@
 
 #include "umicom/trading_workstation/chart_tape/trade_rate.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(umi_trading_professional_evaluate_chart_tape_trade_rate_batch_cases, umi_trading_professional_evaluate_chart_tape_trade_rate,
+    umi_trading_professional_evaluate_chart_tape_trade_rate_batch, UmiTradingProfessionalInput, UmiTradingProfessionalSnapshot, bid)
+
 int main(void)
 {
     UmiTradingProfessionalInput input;
@@ -97,6 +101,7 @@ int main(void)
     input.canCancelOrder = 1;
     input.revision = 55U;
 
+    if (umi_trading_professional_evaluate_chart_tape_trade_rate_batch_cases(&input) != 0) return 1;
     assert(umi_trading_professional_evaluate_chart_tape_trade_rate(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "chart_tape.trade-rate") == 0);
     assert(snapshot.revision == 55U);

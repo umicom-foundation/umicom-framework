@@ -234,6 +234,8 @@ static void ArchiveFillUnusedText(UmiTestRuntimeSelection *value)
 #define ARCHIVE_TYPE UmiTestRuntimeSelection
 #define ARCHIVE_ENCODE umi_test_runtime_selection_archive_encode
 #define ARCHIVE_DECODE umi_test_runtime_selection_archive_decode
+/* Exercise guarded import through this domain's public snapshot codec. */
+#define ARCHIVE_CONDITIONAL_DECODE umi_test_runtime_selection_archive_decode_if_unchanged
 #define ARCHIVE_EQUAL RecordDefaultsEqual
 #include "../value_archive/record_cases.h"
 

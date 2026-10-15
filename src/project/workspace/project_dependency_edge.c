@@ -14,13 +14,20 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Umicom Framework | Project Dependency Edge | Sammy Hegab | Umicom Foundation | MIT */
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/project/workspace/project_dependency_edge.h"
+#include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise project workspace project dependency edge from caller-provided values so
  * later operations receive a known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_project_workspace_project_dependency_edge_init(UmiProjectWorkspaceProjectDependencyEdge *value,const char *id) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -30,6 +37,24 @@ UmiStatus umi_project_workspace_project_dependency_edge_init(UmiProjectWorkspace
     (void)memset(value,0,sizeof(*value));
     return umi_project_workspace_named_state_init(&value->base,id);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_project_workspace_project_dependency_edge_init_build_value(UmiProjectWorkspaceProjectDependencyEdge *value,const char *id) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if(value==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(value,0,sizeof(*value));
+    return umi_project_workspace_named_state_init(&value->base,id);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_project_workspace_project_dependency_edge_init, UmiProjectWorkspaceProjectDependencyEdge, value,
+    (UmiProjectWorkspaceProjectDependencyEdge *value, const char *id),
+    umi_project_workspace_project_dependency_edge_init_build_value(candidate, id))
+
 /*
  * Check that project workspace project dependency edge satisfies its contract before
  * another service relies on it.
@@ -148,3 +173,8 @@ static UmiStatus UmiProjectWorkspaceProjectDependencyEdgeArchiveValidate(const U
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_project_workspace_project_dependency_edge_archive_encode, umi_project_workspace_project_dependency_edge_archive_decode,
     UmiProjectWorkspaceProjectDependencyEdge, UmiProjectWorkspaceProjectDependencyEdgeArchiveSchema, UmiProjectWorkspaceProjectDependencyEdgeArchiveBound, UmiProjectWorkspaceProjectDependencyEdgeArchiveWrite, UmiProjectWorkspaceProjectDependencyEdgeArchiveRead, UmiProjectWorkspaceProjectDependencyEdgeArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_project_workspace_project_dependency_edge_archive_decode_if_unchanged, umi_project_workspace_project_dependency_edge_archive_encode,
+    UmiProjectWorkspaceProjectDependencyEdge, UmiProjectWorkspaceProjectDependencyEdgeArchiveSchema, UmiProjectWorkspaceProjectDependencyEdgeArchiveBound, UmiProjectWorkspaceProjectDependencyEdgeArchiveRead, UmiProjectWorkspaceProjectDependencyEdgeArchiveValidate)

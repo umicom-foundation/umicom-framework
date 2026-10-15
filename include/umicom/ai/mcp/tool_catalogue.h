@@ -42,6 +42,9 @@ void umi_ai_mcp_tool_catalogue_init(
  * Add ai mcp tool catalogue only after its inputs and available capacity have been
  * checked.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ai_mcp_tool_catalogue_add(
     UmiAiMcpToolCatalogue *catalogue,
     const UmiAiMcpToolDescriptor *item);

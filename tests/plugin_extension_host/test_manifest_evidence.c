@@ -93,6 +93,12 @@ UMI_TEST_VALUE_TRANSFER(UmiPluginExtensionHostManifestEvidenceTransferCases, Umi
     umi_plugin_extension_host_manifest_evidence_archive_encode, umi_plugin_extension_host_manifest_evidence_archive_decode,
     UmiPluginExtensionHostManifestEvidenceTransferEqual, UmiPluginExtensionHostManifestEvidenceTransferTails, UmiPluginExtensionHostManifestEvidenceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiPluginExtensionHostManifestEvidenceConditionalArchiveCases, UmiPluginExtensionHostManifestEvidence,
+    umi_plugin_extension_host_manifest_evidence_archive_encode, umi_plugin_extension_host_manifest_evidence_archive_decode_if_unchanged,
+    UmiPluginExtensionHostManifestEvidenceTransferEqual, UmiPluginExtensionHostManifestEvidenceTransferTails, UmiPluginExtensionHostManifestEvidenceTransferMalformed)
+
+
 int main(void)
 {
     UmiPluginExtensionHostManifestEvidence value; umi_plugin_extension_host_manifest_evidence_init(&value);
@@ -101,6 +107,7 @@ int main(void)
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_plugin_extension_host_manifest_evidence_validate(&value) != UMI_STATUS_OK) return 2;
     if (UmiPluginExtensionHostManifestEvidenceTransferCases(&value) != 0) return 1;
+    if (UmiPluginExtensionHostManifestEvidenceConditionalArchiveCases(&value) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (umi_plugin_extension_host_manifest_evidence_fingerprint(&value) == 0U) return 3;

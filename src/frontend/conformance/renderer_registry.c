@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/frontend/conformance/renderer_registry.h"
 
 #include <string.h>
@@ -24,7 +25,19 @@ void umi_fc_renderer_registry_init(UmiFcRendererRegistry *registry){ /* Protect 
  * Provide the fc renderer registry upsert operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_fc_renderer_registry_upsert(UmiFcRendererRegistry *registry,const UmiFcRendererProfile *profile){ size_t i; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(registry==NULL||umi_fc_renderer_profile_validate(profile)!=UMI_STATUS_OK)return UMI_STATUS_INVALID_ARGUMENT; /* Visit each bounded item once so every record receives the same rule. */ for(i=0U;i<registry->count;++i){ /* Protect caller-owned memory by checking that required state is available before it is used. */ if(strcmp(registry->items[i].id,profile->id)==0){ registry->items[i]=*profile; registry->revision++; return UMI_STATUS_OK; }} /* Protect caller-owned memory by checking that required state is available before it is used. */ if(registry->count>=8U)return UMI_STATUS_CAPACITY_EXCEEDED; registry->items[registry->count++]=*profile; registry->revision++; return UMI_STATUS_OK; }
+#endif
+
+UmiStatus umi_fc_renderer_registry_upsert(UmiFcRendererRegistry *registry,const UmiFcRendererProfile *profile){
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+ size_t i; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(registry==NULL||umi_fc_renderer_profile_validate(profile)!=UMI_STATUS_OK)return UMI_STATUS_INVALID_ARGUMENT; /* Visit each bounded item once so every record receives the same rule. */ for(i=0U;i<registry->count;++i){ /* Protect caller-owned memory by checking that required state is available before it is used. */ if(strcmp(registry->items[i].id,profile->id)==0){ registry->items[i]=*profile; registry->revision++; return UMI_STATUS_OK; }} /* Protect caller-owned memory by checking that required state is available before it is used. */ if(registry->count>=8U)return UMI_STATUS_CAPACITY_EXCEEDED; registry->items[registry->count++]=*profile; registry->revision++; return UMI_STATUS_OK; }
 /*
  * Find fc renderer registry while leaving the underlying catalogue or model owned by this
  * module.

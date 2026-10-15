@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/application/production/acceptance_rule.h"
 #include "../../base/value_archive_internal.h"
 
@@ -95,3 +96,9 @@ static UmiStatus UmiApplicationProductionAcceptanceRuleArchiveValidate(const Umi
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_application_production_acceptance_rule_archive_encode, umi_application_production_acceptance_rule_archive_decode,
     UmiApplicationProductionAcceptanceRule, UmiApplicationProductionAcceptanceRuleArchiveSchema, UmiApplicationProductionAcceptanceRuleArchiveBound, UmiApplicationProductionAcceptanceRuleArchiveWrite, UmiApplicationProductionAcceptanceRuleArchiveRead, UmiApplicationProductionAcceptanceRuleArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_application_production_acceptance_rule_archive_decode_if_unchanged, umi_application_production_acceptance_rule_archive_encode,
+    UmiApplicationProductionAcceptanceRule, UmiApplicationProductionAcceptanceRuleArchiveSchema, UmiApplicationProductionAcceptanceRuleArchiveBound, UmiApplicationProductionAcceptanceRuleArchiveRead, UmiApplicationProductionAcceptanceRuleArchiveValidate)

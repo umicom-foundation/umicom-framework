@@ -68,11 +68,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasurySecuritiesLendingContractTransferCases, UmiTr
     umi_treasury_securities_lending_contract_archive_encode, umi_treasury_securities_lending_contract_archive_decode,
     UmiTreasurySecuritiesLendingContractTransferEqual, UmiTreasurySecuritiesLendingContractTransferTails, UmiTreasurySecuritiesLendingContractTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasurySecuritiesLendingContractConditionalArchiveCases, UmiTreasurySecuritiesLendingContract,
+    umi_treasury_securities_lending_contract_archive_encode, umi_treasury_securities_lending_contract_archive_decode_if_unchanged,
+    UmiTreasurySecuritiesLendingContractTransferEqual, UmiTreasurySecuritiesLendingContractTransferTails, UmiTreasurySecuritiesLendingContractTransferMalformed)
+
+
 int main(void) {
     UmiTreasurySecuritiesLendingContract v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_securities_lending_contract_init(&v, "sl", 100, 10000, 50U) != UMI_STATUS_OK) return 1;
     if (UmiTreasurySecuritiesLendingContractTransferCases(&v) != 0) return 1;
+    if (UmiTreasurySecuritiesLendingContractConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if(umi_treasury_securities_lending_contract_annual_fee_minor(&v)!=50)return 2;

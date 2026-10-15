@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/integration/fabric/workflow_step.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -91,10 +92,60 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricWorkflowStepTransferCases, UmiFabricWorkflowSte
     umi_fabric_workflow_step_archive_encode, umi_fabric_workflow_step_archive_decode,
     UmiFabricWorkflowStepTransferEqual, UmiFabricWorkflowStepTransferTails, UmiFabricWorkflowStepTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricWorkflowStepConditionalArchiveCases, UmiFabricWorkflowStep,
+    umi_fabric_workflow_step_archive_encode, umi_fabric_workflow_step_archive_decode_if_unchanged,
+    UmiFabricWorkflowStepTransferEqual, UmiFabricWorkflowStepTransferTails, UmiFabricWorkflowStepTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted workflow step value. */
+static int UmiFabricWorkflowStepConstructionCases(void)
+{
+    UmiFabricWorkflowStep *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_fabric_workflow_step_init(value, "reserve", "inventory.reserve", 1000U, false, true) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->step_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_workflow_step_init(value, oversized, "inventory.reserve", 1000U, false, true) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_workflow_step_init(value, value->step_id, "inventory.reserve", 1000U, false, true) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->step_id, "reserve") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->operation_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_workflow_step_init(value, "reserve", oversized, 1000U, false, true) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_workflow_step_init(value, "reserve", value->operation_id, 1000U, false, true) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->operation_id, "inventory.reserve") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiFabricWorkflowStepConstructionCases() != 0) return 1;
+
     UmiFabricWorkflowStep item;
     CHECK(umi_fabric_workflow_step_init(&item,"reserve","inventory.reserve",1000U,false,true)==UMI_STATUS_OK);
     if (UmiFabricWorkflowStepTransferCases(&item) != 0) return 1;
+    if (UmiFabricWorkflowStepConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.compensatable);
     return 0;

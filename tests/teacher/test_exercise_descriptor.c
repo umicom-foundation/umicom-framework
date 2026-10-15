@@ -90,6 +90,12 @@ UMI_TEST_VALUE_TRANSFER(UmiTeacherExerciseDescriptorTransferCases, UmiTeacherExe
     umi_teacher_exercise_descriptor_archive_encode, umi_teacher_exercise_descriptor_archive_decode,
     UmiTeacherExerciseDescriptorTransferEqual, UmiTeacherExerciseDescriptorTransferTails, UmiTeacherExerciseDescriptorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTeacherExerciseDescriptorConditionalArchiveCases, UmiTeacherExerciseDescriptor,
+    umi_teacher_exercise_descriptor_archive_encode, umi_teacher_exercise_descriptor_archive_decode_if_unchanged,
+    UmiTeacherExerciseDescriptorTransferEqual, UmiTeacherExerciseDescriptorTransferTails, UmiTeacherExerciseDescriptorTransferMalformed)
+
+
 int main(void) {
     UmiTeacherExerciseDescriptor value;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -97,6 +103,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_teacher_exercise_descriptor_validate(&value) != UMI_STATUS_OK) return 2;
     if (UmiTeacherExerciseDescriptorTransferCases(&value) != 0) return 1;
+    if (UmiTeacherExerciseDescriptorConditionalArchiveCases(&value) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (umi_teacher_exercise_descriptor_priority(&value, 60U) != 70U) return 3;

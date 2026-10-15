@@ -49,6 +49,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveBuiltInConvertersTransferCases, UmiUiReacti
     umi_ui_reactive_built_in_converters_archive_encode, umi_ui_reactive_built_in_converters_archive_decode,
     UmiUiReactiveBuiltInConvertersTransferEqual, UmiUiReactiveBuiltInConvertersTransferTails, UmiUiReactiveBuiltInConvertersTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveBuiltInConvertersConditionalArchiveCases, UmiUiReactiveBuiltInConverters,
+    umi_ui_reactive_built_in_converters_archive_encode, umi_ui_reactive_built_in_converters_archive_decode_if_unchanged,
+    UmiUiReactiveBuiltInConvertersTransferEqual, UmiUiReactiveBuiltInConvertersTransferTails, UmiUiReactiveBuiltInConvertersTransferMalformed)
+
+
 int main(void) { UmiUiReactiveBuiltInConverters item; umi_ui_reactive_built_in_converters_init(&item);
     /* Nonzero fields expose swapped or omitted values in a saved record.
      * The original initialized fixture remains available for its own checks. */
@@ -56,4 +62,5 @@ int main(void) { UmiUiReactiveBuiltInConverters item; umi_ui_reactive_built_in_c
     populated.allow_lossy_numeric = true;
     populated.trim_strings = true;
     if (UmiUiReactiveBuiltInConvertersTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveBuiltInConvertersConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_built_in_converters_valid(&item) ? 0 : 1; }

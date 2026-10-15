@@ -84,11 +84,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryCustodyAccountTransferCases, UmiTreasuryCusto
     umi_treasury_custody_account_archive_encode, umi_treasury_custody_account_archive_decode,
     UmiTreasuryCustodyAccountTransferEqual, UmiTreasuryCustodyAccountTransferTails, UmiTreasuryCustodyAccountTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryCustodyAccountConditionalArchiveCases, UmiTreasuryCustodyAccount,
+    umi_treasury_custody_account_archive_encode, umi_treasury_custody_account_archive_decode_if_unchanged,
+    UmiTreasuryCustodyAccountTransferEqual, UmiTreasuryCustodyAccountTransferTails, UmiTreasuryCustodyAccountTransferMalformed)
+
+
 int main(void) {
     UmiTreasuryCustodyAccount v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_custody_account_init(&v, "cust", "custodian", true) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryCustodyAccountTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryCustodyAccountConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if(!umi_treasury_custody_account_is_segregated(&v))return 2;

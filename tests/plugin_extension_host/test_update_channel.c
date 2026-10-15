@@ -93,6 +93,12 @@ UMI_TEST_VALUE_TRANSFER(UmiPluginExtensionHostUpdateChannelTransferCases, UmiPlu
     umi_plugin_extension_host_update_channel_archive_encode, umi_plugin_extension_host_update_channel_archive_decode,
     UmiPluginExtensionHostUpdateChannelTransferEqual, UmiPluginExtensionHostUpdateChannelTransferTails, UmiPluginExtensionHostUpdateChannelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiPluginExtensionHostUpdateChannelConditionalArchiveCases, UmiPluginExtensionHostUpdateChannel,
+    umi_plugin_extension_host_update_channel_archive_encode, umi_plugin_extension_host_update_channel_archive_decode_if_unchanged,
+    UmiPluginExtensionHostUpdateChannelTransferEqual, UmiPluginExtensionHostUpdateChannelTransferTails, UmiPluginExtensionHostUpdateChannelTransferMalformed)
+
+
 int main(void)
 {
     UmiPluginExtensionHostUpdateChannel value; umi_plugin_extension_host_update_channel_init(&value);
@@ -101,6 +107,7 @@ int main(void)
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_plugin_extension_host_update_channel_validate(&value) != UMI_STATUS_OK) return 2;
     if (UmiPluginExtensionHostUpdateChannelTransferCases(&value) != 0) return 1;
+    if (UmiPluginExtensionHostUpdateChannelConditionalArchiveCases(&value) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (umi_plugin_extension_host_update_channel_fingerprint(&value) == 0U) return 3;

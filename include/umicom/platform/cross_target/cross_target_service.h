@@ -45,11 +45,17 @@ void umi_ct_cross_target_service_init(UmiCtCrossTargetService *service);
  * Add ct cross target service only after its inputs and available capacity have been
  * checked.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ct_cross_target_service_register(UmiCtCrossTargetService *service,const UmiCtTargetProfile *profile);
 /**
  * Provide the ct cross target service activate operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ct_cross_target_service_activate(UmiCtCrossTargetService *service,const char *profile_id,const UmiCtCrossTargetSnapshot *snapshot);
 /**
  * Provide the ct cross target service active operation used by this module and its client

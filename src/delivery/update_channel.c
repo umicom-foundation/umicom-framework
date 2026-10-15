@@ -12,7 +12,9 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../base/conditional_archive_internal.h"
 #include "umicom/delivery/update_channel.h"
+#include "../base/value_construction_internal.h"
 #include "../base/value_archive_internal.h"
 #include "delivery_internal.h"
 #include <string.h>
@@ -21,6 +23,11 @@
  * Initialise update channel from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_update_channel_init(UmiUpdateChannel *channel,
                                       const char *channel_id,
                                       const char *feed_url,
@@ -49,6 +56,43 @@ UmiStatus umi_update_channel_init(UmiUpdateChannel *channel,
     channel->require_signature = release_channel == UMI_RELEASE_STABLE;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_update_channel_init_build_value(UmiUpdateChannel *channel,
+                                      const char *channel_id,
+                                      const char *feed_url,
+                                      UmiReleaseChannel release_channel,
+                                      unsigned rollout_percentage)
+{
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (channel == NULL || channel_id == NULL || feed_url == NULL ||
+        rollout_percentage > 100U) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(channel, 0, sizeof(*channel));
+    status = umi_delivery_copy_text(channel->channel_id,
+                                    sizeof(channel->channel_id), channel_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_delivery_copy_text(channel->feed_url,
+                                    sizeof(channel->feed_url), feed_url);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    channel->channel = release_channel;
+    channel->rollout_percentage = rollout_percentage;
+    channel->allow_prerelease = release_channel != UMI_RELEASE_STABLE;
+    channel->require_signature = release_channel == UMI_RELEASE_STABLE;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_update_channel_init, UmiUpdateChannel, channel,
+    (UmiUpdateChannel *channel, const char *channel_id, const char *feed_url, UmiReleaseChannel release_channel, unsigned rollout_percentage),
+    umi_update_channel_init_build_value(candidate, channel_id, feed_url, release_channel, rollout_percentage))
+
 
 /* Check that update channel satisfies its contract before another service relies on it. */
 UmiStatus umi_update_channel_validate(const UmiUpdateChannel *channel)
@@ -141,3 +185,8 @@ static UmiStatus UmiUpdateChannelArchiveValidate(const UmiUpdateChannel *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_update_channel_archive_encode, umi_update_channel_archive_decode,
     UmiUpdateChannel, UmiUpdateChannelArchiveSchema, UmiUpdateChannelArchiveBound, UmiUpdateChannelArchiveWrite, UmiUpdateChannelArchiveRead, UmiUpdateChannelArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_update_channel_archive_decode_if_unchanged, umi_update_channel_archive_encode,
+    UmiUpdateChannel, UmiUpdateChannelArchiveSchema, UmiUpdateChannelArchiveBound, UmiUpdateChannelArchiveRead, UmiUpdateChannelArchiveValidate)

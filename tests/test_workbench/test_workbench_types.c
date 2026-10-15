@@ -108,6 +108,13 @@ UMI_TEST_VALUE_TRANSFER(UmiTestWorkbenchEntryTransferCases, UmiTestWorkbenchEntr
     umi_test_workbench_entry_archive_encode, umi_test_workbench_entry_archive_decode,
     UmiTestWorkbenchEntryTransferEqual, UmiTestWorkbenchEntryTransferTails, UmiTestWorkbenchEntryTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestWorkbenchEntryConditionalArchiveCases, UmiTestWorkbenchEntry,
+    umi_test_workbench_entry_archive_encode, umi_test_workbench_entry_archive_decode_if_unchanged,
+    UmiTestWorkbenchEntryTransferEqual, UmiTestWorkbenchEntryTransferTails, UmiTestWorkbenchEntryTransferMalformed)
+
+
 int main(void){UmiTestWorkbenchEntry e;assert(umi_test_workbench_entry_init(&e,"root","All Tests")==UMI_STATUS_OK);assert(umi_test_workbench_entry_set_detail(&e,"workspace")==UMI_STATUS_OK);assert(umi_test_workbench_entry_set_state(&e,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_workbench_entry_valid(&e));
     if (UmiTestWorkbenchEntryTransferCases(&e) != 0) return 1;
+    if (UmiTestWorkbenchEntryConditionalArchiveCases(&e) != 0) return 1;
 assert(e.revision==3U);return 0;}

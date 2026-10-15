@@ -137,6 +137,12 @@ UMI_TEST_VALUE_TRANSFER(UmiDebugWorkbenchDebugNavigationCheckpointTransferCases,
     umi_debug_workbench_debug_navigation_checkpoint_archive_encode, umi_debug_workbench_debug_navigation_checkpoint_archive_decode,
     UmiDebugWorkbenchDebugNavigationCheckpointTransferEqual, UmiDebugWorkbenchDebugNavigationCheckpointTransferTails, UmiDebugWorkbenchDebugNavigationCheckpointTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDebugWorkbenchDebugNavigationCheckpointConditionalArchiveCases, UmiDebugWorkbenchDebugNavigationCheckpoint,
+    umi_debug_workbench_debug_navigation_checkpoint_archive_encode, umi_debug_workbench_debug_navigation_checkpoint_archive_decode_if_unchanged,
+    UmiDebugWorkbenchDebugNavigationCheckpointTransferEqual, UmiDebugWorkbenchDebugNavigationCheckpointTransferTails, UmiDebugWorkbenchDebugNavigationCheckpointTransferMalformed)
+
+
 int main(void)
 {
     UmiDebugWorkbenchDebugNavigationCheckpoint model;
@@ -151,6 +157,7 @@ int main(void)
     UMI_TEST_CHECK(!model.enabled);
     UMI_TEST_CHECK(umi_debug_workbench_debug_navigation_checkpoint_valid(&model));
     if (UmiDebugWorkbenchDebugNavigationCheckpointTransferCases(&model) != 0) return 1;
+    if (UmiDebugWorkbenchDebugNavigationCheckpointConditionalArchiveCases(&model) != 0) return 1;
 
     return 0;
 }

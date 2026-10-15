@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/financial_platform/instrument_link_store.h"
 #include <string.h>
 
@@ -34,10 +35,45 @@ const UmiFinancialInstrumentLink *umi_financial_instrument_link_store_find(
     return NULL;
 }
 
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_financial_instrument_link_store_upsert(
     UmiFinancialInstrumentLinkStore *store,
     const UmiFinancialInstrumentLink *link)
 {
+    size_t i;
+    if (store == NULL || link == NULL || link->instrumentId[0] == '\0' ||
+        link->productId[0] == '\0' || link->currency[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    for (i = 0U; i < store->count; ++i) {
+        if (strcmp(store->links[i].instrumentId, link->instrumentId) == 0) {
+            if (link->version < store->links[i].version)
+                return UMI_STATUS_INVALID_STATE;
+            store->links[i] = *link;
+            store->revision += 1U;
+            return UMI_STATUS_OK;
+        }
+    }
+    if (store->count >= UMI_FINANCIAL_INSTRUMENT_LINK_CAPACITY)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    store->links[store->count++] = *link;
+    store->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_financial_instrument_link_store_upsert(
+    UmiFinancialInstrumentLinkStore *store,
+    const UmiFinancialInstrumentLink *link)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (store != NULL && store->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t i;
     if (store == NULL || link == NULL || link->instrumentId[0] == '\0' ||
         link->productId[0] == '\0' || link->currency[0] == '\0') {

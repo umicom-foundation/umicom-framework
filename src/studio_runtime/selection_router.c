@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/studio_runtime/selection_router.h"
 
 #include <stdio.h>
@@ -96,6 +97,10 @@ UmiStatus umi_studio_selection_router_problem(
  * Provide the studio selection router test operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_studio_selection_router_test(
     UmiStudioRuntimeSelectionRouter *router,
     const char *test_item_id,
@@ -135,16 +140,109 @@ UmiStatus umi_studio_selection_router_test(
     if (status == UMI_STATUS_OK) router->revision += 1U;
     return status;
 }
+#endif
+
+UmiStatus umi_studio_selection_router_test(
+    UmiStudioRuntimeSelectionRouter *router,
+    const char *test_item_id,
+    const char *label)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (router != NULL && router->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (router == NULL || test_item_id == NULL || label == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    begin_selection(router, UMI_STUDIO_SELECTION_TEST);
+
+    status = copy_text(
+        router->state.current.subject_id,
+        sizeof(router->state.current.subject_id),
+        test_item_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = copy_text(
+            router->state.current.label,
+            sizeof(router->state.current.label),
+            label);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = copy_text(
+            router->command_context.test_item_id,
+            sizeof(router->command_context.test_item_id),
+            test_item_id);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) router->revision += 1U;
+    return status;
+}
 
 /*
  * Provide the studio selection router source control operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_studio_selection_router_source_control(
     UmiStudioRuntimeSelectionRouter *router,
     const char *path,
     uint32_t line)
 {
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (router == NULL || path == NULL || path[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    begin_selection(router, UMI_STUDIO_SELECTION_SOURCE_CONTROL);
+
+    status = copy_text(
+        router->state.current.path,
+        sizeof(router->state.current.path),
+        path);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = copy_text(
+            router->command_context.source_control_path,
+            sizeof(router->command_context.source_control_path),
+            path);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        router->state.current.line = line;
+        router->command_context.source_control_line = line;
+        router->revision += 1U;
+    }
+    return status;
+}
+#endif
+
+UmiStatus umi_studio_selection_router_source_control(
+    UmiStudioRuntimeSelectionRouter *router,
+    const char *path,
+    uint32_t line)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (router != NULL && router->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiStatus status;
 
     /*

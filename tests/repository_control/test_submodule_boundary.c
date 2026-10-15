@@ -126,11 +126,18 @@ UMI_TEST_VALUE_TRANSFER(UmiRepositorySubmoduleTransferCases, UmiRepositorySubmod
     umi_repository_submodule_archive_encode, umi_repository_submodule_archive_decode,
     UmiRepositorySubmoduleTransferEqual, UmiRepositorySubmoduleTransferTails, UmiRepositorySubmoduleTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRepositorySubmoduleConditionalArchiveCases, UmiRepositorySubmodule,
+    umi_repository_submodule_archive_encode, umi_repository_submodule_archive_decode_if_unchanged,
+    UmiRepositorySubmoduleTransferEqual, UmiRepositorySubmoduleTransferTails, UmiRepositorySubmoduleTransferMalformed)
+
+
 int main(void)
 {
     UmiRepositorySubmodule s;
     assert(umi_repository_submodule_init(&s, "studio", "applications/studio", "", "", 0) == UMI_STATUS_OK);
     if (UmiRepositorySubmoduleTransferCases(&s) != 0) return 1;
+    if (UmiRepositorySubmoduleConditionalArchiveCases(&s) != 0) return 1;
 
     assert(s.branch[0] == '\0');
     assert(!s.required);

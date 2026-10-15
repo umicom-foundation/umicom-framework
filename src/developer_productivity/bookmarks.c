@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/developer_productivity/bookmarks.h"
 
 #include <string.h>
@@ -60,10 +61,57 @@ void umi_developer_bookmark_store_init(
  * Provide the developer bookmark store upsert operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_developer_bookmark_store_upsert(
     UmiDeveloperBookmarkStore *store,
     const UmiDeveloperBookmark *bookmark)
 {
+    size_t index;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (store == NULL || bookmark == NULL ||
+        bookmark->bookmark_id[0] == '\0' ||
+        bookmark->label[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    status = umi_developer_productivity_location_validate(
+        &bookmark->location);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    index = find_index(store, bookmark->bookmark_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == (size_t)-1) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (store->count >= UMI_DEVELOPER_BOOKMARK_CAPACITY) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        index = store->count++;
+    }
+
+    store->bookmarks[index] = *bookmark;
+    store->bookmarks[index].revision = ++store->revision;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_developer_bookmark_store_upsert(
+    UmiDeveloperBookmarkStore *store,
+    const UmiDeveloperBookmark *bookmark)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (store != NULL && store->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     UmiStatus status;
 

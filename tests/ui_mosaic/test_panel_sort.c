@@ -87,6 +87,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicPanelSortTransferCases, UmiUiMosaicPanelSort,
     umi_ui_mosaic_panel_sort_archive_encode, umi_ui_mosaic_panel_sort_archive_decode,
     UmiUiMosaicPanelSortTransferEqual, UmiUiMosaicPanelSortTransferTails, UmiUiMosaicPanelSortTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicPanelSortConditionalArchiveCases, UmiUiMosaicPanelSort,
+    umi_ui_mosaic_panel_sort_archive_encode, umi_ui_mosaic_panel_sort_archive_decode_if_unchanged,
+    UmiUiMosaicPanelSortTransferEqual, UmiUiMosaicPanelSortTransferTails, UmiUiMosaicPanelSortTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicPanelSort value;
     umi_ui_mosaic_panel_sort_init(&value);
@@ -95,6 +101,7 @@ int main(void) {
     value.priority = 10U;
     CHECK(umi_ui_mosaic_panel_sort_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicPanelSortTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicPanelSortConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_panel_sort_rank(&value, 5U) == 16U);
     return 0;

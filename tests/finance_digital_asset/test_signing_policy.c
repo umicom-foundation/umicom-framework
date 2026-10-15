@@ -74,12 +74,19 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalSigningPolicyTransferCases, UmiDigitalSigningP
     umi_digital_asset_signing_policy_archive_encode, umi_digital_asset_signing_policy_archive_decode,
     UmiDigitalSigningPolicyTransferEqual, UmiDigitalSigningPolicyTransferTails, UmiDigitalSigningPolicyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalSigningPolicyConditionalArchiveCases, UmiDigitalSigningPolicy,
+    umi_digital_asset_signing_policy_archive_encode, umi_digital_asset_signing_policy_archive_decode_if_unchanged,
+    UmiDigitalSigningPolicyTransferEqual, UmiDigitalSigningPolicyTransferTails, UmiDigitalSigningPolicyTransferMalformed)
+
+
 int main(void)
 {
     UmiDigitalSigningPolicy value;
     CHECK(umi_digital_asset_signing_policy_init(&value, "POL-1", 2U, 3U, true) == UMI_STATUS_OK);
     CHECK(umi_digital_asset_signing_policy_valid(&value));
     if (UmiDigitalSigningPolicyTransferCases(&value) != 0) return 1;
+    if (UmiDigitalSigningPolicyConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

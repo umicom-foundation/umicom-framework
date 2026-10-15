@@ -13,12 +13,28 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/target_profile.h"
+#include "../../base/value_construction_internal.h"
 #include <string.h>
 /*
  * Initialise nc target profile from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_nc_target_profile_init(UmiNativeTargetProfile *p,const char *triple){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p==NULL||triple==NULL)return UMI_STATUS_INVALID_ARGUMENT;memset(p,0,sizeof(*p));/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_copy_text(p->triple,sizeof(p->triple),triple)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;p->little_endian=true;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(strncmp(triple,"x86_64",6U)==0){p->architecture=UMI_NC_ARCH_X86_64;p->pointer_bits=64U;p->object_format=strstr(triple,"windows")!=NULL?UMI_NC_OBJECT_COFF:UMI_NC_OBJECT_ELF;p->feature_mask=1U;}else /* Protect caller-owned memory by checking that required state is available before it is used. */ if(strncmp(triple,"riscv64",7U)==0){p->architecture=UMI_NC_ARCH_RISCV64;p->pointer_bits=64U;p->object_format=UMI_NC_OBJECT_ELF;p->feature_mask=0x1FU;}/* Use this fallback path when the earlier condition does not apply. */ else return UMI_STATUS_NOT_FOUND;return UMI_STATUS_OK;}
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_nc_target_profile_init_build_value(UmiNativeTargetProfile *p,const char *triple){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p==NULL||triple==NULL)return UMI_STATUS_INVALID_ARGUMENT;memset(p,0,sizeof(*p));/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_copy_text(p->triple,sizeof(p->triple),triple)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;p->little_endian=true;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(strncmp(triple,"x86_64",6U)==0){p->architecture=UMI_NC_ARCH_X86_64;p->pointer_bits=64U;p->object_format=strstr(triple,"windows")!=NULL?UMI_NC_OBJECT_COFF:UMI_NC_OBJECT_ELF;p->feature_mask=1U;}else /* Protect caller-owned memory by checking that required state is available before it is used. */ if(strncmp(triple,"riscv64",7U)==0){p->architecture=UMI_NC_ARCH_RISCV64;p->pointer_bits=64U;p->object_format=UMI_NC_OBJECT_ELF;p->feature_mask=0x1FU;}/* Use this fallback path when the earlier condition does not apply. */ else return UMI_STATUS_NOT_FOUND;return UMI_STATUS_OK;}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_nc_target_profile_init, UmiNativeTargetProfile, p,
+    (UmiNativeTargetProfile *p, const char *triple),
+    umi_nc_target_profile_init_build_value(candidate, triple))
+
 /*
  * Provide the nc target profile compatible operation used by this module and its client
  * applications.

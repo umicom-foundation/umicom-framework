@@ -139,6 +139,12 @@ UMI_TEST_VALUE_TRANSFER(UmiDebugWorkbenchMemoryRegionModelTransferCases, UmiDebu
     umi_debug_workbench_memory_region_model_archive_encode, umi_debug_workbench_memory_region_model_archive_decode,
     UmiDebugWorkbenchMemoryRegionModelTransferEqual, UmiDebugWorkbenchMemoryRegionModelTransferTails, UmiDebugWorkbenchMemoryRegionModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDebugWorkbenchMemoryRegionModelConditionalArchiveCases, UmiDebugWorkbenchMemoryRegionModel,
+    umi_debug_workbench_memory_region_model_archive_encode, umi_debug_workbench_memory_region_model_archive_decode_if_unchanged,
+    UmiDebugWorkbenchMemoryRegionModelTransferEqual, UmiDebugWorkbenchMemoryRegionModelTransferTails, UmiDebugWorkbenchMemoryRegionModelTransferMalformed)
+
+
 int main(void)
 {
     UmiDebugWorkbenchMemoryRegionModel model;
@@ -149,6 +155,7 @@ int main(void)
     UMI_TEST_CHECK(umi_debug_workbench_memory_region_model_set_follow_execution(&model, true) == UMI_STATUS_OK);
     UMI_TEST_CHECK(umi_debug_workbench_memory_region_model_valid(&model));
     if (UmiDebugWorkbenchMemoryRegionModelTransferCases(&model) != 0) return 1;
+    if (UmiDebugWorkbenchMemoryRegionModelConditionalArchiveCases(&model) != 0) return 1;
 
     return 0;
 }

@@ -12,7 +12,9 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/integration/fabric/route_rule.h"
+#include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
 #include <limits.h>
@@ -21,6 +23,11 @@
  * Initialise fabric route rule from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_fabric_route_rule_init(UmiFabricRouteRule *item, const char *route_id, const char *source_pattern, const char *message_pattern, const char *destination_id, uint32_t priority) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -31,6 +38,25 @@ UmiStatus umi_fabric_route_rule_init(UmiFabricRouteRule *item, const char *route
     UmiStatus s=umi_fabric_copy_text(item->route_id,sizeof(item->route_id),route_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->source_pattern,sizeof(item->source_pattern),source_pattern);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->message_pattern,sizeof(item->message_pattern),message_pattern);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->destination_id,sizeof(item->destination_id),destination_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->priority=priority;item->enabled=true;
     return umi_fabric_route_rule_validate(item);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_fabric_route_rule_init_build_value(UmiFabricRouteRule *item, const char *route_id, const char *source_pattern, const char *message_pattern, const char *destination_id, uint32_t priority) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (item==NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(item,0,sizeof(*item));
+    UmiStatus s=umi_fabric_copy_text(item->route_id,sizeof(item->route_id),route_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->source_pattern,sizeof(item->source_pattern),source_pattern);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->message_pattern,sizeof(item->message_pattern),message_pattern);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->destination_id,sizeof(item->destination_id),destination_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->priority=priority;item->enabled=true;
+    return umi_fabric_route_rule_validate(item);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_fabric_route_rule_init, UmiFabricRouteRule, item,
+    (UmiFabricRouteRule *item, const char *route_id, const char *source_pattern, const char *message_pattern, const char *destination_id, uint32_t priority),
+    umi_fabric_route_rule_init_build_value(candidate, route_id, source_pattern, message_pattern, destination_id, priority))
+
 /* Check that fabric route rule satisfies its contract before another service relies on it. */
 UmiStatus umi_fabric_route_rule_validate(const UmiFabricRouteRule *item) {
     /* Fixed-size fields may come from a plug-in or restored state. Check
@@ -100,3 +126,9 @@ static UmiStatus UmiFabricRouteRuleArchiveValidate(const UmiFabricRouteRule *val
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_fabric_route_rule_archive_encode, umi_fabric_route_rule_archive_decode,
     UmiFabricRouteRule, UmiFabricRouteRuleArchiveSchema, UmiFabricRouteRuleArchiveBound, UmiFabricRouteRuleArchiveWrite, UmiFabricRouteRuleArchiveRead, UmiFabricRouteRuleArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_fabric_route_rule_archive_decode_if_unchanged, umi_fabric_route_rule_archive_encode,
+    UmiFabricRouteRule, UmiFabricRouteRuleArchiveSchema, UmiFabricRouteRuleArchiveBound, UmiFabricRouteRuleArchiveRead, UmiFabricRouteRuleArchiveValidate)

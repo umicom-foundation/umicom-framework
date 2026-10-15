@@ -89,12 +89,19 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalBlockReferenceTransferCases, UmiDigitalBlockRe
     umi_digital_asset_block_reference_archive_encode, umi_digital_asset_block_reference_archive_decode,
     UmiDigitalBlockReferenceTransferEqual, UmiDigitalBlockReferenceTransferTails, UmiDigitalBlockReferenceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalBlockReferenceConditionalArchiveCases, UmiDigitalBlockReference,
+    umi_digital_asset_block_reference_archive_encode, umi_digital_asset_block_reference_archive_decode_if_unchanged,
+    UmiDigitalBlockReferenceTransferEqual, UmiDigitalBlockReferenceTransferTails, UmiDigitalBlockReferenceTransferMalformed)
+
+
 int main(void)
 {
     UmiDigitalBlockReference value;
     CHECK(umi_digital_asset_block_reference_init(&value, "BTC", 900000U, "000000abc") == UMI_STATUS_OK);
     CHECK(umi_digital_asset_block_reference_valid(&value));
     if (UmiDigitalBlockReferenceTransferCases(&value) != 0) return 1;
+    if (UmiDigitalBlockReferenceConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

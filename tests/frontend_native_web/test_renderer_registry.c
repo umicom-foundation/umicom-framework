@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../value_archive/revision_cases.h"
 #include <stdio.h>
 #include <string.h>
 #include "umicom/frontend/native_web/renderer_registry.h"
@@ -28,6 +29,9 @@ static UmiStatus dummy_render(const UmiNativeWebRenderContext *c,const UmiNative
  */
 int main(void)
 {
-    UmiNativeWebRendererRegistry r; UmiNativeWebRendererDescriptor d={0}; umi_native_web_renderer_registry_init(&r); strcpy(d.renderer_id,"r1"); strcpy(d.semantic_contract,"X"); d.render=dummy_render; CHECK(umi_native_web_renderer_registry_add(&r,&d)==UMI_STATUS_OK); CHECK(umi_native_web_renderer_registry_resolve(&r,"X")!=NULL);
+    UmiNativeWebRendererRegistry r; UmiNativeWebRendererDescriptor d={0}; umi_native_web_renderer_registry_init(&r); strcpy(d.renderer_id,"r1"); strcpy(d.semantic_contract,"X"); d.render=dummy_render; CHECK(umi_native_web_renderer_registry_add(&r,&d)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiNativeWebRendererRegistry, &r,
+        (umi_native_web_renderer_registry_add(&r,&d)));
+ CHECK(umi_native_web_renderer_registry_resolve(&r,"X")!=NULL);
     return 0;
 }

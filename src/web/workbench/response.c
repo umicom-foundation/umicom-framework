@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/web/workbench/response.h"
 
 #include <string.h>
@@ -54,11 +55,53 @@ void umi_web_workbench_response_init(UmiWebWorkbenchResponse *response)
  * Provide the web workbench response set header operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_web_workbench_response_set_header(
     UmiWebWorkbenchResponse *response,
     const char *name,
     const char *value)
 {
+    size_t index;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (response == NULL || name == NULL || value == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    index = response_header_index(response, name);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == response->header_count) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (index >= UMI_WEB_MAX_HEADERS) return UMI_STATUS_CAPACITY_EXCEEDED;
+        response->header_count++;
+    }
+    status = umi_web_header_set(&response->headers[index], name, value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (index + 1U == response->header_count) response->header_count--;
+        return status;
+    }
+    response->revision++;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_web_workbench_response_set_header(
+    UmiWebWorkbenchResponse *response,
+    const char *name,
+    const char *value)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (response != NULL && response->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     UmiStatus status;
     /*
@@ -108,12 +151,48 @@ const char *umi_web_workbench_response_header(
  * Provide the web workbench response set body operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_web_workbench_response_set_body(
     UmiWebWorkbenchResponse *response,
     const void *body,
     size_t length,
     size_t received_bytes)
 {
+    size_t copied;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (response == NULL || (body == NULL && length > 0U)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    copied = length < sizeof(response->body) - 1U
+        ? length : sizeof(response->body) - 1U;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (copied > 0U) memcpy(response->body, body, copied);
+    response->body[copied] = '\0';
+    response->body_length = copied;
+    response->received_bytes = received_bytes;
+    response->body_truncated = length > copied || received_bytes > copied;
+    response->revision++;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_web_workbench_response_set_body(
+    UmiWebWorkbenchResponse *response,
+    const void *body,
+    size_t length,
+    size_t received_bytes)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (response != NULL && response->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t copied;
     /*
      * Protect caller-owned memory by checking that required state is available before it is

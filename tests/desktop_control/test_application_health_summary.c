@@ -164,6 +164,8 @@ static void ArchiveFillUnusedText(UmiDesktopApplicationHealthSummarySnapshot *va
 #define ARCHIVE_TYPE UmiDesktopApplicationHealthSummarySnapshot
 #define ARCHIVE_ENCODE umi_desktop_application_health_summary_archive_encode
 #define ARCHIVE_DECODE umi_desktop_application_health_summary_archive_decode
+/* Exercise guarded import through this domain's public snapshot codec. */
+#define ARCHIVE_CONDITIONAL_DECODE umi_desktop_application_health_summary_archive_decode_if_unchanged
 #define ARCHIVE_EQUAL RecordDefaultsEqual
 #include "../value_archive/record_cases.h"
 

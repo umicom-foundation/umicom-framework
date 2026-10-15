@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 
@@ -42,6 +43,9 @@ int main(void)
     assert(model.visible_count == 1U);
     assert(umi_data_workbench_connection_model_activate(&model, "primary") ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDataWorkbenchConnectionModel, &model,
+        (umi_data_workbench_connection_model_activate(&model, "primary")));
+
     assert(strcmp(registry.active_id, "primary") == 0);
     return 0;
 }

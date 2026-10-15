@@ -70,6 +70,13 @@ UMI_TEST_VALUE_TRANSFER(UmiAnalyticsDashboardSnapshotTransferCases, UmiAnalytics
     umi_analytics_dashboard_snapshot_archive_encode, umi_analytics_dashboard_snapshot_archive_decode,
     UmiAnalyticsDashboardSnapshotTransferEqual, UmiAnalyticsDashboardSnapshotTransferTails, UmiAnalyticsDashboardSnapshotTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAnalyticsDashboardSnapshotConditionalArchiveCases, UmiAnalyticsDashboardSnapshot,
+    umi_analytics_dashboard_snapshot_archive_encode, umi_analytics_dashboard_snapshot_archive_decode_if_unchanged,
+    UmiAnalyticsDashboardSnapshotTransferEqual, UmiAnalyticsDashboardSnapshotTransferTails, UmiAnalyticsDashboardSnapshotTransferMalformed)
+
+
 int main(void){UmiAnalyticsDashboardSnapshot item;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_analytics_dashboard_snapshot_init(&item)!=UMI_STATUS_OK)return 1;
     if (UmiAnalyticsDashboardSnapshotTransferCases(&item) != 0) return 1;
+    if (UmiAnalyticsDashboardSnapshotConditionalArchiveCases(&item) != 0) return 1;
 return (umi_analytics_dashboard_snapshot_valid(&item))?0:2;}

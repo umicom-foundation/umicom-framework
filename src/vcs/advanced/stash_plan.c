@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/vcs/advanced/stash_plan.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -154,3 +155,8 @@ static UmiStatus UmiVcsAdvancedStashPlanArchiveValidate(const UmiVcsAdvancedStas
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_vcs_advanced_stash_plan_archive_encode, umi_vcs_advanced_stash_plan_archive_decode,
     UmiVcsAdvancedStashPlan, UmiVcsAdvancedStashPlanArchiveSchema, UmiVcsAdvancedStashPlanArchiveBound, UmiVcsAdvancedStashPlanArchiveWrite, UmiVcsAdvancedStashPlanArchiveRead, UmiVcsAdvancedStashPlanArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_vcs_advanced_stash_plan_archive_decode_if_unchanged, umi_vcs_advanced_stash_plan_archive_encode,
+    UmiVcsAdvancedStashPlan, UmiVcsAdvancedStashPlanArchiveSchema, UmiVcsAdvancedStashPlanArchiveBound, UmiVcsAdvancedStashPlanArchiveRead, UmiVcsAdvancedStashPlanArchiveValidate)

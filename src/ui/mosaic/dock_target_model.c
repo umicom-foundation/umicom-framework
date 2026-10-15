@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/mosaic/dock_target_model.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -129,3 +130,8 @@ static UmiStatus UmiUiMosaicDockTargetModelArchiveValidate(const UmiUiMosaicDock
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ui_mosaic_dock_target_model_archive_encode, umi_ui_mosaic_dock_target_model_archive_decode,
     UmiUiMosaicDockTargetModel, UmiUiMosaicDockTargetModelArchiveSchema, UmiUiMosaicDockTargetModelArchiveBound, UmiUiMosaicDockTargetModelArchiveWrite, UmiUiMosaicDockTargetModelArchiveRead, UmiUiMosaicDockTargetModelArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_mosaic_dock_target_model_archive_decode_if_unchanged, umi_ui_mosaic_dock_target_model_archive_encode,
+    UmiUiMosaicDockTargetModel, UmiUiMosaicDockTargetModelArchiveSchema, UmiUiMosaicDockTargetModelArchiveBound, UmiUiMosaicDockTargetModelArchiveRead, UmiUiMosaicDockTargetModelArchiveValidate)

@@ -17,6 +17,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/design/dialog_spec.h"
 #include "../../base/value_archive_internal.h"
 
@@ -81,3 +82,8 @@ static UmiStatus UmiDesignDialogSpecArchiveValidate(const UmiDesignDialogSpec *v
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_design_dialog_spec_archive_encode, umi_design_dialog_spec_archive_decode,
     UmiDesignDialogSpec, UmiDesignDialogSpecArchiveSchema, UmiDesignDialogSpecArchiveBound, UmiDesignDialogSpecArchiveWrite, UmiDesignDialogSpecArchiveRead, UmiDesignDialogSpecArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_design_dialog_spec_archive_decode_if_unchanged, umi_design_dialog_spec_archive_encode,
+    UmiDesignDialogSpec, UmiDesignDialogSpecArchiveSchema, UmiDesignDialogSpecArchiveBound, UmiDesignDialogSpecArchiveRead, UmiDesignDialogSpecArchiveValidate)

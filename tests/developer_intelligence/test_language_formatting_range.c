@@ -17,6 +17,10 @@
 
 #include "umicom/developer_intelligence/language/formatting_range.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(UmiDeveloperIntelligenceEvaluateLanguageFormattingRangeBatchCases, UmiDeveloperIntelligenceEvaluateLanguageFormattingRange,
+    UmiDeveloperIntelligenceEvaluateLanguageFormattingRangeBatch, UmiDeveloperIntelligenceInput, UmiDeveloperIntelligenceSnapshot, lexicalScore)
+
 int main(void)
 {
     UmiDeveloperIntelligenceInput input;
@@ -44,6 +48,7 @@ int main(void)
     input.active = 1;
     input.revision = 42U;
 
+    if (UmiDeveloperIntelligenceEvaluateLanguageFormattingRangeBatchCases(&input) != 0) return 1;
     assert(UmiDeveloperIntelligenceEvaluateLanguageFormattingRange(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "language.formatting-range") == 0);
     assert(snapshot.revision == 42U);

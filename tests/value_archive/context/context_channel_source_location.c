@@ -98,6 +98,12 @@ UMI_TEST_VALUE_TRANSFER(UmiSourceLocationContextTransferCases, UmiSourceLocation
     umi_source_location_context_archive_encode, umi_source_location_context_archive_decode,
     UmiSourceLocationContextTransferEqual, UmiSourceLocationContextTransferTails, UmiSourceLocationContextTransferMalformed)
 
+#include "../conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiSourceLocationContextConditionalArchiveCases, UmiSourceLocationContext,
+    umi_source_location_context_archive_encode, umi_source_location_context_archive_decode_if_unchanged,
+    UmiSourceLocationContextTransferEqual, UmiSourceLocationContextTransferTails, UmiSourceLocationContextTransferMalformed)
+
+
 int main(void)
 {
     UmiSourceLocationContext value;
@@ -111,6 +117,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_source_location_context_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiSourceLocationContextTransferCases(&value) != 0) return 1;
+    if (UmiSourceLocationContextConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 
@@ -36,17 +37,35 @@ int main(void)
     assert(umi_workbench_selection_set_origin(
         &selection, "studio", "studio.editor",
         "workspace") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchSelection, &selection,
+        (umi_workbench_selection_set_origin(
+        &selection, "studio", "studio.editor",
+        "workspace")));
+
     assert(umi_workbench_selection_set_subject(
         &selection, "main.c", "main") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchSelection, &selection,
+        (umi_workbench_selection_set_subject(
+        &selection, "main.c", "main")));
+
     assert(umi_workbench_selection_set_location(
         &selection, "C:/dev/main.c",
         20U, 8U, 4U) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchSelection, &selection,
+        (umi_workbench_selection_set_location(
+        &selection, "C:/dev/main.c",
+        20U, 8U, 4U)));
+
 
     umi_workbench_selection_field_init(&field, "language-id");
     assert(umi_workbench_selection_field_set_text(
         &field, "c") == UMI_STATUS_OK);
     assert(umi_workbench_selection_add_field(
         &selection, &field) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchSelection, &selection,
+        (umi_workbench_selection_add_field(
+        &selection, &field)));
+
 
     assert(umi_workbench_selection_validate(
         &selection) == UMI_STATUS_OK);

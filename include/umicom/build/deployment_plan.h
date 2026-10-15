@@ -119,6 +119,9 @@ UmiStatus umi_build_deployment_plan_compose_default(
     const UmiBuildArtifactManifest *artifact,
     const UmiBuildDeploymentTargetSnapshot *target,
     int dry_run);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_build_deployment_plan_approve(UmiBuildDeploymentPlan *plan);
 UmiStatus umi_build_deployment_plan_validate(
     const UmiBuildDeploymentPlan *plan,

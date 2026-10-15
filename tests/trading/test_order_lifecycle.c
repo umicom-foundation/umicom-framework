@@ -170,9 +170,16 @@ UMI_TEST_VALUE_TRANSFER(UmiOrderRequestTransferCases, UmiOrderRequest,
     umi_order_request_archive_encode, umi_order_request_archive_decode,
     UmiOrderRequestTransferEqual, UmiOrderRequestTransferTails, UmiOrderRequestTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiOrderRequestConditionalArchiveCases, UmiOrderRequest,
+    umi_order_request_archive_encode, umi_order_request_archive_decode_if_unchanged,
+    UmiOrderRequestTransferEqual, UmiOrderRequestTransferTails, UmiOrderRequestTransferMalformed)
+
+
 int main(void){
     UmiOrderRequest r=test_order_request();assert(umi_order_request_validate(&r)==UMI_STATUS_OK);
     if (UmiOrderRequestTransferCases(&r) != 0) return 1;
+    if (UmiOrderRequestConditionalArchiveCases(&r) != 0) return 1;
 
     assert(umi_order_transition_allowed(UMI_ORDER_NEW,UMI_ORDER_VALIDATED));
     assert(umi_order_transition_allowed(UMI_ORDER_ACCEPTED,UMI_ORDER_PARTIALLY_FILLED));

@@ -15,12 +15,18 @@
  *---------------------------------------------------------------------------*/
 /* Umicom Framework | API contracts | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/integration/api_contract.h"
+#include "../base/value_construction_internal.h"
 #include <string.h>
 
 /*
  * Initialise integration api contract from caller-provided values so later operations
  * receive a known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_integration_api_contract_init(UmiIntegrationApiContract *contract,const char *id,const char *title,const char *version,const char *profile_id)
 {
     UmiStatus status;
@@ -39,6 +45,33 @@ UmiStatus umi_integration_api_contract_init(UmiIntegrationApiContract *contract,
     if (status == UMI_STATUS_OK) status = umi_integration_designer_copy(contract->profile_id,sizeof(contract->profile_id),profile_id);
     return status;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_integration_api_contract_init_build_value(UmiIntegrationApiContract *contract,const char *id,const char *title,const char *version,const char *profile_id)
+{
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (contract == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(contract,0,sizeof(*contract));
+    status = umi_integration_designer_copy(contract->id,sizeof(contract->id),id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) status = umi_integration_designer_copy(contract->title,sizeof(contract->title),title);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) status = umi_integration_designer_copy(contract->version,sizeof(contract->version),version);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) status = umi_integration_designer_copy(contract->profile_id,sizeof(contract->profile_id),profile_id);
+    return status;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_integration_api_contract_init, UmiIntegrationApiContract, contract,
+    (UmiIntegrationApiContract *contract, const char *id, const char *title, const char *version, const char *profile_id),
+    umi_integration_api_contract_init_build_value(candidate, id, title, version, profile_id))
+
 
 /*
  * Provide the integration api contract find operation operation used by this module and

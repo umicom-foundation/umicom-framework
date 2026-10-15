@@ -209,6 +209,16 @@ UmiStatus umi_platform_workspace_history_snapshot_archive_encode(const UmiWorksp
 UmiStatus umi_platform_workspace_history_snapshot_archive_decode(const void *bytes, size_t byte_count,
     UmiWorkspaceHistorySnapshot *value);
 
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the registry publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_platform_workspace_history_snapshot_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiWorkspaceHistorySnapshot *expected, UmiWorkspaceHistorySnapshot *value);
+
+
 /** Encode the ordered collection only at expected_revision. Use the same
  * revision for measurement and encoding; an intervening edit is INVALID_STATE.
  * Short output reports the required size without writing bytes. The common

@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/desktop/control/application_crash_record.h"
 #include "../../base/value_archive_internal.h"
 #include "umicom/base/text.h"
@@ -317,3 +318,8 @@ static UmiStatus ArchiveValidate(const UmiDesktopApplicationCrashRecordSnapshot 
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_desktop_application_crash_record_archive_encode, umi_desktop_application_crash_record_archive_decode,
     UmiDesktopApplicationCrashRecordSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Guard snapshot import with the complete encoded value reviewed by the
+ * caller. Imported metadata remains evidence; registry publication is separate. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_desktop_application_crash_record_archive_decode_if_unchanged, umi_desktop_application_crash_record_archive_encode,
+    UmiDesktopApplicationCrashRecordSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)

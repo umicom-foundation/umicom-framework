@@ -76,6 +76,9 @@ UmiStatus umi_data_er_model_build(
  * Provide the data er model add relation operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_data_er_model_add_relation(
     UmiDataErModel *model,
     const UmiDataSchemaForeignKey *foreign_key);

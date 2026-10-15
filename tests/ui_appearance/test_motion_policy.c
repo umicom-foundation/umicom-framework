@@ -69,6 +69,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceMotionPolicyTransferCases, UmiAppearanceMot
     umi_appearance_motion_policy_archive_encode, umi_appearance_motion_policy_archive_decode,
     UmiAppearanceMotionPolicyTransferEqual, UmiAppearanceMotionPolicyTransferTails, UmiAppearanceMotionPolicyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceMotionPolicyConditionalArchiveCases, UmiAppearanceMotionPolicy,
+    umi_appearance_motion_policy_archive_encode, umi_appearance_motion_policy_archive_decode_if_unchanged,
+    UmiAppearanceMotionPolicyTransferEqual, UmiAppearanceMotionPolicyTransferTails, UmiAppearanceMotionPolicyTransferMalformed)
+
+
 int main(void) {
     UmiAppearanceMotionPolicy item;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -76,6 +82,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_motion_policy_is_valid(&item)) return 2;
     if (UmiAppearanceMotionPolicyTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceMotionPolicyConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;
 }

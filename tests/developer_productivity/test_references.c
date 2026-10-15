@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/developer_productivity/references.h"
@@ -35,6 +36,10 @@ int main(void)
 
     assert(umi_developer_reference_set_add(
         &set, &reference) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDeveloperReferenceSet, &set,
+        (umi_developer_reference_set_add(
+        &set, &reference)));
+
     assert(umi_developer_reference_set_for_symbol(
         &set, "symbol.main", matches, 4U, &count) == UMI_STATUS_OK);
     assert(count == 1U);

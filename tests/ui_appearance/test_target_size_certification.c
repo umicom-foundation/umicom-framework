@@ -70,6 +70,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceTargetSizeCertificationTransferCases, UmiAp
     umi_appearance_target_size_certification_archive_encode, umi_appearance_target_size_certification_archive_decode,
     UmiAppearanceTargetSizeCertificationTransferEqual, UmiAppearanceTargetSizeCertificationTransferTails, UmiAppearanceTargetSizeCertificationTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceTargetSizeCertificationConditionalArchiveCases, UmiAppearanceTargetSizeCertification,
+    umi_appearance_target_size_certification_archive_encode, umi_appearance_target_size_certification_archive_decode_if_unchanged,
+    UmiAppearanceTargetSizeCertificationTransferEqual, UmiAppearanceTargetSizeCertificationTransferTails, UmiAppearanceTargetSizeCertificationTransferMalformed)
+
+
 int main(void) {
     UmiAppearanceTargetSizeCertification item;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -77,6 +83,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_target_size_certification_is_valid(&item)) return 2;
     if (UmiAppearanceTargetSizeCertificationTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceTargetSizeCertificationConditionalArchiveCases(&item) != 0) return 1;
 
     item.width_dp=20.0; umi_appearance_target_size_certification_evaluate(&item); /* Apply this branch only when its contract condition is satisfied. */ if(item.passed) return 3;
     return 0;

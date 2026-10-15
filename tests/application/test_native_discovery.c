@@ -26,6 +26,7 @@
 typedef struct Evidence {
     bool studio;
     bool bank;
+    bool healthcare;
     size_t calls;
     size_t fail_at;
     size_t starts;
@@ -62,7 +63,8 @@ static UmiStatus probe(const char *path, bool *present, void *context)
     if (evidence->fail_at != 0U && evidence->calls == evidence->fail_at)
         return UMI_STATUS_PERMISSION_DENIED;
     *present = (strstr(path, "/umicom-studio-ide") != NULL && evidence->studio) ||
-               (strstr(path, "/umicom-bank") != NULL && evidence->bank);
+               (strstr(path, "/umicom-bank") != NULL && evidence->bank) ||
+               (strstr(path, "/umicom-healthcare") != NULL && evidence->healthcare);
     return UMI_STATUS_OK;
 }
 
@@ -159,7 +161,11 @@ int main(void)
     config.executable_root = TEST_ROOT;
     evidence.studio = true;
     REQUIRE(umi_desk_runtime_poll_native_discovery(desk, 0U, false, &fixture->report) == UMI_STATUS_OK);
+    /* Healthcare extends the native portfolio while remaining initially absent. */
+#if 0
     REQUIRE(fixture->report.scanned_count == 24U && fixture->report.installed_count == 1U);
+#endif
+    REQUIRE(fixture->report.scanned_count == 25U && fixture->report.installed_count == 1U);
     REQUIRE(!fixture->report.skipped && !evidence.wrong_path && evidence.starts == 0U);
     REQUIRE(umi_application_runtime_catalogue_find(catalogue, "org.umicom.os", &fixture->after) == UMI_STATUS_OK);
     REQUIRE(strcmp(fixture->after.executable_name, "umicom-os-control-centre-gtk") == 0);
@@ -179,7 +185,12 @@ int main(void)
     REQUIRE(umi_application_runtime_catalogue_find(catalogue, "org.umicom.studio", &fixture->before) == UMI_STATUS_OK);
     evidence.studio = false;
     evidence.bank = true;
+    /* The last scanned product changes when Framework admits a native host.
+     * Retain the original fixed boundary for comparison with older catalogues. */
+#if 0
     evidence.fail_at = evidence.calls + 24U;
+#endif
+    evidence.fail_at = evidence.calls + fixture->report.scanned_count;
     REQUIRE(umi_desk_runtime_poll_native_discovery(desk, 2000U, true, &fixture->report) == UMI_STATUS_PERMISSION_DENIED);
     REQUIRE(fixture->report.changed_count == 0U);
     REQUIRE(umi_application_runtime_catalogue_snapshot(catalogue, &fixture->unchanged) == UMI_STATUS_OK);
@@ -273,6 +284,27 @@ int main(void)
     REQUIRE(fixture->report.skipped && evidence.calls == baseline_calls);
     REQUIRE(umi_application_runtime_catalogue_snapshot(catalogue, &fixture->snapshot) == UMI_STATUS_OK);
     REQUIRE(fixture->snapshot.revision == baseline_revision);
+
+    /* Healthcare appears only after trusted discovery and disappears when the
+     * binary is absent. Fake adapters record requests without launching a GUI. */
+    REQUIRE(umi_desk_runtime_configure_native_discovery(desk, &config) == UMI_STATUS_OK);
+    REQUIRE(umi_application_runtime_catalogue_find(catalogue, "org.umicom.healthcare", &fixture->after) == UMI_STATUS_OK);
+    REQUIRE(!fixture->after.installed && !fixture->after.visible);
+    evidence.healthcare = true;
+    REQUIRE(umi_desk_runtime_poll_native_discovery(desk, 5000U, true, &fixture->report) == UMI_STATUS_OK);
+    REQUIRE(umi_application_runtime_catalogue_find(catalogue, "org.umicom.healthcare", &fixture->after) == UMI_STATUS_OK);
+    REQUIRE(fixture->after.installed && fixture->after.visible && fixture->after.enabled);
+    REQUIRE(strcmp(fixture->after.executable_name, "umicom-healthcare") == 0);
+    /* A catalogue mapping alone is insufficient: the shared experience must
+     * also admit this product to the same picker used by the native Desk UI. */
+    REQUIRE(umi_application_launch_selection_set_selected(
+        umi_desk_runtime_launch_selection(desk), "org.umicom.healthcare", true) == UMI_STATUS_OK);
+    REQUIRE(umi_application_launcher_request(launcher, "org.umicom.healthcare", UMI_APPLICATION_LAUNCH_START) == UMI_STATUS_OK);
+    REQUIRE(evidence.starts == 2U);
+    REQUIRE(umi_desk_runtime_request_application(desk, "org.umicom.healthcare", UMI_DESKTOP_APPLICATION_STRIP_STOP) == UMI_STATUS_OK);
+    evidence.healthcare = false;
+    REQUIRE(umi_desk_runtime_poll_native_discovery(desk, 6000U, true, &fixture->report) == UMI_STATUS_OK);
+    REQUIRE(umi_application_launcher_request(launcher, "org.umicom.healthcare", UMI_APPLICATION_LAUNCH_START) == UMI_STATUS_UNAVAILABLE);
 cleanup:
     umi_desk_runtime_destroy(desk);
     umi_desktop_shell_model_destroy(shell);

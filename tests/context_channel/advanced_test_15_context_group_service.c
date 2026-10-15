@@ -130,6 +130,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextGroupServiceTransferCases, UmiContextGroupServ
     umi_context_group_service_archive_encode, umi_context_group_service_archive_decode,
     UmiContextGroupServiceTransferEqual, UmiContextGroupServiceTransferTails, UmiContextGroupServiceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextGroupServiceConditionalArchiveCases, UmiContextGroupService,
+    umi_context_group_service_archive_encode, umi_context_group_service_archive_decode_if_unchanged,
+    UmiContextGroupServiceTransferEqual, UmiContextGroupServiceTransferTails, UmiContextGroupServiceTransferMalformed)
+
+
 int main(void)
 {
     UmiContextGroupService state;
@@ -144,6 +150,7 @@ int main(void)
     assert(umi_context_group_service_covers_sequence(&state,11U));
     assert(umi_context_group_service_validate(&state) == UMI_STATUS_OK);
     if (UmiContextGroupServiceTransferCases(&state) != 0) return 1;
+    if (UmiContextGroupServiceConditionalArchiveCases(&state) != 0) return 1;
 
     return 0;
 }

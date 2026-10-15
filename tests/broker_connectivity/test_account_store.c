@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/broker_connectivity/account_store.h"
@@ -27,6 +28,9 @@ int main(void)
     snapshot.netLiquidation = 100000.0;
     snapshot.providerSequence = 2U;
     assert(umi_broker_account_store_upsert(&store, &snapshot) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiBrokerAccountStore, &store,
+        (umi_broker_account_store_upsert(&store, &snapshot)));
+
     assert(umi_broker_account_store_find(&store, "DU123") != NULL);
 
     snapshot.providerSequence = 1U;

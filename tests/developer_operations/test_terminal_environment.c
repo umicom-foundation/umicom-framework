@@ -17,6 +17,10 @@
 
 #include "umicom/developer_operations/terminal/environment.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(UmiDeveloperOperationsEvaluateTerminalEnvironmentBatchCases, UmiDeveloperOperationsEvaluateTerminalEnvironment,
+    UmiDeveloperOperationsEvaluateTerminalEnvironmentBatch, UmiDeveloperOperationInput, UmiDeveloperOperationSnapshot, baseline)
+
 int main(void)
 {
     UmiDeveloperOperationInput input;
@@ -32,6 +36,7 @@ int main(void)
     input.blocked = 0;
     input.revision = 7U;
 
+    if (UmiDeveloperOperationsEvaluateTerminalEnvironmentBatchCases(&input) != 0) return 1;
     assert(UmiDeveloperOperationsEvaluateTerminalEnvironment(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "terminal.environment") == 0);
     assert(snapshot.revision == 7U);

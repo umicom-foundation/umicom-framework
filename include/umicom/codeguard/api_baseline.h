@@ -50,6 +50,10 @@ typedef struct UmiCodeGuardApiComparison {
 } UmiCodeGuardApiComparison;
 
 /* Initialise empty caller-owned baseline storage for a non-zero major release. */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_codeguard_api_baseline_init(
     UmiCodeGuardApiBaseline *baseline,
     const char *name,

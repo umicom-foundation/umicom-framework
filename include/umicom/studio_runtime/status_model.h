@@ -43,6 +43,9 @@ void umi_studio_status_model_init(UmiStudioRuntimeStatusModel *model);
  * Provide the studio status model build operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_studio_status_model_build(
     UmiStudioRuntimeStatusModel *model,
     const UmiIdeIntegrationPlatformSnapshot *snapshot,

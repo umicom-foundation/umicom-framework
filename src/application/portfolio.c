@@ -150,6 +150,11 @@ static const char *const PROFILE_EDUCATION[] = {"Course", "Lesson", "Assessment"
       (optional_values), COUNT_OF(optional_values), (domain_values), \
       COUNT_OF(domain_values), (profile_values), COUNT_OF(profile_values) }
 
+/* Healthcare uses the common runtime and a separate synthetic domain service.
+ * Its catalogue presence is not evidence of installation or clinical readiness. */
+static const char *const DOMAIN_HEALTHCARE[] = {"shell", "healthcare"};
+static const char *const PROFILE_HEALTHCARE[] = {"healthcare", "requests", "follow-up"};
+
 static const UmiApplicationDefinition APPLICATIONS[] = {
     APP("org.umicom.desktop", "Umicom Desk", "umicom-desktop", "umicom-desk",
         "Federated application desktop, launcher, taskbar and cross-application workspace.",
@@ -276,7 +281,12 @@ static const UmiApplicationDefinition APPLICATIONS[] = {
         "umicom-education", "Course, lesson, lab, assessment and tutorial production and delivery.",
         UMI_APPLICATION_FAMILY_EDUCATION, UMI_APPLICATION_ROADMAP,
         FRONTENDS_DESKTOP | UMI_FRONTEND_WEB | UMI_FRONTEND_MOBILE,
-        CAP_AUTHOR, OPTIONAL_TRADING, DOMAIN_EDUCATION, PROFILE_EDUCATION)
+        CAP_AUTHOR, OPTIONAL_TRADING, DOMAIN_EDUCATION, PROFILE_EDUCATION),
+    APP("org.umicom.healthcare", "Umicom Healthcare", "umicom-healthcare",
+        "umicom-healthcare-console", "Synthetic registration and medication-access coordination.",
+        UMI_APPLICATION_FAMILY_ENTERPRISE, UMI_APPLICATION_FOUNDATION,
+        UMI_FRONTEND_GTK4 | UMI_FRONTEND_CONSOLE, CAP_PLATFORM, OPTIONAL_NONE,
+        DOMAIN_HEALTHCARE, PROFILE_HEALTHCARE)
 };
 
 /*
@@ -368,7 +378,8 @@ const char *umi_application_portfolio_gui_executable(const char *application_id)
         {"org.umicom.os", "umicom-os-control-centre-gtk"},
         {"org.umicom.rag", "umicom-rag"},
         {"org.umicom.security-centre", "umicom-security-centre"},
-        {"org.umicom.web-studio", "umicom-web-studio"}
+        {"org.umicom.web-studio", "umicom-web-studio"},
+        {"org.umicom.healthcare", "umicom-healthcare"},
     };
     size_t index;
     /* Unknown IDs never become executable paths assembled from user input. */

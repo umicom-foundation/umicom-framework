@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/financial_platform/financial_audit_journal.h"
@@ -37,10 +38,16 @@ int main(void)
     UmiFinancialAuditRecord three = record(3U);
     umi_financial_audit_journal_init(&journal);
     assert(umi_financial_audit_journal_append(&journal, &one) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFinancialAuditJournal, &journal,
+        (umi_financial_audit_journal_append(&journal, &one)));
+
     assert(umi_financial_audit_journal_append(&journal, &three) == UMI_STATUS_OK);
     assert(journal.gapCount == 1U);
     assert(umi_financial_audit_journal_mark_persisted(&journal, 1U) ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFinancialAuditJournal, &journal,
+        (umi_financial_audit_journal_mark_persisted(&journal, 1U)));
+
     assert(umi_financial_audit_journal_persisted_count(&journal) == 1U);
     return 0;
 }

@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/workbench_context_host/endpoint.h"
 #include "../base/value_archive_internal.h"
 
@@ -282,3 +283,8 @@ static UmiStatus UmiWorkbenchContextHostEndpointArchiveValidate(const UmiWorkben
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_context_host_endpoint_archive_encode, umi_workbench_context_host_endpoint_archive_decode,
     UmiWorkbenchContextHostEndpoint, UmiWorkbenchContextHostEndpointArchiveSchema, UmiWorkbenchContextHostEndpointArchiveBound, UmiWorkbenchContextHostEndpointArchiveWrite, UmiWorkbenchContextHostEndpointArchiveRead, UmiWorkbenchContextHostEndpointArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_workbench_context_host_endpoint_archive_decode_if_unchanged, umi_workbench_context_host_endpoint_archive_encode,
+    UmiWorkbenchContextHostEndpoint, UmiWorkbenchContextHostEndpointArchiveSchema, UmiWorkbenchContextHostEndpointArchiveBound, UmiWorkbenchContextHostEndpointArchiveRead, UmiWorkbenchContextHostEndpointArchiveValidate)

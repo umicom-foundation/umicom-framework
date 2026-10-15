@@ -137,6 +137,12 @@ UMI_TEST_VALUE_TRANSFER(UmiDebugWorkbenchThreadFocusModelTransferCases, UmiDebug
     umi_debug_workbench_thread_focus_model_archive_encode, umi_debug_workbench_thread_focus_model_archive_decode,
     UmiDebugWorkbenchThreadFocusModelTransferEqual, UmiDebugWorkbenchThreadFocusModelTransferTails, UmiDebugWorkbenchThreadFocusModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDebugWorkbenchThreadFocusModelConditionalArchiveCases, UmiDebugWorkbenchThreadFocusModel,
+    umi_debug_workbench_thread_focus_model_archive_encode, umi_debug_workbench_thread_focus_model_archive_decode_if_unchanged,
+    UmiDebugWorkbenchThreadFocusModelTransferEqual, UmiDebugWorkbenchThreadFocusModelTransferTails, UmiDebugWorkbenchThreadFocusModelTransferMalformed)
+
+
 int main(void)
 {
     UmiDebugWorkbenchThreadFocusModel model;
@@ -151,6 +157,7 @@ int main(void)
     UMI_TEST_CHECK(!model.enabled);
     UMI_TEST_CHECK(umi_debug_workbench_thread_focus_model_valid(&model));
     if (UmiDebugWorkbenchThreadFocusModelTransferCases(&model) != 0) return 1;
+    if (UmiDebugWorkbenchThreadFocusModelConditionalArchiveCases(&model) != 0) return 1;
 
     return 0;
 }

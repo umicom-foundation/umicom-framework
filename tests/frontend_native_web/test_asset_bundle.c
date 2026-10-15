@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../value_archive/revision_cases.h"
 #include <stdio.h>
 #include <string.h>
 #include "umicom/frontend/native_web/asset_bundle.h"
@@ -23,6 +24,9 @@
  */
 int main(void)
 {
-    UmiNativeWebAssetBundle b; UmiNativeWebAsset a={0}; umi_native_web_asset_bundle_init(&b); strcpy(a.path,"/umi.js"); strcpy(a.content_type,"text/javascript"); CHECK(umi_native_web_asset_bundle_add(&b,&a)==UMI_STATUS_OK); CHECK(umi_native_web_asset_bundle_add(&b,&a)==UMI_STATUS_ALREADY_EXISTS);
+    UmiNativeWebAssetBundle b; UmiNativeWebAsset a={0}; umi_native_web_asset_bundle_init(&b); strcpy(a.path,"/umi.js"); strcpy(a.content_type,"text/javascript"); CHECK(umi_native_web_asset_bundle_add(&b,&a)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiNativeWebAssetBundle, &b,
+        (umi_native_web_asset_bundle_add(&b,&a)));
+ CHECK(umi_native_web_asset_bundle_add(&b,&a)==UMI_STATUS_ALREADY_EXISTS);
     return 0;
 }

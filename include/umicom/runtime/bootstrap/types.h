@@ -565,6 +565,16 @@ UmiStatus umi_bootstrap_provider_descriptor_archive_encode(const UmiBootstrapPro
 UmiStatus umi_bootstrap_provider_descriptor_archive_decode(const void *bytes, size_t byte_count,
     UmiBootstrapProviderDescriptor *value);
 
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the owner's publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_bootstrap_provider_descriptor_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiBootstrapProviderDescriptor *expected, UmiBootstrapProviderDescriptor *value);
+
+
 /** Transfer this value using the portable format described in value_archive.h.
  * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
  * validates every field before replacing the destination; refused input leaves
@@ -576,6 +586,16 @@ UmiStatus umi_bootstrap_factory_descriptor_archive_encode(const UmiBootstrapFact
 UmiStatus umi_bootstrap_factory_descriptor_archive_decode(const void *bytes, size_t byte_count,
     UmiBootstrapFactoryDescriptor *value);
 
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the owner's publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_bootstrap_factory_descriptor_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiBootstrapFactoryDescriptor *expected, UmiBootstrapFactoryDescriptor *value);
+
+
 /** Transfer this value using the portable format described in value_archive.h.
  * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
  * validates every field before replacing the destination; refused input leaves
@@ -586,6 +606,16 @@ UmiStatus umi_bootstrap_service_descriptor_archive_encode(const UmiBootstrapServ
     void *bytes, size_t capacity, size_t *out_size);
 UmiStatus umi_bootstrap_service_descriptor_archive_decode(const void *bytes, size_t byte_count,
     UmiBootstrapServiceDescriptor *value);
+
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the owner's publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_bootstrap_service_descriptor_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiBootstrapServiceDescriptor *expected, UmiBootstrapServiceDescriptor *value);
+
 
 #ifdef __cplusplus
 }

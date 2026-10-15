@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 
 #include "umicom/developer/ecosystem/install_review.h"
@@ -29,13 +30,26 @@ int main(void)
         UMI_ECOSYSTEM_ACTION_REVIEW_PERMISSIONS, record.package_id,
         "Review file-system permission.", UMI_ECOSYSTEM_REVIEW_WARNING,
         true, true) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiEcosystemInstallReview, &review,
+        (umi_ecosystem_install_review_add_action(&review,
+        UMI_ECOSYSTEM_ACTION_REVIEW_PERMISSIONS, record.package_id,
+        "Review file-system permission.", UMI_ECOSYSTEM_REVIEW_WARNING,
+        true, true)));
+
     assert(!umi_ecosystem_install_review_ready(&review));
     assert(review.pending_approval_count == 1U);
     assert(umi_ecosystem_install_review_set_approved(&review, 0U, true) ==
         UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiEcosystemInstallReview, &review,
+        (umi_ecosystem_install_review_set_approved(&review, 0U, true)));
+
     assert(umi_ecosystem_install_review_ready(&review));
     assert(umi_ecosystem_install_review_complete_action(&review, 0U,
         UMI_STATUS_IO_ERROR) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiEcosystemInstallReview, &review,
+        (umi_ecosystem_install_review_complete_action(&review, 0U,
+        UMI_STATUS_IO_ERROR)));
+
     assert(!umi_ecosystem_install_review_ready(&review));
     return 0;
 }

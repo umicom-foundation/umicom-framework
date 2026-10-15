@@ -51,6 +51,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadZoomPolicyTransferCases, UmiRadZoomPolicy,
     umi_rad_zoom_archive_encode, umi_rad_zoom_archive_decode,
     UmiRadZoomPolicyTransferEqual, UmiRadZoomPolicyTransferTails, UmiRadZoomPolicyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadZoomPolicyConditionalArchiveCases, UmiRadZoomPolicy,
+    umi_rad_zoom_archive_encode, umi_rad_zoom_archive_decode_if_unchanged,
+    UmiRadZoomPolicyTransferEqual, UmiRadZoomPolicyTransferTails, UmiRadZoomPolicyTransferMalformed)
+
+
 int main(void){UmiRadZoomPolicy item;CHECK(umi_rad_zoom_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_zoom_is_valid(&item));
     if (UmiRadZoomPolicyTransferCases(&item) != 0) return 1;
+    if (UmiRadZoomPolicyConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

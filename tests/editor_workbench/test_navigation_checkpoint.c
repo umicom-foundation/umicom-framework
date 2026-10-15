@@ -87,6 +87,13 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorWbNavigationCheckpointTransferCases, UmiEditorW
     umi_editor_wb_navigation_checkpoint_archive_encode, umi_editor_wb_navigation_checkpoint_archive_decode,
     UmiEditorWbNavigationCheckpointTransferEqual, UmiEditorWbNavigationCheckpointTransferTails, UmiEditorWbNavigationCheckpointTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorWbNavigationCheckpointConditionalArchiveCases, UmiEditorWbNavigationCheckpoint,
+    umi_editor_wb_navigation_checkpoint_archive_encode, umi_editor_wb_navigation_checkpoint_archive_decode_if_unchanged,
+    UmiEditorWbNavigationCheckpointTransferEqual, UmiEditorWbNavigationCheckpointTransferTails, UmiEditorWbNavigationCheckpointTransferMalformed)
+
+
 int main(void){ UmiEditorWbNavigationCheckpoint s; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_navigation_checkpoint_init(&s,"id","text")!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_navigation_checkpoint_set_values(&s,3U,4U,true)!=UMI_STATUS_OK)return 2; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_wb_navigation_checkpoint_valid(&s)||s.primary!=3U)return 3;
     if (UmiEditorWbNavigationCheckpointTransferCases(&s) != 0) return 1;
+    if (UmiEditorWbNavigationCheckpointConditionalArchiveCases(&s) != 0) return 1;
  return 0; }

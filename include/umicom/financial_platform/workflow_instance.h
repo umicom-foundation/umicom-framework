@@ -57,18 +57,30 @@ void umi_financial_workflow_instance_init(
     const char *workflowId,
     const char *subjectId);
 
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_financial_workflow_instance_add_task(
     UmiFinancialWorkflowInstance *workflow,
     const UmiFinancialWorkflowTask *task);
 
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_financial_workflow_instance_approve(
     UmiFinancialWorkflowInstance *workflow,
     const char *taskId);
 
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_financial_workflow_instance_complete(
     UmiFinancialWorkflowInstance *workflow,
     const char *taskId);
 
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_financial_workflow_instance_rollback(
     UmiFinancialWorkflowInstance *workflow,
     const char *taskId);

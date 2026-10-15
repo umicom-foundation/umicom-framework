@@ -117,6 +117,32 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkWorkspaceBridgeTransferCases, Umi
     umi_workbench_context_link_workspace_bridge_archive_encode, umi_workbench_context_link_workspace_bridge_archive_decode,
     UmiWorkbenchContextLinkWorkspaceBridgeTransferEqual, UmiWorkbenchContextLinkWorkspaceBridgeTransferTails, UmiWorkbenchContextLinkWorkspaceBridgeTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkWorkspaceBridgeConditionalArchiveCases, UmiWorkbenchContextLinkWorkspaceBridge,
+    umi_workbench_context_link_workspace_bridge_archive_encode, umi_workbench_context_link_workspace_bridge_archive_decode_if_unchanged,
+    UmiWorkbenchContextLinkWorkspaceBridgeTransferEqual, UmiWorkbenchContextLinkWorkspaceBridgeTransferTails, UmiWorkbenchContextLinkWorkspaceBridgeTransferMalformed)
+
+
+/* Delayed context edits must preserve newer work and reject exhausted tokens. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextLinkWorkspaceBridgeReviewedCases, UmiWorkbenchContextLinkWorkspaceBridge,
+    bridge_id, group_id, umi_workbench_context_link_workspace_bridge_replace_if_current, UmiWorkbenchContextLinkWorkspaceBridgeTransferEqual)
+static int UmiWorkbenchContextLinkWorkspaceBridgeMutationGuards(const UmiWorkbenchContextLinkWorkspaceBridge *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkWorkspaceBridge, panel_id, umi_workbench_context_link_workspace_bridge_set_primary, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkWorkspaceBridge, group_id, umi_workbench_context_link_workspace_bridge_set_secondary, sample);
+    UmiWorkbenchContextLinkWorkspaceBridge value = *sample;
+    unsigned char before[sizeof(value)];
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_link_workspace_bridge_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U ||
+        value.timestamp_ms != 44U) return 1;
+    memcpy(before, &value, sizeof(value));
+    umi_workbench_context_link_workspace_bridge_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof(value)) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextLinkWorkspaceBridge record;
@@ -125,6 +151,9 @@ int main(void)
     umi_workbench_context_link_workspace_bridge_init(&record, "workspace_bridge-id");
     assert(umi_workbench_context_link_workspace_bridge_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkWorkspaceBridgeTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkWorkspaceBridgeConditionalArchiveCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkWorkspaceBridgeReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkWorkspaceBridgeMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_context_link_workspace_bridge_set_primary(&record, "primary") == UMI_STATUS_OK);
     assert(umi_workbench_context_link_workspace_bridge_set_secondary(&record, "secondary") == UMI_STATUS_OK);

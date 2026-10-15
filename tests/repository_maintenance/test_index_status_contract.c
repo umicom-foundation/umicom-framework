@@ -51,6 +51,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRepositoryIndexStatusTransferCases, UmiRepositoryInde
     umi_repository_index_status_archive_encode, umi_repository_index_status_archive_decode,
     UmiRepositoryIndexStatusTransferEqual, UmiRepositoryIndexStatusTransferTails, UmiRepositoryIndexStatusTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRepositoryIndexStatusConditionalArchiveCases, UmiRepositoryIndexStatus,
+    umi_repository_index_status_archive_encode, umi_repository_index_status_archive_decode_if_unchanged,
+    UmiRepositoryIndexStatusTransferEqual, UmiRepositoryIndexStatusTransferTails, UmiRepositoryIndexStatusTransferMalformed)
+
+
 int main(void){ UmiRepositoryIndexStatus s; umi_repository_index_status_init(&s); s.staged_paths=2U; s.staged_gitlinks=1U; assert(umi_repository_index_status_validate(&s)==UMI_STATUS_OK);
     if (UmiRepositoryIndexStatusTransferCases(&s) != 0) return 1;
+    if (UmiRepositoryIndexStatusConditionalArchiveCases(&s) != 0) return 1;
  return 0; }

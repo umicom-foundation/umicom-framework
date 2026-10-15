@@ -57,6 +57,26 @@ UmiStatus umi_value_archive_inspect(const void *bytes, size_t byte_count,
  * - Codecs allocate nothing and perform no I/O. Whole-registry restoration
  *   uses bounded temporary storage and the existing atomic replacement path.
  */
+/* Conditional typed decoding adds a checked restore for caller-owned values:
+ * - Keep an independent copy of the encoded fields reviewed before starting an
+ *   import. Pass that expected snapshot with the destination to the typed
+ *   archive_decode_if_unchanged function. Passing the destination itself as
+ *   expected is allowed, but cannot detect changes since an earlier review.
+ * - The function validates both snapshots and compares their full canonical
+ *   encodings. A mismatch returns INVALID_STATE without changing the destination.
+ *   It ignores padding and unused string tails, just as encoding does.
+ * - The archive must have the matching schema, valid fields and a valid checksum.
+ *   Any error leaves all destination bytes unchanged. OUT_OF_MEMORY is possible:
+ *   comparison uses at most twice the encoded size, then decoding uses one
+ *   heap-allocated record. The old encode/decode APIs retain their contracts.
+ * - The caller serializes access to all input and output storage for the whole
+ *   call. This is not a mutex, a historical change detector or a database commit.
+ *   A value that changes away and back has the same encoded state. Owners that
+ *   need monotonic history must also use their revision-checked publication API.
+ * - Decoded IDs and revisions come from the archive. Restore into a reviewed
+ *   draft, then use the relevant registry/owner API to publish live state. No
+ *   network request, trade, provider connection or other command is executed.
+ */
 #ifdef __cplusplus
 }
 #endif

@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/integration/fabric/route_rule.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -126,10 +127,84 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricRouteRuleTransferCases, UmiFabricRouteRule,
     umi_fabric_route_rule_archive_encode, umi_fabric_route_rule_archive_decode,
     UmiFabricRouteRuleTransferEqual, UmiFabricRouteRuleTransferTails, UmiFabricRouteRuleTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricRouteRuleConditionalArchiveCases, UmiFabricRouteRule,
+    umi_fabric_route_rule_archive_encode, umi_fabric_route_rule_archive_decode_if_unchanged,
+    UmiFabricRouteRuleTransferEqual, UmiFabricRouteRuleTransferTails, UmiFabricRouteRuleTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted route rule value. */
+static int UmiFabricRouteRuleConstructionCases(void)
+{
+    UmiFabricRouteRule *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_fabric_route_rule_init(value, "r1", "trader.*", "trade.*", "risk", 10U) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->route_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_route_rule_init(value, oversized, "trader.*", "trade.*", "risk", 10U) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_route_rule_init(value, value->route_id, "trader.*", "trade.*", "risk", 10U) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->route_id, "r1") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->source_pattern) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_route_rule_init(value, "r1", oversized, "trade.*", "risk", 10U) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_route_rule_init(value, "r1", value->source_pattern, "trade.*", "risk", 10U) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->source_pattern, "trader.*") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->message_pattern) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_route_rule_init(value, "r1", "trader.*", oversized, "risk", 10U) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_route_rule_init(value, "r1", "trader.*", value->message_pattern, "risk", 10U) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->message_pattern, "trade.*") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->destination_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_route_rule_init(value, "r1", "trader.*", "trade.*", oversized, 10U) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_route_rule_init(value, "r1", "trader.*", "trade.*", value->destination_id, 10U) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->destination_id, "risk") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiFabricRouteRuleConstructionCases() != 0) return 1;
+
     UmiFabricRouteRule item;
     CHECK(umi_fabric_route_rule_init(&item,"r1","trader.*","trade.*","risk",10U)==UMI_STATUS_OK);
     if (UmiFabricRouteRuleTransferCases(&item) != 0) return 1;
+    if (UmiFabricRouteRuleConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.enabled);
     return 0;

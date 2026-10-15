@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/financial_platform/workflow_instance.h"
@@ -28,14 +29,26 @@ int main(void)
     task.state = UMI_FINANCIAL_WORKFLOW_APPROVAL_PENDING;
     assert(umi_financial_workflow_instance_add_task(&workflow, &task) ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFinancialWorkflowInstance, &workflow,
+        (umi_financial_workflow_instance_add_task(&workflow, &task)));
+
     assert(umi_financial_workflow_instance_complete(&workflow, "approve") ==
            UMI_STATUS_PERMISSION_DENIED);
     assert(umi_financial_workflow_instance_approve(&workflow, "approve") ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFinancialWorkflowInstance, &workflow,
+        (umi_financial_workflow_instance_approve(&workflow, "approve")));
+
     assert(umi_financial_workflow_instance_complete(&workflow, "approve") ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFinancialWorkflowInstance, &workflow,
+        (umi_financial_workflow_instance_complete(&workflow, "approve")));
+
     assert(umi_financial_workflow_instance_completion(&workflow) > 99.9);
     assert(umi_financial_workflow_instance_rollback(&workflow, "approve") ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFinancialWorkflowInstance, &workflow,
+        (umi_financial_workflow_instance_rollback(&workflow, "approve")));
+
     return 0;
 }

@@ -123,9 +123,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrApplicationIdentityTransferCases, UmiDrApplicationI
     umi_dr_application_identity_archive_encode, umi_dr_application_identity_archive_decode,
     UmiDrApplicationIdentityTransferEqual, UmiDrApplicationIdentityTransferTails, UmiDrApplicationIdentityTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrApplicationIdentityConditionalArchiveCases, UmiDrApplicationIdentity,
+    umi_dr_application_identity_archive_encode, umi_dr_application_identity_archive_decode_if_unchanged,
+    UmiDrApplicationIdentityTransferEqual, UmiDrApplicationIdentityTransferTails, UmiDrApplicationIdentityTransferMalformed)
+
+
 int main(void) {
     UmiDrApplicationIdentity value; umi_dr_application_identity_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"trader") == UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.publisher,sizeof(value.publisher),"Umicom Foundation") == UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.product,sizeof(value.product),"Umicom Trader") == UMI_STATUS_OK); CHECK(umi_dr_application_identity_valid(&value));
     if (UmiDrApplicationIdentityTransferCases(&value) != 0) return 1;
+    if (UmiDrApplicationIdentityConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_application_identity_fingerprint(&value) != 0U);
     return 0;
 }

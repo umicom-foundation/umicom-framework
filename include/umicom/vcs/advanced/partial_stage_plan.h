@@ -46,6 +46,8 @@ void umi_vcs_advanced_partial_stage_plan_init(UmiVcsAdvancedPartialStagePlan *pl
  * Provide the vcs advanced partial stage plan set root operation used by this module and
  * its client applications.
  */
+/** Failed edits preserve the complete value. Input may borrow this field;
+ * callers still serialize access. Existing empty/null input rules apply. */
 UmiStatus umi_vcs_advanced_partial_stage_plan_set_root(UmiVcsAdvancedPartialStagePlan *plan,
                                                         const char *root);
 /**

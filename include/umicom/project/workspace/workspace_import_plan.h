@@ -41,8 +41,14 @@ extern "C" {
     }
     UmiProjectWorkspaceWorkspaceImportPlan;
     void umi_project_workspace_workspace_import_plan_init(UmiProjectWorkspaceWorkspaceImportPlan *value);
-    UmiStatus umi_project_workspace_workspace_import_plan_add(UmiProjectWorkspaceWorkspaceImportPlan *value,const char *id,const char *action,bool required);
-    UmiStatus umi_project_workspace_workspace_import_plan_complete(UmiProjectWorkspaceWorkspaceImportPlan *value,const char *id);
+    /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
+UmiStatus umi_project_workspace_workspace_import_plan_add(UmiProjectWorkspaceWorkspaceImportPlan *value,const char *id,const char *action,bool required);
+    /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
+UmiStatus umi_project_workspace_workspace_import_plan_complete(UmiProjectWorkspaceWorkspaceImportPlan *value,const char *id);
     bool umi_project_workspace_workspace_import_plan_ready(const UmiProjectWorkspaceWorkspaceImportPlan *value);
 #ifdef __cplusplus
 }

@@ -75,8 +75,15 @@ UMI_TEST_VALUE_TRANSFER(UmiIbkrConnectionSettingsTransferCases, UmiIbkrConnectio
     umi_ibkr_settings_archive_encode, umi_ibkr_settings_archive_decode,
     UmiIbkrConnectionSettingsTransferEqual, UmiIbkrConnectionSettingsTransferTails, UmiIbkrConnectionSettingsTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiIbkrConnectionSettingsConditionalArchiveCases, UmiIbkrConnectionSettings,
+    umi_ibkr_settings_archive_encode, umi_ibkr_settings_archive_decode_if_unchanged,
+    UmiIbkrConnectionSettingsTransferEqual, UmiIbkrConnectionSettingsTransferTails, UmiIbkrConnectionSettingsTransferMalformed)
+
+
 int main(void){
     UmiIbkrConnectionSettings s={0};(void)snprintf(s.host,sizeof(s.host),"%s","127.0.0.1");s.port=7497U;s.client_id=17;s.environment=UMI_TRADING_PAPER;assert(umi_ibkr_settings_valid(&s));
     if (UmiIbkrConnectionSettingsTransferCases(&s) != 0) return 1;
+    if (UmiIbkrConnectionSettingsConditionalArchiveCases(&s) != 0) return 1;
 return 0;
 }

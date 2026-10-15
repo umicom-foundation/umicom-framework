@@ -69,6 +69,13 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorWbDirtyDocumentStateTransferCases, UmiEditorWbD
     umi_editor_wb_dirty_document_state_archive_encode, umi_editor_wb_dirty_document_state_archive_decode,
     UmiEditorWbDirtyDocumentStateTransferEqual, UmiEditorWbDirtyDocumentStateTransferTails, UmiEditorWbDirtyDocumentStateTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorWbDirtyDocumentStateConditionalArchiveCases, UmiEditorWbDirtyDocumentState,
+    umi_editor_wb_dirty_document_state_archive_encode, umi_editor_wb_dirty_document_state_archive_decode_if_unchanged,
+    UmiEditorWbDirtyDocumentStateTransferEqual, UmiEditorWbDirtyDocumentStateTransferTails, UmiEditorWbDirtyDocumentStateTransferMalformed)
+
+
 int main(void){ UmiEditorWbDirtyDocumentState s; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_dirty_document_state_init(&s,"item",false)!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_dirty_document_state_set(&s,true)!=UMI_STATUS_OK)return 2; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_wb_dirty_document_state_valid(&s)||!s.enabled)return 3;
     if (UmiEditorWbDirtyDocumentStateTransferCases(&s) != 0) return 1;
+    if (UmiEditorWbDirtyDocumentStateConditionalArchiveCases(&s) != 0) return 1;
  return 0; }

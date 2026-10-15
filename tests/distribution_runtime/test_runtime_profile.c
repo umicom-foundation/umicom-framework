@@ -76,9 +76,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrRuntimeProfileTransferCases, UmiDrRuntimeProfile,
     umi_dr_runtime_profile_archive_encode, umi_dr_runtime_profile_archive_decode,
     UmiDrRuntimeProfileTransferEqual, UmiDrRuntimeProfileTransferTails, UmiDrRuntimeProfileTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrRuntimeProfileConditionalArchiveCases, UmiDrRuntimeProfile,
+    umi_dr_runtime_profile_archive_encode, umi_dr_runtime_profile_archive_decode_if_unchanged,
+    UmiDrRuntimeProfileTransferEqual, UmiDrRuntimeProfileTransferTails, UmiDrRuntimeProfileTransferMalformed)
+
+
 int main(void) {
     UmiDrRuntimeProfile value; umi_dr_runtime_profile_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"linux-x64") == UMI_STATUS_OK); CHECK(umi_dr_runtime_profile_valid(&value));
     if (UmiDrRuntimeProfileTransferCases(&value) != 0) return 1;
+    if (UmiDrRuntimeProfileConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_runtime_profile_fingerprint(&value) != 0U);
     return 0;
 }

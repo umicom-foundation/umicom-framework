@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiTestEnvironmentModelTransferCases, UmiTestEnvironment
     umi_test_environment_model_archive_encode, umi_test_environment_model_archive_decode,
     UmiTestEnvironmentModelTransferEqual, UmiTestEnvironmentModelTransferTails, UmiTestEnvironmentModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestEnvironmentModelConditionalArchiveCases, UmiTestEnvironmentModel,
+    umi_test_environment_model_archive_encode, umi_test_environment_model_archive_decode_if_unchanged,
+    UmiTestEnvironmentModelTransferEqual, UmiTestEnvironmentModelTransferTails, UmiTestEnvironmentModelTransferMalformed)
+
+
 int main(void){UmiTestEnvironmentModel m;assert(umi_test_environment_model_init(&m,"test_environment_model","Test Environment Model")==UMI_STATUS_OK);assert(umi_test_environment_model_set_active(&m,true)==UMI_STATUS_OK);assert(umi_test_environment_model_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_test_environment_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_environment_model_valid(&m));
     if (UmiTestEnvironmentModelTransferCases(&m) != 0) return 1;
+    if (UmiTestEnvironmentModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

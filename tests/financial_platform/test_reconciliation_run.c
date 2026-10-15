@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/financial_platform/reconciliation_run.h"
@@ -35,6 +36,9 @@ int main(void)
     broken.targetValue = 102.0;
 
     assert(umi_financial_reconciliation_run_add(&run, &matched) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFinancialReconciliationRun, &run,
+        (umi_financial_reconciliation_run_add(&run, &matched)));
+
     assert(umi_financial_reconciliation_run_add(&run, &broken) == UMI_STATUS_OK);
     assert(run.matchedCount == 1U);
     assert(run.breakCount == 1U);
@@ -42,6 +46,9 @@ int main(void)
                &run, 3000U, 1000U) == 1U);
     assert(umi_financial_reconciliation_run_resolve(&run, "item-2") ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFinancialReconciliationRun, &run,
+        (umi_financial_reconciliation_run_resolve(&run, "item-2")));
+
     assert(umi_financial_reconciliation_run_coverage(&run) > 99.9);
     return 0;
 }

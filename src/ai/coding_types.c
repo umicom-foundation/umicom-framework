@@ -18,6 +18,7 @@
  * An application may use either slash style, but an AI response cannot escape
  * the workspace through an absolute path, drive prefix or '..' segment.
  */
+#include "../base/conditional_archive_internal.h"
 #include "umicom/ai/coding_types.h"
 #include "../base/value_archive_internal.h"
 
@@ -286,3 +287,9 @@ static UmiStatus UmiAiCodingRequestArchiveValidate(const UmiAiCodingRequest *val
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ai_coding_request_archive_encode, umi_ai_coding_request_archive_decode,
     UmiAiCodingRequest, UmiAiCodingRequestArchiveSchema, UmiAiCodingRequestArchiveBound, UmiAiCodingRequestArchiveWrite, UmiAiCodingRequestArchiveRead, UmiAiCodingRequestArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ai_coding_request_archive_decode_if_unchanged, umi_ai_coding_request_archive_encode,
+    UmiAiCodingRequest, UmiAiCodingRequestArchiveSchema, UmiAiCodingRequestArchiveBound, UmiAiCodingRequestArchiveRead, UmiAiCodingRequestArchiveValidate)

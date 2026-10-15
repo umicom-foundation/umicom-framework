@@ -12,11 +12,18 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/data/enterprise/field_mapping.h"
+#include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
 
 /* Initialisation centralises bounded text handling and defaults. */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_data_field_mapping_init(UmiDataFieldMapping *item, const char *mapping_id, const char *entity_id, const char *field_name, const char *column_name, UmiDataValueKind kind) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -27,6 +34,25 @@ UmiStatus umi_data_field_mapping_init(UmiDataFieldMapping *item, const char *map
     UmiStatus s=umi_data_enterprise_copy_text(item->mapping_id,sizeof(item->mapping_id),mapping_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->entity_id,sizeof(item->entity_id),entity_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->field_name,sizeof(item->field_name),field_name);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->column_name,sizeof(item->column_name),column_name);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->kind=kind;item->nullable=false;
     return umi_data_field_mapping_validate(item);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_data_field_mapping_init_build_value(UmiDataFieldMapping *item, const char *mapping_id, const char *entity_id, const char *field_name, const char *column_name, UmiDataValueKind kind) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(item, 0, sizeof(*item));
+    UmiStatus s=umi_data_enterprise_copy_text(item->mapping_id,sizeof(item->mapping_id),mapping_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->entity_id,sizeof(item->entity_id),entity_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->field_name,sizeof(item->field_name),field_name);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->column_name,sizeof(item->column_name),column_name);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->kind=kind;item->nullable=false;
+    return umi_data_field_mapping_validate(item);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_data_field_mapping_init, UmiDataFieldMapping, item,
+    (UmiDataFieldMapping *item, const char *mapping_id, const char *entity_id, const char *field_name, const char *column_name, UmiDataValueKind kind),
+    umi_data_field_mapping_init_build_value(candidate, mapping_id, entity_id, field_name, column_name, kind))
+
 
 /* Validation prevents malformed metadata from leaking into later query/migration stages. */
 UmiStatus umi_data_field_mapping_validate(const UmiDataFieldMapping *item) {
@@ -97,3 +123,9 @@ static UmiStatus UmiDataFieldMappingArchiveValidate(const UmiDataFieldMapping *v
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_data_field_mapping_archive_encode, umi_data_field_mapping_archive_decode,
     UmiDataFieldMapping, UmiDataFieldMappingArchiveSchema, UmiDataFieldMappingArchiveBound, UmiDataFieldMappingArchiveWrite, UmiDataFieldMappingArchiveRead, UmiDataFieldMappingArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_data_field_mapping_archive_decode_if_unchanged, umi_data_field_mapping_archive_encode,
+    UmiDataFieldMapping, UmiDataFieldMappingArchiveSchema, UmiDataFieldMappingArchiveBound, UmiDataFieldMappingArchiveRead, UmiDataFieldMappingArchiveValidate)

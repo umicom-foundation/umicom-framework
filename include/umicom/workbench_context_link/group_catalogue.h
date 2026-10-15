@@ -49,6 +49,10 @@ void umi_workbench_context_link_group_catalogue_destroy(
  * Provide the workbench context link group catalogue upsert operation used by this module
  * and its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
+/** Replacing a record also refuses an exhausted input revision before copying it. */
 UmiStatus umi_workbench_context_link_group_catalogue_upsert(
     UmiWorkbenchContextLinkGroupCatalogue *catalogue,
     const UmiWorkbenchContextLinkGroupProfile *profile);
@@ -56,6 +60,9 @@ UmiStatus umi_workbench_context_link_group_catalogue_upsert(
  * Remove workbench context link group catalogue while keeping the remaining records in a
  * valid and discoverable state.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_context_link_group_catalogue_remove(
     UmiWorkbenchContextLinkGroupCatalogue *catalogue,
     const char *group_id);

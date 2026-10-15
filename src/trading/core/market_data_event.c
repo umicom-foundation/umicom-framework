@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/trading/core/market_data_event.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -89,3 +90,8 @@ static UmiStatus UmiTradingMarketDataEventArchiveValidate(const UmiTradingMarket
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_trading_market_data_event_archive_encode, umi_trading_market_data_event_archive_decode,
     UmiTradingMarketDataEvent, UmiTradingMarketDataEventArchiveSchema, UmiTradingMarketDataEventArchiveBound, UmiTradingMarketDataEventArchiveWrite, UmiTradingMarketDataEventArchiveRead, UmiTradingMarketDataEventArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_trading_market_data_event_archive_decode_if_unchanged, umi_trading_market_data_event_archive_encode,
+    UmiTradingMarketDataEvent, UmiTradingMarketDataEventArchiveSchema, UmiTradingMarketDataEventArchiveBound, UmiTradingMarketDataEventArchiveRead, UmiTradingMarketDataEventArchiveValidate)

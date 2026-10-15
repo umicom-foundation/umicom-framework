@@ -17,6 +17,10 @@
 
 #include "umicom/developer_operations/coverage/history.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(UmiDeveloperOperationsEvaluateCoverageHistoryBatchCases, UmiDeveloperOperationsEvaluateCoverageHistory,
+    UmiDeveloperOperationsEvaluateCoverageHistoryBatch, UmiDeveloperOperationInput, UmiDeveloperOperationSnapshot, baseline)
+
 int main(void)
 {
     UmiDeveloperOperationInput input;
@@ -32,6 +36,7 @@ int main(void)
     input.blocked = 0;
     input.revision = 7U;
 
+    if (UmiDeveloperOperationsEvaluateCoverageHistoryBatchCases(&input) != 0) return 1;
     assert(UmiDeveloperOperationsEvaluateCoverageHistory(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "coverage.history") == 0);
     assert(snapshot.revision == 7U);

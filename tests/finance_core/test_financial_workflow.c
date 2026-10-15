@@ -106,10 +106,17 @@ UMI_TEST_VALUE_TRANSFER(UmiFinancialWorkflowTransferCases, UmiFinancialWorkflow,
     umi_financial_workflow_archive_encode, umi_financial_workflow_archive_decode,
     UmiFinancialWorkflowTransferEqual, UmiFinancialWorkflowTransferTails, UmiFinancialWorkflowTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFinancialWorkflowConditionalArchiveCases, UmiFinancialWorkflow,
+    umi_financial_workflow_archive_encode, umi_financial_workflow_archive_decode_if_unchanged,
+    UmiFinancialWorkflowTransferEqual, UmiFinancialWorkflowTransferTails, UmiFinancialWorkflowTransferMalformed)
+
+
 int main(void)
 {
     UmiFinancialWorkflow x; CHECK(umi_financial_workflow_init(&x,"ID","Name","PARENT",1U)==UMI_STATUS_OK); CHECK(umi_financial_workflow_is_valid(&x));
     if (UmiFinancialWorkflowTransferCases(&x) != 0) return 1;
+    if (UmiFinancialWorkflowConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;
 }

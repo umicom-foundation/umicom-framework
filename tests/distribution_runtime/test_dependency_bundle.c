@@ -90,9 +90,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrDependencyBundleTransferCases, UmiDrDependencyBundl
     umi_dr_dependency_bundle_archive_encode, umi_dr_dependency_bundle_archive_decode,
     UmiDrDependencyBundleTransferEqual, UmiDrDependencyBundleTransferTails, UmiDrDependencyBundleTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrDependencyBundleConditionalArchiveCases, UmiDrDependencyBundle,
+    umi_dr_dependency_bundle_archive_encode, umi_dr_dependency_bundle_archive_decode_if_unchanged,
+    UmiDrDependencyBundleTransferEqual, UmiDrDependencyBundleTransferTails, UmiDrDependencyBundleTransferMalformed)
+
+
 int main(void) {
     UmiDrDependencyBundle value; umi_dr_dependency_bundle_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"deps")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.application_id,sizeof(value.application_id),"app")==UMI_STATUS_OK); CHECK(umi_dr_dependency_bundle_valid(&value));
     if (UmiDrDependencyBundleTransferCases(&value) != 0) return 1;
+    if (UmiDrDependencyBundleConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_dependency_bundle_fingerprint(&value) != 0U);
     return 0;
 }

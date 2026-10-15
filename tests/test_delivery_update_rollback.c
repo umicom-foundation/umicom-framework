@@ -23,6 +23,7 @@
 #undef NDEBUG
 #endif
 #include <assert.h>
+#include "value_archive/construction_cases.h"
 #include "umicom/delivery/update.h"
 #include "umicom/delivery/update_plan.h"
 #include "umicom/delivery/rollback.h"
@@ -76,7 +77,44 @@ UMI_TEST_VALUE_TRANSFER(UmiRollbackPlanTransferCases, UmiRollbackPlan,
     umi_rollback_plan_archive_encode, umi_rollback_plan_archive_decode,
     UmiRollbackPlanTransferEqual, UmiRollbackPlanTransferTails, UmiRollbackPlanTransferMalformed)
 
+#include "value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRollbackPlanConditionalArchiveCases, UmiRollbackPlan,
+    umi_rollback_plan_archive_encode, umi_rollback_plan_archive_decode_if_unchanged,
+    UmiRollbackPlanTransferEqual, UmiRollbackPlanTransferTails, UmiRollbackPlanTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted update plan value. */
+static int UmiUpdatePlanConstructionCases(void)
+{
+    UmiUpdatePlan *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_update_plan_init(value, 1U, 2U, UMI_UPDATE_AVAILABLE, "new build") == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->reason) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_update_plan_init(value, 1U, 2U, UMI_UPDATE_AVAILABLE, oversized) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_update_plan_init(value, 1U, 2U, UMI_UPDATE_AVAILABLE, value->reason) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->reason, "new build") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiUpdatePlanConstructionCases() != 0) return 1;
+
     UmiUpdatePlan update;
     UmiRollbackPlan rollback;
     assert(umi_update_decide(1U, 2U, 1, 1) == UMI_UPDATE_AVAILABLE);
@@ -86,6 +124,7 @@ int main(void) {
     assert(umi_rollback_plan_approve(&rollback) == UMI_STATUS_OK);
     assert(umi_rollback_plan_valid(&rollback));
     if (UmiRollbackPlanTransferCases(&rollback) != 0) return 1;
+    if (UmiRollbackPlanConditionalArchiveCases(&rollback) != 0) return 1;
 
     return 0;
 }

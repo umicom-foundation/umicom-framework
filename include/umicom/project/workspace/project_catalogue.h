@@ -31,7 +31,10 @@ extern "C" {
     }
     UmiProjectWorkspaceProjectCatalogue;
     void umi_project_workspace_project_catalogue_init(UmiProjectWorkspaceProjectCatalogue *value);
-    UmiStatus umi_project_workspace_project_catalogue_add(UmiProjectWorkspaceProjectCatalogue *value, const char *id);
+    /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
+UmiStatus umi_project_workspace_project_catalogue_add(UmiProjectWorkspaceProjectCatalogue *value, const char *id);
     bool umi_project_workspace_project_catalogue_contains(const UmiProjectWorkspaceProjectCatalogue *value, const char *id);
     UmiStatus umi_project_workspace_project_catalogue_at(const UmiProjectWorkspaceProjectCatalogue *value, size_t index, const char **out_id);
 #ifdef __cplusplus

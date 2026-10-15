@@ -57,6 +57,10 @@ typedef struct UmiWsNodeGraphSurface {
  * Initialise ws node graph surface from caller-provided values so later operations receive
  * a known state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_ws_node_graph_surface_init(UmiWsNodeGraphSurface *graph, const char *graph_id);
 /**
  * Provide the ws node graph surface add node operation used by this module and its client

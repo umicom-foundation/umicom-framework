@@ -87,6 +87,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicWindowPlacementTransferCases, UmiUiMosaicWind
     umi_ui_mosaic_window_placement_archive_encode, umi_ui_mosaic_window_placement_archive_decode,
     UmiUiMosaicWindowPlacementTransferEqual, UmiUiMosaicWindowPlacementTransferTails, UmiUiMosaicWindowPlacementTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicWindowPlacementConditionalArchiveCases, UmiUiMosaicWindowPlacement,
+    umi_ui_mosaic_window_placement_archive_encode, umi_ui_mosaic_window_placement_archive_decode_if_unchanged,
+    UmiUiMosaicWindowPlacementTransferEqual, UmiUiMosaicWindowPlacementTransferTails, UmiUiMosaicWindowPlacementTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicWindowPlacement value;
     umi_ui_mosaic_window_placement_init(&value);
@@ -94,6 +100,7 @@ int main(void) {
     value.item_count = 4U;
     CHECK(umi_ui_mosaic_window_placement_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicWindowPlacementTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicWindowPlacementConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_window_placement_touch(&value) == UMI_STATUS_OK);
     CHECK(value.revision == 2U);

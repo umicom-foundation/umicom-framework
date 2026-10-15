@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/workbench_context_event/route_hop.h"
 #include "../base/value_archive_internal.h"
 #include "../base/record_update_internal.h"
@@ -370,3 +371,8 @@ UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_context_event_route_hop_archive_encode, u
  * all fields together without emitting events or changing any external service. */
 UMI_DEFINE_REVIEWED_IDENTITY_RECORD_EDIT(umi_workbench_context_event_route_hop_replace_if_current,
     UmiWorkbenchContextEventRouteHop, record_id, UmiWorkbenchContextEventRouteHopArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_workbench_context_event_route_hop_archive_decode_if_unchanged, umi_workbench_context_event_route_hop_archive_encode,
+    UmiWorkbenchContextEventRouteHop, UmiWorkbenchContextEventRouteHopArchiveSchema, UmiWorkbenchContextEventRouteHopArchiveBound, UmiWorkbenchContextEventRouteHopArchiveRead, UmiWorkbenchContextEventRouteHopArchiveValidate)

@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/delivery/package_manifest.h"
+#include "../base/value_construction_internal.h"
 #include "delivery_internal.h"
 #include <string.h>
 
@@ -20,6 +21,11 @@
  * Initialise package manifest from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_package_manifest_init(UmiPackageManifest *manifest,
                                         const char *product_id,
                                         const char *version,
@@ -49,6 +55,44 @@ UmiStatus umi_package_manifest_init(UmiPackageManifest *manifest,
     manifest->format = format;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_package_manifest_init_build_value(UmiPackageManifest *manifest,
+                                        const char *product_id,
+                                        const char *version,
+                                        const char *entrypoint,
+                                        UmiPackageFormat format)
+{
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (manifest == NULL || product_id == NULL || version == NULL ||
+        entrypoint == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(manifest, 0, sizeof(*manifest));
+    status = umi_delivery_copy_text(manifest->product_id,
+                                    sizeof(manifest->product_id), product_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_delivery_copy_text(manifest->version,
+                                    sizeof(manifest->version), version);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_delivery_copy_text(manifest->entrypoint,
+                                    sizeof(manifest->entrypoint), entrypoint);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    manifest->format = format;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_package_manifest_init, UmiPackageManifest, manifest,
+    (UmiPackageManifest *manifest, const char *product_id, const char *version, const char *entrypoint, UmiPackageFormat format),
+    umi_package_manifest_init_build_value(candidate, product_id, version, entrypoint, format))
+
 
 /*
  * Find package manifest while leaving the underlying catalogue or model owned by this

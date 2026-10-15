@@ -39,6 +39,10 @@ typedef struct UmiWsPerspectiveTemplate {
  * Initialise ws perspective template from caller-provided values so later operations
  * receive a known state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_ws_perspective_template_init(UmiWsPerspectiveTemplate *perspective,
                                            const char *perspective_id,
                                            const char *label,
@@ -47,6 +51,8 @@ UmiStatus umi_ws_perspective_template_init(UmiWsPerspectiveTemplate *perspective
  * Provide the ws perspective template set default layout operation used by this module and
  * its client applications.
  */
+/** Failed edits preserve the complete value. Input may borrow this field;
+ * callers still serialize access. Existing empty/null input rules apply. */
 UmiStatus umi_ws_perspective_template_set_default_layout(UmiWsPerspectiveTemplate *perspective,
                                                          const char *layout_id);
 /**

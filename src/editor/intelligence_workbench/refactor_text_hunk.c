@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/editor/intelligence_workbench/refactor_text_hunk.h"
 #include "../../base/value_archive_internal.h"
 
@@ -123,3 +124,8 @@ static UmiStatus UmiEditorIntelRefactorTextHunkArchiveValidate(const UmiEditorIn
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_editor_intel_refactor_text_hunk_archive_encode, umi_editor_intel_refactor_text_hunk_archive_decode,
     UmiEditorIntelRefactorTextHunk, UmiEditorIntelRefactorTextHunkArchiveSchema, UmiEditorIntelRefactorTextHunkArchiveBound, UmiEditorIntelRefactorTextHunkArchiveWrite, UmiEditorIntelRefactorTextHunkArchiveRead, UmiEditorIntelRefactorTextHunkArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_editor_intel_refactor_text_hunk_archive_decode_if_unchanged, umi_editor_intel_refactor_text_hunk_archive_encode,
+    UmiEditorIntelRefactorTextHunk, UmiEditorIntelRefactorTextHunkArchiveSchema, UmiEditorIntelRefactorTextHunkArchiveBound, UmiEditorIntelRefactorTextHunkArchiveRead, UmiEditorIntelRefactorTextHunkArchiveValidate)

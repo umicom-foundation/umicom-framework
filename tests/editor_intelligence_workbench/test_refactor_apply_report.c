@@ -70,6 +70,13 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorIntelRefactorApplyReportTransferCases, UmiEdito
     umi_editor_intel_refactor_apply_report_archive_encode, umi_editor_intel_refactor_apply_report_archive_decode,
     UmiEditorIntelRefactorApplyReportTransferEqual, UmiEditorIntelRefactorApplyReportTransferTails, UmiEditorIntelRefactorApplyReportTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelRefactorApplyReportConditionalArchiveCases, UmiEditorIntelRefactorApplyReport,
+    umi_editor_intel_refactor_apply_report_archive_encode, umi_editor_intel_refactor_apply_report_archive_decode_if_unchanged,
+    UmiEditorIntelRefactorApplyReportTransferEqual, UmiEditorIntelRefactorApplyReportTransferTails, UmiEditorIntelRefactorApplyReportTransferMalformed)
+
+
 int main(void){UmiEditorIntelRefactorApplyReport transaction;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_apply_report_begin(&transaction,"tx-1",2U)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_apply_report_record_apply(&transaction)!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_apply_report_record_apply(&transaction)!=UMI_STATUS_OK)return 3;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_apply_report_commit(&transaction)!=UMI_STATUS_OK)return 4;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_intel_refactor_apply_report_valid(&transaction)||transaction.phase!=UMI_EDITOR_INTEL_PHASE_COMMITTED)return 5;
     if (UmiEditorIntelRefactorApplyReportTransferCases(&transaction) != 0) return 1;
+    if (UmiEditorIntelRefactorApplyReportConditionalArchiveCases(&transaction) != 0) return 1;
 return 0;}

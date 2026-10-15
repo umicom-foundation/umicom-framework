@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/editor/workbench/preview_editor.h"
 #include "../../base/value_archive_internal.h"
 
@@ -77,3 +78,8 @@ static UmiStatus UmiEditorWbPreviewEditorArchiveValidate(const UmiEditorWbPrevie
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_editor_wb_preview_editor_archive_encode, umi_editor_wb_preview_editor_archive_decode,
     UmiEditorWbPreviewEditor, UmiEditorWbPreviewEditorArchiveSchema, UmiEditorWbPreviewEditorArchiveBound, UmiEditorWbPreviewEditorArchiveWrite, UmiEditorWbPreviewEditorArchiveRead, UmiEditorWbPreviewEditorArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_editor_wb_preview_editor_archive_decode_if_unchanged, umi_editor_wb_preview_editor_archive_encode,
+    UmiEditorWbPreviewEditor, UmiEditorWbPreviewEditorArchiveSchema, UmiEditorWbPreviewEditorArchiveBound, UmiEditorWbPreviewEditorArchiveRead, UmiEditorWbPreviewEditorArchiveValidate)

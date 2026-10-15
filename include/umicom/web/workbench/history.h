@@ -68,6 +68,9 @@ uint64_t umi_web_workbench_history_begin(
  * Provide the web workbench history complete operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_web_workbench_history_complete(
     UmiWebWorkbenchHistory *history,
     uint64_t execution_id,

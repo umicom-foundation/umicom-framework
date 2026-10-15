@@ -57,6 +57,13 @@ UMI_TEST_VALUE_TRANSFER(UmiDesignSelectionControlSpecTransferCases, UmiDesignSel
     umi_design_selection_control_spec_archive_encode, umi_design_selection_control_spec_archive_decode,
     UmiDesignSelectionControlSpecTransferEqual, UmiDesignSelectionControlSpecTransferTails, UmiDesignSelectionControlSpecTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignSelectionControlSpecConditionalArchiveCases, UmiDesignSelectionControlSpec,
+    umi_design_selection_control_spec_archive_encode, umi_design_selection_control_spec_archive_decode_if_unchanged,
+    UmiDesignSelectionControlSpecTransferEqual, UmiDesignSelectionControlSpecTransferTails, UmiDesignSelectionControlSpecTransferMalformed)
+
+
 int main(void){UmiDesignSelectionControlSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_selection_control_spec_init(&s,UMI_UI_COMPONENT_CHECK_BUTTON,1,1,0)!=UMI_STATUS_OK)return 1;
     if (UmiDesignSelectionControlSpecTransferCases(&s) != 0) return 1;
+    if (UmiDesignSelectionControlSpecConditionalArchiveCases(&s) != 0) return 1;
 return s.selected?0:2;}

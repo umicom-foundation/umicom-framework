@@ -58,6 +58,12 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextHostDeliveryPolicyTransferCases, UmiW
     umi_workbench_context_host_delivery_policy_archive_encode, umi_workbench_context_host_delivery_policy_archive_decode,
     UmiWorkbenchContextHostDeliveryPolicyTransferEqual, UmiWorkbenchContextHostDeliveryPolicyTransferTails, UmiWorkbenchContextHostDeliveryPolicyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextHostDeliveryPolicyConditionalArchiveCases, UmiWorkbenchContextHostDeliveryPolicy,
+    umi_workbench_context_host_delivery_policy_archive_encode, umi_workbench_context_host_delivery_policy_archive_decode_if_unchanged,
+    UmiWorkbenchContextHostDeliveryPolicyTransferEqual, UmiWorkbenchContextHostDeliveryPolicyTransferTails, UmiWorkbenchContextHostDeliveryPolicyTransferMalformed)
+
+
 int main(void)
 {
     UmiWorkbenchContextHostDeliveryPolicy policy =
@@ -67,6 +73,7 @@ int main(void)
     assert(umi_workbench_context_host_delivery_policy_validate(
         &policy) == UMI_STATUS_OK);
     if (UmiWorkbenchContextHostDeliveryPolicyTransferCases(&policy) != 0) return 1;
+    if (UmiWorkbenchContextHostDeliveryPolicyConditionalArchiveCases(&policy) != 0) return 1;
 
     policy.max_pending_per_endpoint = 0U;
     assert(umi_workbench_context_host_delivery_policy_validate(

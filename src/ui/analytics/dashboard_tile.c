@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/analytics/dashboard_tile.h"
 #include "../../base/value_archive_internal.h"
 
@@ -80,3 +81,8 @@ static UmiStatus UmiAnalyticsDashboardTileArchiveValidate(const UmiAnalyticsDash
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_analytics_dashboard_tile_archive_encode, umi_analytics_dashboard_tile_archive_decode,
     UmiAnalyticsDashboardTile, UmiAnalyticsDashboardTileArchiveSchema, UmiAnalyticsDashboardTileArchiveBound, UmiAnalyticsDashboardTileArchiveWrite, UmiAnalyticsDashboardTileArchiveRead, UmiAnalyticsDashboardTileArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_analytics_dashboard_tile_archive_decode_if_unchanged, umi_analytics_dashboard_tile_archive_encode,
+    UmiAnalyticsDashboardTile, UmiAnalyticsDashboardTileArchiveSchema, UmiAnalyticsDashboardTileArchiveBound, UmiAnalyticsDashboardTileArchiveRead, UmiAnalyticsDashboardTileArchiveValidate)

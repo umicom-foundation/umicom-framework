@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/appearance/icon_variant_resolution.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -94,3 +95,8 @@ static UmiStatus UmiAppearanceIconVariantResolutionArchiveValidate(const UmiAppe
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_appearance_icon_variant_resolution_archive_encode, umi_appearance_icon_variant_resolution_archive_decode,
     UmiAppearanceIconVariantResolution, UmiAppearanceIconVariantResolutionArchiveSchema, UmiAppearanceIconVariantResolutionArchiveBound, UmiAppearanceIconVariantResolutionArchiveWrite, UmiAppearanceIconVariantResolutionArchiveRead, UmiAppearanceIconVariantResolutionArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_appearance_icon_variant_resolution_archive_decode_if_unchanged, umi_appearance_icon_variant_resolution_archive_encode,
+    UmiAppearanceIconVariantResolution, UmiAppearanceIconVariantResolutionArchiveSchema, UmiAppearanceIconVariantResolutionArchiveBound, UmiAppearanceIconVariantResolutionArchiveRead, UmiAppearanceIconVariantResolutionArchiveValidate)

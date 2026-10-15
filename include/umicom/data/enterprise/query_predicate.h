@@ -37,6 +37,9 @@ typedef struct UmiDataQueryPredicate {
 /* Reset the bounded query predicate registry. */
 void umi_data_query_predicate_init(UmiDataQueryPredicate *registry);
 /* Add a unique item by stable identifier. */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_data_query_predicate_add(UmiDataQueryPredicate *registry, const UmiDataQueryExpression *item);
 /* Find a registry item by stable identifier. */
 UmiStatus umi_data_query_predicate_find(const UmiDataQueryPredicate *registry, const char *id, UmiDataQueryExpression *out_item);

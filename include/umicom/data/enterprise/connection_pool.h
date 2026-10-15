@@ -30,9 +30,18 @@ extern "C" {
  */
 typedef struct UmiDataConnectionPool { UmiDataConnectionSlot slots[UMI_DATA_ENTERPRISE_MAX_ITEMS]; size_t count; size_t leased_count; uint64_t revision; } UmiDataConnectionPool;
 /* Reset connection-pool metadata. */ void umi_data_connection_pool_init(UmiDataConnectionPool *pool);
-/* Register a backend-owned connection token as a pool slot. */ UmiStatus umi_data_connection_pool_add(UmiDataConnectionPool *pool,const UmiDataConnectionSlot *slot);
-/* Lease the first healthy free slot and return its token. */ UmiStatus umi_data_connection_pool_acquire(UmiDataConnectionPool *pool,uint64_t now,uint64_t *out_token);
-/* Release a previously leased backend token. */ UmiStatus umi_data_connection_pool_release(UmiDataConnectionPool *pool,uint64_t connection_token,uint64_t now);
+/* Register a backend-owned connection token as a pool slot. */ /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
+UmiStatus umi_data_connection_pool_add(UmiDataConnectionPool *pool,const UmiDataConnectionSlot *slot);
+/* Lease the first healthy free slot and return its token. */ /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
+UmiStatus umi_data_connection_pool_acquire(UmiDataConnectionPool *pool,uint64_t now,uint64_t *out_token);
+/* Release a previously leased backend token. */ /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
+UmiStatus umi_data_connection_pool_release(UmiDataConnectionPool *pool,uint64_t connection_token,uint64_t now);
 
 #ifdef __cplusplus
 }

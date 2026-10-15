@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/integration/fabric/message_header.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -143,10 +144,84 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricMessageHeaderTransferCases, UmiFabricMessageHea
     umi_fabric_message_header_archive_encode, umi_fabric_message_header_archive_decode,
     UmiFabricMessageHeaderTransferEqual, UmiFabricMessageHeaderTransferTails, UmiFabricMessageHeaderTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricMessageHeaderConditionalArchiveCases, UmiFabricMessageHeader,
+    umi_fabric_message_header_archive_encode, umi_fabric_message_header_archive_decode_if_unchanged,
+    UmiFabricMessageHeaderTransferEqual, UmiFabricMessageHeaderTransferTails, UmiFabricMessageHeaderTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted message header value. */
+static int UmiFabricMessageHeaderConstructionCases(void)
+{
+    UmiFabricMessageHeader *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_fabric_message_header_init(value, "m1", "c1", "tenant", "application/json", 100U) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->message_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_message_header_init(value, oversized, "c1", "tenant", "application/json", 100U) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_message_header_init(value, value->message_id, "c1", "tenant", "application/json", 100U) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->message_id, "m1") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->correlation_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_message_header_init(value, "m1", oversized, "tenant", "application/json", 100U) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_message_header_init(value, "m1", value->correlation_id, "tenant", "application/json", 100U) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->correlation_id, "c1") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->tenant_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_message_header_init(value, "m1", "c1", oversized, "application/json", 100U) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_message_header_init(value, "m1", "c1", value->tenant_id, "application/json", 100U) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->tenant_id, "tenant") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->content_type) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_message_header_init(value, "m1", "c1", "tenant", oversized, 100U) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_message_header_init(value, "m1", "c1", "tenant", value->content_type, 100U) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->content_type, "application/json") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiFabricMessageHeaderConstructionCases() != 0) return 1;
+
     UmiFabricMessageHeader item;
     CHECK(umi_fabric_message_header_init(&item,"m1","c1","tenant","application/json",100U)==UMI_STATUS_OK);
     if (UmiFabricMessageHeaderTransferCases(&item) != 0) return 1;
+    if (UmiFabricMessageHeaderConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(strcmp(item.correlation_id,"c1")==0);
     return 0;

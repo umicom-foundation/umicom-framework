@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/treasury/securities_finance_exposure.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -99,3 +100,9 @@ static UmiStatus UmiTreasurySecuritiesFinanceExposureArchiveValidate(const UmiTr
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_treasury_securities_finance_exposure_archive_encode, umi_treasury_securities_finance_exposure_archive_decode,
     UmiTreasurySecuritiesFinanceExposure, UmiTreasurySecuritiesFinanceExposureArchiveSchema, UmiTreasurySecuritiesFinanceExposureArchiveBound, UmiTreasurySecuritiesFinanceExposureArchiveWrite, UmiTreasurySecuritiesFinanceExposureArchiveRead, UmiTreasurySecuritiesFinanceExposureArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_treasury_securities_finance_exposure_archive_decode_if_unchanged, umi_treasury_securities_finance_exposure_archive_encode,
+    UmiTreasurySecuritiesFinanceExposure, UmiTreasurySecuritiesFinanceExposureArchiveSchema, UmiTreasurySecuritiesFinanceExposureArchiveBound, UmiTreasurySecuritiesFinanceExposureArchiveRead, UmiTreasurySecuritiesFinanceExposureArchiveValidate)

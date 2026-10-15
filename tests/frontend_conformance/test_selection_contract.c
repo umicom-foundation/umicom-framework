@@ -54,9 +54,16 @@ UMI_TEST_VALUE_TRANSFER(UmiFcSelectionContractTransferCases, UmiFcSelectionContr
     umi_fc_selection_contract_archive_encode, umi_fc_selection_contract_archive_decode,
     UmiFcSelectionContractTransferEqual, UmiFcSelectionContractTransferTails, UmiFcSelectionContractTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFcSelectionContractConditionalArchiveCases, UmiFcSelectionContract,
+    umi_fc_selection_contract_archive_encode, umi_fc_selection_contract_archive_decode_if_unchanged,
+    UmiFcSelectionContractTransferEqual, UmiFcSelectionContractTransferTails, UmiFcSelectionContractTransferMalformed)
+
+
 int main(void) {
     UmiFcSelectionContract x={3U,true,true}; CHECK(umi_fc_selection_contract_validate(&x));
     if (UmiFcSelectionContractTransferCases(&x) != 0) return 1;
+    if (UmiFcSelectionContractConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;
 }

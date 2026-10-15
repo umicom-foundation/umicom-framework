@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/application_shell/layout.h"
 #include "umicom/application_shell/drag_drop.h"
 
@@ -91,6 +92,10 @@ void umi_application_shell_layout_init(
  * Provide the application shell layout place operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_application_shell_layout_place(
     UmiApplicationShellLayout *layout,
     const char *contribution_id,
@@ -99,6 +104,61 @@ UmiStatus umi_application_shell_layout_place(
     size_t order,
     int visible)
 {
+    UmiApplicationShellPlacement *placement;
+    size_t index;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (layout == NULL || contribution_id == NULL ||
+        contribution_id[0] == '\0' ||
+        region < UMI_APPLICATION_SHELL_REGION_PRIMARY_SIDEBAR ||
+        region > UMI_APPLICATION_SHELL_REGION_WINDOW) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    index = find_index(layout, contribution_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == (size_t)-1) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (layout->placement_count >=
+            UMI_APPLICATION_SHELL_LAYOUT_MAX_ITEMS) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        index = layout->placement_count++;
+    }
+
+    placement = &layout->placements[index];
+    (void)memset(placement, 0, sizeof(*placement));
+    copy_text(placement->contribution_id,
+              sizeof(placement->contribution_id),
+              contribution_id);
+    copy_text(placement->container_id,
+              sizeof(placement->container_id),
+              container_id);
+    placement->region = region;
+    placement->order = order;
+    placement->visible = visible != 0;
+
+    layout->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_application_shell_layout_place(
+    UmiApplicationShellLayout *layout,
+    const char *contribution_id,
+    const char *container_id,
+    UmiApplicationShellRegion region,
+    size_t order,
+    int visible)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (layout != NULL && layout->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiApplicationShellPlacement *placement;
     size_t index;
 

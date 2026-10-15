@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/analytics/area_chart.h"
 #include "../../base/value_archive_internal.h"
 
@@ -60,3 +61,8 @@ static UmiStatus UmiAnalyticsAreaChartArchiveValidate(const UmiAnalyticsAreaChar
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_analytics_area_chart_archive_encode, umi_analytics_area_chart_archive_decode,
     UmiAnalyticsAreaChart, UmiAnalyticsAreaChartArchiveSchema, UmiAnalyticsAreaChartArchiveBound, UmiAnalyticsAreaChartArchiveWrite, UmiAnalyticsAreaChartArchiveRead, UmiAnalyticsAreaChartArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_analytics_area_chart_archive_decode_if_unchanged, umi_analytics_area_chart_archive_encode,
+    UmiAnalyticsAreaChart, UmiAnalyticsAreaChartArchiveSchema, UmiAnalyticsAreaChartArchiveBound, UmiAnalyticsAreaChartArchiveRead, UmiAnalyticsAreaChartArchiveValidate)

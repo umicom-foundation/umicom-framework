@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/core/lifecycle_event.h"
 #include "../../base/value_archive_internal.h"
 
@@ -82,3 +83,9 @@ static UmiStatus UmiLifecycleEventArchiveValidate(const UmiLifecycleEvent *value
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_lifecycle_event_archive_encode, umi_lifecycle_event_archive_decode,
     UmiLifecycleEvent, UmiLifecycleEventArchiveSchema, UmiLifecycleEventArchiveBound, UmiLifecycleEventArchiveWrite, UmiLifecycleEventArchiveRead, UmiLifecycleEventArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_lifecycle_event_archive_decode_if_unchanged, umi_lifecycle_event_archive_encode,
+    UmiLifecycleEvent, UmiLifecycleEventArchiveSchema, UmiLifecycleEventArchiveBound, UmiLifecycleEventArchiveRead, UmiLifecycleEventArchiveValidate)

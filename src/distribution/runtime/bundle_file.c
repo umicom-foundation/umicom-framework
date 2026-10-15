@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/distribution/runtime/bundle_file.h"
 #include "../../base/value_archive_internal.h"
 
@@ -87,3 +88,9 @@ static UmiStatus UmiDrBundleFileArchiveValidate(const UmiDrBundleFile *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_dr_bundle_file_archive_encode, umi_dr_bundle_file_archive_decode,
     UmiDrBundleFile, UmiDrBundleFileArchiveSchema, UmiDrBundleFileArchiveBound, UmiDrBundleFileArchiveWrite, UmiDrBundleFileArchiveRead, UmiDrBundleFileArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_dr_bundle_file_archive_decode_if_unchanged, umi_dr_bundle_file_archive_encode,
+    UmiDrBundleFile, UmiDrBundleFileArchiveSchema, UmiDrBundleFileArchiveBound, UmiDrBundleFileArchiveRead, UmiDrBundleFileArchiveValidate)

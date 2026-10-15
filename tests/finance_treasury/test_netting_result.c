@@ -67,11 +67,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryNettingResultTransferCases, UmiTreasuryNettin
     umi_treasury_netting_result_archive_encode, umi_treasury_netting_result_archive_decode,
     UmiTreasuryNettingResultTransferEqual, UmiTreasuryNettingResultTransferTails, UmiTreasuryNettingResultTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryNettingResultConditionalArchiveCases, UmiTreasuryNettingResult,
+    umi_treasury_netting_result_archive_encode, umi_treasury_netting_result_archive_decode_if_unchanged,
+    UmiTreasuryNettingResultTransferEqual, UmiTreasuryNettingResultTransferTails, UmiTreasuryNettingResultTransferMalformed)
+
+
 int main(void) {
     UmiTreasuryNettingResult v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_netting_result_init(&v, "netres", 1000, 250) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryNettingResultTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryNettingResultConditionalArchiveCases(&v) != 0) return 1;
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(umi_treasury_netting_result_reduction_minor(&v)!=750)return 2;

@@ -106,10 +106,17 @@ UMI_TEST_VALUE_TRANSFER(UmiFinancialSnapshotTransferCases, UmiFinancialSnapshot,
     umi_financial_snapshot_archive_encode, umi_financial_snapshot_archive_decode,
     UmiFinancialSnapshotTransferEqual, UmiFinancialSnapshotTransferTails, UmiFinancialSnapshotTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFinancialSnapshotConditionalArchiveCases, UmiFinancialSnapshot,
+    umi_financial_snapshot_archive_encode, umi_financial_snapshot_archive_decode_if_unchanged,
+    UmiFinancialSnapshotTransferEqual, UmiFinancialSnapshotTransferTails, UmiFinancialSnapshotTransferMalformed)
+
+
 int main(void)
 {
     UmiFinancialSnapshot x; CHECK(umi_financial_snapshot_init(&x,"ID","Name","CODE",1U)==UMI_STATUS_OK); CHECK(umi_financial_snapshot_is_valid(&x));
     if (UmiFinancialSnapshotTransferCases(&x) != 0) return 1;
+    if (UmiFinancialSnapshotConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;
 }

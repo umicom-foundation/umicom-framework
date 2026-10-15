@@ -13,12 +13,28 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/link_plan.h"
+#include "../../base/value_construction_internal.h"
 #include <string.h>
 /*
  * Initialise nc link plan from caller-provided values so later operations receive a known
  * state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_nc_link_plan_init(UmiNativeLinkPlan *p,const char *out,UmiNativeLinkOutputKind k){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p==NULL||out==NULL||out[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;memset(p,0,sizeof(*p));p->kind=k;return umi_nc_copy_text(p->output,sizeof(p->output),out);}
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_nc_link_plan_init_build_value(UmiNativeLinkPlan *p,const char *out,UmiNativeLinkOutputKind k){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p==NULL||out==NULL||out[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;memset(p,0,sizeof(*p));p->kind=k;return umi_nc_copy_text(p->output,sizeof(p->output),out);}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_nc_link_plan_init, UmiNativeLinkPlan, p,
+    (UmiNativeLinkPlan *p, const char *out, UmiNativeLinkOutputKind k),
+    umi_nc_link_plan_init_build_value(candidate, out, k))
+
 /*
  * Provide the nc link plan add input operation used by this module and its client
  * applications.

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/analytics/heatmap_cell.h"
 #include "../../base/value_archive_internal.h"
 
@@ -72,3 +73,8 @@ static UmiStatus UmiAnalyticsHeatmapCellArchiveValidate(const UmiAnalyticsHeatma
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_analytics_heatmap_cell_archive_encode, umi_analytics_heatmap_cell_archive_decode,
     UmiAnalyticsHeatmapCell, UmiAnalyticsHeatmapCellArchiveSchema, UmiAnalyticsHeatmapCellArchiveBound, UmiAnalyticsHeatmapCellArchiveWrite, UmiAnalyticsHeatmapCellArchiveRead, UmiAnalyticsHeatmapCellArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_analytics_heatmap_cell_archive_decode_if_unchanged, umi_analytics_heatmap_cell_archive_encode,
+    UmiAnalyticsHeatmapCell, UmiAnalyticsHeatmapCellArchiveSchema, UmiAnalyticsHeatmapCellArchiveBound, UmiAnalyticsHeatmapCellArchiveRead, UmiAnalyticsHeatmapCellArchiveValidate)

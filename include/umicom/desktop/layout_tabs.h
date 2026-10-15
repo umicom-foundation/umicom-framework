@@ -36,6 +36,9 @@ void umi_desktop_layout_tabs_init(UmiDesktopLayoutTabs *tabs);
 /**
  * Add desktop layout tabs only after its inputs and available capacity have been checked.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_desktop_layout_tabs_add(
     UmiDesktopLayoutTabs *tabs,
     const UmiDesktopLayoutTab *tab);
@@ -43,6 +46,9 @@ UmiStatus umi_desktop_layout_tabs_add(
  * Remove desktop layout tabs while keeping the remaining records in a valid and
  * discoverable state.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_desktop_layout_tabs_remove(
     UmiDesktopLayoutTabs *tabs,
     const char *tab_id);
@@ -50,6 +56,9 @@ UmiStatus umi_desktop_layout_tabs_remove(
  * Provide the desktop layout tabs activate operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_desktop_layout_tabs_activate(
     UmiDesktopLayoutTabs *tabs,
     const char *tab_id);
@@ -57,6 +66,9 @@ UmiStatus umi_desktop_layout_tabs_activate(
  * Provide the desktop layout tabs move operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_desktop_layout_tabs_move(
     UmiDesktopLayoutTabs *tabs,
     const char *tab_id,
@@ -65,6 +77,9 @@ UmiStatus umi_desktop_layout_tabs_move(
  * Provide the desktop layout tabs rename operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_desktop_layout_tabs_rename(
     UmiDesktopLayoutTabs *tabs,
     const char *tab_id,
@@ -73,6 +88,9 @@ UmiStatus umi_desktop_layout_tabs_rename(
  * Provide the desktop layout tabs set dirty operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_desktop_layout_tabs_set_dirty(
     UmiDesktopLayoutTabs *tabs,
     const char *tab_id,

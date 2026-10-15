@@ -86,6 +86,12 @@ UMI_TEST_VALUE_TRANSFER(UmiPaymentsPaymentRailTransferCases, UmiPaymentsPaymentR
     umi_payments_payment_rail_archive_encode, umi_payments_payment_rail_archive_decode,
     UmiPaymentsPaymentRailTransferEqual, UmiPaymentsPaymentRailTransferTails, UmiPaymentsPaymentRailTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiPaymentsPaymentRailConditionalArchiveCases, UmiPaymentsPaymentRail,
+    umi_payments_payment_rail_archive_encode, umi_payments_payment_rail_archive_decode_if_unchanged,
+    UmiPaymentsPaymentRailTransferEqual, UmiPaymentsPaymentRailTransferTails, UmiPaymentsPaymentRailTransferMalformed)
+
+
 int main(void) {
     UmiPaymentsPaymentRail v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -93,6 +99,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if(!umi_payments_payment_rail_valid(&v)) return 2;
     if (UmiPaymentsPaymentRailTransferCases(&v) != 0) return 1;
+    if (UmiPaymentsPaymentRailConditionalArchiveCases(&v) != 0) return 1;
 
     return 0;
 }

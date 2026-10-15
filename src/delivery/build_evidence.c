@@ -17,6 +17,7 @@
  * Release decisions should use structured evidence instead of relying on a developer remembering whether a build looked successful.
  */
 
+#include "umicom/base/text.h"
 #include "umicom/delivery/build_evidence.h"
 #include "delivery_internal.h"
 #include <string.h>
@@ -49,6 +50,9 @@ int umi_build_evidence_passed(const UmiBuildEvidence *evidence)
  * Provide the build evidence set source operation used by this module and its client
  * applications.
  */
+/* The presentation copy could erase a rejected field or overlap its input.
+ * Retain it for review; the replacement validates before publishing any text. */
+#if 0
 UmiStatus umi_build_evidence_set_source(UmiBuildEvidence *evidence,
                                         const char *revision)
 {
@@ -58,5 +62,18 @@ UmiStatus umi_build_evidence_set_source(UmiBuildEvidence *evidence,
      */
     if (evidence == NULL || revision == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_delivery_copy_text(evidence->source_revision,
+                                  sizeof(evidence->source_revision), revision);
+}
+#endif
+
+UmiStatus umi_build_evidence_set_source(UmiBuildEvidence *evidence,
+                                        const char *revision)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (evidence == NULL || revision == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_replace(evidence->source_revision,
                                   sizeof(evidence->source_revision), revision);
 }

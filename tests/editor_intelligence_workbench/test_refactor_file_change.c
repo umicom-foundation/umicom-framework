@@ -130,6 +130,13 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorIntelRefactorFileChangeTransferCases, UmiEditor
     umi_editor_intel_refactor_file_change_archive_encode, umi_editor_intel_refactor_file_change_archive_decode,
     UmiEditorIntelRefactorFileChangeTransferEqual, UmiEditorIntelRefactorFileChangeTransferTails, UmiEditorIntelRefactorFileChangeTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelRefactorFileChangeConditionalArchiveCases, UmiEditorIntelRefactorFileChange,
+    umi_editor_intel_refactor_file_change_archive_encode, umi_editor_intel_refactor_file_change_archive_decode_if_unchanged,
+    UmiEditorIntelRefactorFileChangeTransferEqual, UmiEditorIntelRefactorFileChangeTransferTails, UmiEditorIntelRefactorFileChangeTransferMalformed)
+
+
 int main(void){UmiEditorIntelRefactorFileChange model;UmiEditorIntelRange range={{3U,4U},{3U,12U}};/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_file_change_init(&model,"model-1","item","src/main.c",range)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_file_change_set_score(&model,91U)!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_file_change_set_selected(&model,true)!=UMI_STATUS_OK)return 3;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_intel_refactor_file_change_valid(&model)||model.value.score!=91U||!model.selected)return 4;
     if (UmiEditorIntelRefactorFileChangeTransferCases(&model) != 0) return 1;
+    if (UmiEditorIntelRefactorFileChangeConditionalArchiveCases(&model) != 0) return 1;
 return 0;}

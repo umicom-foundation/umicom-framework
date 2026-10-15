@@ -132,6 +132,12 @@ UMI_TEST_VALUE_TRANSFER(UmiDeveloperProblemTransferCases, UmiDeveloperProblem,
     umi_developer_problem_archive_encode, umi_developer_problem_archive_decode,
     UmiDeveloperProblemTransferEqual, UmiDeveloperProblemTransferTails, UmiDeveloperProblemTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDeveloperProblemConditionalArchiveCases, UmiDeveloperProblem,
+    umi_developer_problem_archive_encode, umi_developer_problem_archive_decode_if_unchanged,
+    UmiDeveloperProblemTransferEqual, UmiDeveloperProblemTransferTails, UmiDeveloperProblemTransferMalformed)
+
+
 int main(void)
 {
     UmiDeveloperProblem problem;
@@ -147,6 +153,7 @@ int main(void)
     assert(matched == 1);
     assert(umi_developer_problem_validate(&problem) == UMI_STATUS_OK);
     if (UmiDeveloperProblemTransferCases(&problem) != 0) return 1;
+    if (UmiDeveloperProblemConditionalArchiveCases(&problem) != 0) return 1;
 
     return 0;
 }

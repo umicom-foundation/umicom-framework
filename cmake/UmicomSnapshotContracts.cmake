@@ -189,3 +189,16 @@ install(FILES "${_snapshot_root}/docs/REVIEWED_STATE_UPDATES.html"
 install(FILES "${_snapshot_root}/docs/SAFE_VALUE_RECORDS.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs"
     COMPONENT Framework)
+
+# Install the guarded-import guide alongside the existing value tutorials.
+install(FILES "${_snapshot_root}/docs/CONDITIONAL_STATE_IMPORT.html"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs"
+    COMPONENT Framework)
+
+# Keep the policy example and its guide available to SDK consumers.
+install(DIRECTORY "${_snapshot_root}/examples/policy_batch/"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/policy_batch"
+    COMPONENT Framework)
+install(FILES "${_snapshot_root}/docs/COMPLETE_POLICY_TABLES.html"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs"
+    COMPONENT Framework)

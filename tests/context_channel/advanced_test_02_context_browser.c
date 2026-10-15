@@ -130,6 +130,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextBrowserTransferCases, UmiContextBrowser,
     umi_context_browser_archive_encode, umi_context_browser_archive_decode,
     UmiContextBrowserTransferEqual, UmiContextBrowserTransferTails, UmiContextBrowserTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextBrowserConditionalArchiveCases, UmiContextBrowser,
+    umi_context_browser_archive_encode, umi_context_browser_archive_decode_if_unchanged,
+    UmiContextBrowserTransferEqual, UmiContextBrowserTransferTails, UmiContextBrowserTransferMalformed)
+
+
 int main(void)
 {
     UmiContextBrowser state;
@@ -144,6 +150,7 @@ int main(void)
     assert(umi_context_browser_covers_sequence(&state,11U));
     assert(umi_context_browser_validate(&state) == UMI_STATUS_OK);
     if (UmiContextBrowserTransferCases(&state) != 0) return 1;
+    if (UmiContextBrowserConditionalArchiveCases(&state) != 0) return 1;
 
     return 0;
 }

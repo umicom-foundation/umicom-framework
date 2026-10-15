@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/core/settlement_event.h"
 #include "../../base/value_archive_internal.h"
 
@@ -82,3 +83,9 @@ static UmiStatus UmiSettlementEventArchiveValidate(const UmiSettlementEvent *val
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_settlement_event_archive_encode, umi_settlement_event_archive_decode,
     UmiSettlementEvent, UmiSettlementEventArchiveSchema, UmiSettlementEventArchiveBound, UmiSettlementEventArchiveWrite, UmiSettlementEventArchiveRead, UmiSettlementEventArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_settlement_event_archive_decode_if_unchanged, umi_settlement_event_archive_encode,
+    UmiSettlementEvent, UmiSettlementEventArchiveSchema, UmiSettlementEventArchiveBound, UmiSettlementEventArchiveRead, UmiSettlementEventArchiveValidate)

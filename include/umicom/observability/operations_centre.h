@@ -42,31 +42,49 @@ void umi_operations_centre_init(UmiOperationsCentre *centre);
  * Provide the operations centre record resource operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_operations_centre_record_resource(UmiOperationsCentre *centre,const UmiOperationsResourceSample *sample);
 /**
  * Provide the operations centre record benchmark operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_operations_centre_record_benchmark(UmiOperationsCentre *centre,const UmiOperationsBenchmarkRun *run);
 /**
  * Provide the operations centre record crash operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_operations_centre_record_crash(UmiOperationsCentre *centre,const UmiOperationsCrashEvidence *crash);
 /**
  * Provide the operations centre update evidence operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_operations_centre_update_evidence(UmiOperationsCentre *centre,const UmiOperationsEvidenceCounts *evidence);
 /**
  * Provide the operations centre update health operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_operations_centre_update_health(UmiOperationsCentre *centre,const UmiOperationsHealthSummary *health);
 /**
  * Provide the operations centre update resilience operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_operations_centre_update_resilience(UmiOperationsCentre *centre,const UmiOperationsResilienceTelemetry *resilience);
 /**
  * Provide the operations centre snapshot operation used by this module and its client

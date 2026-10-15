@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/appearance/motion_policy.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -89,3 +90,8 @@ static UmiStatus UmiAppearanceMotionPolicyArchiveValidate(const UmiAppearanceMot
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_appearance_motion_policy_archive_encode, umi_appearance_motion_policy_archive_decode,
     UmiAppearanceMotionPolicy, UmiAppearanceMotionPolicyArchiveSchema, UmiAppearanceMotionPolicyArchiveBound, UmiAppearanceMotionPolicyArchiveWrite, UmiAppearanceMotionPolicyArchiveRead, UmiAppearanceMotionPolicyArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_appearance_motion_policy_archive_decode_if_unchanged, umi_appearance_motion_policy_archive_encode,
+    UmiAppearanceMotionPolicy, UmiAppearanceMotionPolicyArchiveSchema, UmiAppearanceMotionPolicyArchiveBound, UmiAppearanceMotionPolicyArchiveRead, UmiAppearanceMotionPolicyArchiveValidate)

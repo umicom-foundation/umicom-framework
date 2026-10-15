@@ -69,6 +69,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceTextScalePolicyTransferCases, UmiAppearance
     umi_appearance_text_scale_policy_archive_encode, umi_appearance_text_scale_policy_archive_decode,
     UmiAppearanceTextScalePolicyTransferEqual, UmiAppearanceTextScalePolicyTransferTails, UmiAppearanceTextScalePolicyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceTextScalePolicyConditionalArchiveCases, UmiAppearanceTextScalePolicy,
+    umi_appearance_text_scale_policy_archive_encode, umi_appearance_text_scale_policy_archive_decode_if_unchanged,
+    UmiAppearanceTextScalePolicyTransferEqual, UmiAppearanceTextScalePolicyTransferTails, UmiAppearanceTextScalePolicyTransferMalformed)
+
+
 int main(void) {
     UmiAppearanceTextScalePolicy item;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -76,6 +82,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_text_scale_policy_is_valid(&item)) return 2;
     if (UmiAppearanceTextScalePolicyTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceTextScalePolicyConditionalArchiveCases(&item) != 0) return 1;
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_appearance_text_scale_policy_resolve(&item,5.0)!=UMI_STATUS_OK || item.resolved_scale!=3.0) return 3;

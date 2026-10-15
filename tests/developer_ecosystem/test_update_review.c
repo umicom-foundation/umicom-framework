@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 
 #include "umicom/developer/ecosystem/update_review.h"
@@ -48,6 +49,9 @@ int main(void)
     make_update(&pinned, "pinned", UMI_ECOSYSTEM_EVIDENCE_VERIFIED, true);
     umi_ecosystem_update_review_init(&review);
     assert(umi_ecosystem_update_review_add(&review, &safe) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiEcosystemUpdateReview, &review,
+        (umi_ecosystem_update_review_add(&review, &safe)));
+
     assert(umi_ecosystem_update_review_add(&review, &pinned) == UMI_STATUS_OK);
     assert(umi_ecosystem_update_review_select_safe(&review) == 1U);
     assert(review.selected_count == 1U && review.blocked_count == 1U);

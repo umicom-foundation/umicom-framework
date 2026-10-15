@@ -51,6 +51,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadPanStateTransferCases, UmiRadPanState,
     umi_rad_pan_archive_encode, umi_rad_pan_archive_decode,
     UmiRadPanStateTransferEqual, UmiRadPanStateTransferTails, UmiRadPanStateTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadPanStateConditionalArchiveCases, UmiRadPanState,
+    umi_rad_pan_archive_encode, umi_rad_pan_archive_decode_if_unchanged,
+    UmiRadPanStateTransferEqual, UmiRadPanStateTransferTails, UmiRadPanStateTransferMalformed)
+
+
 int main(void){UmiRadPanState item;CHECK(umi_rad_pan_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_pan_is_valid(&item));
     if (UmiRadPanStateTransferCases(&item) != 0) return 1;
+    if (UmiRadPanStateConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

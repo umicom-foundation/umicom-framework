@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/editor/intelligence_workbench/navigation_projection.h"
 
 #include <inttypes.h>
@@ -287,10 +288,77 @@ UmiStatus umi_editor_intel_navigation_projection_init(
  * Provide the editor intel navigation projection refresh operation used by this module and
  * its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_editor_intel_navigation_projection_refresh(
     UmiEditorIntelNavigationProjection *projection,
     UmiEditorNavigationInsights *insights)
 {
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (projection == NULL || insights == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_editor_navigation_insights_snapshot(
+        insights, &projection->source_snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    (void)umi_editor_intel_navigation_target_set_clear(
+        &projection->peek_targets);
+    (void)umi_editor_intel_reference_results_model_clear(
+        &projection->references);
+    (void)umi_editor_intel_call_hierarchy_view_model_clear(
+        &projection->call_hierarchy);
+    (void)umi_editor_intel_type_hierarchy_view_model_clear(
+        &projection->type_hierarchy);
+
+    /* Select the behaviour associated with the requested command or state value. */
+    switch (projection->source_snapshot.active_surface) {
+        case UMI_EDITOR_NAVIGATION_INSIGHT_NONE:
+            projection->source_revision = projection->source_snapshot.revision;
+            status = UMI_STATUS_OK;
+            break;
+        case UMI_EDITOR_NAVIGATION_INSIGHT_PEEK_DEFINITION:
+            status = refresh_peek(projection, insights);
+            break;
+        case UMI_EDITOR_NAVIGATION_INSIGHT_REFERENCES:
+            status = refresh_references(projection, insights);
+            break;
+        case UMI_EDITOR_NAVIGATION_INSIGHT_CALL_HIERARCHY:
+            status = refresh_hierarchy(
+                projection,
+                umi_editor_navigation_insights_call_hierarchy(insights), 1);
+            break;
+        case UMI_EDITOR_NAVIGATION_INSIGHT_TYPE_HIERARCHY:
+            status = refresh_hierarchy(
+                projection,
+                umi_editor_navigation_insights_type_hierarchy(insights), 0);
+            break;
+        default:
+            status = UMI_STATUS_INVALID_STATE;
+            break;
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) ++projection->revision;
+    return status;
+}
+#endif
+
+UmiStatus umi_editor_intel_navigation_projection_refresh(
+    UmiEditorIntelNavigationProjection *projection,
+    UmiEditorNavigationInsights *insights)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (projection != NULL && projection->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiStatus status;
 
     /*

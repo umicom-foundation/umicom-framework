@@ -12,7 +12,9 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/integration/fabric/connector_binding.h"
+#include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
 #include <limits.h>
@@ -21,6 +23,11 @@
  * Initialise fabric connector binding from caller-provided values so later operations
  * receive a known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_fabric_connector_binding_init(UmiFabricConnectorBinding *item, const char *binding_id, const char *connector_id, const char *endpoint_id, const char *transport_profile_id) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -31,6 +38,25 @@ UmiStatus umi_fabric_connector_binding_init(UmiFabricConnectorBinding *item, con
     UmiStatus s=umi_fabric_copy_text(item->binding_id,sizeof(item->binding_id),binding_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->connector_id,sizeof(item->connector_id),connector_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->endpoint_id,sizeof(item->endpoint_id),endpoint_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->transport_profile_id,sizeof(item->transport_profile_id),transport_profile_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->enabled=true;
     return umi_fabric_connector_binding_validate(item);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_fabric_connector_binding_init_build_value(UmiFabricConnectorBinding *item, const char *binding_id, const char *connector_id, const char *endpoint_id, const char *transport_profile_id) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (item==NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(item,0,sizeof(*item));
+    UmiStatus s=umi_fabric_copy_text(item->binding_id,sizeof(item->binding_id),binding_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->connector_id,sizeof(item->connector_id),connector_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->endpoint_id,sizeof(item->endpoint_id),endpoint_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->transport_profile_id,sizeof(item->transport_profile_id),transport_profile_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->enabled=true;
+    return umi_fabric_connector_binding_validate(item);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_fabric_connector_binding_init, UmiFabricConnectorBinding, item,
+    (UmiFabricConnectorBinding *item, const char *binding_id, const char *connector_id, const char *endpoint_id, const char *transport_profile_id),
+    umi_fabric_connector_binding_init_build_value(candidate, binding_id, connector_id, endpoint_id, transport_profile_id))
+
 /*
  * Check that fabric connector binding satisfies its contract before another service relies
  * on it.
@@ -100,3 +126,9 @@ static UmiStatus UmiFabricConnectorBindingArchiveValidate(const UmiFabricConnect
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_fabric_connector_binding_archive_encode, umi_fabric_connector_binding_archive_decode,
     UmiFabricConnectorBinding, UmiFabricConnectorBindingArchiveSchema, UmiFabricConnectorBindingArchiveBound, UmiFabricConnectorBindingArchiveWrite, UmiFabricConnectorBindingArchiveRead, UmiFabricConnectorBindingArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_fabric_connector_binding_archive_decode_if_unchanged, umi_fabric_connector_binding_archive_encode,
+    UmiFabricConnectorBinding, UmiFabricConnectorBindingArchiveSchema, UmiFabricConnectorBindingArchiveBound, UmiFabricConnectorBindingArchiveRead, UmiFabricConnectorBindingArchiveValidate)

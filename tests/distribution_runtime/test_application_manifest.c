@@ -93,9 +93,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrApplicationManifestTransferCases, UmiDrApplicationM
     umi_dr_application_manifest_archive_encode, umi_dr_application_manifest_archive_decode,
     UmiDrApplicationManifestTransferEqual, UmiDrApplicationManifestTransferTails, UmiDrApplicationManifestTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrApplicationManifestConditionalArchiveCases, UmiDrApplicationManifest,
+    umi_dr_application_manifest_archive_encode, umi_dr_application_manifest_archive_decode_if_unchanged,
+    UmiDrApplicationManifestTransferEqual, UmiDrApplicationManifestTransferTails, UmiDrApplicationManifestTransferMalformed)
+
+
 int main(void) {
     UmiDrApplicationManifest value; umi_dr_application_manifest_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"studio") == UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.name,sizeof(value.name),"Umicom Studio") == UMI_STATUS_OK); CHECK(umi_dr_application_manifest_valid(&value));
     if (UmiDrApplicationManifestTransferCases(&value) != 0) return 1;
+    if (UmiDrApplicationManifestConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_application_manifest_fingerprint(&value) != 0U);
     return 0;
 }

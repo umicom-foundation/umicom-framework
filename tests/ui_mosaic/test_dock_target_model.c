@@ -87,12 +87,19 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicDockTargetModelTransferCases, UmiUiMosaicDock
     umi_ui_mosaic_dock_target_model_archive_encode, umi_ui_mosaic_dock_target_model_archive_decode,
     UmiUiMosaicDockTargetModelTransferEqual, UmiUiMosaicDockTargetModelTransferTails, UmiUiMosaicDockTargetModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicDockTargetModelConditionalArchiveCases, UmiUiMosaicDockTargetModel,
+    umi_ui_mosaic_dock_target_model_archive_encode, umi_ui_mosaic_dock_target_model_archive_decode_if_unchanged,
+    UmiUiMosaicDockTargetModelTransferEqual, UmiUiMosaicDockTargetModelTransferTails, UmiUiMosaicDockTargetModelTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicDockTargetModel value;
     umi_ui_mosaic_dock_target_model_init(&value);
     CHECK(umi_ui_mosaic_dock_target_model_set(&value, "panel.source", "panel.target", UMI_UI_MOSAIC_DOCK_CENTRE) == UMI_STATUS_OK);
     CHECK(umi_ui_mosaic_dock_target_model_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicDockTargetModelTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicDockTargetModelConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_dock_target_model_is_centre(&value) == 1);
     return 0;

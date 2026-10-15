@@ -32,7 +32,10 @@ typedef struct UmiDrDistributionSession { char id[UMI_DR_ID_CAPACITY]; UmiDrStat
  * Initialise dr distribution session from caller-provided values so later operations
  * receive a known state.
  */
-void umi_dr_distribution_session_init(UmiDrDistributionSession *session,const char *id); bool umi_dr_distribution_session_ready(const UmiDrDistributionSession *session); UmiStatus umi_dr_distribution_session_commit(UmiDrDistributionSession *session);
+void umi_dr_distribution_session_init(UmiDrDistributionSession *session,const char *id); bool umi_dr_distribution_session_ready(const UmiDrDistributionSession *session); /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
+UmiStatus umi_dr_distribution_session_commit(UmiDrDistributionSession *session);
 
 #ifdef __cplusplus
 }

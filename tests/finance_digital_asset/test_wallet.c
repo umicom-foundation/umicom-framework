@@ -108,12 +108,19 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalAssetWalletTransferCases, UmiDigitalAssetWalle
     umi_digital_asset_wallet_archive_encode, umi_digital_asset_wallet_archive_decode,
     UmiDigitalAssetWalletTransferEqual, UmiDigitalAssetWalletTransferTails, UmiDigitalAssetWalletTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalAssetWalletConditionalArchiveCases, UmiDigitalAssetWallet,
+    umi_digital_asset_wallet_archive_encode, umi_digital_asset_wallet_archive_decode_if_unchanged,
+    UmiDigitalAssetWalletTransferEqual, UmiDigitalAssetWalletTransferTails, UmiDigitalAssetWalletTransferMalformed)
+
+
 int main(void)
 {
     UmiDigitalAssetWallet value;
     CHECK(umi_digital_asset_wallet_init(&value, "WALLET-1", "Operations", "BTC", true) == UMI_STATUS_OK);
     CHECK(umi_digital_asset_wallet_valid(&value));
     if (UmiDigitalAssetWalletTransferCases(&value) != 0) return 1;
+    if (UmiDigitalAssetWalletConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

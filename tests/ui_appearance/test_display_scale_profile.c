@@ -69,6 +69,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceDisplayScaleProfileTransferCases, UmiAppear
     umi_appearance_display_scale_profile_archive_encode, umi_appearance_display_scale_profile_archive_decode,
     UmiAppearanceDisplayScaleProfileTransferEqual, UmiAppearanceDisplayScaleProfileTransferTails, UmiAppearanceDisplayScaleProfileTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceDisplayScaleProfileConditionalArchiveCases, UmiAppearanceDisplayScaleProfile,
+    umi_appearance_display_scale_profile_archive_encode, umi_appearance_display_scale_profile_archive_decode_if_unchanged,
+    UmiAppearanceDisplayScaleProfileTransferEqual, UmiAppearanceDisplayScaleProfileTransferTails, UmiAppearanceDisplayScaleProfileTransferMalformed)
+
+
 int main(void) {
     UmiAppearanceDisplayScaleProfile item;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -76,6 +82,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_display_scale_profile_is_valid(&item)) return 2;
     if (UmiAppearanceDisplayScaleProfileTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceDisplayScaleProfileConditionalArchiveCases(&item) != 0) return 1;
 
     item.os_scale=1.5; item.user_scale=2.0; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_appearance_display_scale_profile_resolve(&item)!=UMI_STATUS_OK || item.effective_scale!=3.0) return 3;
     return 0;

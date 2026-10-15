@@ -13,12 +13,28 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/ir_module.h"
+#include "../../base/value_construction_internal.h"
 #include <string.h>
 /*
  * Initialise nc ir module from caller-provided values so later operations receive a known
  * state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_nc_ir_module_init(UmiNativeIrModule *m,const char *id,const char *triple){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(m==NULL||id==NULL||triple==NULL)return UMI_STATUS_INVALID_ARGUMENT;memset(m,0,sizeof(*m));/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_copy_text(m->module_id,sizeof(m->module_id),id)!=UMI_STATUS_OK||umi_nc_copy_text(m->target_triple,sizeof(m->target_triple),triple)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;return UMI_STATUS_OK;}
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_nc_ir_module_init_build_value(UmiNativeIrModule *m,const char *id,const char *triple){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(m==NULL||id==NULL||triple==NULL)return UMI_STATUS_INVALID_ARGUMENT;memset(m,0,sizeof(*m));/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_copy_text(m->module_id,sizeof(m->module_id),id)!=UMI_STATUS_OK||umi_nc_copy_text(m->target_triple,sizeof(m->target_triple),triple)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;return UMI_STATUS_OK;}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_nc_ir_module_init, UmiNativeIrModule, m,
+    (UmiNativeIrModule *m, const char *id, const char *triple),
+    umi_nc_ir_module_init_build_value(candidate, id, triple))
+
 /* Find nc ir module while leaving the underlying catalogue or model owned by this module. */
 UmiNativeIrFunction *umi_nc_ir_module_find(UmiNativeIrModule *m,const char *name){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(m==NULL||name==NULL)return NULL;/* Visit each bounded item once so every record receives the same rule. */ for(size_t i=0U;i<m->function_count;i++)/* Protect caller-owned memory by checking that required state is available before it is used. */ if(strcmp(m->functions[i].name,name)==0)return &m->functions[i];return NULL;}
 /*

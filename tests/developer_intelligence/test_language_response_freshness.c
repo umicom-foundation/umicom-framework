@@ -17,6 +17,10 @@
 
 #include "umicom/developer_intelligence/language/response_freshness.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(UmiDeveloperIntelligenceEvaluateLanguageResponseFreshnessBatchCases, UmiDeveloperIntelligenceEvaluateLanguageResponseFreshness,
+    UmiDeveloperIntelligenceEvaluateLanguageResponseFreshnessBatch, UmiDeveloperIntelligenceInput, UmiDeveloperIntelligenceSnapshot, lexicalScore)
+
 int main(void)
 {
     UmiDeveloperIntelligenceInput input;
@@ -44,6 +48,7 @@ int main(void)
     input.active = 1;
     input.revision = 42U;
 
+    if (UmiDeveloperIntelligenceEvaluateLanguageResponseFreshnessBatchCases(&input) != 0) return 1;
     assert(UmiDeveloperIntelligenceEvaluateLanguageResponseFreshness(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "language.response-freshness") == 0);
     assert(snapshot.revision == 42U);

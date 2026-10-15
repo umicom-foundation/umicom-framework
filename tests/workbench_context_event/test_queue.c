@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 
@@ -39,9 +40,17 @@ int main(void)
         "panel") == UMI_STATUS_OK);
     assert(umi_workbench_context_event_queue_push(
         &queue, &event) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchContextEventQueue, &queue,
+        (umi_workbench_context_event_queue_push(
+        &queue, &event)));
+
     assert(umi_workbench_context_event_queue_peek(&queue) != NULL);
     assert(umi_workbench_context_event_queue_pop(
         &queue, &popped) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchContextEventQueue, &queue,
+        (umi_workbench_context_event_queue_pop(
+        &queue, &popped)));
+
     assert(strcmp(popped.event_id, "event") == 0);
     umi_workbench_context_event_queue_destroy(&queue);
 

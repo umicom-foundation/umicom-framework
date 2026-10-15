@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include <stdint.h>
 #include "umicom/workbench_selection/selection.h"
 
 #include <string.h>
@@ -55,6 +56,10 @@ void umi_workbench_selection_init(
  * Provide the workbench selection set origin operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_selection_set_origin(
     UmiWorkbenchSelection *selection,
     const char *application_id,
@@ -92,11 +97,59 @@ UmiStatus umi_workbench_selection_set_origin(
     ++selection->revision;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_workbench_selection_set_origin(
+    UmiWorkbenchSelection *selection,
+    const char *application_id,
+    const char *panel_id,
+    const char *workspace_id)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (selection != NULL && selection->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (selection == NULL || application_id == NULL || panel_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_workbench_selection_copy_text(
+        selection->application_id, sizeof(selection->application_id),
+        application_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_workbench_selection_copy_text(
+        selection->panel_id, sizeof(selection->panel_id), panel_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace_id != NULL) {
+        status = umi_workbench_selection_copy_text(
+            selection->workspace_id, sizeof(selection->workspace_id),
+            workspace_id);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+    }
+    ++selection->revision;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the workbench selection set subject operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_selection_set_subject(
     UmiWorkbenchSelection *selection,
     const char *subject_id,
@@ -128,11 +181,53 @@ UmiStatus umi_workbench_selection_set_subject(
     ++selection->revision;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_workbench_selection_set_subject(
+    UmiWorkbenchSelection *selection,
+    const char *subject_id,
+    const char *secondary_id)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (selection != NULL && selection->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (selection == NULL || subject_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_workbench_selection_copy_text(
+        selection->subject_id, sizeof(selection->subject_id), subject_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (secondary_id != NULL) {
+        status = umi_workbench_selection_copy_text(
+            selection->secondary_id, sizeof(selection->secondary_id),
+            secondary_id);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+    }
+    ++selection->revision;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the workbench selection set location operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_selection_set_location(
     UmiWorkbenchSelection *selection,
     const char *path,
@@ -140,6 +235,36 @@ UmiStatus umi_workbench_selection_set_location(
     uint32_t column,
     uint32_t selection_length)
 {
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (selection == NULL || path == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_workbench_selection_copy_text(
+        selection->path, sizeof(selection->path), path);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    selection->line = line;
+    selection->column = column;
+    selection->selection_length = selection_length;
+    ++selection->revision;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_workbench_selection_set_location(
+    UmiWorkbenchSelection *selection,
+    const char *path,
+    uint32_t line,
+    uint32_t column,
+    uint32_t selection_length)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (selection != NULL && selection->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiStatus status;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -208,10 +333,53 @@ UmiStatus umi_workbench_selection_set_group_hint(
  * Provide the workbench selection add field operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_selection_add_field(
     UmiWorkbenchSelection *selection,
     const UmiWorkbenchSelectionField *field)
 {
+    size_t index;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (selection == NULL || field == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_workbench_selection_field_validate(field);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < selection->field_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(selection->fields[index].name, field->name) == 0) {
+            selection->fields[index] = *field;
+            ++selection->revision;
+            return UMI_STATUS_OK;
+        }
+    }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (selection->field_count >= UMI_WORKBENCH_SELECTION_MAX_FIELDS) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    selection->fields[selection->field_count++] = *field;
+    ++selection->revision;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_workbench_selection_add_field(
+    UmiWorkbenchSelection *selection,
+    const UmiWorkbenchSelectionField *field)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (selection != NULL && selection->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     UmiStatus status;
     /*

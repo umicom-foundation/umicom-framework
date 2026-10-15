@@ -54,6 +54,9 @@ UmiStatus umi_studio_selection_router_problem(
  * Provide the studio selection router test operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_studio_selection_router_test(
     UmiStudioRuntimeSelectionRouter *router,
     const char *test_item_id,
@@ -63,6 +66,9 @@ UmiStatus umi_studio_selection_router_test(
  * Provide the studio selection router source control operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_studio_selection_router_source_control(
     UmiStudioRuntimeSelectionRouter *router,
     const char *path,

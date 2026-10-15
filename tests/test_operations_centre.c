@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Umicom Framework | Operations Centre tests | Sammy Hegab | Umicom Foundation | MIT */
+#include "value_archive/revision_cases.h"
 #include <assert.h>
 #include "umicom/observability/operations_centre.h"
 
@@ -33,11 +34,29 @@ int main(void)
     UmiOperationsResilienceTelemetry resilience = {2U,1U,1U,0U,1U,UMI_CIRCUIT_CLOSED,20U,2U};
     umi_operations_centre_init(&centre);
     assert(umi_operations_centre_record_resource(&centre,&resource) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiOperationsCentre, &centre,
+        (umi_operations_centre_record_resource(&centre,&resource)));
+
     assert(umi_operations_centre_record_benchmark(&centre,&benchmark) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiOperationsCentre, &centre,
+        (umi_operations_centre_record_benchmark(&centre,&benchmark)));
+
     assert(umi_operations_centre_record_crash(&centre,&crash) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiOperationsCentre, &centre,
+        (umi_operations_centre_record_crash(&centre,&crash)));
+
     assert(umi_operations_centre_update_evidence(&centre,&evidence) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiOperationsCentre, &centre,
+        (umi_operations_centre_update_evidence(&centre,&evidence)));
+
     assert(umi_operations_centre_update_health(&centre,&health) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiOperationsCentre, &centre,
+        (umi_operations_centre_update_health(&centre,&health)));
+
     assert(umi_operations_centre_update_resilience(&centre,&resilience) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiOperationsCentre, &centre,
+        (umi_operations_centre_update_resilience(&centre,&resilience)));
+
     umi_operations_centre_snapshot(&centre,&snapshot);
     assert(snapshot.resource_samples == 1U);
     assert(snapshot.benchmarks == 1U);

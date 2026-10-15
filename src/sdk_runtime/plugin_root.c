@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/sdk_runtime/plugin_root.h"
 #include "../base/value_archive_internal.h"
 #include "umicom/base/text.h"
@@ -298,3 +299,8 @@ static UmiStatus ArchiveValidate(const UmiSdkRuntimePluginRoot *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_sdk_runtime_plugin_root_archive_encode, umi_sdk_runtime_plugin_root_archive_decode,
     UmiSdkRuntimePluginRoot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Guard snapshot import with the complete encoded value reviewed by the
+ * caller. Imported metadata remains evidence; registry publication is separate. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_sdk_runtime_plugin_root_archive_decode_if_unchanged, umi_sdk_runtime_plugin_root_archive_encode,
+    UmiSdkRuntimePluginRoot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/financial_platform/settlement_book.h"
@@ -29,10 +30,17 @@ int main(void)
     record.dueMilliseconds = 2000U;
     record.version = 1U;
     assert(umi_financial_settlement_book_add(&book, &record) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFinancialSettlementBook, &book,
+        (umi_financial_settlement_book_add(&book, &record)));
+
     assert(umi_financial_settlement_book_overdue_count(&book, 3000U) == 1U);
     assert(umi_financial_settlement_book_transition(
                &book, "settle-1", UMI_FINANCIAL_SETTLEMENT_SETTLED, 2U) ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFinancialSettlementBook, &book,
+        (umi_financial_settlement_book_transition(
+               &book, "settle-1", UMI_FINANCIAL_SETTLEMENT_SETTLED, 2U)));
+
     assert(umi_financial_settlement_book_overdue_count(&book, 3000U) == 0U);
     return 0;
 }

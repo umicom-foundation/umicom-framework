@@ -67,11 +67,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryRiskFactorTransferCases, UmiTreasuryRiskFacto
     umi_treasury_risk_factor_archive_encode, umi_treasury_risk_factor_archive_decode,
     UmiTreasuryRiskFactorTransferEqual, UmiTreasuryRiskFactorTransferTails, UmiTreasuryRiskFactorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryRiskFactorConditionalArchiveCases, UmiTreasuryRiskFactor,
+    umi_treasury_risk_factor_archive_encode, umi_treasury_risk_factor_archive_decode_if_unchanged,
+    UmiTreasuryRiskFactorTransferEqual, UmiTreasuryRiskFactorTransferTails, UmiTreasuryRiskFactorTransferMalformed)
+
+
 int main(void) {
     UmiTreasuryRiskFactor v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_risk_factor_init(&v, "USD-IR", UMI_TREASURY_RISK_MARKET, -25) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryRiskFactorTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryRiskFactorConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if(umi_treasury_risk_factor_absolute_shock_bps(&v)!=25)return 2;

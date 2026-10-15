@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/open_tms/reconciliation_book.h"
 
 #include <math.h>
@@ -25,6 +26,10 @@ void umi_open_tms_reconciliation_book_init(
     book->revision = 1U;
 }
 
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_open_tms_reconciliation_book_add(
     UmiOpenTmsReconciliationBook *book,
     const UmiOpenTmsReconciliationItem *item)
@@ -51,11 +56,76 @@ UmiStatus umi_open_tms_reconciliation_book_add(
     book->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_open_tms_reconciliation_book_add(
+    UmiOpenTmsReconciliationBook *book,
+    const UmiOpenTmsReconciliationItem *item)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (book != NULL && book->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiOpenTmsReconciliationItem copy;
+
+    if (book == NULL || item == NULL || item->id[0] == '\0' ||
+        item->sourceId[0] == '\0' || item->targetId[0] == '\0' ||
+        item->tolerance < 0.0) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (book->count >= UMI_OPEN_TMS_RECONCILIATION_CAPACITY) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    copy = *item;
+    copy.matched = fabs(copy.sourceValue - copy.targetValue) <= copy.tolerance;
+    if (copy.matched) {
+        book->matchedCount += 1U;
+    } else {
+        book->breakCount += 1U;
+    }
+    book->items[book->count++] = copy;
+    book->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
+UmiStatus umi_open_tms_reconciliation_book_resolve(
+    UmiOpenTmsReconciliationBook *book,
+    const char *id)
+{
+    size_t index;
+
+    if (book == NULL || id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    for (index = 0U; index < book->count; ++index) {
+        UmiOpenTmsReconciliationItem *item = &book->items[index];
+        if (strcmp(item->id, id) == 0) {
+            if (item->resolved) return UMI_STATUS_ALREADY_EXISTS;
+            item->resolved = 1;
+            if (!item->matched && book->breakCount > 0U) {
+                book->breakCount -= 1U;
+            }
+            book->revision += 1U;
+            return UMI_STATUS_OK;
+        }
+    }
+    return UMI_STATUS_NOT_FOUND;
+}
+#endif
 
 UmiStatus umi_open_tms_reconciliation_book_resolve(
     UmiOpenTmsReconciliationBook *book,
     const char *id)
 {
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (book != NULL && book->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
 
     if (book == NULL || id == NULL) return UMI_STATUS_INVALID_ARGUMENT;

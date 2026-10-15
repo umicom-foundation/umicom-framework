@@ -18,6 +18,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/platform/cross_target/cpu_profile.h"
 #include "../../base/value_archive_internal.h"
 
@@ -77,3 +78,8 @@ static UmiStatus UmiCtCpuProfileArchiveValidate(const UmiCtCpuProfile *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ct_cpu_profile_archive_encode, umi_ct_cpu_profile_archive_decode,
     UmiCtCpuProfile, UmiCtCpuProfileArchiveSchema, UmiCtCpuProfileArchiveBound, UmiCtCpuProfileArchiveWrite, UmiCtCpuProfileArchiveRead, UmiCtCpuProfileArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ct_cpu_profile_archive_decode_if_unchanged, umi_ct_cpu_profile_archive_encode,
+    UmiCtCpuProfile, UmiCtCpuProfileArchiveSchema, UmiCtCpuProfileArchiveBound, UmiCtCpuProfileArchiveRead, UmiCtCpuProfileArchiveValidate)

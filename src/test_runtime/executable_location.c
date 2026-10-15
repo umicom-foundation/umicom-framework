@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/test_runtime/executable_location.h"
 #include "../base/value_archive_internal.h"
 #include "umicom/base/text.h"
@@ -294,3 +295,8 @@ static UmiStatus ArchiveValidate(const UmiTestRuntimeExecutableLocation *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_test_runtime_executable_location_archive_encode, umi_test_runtime_executable_location_archive_decode,
     UmiTestRuntimeExecutableLocation, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Guard snapshot import with the complete encoded value reviewed by the
+ * caller. Imported metadata remains evidence; registry publication is separate. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_test_runtime_executable_location_archive_decode_if_unchanged, umi_test_runtime_executable_location_archive_encode,
+    UmiTestRuntimeExecutableLocation, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)

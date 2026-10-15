@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/developer_productivity/output_channels.h"
 
 #include <stdio.h>
@@ -61,12 +62,79 @@ void umi_developer_output_channels_init(
  * Add developer output channel only after its inputs and available capacity have been
  * checked.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_developer_output_channel_append(
     UmiDeveloperOutputChannels *channels,
     const char *channel_id,
     const char *title,
     const char *text)
 {
+    size_t index;
+    UmiDeveloperOutputChannel *channel;
+    size_t length;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (channels == NULL || channel_id == NULL ||
+        title == NULL || text == NULL || channel_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    index = find_index(channels, channel_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == (size_t)-1) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (channels->count >= UMI_DEVELOPER_OUTPUT_CHANNEL_CAPACITY) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+
+        index = channels->count++;
+        channel = &channels->channels[index];
+        (void)memset(channel, 0, sizeof(*channel));
+        (void)snprintf(channel->channel_id,
+                       sizeof(channel->channel_id),
+                       "%s",
+                       channel_id);
+        (void)snprintf(channel->title,
+                       sizeof(channel->title),
+                       "%s",
+                       title);
+    }
+
+    channel = &channels->channels[index];
+    length = strlen(text);
+
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (channel->length + length + 2U > sizeof(channel->text)) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    (void)memcpy(channel->text + channel->length, text, length);
+    channel->length += length;
+    channel->text[channel->length++] = '\n';
+    channel->text[channel->length] = '\0';
+    channel->revision += 1U;
+    channels->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_developer_output_channel_append(
+    UmiDeveloperOutputChannels *channels,
+    const char *channel_id,
+    const char *title,
+    const char *text)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (channels != NULL && channels->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     UmiDeveloperOutputChannel *channel;
     size_t length;

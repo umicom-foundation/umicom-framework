@@ -53,6 +53,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRepositoryDoctorPolicyTransferCases, UmiRepositoryDoc
     umi_repository_doctor_policy_archive_encode, umi_repository_doctor_policy_archive_decode,
     UmiRepositoryDoctorPolicyTransferEqual, UmiRepositoryDoctorPolicyTransferTails, UmiRepositoryDoctorPolicyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRepositoryDoctorPolicyConditionalArchiveCases, UmiRepositoryDoctorPolicy,
+    umi_repository_doctor_policy_archive_encode, umi_repository_doctor_policy_archive_decode_if_unchanged,
+    UmiRepositoryDoctorPolicyTransferEqual, UmiRepositoryDoctorPolicyTransferTails, UmiRepositoryDoctorPolicyTransferMalformed)
+
+
 int main(void){ UmiRepositoryDoctorPolicy p; umi_repository_doctor_policy_default(&p); assert(umi_repository_doctor_policy_validate(&p)==UMI_STATUS_OK);
     if (UmiRepositoryDoctorPolicyTransferCases(&p) != 0) return 1;
+    if (UmiRepositoryDoctorPolicyConditionalArchiveCases(&p) != 0) return 1;
  assert(p.require_initialised_submodules); return 0; }

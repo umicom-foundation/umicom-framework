@@ -42,6 +42,9 @@ void umi_fabric_endpoint_registry_init(UmiFabricEndpointRegistry *registry);
  * Add fabric endpoint registry only after its inputs and available capacity have been
  * checked.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_fabric_endpoint_registry_add(UmiFabricEndpointRegistry *registry,const UmiFabricEndpointDescriptor *item);
 /**
  * Find fabric endpoint registry while leaving the underlying catalogue or model owned by

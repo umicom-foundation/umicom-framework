@@ -46,6 +46,10 @@ typedef struct UmiWsSurfaceDescriptor {
 } UmiWsSurfaceDescriptor;
 
 /* Initialise a descriptor with stable defaults suitable for a workbench catalogue. */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_ws_surface_descriptor_init(UmiWsSurfaceDescriptor *descriptor,
                                          const char *surface_id,
                                          const char *label,
@@ -64,6 +68,16 @@ UmiStatus umi_ws_surface_descriptor_archive_encode(const UmiWsSurfaceDescriptor 
     void *bytes, size_t capacity, size_t *out_size);
 UmiStatus umi_ws_surface_descriptor_archive_decode(const void *bytes, size_t byte_count,
     UmiWsSurfaceDescriptor *value);
+
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the owner's publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_ws_surface_descriptor_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiWsSurfaceDescriptor *expected, UmiWsSurfaceDescriptor *value);
+
 
 #ifdef __cplusplus
 }

@@ -67,11 +67,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryConfirmationMatchingTransferCases, UmiTreasur
     umi_treasury_confirmation_matching_archive_encode, umi_treasury_confirmation_matching_archive_decode,
     UmiTreasuryConfirmationMatchingTransferEqual, UmiTreasuryConfirmationMatchingTransferTails, UmiTreasuryConfirmationMatchingTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryConfirmationMatchingConditionalArchiveCases, UmiTreasuryConfirmationMatching,
+    umi_treasury_confirmation_matching_archive_encode, umi_treasury_confirmation_matching_archive_decode_if_unchanged,
+    UmiTreasuryConfirmationMatchingTransferEqual, UmiTreasuryConfirmationMatchingTransferTails, UmiTreasuryConfirmationMatchingTransferMalformed)
+
+
 int main(void) {
     UmiTreasuryConfirmationMatching v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_confirmation_matching_init(&v, "match", 8U, 8U) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryConfirmationMatchingTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryConfirmationMatchingConditionalArchiveCases(&v) != 0) return 1;
 
     /* Use the stable identifier comparison to choose the matching record or policy. */
     if(!umi_treasury_confirmation_matching_exact(&v))return 2;

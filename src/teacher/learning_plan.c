@@ -17,6 +17,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/teacher/learning_plan.h"
 #include <string.h>
 
@@ -93,7 +94,34 @@ void umi_teacher_learning_plan_init(UmiTeacherLearningPlan *sequence) { /* Prote
  * Add teacher learning plan only after its inputs and available capacity have been
  * checked.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_teacher_learning_plan_append(UmiTeacherLearningPlan *sequence,const char *id) { size_t i;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if(sequence==NULL||!UmiTeacherLearningPlanIdValid(id)) return UMI_STATUS_INVALID_ARGUMENT;
+    if(!UmiTeacherLearningPlanStateValid(sequence)) return UMI_STATUS_INVALID_STATE;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for(i=0U;i<sequence->count;++i) /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(strcmp(sequence->ids[i],id)==0) return UMI_STATUS_ALREADY_EXISTS;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if(sequence->count>=UMI_TEACHER_MEDIUM_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
+    umi_teacher_learning_plan_copy(sequence->ids[sequence->count],UMI_TEACHER_ID_CAPACITY,id);
+    ++sequence->count;
+    ++sequence->revision;
+    return UMI_STATUS_OK;
+    }
+#endif
+
+UmiStatus umi_teacher_learning_plan_append(UmiTeacherLearningPlan *sequence,const char *id) {
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (sequence != NULL && sequence->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+ size_t i;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.

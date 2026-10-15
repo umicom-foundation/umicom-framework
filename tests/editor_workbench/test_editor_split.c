@@ -68,6 +68,13 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorWbEditorSplitTransferCases, UmiEditorWbEditorSp
     umi_editor_wb_editor_split_archive_encode, umi_editor_wb_editor_split_archive_decode,
     UmiEditorWbEditorSplitTransferEqual, UmiEditorWbEditorSplitTransferTails, UmiEditorWbEditorSplitTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorWbEditorSplitConditionalArchiveCases, UmiEditorWbEditorSplit,
+    umi_editor_wb_editor_split_archive_encode, umi_editor_wb_editor_split_archive_decode_if_unchanged,
+    UmiEditorWbEditorSplitTransferEqual, UmiEditorWbEditorSplitTransferTails, UmiEditorWbEditorSplitTransferMalformed)
+
+
 int main(void){ UmiEditorWbEditorSplit s; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_editor_split_init(&s,"s",UMI_EDITOR_WB_HORIZONTAL,0.5)!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_editor_split_set_ratio(&s,0.95)!=UMI_STATUS_INVALID_ARGUMENT)return 2; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_wb_editor_split_valid(&s))return 3;
     if (UmiEditorWbEditorSplitTransferCases(&s) != 0) return 1;
+    if (UmiEditorWbEditorSplitConditionalArchiveCases(&s) != 0) return 1;
  return 0; }

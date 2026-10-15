@@ -67,6 +67,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveDependencyNodeTransferCases, UmiUiReactiveD
     umi_ui_reactive_dependency_node_archive_encode, umi_ui_reactive_dependency_node_archive_decode,
     UmiUiReactiveDependencyNodeTransferEqual, UmiUiReactiveDependencyNodeTransferTails, UmiUiReactiveDependencyNodeTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveDependencyNodeConditionalArchiveCases, UmiUiReactiveDependencyNode,
+    umi_ui_reactive_dependency_node_archive_encode, umi_ui_reactive_dependency_node_archive_decode_if_unchanged,
+    UmiUiReactiveDependencyNodeTransferEqual, UmiUiReactiveDependencyNodeTransferTails, UmiUiReactiveDependencyNodeTransferMalformed)
+
+
 int main(void) { UmiUiReactiveDependencyNode item; umi_ui_reactive_dependency_node_init(&item);
     /* Nonzero fields expose swapped or omitted values in a saved record.
      * The original initialized fixture remains available for its own checks. */
@@ -75,4 +81,5 @@ int main(void) { UmiUiReactiveDependencyNode item; umi_ui_reactive_dependency_no
     populated.computed = true;
     populated.revision = (uint64_t)4;
     if (UmiUiReactiveDependencyNodeTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveDependencyNodeConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_dependency_node_valid(&item) ? 0 : 1; }

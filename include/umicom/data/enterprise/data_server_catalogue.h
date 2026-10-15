@@ -37,6 +37,9 @@ typedef struct UmiDataServerCatalogue {
 /* Reset the bounded data server catalogue registry. */
 void umi_data_data_server_catalogue_init(UmiDataServerCatalogue *registry);
 /* Add a unique item by stable identifier. */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_data_data_server_catalogue_add(UmiDataServerCatalogue *registry, const UmiDataServerProfile *item);
 /* Find a registry item by stable identifier. */
 UmiStatus umi_data_data_server_catalogue_find(const UmiDataServerCatalogue *registry, const char *id, UmiDataServerProfile *out_item);

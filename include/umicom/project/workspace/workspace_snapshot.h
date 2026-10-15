@@ -32,7 +32,11 @@ extern "C" {
         uint64_t revision;
     }
     UmiProjectWorkspaceWorkspaceSnapshot;
-    UmiStatus umi_project_workspace_workspace_snapshot_init(UmiProjectWorkspaceWorkspaceSnapshot*value,const char*workspace_id);
+    /** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
+UmiStatus umi_project_workspace_workspace_snapshot_init(UmiProjectWorkspaceWorkspaceSnapshot*value,const char*workspace_id);
     void umi_project_workspace_workspace_snapshot_recalculate(UmiProjectWorkspaceWorkspaceSnapshot*value);
 #ifdef __cplusplus
 }

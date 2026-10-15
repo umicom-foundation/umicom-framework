@@ -18,6 +18,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/platform/cross_target/riscv_platform.h"
 #include "../../base/value_archive_internal.h"
 
@@ -81,3 +82,8 @@ static UmiStatus UmiCtRiscvPlatformArchiveValidate(const UmiCtRiscvPlatform *val
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ct_riscv_platform_archive_encode, umi_ct_riscv_platform_archive_decode,
     UmiCtRiscvPlatform, UmiCtRiscvPlatformArchiveSchema, UmiCtRiscvPlatformArchiveBound, UmiCtRiscvPlatformArchiveWrite, UmiCtRiscvPlatformArchiveRead, UmiCtRiscvPlatformArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ct_riscv_platform_archive_decode_if_unchanged, umi_ct_riscv_platform_archive_encode,
+    UmiCtRiscvPlatform, UmiCtRiscvPlatformArchiveSchema, UmiCtRiscvPlatformArchiveBound, UmiCtRiscvPlatformArchiveRead, UmiCtRiscvPlatformArchiveValidate)

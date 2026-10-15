@@ -12,11 +12,28 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/data/enterprise/query_plan.h"
+#include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
 
-/* Initialisation keeps query semantics independent from SQL-string construction. */ UmiStatus umi_data_query_plan_init(UmiDataQueryPlan *plan,const char *plan_id,const char *root_table){UmiStatus s;if(plan==NULL||plan_id==NULL||root_table==NULL)return UMI_STATUS_INVALID_ARGUMENT;(void)memset(plan,0,sizeof(*plan));s=umi_data_enterprise_copy_text(plan->plan_id,sizeof(plan->plan_id),plan_id);if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(plan->root_table,sizeof(plan->root_table),root_table);if(s!=UMI_STATUS_OK)return s;plan->read_only=true;return UMI_STATUS_OK;}
+/* Initialisation keeps query semantics independent from SQL-string construction. */ /* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
+UmiStatus umi_data_query_plan_init(UmiDataQueryPlan *plan,const char *plan_id,const char *root_table){UmiStatus s;if(plan==NULL||plan_id==NULL||root_table==NULL)return UMI_STATUS_INVALID_ARGUMENT;(void)memset(plan,0,sizeof(*plan));s=umi_data_enterprise_copy_text(plan->plan_id,sizeof(plan->plan_id),plan_id);if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(plan->root_table,sizeof(plan->root_table),root_table);if(s!=UMI_STATUS_OK)return s;plan->read_only=true;return UMI_STATUS_OK;}
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_data_query_plan_init_build_value(UmiDataQueryPlan *plan,const char *plan_id,const char *root_table){UmiStatus s;if(plan==NULL||plan_id==NULL||root_table==NULL)return UMI_STATUS_INVALID_ARGUMENT;(void)memset(plan,0,sizeof(*plan));s=umi_data_enterprise_copy_text(plan->plan_id,sizeof(plan->plan_id),plan_id);if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(plan->root_table,sizeof(plan->root_table),root_table);if(s!=UMI_STATUS_OK)return s;plan->read_only=true;return UMI_STATUS_OK;}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_data_query_plan_init, UmiDataQueryPlan, plan,
+    (UmiDataQueryPlan *plan, const char *plan_id, const char *root_table),
+    umi_data_query_plan_init_build_value(candidate, plan_id, root_table))
+
 /* Shape evidence feeds cost, policy and observability without executing a query. */ UmiStatus umi_data_query_plan_shape(UmiDataQueryPlan *plan,size_t predicates,size_t projections,size_t joins,size_t orders,uint64_t row_limit){if(plan==NULL)return UMI_STATUS_INVALID_ARGUMENT;if(predicates>UMI_DATA_ENTERPRISE_MAX_ITEMS||projections>UMI_DATA_ENTERPRISE_MAX_ITEMS||joins>UMI_DATA_ENTERPRISE_MAX_ITEMS||orders>UMI_DATA_ENTERPRISE_MAX_ITEMS)return UMI_STATUS_CAPACITY_EXCEEDED;plan->predicate_count=predicates;plan->projection_count=projections;plan->join_count=joins;plan->order_count=orders;plan->row_limit=row_limit;return umi_data_query_plan_validate(plan);}
 /* Validation blocks accidental unbounded reads by requiring an explicit row limit. */ UmiStatus umi_data_query_plan_validate(const UmiDataQueryPlan *plan){
     /* Fixed-size fields may come from a plug-in or restored state. Check
@@ -92,3 +109,9 @@ static UmiStatus UmiDataQueryPlanArchiveValidate(const UmiDataQueryPlan *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_data_query_plan_archive_encode, umi_data_query_plan_archive_decode,
     UmiDataQueryPlan, UmiDataQueryPlanArchiveSchema, UmiDataQueryPlanArchiveBound, UmiDataQueryPlanArchiveWrite, UmiDataQueryPlanArchiveRead, UmiDataQueryPlanArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_data_query_plan_archive_decode_if_unchanged, umi_data_query_plan_archive_encode,
+    UmiDataQueryPlan, UmiDataQueryPlanArchiveSchema, UmiDataQueryPlanArchiveBound, UmiDataQueryPlanArchiveRead, UmiDataQueryPlanArchiveValidate)

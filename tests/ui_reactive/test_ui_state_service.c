@@ -52,6 +52,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveUiStateServiceTransferCases, UmiUiReactiveU
     umi_ui_reactive_ui_state_service_archive_encode, umi_ui_reactive_ui_state_service_archive_decode,
     UmiUiReactiveUiStateServiceTransferEqual, UmiUiReactiveUiStateServiceTransferTails, UmiUiReactiveUiStateServiceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveUiStateServiceConditionalArchiveCases, UmiUiReactiveUiStateService,
+    umi_ui_reactive_ui_state_service_archive_encode, umi_ui_reactive_ui_state_service_archive_decode_if_unchanged,
+    UmiUiReactiveUiStateServiceTransferEqual, UmiUiReactiveUiStateServiceTransferTails, UmiUiReactiveUiStateServiceTransferMalformed)
+
+
 int main(void) { UmiUiReactiveUiStateService item; umi_ui_reactive_ui_state_service_init(&item);
     /* Nonzero fields expose swapped or omitted values in a saved record.
      * The original initialized fixture remains available for its own checks. */
@@ -62,4 +68,5 @@ int main(void) { UmiUiReactiveUiStateService item; umi_ui_reactive_ui_state_serv
     populated.scheduler_ready = true;
     populated.revision = (uint64_t)6;
     if (UmiUiReactiveUiStateServiceTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveUiStateServiceConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_ui_state_service_valid(&item) ? 0 : 1; }

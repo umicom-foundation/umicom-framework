@@ -59,6 +59,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAiDeveloperPreferencesTransferCases, UmiAiDeveloperPr
     umi_ai_developer_preferences_archive_encode, umi_ai_developer_preferences_archive_decode,
     UmiAiDeveloperPreferencesTransferEqual, UmiAiDeveloperPreferencesTransferTails, UmiAiDeveloperPreferencesTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAiDeveloperPreferencesConditionalArchiveCases, UmiAiDeveloperPreferences,
+    umi_ai_developer_preferences_archive_encode, umi_ai_developer_preferences_archive_decode_if_unchanged,
+    UmiAiDeveloperPreferencesTransferEqual, UmiAiDeveloperPreferencesTransferTails, UmiAiDeveloperPreferencesTransferMalformed)
+
+
 int main(void)
 {
     UmiAiDeveloperPreferences preferences;
@@ -70,6 +76,7 @@ int main(void)
     assert(umi_ai_developer_preferences_validate(
         &preferences) == UMI_STATUS_OK);
     if (UmiAiDeveloperPreferencesTransferCases(&preferences) != 0) return 1;
+    if (UmiAiDeveloperPreferencesConditionalArchiveCases(&preferences) != 0) return 1;
 
 
     preferences.visible_rows = 0U;

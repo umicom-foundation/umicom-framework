@@ -47,9 +47,15 @@ typedef struct UmiBrokerAuditJournal {
 } UmiBrokerAuditJournal;
 
 void umi_broker_audit_journal_init(UmiBrokerAuditJournal *journal);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_broker_audit_journal_append(
     UmiBrokerAuditJournal *journal,
     const UmiBrokerAuditRecord *record);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_broker_audit_journal_mark_persisted(
     UmiBrokerAuditJournal *journal,
     uint64_t sequence);

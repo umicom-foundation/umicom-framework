@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/vcs/advanced/commit_node.h"
 #include "../../base/value_archive_internal.h"
 
@@ -143,3 +144,8 @@ static UmiStatus UmiVcsAdvancedCommitNodeArchiveValidate(const UmiVcsAdvancedCom
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_vcs_advanced_commit_node_archive_encode, umi_vcs_advanced_commit_node_archive_decode,
     UmiVcsAdvancedCommitNode, UmiVcsAdvancedCommitNodeArchiveSchema, UmiVcsAdvancedCommitNodeArchiveBound, UmiVcsAdvancedCommitNodeArchiveWrite, UmiVcsAdvancedCommitNodeArchiveRead, UmiVcsAdvancedCommitNodeArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_vcs_advanced_commit_node_archive_decode_if_unchanged, umi_vcs_advanced_commit_node_archive_encode,
+    UmiVcsAdvancedCommitNode, UmiVcsAdvancedCommitNodeArchiveSchema, UmiVcsAdvancedCommitNodeArchiveBound, UmiVcsAdvancedCommitNodeArchiveRead, UmiVcsAdvancedCommitNodeArchiveValidate)

@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/web/workbench/response.h"
@@ -26,8 +27,16 @@ int main(void)
     umi_web_workbench_response_init(&response);
     assert(umi_web_workbench_response_set_header(&response,
         "Content-Type", "application/json") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWebWorkbenchResponse, &response,
+        (umi_web_workbench_response_set_header(&response,
+        "Content-Type", "application/json")));
+
     assert(umi_web_workbench_response_set_body(&response, large, sizeof(large),
         sizeof(large)) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWebWorkbenchResponse, &response,
+        (umi_web_workbench_response_set_body(&response, large, sizeof(large),
+        sizeof(large))));
+
     assert(response.body_truncated);
     assert(response.body_length == UMI_WEB_WORKBENCH_PAYLOAD_CAPACITY - 1U);
     umi_web_workbench_response_complete(&response, UMI_STATUS_OK, 200,

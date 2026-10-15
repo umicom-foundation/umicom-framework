@@ -44,6 +44,9 @@ void umi_workbench_context_host_profile_catalogue_destroy(UmiWorkbenchContextHos
  * Provide the workbench context host profile catalogue upsert operation used by this
  * module and its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_context_host_profile_catalogue_upsert(
     UmiWorkbenchContextHostProfileCatalogue *catalogue,const UmiWorkbenchContextHostProfile *profile);
 /**
@@ -56,6 +59,9 @@ const UmiWorkbenchContextHostProfile *umi_workbench_context_host_profile_catalog
  * Remove workbench context host profile catalogue while keeping the remaining records in a
  * valid and discoverable state.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_context_host_profile_catalogue_remove(
     UmiWorkbenchContextHostProfileCatalogue *catalogue,const char *profile_id);
 #ifdef __cplusplus

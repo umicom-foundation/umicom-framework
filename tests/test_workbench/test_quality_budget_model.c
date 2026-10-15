@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiQualityBudgetModelTransferCases, UmiQualityBudgetMode
     umi_quality_budget_model_archive_encode, umi_quality_budget_model_archive_decode,
     UmiQualityBudgetModelTransferEqual, UmiQualityBudgetModelTransferTails, UmiQualityBudgetModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiQualityBudgetModelConditionalArchiveCases, UmiQualityBudgetModel,
+    umi_quality_budget_model_archive_encode, umi_quality_budget_model_archive_decode_if_unchanged,
+    UmiQualityBudgetModelTransferEqual, UmiQualityBudgetModelTransferTails, UmiQualityBudgetModelTransferMalformed)
+
+
 int main(void){UmiQualityBudgetModel m;assert(umi_quality_budget_model_init(&m,"quality_budget_model","Quality Budget Model")==UMI_STATUS_OK);assert(umi_quality_budget_model_set_active(&m,true)==UMI_STATUS_OK);assert(umi_quality_budget_model_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_quality_budget_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_quality_budget_model_valid(&m));
     if (UmiQualityBudgetModelTransferCases(&m) != 0) return 1;
+    if (UmiQualityBudgetModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

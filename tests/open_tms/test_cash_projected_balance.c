@@ -17,6 +17,10 @@
 
 #include "umicom/open_tms/cash/projected_balance.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(umi_open_tms_evaluate_cash_projected_balance_batch_cases, umi_open_tms_evaluate_cash_projected_balance,
+    umi_open_tms_evaluate_cash_projected_balance_batch, UmiOpenTmsInput, UmiOpenTmsSnapshot, value)
+
 int main(void)
 {
     UmiOpenTmsInput input;
@@ -76,6 +80,7 @@ int main(void)
     input.transitionAllowed = 1;
     input.revision = 111U;
 
+    if (umi_open_tms_evaluate_cash_projected_balance_batch_cases(&input) != 0) return 1;
     assert(umi_open_tms_evaluate_cash_projected_balance(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "cash.projected-balance") == 0);
     assert(snapshot.revision == 111U);

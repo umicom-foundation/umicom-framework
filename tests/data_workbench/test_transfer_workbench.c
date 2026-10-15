@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 
 #include "umicom/data/workbench/transfer_workbench.h"
@@ -32,5 +33,8 @@ int main(void)
     assert(umi_data_transfer_workbench_add(&workbench, &plan) == UMI_STATUS_OK);
     assert(workbench.ready && workbench.valid_count == 1U);
     assert(umi_data_transfer_workbench_select(&workbench, 0U) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDataTransferWorkbench, &workbench,
+        (umi_data_transfer_workbench_select(&workbench, 0U)));
+
     return 0;
 }

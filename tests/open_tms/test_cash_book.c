@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <math.h>
 #include <string.h>
@@ -30,6 +31,9 @@ int main(void)
     r.minimum = 500.0;
     r.eventMilliseconds = 1000U;
     assert(umi_open_tms_cash_book_upsert(&book, &r) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiOpenTmsCashBook, &book,
+        (umi_open_tms_cash_book_upsert(&book, &r)));
+
     assert(fabs(umi_open_tms_cash_record_net_forecast(&r) - 1100.0) < 0.001);
     assert(fabs(umi_open_tms_cash_record_headroom(&r) - 600.0) < 0.001);
     return 0;

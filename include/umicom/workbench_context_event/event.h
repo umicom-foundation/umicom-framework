@@ -72,6 +72,9 @@ UmiStatus umi_workbench_context_event_validate(
  * Provide the workbench context event add metadata operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_context_event_add_metadata(
     UmiWorkbenchContextEvent *event,
     const char *name,

@@ -90,6 +90,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicMosaicGridTransferCases, UmiUiMosaicMosaicGri
     umi_ui_mosaic_mosaic_grid_archive_encode, umi_ui_mosaic_mosaic_grid_archive_decode,
     UmiUiMosaicMosaicGridTransferEqual, UmiUiMosaicMosaicGridTransferTails, UmiUiMosaicMosaicGridTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicMosaicGridConditionalArchiveCases, UmiUiMosaicMosaicGrid,
+    umi_ui_mosaic_mosaic_grid_archive_encode, umi_ui_mosaic_mosaic_grid_archive_decode_if_unchanged,
+    UmiUiMosaicMosaicGridTransferEqual, UmiUiMosaicMosaicGridTransferTails, UmiUiMosaicMosaicGridTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicMosaicGrid value;
     umi_ui_mosaic_mosaic_grid_init(&value);
@@ -97,6 +103,7 @@ int main(void) {
     value.row_span = 2U; value.column_span = 3U;
     CHECK(umi_ui_mosaic_mosaic_grid_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicMosaicGridTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicMosaicGridConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_mosaic_grid_area(&value) == 6U);
     return 0;

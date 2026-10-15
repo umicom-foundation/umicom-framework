@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/analytics/gauge_zone.h"
 #include "../../base/value_archive_internal.h"
 
@@ -63,3 +64,8 @@ static UmiStatus UmiAnalyticsGaugeZoneArchiveValidate(const UmiAnalyticsGaugeZon
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_analytics_gauge_zone_archive_encode, umi_analytics_gauge_zone_archive_decode,
     UmiAnalyticsGaugeZone, UmiAnalyticsGaugeZoneArchiveSchema, UmiAnalyticsGaugeZoneArchiveBound, UmiAnalyticsGaugeZoneArchiveWrite, UmiAnalyticsGaugeZoneArchiveRead, UmiAnalyticsGaugeZoneArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_analytics_gauge_zone_archive_decode_if_unchanged, umi_analytics_gauge_zone_archive_encode,
+    UmiAnalyticsGaugeZone, UmiAnalyticsGaugeZoneArchiveSchema, UmiAnalyticsGaugeZoneArchiveBound, UmiAnalyticsGaugeZoneArchiveRead, UmiAnalyticsGaugeZoneArchiveValidate)

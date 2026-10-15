@@ -86,6 +86,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAccountingLedgerAccountTransferCases, UmiAccountingLe
     umi_accounting_ledger_account_archive_encode, umi_accounting_ledger_account_archive_decode,
     UmiAccountingLedgerAccountTransferEqual, UmiAccountingLedgerAccountTransferTails, UmiAccountingLedgerAccountTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAccountingLedgerAccountConditionalArchiveCases, UmiAccountingLedgerAccount,
+    umi_accounting_ledger_account_archive_encode, umi_accounting_ledger_account_archive_decode_if_unchanged,
+    UmiAccountingLedgerAccountTransferEqual, UmiAccountingLedgerAccountTransferTails, UmiAccountingLedgerAccountTransferMalformed)
+
+
 int main(void) {
     UmiAccountingLedgerAccount v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -93,6 +99,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if(!umi_accounting_ledger_account_valid(&v)) return 2;
     if (UmiAccountingLedgerAccountTransferCases(&v) != 0) return 1;
+    if (UmiAccountingLedgerAccountConditionalArchiveCases(&v) != 0) return 1;
 
     return 0;
 }

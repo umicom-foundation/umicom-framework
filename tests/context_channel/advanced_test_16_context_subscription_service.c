@@ -130,6 +130,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextSubscriptionServiceTransferCases, UmiContextSu
     umi_context_subscription_service_archive_encode, umi_context_subscription_service_archive_decode,
     UmiContextSubscriptionServiceTransferEqual, UmiContextSubscriptionServiceTransferTails, UmiContextSubscriptionServiceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextSubscriptionServiceConditionalArchiveCases, UmiContextSubscriptionService,
+    umi_context_subscription_service_archive_encode, umi_context_subscription_service_archive_decode_if_unchanged,
+    UmiContextSubscriptionServiceTransferEqual, UmiContextSubscriptionServiceTransferTails, UmiContextSubscriptionServiceTransferMalformed)
+
+
 int main(void)
 {
     UmiContextSubscriptionService state;
@@ -144,6 +150,7 @@ int main(void)
     assert(umi_context_subscription_service_covers_sequence(&state,11U));
     assert(umi_context_subscription_service_validate(&state) == UMI_STATUS_OK);
     if (UmiContextSubscriptionServiceTransferCases(&state) != 0) return 1;
+    if (UmiContextSubscriptionServiceConditionalArchiveCases(&state) != 0) return 1;
 
     return 0;
 }

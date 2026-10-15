@@ -117,6 +117,32 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkSessionTransferCases, UmiWorkbenc
     umi_workbench_context_link_session_archive_encode, umi_workbench_context_link_session_archive_decode,
     UmiWorkbenchContextLinkSessionTransferEqual, UmiWorkbenchContextLinkSessionTransferTails, UmiWorkbenchContextLinkSessionTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkSessionConditionalArchiveCases, UmiWorkbenchContextLinkSession,
+    umi_workbench_context_link_session_archive_encode, umi_workbench_context_link_session_archive_decode_if_unchanged,
+    UmiWorkbenchContextLinkSessionTransferEqual, UmiWorkbenchContextLinkSessionTransferTails, UmiWorkbenchContextLinkSessionTransferMalformed)
+
+
+/* Delayed context edits must preserve newer work and reject exhausted tokens. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextLinkSessionReviewedCases, UmiWorkbenchContextLinkSession,
+    session_id, layout_id, umi_workbench_context_link_session_replace_if_current, UmiWorkbenchContextLinkSessionTransferEqual)
+static int UmiWorkbenchContextLinkSessionMutationGuards(const UmiWorkbenchContextLinkSession *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkSession, workspace_id, umi_workbench_context_link_session_set_primary, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkSession, layout_id, umi_workbench_context_link_session_set_secondary, sample);
+    UmiWorkbenchContextLinkSession value = *sample;
+    unsigned char before[sizeof(value)];
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_link_session_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U ||
+        value.timestamp_ms != 44U) return 1;
+    memcpy(before, &value, sizeof(value));
+    umi_workbench_context_link_session_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof(value)) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextLinkSession record;
@@ -125,6 +151,9 @@ int main(void)
     umi_workbench_context_link_session_init(&record, "session-id");
     assert(umi_workbench_context_link_session_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkSessionTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkSessionConditionalArchiveCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkSessionReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkSessionMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_context_link_session_set_primary(&record, "primary") == UMI_STATUS_OK);
     assert(umi_workbench_context_link_session_set_secondary(&record, "secondary") == UMI_STATUS_OK);

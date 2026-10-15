@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <stdio.h>
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "check failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return __LINE__; } } while (0)
 
@@ -28,6 +29,9 @@ int main(void)
     umi_digital_asset_digital_asset_service_init(&service);
     CHECK(!umi_digital_asset_digital_asset_service_ready(&service));
     CHECK(umi_digital_asset_digital_asset_service_start(&service) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDigitalAssetService, &service,
+        (umi_digital_asset_digital_asset_service_start(&service)));
+
     CHECK(umi_digital_asset_digital_asset_service_ready(&service));
     return 0;
 }

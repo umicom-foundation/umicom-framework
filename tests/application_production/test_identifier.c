@@ -68,12 +68,19 @@ UMI_TEST_VALUE_TRANSFER(UmiApplicationProductionIdentifierTransferCases, UmiAppl
     umi_application_production_identifier_archive_encode, umi_application_production_identifier_archive_decode,
     UmiApplicationProductionIdentifierTransferEqual, UmiApplicationProductionIdentifierTransferTails, UmiApplicationProductionIdentifierTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiApplicationProductionIdentifierConditionalArchiveCases, UmiApplicationProductionIdentifier,
+    umi_application_production_identifier_archive_encode, umi_application_production_identifier_archive_decode_if_unchanged,
+    UmiApplicationProductionIdentifierTransferEqual, UmiApplicationProductionIdentifierTransferTails, UmiApplicationProductionIdentifierTransferMalformed)
+
+
 int main(void) {
     UmiApplicationProductionIdentifier a = {{0}}, b = {{0}};
     assert(umi_application_production_identifier_set(&a, "org.umicom.studio") == UMI_STATUS_OK);
     assert(umi_application_production_identifier_set(&b, "org.umicom.studio") == UMI_STATUS_OK);
     assert(umi_application_production_identifier_valid(&a));
     if (UmiApplicationProductionIdentifierTransferCases(&a) != 0) return 1;
+    if (UmiApplicationProductionIdentifierConditionalArchiveCases(&a) != 0) return 1;
 
     assert(umi_application_production_identifier_equal(&a, &b));
     return 0;

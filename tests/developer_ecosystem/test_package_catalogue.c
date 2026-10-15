@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 
 #include "umicom/developer/ecosystem/package_catalogue.h"
@@ -33,6 +34,23 @@ int main(void)
         sizeof(record.installed_version), "1.0.0") == UMI_STATUS_OK);
     assert(umi_ecosystem_package_catalogue_upsert(&catalogue, &record) ==
         UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiEcosystemPackageCatalogue, &catalogue,
+        (umi_ecosystem_package_catalogue_upsert(&catalogue, &record)));
+    /* Replacing an existing child must not wrap its independent token. */
+    {
+        uint64_t input_revision = record.revision;
+        uint64_t owner_revision = catalogue.revision;
+        unsigned char child_before[sizeof(catalogue.packages[0])];
+        memcpy(child_before, &catalogue.packages[0], sizeof(child_before));
+        record.revision = UINT64_MAX;
+        UmiStatus replace_status = umi_ecosystem_package_catalogue_upsert(&catalogue, &record);
+        record.revision = input_revision;
+        if (replace_status != UMI_STATUS_CAPACITY_EXCEEDED ||
+            catalogue.revision != owner_revision ||
+            memcmp(child_before, &catalogue.packages[0], sizeof(child_before)) != 0)
+            return 1;
+    }
+
     assert(umi_ecosystem_package_has_update(&catalogue.packages[0]));
     assert(umi_ecosystem_package_catalogue_statistics(&catalogue, &statistics) ==
         UMI_STATUS_OK);

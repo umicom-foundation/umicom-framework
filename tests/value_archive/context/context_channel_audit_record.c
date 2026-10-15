@@ -151,6 +151,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextAuditRecordTransferCases, UmiContextAuditRecor
     umi_context_audit_record_archive_encode, umi_context_audit_record_archive_decode,
     UmiContextAuditRecordTransferEqual, UmiContextAuditRecordTransferTails, UmiContextAuditRecordTransferMalformed)
 
+#include "../conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextAuditRecordConditionalArchiveCases, UmiContextAuditRecord,
+    umi_context_audit_record_archive_encode, umi_context_audit_record_archive_decode_if_unchanged,
+    UmiContextAuditRecordTransferEqual, UmiContextAuditRecordTransferTails, UmiContextAuditRecordTransferMalformed)
+
+
 int main(void)
 {
     UmiContextAuditRecord value;
@@ -165,6 +171,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_context_audit_record_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiContextAuditRecordTransferCases(&value) != 0) return 1;
+    if (UmiContextAuditRecordConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

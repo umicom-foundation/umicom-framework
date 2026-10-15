@@ -88,12 +88,19 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicDesignerDragTransferCases, UmiUiMosaicDesigne
     umi_ui_mosaic_designer_drag_archive_encode, umi_ui_mosaic_designer_drag_archive_decode,
     UmiUiMosaicDesignerDragTransferEqual, UmiUiMosaicDesignerDragTransferTails, UmiUiMosaicDesignerDragTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicDesignerDragConditionalArchiveCases, UmiUiMosaicDesignerDrag,
+    umi_ui_mosaic_designer_drag_archive_encode, umi_ui_mosaic_designer_drag_archive_decode_if_unchanged,
+    UmiUiMosaicDesignerDragTransferEqual, UmiUiMosaicDesignerDragTransferTails, UmiUiMosaicDesignerDragTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicDesignerDrag value;
     umi_ui_mosaic_designer_drag_init(&value);
     CHECK(umi_ui_mosaic_designer_drag_bind(&value, "workspace.main", "panel.active") == UMI_STATUS_OK);
     CHECK(umi_ui_mosaic_designer_drag_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicDesignerDragTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicDesignerDragConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_designer_drag_advance(&value) == UMI_STATUS_PERMISSION_DENIED);
     value.mode = UMI_UI_MOSAIC_EDIT_UNLOCKED;

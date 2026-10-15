@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/distribution/runtime/provenance.h"
 #include "../../base/value_archive_internal.h"
 
@@ -89,3 +90,9 @@ static UmiStatus UmiDrProvenanceArchiveValidate(const UmiDrProvenance *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_dr_provenance_archive_encode, umi_dr_provenance_archive_decode,
     UmiDrProvenance, UmiDrProvenanceArchiveSchema, UmiDrProvenanceArchiveBound, UmiDrProvenanceArchiveWrite, UmiDrProvenanceArchiveRead, UmiDrProvenanceArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_dr_provenance_archive_decode_if_unchanged, umi_dr_provenance_archive_encode,
+    UmiDrProvenance, UmiDrProvenanceArchiveSchema, UmiDrProvenanceArchiveBound, UmiDrProvenanceArchiveRead, UmiDrProvenanceArchiveValidate)

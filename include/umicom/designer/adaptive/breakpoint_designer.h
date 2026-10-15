@@ -34,6 +34,9 @@ typedef struct UmiDesignerBreakpointDesigner {
 /* Initialise an empty breakpoint-designer session. */
 void umi_designer_breakpoint_designer_init(UmiDesignerBreakpointDesigner *designer);
 /* Add and select one canonical Design-System breakpoint. */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_designer_breakpoint_designer_add(UmiDesignerBreakpointDesigner *designer,
                                                const UmiDesignBreakpoint *breakpoint);
 

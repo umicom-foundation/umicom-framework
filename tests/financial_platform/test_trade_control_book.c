@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/financial_platform/trade_control_book.h"
@@ -31,9 +32,16 @@ int main(void)
     trade.notional = 125000.0;
     trade.version = 1U;
     assert(umi_financial_trade_control_book_add(&book, &trade) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFinancialTradeControlBook, &book,
+        (umi_financial_trade_control_book_add(&book, &trade)));
+
     assert(umi_financial_trade_control_book_transition(
                &book, "trade-1", UMI_FINANCIAL_TRADE_CONFIRMED, 2U) ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFinancialTradeControlBook, &book,
+        (umi_financial_trade_control_book_transition(
+               &book, "trade-1", UMI_FINANCIAL_TRADE_CONFIRMED, 2U)));
+
     assert(umi_financial_trade_control_book_transition(
                &book, "trade-1", UMI_FINANCIAL_TRADE_SETTLED, 3U) ==
            UMI_STATUS_OK);

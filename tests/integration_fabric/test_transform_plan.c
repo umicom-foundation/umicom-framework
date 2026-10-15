@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/integration/fabric/transform_plan.h"
 #include <stdio.h>
 #include <string.h>
@@ -26,6 +27,9 @@ int main(void) {
     UmiFabricTransformPlan r; UmiFabricTransformRule item, found; umi_fabric_transform_plan_init(&r);
     CHECK(umi_fabric_transform_rule_init(&item,"t1","a","b","copy",true)==UMI_STATUS_OK);
     CHECK(umi_fabric_transform_plan_add(&r,&item)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFabricTransformPlan, &r,
+        (umi_fabric_transform_plan_add(&r,&item)));
+
     CHECK(umi_fabric_transform_plan_add(&r,&item)==UMI_STATUS_ALREADY_EXISTS);
     CHECK(umi_fabric_transform_plan_find(&r,item.rule_id,&found)==UMI_STATUS_OK);
     CHECK(umi_fabric_transform_plan_count(&r)==1U);

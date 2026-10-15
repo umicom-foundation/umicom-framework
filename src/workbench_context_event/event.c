@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include <stdint.h>
 #include "umicom/workbench_context_event/event.h"
 
 #include <string.h>
@@ -81,11 +82,53 @@ UmiStatus umi_workbench_context_event_validate(
  * Provide the workbench context event add metadata operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_context_event_add_metadata(
     UmiWorkbenchContextEvent *event,
     const char *name,
     const char *value)
 {
+    UmiWorkbenchContextEventMetadata *item;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (event == NULL || name == NULL || value == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (event->metadata_count >= UMI_WORKBENCH_CONTEXT_EVENT_MAX_METADATA) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    item = &event->metadata[event->metadata_count];
+    status = umi_workbench_context_event_copy_text(
+        item->name, sizeof(item->name), name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_workbench_context_event_copy_text(
+        item->value, sizeof(item->value), value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    ++event->metadata_count;
+    ++event->revision;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_workbench_context_event_add_metadata(
+    UmiWorkbenchContextEvent *event,
+    const char *name,
+    const char *value)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (event != NULL && event->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiWorkbenchContextEventMetadata *item;
     UmiStatus status;
     /*

@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/integration/fabric/saga_step.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -107,10 +108,72 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricSagaStepTransferCases, UmiFabricSagaStep,
     umi_fabric_saga_step_archive_encode, umi_fabric_saga_step_archive_decode,
     UmiFabricSagaStepTransferEqual, UmiFabricSagaStepTransferTails, UmiFabricSagaStepTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricSagaStepConditionalArchiveCases, UmiFabricSagaStep,
+    umi_fabric_saga_step_archive_encode, umi_fabric_saga_step_archive_decode_if_unchanged,
+    UmiFabricSagaStepTransferEqual, UmiFabricSagaStepTransferTails, UmiFabricSagaStepTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted saga step value. */
+static int UmiFabricSagaStepConstructionCases(void)
+{
+    UmiFabricSagaStep *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_fabric_saga_step_init(value, "reserve", "reserve", "release", true) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->step_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_saga_step_init(value, oversized, "reserve", "release", true) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_saga_step_init(value, value->step_id, "reserve", "release", true) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->step_id, "reserve") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->action_operation) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_saga_step_init(value, "reserve", oversized, "release", true) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_saga_step_init(value, "reserve", value->action_operation, "release", true) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->action_operation, "reserve") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->compensation_operation) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_saga_step_init(value, "reserve", "reserve", oversized, true) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_saga_step_init(value, "reserve", "reserve", value->compensation_operation, true) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->compensation_operation, "release") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiFabricSagaStepConstructionCases() != 0) return 1;
+
     UmiFabricSagaStep item;
     CHECK(umi_fabric_saga_step_init(&item,"reserve","reserve","release",true)==UMI_STATUS_OK);
     if (UmiFabricSagaStepTransferCases(&item) != 0) return 1;
+    if (UmiFabricSagaStepConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.compensation_required);
     return 0;

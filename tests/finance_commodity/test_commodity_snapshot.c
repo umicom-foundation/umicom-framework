@@ -59,12 +59,19 @@ UMI_TEST_VALUE_TRANSFER(UmiCommoditySnapshotTransferCases, UmiCommoditySnapshot,
     umi_commodity_commodity_snapshot_archive_encode, umi_commodity_commodity_snapshot_archive_decode,
     UmiCommoditySnapshotTransferEqual, UmiCommoditySnapshotTransferTails, UmiCommoditySnapshotTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCommoditySnapshotConditionalArchiveCases, UmiCommoditySnapshot,
+    umi_commodity_commodity_snapshot_archive_encode, umi_commodity_commodity_snapshot_archive_decode_if_unchanged,
+    UmiCommoditySnapshotTransferEqual, UmiCommoditySnapshotTransferTails, UmiCommoditySnapshotTransferMalformed)
+
+
 int main(void)
 {
     UmiCommoditySnapshot snapshot;
     umi_commodity_commodity_snapshot_init(&snapshot, 1000);
     CHECK(umi_commodity_commodity_snapshot_valid(&snapshot));
     if (UmiCommoditySnapshotTransferCases(&snapshot) != 0) return 1;
+    if (UmiCommoditySnapshotConditionalArchiveCases(&snapshot) != 0) return 1;
 
     CHECK(snapshot.revision == 1U);
     return 0;

@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/desktop/control/window_identity.h"
 #include "../../base/value_archive_internal.h"
 #include "umicom/base/text.h"
@@ -317,3 +318,8 @@ static UmiStatus ArchiveValidate(const UmiDesktopWindowIdentitySnapshot *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_desktop_window_identity_archive_encode, umi_desktop_window_identity_archive_decode,
     UmiDesktopWindowIdentitySnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Guard snapshot import with the complete encoded value reviewed by the
+ * caller. Imported metadata remains evidence; registry publication is separate. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_desktop_window_identity_archive_decode_if_unchanged, umi_desktop_window_identity_archive_encode,
+    UmiDesktopWindowIdentitySnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)

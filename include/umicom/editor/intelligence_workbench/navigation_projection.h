@@ -55,6 +55,9 @@ UmiStatus umi_editor_intel_navigation_projection_init(
  * Provide the editor intel navigation projection refresh operation used by this module and
  * its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_editor_intel_navigation_projection_refresh(
     UmiEditorIntelNavigationProjection *projection,
     UmiEditorNavigationInsights *insights);

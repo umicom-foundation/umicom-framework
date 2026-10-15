@@ -159,9 +159,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrFilesystemLayoutTransferCases, UmiDrFilesystemLayou
     umi_dr_filesystem_layout_archive_encode, umi_dr_filesystem_layout_archive_decode,
     UmiDrFilesystemLayoutTransferEqual, UmiDrFilesystemLayoutTransferTails, UmiDrFilesystemLayoutTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrFilesystemLayoutConditionalArchiveCases, UmiDrFilesystemLayout,
+    umi_dr_filesystem_layout_archive_encode, umi_dr_filesystem_layout_archive_decode_if_unchanged,
+    UmiDrFilesystemLayoutTransferEqual, UmiDrFilesystemLayoutTransferTails, UmiDrFilesystemLayoutTransferMalformed)
+
+
 int main(void) {
     UmiDrFilesystemLayout value; umi_dr_filesystem_layout_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"portable")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.root,sizeof(value.root),".")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.bin,sizeof(value.bin),"bin")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.lib,sizeof(value.lib),"lib")==UMI_STATUS_OK); CHECK(umi_dr_filesystem_layout_valid(&value));
     if (UmiDrFilesystemLayoutTransferCases(&value) != 0) return 1;
+    if (UmiDrFilesystemLayoutConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_filesystem_layout_fingerprint(&value) != 0U);
     return 0;
 }

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/treasury/margin_call.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -104,3 +105,9 @@ static UmiStatus UmiTreasuryMarginCallArchiveValidate(const UmiTreasuryMarginCal
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_treasury_margin_call_archive_encode, umi_treasury_margin_call_archive_decode,
     UmiTreasuryMarginCall, UmiTreasuryMarginCallArchiveSchema, UmiTreasuryMarginCallArchiveBound, UmiTreasuryMarginCallArchiveWrite, UmiTreasuryMarginCallArchiveRead, UmiTreasuryMarginCallArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_treasury_margin_call_archive_decode_if_unchanged, umi_treasury_margin_call_archive_encode,
+    UmiTreasuryMarginCall, UmiTreasuryMarginCallArchiveSchema, UmiTreasuryMarginCallArchiveBound, UmiTreasuryMarginCallArchiveRead, UmiTreasuryMarginCallArchiveValidate)

@@ -107,9 +107,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrBundleFileTransferCases, UmiDrBundleFile,
     umi_dr_bundle_file_archive_encode, umi_dr_bundle_file_archive_decode,
     UmiDrBundleFileTransferEqual, UmiDrBundleFileTransferTails, UmiDrBundleFileTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrBundleFileConditionalArchiveCases, UmiDrBundleFile,
+    umi_dr_bundle_file_archive_encode, umi_dr_bundle_file_archive_decode_if_unchanged,
+    UmiDrBundleFileTransferEqual, UmiDrBundleFileTransferTails, UmiDrBundleFileTransferMalformed)
+
+
 int main(void) {
     UmiDrBundleFile value; umi_dr_bundle_file_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"app") == UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.path,sizeof(value.path),"bin/app") == UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.digest,sizeof(value.digest),"abc") == UMI_STATUS_OK); value.size_bytes=10U; CHECK(umi_dr_bundle_file_valid(&value));
     if (UmiDrBundleFileTransferCases(&value) != 0) return 1;
+    if (UmiDrBundleFileConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_bundle_file_fingerprint(&value) != 0U);
     return 0;
 }

@@ -20,6 +20,7 @@
  * PURPOSE:
  *   Describe named factories that create services for the canonical service registry.
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/runtime/bootstrap/factory_descriptor.h"
 #include "../../base/value_archive_internal.h"
 
@@ -114,3 +115,9 @@ static UmiStatus UmiBootstrapFactoryDescriptorArchiveValidate(const UmiBootstrap
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_bootstrap_factory_descriptor_archive_encode, umi_bootstrap_factory_descriptor_archive_decode,
     UmiBootstrapFactoryDescriptor, UmiBootstrapFactoryDescriptorArchiveSchema, UmiBootstrapFactoryDescriptorArchiveBound, UmiBootstrapFactoryDescriptorArchiveWrite, UmiBootstrapFactoryDescriptorArchiveRead, UmiBootstrapFactoryDescriptorArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_bootstrap_factory_descriptor_archive_decode_if_unchanged, umi_bootstrap_factory_descriptor_archive_encode,
+    UmiBootstrapFactoryDescriptor, UmiBootstrapFactoryDescriptorArchiveSchema, UmiBootstrapFactoryDescriptorArchiveBound, UmiBootstrapFactoryDescriptorArchiveRead, UmiBootstrapFactoryDescriptorArchiveValidate)

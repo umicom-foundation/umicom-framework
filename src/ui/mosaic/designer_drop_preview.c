@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/mosaic/designer_drop_preview.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -137,3 +138,8 @@ static UmiStatus UmiUiMosaicDesignerDropPreviewArchiveValidate(const UmiUiMosaic
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ui_mosaic_designer_drop_preview_archive_encode, umi_ui_mosaic_designer_drop_preview_archive_decode,
     UmiUiMosaicDesignerDropPreview, UmiUiMosaicDesignerDropPreviewArchiveSchema, UmiUiMosaicDesignerDropPreviewArchiveBound, UmiUiMosaicDesignerDropPreviewArchiveWrite, UmiUiMosaicDesignerDropPreviewArchiveRead, UmiUiMosaicDesignerDropPreviewArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_mosaic_designer_drop_preview_archive_decode_if_unchanged, umi_ui_mosaic_designer_drop_preview_archive_encode,
+    UmiUiMosaicDesignerDropPreview, UmiUiMosaicDesignerDropPreviewArchiveSchema, UmiUiMosaicDesignerDropPreviewArchiveBound, UmiUiMosaicDesignerDropPreviewArchiveRead, UmiUiMosaicDesignerDropPreviewArchiveValidate)

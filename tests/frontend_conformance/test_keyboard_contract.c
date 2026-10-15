@@ -54,9 +54,16 @@ UMI_TEST_VALUE_TRANSFER(UmiFcKeyboardContractTransferCases, UmiFcKeyboardContrac
     umi_fc_keyboard_contract_archive_encode, umi_fc_keyboard_contract_archive_decode,
     UmiFcKeyboardContractTransferEqual, UmiFcKeyboardContractTransferTails, UmiFcKeyboardContractTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFcKeyboardContractConditionalArchiveCases, UmiFcKeyboardContract,
+    umi_fc_keyboard_contract_archive_encode, umi_fc_keyboard_contract_archive_decode_if_unchanged,
+    UmiFcKeyboardContractTransferEqual, UmiFcKeyboardContractTransferTails, UmiFcKeyboardContractTransferMalformed)
+
+
 int main(void) {
     UmiFcKeyboardContract x={5U,2U,true}; CHECK(umi_fc_keyboard_contract_validate(&x));
     if (UmiFcKeyboardContractTransferCases(&x) != 0) return 1;
+    if (UmiFcKeyboardContractConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;
 }

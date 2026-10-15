@@ -61,6 +61,9 @@ UmiStatus umi_language_client_session_init(UmiLanguageClientSession *session,
  * Provide the language client session transition operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_language_client_session_transition(
     UmiLanguageClientSession *session, UmiLanguageClientState next_state);
 /**

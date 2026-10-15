@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 
 #include "umicom/vcs/workbench/directory_model.h"
@@ -35,13 +36,23 @@ int main(void)
                &right, "src/a.c", 12U, 101U, 0) == UMI_STATUS_OK);
     assert(umi_vcs_workbench_directory_model_add(&model, &left, &right) ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiVcsWorkbenchDirectoryModel, &model,
+        (umi_vcs_workbench_directory_model_add(&model, &left, &right)));
+
     assert(model.changed_count == 1U);
     assert(model.visible_count == 1U);
     umi_vcs_advanced_directory_filter_init(&filter);
     assert(umi_vcs_workbench_directory_model_set_filter(
                &model, &filter, 0) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiVcsWorkbenchDirectoryModel, &model,
+        (umi_vcs_workbench_directory_model_set_filter(
+               &model, &filter, 0)));
+
     assert(umi_vcs_workbench_directory_model_select(&model, 0U) ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiVcsWorkbenchDirectoryModel, &model,
+        (umi_vcs_workbench_directory_model_select(&model, 0U)));
+
     assert(umi_vcs_workbench_directory_model_visible_at(&model, 0U) != NULL);
     return 0;
 }

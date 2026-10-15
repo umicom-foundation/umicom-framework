@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/reactive/ui_state_service.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -72,3 +73,8 @@ static UmiStatus UmiUiReactiveUiStateServiceArchiveValidate(const UmiUiReactiveU
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ui_reactive_ui_state_service_archive_encode, umi_ui_reactive_ui_state_service_archive_decode,
     UmiUiReactiveUiStateService, UmiUiReactiveUiStateServiceArchiveSchema, UmiUiReactiveUiStateServiceArchiveBound, UmiUiReactiveUiStateServiceArchiveWrite, UmiUiReactiveUiStateServiceArchiveRead, UmiUiReactiveUiStateServiceArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_reactive_ui_state_service_archive_decode_if_unchanged, umi_ui_reactive_ui_state_service_archive_encode,
+    UmiUiReactiveUiStateService, UmiUiReactiveUiStateServiceArchiveSchema, UmiUiReactiveUiStateServiceArchiveBound, UmiUiReactiveUiStateServiceArchiveRead, UmiUiReactiveUiStateServiceArchiveValidate)

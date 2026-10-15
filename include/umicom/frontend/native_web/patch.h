@@ -31,6 +31,10 @@ extern "C" {
  */
 typedef struct UmiNativeWebPatch { UmiNativeWebPatchKind kind; char target_id[UMI_NATIVE_WEB_ID_CAPACITY]; char name[64]; char value[UMI_NATIVE_WEB_VALUE_CAPACITY]; int32_t order; uint64_t revision; } UmiNativeWebPatch;
 /* Initialise one validated DOM patch. */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_native_web_patch_init(UmiNativeWebPatch *patch, UmiNativeWebPatchKind kind, const char *target_id, const char *name, const char *value, uint64_t revision);
 /* Return true when two patches address the same semantic mutation slot. */
 bool umi_native_web_patch_same_slot(const UmiNativeWebPatch *left, const UmiNativeWebPatch *right);

@@ -70,6 +70,13 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorIntelRefactorRestoreTransferCases, UmiEditorInt
     umi_editor_intel_refactor_restore_archive_encode, umi_editor_intel_refactor_restore_archive_decode,
     UmiEditorIntelRefactorRestoreTransferEqual, UmiEditorIntelRefactorRestoreTransferTails, UmiEditorIntelRefactorRestoreTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelRefactorRestoreConditionalArchiveCases, UmiEditorIntelRefactorRestore,
+    umi_editor_intel_refactor_restore_archive_encode, umi_editor_intel_refactor_restore_archive_decode_if_unchanged,
+    UmiEditorIntelRefactorRestoreTransferEqual, UmiEditorIntelRefactorRestoreTransferTails, UmiEditorIntelRefactorRestoreTransferMalformed)
+
+
 int main(void){UmiEditorIntelRefactorRestore session;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_restore_begin(&session,"session-1")!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_restore_set_ready(&session,3U)!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_intel_refactor_restore_valid(&session)||session.item_count!=3U)return 3;
     if (UmiEditorIntelRefactorRestoreTransferCases(&session) != 0) return 1;
+    if (UmiEditorIntelRefactorRestoreConditionalArchiveCases(&session) != 0) return 1;
 /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_restore_cancel(&session)!=UMI_STATUS_OK||session.phase!=UMI_EDITOR_INTEL_PHASE_CANCELLED)return 4;return 0;}

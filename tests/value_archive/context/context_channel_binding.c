@@ -133,6 +133,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextBindingTransferCases, UmiContextBinding,
     umi_context_binding_archive_encode, umi_context_binding_archive_decode,
     UmiContextBindingTransferEqual, UmiContextBindingTransferTails, UmiContextBindingTransferMalformed)
 
+#include "../conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextBindingConditionalArchiveCases, UmiContextBinding,
+    umi_context_binding_archive_encode, umi_context_binding_archive_decode_if_unchanged,
+    UmiContextBindingTransferEqual, UmiContextBindingTransferTails, UmiContextBindingTransferMalformed)
+
+
 int main(void)
 {
     UmiContextBinding value;
@@ -147,6 +153,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_context_binding_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiContextBindingTransferCases(&value) != 0) return 1;
+    if (UmiContextBindingConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

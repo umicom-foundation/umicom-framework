@@ -17,6 +17,10 @@
 
 #include "umicom/developer_operations/debug/watch.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(UmiDeveloperOperationsEvaluateDebugWatchBatchCases, UmiDeveloperOperationsEvaluateDebugWatch,
+    UmiDeveloperOperationsEvaluateDebugWatchBatch, UmiDeveloperOperationInput, UmiDeveloperOperationSnapshot, baseline)
+
 int main(void)
 {
     UmiDeveloperOperationInput input;
@@ -32,6 +36,7 @@ int main(void)
     input.blocked = 0;
     input.revision = 7U;
 
+    if (UmiDeveloperOperationsEvaluateDebugWatchBatchCases(&input) != 0) return 1;
     assert(UmiDeveloperOperationsEvaluateDebugWatch(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "debug.watch") == 0);
     assert(snapshot.revision == 7U);

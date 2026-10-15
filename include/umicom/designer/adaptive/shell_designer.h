@@ -35,6 +35,9 @@ typedef struct UmiDesignerShellDesigner {
 UmiStatus umi_designer_shell_designer_init(UmiDesignerShellDesigner *designer,
                                            const UmiAdaptiveShellProfile *profile);
 /* Select an authored shell region and mark the session revision. */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_designer_shell_designer_select_region(UmiDesignerShellDesigner *designer,
                                                     const char *region_id);
 

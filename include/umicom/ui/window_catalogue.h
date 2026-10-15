@@ -94,6 +94,9 @@ void umi_ui_window_catalogue_init(UmiUiWindowCatalogue *catalogue);
 /**
  * Add ui window catalogue only after its inputs and available capacity have been checked.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ui_window_catalogue_register(UmiUiWindowCatalogue *catalogue,const UmiUiWindowDescriptor *descriptor);
 /**
  * Find ui window catalogue while leaving the underlying catalogue or model owned by this
@@ -123,6 +126,9 @@ UmiStatus umi_ui_window_catalogue_query(
  * Provide the ui window catalogue record open operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ui_window_catalogue_record_open(
     UmiUiWindowCatalogue *catalogue,
     const char *tool_id,

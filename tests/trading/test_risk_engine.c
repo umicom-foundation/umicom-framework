@@ -57,9 +57,16 @@ UMI_TEST_VALUE_TRANSFER(UmiRiskLimitTransferCases, UmiRiskLimit,
     umi_risk_limit_archive_encode, umi_risk_limit_archive_decode,
     UmiRiskLimitTransferEqual, UmiRiskLimitTransferTails, UmiRiskLimitTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRiskLimitConditionalArchiveCases, UmiRiskLimit,
+    umi_risk_limit_archive_encode, umi_risk_limit_archive_decode_if_unchanged,
+    UmiRiskLimitTransferEqual, UmiRiskLimitTransferTails, UmiRiskLimitTransferMalformed)
+
+
 int main(void){
     UmiRiskLimit l={5,1000000,10,5000};assert(umi_risk_limit_valid(&l));
     if (UmiRiskLimitTransferCases(&l) != 0) return 1;
+    if (UmiRiskLimitConditionalArchiveCases(&l) != 0) return 1;
 UmiOrderRequest r=test_order_request();
     UmiRiskDecision d=umi_pretrade_risk_evaluate(&r,&l,0,0);assert(d.allowed);
     r.quantity=100;d=umi_pretrade_risk_evaluate(&r,&l,0,0);assert(!d.allowed);return 0;

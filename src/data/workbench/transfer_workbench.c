@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/data/workbench/transfer_workbench.h"
 
 #include <string.h>
@@ -104,10 +105,36 @@ UmiStatus umi_data_transfer_workbench_add(
  * Provide the data transfer workbench select operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_data_transfer_workbench_select(
     UmiDataTransferWorkbench *workbench,
     size_t plan_index)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workbench == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (plan_index >= workbench->plan_count) return UMI_STATUS_NOT_FOUND;
+    workbench->selected_index = plan_index;
+    workbench->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_data_transfer_workbench_select(
+    UmiDataTransferWorkbench *workbench,
+    size_t plan_index)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (workbench != NULL && workbench->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.

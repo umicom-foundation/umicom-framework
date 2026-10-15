@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/vcs/advanced/diff_options.h"
 #include "../../base/value_archive_internal.h"
 
@@ -131,3 +132,8 @@ static UmiStatus UmiVcsAdvancedDiffOptionsArchiveValidate(const UmiVcsAdvancedDi
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_vcs_advanced_diff_options_archive_encode, umi_vcs_advanced_diff_options_archive_decode,
     UmiVcsAdvancedDiffOptions, UmiVcsAdvancedDiffOptionsArchiveSchema, UmiVcsAdvancedDiffOptionsArchiveBound, UmiVcsAdvancedDiffOptionsArchiveWrite, UmiVcsAdvancedDiffOptionsArchiveRead, UmiVcsAdvancedDiffOptionsArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_vcs_advanced_diff_options_archive_decode_if_unchanged, umi_vcs_advanced_diff_options_archive_encode,
+    UmiVcsAdvancedDiffOptions, UmiVcsAdvancedDiffOptionsArchiveSchema, UmiVcsAdvancedDiffOptionsArchiveBound, UmiVcsAdvancedDiffOptionsArchiveRead, UmiVcsAdvancedDiffOptionsArchiveValidate)

@@ -64,6 +64,9 @@ UmiStatus umi_application_shell_drop_prepare(
  * Provide the application shell drop accept operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_application_shell_drop_accept(
     UmiApplicationShellDropTransaction *transaction);
 
@@ -71,6 +74,9 @@ UmiStatus umi_application_shell_drop_accept(
  * Provide the application shell drop reject operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_application_shell_drop_reject(
     UmiApplicationShellDropTransaction *transaction,
     const char *reason);

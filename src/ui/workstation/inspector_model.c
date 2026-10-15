@@ -14,12 +14,18 @@
  *---------------------------------------------------------------------------*/
 
 #include <string.h>
+#include "../../base/value_construction_internal.h"
 #include "umicom/ui/workstation/inspector_model.h"
 
 /*
  * Initialise ws inspector model from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_ws_inspector_model_init(UmiWsInspectorModel *model, const char *subject_id) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -29,6 +35,24 @@ UmiStatus umi_ws_inspector_model_init(UmiWsInspectorModel *model, const char *su
     *model = (UmiWsInspectorModel){0};
     return umi_ws_copy_text(model->subject_id, sizeof(model->subject_id), subject_id);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_ws_inspector_model_init_build_value(UmiWsInspectorModel *model, const char *subject_id) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (model == NULL || !umi_ws_id_valid(subject_id)) return UMI_STATUS_INVALID_ARGUMENT;
+    *model = (UmiWsInspectorModel){0};
+    return umi_ws_copy_text(model->subject_id, sizeof(model->subject_id), subject_id);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_ws_inspector_model_init, UmiWsInspectorModel, model,
+    (UmiWsInspectorModel *model, const char *subject_id),
+    umi_ws_inspector_model_init_build_value(candidate, subject_id))
+
 
 /*
  * Copy ws inspector model into module-owned storage so callers keep ownership of their

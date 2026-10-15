@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/designer/transaction.h"
+#include "../base/value_construction_internal.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -29,6 +30,11 @@ struct UmiDesignerTransactionHistory {
  * Initialise designer transaction from caller-provided values so later operations receive
  * a known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_designer_transaction_init(UmiDesignerTransaction *transaction,
                                             const char *transaction_id,
                                             const char *summary)
@@ -51,6 +57,37 @@ UmiStatus umi_designer_transaction_init(UmiDesignerTransaction *transaction,
     transaction->state = UMI_DESIGNER_TRANSACTION_DRAFT;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_designer_transaction_init_build_value(UmiDesignerTransaction *transaction,
+                                            const char *transaction_id,
+                                            const char *summary)
+{
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (transaction == NULL || transaction_id == NULL || transaction_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    (void)memset(transaction, 0, sizeof(*transaction));
+    status = umi_decl_copy_text(transaction->transaction_id, sizeof(transaction->transaction_id), transaction_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_decl_copy_text(transaction->summary, sizeof(transaction->summary), summary != NULL ? summary : transaction_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    transaction->state = UMI_DESIGNER_TRANSACTION_DRAFT;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_designer_transaction_init, UmiDesignerTransaction, transaction,
+    (UmiDesignerTransaction *transaction, const char *transaction_id, const char *summary),
+    umi_designer_transaction_init_build_value(candidate, transaction_id, summary))
+
 
 /* Add designer transaction only after its inputs and available capacity have been checked. */
 UmiStatus umi_designer_transaction_add(UmiDesignerTransaction *transaction,

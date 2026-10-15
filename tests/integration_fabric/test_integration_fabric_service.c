@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/integration/fabric/integration_fabric_service.h"
 #include <stdio.h>
 #include <string.h>
@@ -23,6 +24,9 @@
  * to the operating system.
  */
 int main(void) {
-    UmiIntegrationFabricService s; UmiFabricSnapshot snap; umi_integration_fabric_service_init(&s); CHECK(umi_integration_fabric_service_start(&s)==UMI_STATUS_OK); CHECK(umi_integration_fabric_service_snapshot(&s,&snap)==UMI_STATUS_OK); CHECK(snap.health==UMI_FABRIC_STATE_READY);
+    UmiIntegrationFabricService s; UmiFabricSnapshot snap; umi_integration_fabric_service_init(&s); CHECK(umi_integration_fabric_service_start(&s)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiIntegrationFabricService, &s,
+        (umi_integration_fabric_service_start(&s)));
+ CHECK(umi_integration_fabric_service_snapshot(&s,&snap)==UMI_STATUS_OK); CHECK(snap.health==UMI_FABRIC_STATE_READY);
     return 0;
 }

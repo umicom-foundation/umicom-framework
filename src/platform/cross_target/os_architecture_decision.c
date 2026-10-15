@@ -16,6 +16,7 @@
  * LICENCE:
  *   MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/platform/cross_target/os_architecture_decision.h"
 #include "../../base/value_archive_internal.h"
 
@@ -168,3 +169,8 @@ static UmiStatus UmiCtOsArchitectureDecisionArchiveValidate(const UmiCtOsArchite
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ct_umicom_os_architecture_decision_archive_encode, umi_ct_umicom_os_architecture_decision_archive_decode,
     UmiCtOsArchitectureDecision, UmiCtOsArchitectureDecisionArchiveSchema, UmiCtOsArchitectureDecisionArchiveBound, UmiCtOsArchitectureDecisionArchiveWrite, UmiCtOsArchitectureDecisionArchiveRead, UmiCtOsArchitectureDecisionArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ct_umicom_os_architecture_decision_archive_decode_if_unchanged, umi_ct_umicom_os_architecture_decision_archive_encode,
+    UmiCtOsArchitectureDecision, UmiCtOsArchitectureDecisionArchiveSchema, UmiCtOsArchitectureDecisionArchiveBound, UmiCtOsArchitectureDecisionArchiveRead, UmiCtOsArchitectureDecisionArchiveValidate)

@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/chat_session.h"
+#include "../base/value_construction_internal.h"
 #include "umicom/ai/coding_types.h"
 
 #include <stdio.h>
@@ -43,6 +44,11 @@ static UmiStatus copy_text(char *out, size_t capacity, const char *value)
  * Initialise ai coding tool chat session from caller-provided values so later operations
  * receive a known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_ai_coding_tool_chat_session_init(
     UmiAiCodingToolChatSession *session,
     const char *session_id,
@@ -76,6 +82,48 @@ UmiStatus umi_ai_coding_tool_chat_session_init(
     session->revision = 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_ai_coding_tool_chat_session_init_build_value(
+    UmiAiCodingToolChatSession *session,
+    const char *session_id,
+    const char *provider_id,
+    const char *model_id)
+{
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (session == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
+    (void)memset(session, 0, sizeof(*session));
+
+    status = copy_text(session->session_id, sizeof(session->session_id), session_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = copy_text(
+            session->provider_id, sizeof(session->provider_id), provider_id);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = copy_text(
+            session->model_id, sizeof(session->model_id), model_id);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    session->revision = 1U;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_ai_coding_tool_chat_session_init, UmiAiCodingToolChatSession, session,
+    (UmiAiCodingToolChatSession *session, const char *session_id, const char *provider_id, const char *model_id),
+    umi_ai_coding_tool_chat_session_init_build_value(candidate, session_id, provider_id, model_id))
+
 
 /* Add ai coding tool chat only after its inputs and available capacity have been checked. */
 UmiStatus umi_ai_coding_tool_chat_add(

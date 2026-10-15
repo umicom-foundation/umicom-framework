@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiTestDebugPlanTransferCases, UmiTestDebugPlan,
     umi_test_debug_plan_archive_encode, umi_test_debug_plan_archive_decode,
     UmiTestDebugPlanTransferEqual, UmiTestDebugPlanTransferTails, UmiTestDebugPlanTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestDebugPlanConditionalArchiveCases, UmiTestDebugPlan,
+    umi_test_debug_plan_archive_encode, umi_test_debug_plan_archive_decode_if_unchanged,
+    UmiTestDebugPlanTransferEqual, UmiTestDebugPlanTransferTails, UmiTestDebugPlanTransferMalformed)
+
+
 int main(void){UmiTestDebugPlan m;assert(umi_test_debug_plan_init(&m,"test_debug_plan","Test Debug Plan")==UMI_STATUS_OK);assert(umi_test_debug_plan_set_active(&m,true)==UMI_STATUS_OK);assert(umi_test_debug_plan_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_test_debug_plan_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_debug_plan_valid(&m));
     if (UmiTestDebugPlanTransferCases(&m) != 0) return 1;
+    if (UmiTestDebugPlanConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

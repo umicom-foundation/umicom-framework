@@ -106,6 +106,12 @@ UMI_TEST_VALUE_TRANSFER(UmiLanguageIntelligenceWorkspaceRoutingTransferCases, Um
     umi_language_intelligence_workspace_routing_archive_encode, umi_language_intelligence_workspace_routing_archive_decode,
     UmiLanguageIntelligenceWorkspaceRoutingTransferEqual, UmiLanguageIntelligenceWorkspaceRoutingTransferTails, UmiLanguageIntelligenceWorkspaceRoutingTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiLanguageIntelligenceWorkspaceRoutingConditionalArchiveCases, UmiLanguageIntelligenceWorkspaceRouting,
+    umi_language_intelligence_workspace_routing_archive_encode, umi_language_intelligence_workspace_routing_archive_decode_if_unchanged,
+    UmiLanguageIntelligenceWorkspaceRoutingTransferEqual, UmiLanguageIntelligenceWorkspaceRoutingTransferTails, UmiLanguageIntelligenceWorkspaceRoutingTransferMalformed)
+
+
 int main(void)
 {
     UmiLanguageIntelligenceWorkspaceRouting mapping;
@@ -113,6 +119,7 @@ int main(void)
     CHECK(umi_language_intelligence_workspace_routing_set(&mapping, "c", "clangd", "workspace") == UMI_STATUS_OK);
     CHECK(umi_language_intelligence_workspace_routing_validate(&mapping) == UMI_STATUS_OK);
     if (UmiLanguageIntelligenceWorkspaceRoutingTransferCases(&mapping) != 0) return 1;
+    if (UmiLanguageIntelligenceWorkspaceRoutingConditionalArchiveCases(&mapping) != 0) return 1;
 
     CHECK(umi_language_intelligence_workspace_routing_matches(&mapping, "c", "workspace") != 0);
     CHECK(umi_language_intelligence_workspace_routing_matches(&mapping, "cpp", "workspace") == 0);

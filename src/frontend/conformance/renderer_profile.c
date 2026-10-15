@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/frontend/conformance/renderer_profile.h"
 #include "../../base/value_archive_internal.h"
 
@@ -77,3 +78,9 @@ static UmiStatus UmiFcRendererProfileArchiveValidate(const UmiFcRendererProfile 
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_fc_renderer_profile_archive_encode, umi_fc_renderer_profile_archive_decode,
     UmiFcRendererProfile, UmiFcRendererProfileArchiveSchema, UmiFcRendererProfileArchiveBound, UmiFcRendererProfileArchiveWrite, UmiFcRendererProfileArchiveRead, UmiFcRendererProfileArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_fc_renderer_profile_archive_decode_if_unchanged, umi_fc_renderer_profile_archive_encode,
+    UmiFcRendererProfile, UmiFcRendererProfileArchiveSchema, UmiFcRendererProfileArchiveBound, UmiFcRendererProfileArchiveRead, UmiFcRendererProfileArchiveValidate)

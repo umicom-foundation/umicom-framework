@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/finance/core/financial_core_service.h"
 
 #include <string.h>
@@ -32,8 +33,34 @@
   umi_financial_product_registry_init(&s->products);
   umi_trade_registry_init(&s->trades);
 }
-/* Start service after reference data configuration. */ UmiStatus
+/* Start service after reference data configuration. */ /* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
+UmiStatus
 umi_financial_core_service_start(UmiFinancialCoreService *s) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
+  if (s == NULL)
+    return UMI_STATUS_INVALID_ARGUMENT;
+  /* Apply this operation only while the related capability or state is available. */
+  if (s->ready)
+    return UMI_STATUS_ALREADY_EXISTS;
+  s->ready = true;
+  s->revision++;
+  return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus
+umi_financial_core_service_start(UmiFinancialCoreService *s) {
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (s != NULL && s->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
   /*
    * Protect caller-owned memory by checking that required state is available before it is
    * used.

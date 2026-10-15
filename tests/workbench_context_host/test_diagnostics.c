@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/workbench_context_host/diagnostics.h"
@@ -35,6 +36,10 @@ int main(void)
     item.severity = UMI_WORKBENCH_CONTEXT_HOST_DIAGNOSTIC_WARNING;
     assert(umi_workbench_context_host_diagnostics_add(
         &diagnostics, &item) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchContextHostDiagnostics, &diagnostics,
+        (umi_workbench_context_host_diagnostics_add(
+        &diagnostics, &item)));
+
     assert(diagnostics.count == 1U);
     assert(diagnostics.items[0].severity ==
         UMI_WORKBENCH_CONTEXT_HOST_DIAGNOSTIC_WARNING);

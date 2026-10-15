@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/reactive/state_graph.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -72,3 +73,8 @@ static UmiStatus UmiUiReactiveStateGraphArchiveValidate(const UmiUiReactiveState
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ui_reactive_state_graph_archive_encode, umi_ui_reactive_state_graph_archive_decode,
     UmiUiReactiveStateGraph, UmiUiReactiveStateGraphArchiveSchema, UmiUiReactiveStateGraphArchiveBound, UmiUiReactiveStateGraphArchiveWrite, UmiUiReactiveStateGraphArchiveRead, UmiUiReactiveStateGraphArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_reactive_state_graph_archive_decode_if_unchanged, umi_ui_reactive_state_graph_archive_encode,
+    UmiUiReactiveStateGraph, UmiUiReactiveStateGraphArchiveSchema, UmiUiReactiveStateGraphArchiveBound, UmiUiReactiveStateGraphArchiveRead, UmiUiReactiveStateGraphArchiveValidate)

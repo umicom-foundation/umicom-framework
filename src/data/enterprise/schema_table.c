@@ -13,9 +13,15 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/enterprise/schema_table.h"
+#include "../../base/value_construction_internal.h"
 #include <string.h>
 
 /* Table identity is established before columns are collected. */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_data_schema_table_init(UmiDataSchemaTable *table, const char *table_id, const char *name) {
     UmiStatus status;
     /*
@@ -27,6 +33,26 @@ UmiStatus umi_data_schema_table_init(UmiDataSchemaTable *table, const char *tabl
     status=umi_data_enterprise_copy_text(table->table_id,sizeof(table->table_id),table_id); /* Preserve the original failure result so the caller can respond to the correct cause. */ if(status!=UMI_STATUS_OK)return status;
     return umi_data_enterprise_copy_text(table->name,sizeof(table->name),name);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_data_schema_table_init_build_value(UmiDataSchemaTable *table, const char *table_id, const char *name) {
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (table == NULL || table_id == NULL || name == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(table,0,sizeof(*table));
+    status=umi_data_enterprise_copy_text(table->table_id,sizeof(table->table_id),table_id); /* Preserve the original failure result so the caller can respond to the correct cause. */ if(status!=UMI_STATUS_OK)return status;
+    return umi_data_enterprise_copy_text(table->name,sizeof(table->name),name);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_data_schema_table_init, UmiDataSchemaTable, table,
+    (UmiDataSchemaTable *table, const char *table_id, const char *name),
+    umi_data_schema_table_init_build_value(candidate, table_id, name))
+
 /* Duplicate metadata is rejected early so generated migrations remain deterministic. */
 UmiStatus umi_data_schema_table_add_column(UmiDataSchemaTable *table, const UmiDataSchemaColumn *column) {
     size_t i; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(table==NULL||column==NULL)return UMI_STATUS_INVALID_ARGUMENT; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_data_schema_column_validate(column)!=UMI_STATUS_OK)return UMI_STATUS_INVALID_ARGUMENT;

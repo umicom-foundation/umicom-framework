@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/banking/interest_rate.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -99,3 +100,9 @@ static UmiStatus UmiBankingInterestRateArchiveValidate(const UmiBankingInterestR
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_banking_interest_rate_archive_encode, umi_banking_interest_rate_archive_decode,
     UmiBankingInterestRate, UmiBankingInterestRateArchiveSchema, UmiBankingInterestRateArchiveBound, UmiBankingInterestRateArchiveWrite, UmiBankingInterestRateArchiveRead, UmiBankingInterestRateArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_banking_interest_rate_archive_decode_if_unchanged, umi_banking_interest_rate_archive_encode,
+    UmiBankingInterestRate, UmiBankingInterestRateArchiveSchema, UmiBankingInterestRateArchiveBound, UmiBankingInterestRateArchiveRead, UmiBankingInterestRateArchiveValidate)

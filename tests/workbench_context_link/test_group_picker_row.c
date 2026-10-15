@@ -117,6 +117,32 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkGroupPickerRowTransferCases, UmiW
     umi_workbench_context_link_group_picker_row_archive_encode, umi_workbench_context_link_group_picker_row_archive_decode,
     UmiWorkbenchContextLinkGroupPickerRowTransferEqual, UmiWorkbenchContextLinkGroupPickerRowTransferTails, UmiWorkbenchContextLinkGroupPickerRowTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkGroupPickerRowConditionalArchiveCases, UmiWorkbenchContextLinkGroupPickerRow,
+    umi_workbench_context_link_group_picker_row_archive_encode, umi_workbench_context_link_group_picker_row_archive_decode_if_unchanged,
+    UmiWorkbenchContextLinkGroupPickerRowTransferEqual, UmiWorkbenchContextLinkGroupPickerRowTransferTails, UmiWorkbenchContextLinkGroupPickerRowTransferMalformed)
+
+
+/* Delayed context edits must preserve newer work and reject exhausted tokens. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextLinkGroupPickerRowReviewedCases, UmiWorkbenchContextLinkGroupPickerRow,
+    row_id, label, umi_workbench_context_link_group_picker_row_replace_if_current, UmiWorkbenchContextLinkGroupPickerRowTransferEqual)
+static int UmiWorkbenchContextLinkGroupPickerRowMutationGuards(const UmiWorkbenchContextLinkGroupPickerRow *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkGroupPickerRow, group_id, umi_workbench_context_link_group_picker_row_set_primary, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkGroupPickerRow, label, umi_workbench_context_link_group_picker_row_set_secondary, sample);
+    UmiWorkbenchContextLinkGroupPickerRow value = *sample;
+    unsigned char before[sizeof(value)];
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_link_group_picker_row_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U ||
+        value.timestamp_ms != 44U) return 1;
+    memcpy(before, &value, sizeof(value));
+    umi_workbench_context_link_group_picker_row_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof(value)) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextLinkGroupPickerRow record;
@@ -125,6 +151,9 @@ int main(void)
     umi_workbench_context_link_group_picker_row_init(&record, "group_picker_row-id");
     assert(umi_workbench_context_link_group_picker_row_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkGroupPickerRowTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkGroupPickerRowConditionalArchiveCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkGroupPickerRowReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkGroupPickerRowMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_context_link_group_picker_row_set_primary(&record, "primary") == UMI_STATUS_OK);
     assert(umi_workbench_context_link_group_picker_row_set_secondary(&record, "secondary") == UMI_STATUS_OK);

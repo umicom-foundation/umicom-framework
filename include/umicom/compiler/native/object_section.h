@@ -34,6 +34,10 @@ typedef struct UmiNativeObjectSection { char name[UMI_NC_NAME_CAPACITY]; UmiNati
  * Initialise nc object section from caller-provided values so later operations receive a
  * known state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_nc_object_section_init(UmiNativeObjectSection *section,const char *name,UmiNativeSectionKind kind,size_t alignment);
 /**
  * Provide the nc object section reserve operation used by this module and its client

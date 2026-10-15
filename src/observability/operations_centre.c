@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Umicom Framework | Operations Centre | Sammy Hegab | Umicom Foundation | MIT */
+#include <stdint.h>
 #include "umicom/observability/operations_centre.h"
 #include <string.h>
 
@@ -26,32 +27,104 @@ void umi_operations_centre_init(UmiOperationsCentre *centre) { /* Protect caller
  * Provide the operations centre record resource operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_operations_centre_record_resource(UmiOperationsCentre *centre,const UmiOperationsResourceSample *sample) { UmiStatus status; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (centre == NULL) return UMI_STATUS_INVALID_ARGUMENT; status = umi_operations_resource_history_add(&centre->resources,sample); /* Protect caller-owned memory by checking that required state is available before it is used. */ if (status == UMI_STATUS_OK) centre->revision += 1U; return status; }
+#endif
+
+UmiStatus umi_operations_centre_record_resource(UmiOperationsCentre *centre,const UmiOperationsResourceSample *sample) {
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (centre != NULL && centre->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+ UmiStatus status; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (centre == NULL) return UMI_STATUS_INVALID_ARGUMENT; status = umi_operations_resource_history_add(&centre->resources,sample); /* Protect caller-owned memory by checking that required state is available before it is used. */ if (status == UMI_STATUS_OK) centre->revision += 1U; return status; }
 /*
  * Provide the operations centre record benchmark operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_operations_centre_record_benchmark(UmiOperationsCentre *centre,const UmiOperationsBenchmarkRun *run) { UmiStatus status; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (centre == NULL) return UMI_STATUS_INVALID_ARGUMENT; status = umi_operations_benchmark_history_add(&centre->benchmarks,run); /* Protect caller-owned memory by checking that required state is available before it is used. */ if (status == UMI_STATUS_OK) centre->revision += 1U; return status; }
+#endif
+
+UmiStatus umi_operations_centre_record_benchmark(UmiOperationsCentre *centre,const UmiOperationsBenchmarkRun *run) {
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (centre != NULL && centre->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+ UmiStatus status; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (centre == NULL) return UMI_STATUS_INVALID_ARGUMENT; status = umi_operations_benchmark_history_add(&centre->benchmarks,run); /* Protect caller-owned memory by checking that required state is available before it is used. */ if (status == UMI_STATUS_OK) centre->revision += 1U; return status; }
 /*
  * Provide the operations centre record crash operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_operations_centre_record_crash(UmiOperationsCentre *centre,const UmiOperationsCrashEvidence *crash) { UmiStatus status; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (centre == NULL) return UMI_STATUS_INVALID_ARGUMENT; status = umi_operations_crash_registry_add(&centre->crashes,crash); /* Protect caller-owned memory by checking that required state is available before it is used. */ if (status == UMI_STATUS_OK) centre->revision += 1U; return status; }
+#endif
+
+UmiStatus umi_operations_centre_record_crash(UmiOperationsCentre *centre,const UmiOperationsCrashEvidence *crash) {
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (centre != NULL && centre->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+ UmiStatus status; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (centre == NULL) return UMI_STATUS_INVALID_ARGUMENT; status = umi_operations_crash_registry_add(&centre->crashes,crash); /* Protect caller-owned memory by checking that required state is available before it is used. */ if (status == UMI_STATUS_OK) centre->revision += 1U; return status; }
 /*
  * Provide the operations centre update evidence operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_operations_centre_update_evidence(UmiOperationsCentre *centre,const UmiOperationsEvidenceCounts *evidence) { /* Protect caller-owned memory by checking that required state is available before it is used. */ if (centre == NULL || evidence == NULL) return UMI_STATUS_INVALID_ARGUMENT; centre->evidence = *evidence; centre->revision += 1U; return UMI_STATUS_OK; }
+#endif
+
+UmiStatus umi_operations_centre_update_evidence(UmiOperationsCentre *centre,const UmiOperationsEvidenceCounts *evidence) {
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (centre != NULL && centre->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+ /* Protect caller-owned memory by checking that required state is available before it is used. */ if (centre == NULL || evidence == NULL) return UMI_STATUS_INVALID_ARGUMENT; centre->evidence = *evidence; centre->revision += 1U; return UMI_STATUS_OK; }
 /*
  * Provide the operations centre update health operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_operations_centre_update_health(UmiOperationsCentre *centre,const UmiOperationsHealthSummary *health) { /* Protect caller-owned memory by checking that required state is available before it is used. */ if (centre == NULL || health == NULL) return UMI_STATUS_INVALID_ARGUMENT; centre->health = *health; centre->revision += 1U; return UMI_STATUS_OK; }
+#endif
+
+UmiStatus umi_operations_centre_update_health(UmiOperationsCentre *centre,const UmiOperationsHealthSummary *health) {
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (centre != NULL && centre->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+ /* Protect caller-owned memory by checking that required state is available before it is used. */ if (centre == NULL || health == NULL) return UMI_STATUS_INVALID_ARGUMENT; centre->health = *health; centre->revision += 1U; return UMI_STATUS_OK; }
 /*
  * Provide the operations centre update resilience operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_operations_centre_update_resilience(UmiOperationsCentre *centre,const UmiOperationsResilienceTelemetry *resilience) { /* Protect caller-owned memory by checking that required state is available before it is used. */ if (centre == NULL || resilience == NULL) return UMI_STATUS_INVALID_ARGUMENT; centre->resilience = *resilience; centre->revision += 1U; return UMI_STATUS_OK; }
+#endif
+
+UmiStatus umi_operations_centre_update_resilience(UmiOperationsCentre *centre,const UmiOperationsResilienceTelemetry *resilience) {
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (centre != NULL && centre->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+ /* Protect caller-owned memory by checking that required state is available before it is used. */ if (centre == NULL || resilience == NULL) return UMI_STATUS_INVALID_ARGUMENT; centre->resilience = *resilience; centre->revision += 1U; return UMI_STATUS_OK; }
 /*
  * Provide the operations centre snapshot operation used by this module and its client
  * applications.

@@ -34,6 +34,10 @@ typedef struct UmiFabricServiceLease { char instance_id[UMI_FABRIC_ID_CAPACITY];
  * Initialise fabric service lease from caller-provided values so later operations receive
  * a known state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_fabric_service_lease_init(UmiFabricServiceLease *lease,const char *instance_id,uint64_t now_ms,uint64_t ttl_ms);
 /**
  * Provide the fabric service lease renew operation used by this module and its client

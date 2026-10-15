@@ -131,6 +131,12 @@ UMI_TEST_VALUE_TRANSFER(UmiWsSurfaceDescriptorTransferCases, UmiWsSurfaceDescrip
     umi_ws_surface_descriptor_archive_encode, umi_ws_surface_descriptor_archive_decode,
     UmiWsSurfaceDescriptorTransferEqual, UmiWsSurfaceDescriptorTransferTails, UmiWsSurfaceDescriptorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWsSurfaceDescriptorConditionalArchiveCases, UmiWsSurfaceDescriptor,
+    umi_ws_surface_descriptor_archive_encode, umi_ws_surface_descriptor_archive_decode_if_unchanged,
+    UmiWsSurfaceDescriptorTransferEqual, UmiWsSurfaceDescriptorTransferTails, UmiWsSurfaceDescriptorTransferMalformed)
+
+
 int main(void) {
     UmiWsSurfaceDescriptor d;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -138,6 +144,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ws_surface_descriptor_validate(&d) != UMI_STATUS_OK) return 2;
     if (UmiWsSurfaceDescriptorTransferCases(&d) != 0) return 1;
+    if (UmiWsSurfaceDescriptorConditionalArchiveCases(&d) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (!d.movable || d.minimum_width != 160) return 3;

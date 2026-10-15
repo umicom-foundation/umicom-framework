@@ -17,6 +17,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/design/inspector_spec.h"
 #include "../../base/value_archive_internal.h"
 
@@ -81,3 +82,8 @@ static UmiStatus UmiDesignInspectorSpecArchiveValidate(const UmiDesignInspectorS
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_design_inspector_spec_archive_encode, umi_design_inspector_spec_archive_decode,
     UmiDesignInspectorSpec, UmiDesignInspectorSpecArchiveSchema, UmiDesignInspectorSpecArchiveBound, UmiDesignInspectorSpecArchiveWrite, UmiDesignInspectorSpecArchiveRead, UmiDesignInspectorSpecArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_design_inspector_spec_archive_decode_if_unchanged, umi_design_inspector_spec_archive_encode,
+    UmiDesignInspectorSpec, UmiDesignInspectorSpecArchiveSchema, UmiDesignInspectorSpecArchiveBound, UmiDesignInspectorSpecArchiveRead, UmiDesignInspectorSpecArchiveValidate)

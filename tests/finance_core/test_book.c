@@ -105,10 +105,17 @@ UMI_TEST_VALUE_TRANSFER(UmiFinancialBookTransferCases, UmiFinancialBook,
     umi_book_archive_encode, umi_book_archive_decode,
     UmiFinancialBookTransferEqual, UmiFinancialBookTransferTails, UmiFinancialBookTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFinancialBookConditionalArchiveCases, UmiFinancialBook,
+    umi_book_archive_encode, umi_book_archive_decode_if_unchanged,
+    UmiFinancialBookTransferEqual, UmiFinancialBookTransferTails, UmiFinancialBookTransferMalformed)
+
+
 int main(void)
 {
     UmiFinancialBook x; CHECK(umi_book_init(&x,"ID","Name","PARENT")==UMI_STATUS_OK); CHECK(umi_book_is_valid(&x));
     if (UmiFinancialBookTransferCases(&x) != 0) return 1;
+    if (UmiFinancialBookConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;
 }

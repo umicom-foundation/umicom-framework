@@ -35,6 +35,9 @@ typedef struct UmiDesignerNavigationDesigner {
 UmiStatus umi_designer_navigation_designer_init(UmiDesignerNavigationDesigner *designer,
                                                 const UmiAdaptiveNavigationModel *model);
 /* Move one navigation item to a new bounded position. */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_designer_navigation_designer_move(UmiDesignerNavigationDesigner *designer,
                                                 size_t from_index,
                                                 size_t to_index);

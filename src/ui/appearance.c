@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/appearance.h"
+#include "../base/value_construction_internal.h"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -91,6 +92,11 @@ static void set_umicom_palette(UmiUiAppearanceProfile *profile)
  * Initialise ui appearance profile from caller-provided values so later operations receive
  * a known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_ui_appearance_profile_init(
     UmiUiAppearanceProfile *profile,
     const char *profile_id,
@@ -129,6 +135,53 @@ UmiStatus umi_ui_appearance_profile_init(
     set_umicom_palette(profile);
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_ui_appearance_profile_init_build_value(
+    UmiUiAppearanceProfile *profile,
+    const char *profile_id,
+    const char *label,
+    UmiUiThemeMode mode,
+    UmiUiDensity density)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (profile == NULL || !umi_ui_id_is_valid(profile_id) || label == NULL ||
+        label[0] == '\0' || strlen(label) >= sizeof(profile->label) ||
+        mode < UMI_UI_THEME_MODE_SYSTEM ||
+        mode > UMI_UI_THEME_MODE_HIGH_CONTRAST ||
+        density < UMI_UI_DENSITY_COMPACT ||
+        density > UMI_UI_DENSITY_SPACIOUS) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    (void)memset(profile, 0, sizeof(*profile));
+    copy_text(profile->profile_id, sizeof(profile->profile_id), profile_id);
+    copy_text(profile->label, sizeof(profile->label), label);
+    profile->mode = mode;
+    profile->density = density;
+    copy_text(profile->brand_name, sizeof(profile->brand_name), "Umicom");
+    copy_text(profile->interface_font, sizeof(profile->interface_font),
+              "Segoe UI, Inter, Sans");
+    copy_text(profile->editor_font, sizeof(profile->editor_font),
+              "Cascadia Code, JetBrains Mono, Monospace");
+    profile->interface_font_size = 10.0;
+    profile->editor_font_size = 11.0;
+    profile->font_scale = 1.0;
+    profile->reduce_motion = mode == UMI_UI_THEME_MODE_HIGH_CONTRAST;
+    profile->revision = 1U;
+    set_umicom_palette(profile);
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_ui_appearance_profile_init, UmiUiAppearanceProfile, profile,
+    (UmiUiAppearanceProfile *profile, const char *profile_id, const char *label, UmiUiThemeMode mode, UmiUiDensity density),
+    umi_ui_appearance_profile_init_build_value(candidate, profile_id, label, mode, density))
+
 
 /* Provide the valid colour operation used by this module and its client applications. */
 static int valid_colour(const char *colour)

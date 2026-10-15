@@ -124,9 +124,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrLauncherManifestTransferCases, UmiDrLauncherManifes
     umi_dr_launcher_manifest_archive_encode, umi_dr_launcher_manifest_archive_decode,
     UmiDrLauncherManifestTransferEqual, UmiDrLauncherManifestTransferTails, UmiDrLauncherManifestTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrLauncherManifestConditionalArchiveCases, UmiDrLauncherManifest,
+    umi_dr_launcher_manifest_archive_encode, umi_dr_launcher_manifest_archive_decode_if_unchanged,
+    UmiDrLauncherManifestTransferEqual, UmiDrLauncherManifestTransferTails, UmiDrLauncherManifestTransferMalformed)
+
+
 int main(void) {
     UmiDrLauncherManifest value; umi_dr_launcher_manifest_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"default")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.executable,sizeof(value.executable),"bin/app")==UMI_STATUS_OK); CHECK(umi_dr_launcher_manifest_valid(&value));
     if (UmiDrLauncherManifestTransferCases(&value) != 0) return 1;
+    if (UmiDrLauncherManifestConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_launcher_manifest_fingerprint(&value) != 0U);
     return 0;
 }

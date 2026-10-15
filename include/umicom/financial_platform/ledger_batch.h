@@ -47,6 +47,9 @@ void umi_financial_ledger_batch_init(
     UmiFinancialLedgerBatch *batch,
     const char *batchId);
 
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_financial_ledger_batch_add(
     UmiFinancialLedgerBatch *batch,
     const UmiFinancialLedgerControlLine *line);
@@ -60,9 +63,15 @@ UmiStatus umi_financial_ledger_batch_validate(
     const UmiFinancialLedgerBatch *batch,
     double tolerance);
 
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_financial_ledger_batch_mark_approved(
     UmiFinancialLedgerBatch *batch);
 
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_financial_ledger_batch_mark_posted(
     UmiFinancialLedgerBatch *batch);
 

@@ -38,6 +38,9 @@ typedef struct UmiNativeWebAssetBundle { UmiNativeWebAsset items[UMI_NATIVE_WEB_
 /* Initialise an empty browser asset bundle. */
 void umi_native_web_asset_bundle_init(UmiNativeWebAssetBundle *bundle);
 /* Add one unique generated/static browser asset descriptor. */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_native_web_asset_bundle_add(UmiNativeWebAssetBundle *bundle, const UmiNativeWebAsset *asset);
 
 #ifdef __cplusplus

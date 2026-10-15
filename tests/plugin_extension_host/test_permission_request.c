@@ -93,6 +93,12 @@ UMI_TEST_VALUE_TRANSFER(UmiPluginExtensionHostPermissionRequestTransferCases, Um
     umi_plugin_extension_host_permission_request_archive_encode, umi_plugin_extension_host_permission_request_archive_decode,
     UmiPluginExtensionHostPermissionRequestTransferEqual, UmiPluginExtensionHostPermissionRequestTransferTails, UmiPluginExtensionHostPermissionRequestTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiPluginExtensionHostPermissionRequestConditionalArchiveCases, UmiPluginExtensionHostPermissionRequest,
+    umi_plugin_extension_host_permission_request_archive_encode, umi_plugin_extension_host_permission_request_archive_decode_if_unchanged,
+    UmiPluginExtensionHostPermissionRequestTransferEqual, UmiPluginExtensionHostPermissionRequestTransferTails, UmiPluginExtensionHostPermissionRequestTransferMalformed)
+
+
 int main(void)
 {
     UmiPluginExtensionHostPermissionRequest value; umi_plugin_extension_host_permission_request_init(&value);
@@ -101,6 +107,7 @@ int main(void)
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_plugin_extension_host_permission_request_validate(&value) != UMI_STATUS_OK) return 2;
     if (UmiPluginExtensionHostPermissionRequestTransferCases(&value) != 0) return 1;
+    if (UmiPluginExtensionHostPermissionRequestConditionalArchiveCases(&value) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (umi_plugin_extension_host_permission_request_fingerprint(&value) == 0U) return 3;

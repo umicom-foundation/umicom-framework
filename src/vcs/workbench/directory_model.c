@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/vcs/workbench/directory_model.h"
 
 #include <string.h>
@@ -84,6 +85,10 @@ void umi_vcs_workbench_directory_model_init(
  * Add vcs workbench directory model only after its inputs and available capacity have been
  * checked.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_vcs_workbench_directory_model_add(
     UmiVcsWorkbenchDirectoryModel *model,
     const UmiVcsAdvancedDirectoryEntry *left,
@@ -122,11 +127,60 @@ UmiStatus umi_vcs_workbench_directory_model_add(
     model->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_vcs_workbench_directory_model_add(
+    UmiVcsWorkbenchDirectoryModel *model,
+    const UmiVcsAdvancedDirectoryEntry *left,
+    const UmiVcsAdvancedDirectoryEntry *right)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (model != NULL && model->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiVcsAdvancedDirectoryDiff *entry;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (model == NULL || !model->ready) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (model->count >= UMI_VCS_WORKBENCH_MAX_DIRECTORY_ENTRIES) {
+        model->truncated = 1;
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    entry = &model->entries[model->count];
+    status = umi_vcs_advanced_directory_diff_compare(left, right, entry);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    model->count += 1U;
+    /* Select the behaviour associated with the requested command or state value. */
+    switch (entry->state) {
+        case UMI_VCS_DIRECTORY_EQUAL: model->equal_count += 1U; break;
+        case UMI_VCS_DIRECTORY_LEFT_ONLY: model->left_only_count += 1U; break;
+        case UMI_VCS_DIRECTORY_RIGHT_ONLY: model->right_only_count += 1U; break;
+        case UMI_VCS_DIRECTORY_DIFFERENT: model->changed_count += 1U; break;
+        case UMI_VCS_DIRECTORY_TYPE_CHANGED:
+            model->type_changed_count += 1U;
+            break;
+        default: break;
+    }
+    rebuild_visible(model);
+    model->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the vcs workbench directory model set filter operation used by this module and
  * its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_vcs_workbench_directory_model_set_filter(
     UmiVcsWorkbenchDirectoryModel *model,
     const UmiVcsAdvancedDirectoryFilter *filter,
@@ -146,15 +200,67 @@ UmiStatus umi_vcs_workbench_directory_model_set_filter(
     model->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_vcs_workbench_directory_model_set_filter(
+    UmiVcsWorkbenchDirectoryModel *model,
+    const UmiVcsAdvancedDirectoryFilter *filter,
+    int show_equal)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (model != NULL && model->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (model == NULL ||
+        umi_vcs_advanced_directory_filter_validate(filter) != UMI_STATUS_OK) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    model->filter = *filter;
+    model->show_equal = show_equal != 0;
+    rebuild_visible(model);
+    model->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the vcs workbench directory model select operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_vcs_workbench_directory_model_select(
     UmiVcsWorkbenchDirectoryModel *model,
     size_t visible_index)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (visible_index >= model->visible_count) return UMI_STATUS_NOT_FOUND;
+    model->selected_visible_index = visible_index;
+    model->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_vcs_workbench_directory_model_select(
+    UmiVcsWorkbenchDirectoryModel *model,
+    size_t visible_index)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (model != NULL && model->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.

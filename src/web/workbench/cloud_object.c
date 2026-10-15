@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/web/workbench/cloud_object.h"
 #include "../../base/value_archive_internal.h"
 
@@ -300,3 +301,8 @@ static UmiStatus UmiWebWorkbenchCloudProfileArchiveValidate(const UmiWebWorkbenc
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_web_workbench_cloud_profile_archive_encode, umi_web_workbench_cloud_profile_archive_decode,
     UmiWebWorkbenchCloudProfile, UmiWebWorkbenchCloudProfileArchiveSchema, UmiWebWorkbenchCloudProfileArchiveBound, UmiWebWorkbenchCloudProfileArchiveWrite, UmiWebWorkbenchCloudProfileArchiveRead, UmiWebWorkbenchCloudProfileArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_web_workbench_cloud_profile_archive_decode_if_unchanged, umi_web_workbench_cloud_profile_archive_encode,
+    UmiWebWorkbenchCloudProfile, UmiWebWorkbenchCloudProfileArchiveSchema, UmiWebWorkbenchCloudProfileArchiveBound, UmiWebWorkbenchCloudProfileArchiveRead, UmiWebWorkbenchCloudProfileArchiveValidate)

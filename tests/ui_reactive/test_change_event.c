@@ -110,6 +110,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveChangeEventTransferCases, UmiUiReactiveChan
     umi_ui_reactive_change_event_archive_encode, umi_ui_reactive_change_event_archive_decode,
     UmiUiReactiveChangeEventTransferEqual, UmiUiReactiveChangeEventTransferTails, UmiUiReactiveChangeEventTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveChangeEventConditionalArchiveCases, UmiUiReactiveChangeEvent,
+    umi_ui_reactive_change_event_archive_encode, umi_ui_reactive_change_event_archive_decode_if_unchanged,
+    UmiUiReactiveChangeEventTransferEqual, UmiUiReactiveChangeEventTransferTails, UmiUiReactiveChangeEventTransferMalformed)
+
+
 int main(void) { UmiUiReactiveChangeEvent item; umi_ui_reactive_change_event_init(&item);
     /* Nonzero fields expose swapped or omitted values in a saved record.
      * The original initialized fixture remains available for its own checks. */
@@ -125,4 +131,5 @@ int main(void) { UmiUiReactiveChangeEvent item; umi_ui_reactive_change_event_ini
     (void)snprintf(populated.after_value.string_value, sizeof(populated.after_value.string_value), "field-10");
     populated.sequence = (uint64_t)13;
     if (UmiUiReactiveChangeEventTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveChangeEventConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_change_event_valid(&item) ? 0 : 1; }

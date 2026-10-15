@@ -92,9 +92,16 @@ UMI_TEST_VALUE_TRANSFER(UmiReplayEventTransferCases, UmiReplayEvent,
     umi_replay_event_archive_encode, umi_replay_event_archive_decode,
     UmiReplayEventTransferEqual, UmiReplayEventTransferTails, UmiReplayEventTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiReplayEventConditionalArchiveCases, UmiReplayEvent,
+    umi_replay_event_archive_encode, umi_replay_event_archive_decode_if_unchanged,
+    UmiReplayEventTransferEqual, UmiReplayEventTransferTails, UmiReplayEventTransferMalformed)
+
+
 int main(void){
     UmiReplayEvent e={1U,1000,{0},{0}};(void)snprintf(e.type,sizeof(e.type),"%s","tick");assert(umi_replay_event_valid(&e));
     if (UmiReplayEventTransferCases(&e) != 0) return 1;
+    if (UmiReplayEventConditionalArchiveCases(&e) != 0) return 1;
 
     UmiReplayCursor c;umi_replay_cursor_init(&c,1U);assert(umi_replay_cursor_accept(&c,&e));assert(c.next_sequence==2U);
     UmiReplayClock clock;umi_replay_clock_init(&clock,0,2.0);umi_replay_clock_advance(&clock,1000);assert(clock.now_ms==1000);

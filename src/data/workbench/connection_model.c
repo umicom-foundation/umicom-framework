@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/data/workbench/connection_model.h"
 
 #include <ctype.h>
@@ -125,10 +126,39 @@ UmiStatus umi_data_workbench_connection_model_set_filter(
  * Provide the data workbench connection model activate operation used by this module and
  * its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_data_workbench_connection_model_activate(
     UmiDataWorkbenchConnectionModel *model,
     const char *connection_id)
 {
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (model == NULL || model->registry == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_database_connection_registry_activate(
+        model->registry, connection_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) model->revision += 1U;
+    return status;
+}
+#endif
+
+UmiStatus umi_data_workbench_connection_model_activate(
+    UmiDataWorkbenchConnectionModel *model,
+    const char *connection_id)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (model != NULL && model->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiStatus status;
     /*
      * Protect caller-owned memory by checking that required state is available before it is

@@ -17,6 +17,10 @@
 
 #include "umicom/financial_platform/settlement/due_date.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(umi_financial_platform_evaluate_settlement_due_date_batch_cases, umi_financial_platform_evaluate_settlement_due_date,
+    umi_financial_platform_evaluate_settlement_due_date_batch, UmiFinancialPlatformInput, UmiFinancialPlatformSnapshot, value)
+
 int main(void)
 {
     UmiFinancialPlatformInput input;
@@ -73,6 +77,7 @@ int main(void)
     input.rollbackAvailable = 1;
     input.revision = 101U;
 
+    if (umi_financial_platform_evaluate_settlement_due_date_batch_cases(&input) != 0) return 1;
     assert(umi_financial_platform_evaluate_settlement_due_date(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "settlement.due-date") == 0);
     assert(snapshot.revision == 101U);

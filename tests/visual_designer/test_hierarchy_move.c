@@ -103,6 +103,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadHierarchyMoveTransferCases, UmiRadHierarchyMove,
     umi_rad_hierarchy_move_archive_encode, umi_rad_hierarchy_move_archive_decode,
     UmiRadHierarchyMoveTransferEqual, UmiRadHierarchyMoveTransferTails, UmiRadHierarchyMoveTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadHierarchyMoveConditionalArchiveCases, UmiRadHierarchyMove,
+    umi_rad_hierarchy_move_archive_encode, umi_rad_hierarchy_move_archive_decode_if_unchanged,
+    UmiRadHierarchyMoveTransferEqual, UmiRadHierarchyMoveTransferTails, UmiRadHierarchyMoveTransferMalformed)
+
+
 int main(void){UmiRadHierarchyMove item;CHECK(umi_rad_hierarchy_move_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_hierarchy_move_is_valid(&item));
     if (UmiRadHierarchyMoveTransferCases(&item) != 0) return 1;
+    if (UmiRadHierarchyMoveConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

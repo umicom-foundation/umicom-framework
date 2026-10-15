@@ -19,6 +19,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/project/workspace/project_activation.h"
+#include "../value_archive/construction_cases.h"
 #include <string.h>
 #define CHECK(x) do { if (!(x)) return __LINE__; } while (0)
 /*
@@ -112,7 +113,44 @@ UMI_TEST_VALUE_TRANSFER(UmiProjectWorkspaceProjectActivationTransferCases, UmiPr
     umi_project_workspace_project_activation_archive_encode, umi_project_workspace_project_activation_archive_decode,
     UmiProjectWorkspaceProjectActivationTransferEqual, UmiProjectWorkspaceProjectActivationTransferTails, UmiProjectWorkspaceProjectActivationTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiProjectWorkspaceProjectActivationConditionalArchiveCases, UmiProjectWorkspaceProjectActivation,
+    umi_project_workspace_project_activation_archive_encode, umi_project_workspace_project_activation_archive_decode_if_unchanged,
+    UmiProjectWorkspaceProjectActivationTransferEqual, UmiProjectWorkspaceProjectActivationTransferTails, UmiProjectWorkspaceProjectActivationTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted project activation value. */
+static int UmiProjectWorkspaceProjectActivationConstructionCases(void)
+{
+    UmiProjectWorkspaceProjectActivation *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_project_workspace_project_activation_init(value, "item") == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->base.id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_project_workspace_project_activation_init(value, oversized) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_project_workspace_project_activation_init(value, value->base.id) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->base.id, "item") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiProjectWorkspaceProjectActivationConstructionCases() != 0) return 1;
+
     UmiProjectWorkspaceProjectActivation a,b;
     CHECK(umi_project_workspace_project_activation_init(&a,"item")==UMI_STATUS_OK);
     CHECK(umi_project_workspace_project_activation_init(&b,"item")==UMI_STATUS_OK);
@@ -121,6 +159,7 @@ int main(void) {
     umi_project_workspace_project_activation_set_metric(&a,7U);
     CHECK(umi_project_workspace_project_activation_validate(&a)==UMI_STATUS_OK);
     if (UmiProjectWorkspaceProjectActivationTransferCases(&a) != 0) return 1;
+    if (UmiProjectWorkspaceProjectActivationConditionalArchiveCases(&a) != 0) return 1;
 
     CHECK(a.metric==7U);
     CHECK(umi_project_workspace_project_activation_same_identity(&a,&b));

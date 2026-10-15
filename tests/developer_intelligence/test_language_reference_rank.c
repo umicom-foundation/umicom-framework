@@ -17,6 +17,10 @@
 
 #include "umicom/developer_intelligence/language/reference_rank.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(UmiDeveloperIntelligenceEvaluateLanguageReferenceRankBatchCases, UmiDeveloperIntelligenceEvaluateLanguageReferenceRank,
+    UmiDeveloperIntelligenceEvaluateLanguageReferenceRankBatch, UmiDeveloperIntelligenceInput, UmiDeveloperIntelligenceSnapshot, lexicalScore)
+
 int main(void)
 {
     UmiDeveloperIntelligenceInput input;
@@ -44,6 +48,7 @@ int main(void)
     input.active = 1;
     input.revision = 42U;
 
+    if (UmiDeveloperIntelligenceEvaluateLanguageReferenceRankBatchCases(&input) != 0) return 1;
     assert(UmiDeveloperIntelligenceEvaluateLanguageReferenceRank(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "language.reference-rank") == 0);
     assert(snapshot.revision == 42U);

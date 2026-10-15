@@ -87,6 +87,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicMonitorFallbackTransferCases, UmiUiMosaicMoni
     umi_ui_mosaic_monitor_fallback_archive_encode, umi_ui_mosaic_monitor_fallback_archive_decode,
     UmiUiMosaicMonitorFallbackTransferEqual, UmiUiMosaicMonitorFallbackTransferTails, UmiUiMosaicMonitorFallbackTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicMonitorFallbackConditionalArchiveCases, UmiUiMosaicMonitorFallback,
+    umi_ui_mosaic_monitor_fallback_archive_encode, umi_ui_mosaic_monitor_fallback_archive_decode_if_unchanged,
+    UmiUiMosaicMonitorFallbackTransferEqual, UmiUiMosaicMonitorFallbackTransferTails, UmiUiMosaicMonitorFallbackTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicMonitorFallback value;
     umi_ui_mosaic_monitor_fallback_init(&value);
@@ -94,6 +100,7 @@ int main(void) {
     value.item_count = 4U;
     CHECK(umi_ui_mosaic_monitor_fallback_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicMonitorFallbackTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicMonitorFallbackConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_monitor_fallback_touch(&value) == UMI_STATUS_OK);
     CHECK(value.revision == 2U);

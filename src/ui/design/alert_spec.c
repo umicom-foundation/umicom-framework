@@ -17,6 +17,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/design/alert_spec.h"
 #include "../../base/value_archive_internal.h"
 
@@ -93,3 +94,8 @@ static UmiStatus UmiDesignAlertSpecArchiveValidate(const UmiDesignAlertSpec *val
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_design_alert_spec_archive_encode, umi_design_alert_spec_archive_decode,
     UmiDesignAlertSpec, UmiDesignAlertSpecArchiveSchema, UmiDesignAlertSpecArchiveBound, UmiDesignAlertSpecArchiveWrite, UmiDesignAlertSpecArchiveRead, UmiDesignAlertSpecArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_design_alert_spec_archive_decode_if_unchanged, umi_design_alert_spec_archive_encode,
+    UmiDesignAlertSpec, UmiDesignAlertSpecArchiveSchema, UmiDesignAlertSpecArchiveBound, UmiDesignAlertSpecArchiveRead, UmiDesignAlertSpecArchiveValidate)

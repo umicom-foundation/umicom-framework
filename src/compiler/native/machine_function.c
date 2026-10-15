@@ -13,12 +13,28 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/machine_function.h"
+#include "../../base/value_construction_internal.h"
 #include <string.h>
 /*
  * Initialise nc machine function from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_nc_machine_function_init(UmiNativeMachineFunction *f,const char *name,UmiNativeMachineArch a){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(f==NULL||name==NULL||a==UMI_NC_ARCH_UNKNOWN)return UMI_STATUS_INVALID_ARGUMENT;memset(f,0,sizeof(*f));/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_copy_text(f->name,sizeof(f->name),name)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;f->architecture=a;f->stack_alignment=16U;f->next_instruction_id=1U;return UMI_STATUS_OK;}
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_nc_machine_function_init_build_value(UmiNativeMachineFunction *f,const char *name,UmiNativeMachineArch a){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(f==NULL||name==NULL||a==UMI_NC_ARCH_UNKNOWN)return UMI_STATUS_INVALID_ARGUMENT;memset(f,0,sizeof(*f));/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_copy_text(f->name,sizeof(f->name),name)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;f->architecture=a;f->stack_alignment=16U;f->next_instruction_id=1U;return UMI_STATUS_OK;}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_nc_machine_function_init, UmiNativeMachineFunction, f,
+    (UmiNativeMachineFunction *f, const char *name, UmiNativeMachineArch a),
+    umi_nc_machine_function_init_build_value(candidate, name, a))
+
 /*
  * Provide the nc machine function block operation used by this module and its client
  * applications.

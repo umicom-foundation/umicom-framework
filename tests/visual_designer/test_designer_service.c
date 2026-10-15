@@ -52,6 +52,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadDesignerServiceTransferCases, UmiRadDesignerServic
     umi_rad_designer_service_archive_encode, umi_rad_designer_service_archive_decode,
     UmiRadDesignerServiceTransferEqual, UmiRadDesignerServiceTransferTails, UmiRadDesignerServiceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadDesignerServiceConditionalArchiveCases, UmiRadDesignerService,
+    umi_rad_designer_service_archive_encode, umi_rad_designer_service_archive_decode_if_unchanged,
+    UmiRadDesignerServiceTransferEqual, UmiRadDesignerServiceTransferTails, UmiRadDesignerServiceTransferMalformed)
+
+
 int main(void){UmiRadDesignerService item;CHECK(umi_rad_designer_service_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_designer_service_is_valid(&item));
     if (UmiRadDesignerServiceTransferCases(&item) != 0) return 1;
+    if (UmiRadDesignerServiceConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

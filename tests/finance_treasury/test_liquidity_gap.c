@@ -68,11 +68,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryLiquidityGapTransferCases, UmiTreasuryLiquidi
     umi_treasury_liquidity_gap_archive_encode, umi_treasury_liquidity_gap_archive_decode,
     UmiTreasuryLiquidityGapTransferEqual, UmiTreasuryLiquidityGapTransferTails, UmiTreasuryLiquidityGapTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryLiquidityGapConditionalArchiveCases, UmiTreasuryLiquidityGap,
+    umi_treasury_liquidity_gap_archive_encode, umi_treasury_liquidity_gap_archive_decode_if_unchanged,
+    UmiTreasuryLiquidityGapTransferEqual, UmiTreasuryLiquidityGapTransferTails, UmiTreasuryLiquidityGapTransferMalformed)
+
+
 int main(void) {
     UmiTreasuryLiquidityGap v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_liquidity_gap_init(&v, "gap", 30, 1000, 1300) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryLiquidityGapTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryLiquidityGapConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if(umi_treasury_liquidity_gap_net_minor(&v)!=-300)return 2;

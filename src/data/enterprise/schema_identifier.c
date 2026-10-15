@@ -12,11 +12,18 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/data/enterprise/schema_identifier.h"
+#include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
 
 /* Initialisation centralises bounded text handling and defaults. */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_data_schema_identifier_init(UmiDataSchemaIdentifier *item, const char *catalog, const char *schema, const char *name) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -37,6 +44,35 @@ UmiStatus umi_data_schema_identifier_init(UmiDataSchemaIdentifier *item, const c
     return umi_data_enterprise_copy_text(item->name,sizeof(item->name),name);
     return umi_data_schema_identifier_validate(item);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_data_schema_identifier_init_build_value(UmiDataSchemaIdentifier *item, const char *catalog, const char *schema, const char *name) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(item, 0, sizeof(*item));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (catalog != NULL) { UmiStatus s=umi_data_enterprise_copy_text(item->catalog,sizeof(item->catalog),catalog); /* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK)return s; }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (schema != NULL) { UmiStatus s=umi_data_enterprise_copy_text(item->schema,sizeof(item->schema),schema); /* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK)return s; }
+    return umi_data_enterprise_copy_text(item->name,sizeof(item->name),name);
+    return umi_data_schema_identifier_validate(item);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_data_schema_identifier_init, UmiDataSchemaIdentifier, item,
+    (UmiDataSchemaIdentifier *item, const char *catalog, const char *schema, const char *name),
+    umi_data_schema_identifier_init_build_value(candidate, catalog, schema, name))
+
 
 /* Validation prevents malformed metadata from leaking into later query/migration stages. */
 UmiStatus umi_data_schema_identifier_validate(const UmiDataSchemaIdentifier *item) {
@@ -96,3 +132,9 @@ static UmiStatus UmiDataSchemaIdentifierArchiveValidate(const UmiDataSchemaIdent
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_data_schema_identifier_archive_encode, umi_data_schema_identifier_archive_decode,
     UmiDataSchemaIdentifier, UmiDataSchemaIdentifierArchiveSchema, UmiDataSchemaIdentifierArchiveBound, UmiDataSchemaIdentifierArchiveWrite, UmiDataSchemaIdentifierArchiveRead, UmiDataSchemaIdentifierArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_data_schema_identifier_archive_decode_if_unchanged, umi_data_schema_identifier_archive_encode,
+    UmiDataSchemaIdentifier, UmiDataSchemaIdentifierArchiveSchema, UmiDataSchemaIdentifierArchiveBound, UmiDataSchemaIdentifierArchiveRead, UmiDataSchemaIdentifierArchiveValidate)

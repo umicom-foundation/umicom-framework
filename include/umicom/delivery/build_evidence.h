@@ -55,6 +55,8 @@ int umi_build_evidence_passed(const UmiBuildEvidence *evidence);
  * Provide the build evidence set source operation used by this module and its client
  * applications.
  */
+/** Failed edits preserve the complete value. Input may borrow this field;
+ * callers still serialize access. Existing empty/null input rules apply. */
 UmiStatus umi_build_evidence_set_source(UmiBuildEvidence *evidence,
                                         const char *revision);
 

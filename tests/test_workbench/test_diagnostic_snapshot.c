@@ -111,6 +111,12 @@ UMI_TEST_VALUE_TRANSFER(UmiTestWorkbenchDiagnosticSnapshotTransferCases, UmiTest
     umi_test_workbench_diagnostic_snapshot_archive_encode, umi_test_workbench_diagnostic_snapshot_archive_decode,
     UmiTestWorkbenchDiagnosticSnapshotTransferEqual, UmiTestWorkbenchDiagnosticSnapshotTransferTails, UmiTestWorkbenchDiagnosticSnapshotTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestWorkbenchDiagnosticSnapshotConditionalArchiveCases, UmiTestWorkbenchDiagnosticSnapshot,
+    umi_test_workbench_diagnostic_snapshot_archive_encode, umi_test_workbench_diagnostic_snapshot_archive_decode_if_unchanged,
+    UmiTestWorkbenchDiagnosticSnapshotTransferEqual, UmiTestWorkbenchDiagnosticSnapshotTransferTails, UmiTestWorkbenchDiagnosticSnapshotTransferMalformed)
+
+
 int main(void) {
   UmiTestWorkbenchDiagnosticSnapshot m;
   assert(umi_test_workbench_diagnostic_snapshot_init(
@@ -124,6 +130,7 @@ int main(void) {
              &m, UMI_TEST_WORKBENCH_STATE_READY) == UMI_STATUS_OK);
   assert(umi_test_workbench_diagnostic_snapshot_valid(&m));
     if (UmiTestWorkbenchDiagnosticSnapshotTransferCases(&m) != 0) return 1;
+    if (UmiTestWorkbenchDiagnosticSnapshotConditionalArchiveCases(&m) != 0) return 1;
 
   assert(m.active);
   assert(m.item_count == 3U);

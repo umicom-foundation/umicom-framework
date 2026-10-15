@@ -120,6 +120,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadPageDescriptorTransferCases, UmiRadPageDescriptor,
     umi_rad_page_descriptor_archive_encode, umi_rad_page_descriptor_archive_decode,
     UmiRadPageDescriptorTransferEqual, UmiRadPageDescriptorTransferTails, UmiRadPageDescriptorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadPageDescriptorConditionalArchiveCases, UmiRadPageDescriptor,
+    umi_rad_page_descriptor_archive_encode, umi_rad_page_descriptor_archive_decode_if_unchanged,
+    UmiRadPageDescriptorTransferEqual, UmiRadPageDescriptorTransferTails, UmiRadPageDescriptorTransferMalformed)
+
+
 int main(void){UmiRadPageDescriptor item;CHECK(umi_rad_page_descriptor_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_page_descriptor_is_valid(&item));
     if (UmiRadPageDescriptorTransferCases(&item) != 0) return 1;
+    if (UmiRadPageDescriptorConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

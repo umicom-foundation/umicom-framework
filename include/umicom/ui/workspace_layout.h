@@ -72,11 +72,17 @@ UmiStatus umi_ui_workspace_layout_init(UmiUiWorkspaceLayout *layout,const char *
  * Provide the ui workspace layout set locked operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ui_workspace_layout_set_locked(UmiUiWorkspaceLayout *layout,bool locked);
 /**
  * Provide the ui workspace layout add window operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ui_workspace_layout_add_window(UmiUiWorkspaceLayout *layout,const UmiUiWorkspaceWindow *window);
 /**
  * Provide the ui workspace layout remove window operation used by this module and its
@@ -87,11 +93,17 @@ UmiStatus umi_ui_workspace_layout_remove_window(UmiUiWorkspaceLayout *layout,con
  * Provide the ui workspace layout place window operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ui_workspace_layout_place_window(UmiUiWorkspaceLayout *layout,const char *window_id,double x,double y,double width,double height);
 /**
  * Provide the ui workspace layout set maximised operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ui_workspace_layout_set_maximised(UmiUiWorkspaceLayout *layout,const char *window_id,bool maximised);
 /**
  * Provide the ui workspace layout set visible operation used by this module and its client
@@ -121,6 +133,9 @@ UmiStatus umi_ui_workspace_layout_set_group(
  * Provide the ui workspace layout set placement operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ui_workspace_layout_set_placement(
     UmiUiWorkspaceLayout *layout,
     const char *window_id,
@@ -129,6 +144,9 @@ UmiStatus umi_ui_workspace_layout_set_placement(
  * Provide the ui workspace layout set stack operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ui_workspace_layout_set_stack(
     UmiUiWorkspaceLayout *layout,
     const char *window_id,
@@ -137,6 +155,9 @@ UmiStatus umi_ui_workspace_layout_set_stack(
  * Provide the ui workspace layout set context group operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ui_workspace_layout_set_context_group(
     UmiUiWorkspaceLayout *layout,
     const char *window_id,
@@ -145,6 +166,9 @@ UmiStatus umi_ui_workspace_layout_set_context_group(
  * Provide the ui workspace layout set pinned operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ui_workspace_layout_set_pinned(
     UmiUiWorkspaceLayout *layout,
     const char *window_id,

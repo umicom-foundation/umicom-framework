@@ -17,7 +17,9 @@
  * Promotion reuses the same immutable artifact set while changing its approved audience and release policy.
  */
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/delivery/promotion.h"
+#include "../base/value_construction_internal.h"
 #include "../base/value_archive_internal.h"
 #include "delivery_internal.h"
 #include <string.h>
@@ -25,6 +27,11 @@
  * Initialise promotion from caller-provided values so later operations receive a known
  * state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_promotion_init(UmiPromotion *promotion,
                              const char *release_id,
                              UmiReleaseChannel from_channel,
@@ -41,6 +48,31 @@ UmiStatus umi_promotion_init(UmiPromotion *promotion,
     promotion->status = UMI_EVIDENCE_UNKNOWN;
     return umi_delivery_copy_text(promotion->release_id, sizeof(promotion->release_id), release_id);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_promotion_init_build_value(UmiPromotion *promotion,
+                             const char *release_id,
+                             UmiReleaseChannel from_channel,
+                             UmiReleaseChannel to_channel)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (promotion == NULL || release_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(promotion, 0, sizeof(*promotion));
+    promotion->from_channel = from_channel;
+    promotion->to_channel = to_channel;
+    promotion->status = UMI_EVIDENCE_UNKNOWN;
+    return umi_delivery_copy_text(promotion->release_id, sizeof(promotion->release_id), release_id);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_promotion_init, UmiPromotion, promotion,
+    (UmiPromotion *promotion, const char *release_id, UmiReleaseChannel from_channel, UmiReleaseChannel to_channel),
+    umi_promotion_init_build_value(candidate, release_id, from_channel, to_channel))
+
 /*
  * Check that promotion direction satisfies its contract before another service relies on
  * it.
@@ -95,3 +127,8 @@ static UmiStatus UmiPromotionArchiveValidate(const UmiPromotion *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_promotion_direction_archive_encode, umi_promotion_direction_archive_decode,
     UmiPromotion, UmiPromotionArchiveSchema, UmiPromotionArchiveBound, UmiPromotionArchiveWrite, UmiPromotionArchiveRead, UmiPromotionArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_promotion_direction_archive_decode_if_unchanged, umi_promotion_direction_archive_encode,
+    UmiPromotion, UmiPromotionArchiveSchema, UmiPromotionArchiveBound, UmiPromotionArchiveRead, UmiPromotionArchiveValidate)

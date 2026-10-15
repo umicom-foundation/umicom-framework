@@ -91,12 +91,19 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalFeeQuoteTransferCases, UmiDigitalFeeQuote,
     umi_digital_asset_fee_quote_archive_encode, umi_digital_asset_fee_quote_archive_decode,
     UmiDigitalFeeQuoteTransferEqual, UmiDigitalFeeQuoteTransferTails, UmiDigitalFeeQuoteTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalFeeQuoteConditionalArchiveCases, UmiDigitalFeeQuote,
+    umi_digital_asset_fee_quote_archive_encode, umi_digital_asset_fee_quote_archive_decode_if_unchanged,
+    UmiDigitalFeeQuoteTransferEqual, UmiDigitalFeeQuoteTransferTails, UmiDigitalFeeQuoteTransferMalformed)
+
+
 int main(void)
 {
     UmiDigitalFeeQuote value;
     CHECK(umi_digital_asset_fee_quote_init(&value, "BTC", 1200, 8, "BTC", 5000) == UMI_STATUS_OK);
     CHECK(umi_digital_asset_fee_quote_valid(&value));
     if (UmiDigitalFeeQuoteTransferCases(&value) != 0) return 1;
+    if (UmiDigitalFeeQuoteConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

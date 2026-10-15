@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiQualityWorkbenchSnapshotTransferCases, UmiQualityWork
     umi_quality_workbench_snapshot_archive_encode, umi_quality_workbench_snapshot_archive_decode,
     UmiQualityWorkbenchSnapshotTransferEqual, UmiQualityWorkbenchSnapshotTransferTails, UmiQualityWorkbenchSnapshotTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiQualityWorkbenchSnapshotConditionalArchiveCases, UmiQualityWorkbenchSnapshot,
+    umi_quality_workbench_snapshot_archive_encode, umi_quality_workbench_snapshot_archive_decode_if_unchanged,
+    UmiQualityWorkbenchSnapshotTransferEqual, UmiQualityWorkbenchSnapshotTransferTails, UmiQualityWorkbenchSnapshotTransferMalformed)
+
+
 int main(void){UmiQualityWorkbenchSnapshot m;assert(umi_quality_workbench_snapshot_init(&m,"quality_workbench_snapshot","Quality Workbench Snapshot")==UMI_STATUS_OK);assert(umi_quality_workbench_snapshot_set_active(&m,true)==UMI_STATUS_OK);assert(umi_quality_workbench_snapshot_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_quality_workbench_snapshot_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_quality_workbench_snapshot_valid(&m));
     if (UmiQualityWorkbenchSnapshotTransferCases(&m) != 0) return 1;
+    if (UmiQualityWorkbenchSnapshotConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

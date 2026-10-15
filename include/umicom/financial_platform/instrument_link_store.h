@@ -42,6 +42,9 @@ typedef struct UmiFinancialInstrumentLinkStore {
 } UmiFinancialInstrumentLinkStore;
 
 void umi_financial_instrument_link_store_init(UmiFinancialInstrumentLinkStore *store);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_financial_instrument_link_store_upsert(
     UmiFinancialInstrumentLinkStore *store,
     const UmiFinancialInstrumentLink *link);

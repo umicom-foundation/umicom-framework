@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <stdio.h>
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "check failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return __LINE__; } } while (0)
 
@@ -29,6 +30,9 @@ int main(void)
     umi_commodity_commodity_catalogue_init(&catalogue);
     CHECK(umi_commodity_commodity_descriptor_init(&item, "CMD-WTI", "West Texas Intermediate", "WTI", UMI_COMMODITY_KIND_ENERGY, &(UmiCurrency){{'U','S','D','\0'}}, true) == UMI_STATUS_OK);
     CHECK(umi_commodity_commodity_catalogue_add(&catalogue, &item) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiCommodityCatalogue, &catalogue,
+        (umi_commodity_commodity_catalogue_add(&catalogue, &item)));
+
     CHECK(umi_commodity_commodity_catalogue_add(&catalogue, &item) == UMI_STATUS_ALREADY_EXISTS);
     CHECK(umi_commodity_commodity_catalogue_find(&catalogue, "CMD-WTI") != NULL);
     CHECK(catalogue.revision == 1U);

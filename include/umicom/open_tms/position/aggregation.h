@@ -15,6 +15,7 @@
 #ifndef UMICOM_OPEN_TMS_POSITION_AGGREGATION_H
 #define UMICOM_OPEN_TMS_POSITION_AGGREGATION_H
 
+#include <stddef.h>
 #include "umicom/open_tms/types.h"
 
 #ifdef __cplusplus
@@ -24,6 +25,18 @@ extern "C" {
 UmiStatus umi_open_tms_evaluate_position_aggregation(
     const UmiOpenTmsInput *input,
     UmiOpenTmsSnapshot *outSnapshot);
+
+
+/** Evaluate a complete group using this policy without publishing partial rows.
+ * Zero count is a no-op and permits NULL arrays. Nonempty groups require arrays
+ * with count readable inputs and capacity writable outputs. At most 4096 rows
+ * and 16 MiB of temporary output are accepted; allocation can fail.
+ * Any failure preserves all outputs. Non-finite signals and overlong labels
+ * are refused. Inputs may borrow output storage until publication. The caller
+ * serializes access; this calculation does not submit orders or execute jobs.
+ */
+UmiStatus umi_open_tms_evaluate_position_aggregation_batch(const UmiOpenTmsInput *inputs,
+    size_t count, UmiOpenTmsSnapshot *outputs, size_t capacity);
 
 #ifdef __cplusplus
 }

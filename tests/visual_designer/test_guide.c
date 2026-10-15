@@ -69,6 +69,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadGuideTransferCases, UmiRadGuide,
     umi_rad_guide_archive_encode, umi_rad_guide_archive_decode,
     UmiRadGuideTransferEqual, UmiRadGuideTransferTails, UmiRadGuideTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadGuideConditionalArchiveCases, UmiRadGuide,
+    umi_rad_guide_archive_encode, umi_rad_guide_archive_decode_if_unchanged,
+    UmiRadGuideTransferEqual, UmiRadGuideTransferTails, UmiRadGuideTransferMalformed)
+
+
 int main(void){UmiRadGuide item;CHECK(umi_rad_guide_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_guide_is_valid(&item));
     if (UmiRadGuideTransferCases(&item) != 0) return 1;
+    if (UmiRadGuideConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

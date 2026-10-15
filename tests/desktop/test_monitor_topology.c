@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Desktop monitor topology | Sammy Hegab | Umicom Foundation | MIT */
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -50,12 +51,18 @@ int main(void)
     UmiDesktopRect bounds = {3600, 900, 800, 600};
     umi_desktop_monitor_topology_init(&topology);
     assert(umi_desktop_monitor_topology_add(&topology, &first) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDesktopMonitorTopology, &topology,
+        (umi_desktop_monitor_topology_add(&topology, &first)));
+
     assert(umi_desktop_monitor_topology_add(&topology, &second) == UMI_STATUS_OK);
     assert(topology.count == 2U);
     assert(strcmp(umi_desktop_monitor_topology_primary(&topology)->monitor_id,
                   "first") == 0);
     assert(umi_desktop_monitor_topology_set_primary(&topology, "second") ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDesktopMonitorTopology, &topology,
+        (umi_desktop_monitor_topology_set_primary(&topology, "second")));
+
     assert(strcmp(umi_desktop_monitor_topology_primary(&topology)->monitor_id,
                   "second") == 0);
     assert(umi_desktop_monitor_topology_constrain(
@@ -63,6 +70,9 @@ int main(void)
     assert(bounds.x == 3040 && bounds.y == 440);
     assert(umi_desktop_monitor_topology_remove(&topology, "second") ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDesktopMonitorTopology, &topology,
+        (umi_desktop_monitor_topology_remove(&topology, "second")));
+
     assert(topology.count == 1U && topology.monitors[0].primary);
     return 0;
 }

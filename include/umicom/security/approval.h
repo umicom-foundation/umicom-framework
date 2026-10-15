@@ -37,6 +37,9 @@ typedef struct UmiSecurityApprovalStore { UmiSecurityApproval items[UMI_SECURITY
  * Provide the security approval request operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_security_approval_request(UmiSecurityApprovalStore *store,const UmiSecurityApproval *approval);
 /**
  * Find security approval while leaving the underlying catalogue or model owned by this
@@ -47,6 +50,9 @@ const UmiSecurityApproval *umi_security_approval_find(const UmiSecurityApprovalS
  * Provide the security approval decide operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_security_approval_decide(UmiSecurityApprovalStore *store,const char *approval_id,const char *decided_by,UmiSecurityApprovalState state,const char *reason);
 /**
  * Check that security approval satisfies its contract before another service relies on it.

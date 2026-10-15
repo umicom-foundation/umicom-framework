@@ -17,6 +17,10 @@
 
 #include "umicom/developer_intelligence/language/provider_selection.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(UmiDeveloperIntelligenceEvaluateLanguageProviderSelectionBatchCases, UmiDeveloperIntelligenceEvaluateLanguageProviderSelection,
+    UmiDeveloperIntelligenceEvaluateLanguageProviderSelectionBatch, UmiDeveloperIntelligenceInput, UmiDeveloperIntelligenceSnapshot, lexicalScore)
+
 int main(void)
 {
     UmiDeveloperIntelligenceInput input;
@@ -44,6 +48,7 @@ int main(void)
     input.active = 1;
     input.revision = 42U;
 
+    if (UmiDeveloperIntelligenceEvaluateLanguageProviderSelectionBatchCases(&input) != 0) return 1;
     assert(UmiDeveloperIntelligenceEvaluateLanguageProviderSelection(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "language.provider-selection") == 0);
     assert(snapshot.revision == 42U);

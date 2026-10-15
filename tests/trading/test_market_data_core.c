@@ -134,6 +134,12 @@ UMI_TEST_VALUE_TRANSFER(UmiBarTransferCases, UmiBar,
     umi_bar_archive_encode, umi_bar_archive_decode,
     UmiBarTransferEqual, UmiBarTransferTails, UmiBarTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiBarConditionalArchiveCases, UmiBar,
+    umi_bar_archive_encode, umi_bar_archive_decode_if_unchanged,
+    UmiBarTransferEqual, UmiBarTransferTails, UmiBarTransferMalformed)
+
+
 /* These helpers describe the Finance market-data-key quote, not the
  * Trading bid/ask quote used by this test. Their active, type-correct checks
  * now run in tests/finance_core/test_quote.c through its existing test target.
@@ -264,6 +270,7 @@ assert(umi_quote_mid(&q)==25001.0);assert(umi_quote_spread(&q)==2.0);
     UmiBar b={0};b.instrument=q.instrument;b.open=24990;b.high=25010;b.low=24980;b.close=25000;b.volume=100;b.start_time_ms=0;b.end_time_ms=1000;
     assert(umi_bar_valid(&b));
     if (UmiBarTransferCases(&b) != 0) return 1;
+    if (UmiBarConditionalArchiveCases(&b) != 0) return 1;
 assert(umi_bar_range(&b)==30.0);assert(umi_market_data_snapshot_aligned(&q,&b,0));
     assert(umi_market_data_quality_score(&q,1100,1000)>0.8);
     return 0;

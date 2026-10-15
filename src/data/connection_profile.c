@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
+#include <stdint.h>
 #include "umicom/data/connection_profile.h"
 #include <string.h>
 /* Provide the find index operation used by this module and its client applications. */
@@ -27,12 +28,36 @@ UmiStatus umi_database_connection_registry_init(UmiDatabaseConnectionRegistry *r
  * Provide the database connection registry upsert operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_database_connection_registry_upsert(UmiDatabaseConnectionRegistry *r,const UmiDatabaseConnectionProfile *p){size_t i;UmiStatus s;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||p==NULL||p->id[0]=='\0'||p->provider<UMI_DATABASE_PROVIDER_MEMORY||p->provider>UMI_DATABASE_PROVIDER_CUSTOM)return UMI_STATUS_INVALID_ARGUMENT;i=find_index(r,p->id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i==SIZE_MAX){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r->count>=UMI_DATABASE_MAX_CONNECTIONS)return UMI_STATUS_CAPACITY_EXCEEDED;i=r->count++;}r->items[i]=*p;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r->active_id[0]=='\0'){s=umi_database_copy_text(r->active_id,sizeof(r->active_id),p->id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK)return s;}r->revision+=1U;return UMI_STATUS_OK;}
+#endif
+
+UmiStatus umi_database_connection_registry_upsert(UmiDatabaseConnectionRegistry *r,const UmiDatabaseConnectionProfile *p){
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (r != NULL && r->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+size_t i;UmiStatus s;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||p==NULL||p->id[0]=='\0'||p->provider<UMI_DATABASE_PROVIDER_MEMORY||p->provider>UMI_DATABASE_PROVIDER_CUSTOM)return UMI_STATUS_INVALID_ARGUMENT;i=find_index(r,p->id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i==SIZE_MAX){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r->count>=UMI_DATABASE_MAX_CONNECTIONS)return UMI_STATUS_CAPACITY_EXCEEDED;i=r->count++;}r->items[i]=*p;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r->active_id[0]=='\0'){s=umi_database_copy_text(r->active_id,sizeof(r->active_id),p->id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK)return s;}r->revision+=1U;return UMI_STATUS_OK;}
 /*
  * Provide the database connection registry activate operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_database_connection_registry_activate(UmiDatabaseConnectionRegistry *r,const char *id){UmiStatus s;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||id==NULL)return UMI_STATUS_INVALID_ARGUMENT;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(find_index(r,id)==SIZE_MAX)return UMI_STATUS_NOT_FOUND;s=umi_database_copy_text(r->active_id,sizeof(r->active_id),id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==UMI_STATUS_OK)r->revision+=1U;return s;}
+#endif
+
+UmiStatus umi_database_connection_registry_activate(UmiDatabaseConnectionRegistry *r,const char *id){
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (r != NULL && r->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+UmiStatus s;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||id==NULL)return UMI_STATUS_INVALID_ARGUMENT;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(find_index(r,id)==SIZE_MAX)return UMI_STATUS_NOT_FOUND;s=umi_database_copy_text(r->active_id,sizeof(r->active_id),id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==UMI_STATUS_OK)r->revision+=1U;return s;}
 /*
  * Provide the database connection registry active operation used by this module and its
  * client applications.

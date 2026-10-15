@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/data/enterprise/query_predicate.h"
 #include <stdio.h>
 #include <string.h>
@@ -29,6 +30,9 @@ int main(void) {
     umi_data_query_predicate_init(&registry);
     CHECK(umi_data_query_expression_init(&item,"e1","status","=","OPEN") == UMI_STATUS_OK);
     CHECK(umi_data_query_predicate_add(&registry, &item) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDataQueryPredicate, &registry,
+        (umi_data_query_predicate_add(&registry, &item)));
+
     CHECK(umi_data_query_predicate_add(&registry, &item) == UMI_STATUS_ALREADY_EXISTS);
     CHECK(umi_data_query_predicate_find(&registry, item.expression_id, &found) == UMI_STATUS_OK);
     CHECK(strcmp(found.expression_id, item.expression_id) == 0);

@@ -17,6 +17,10 @@
 
 #include "umicom/developer_intelligence/language/symbol_rank.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(UmiDeveloperIntelligenceEvaluateLanguageSymbolRankBatchCases, UmiDeveloperIntelligenceEvaluateLanguageSymbolRank,
+    UmiDeveloperIntelligenceEvaluateLanguageSymbolRankBatch, UmiDeveloperIntelligenceInput, UmiDeveloperIntelligenceSnapshot, lexicalScore)
+
 int main(void)
 {
     UmiDeveloperIntelligenceInput input;
@@ -44,6 +48,7 @@ int main(void)
     input.active = 1;
     input.revision = 42U;
 
+    if (UmiDeveloperIntelligenceEvaluateLanguageSymbolRankBatchCases(&input) != 0) return 1;
     assert(UmiDeveloperIntelligenceEvaluateLanguageSymbolRank(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "language.symbol-rank") == 0);
     assert(snapshot.revision == 42U);

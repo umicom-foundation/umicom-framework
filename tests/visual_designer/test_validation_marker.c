@@ -103,6 +103,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadValidationMarkerTransferCases, UmiRadValidationMar
     umi_rad_validation_marker_archive_encode, umi_rad_validation_marker_archive_decode,
     UmiRadValidationMarkerTransferEqual, UmiRadValidationMarkerTransferTails, UmiRadValidationMarkerTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadValidationMarkerConditionalArchiveCases, UmiRadValidationMarker,
+    umi_rad_validation_marker_archive_encode, umi_rad_validation_marker_archive_decode_if_unchanged,
+    UmiRadValidationMarkerTransferEqual, UmiRadValidationMarkerTransferTails, UmiRadValidationMarkerTransferMalformed)
+
+
 int main(void){UmiRadValidationMarker item;CHECK(umi_rad_validation_marker_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_validation_marker_is_valid(&item));
     if (UmiRadValidationMarkerTransferCases(&item) != 0) return 1;
+    if (UmiRadValidationMarkerConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

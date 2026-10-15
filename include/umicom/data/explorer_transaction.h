@@ -30,6 +30,9 @@ UmiStatus umi_database_explorer_transaction_init(UmiDatabaseExplorerTransaction 
  * Provide the database explorer transaction begin operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_database_explorer_transaction_begin(UmiDatabaseExplorerTransaction *transaction);
 /**
  * Provide the database explorer transaction commit operation used by this module and its
@@ -40,5 +43,8 @@ UmiStatus umi_database_explorer_transaction_commit(UmiDatabaseExplorerTransactio
  * Provide the database explorer transaction rollback operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_database_explorer_transaction_rollback(UmiDatabaseExplorerTransaction *transaction);
 #endif

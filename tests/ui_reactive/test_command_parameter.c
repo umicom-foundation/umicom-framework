@@ -88,6 +88,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveCommandParameterTransferCases, UmiUiReactiv
     umi_ui_reactive_command_parameter_archive_encode, umi_ui_reactive_command_parameter_archive_decode,
     UmiUiReactiveCommandParameterTransferEqual, UmiUiReactiveCommandParameterTransferTails, UmiUiReactiveCommandParameterTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveCommandParameterConditionalArchiveCases, UmiUiReactiveCommandParameter,
+    umi_ui_reactive_command_parameter_archive_encode, umi_ui_reactive_command_parameter_archive_decode_if_unchanged,
+    UmiUiReactiveCommandParameterTransferEqual, UmiUiReactiveCommandParameterTransferTails, UmiUiReactiveCommandParameterTransferMalformed)
+
+
 int main(void) { UmiUiReactiveCommandParameter item; umi_ui_reactive_command_parameter_init(&item);
     /* Nonzero fields expose swapped or omitted values in a saved record.
      * The original initialized fixture remains available for its own checks. */
@@ -99,4 +105,5 @@ int main(void) { UmiUiReactiveCommandParameter item; umi_ui_reactive_command_par
     (void)snprintf(populated.value.string_value, sizeof(populated.value.string_value), "field-5");
     populated.revision = (uint64_t)8;
     if (UmiUiReactiveCommandParameterTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveCommandParameterConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_command_parameter_valid(&item) ? 0 : 1; }

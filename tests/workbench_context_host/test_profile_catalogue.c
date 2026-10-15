@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/workbench_context_host/profile_catalogue.h"
@@ -30,10 +31,18 @@ int main(void)
     umi_workbench_context_host_profile_catalogue_init(&catalogue);
     assert(umi_workbench_context_host_profile_catalogue_upsert(
         &catalogue, &fixture.profile) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchContextHostProfileCatalogue, &catalogue,
+        (umi_workbench_context_host_profile_catalogue_upsert(
+        &catalogue, &fixture.profile)));
+
     assert(umi_workbench_context_host_profile_catalogue_find(
         &catalogue, "test.profile") != NULL);
     assert(umi_workbench_context_host_profile_catalogue_remove(
         &catalogue, "test.profile") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchContextHostProfileCatalogue, &catalogue,
+        (umi_workbench_context_host_profile_catalogue_remove(
+        &catalogue, "test.profile")));
+
     umi_workbench_context_host_profile_catalogue_destroy(&catalogue);
     umi_wch_test_fixture_destroy(&fixture);
 

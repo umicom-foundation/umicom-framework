@@ -87,6 +87,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicPanelPinningTransferCases, UmiUiMosaicPanelPi
     umi_ui_mosaic_panel_pinning_archive_encode, umi_ui_mosaic_panel_pinning_archive_decode,
     UmiUiMosaicPanelPinningTransferEqual, UmiUiMosaicPanelPinningTransferTails, UmiUiMosaicPanelPinningTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicPanelPinningConditionalArchiveCases, UmiUiMosaicPanelPinning,
+    umi_ui_mosaic_panel_pinning_archive_encode, umi_ui_mosaic_panel_pinning_archive_decode_if_unchanged,
+    UmiUiMosaicPanelPinningTransferEqual, UmiUiMosaicPanelPinningTransferTails, UmiUiMosaicPanelPinningTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicPanelPinning value;
     umi_ui_mosaic_panel_pinning_init(&value);
@@ -95,6 +101,7 @@ int main(void) {
     value.priority = 10U;
     CHECK(umi_ui_mosaic_panel_pinning_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicPanelPinningTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicPanelPinningConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_panel_pinning_rank(&value, 5U) == 16U);
     return 0;

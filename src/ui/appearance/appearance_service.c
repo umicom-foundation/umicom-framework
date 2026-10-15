@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/appearance/appearance_service.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -102,3 +103,8 @@ static UmiStatus UmiAppearanceAppearanceServiceArchiveValidate(const UmiAppearan
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_appearance_service_archive_encode, umi_appearance_service_archive_decode,
     UmiAppearanceAppearanceService, UmiAppearanceAppearanceServiceArchiveSchema, UmiAppearanceAppearanceServiceArchiveBound, UmiAppearanceAppearanceServiceArchiveWrite, UmiAppearanceAppearanceServiceArchiveRead, UmiAppearanceAppearanceServiceArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_appearance_service_archive_decode_if_unchanged, umi_appearance_service_archive_encode,
+    UmiAppearanceAppearanceService, UmiAppearanceAppearanceServiceArchiveSchema, UmiAppearanceAppearanceServiceArchiveBound, UmiAppearanceAppearanceServiceArchiveRead, UmiAppearanceAppearanceServiceArchiveValidate)

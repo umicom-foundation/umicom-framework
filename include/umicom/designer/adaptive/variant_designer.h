@@ -33,6 +33,9 @@ typedef struct UmiDesignerVariantDesigner {
 /* Initialise an empty variant-designer session. */
 void umi_designer_variant_designer_init(UmiDesignerVariantDesigner *designer);
 /* Add and select one adaptive variant. */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_designer_variant_designer_add(UmiDesignerVariantDesigner *designer,
                                             const UmiDesignerAdaptiveVariant *variant);
 

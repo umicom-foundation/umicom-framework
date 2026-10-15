@@ -23,6 +23,8 @@
 #undef NDEBUG
 #endif
 #include <assert.h>
+#include "value_archive/construction_cases.h"
+#include "value_archive/construction_cases.h"
 #include "umicom/delivery/stage.h"
 #include "umicom/delivery/directory_package.h"
 /*
@@ -110,7 +112,99 @@ UMI_TEST_VALUE_TRANSFER(UmiPackageSpecTransferCases, UmiPackageSpec,
     umi_package_spec_archive_encode, umi_package_spec_archive_decode,
     UmiPackageSpecTransferEqual, UmiPackageSpecTransferTails, UmiPackageSpecTransferMalformed)
 
+#include "value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiPackageSpecConditionalArchiveCases, UmiPackageSpec,
+    umi_package_spec_archive_encode, umi_package_spec_archive_decode_if_unchanged,
+    UmiPackageSpecTransferEqual, UmiPackageSpecTransferTails, UmiPackageSpecTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted package value. */
+static int UmiPackageSpecConstructionCases(void)
+{
+    UmiPackageSpec *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_package_spec_init(value, "portable", UMI_PACKAGE_DIRECTORY, "stage/root", "dist/studio") == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->package_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_package_spec_init(value, oversized, UMI_PACKAGE_DIRECTORY, "stage/root", "dist/studio") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_package_spec_init(value, value->package_id, UMI_PACKAGE_DIRECTORY, "stage/root", "dist/studio") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->package_id, "portable") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->staging_root) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_package_spec_init(value, "portable", UMI_PACKAGE_DIRECTORY, oversized, "dist/studio") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_package_spec_init(value, "portable", UMI_PACKAGE_DIRECTORY, value->staging_root, "dist/studio") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->staging_root, "stage/root") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->output_path) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_package_spec_init(value, "portable", UMI_PACKAGE_DIRECTORY, "stage/root", oversized) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_package_spec_init(value, "portable", UMI_PACKAGE_DIRECTORY, "stage/root", value->output_path) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->output_path, "dist/studio") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
+
+/* A rejected replacement must preserve the previously accepted stage value. */
+static int UmiDeliveryStageRecordConstructionCases(void)
+{
+    UmiDeliveryStageRecord *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_delivery_stage_init(value, "stage/root") == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->root) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_delivery_stage_init(value, oversized) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_delivery_stage_init(value, value->root) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->root, "stage/root") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiDeliveryStageRecordConstructionCases() != 0) return 1;
+
+    if (UmiPackageSpecConstructionCases() != 0) return 1;
+
     UmiDeliveryStageRecord stage;
     UmiPackageSpec spec;
     UmiPackageProvider provider;
@@ -121,6 +215,7 @@ int main(void) {
     assert(stage.complete && stage.total_bytes == 100U);
     assert(umi_package_spec_init(&spec, "portable", UMI_PACKAGE_DIRECTORY, "stage/root", "dist/studio") == UMI_STATUS_OK);
     if (UmiPackageSpecTransferCases(&spec) != 0) return 1;
+    if (UmiPackageSpecConditionalArchiveCases(&spec) != 0) return 1;
 
     assert(umi_directory_package_provider(&provider) == UMI_STATUS_OK);
     assert(umi_package_provider_create(&provider, &spec, &result) == UMI_STATUS_OK);

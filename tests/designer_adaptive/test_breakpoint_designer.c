@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/designer/adaptive/breakpoint_designer.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)
 /*
@@ -21,6 +22,9 @@
 int main(void)
 {
     UmiDesignerBreakpointDesigner d; UmiDesignBreakpoint b={"compact",0,599,UMI_DESIGN_SIZE_COMPACT};
-    umi_designer_breakpoint_designer_init(&d); CHECK(umi_designer_breakpoint_designer_add(&d,&b)==UMI_STATUS_OK); CHECK(d.catalogue.count==1U);
+    umi_designer_breakpoint_designer_init(&d); CHECK(umi_designer_breakpoint_designer_add(&d,&b)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDesignerBreakpointDesigner, &d,
+        (umi_designer_breakpoint_designer_add(&d,&b)));
+ CHECK(d.catalogue.count==1U);
     return 0;
 }

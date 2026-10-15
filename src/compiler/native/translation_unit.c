@@ -13,12 +13,28 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/translation_unit.h"
+#include "../../base/value_construction_internal.h"
 #include <string.h>
 /*
  * Initialise nc translation unit from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_nc_translation_unit_init(UmiNativeTranslationUnit *u,const char *path,uint32_t root,uint64_t fp){ /* Protect caller-owned memory by checking that required state is available before it is used. */ if(u==NULL||path==NULL||root==0U||fp==0U) return UMI_STATUS_INVALID_ARGUMENT; memset(u,0,sizeof(*u)); /* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_copy_text(u->path,sizeof(u->path),path)!=UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;u->root_node_id=root;u->source_fingerprint=fp;return UMI_STATUS_OK; }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_nc_translation_unit_init_build_value(UmiNativeTranslationUnit *u,const char *path,uint32_t root,uint64_t fp){ /* Protect caller-owned memory by checking that required state is available before it is used. */ if(u==NULL||path==NULL||root==0U||fp==0U) return UMI_STATUS_INVALID_ARGUMENT; memset(u,0,sizeof(*u)); /* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_copy_text(u->path,sizeof(u->path),path)!=UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;u->root_node_id=root;u->source_fingerprint=fp;return UMI_STATUS_OK; }
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_nc_translation_unit_init, UmiNativeTranslationUnit, u,
+    (UmiNativeTranslationUnit *u, const char *path, uint32_t root, uint64_t fp),
+    umi_nc_translation_unit_init_build_value(candidate, path, root, fp))
+
 /*
  * Provide the nc translation unit add declaration operation used by this module and its
  * client applications.

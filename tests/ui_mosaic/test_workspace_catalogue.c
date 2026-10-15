@@ -104,12 +104,19 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicWorkspaceCatalogueTransferCases, UmiUiMosaicW
     umi_ui_mosaic_workspace_catalogue_archive_encode, umi_ui_mosaic_workspace_catalogue_archive_decode,
     UmiUiMosaicWorkspaceCatalogueTransferEqual, UmiUiMosaicWorkspaceCatalogueTransferTails, UmiUiMosaicWorkspaceCatalogueTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicWorkspaceCatalogueConditionalArchiveCases, UmiUiMosaicWorkspaceCatalogue,
+    umi_ui_mosaic_workspace_catalogue_archive_encode, umi_ui_mosaic_workspace_catalogue_archive_decode_if_unchanged,
+    UmiUiMosaicWorkspaceCatalogueTransferEqual, UmiUiMosaicWorkspaceCatalogueTransferTails, UmiUiMosaicWorkspaceCatalogueTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicWorkspaceCatalogue value;
     umi_ui_mosaic_workspace_catalogue_init(&value);
     CHECK(umi_ui_mosaic_workspace_catalogue_set(&value, "perspective.workspace_catalogue", "Workspace Catalogue", "layout.default", UMI_UI_MOSAIC_APP_TMS) == UMI_STATUS_OK);
     CHECK(umi_ui_mosaic_workspace_catalogue_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicWorkspaceCatalogueTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicWorkspaceCatalogueConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

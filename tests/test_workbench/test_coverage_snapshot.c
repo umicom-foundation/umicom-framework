@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiCoverageSnapshotTransferCases, UmiCoverageSnapshot,
     umi_coverage_snapshot_archive_encode, umi_coverage_snapshot_archive_decode,
     UmiCoverageSnapshotTransferEqual, UmiCoverageSnapshotTransferTails, UmiCoverageSnapshotTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCoverageSnapshotConditionalArchiveCases, UmiCoverageSnapshot,
+    umi_coverage_snapshot_archive_encode, umi_coverage_snapshot_archive_decode_if_unchanged,
+    UmiCoverageSnapshotTransferEqual, UmiCoverageSnapshotTransferTails, UmiCoverageSnapshotTransferMalformed)
+
+
 int main(void){UmiCoverageSnapshot m;assert(umi_coverage_snapshot_init(&m,"coverage_snapshot","Coverage Snapshot")==UMI_STATUS_OK);assert(umi_coverage_snapshot_set_active(&m,true)==UMI_STATUS_OK);assert(umi_coverage_snapshot_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_coverage_snapshot_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_coverage_snapshot_valid(&m));
     if (UmiCoverageSnapshotTransferCases(&m) != 0) return 1;
+    if (UmiCoverageSnapshotConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

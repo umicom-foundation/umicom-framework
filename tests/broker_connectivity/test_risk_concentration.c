@@ -17,6 +17,10 @@
 
 #include "umicom/broker_connectivity/risk/concentration.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(umi_broker_connectivity_evaluate_risk_concentration_batch_cases, umi_broker_connectivity_evaluate_risk_concentration,
+    umi_broker_connectivity_evaluate_risk_concentration_batch, UmiBrokerConnectivityInput, UmiBrokerConnectivitySnapshot, value)
+
 int main(void)
 {
     UmiBrokerConnectivityInput input;
@@ -85,6 +89,7 @@ int main(void)
     input.trusted = 1;
     input.revision = 123U;
 
+    if (umi_broker_connectivity_evaluate_risk_concentration_batch_cases(&input) != 0) return 1;
     assert(umi_broker_connectivity_evaluate_risk_concentration(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "risk.concentration") == 0);
     assert(snapshot.revision == 123U);

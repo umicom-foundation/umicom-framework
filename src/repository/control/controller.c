@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/repository/controller.h"
 
 #include <string.h>
@@ -41,9 +42,38 @@ void umi_repository_controller_init(UmiRepositoryController *controller)
  * Provide the repository controller begin operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_repository_controller_begin(
     UmiRepositoryController *controller, int dry_run)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (controller == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (controller->state == UMI_REPOSITORY_CONTROL_STAGING) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    controller->state = UMI_REPOSITORY_CONTROL_INSPECTING;
+    controller->last_status = UMI_STATUS_OK;
+    controller->dry_run = dry_run != 0;
+    controller->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_repository_controller_begin(
+    UmiRepositoryController *controller, int dry_run)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (controller != NULL && controller->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -64,9 +94,36 @@ UmiStatus umi_repository_controller_begin(
  * Provide the repository controller mark planned operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_repository_controller_mark_planned(
     UmiRepositoryController *controller)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (controller == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (controller->state != UMI_REPOSITORY_CONTROL_INSPECTING) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    controller->state = UMI_REPOSITORY_CONTROL_PLANNED;
+    controller->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_repository_controller_mark_planned(
+    UmiRepositoryController *controller)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (controller != NULL && controller->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -85,9 +142,37 @@ UmiStatus umi_repository_controller_mark_planned(
  * Provide the repository controller mark staging operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_repository_controller_mark_staging(
     UmiRepositoryController *controller)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (controller == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (controller->dry_run ||
+        controller->state != UMI_REPOSITORY_CONTROL_PLANNED) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    controller->state = UMI_REPOSITORY_CONTROL_STAGING;
+    controller->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_repository_controller_mark_staging(
+    UmiRepositoryController *controller)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (controller != NULL && controller->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -107,9 +192,38 @@ UmiStatus umi_repository_controller_mark_staging(
  * Provide the repository controller mark verified operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_repository_controller_mark_verified(
     UmiRepositoryController *controller)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (controller == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (controller->state != UMI_REPOSITORY_CONTROL_PLANNED &&
+        controller->state != UMI_REPOSITORY_CONTROL_STAGING) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    controller->state = UMI_REPOSITORY_CONTROL_VERIFIED;
+    controller->last_status = UMI_STATUS_OK;
+    controller->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_repository_controller_mark_verified(
+    UmiRepositoryController *controller)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (controller != NULL && controller->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.

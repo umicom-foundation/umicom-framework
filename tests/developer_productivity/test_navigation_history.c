@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/developer_productivity/navigation_history.h"
@@ -36,10 +37,18 @@ int main(void)
 
     assert(umi_developer_navigation_history_push(
         &history, &first) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDeveloperNavigationHistory, &history,
+        (umi_developer_navigation_history_push(
+        &history, &first)));
+
     assert(umi_developer_navigation_history_push(
         &history, &second) == UMI_STATUS_OK);
     assert(umi_developer_navigation_history_back(
         &history, &result) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDeveloperNavigationHistory, &history,
+        (umi_developer_navigation_history_back(
+        &history, &result)));
+
     assert(strcmp(result.uri, "a.c") == 0);
     return 0;
 }

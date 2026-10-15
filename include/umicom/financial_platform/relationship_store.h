@@ -42,6 +42,9 @@ typedef struct UmiFinancialRelationshipStore {
 } UmiFinancialRelationshipStore;
 
 void umi_financial_relationship_store_init(UmiFinancialRelationshipStore *store);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_financial_relationship_store_add(
     UmiFinancialRelationshipStore *store,
     const UmiFinancialRelationship *relationship);

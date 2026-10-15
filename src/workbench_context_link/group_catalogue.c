@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include <stdint.h>
 #include "umicom/workbench_context_link/group_catalogue.h"
 
 #include <stdlib.h>
@@ -137,6 +138,10 @@ umi_workbench_context_link_group_catalogue_find_const(
  * Provide the workbench context link group catalogue upsert operation used by this module
  * and its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_context_link_group_catalogue_upsert(
     UmiWorkbenchContextLinkGroupCatalogue *catalogue,
     const UmiWorkbenchContextLinkGroupProfile *profile)
@@ -171,15 +176,99 @@ UmiStatus umi_workbench_context_link_group_catalogue_upsert(
     ++catalogue->revision;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_workbench_context_link_group_catalogue_upsert(
+    UmiWorkbenchContextLinkGroupCatalogue *catalogue,
+    const UmiWorkbenchContextLinkGroupProfile *profile)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (catalogue != NULL && catalogue->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiWorkbenchContextLinkGroupProfile *existing;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (catalogue == NULL || profile == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (umi_workbench_context_link_group_profile_validate(profile) != UMI_STATUS_OK) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    existing = umi_workbench_context_link_group_catalogue_find(
+        catalogue, profile->group_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (existing != NULL) {
+        /* A replacement also advances the stored record's token. Refuse an
+             * exhausted input before copying it, keeping owner and child intact. */
+            if (profile->revision == UINT64_MAX)
+                return UMI_STATUS_CAPACITY_EXCEEDED;
+            *existing = *profile;
+        ++existing->revision;
+        ++catalogue->revision;
+        return UMI_STATUS_OK;
+    }
+    status = ensure_capacity(catalogue);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    catalogue->items[catalogue->count++] = *profile;
+    ++catalogue->revision;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Remove workbench context link group catalogue while keeping the remaining records in a
  * valid and discoverable state.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_context_link_group_catalogue_remove(
     UmiWorkbenchContextLinkGroupCatalogue *catalogue,
     const char *group_id)
 {
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (catalogue == NULL || group_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < catalogue->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(catalogue->items[index].group_id, group_id) == 0) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+            if (index + 1U < catalogue->count) {
+                memmove(&catalogue->items[index],
+                        &catalogue->items[index + 1U],
+                        (catalogue->count - index - 1U) * sizeof(catalogue->items[0]));
+            }
+            --catalogue->count;
+            memset(&catalogue->items[catalogue->count], 0, sizeof(catalogue->items[0]));
+            ++catalogue->revision;
+            return UMI_STATUS_OK;
+        }
+    }
+    return UMI_STATUS_NOT_FOUND;
+}
+#endif
+
+UmiStatus umi_workbench_context_link_group_catalogue_remove(
+    UmiWorkbenchContextLinkGroupCatalogue *catalogue,
+    const char *group_id)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (catalogue != NULL && catalogue->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is

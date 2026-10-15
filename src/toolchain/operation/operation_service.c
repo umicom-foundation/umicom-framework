@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/toolchain/operation_service.h"
 
 #include <string.h>
@@ -41,6 +42,10 @@ void umi_toolchain_operation_service_init(UmiToolchainOperationService *service)
  * Provide the toolchain operation service prepare operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_toolchain_operation_service_prepare(
     UmiToolchainOperationService *service,
     UmiToolchainOperationKind kind,
@@ -49,6 +54,38 @@ UmiStatus umi_toolchain_operation_service_prepare(
     UmiDiagnosticSink diagnostic_sink,
     void *diagnostic_user_data)
 {
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    service->state = UMI_TOOLCHAIN_OPERATION_SERVICE_PREPARING;
+    status = umi_toolchain_operation_context_prepare(
+        kind, explicit_toolchain_root, preferred_profile,
+        diagnostic_sink, diagnostic_user_data, &service->context);
+    service->last_status = status;
+    service->state = status == UMI_STATUS_OK
+        ? UMI_TOOLCHAIN_OPERATION_SERVICE_READY
+        : UMI_TOOLCHAIN_OPERATION_SERVICE_FAILED;
+    service->revision += 1U;
+    return status;
+}
+#endif
+
+UmiStatus umi_toolchain_operation_service_prepare(
+    UmiToolchainOperationService *service,
+    UmiToolchainOperationKind kind,
+    const char *explicit_toolchain_root,
+    const char *preferred_profile,
+    UmiDiagnosticSink diagnostic_sink,
+    void *diagnostic_user_data)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (service != NULL && service->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiStatus status;
     /*
      * Protect caller-owned memory by checking that required state is available before it is

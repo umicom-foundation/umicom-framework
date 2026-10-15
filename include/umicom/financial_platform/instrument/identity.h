@@ -15,6 +15,7 @@
 #ifndef UMICOM_FINANCIAL_PLATFORM_INSTRUMENT_IDENTITY_H
 #define UMICOM_FINANCIAL_PLATFORM_INSTRUMENT_IDENTITY_H
 
+#include <stddef.h>
 #include "umicom/financial_platform/types.h"
 
 #ifdef __cplusplus
@@ -24,6 +25,18 @@ extern "C" {
 UmiStatus umi_financial_platform_evaluate_instrument_identity(
     const UmiFinancialPlatformInput *input,
     UmiFinancialPlatformSnapshot *outSnapshot);
+
+
+/** Evaluate a complete group using this policy without publishing partial rows.
+ * Zero count is a no-op and permits NULL arrays. Nonempty groups require arrays
+ * with count readable inputs and capacity writable outputs. At most 4096 rows
+ * and 16 MiB of temporary output are accepted; allocation can fail.
+ * Any failure preserves all outputs. Non-finite signals and overlong labels
+ * are refused. Inputs may borrow output storage until publication. The caller
+ * serializes access; this calculation does not submit orders or execute jobs.
+ */
+UmiStatus umi_financial_platform_evaluate_instrument_identity_batch(const UmiFinancialPlatformInput *inputs,
+    size_t count, UmiFinancialPlatformSnapshot *outputs, size_t capacity);
 
 #ifdef __cplusplus
 }

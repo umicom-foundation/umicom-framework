@@ -41,5 +41,6 @@
 #include "umicom/application/experiences/security_centre.h"
 #include "umicom/application/experiences/marketplace.h"
 #include "umicom/application/experiences/education.h"
+#include "umicom/application/experiences/healthcare.h"
 
 #endif

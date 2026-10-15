@@ -14,12 +14,18 @@
  *---------------------------------------------------------------------------*/
 
 #include <string.h>
+#include "../../base/value_construction_internal.h"
 #include "umicom/ui/workstation/layout_template.h"
 
 /*
  * Initialise ws layout template from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_ws_layout_template_init(UmiWsLayoutTemplate *layout,
                                       const char *layout_id,
                                       const char *label,
@@ -39,6 +45,34 @@ UmiStatus umi_ws_layout_template_init(UmiWsLayoutTemplate *layout,
     layout->locked_by_default = true;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_ws_layout_template_init_build_value(UmiWsLayoutTemplate *layout,
+                                      const char *layout_id,
+                                      const char *label,
+                                      UmiWsApplicationDomain domain) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (layout == NULL || !umi_ws_id_valid(layout_id) || label == NULL || label[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    *layout = (UmiWsLayoutTemplate){0};
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (umi_ws_copy_text(layout->layout_id, sizeof(layout->layout_id), layout_id) != UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (umi_ws_copy_text(layout->label, sizeof(layout->label), label) != UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;
+    layout->domain = domain;
+    layout->variant = UMI_WS_LAYOUT_DESKTOP;
+    layout->locked_by_default = true;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_ws_layout_template_init, UmiWsLayoutTemplate, layout,
+    (UmiWsLayoutTemplate *layout, const char *layout_id, const char *label, UmiWsApplicationDomain domain),
+    umi_ws_layout_template_init_build_value(candidate, layout_id, label, domain))
+
 
 /* Add ws layout template only after its inputs and available capacity have been checked. */
 UmiStatus umi_ws_layout_template_add(UmiWsLayoutTemplate *layout,

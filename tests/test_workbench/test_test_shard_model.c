@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiTestShardModelTransferCases, UmiTestShardModel,
     umi_test_shard_model_archive_encode, umi_test_shard_model_archive_decode,
     UmiTestShardModelTransferEqual, UmiTestShardModelTransferTails, UmiTestShardModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestShardModelConditionalArchiveCases, UmiTestShardModel,
+    umi_test_shard_model_archive_encode, umi_test_shard_model_archive_decode_if_unchanged,
+    UmiTestShardModelTransferEqual, UmiTestShardModelTransferTails, UmiTestShardModelTransferMalformed)
+
+
 int main(void){UmiTestShardModel m;assert(umi_test_shard_model_init(&m,"test_shard_model","Test Shard Model")==UMI_STATUS_OK);assert(umi_test_shard_model_set_active(&m,true)==UMI_STATUS_OK);assert(umi_test_shard_model_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_test_shard_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_shard_model_valid(&m));
     if (UmiTestShardModelTransferCases(&m) != 0) return 1;
+    if (UmiTestShardModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

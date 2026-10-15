@@ -85,6 +85,12 @@ UMI_TEST_VALUE_TRANSFER(UmiTradingMarketDataEventTransferCases, UmiTradingMarket
     umi_trading_market_data_event_archive_encode, umi_trading_market_data_event_archive_decode,
     UmiTradingMarketDataEventTransferEqual, UmiTradingMarketDataEventTransferTails, UmiTradingMarketDataEventTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTradingMarketDataEventConditionalArchiveCases, UmiTradingMarketDataEvent,
+    umi_trading_market_data_event_archive_encode, umi_trading_market_data_event_archive_decode_if_unchanged,
+    UmiTradingMarketDataEventTransferEqual, UmiTradingMarketDataEventTransferTails, UmiTradingMarketDataEventTransferMalformed)
+
+
 int main(void) {
     UmiFinancialId iid,vid;
     umi_trading_core_id_assign(&iid,"i");
@@ -95,6 +101,7 @@ int main(void) {
      /* Apply this operation only while the related capability or state is available. */
      if(!umi_trading_market_data_event_valid(&v)) return 2;
     if (UmiTradingMarketDataEventTransferCases(&v) != 0) return 1;
+    if (UmiTradingMarketDataEventConditionalArchiveCases(&v) != 0) return 1;
 
      return 0;
 }

@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/data/enterprise/data_session.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -92,10 +93,60 @@ UMI_TEST_VALUE_TRANSFER(UmiDataSessionTransferCases, UmiDataSession,
     umi_data_data_session_archive_encode, umi_data_data_session_archive_decode,
     UmiDataSessionTransferEqual, UmiDataSessionTransferTails, UmiDataSessionTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataSessionConditionalArchiveCases, UmiDataSession,
+    umi_data_data_session_archive_encode, umi_data_data_session_archive_decode_if_unchanged,
+    UmiDataSessionTransferEqual, UmiDataSessionTransferTails, UmiDataSessionTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted data session value. */
+static int UmiDataSessionConstructionCases(void)
+{
+    UmiDataSession *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_data_data_session_init(value, "s1", "user", UMI_DATA_CONSISTENCY_SESSION, 10U) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->session_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_data_session_init(value, oversized, "user", UMI_DATA_CONSISTENCY_SESSION, 10U) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_data_session_init(value, value->session_id, "user", UMI_DATA_CONSISTENCY_SESSION, 10U) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->session_id, "s1") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->principal_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_data_session_init(value, "s1", oversized, UMI_DATA_CONSISTENCY_SESSION, 10U) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_data_session_init(value, "s1", value->principal_id, UMI_DATA_CONSISTENCY_SESSION, 10U) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->principal_id, "user") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiDataSessionConstructionCases() != 0) return 1;
+
     UmiDataSession item;
     CHECK(umi_data_data_session_init(&item,"s1","user",UMI_DATA_CONSISTENCY_SESSION,10U) == UMI_STATUS_OK);
     if (UmiDataSessionTransferCases(&item) != 0) return 1;
+    if (UmiDataSessionConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.last_activity==10U);
     return 0;

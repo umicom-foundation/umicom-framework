@@ -27,7 +27,12 @@ int main(void) {
 
   umi_application_component_registry_init(&registry);
   assert(umi_application_component_registry_seed_catalogue(&registry) == UMI_STATUS_OK);
+  /* Healthcare adds one product and its three audience layouts. The previous
+   * fixed expectation is retained to document the catalogue expansion. */
+#if 0
   assert(umi_application_component_recipe_catalogue_count() == 78U);
+#endif
+  assert(umi_application_component_recipe_catalogue_count() == 81U);
   assert(umi_application_component_recipe_catalogue_validate(
              &registry, UMI_APPLICATION_COMPONENT_FRONTEND_HEADLESS) == UMI_STATUS_OK);
   assert(umi_application_component_recipe_catalogue_application_count("org.umicom.studio") == 3U);

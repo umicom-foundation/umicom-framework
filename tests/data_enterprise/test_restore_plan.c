@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/data/enterprise/restore_plan.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -92,10 +93,60 @@ UMI_TEST_VALUE_TRANSFER(UmiDataRestorePlanTransferCases, UmiDataRestorePlan,
     umi_data_restore_plan_archive_encode, umi_data_restore_plan_archive_decode,
     UmiDataRestorePlanTransferEqual, UmiDataRestorePlanTransferTails, UmiDataRestorePlanTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataRestorePlanConditionalArchiveCases, UmiDataRestorePlan,
+    umi_data_restore_plan_archive_encode, umi_data_restore_plan_archive_decode_if_unchanged,
+    UmiDataRestorePlanTransferEqual, UmiDataRestorePlanTransferTails, UmiDataRestorePlanTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted restore plan value. */
+static int UmiDataRestorePlanConstructionCases(void)
+{
+    UmiDataRestorePlan *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_data_restore_plan_init(value, "r1", "b1", 11U, true) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->restore_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_restore_plan_init(value, oversized, "b1", 11U, true) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_restore_plan_init(value, value->restore_id, "b1", 11U, true) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->restore_id, "r1") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->backup_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_restore_plan_init(value, "r1", oversized, 11U, true) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_restore_plan_init(value, "r1", value->backup_id, 11U, true) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->backup_id, "b1") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiDataRestorePlanConstructionCases() != 0) return 1;
+
     UmiDataRestorePlan item;
     CHECK(umi_data_restore_plan_init(&item,"r1","b1",11U,true) == UMI_STATUS_OK);
     if (UmiDataRestorePlanTransferCases(&item) != 0) return 1;
+    if (UmiDataRestorePlanConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.verify_only && item.preserve_existing);
     return 0;

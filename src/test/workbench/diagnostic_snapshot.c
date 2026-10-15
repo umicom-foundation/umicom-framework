@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/test/workbench/diagnostic_snapshot.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -172,3 +173,8 @@ static UmiStatus UmiTestWorkbenchDiagnosticSnapshotArchiveValidate(const UmiTest
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_test_workbench_diagnostic_snapshot_archive_encode, umi_test_workbench_diagnostic_snapshot_archive_decode,
     UmiTestWorkbenchDiagnosticSnapshot, UmiTestWorkbenchDiagnosticSnapshotArchiveSchema, UmiTestWorkbenchDiagnosticSnapshotArchiveBound, UmiTestWorkbenchDiagnosticSnapshotArchiveWrite, UmiTestWorkbenchDiagnosticSnapshotArchiveRead, UmiTestWorkbenchDiagnosticSnapshotArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_test_workbench_diagnostic_snapshot_archive_decode_if_unchanged, umi_test_workbench_diagnostic_snapshot_archive_encode,
+    UmiTestWorkbenchDiagnosticSnapshot, UmiTestWorkbenchDiagnosticSnapshotArchiveSchema, UmiTestWorkbenchDiagnosticSnapshotArchiveBound, UmiTestWorkbenchDiagnosticSnapshotArchiveRead, UmiTestWorkbenchDiagnosticSnapshotArchiveValidate)

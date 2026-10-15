@@ -81,6 +81,13 @@ UMI_TEST_VALUE_TRANSFER(UmiCtKernelBoundaryTransferCases, UmiCtKernelBoundary,
     umi_ct_kernel_boundary_archive_encode, umi_ct_kernel_boundary_archive_decode,
     UmiCtKernelBoundaryTransferEqual, UmiCtKernelBoundaryTransferTails, UmiCtKernelBoundaryTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtKernelBoundaryConditionalArchiveCases, UmiCtKernelBoundary,
+    umi_ct_kernel_boundary_archive_encode, umi_ct_kernel_boundary_archive_decode_if_unchanged,
+    UmiCtKernelBoundaryTransferEqual, UmiCtKernelBoundaryTransferTails, UmiCtKernelBoundaryTransferMalformed)
+
+
 int main(void){UmiCtKernelBoundary b={"syscall",UMI_CT_DOMAIN_USER,UMI_CT_DOMAIN_KERNEL,true,true,true};CHECK(umi_ct_kernel_boundary_validate(&b)==UMI_STATUS_OK);
     if (UmiCtKernelBoundaryTransferCases(&b) != 0) return 1;
+    if (UmiCtKernelBoundaryConditionalArchiveCases(&b) != 0) return 1;
 b.privileged=false;CHECK(umi_ct_kernel_boundary_validate(&b)==UMI_STATUS_INVALID_STATE);return 0;}

@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/test_runtime/database_requirement.h"
 #include "../base/value_archive_internal.h"
 #include "umicom/base/text.h"
@@ -227,3 +228,8 @@ static UmiStatus ArchiveValidate(const UmiTestRuntimeDatabaseRequirement *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_test_runtime_database_requirement_archive_encode, umi_test_runtime_database_requirement_archive_decode,
     UmiTestRuntimeDatabaseRequirement, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Guard snapshot import with the complete encoded value reviewed by the
+ * caller. Imported metadata remains evidence; registry publication is separate. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_test_runtime_database_requirement_archive_decode_if_unchanged, umi_test_runtime_database_requirement_archive_encode,
+    UmiTestRuntimeDatabaseRequirement, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)

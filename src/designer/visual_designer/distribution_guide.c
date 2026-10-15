@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/designer/visual_designer/distribution_guide.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -82,3 +83,8 @@ static UmiStatus UmiRadDistributionGuideArchiveValidate(const UmiRadDistribution
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_rad_distribution_guide_archive_encode, umi_rad_distribution_guide_archive_decode,
     UmiRadDistributionGuide, UmiRadDistributionGuideArchiveSchema, UmiRadDistributionGuideArchiveBound, UmiRadDistributionGuideArchiveWrite, UmiRadDistributionGuideArchiveRead, UmiRadDistributionGuideArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_rad_distribution_guide_archive_decode_if_unchanged, umi_rad_distribution_guide_archive_encode,
+    UmiRadDistributionGuide, UmiRadDistributionGuideArchiveSchema, UmiRadDistributionGuideArchiveBound, UmiRadDistributionGuideArchiveRead, UmiRadDistributionGuideArchiveValidate)

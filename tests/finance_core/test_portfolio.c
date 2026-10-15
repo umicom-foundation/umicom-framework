@@ -105,10 +105,17 @@ UMI_TEST_VALUE_TRANSFER(UmiFinancialPortfolioTransferCases, UmiFinancialPortfoli
     umi_portfolio_archive_encode, umi_portfolio_archive_decode,
     UmiFinancialPortfolioTransferEqual, UmiFinancialPortfolioTransferTails, UmiFinancialPortfolioTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFinancialPortfolioConditionalArchiveCases, UmiFinancialPortfolio,
+    umi_portfolio_archive_encode, umi_portfolio_archive_decode_if_unchanged,
+    UmiFinancialPortfolioTransferEqual, UmiFinancialPortfolioTransferTails, UmiFinancialPortfolioTransferMalformed)
+
+
 int main(void)
 {
     UmiFinancialPortfolio x; CHECK(umi_portfolio_init(&x,"ID","Name","PARENT")==UMI_STATUS_OK); CHECK(umi_portfolio_is_valid(&x));
     if (UmiFinancialPortfolioTransferCases(&x) != 0) return 1;
+    if (UmiFinancialPortfolioConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;
 }

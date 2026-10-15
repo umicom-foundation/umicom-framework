@@ -18,6 +18,7 @@
  */
 
 #include "umicom/delivery/gate.h"
+#include "../base/value_construction_internal.h"
 #include "delivery_internal.h"
 #include <string.h>
 
@@ -25,6 +26,11 @@
  * Initialise release gate from caller-provided values so later operations receive a known
  * state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_release_gate_init(UmiReleaseGate *gate,
                                 const char *gate_id,
                                 int required)
@@ -39,6 +45,29 @@ UmiStatus umi_release_gate_init(UmiReleaseGate *gate,
     gate->status = UMI_EVIDENCE_UNKNOWN;
     return umi_delivery_copy_text(gate->gate_id, sizeof(gate->gate_id), gate_id);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_release_gate_init_build_value(UmiReleaseGate *gate,
+                                const char *gate_id,
+                                int required)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (gate == NULL || gate_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(gate, 0, sizeof(*gate));
+    gate->required = required != 0;
+    gate->status = UMI_EVIDENCE_UNKNOWN;
+    return umi_delivery_copy_text(gate->gate_id, sizeof(gate->gate_id), gate_id);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_release_gate_init, UmiReleaseGate, gate,
+    (UmiReleaseGate *gate, const char *gate_id, int required),
+    umi_release_gate_init_build_value(candidate, gate_id, required))
+
 
 /*
  * Provide the release gate record operation used by this module and its client

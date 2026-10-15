@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Governed approvals v2 | Sammy Hegab | Umicom Foundation | MIT */
+#include "value_archive/revision_cases.h"
 #include <assert.h>
 #include <stdio.h>
 #include "umicom/security/approval.h"
@@ -30,7 +31,13 @@ int main(void)
     (void)snprintf(approval.requested_by,sizeof(approval.requested_by),"sammy");
     approval.subject_kind = UMI_SECURITY_APPROVAL_PLUGIN; approval.requested_at_ns = 1U; approval.expires_at_ns = 100U;
     assert(umi_security_approval_request(&store,&approval) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiSecurityApprovalStore, &store,
+        (umi_security_approval_request(&store,&approval)));
+
     assert(umi_security_approval_decide(&store,"approval-1","security-admin",UMI_SECURITY_APPROVAL_APPROVED,"Reviewed package evidence") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiSecurityApprovalStore, &store,
+        (umi_security_approval_decide(&store,"approval-1","security-admin",UMI_SECURITY_APPROVAL_APPROVED,"Reviewed package evidence")));
+
     assert(umi_security_approval_valid(umi_security_approval_find(&store,"approval-1",50U),50U));
     assert(umi_security_approval_find(&store,"approval-1",100U) == NULL);
     return 0;

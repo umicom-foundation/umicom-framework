@@ -17,6 +17,10 @@
 
 #include "umicom/developer_operations/terminal/session.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(UmiDeveloperOperationsEvaluateTerminalSessionBatchCases, UmiDeveloperOperationsEvaluateTerminalSession,
+    UmiDeveloperOperationsEvaluateTerminalSessionBatch, UmiDeveloperOperationInput, UmiDeveloperOperationSnapshot, baseline)
+
 int main(void)
 {
     UmiDeveloperOperationInput input;
@@ -32,6 +36,7 @@ int main(void)
     input.blocked = 0;
     input.revision = 7U;
 
+    if (UmiDeveloperOperationsEvaluateTerminalSessionBatchCases(&input) != 0) return 1;
     assert(UmiDeveloperOperationsEvaluateTerminalSession(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "terminal.session") == 0);
     assert(snapshot.revision == 7U);

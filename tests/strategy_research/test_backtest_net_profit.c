@@ -18,6 +18,10 @@
 
 #include "umicom/strategy_research/backtest/net_profit.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(umi_strategy_research_evaluate_backtest_net_profit_batch_cases, umi_strategy_research_evaluate_backtest_net_profit,
+    umi_strategy_research_evaluate_backtest_net_profit_batch, UmiStrategyResearchInput, UmiStrategyResearchSnapshot, scoreOne)
+
 int main(void)
 {
     UmiStrategyResearchInput input;
@@ -108,6 +112,7 @@ int main(void)
     input.approved = 1;
     input.revision = 88U;
 
+    if (umi_strategy_research_evaluate_backtest_net_profit_batch_cases(&input) != 0) return 1;
     assert(umi_strategy_research_evaluate_backtest_net_profit(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "backtest.net-profit") == 0);
     assert(snapshot.revision == 88U);

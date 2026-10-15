@@ -169,6 +169,12 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextSourceRouteRecordTransferCases, UmiWo
     umi_workbench_context_source_route_record_archive_encode, umi_workbench_context_source_route_record_archive_decode,
     UmiWorkbenchContextSourceRouteRecordTransferEqual, UmiWorkbenchContextSourceRouteRecordTransferTails, UmiWorkbenchContextSourceRouteRecordTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextSourceRouteRecordConditionalArchiveCases, UmiWorkbenchContextSourceRouteRecord,
+    umi_workbench_context_source_route_record_archive_encode, umi_workbench_context_source_route_record_archive_decode_if_unchanged,
+    UmiWorkbenchContextSourceRouteRecordTransferEqual, UmiWorkbenchContextSourceRouteRecordTransferTails, UmiWorkbenchContextSourceRouteRecordTransferMalformed)
+
+
 /* Exercise the accepted domain fixture through reviewed publication and
  * legacy mutation boundaries. These checks stay active in release builds. */
 #include "../record_integrity/reviewed_value_cases.h"
@@ -202,6 +208,7 @@ int main(void)
     assert(umi_workbench_context_source_route_record_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextSourceRouteRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceRouteRecordConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextSourceRouteRecordReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextSourceRouteRecordMutationGuards(&record) != 0) return 1;
 

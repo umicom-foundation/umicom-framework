@@ -18,6 +18,7 @@
  * into bounded storage, revisions advance on mutation, and callers retain
  * responsibility for higher-level threading and persistence policy.
  */
+#include "../base/conditional_archive_internal.h"
 #include "umicom/ui/tree_model.h"
 #include "../base/value_archive_internal.h"
 #include "../base/registry_archive_internal.h"
@@ -391,3 +392,8 @@ UMI_DEFINE_VALUE_ARCHIVE(umi_ui_tree_model_snapshot_archive_encode, umi_ui_tree_
 UMI_DEFINE_REGISTRY_ARCHIVE(umi_ui_tree_model_registry_archive_encode, umi_ui_tree_model_registry_archive_restore,
     UmiUiTreeModelRegistry, UmiUiTreeModelSnapshot, UMI_UI_TREE_MODEL_CAPACITY, ArchiveSchema,
     umi_ui_tree_model_snapshot_archive_encode, umi_ui_tree_model_snapshot_archive_decode, umi_ui_tree_model_registry_replace_if_current)
+
+/* Guard snapshot import with the complete encoded value reviewed by the
+ * caller. Imported metadata remains evidence; registry publication is separate. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_tree_model_snapshot_archive_decode_if_unchanged, umi_ui_tree_model_snapshot_archive_encode,
+    UmiUiTreeModelSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)

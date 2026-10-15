@@ -99,6 +99,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextSchemaTransferCases, UmiContextSchema,
     umi_context_schema_archive_encode, umi_context_schema_archive_decode,
     UmiContextSchemaTransferEqual, UmiContextSchemaTransferTails, UmiContextSchemaTransferMalformed)
 
+#include "../conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextSchemaConditionalArchiveCases, UmiContextSchema,
+    umi_context_schema_archive_encode, umi_context_schema_archive_decode_if_unchanged,
+    UmiContextSchemaTransferEqual, UmiContextSchemaTransferTails, UmiContextSchemaTransferMalformed)
+
+
 int main(void)
 {
     UmiContextSchema value;
@@ -112,6 +118,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_context_schema_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiContextSchemaTransferCases(&value) != 0) return 1;
+    if (UmiContextSchemaConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

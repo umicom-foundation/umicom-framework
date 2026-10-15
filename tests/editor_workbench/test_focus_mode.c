@@ -69,6 +69,13 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorWbFocusModeTransferCases, UmiEditorWbFocusMode,
     umi_editor_wb_focus_mode_archive_encode, umi_editor_wb_focus_mode_archive_decode,
     UmiEditorWbFocusModeTransferEqual, UmiEditorWbFocusModeTransferTails, UmiEditorWbFocusModeTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorWbFocusModeConditionalArchiveCases, UmiEditorWbFocusMode,
+    umi_editor_wb_focus_mode_archive_encode, umi_editor_wb_focus_mode_archive_decode_if_unchanged,
+    UmiEditorWbFocusModeTransferEqual, UmiEditorWbFocusModeTransferTails, UmiEditorWbFocusModeTransferMalformed)
+
+
 int main(void){ UmiEditorWbFocusMode s; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_focus_mode_init(&s,"item",false)!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_focus_mode_set(&s,true)!=UMI_STATUS_OK)return 2; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_wb_focus_mode_valid(&s)||!s.enabled)return 3;
     if (UmiEditorWbFocusModeTransferCases(&s) != 0) return 1;
+    if (UmiEditorWbFocusModeConditionalArchiveCases(&s) != 0) return 1;
  return 0; }

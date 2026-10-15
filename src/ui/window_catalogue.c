@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/ui/window_catalogue.h"
 #include <ctype.h>
 #include <stdlib.h>
@@ -176,8 +177,35 @@ void umi_ui_window_catalogue_init(UmiUiWindowCatalogue *catalogue)
 }
 
 /* Add ui window catalogue only after its inputs and available capacity have been checked. */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ui_window_catalogue_register(UmiUiWindowCatalogue *catalogue,const UmiUiWindowDescriptor *descriptor)
 {
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (catalogue == NULL || descriptor == NULL || descriptor->tool_id[0] == '\0' || descriptor->title[0] == '\0' || descriptor->category < UMI_UI_WINDOW_CATEGORY_DEVELOPMENT || descriptor->category > UMI_UI_WINDOW_CATEGORY_GENERAL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Refuse a malformed restored count before searching or appending. */
+    if (!catalogue_shape_valid(catalogue)) return UMI_STATUS_INVALID_STATE;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < catalogue->count; ++index) /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (strcmp(catalogue->items[index].tool_id,descriptor->tool_id) == 0) return UMI_STATUS_ALREADY_EXISTS;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (catalogue->count >= UMI_UI_WINDOW_CATALOGUE_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    catalogue->items[catalogue->count++] = *descriptor; catalogue->revision += 1U; return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_ui_window_catalogue_register(UmiUiWindowCatalogue *catalogue,const UmiUiWindowDescriptor *descriptor)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (catalogue != NULL && catalogue->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -338,11 +366,77 @@ UmiStatus umi_ui_window_catalogue_query(
  * Provide the ui window catalogue record open operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ui_window_catalogue_record_open(
     UmiUiWindowCatalogue *catalogue,
     const char *tool_id,
     uint64_t opened_at_ms)
 {
+    size_t index;
+    size_t target = UMI_UI_WINDOW_RECENT_MAX;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (!catalogue_shape_valid(catalogue) || tool_id == NULL || tool_id[0] == '\0' ||
+        umi_ui_window_catalogue_find(catalogue, tool_id) == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < catalogue->recent_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(catalogue->recent[index].tool_id, tool_id) == 0) {
+            target = index;
+            break;
+        }
+    }
+    /* Configure the optional target only when its feature has created it. */
+    if (target == UMI_UI_WINDOW_RECENT_MAX) {
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (catalogue->recent_count < UMI_UI_WINDOW_RECENT_MAX) {
+            target = catalogue->recent_count++;
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
+            target = 0U;
+            /* Visit each bounded item once so every record receives the same rule. */
+            for (index = 1U; index < catalogue->recent_count; ++index) {
+                /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+                if (catalogue->recent[index].last_opened_at_ms <
+                    catalogue->recent[target].last_opened_at_ms) {
+                    target = index;
+                }
+            }
+        }
+        (void)memset(&catalogue->recent[target], 0,
+                     sizeof(catalogue->recent[target]));
+        (void)snprintf(
+            catalogue->recent[target].tool_id,
+            sizeof(catalogue->recent[target].tool_id),
+            "%s",
+            tool_id);
+    }
+
+    catalogue->recent[target].last_opened_at_ms = opened_at_ms;
+    catalogue->recent[target].open_count += 1U;
+    catalogue->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_ui_window_catalogue_record_open(
+    UmiUiWindowCatalogue *catalogue,
+    const char *tool_id,
+    uint64_t opened_at_ms)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (catalogue != NULL && catalogue->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     size_t target = UMI_UI_WINDOW_RECENT_MAX;
 

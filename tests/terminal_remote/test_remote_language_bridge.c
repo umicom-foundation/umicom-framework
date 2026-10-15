@@ -89,6 +89,13 @@ UMI_TEST_VALUE_TRANSFER(UmiTerminalRemoteRemoteLanguageBridgeTransferCases, UmiT
     umi_terminal_remote_remote_language_bridge_archive_encode, umi_terminal_remote_remote_language_bridge_archive_decode,
     UmiTerminalRemoteRemoteLanguageBridgeTransferEqual, UmiTerminalRemoteRemoteLanguageBridgeTransferTails, UmiTerminalRemoteRemoteLanguageBridgeTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTerminalRemoteRemoteLanguageBridgeConditionalArchiveCases, UmiTerminalRemoteRemoteLanguageBridge,
+    umi_terminal_remote_remote_language_bridge_archive_encode, umi_terminal_remote_remote_language_bridge_archive_decode_if_unchanged,
+    UmiTerminalRemoteRemoteLanguageBridgeTransferEqual, UmiTerminalRemoteRemoteLanguageBridgeTransferTails, UmiTerminalRemoteRemoteLanguageBridgeTransferMalformed)
+
+
 int main(void) { UmiTerminalRemoteRemoteLanguageBridge v; umi_terminal_remote_remote_language_bridge_init(&v,"left","right"); /* Apply this operation only while the related capability or state is available. */ if(!umi_terminal_remote_remote_language_bridge_valid(&v)) return 1;
     if (UmiTerminalRemoteRemoteLanguageBridgeTransferCases(&v) != 0) return 1;
+    if (UmiTerminalRemoteRemoteLanguageBridgeConditionalArchiveCases(&v) != 0) return 1;
  /* Apply this operation only while the related capability or state is available. */ if(umi_terminal_remote_remote_language_bridge_fingerprint(&v)==0U) return 2; umi_terminal_remote_remote_language_bridge_init(&v,"same","same"); return umi_terminal_remote_remote_language_bridge_valid(&v)?3:0; }

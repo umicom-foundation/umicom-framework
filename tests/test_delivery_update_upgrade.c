@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include <assert.h>
+#include "value_archive/construction_cases.h"
 #include "umicom/delivery/delivery.h"
 
 /*
@@ -89,6 +90,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUpdateChannelTransferCases, UmiUpdateChannel,
     umi_update_channel_archive_encode, umi_update_channel_archive_decode,
     UmiUpdateChannelTransferEqual, UmiUpdateChannelTransferTails, UmiUpdateChannelTransferMalformed)
 
+#include "value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUpdateChannelConditionalArchiveCases, UmiUpdateChannel,
+    umi_update_channel_archive_encode, umi_update_channel_archive_decode_if_unchanged,
+    UmiUpdateChannelTransferEqual, UmiUpdateChannelTransferTails, UmiUpdateChannelTransferMalformed)
+
+
 #include "umicom/delivery/upgrade_plan.h"
 /* Compare the complete domain value rather than using struct padding or
  * re-decoding an expected byte stream. Add new public fields to this check. */
@@ -154,8 +161,57 @@ UMI_TEST_VALUE_TRANSFER(UmiUpgradePlanTransferCases, UmiUpgradePlan,
     umi_upgrade_plan_archive_encode, umi_upgrade_plan_archive_decode,
     UmiUpgradePlanTransferEqual, UmiUpgradePlanTransferTails, UmiUpgradePlanTransferMalformed)
 
+#include "value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUpgradePlanConditionalArchiveCases, UmiUpgradePlan,
+    umi_upgrade_plan_archive_encode, umi_upgrade_plan_archive_decode_if_unchanged,
+    UmiUpgradePlanTransferEqual, UmiUpgradePlanTransferTails, UmiUpgradePlanTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted upgrade plan value. */
+static int UmiUpgradePlanConstructionCases(void)
+{
+    UmiUpgradePlan *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_upgrade_plan_init(value, "0.22.0", "0.23.0", 58U, 59U, 1) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->current_version) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_upgrade_plan_init(value, oversized, "0.23.0", 58U, 59U, 1) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_upgrade_plan_init(value, value->current_version, "0.23.0", 58U, 59U, 1) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->current_version, "0.22.0") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->target_version) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_upgrade_plan_init(value, "0.22.0", oversized, 58U, 59U, 1) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_upgrade_plan_init(value, "0.22.0", value->target_version, 58U, 59U, 1) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->target_version, "0.23.0") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void)
 {
+    if (UmiUpgradePlanConstructionCases() != 0) return 1;
+
     UmiUpdateChannel channel;
     UmiUpgradePlan upgrade;
     assert(umi_update_channel_init(
@@ -163,6 +219,7 @@ int main(void)
                UMI_RELEASE_STABLE, 25U) == UMI_STATUS_OK);
     assert(umi_update_channel_validate(&channel) == UMI_STATUS_OK);
     if (UmiUpdateChannelTransferCases(&channel) != 0) return 1;
+    if (UmiUpdateChannelConditionalArchiveCases(&channel) != 0) return 1;
 
     assert(umi_update_channel_offers(&channel, UMI_RELEASE_STABLE, 24U));
     assert(!umi_update_channel_offers(&channel, UMI_RELEASE_STABLE, 25U));
@@ -172,6 +229,7 @@ int main(void)
     assert(umi_upgrade_plan_authorise(&upgrade, 1) == UMI_STATUS_OK);
     assert(umi_upgrade_plan_validate(&upgrade) == UMI_STATUS_OK);
     if (UmiUpgradePlanTransferCases(&upgrade) != 0) return 1;
+    if (UmiUpgradePlanConditionalArchiveCases(&upgrade) != 0) return 1;
 
     assert(umi_upgrade_plan_rollback_generation(&upgrade) == 58U);
     return 0;

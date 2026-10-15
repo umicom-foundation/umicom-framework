@@ -97,6 +97,8 @@ static void ArchiveFillUnusedText(UmiProductMetadataProviderSnapshot *value)
 #define ARCHIVE_TYPE UmiProductMetadataProviderSnapshot
 #define ARCHIVE_ENCODE umi_product_metadata_provider_snapshot_archive_encode
 #define ARCHIVE_DECODE umi_product_metadata_provider_snapshot_archive_decode
+/* Exercise guarded import through this domain's public snapshot codec. */
+#define ARCHIVE_CONDITIONAL_DECODE umi_product_metadata_provider_snapshot_archive_decode_if_unchanged
 #define ARCHIVE_EQUAL ContractSnapshotEqual
 #include "../value_archive/record_cases.h"
 

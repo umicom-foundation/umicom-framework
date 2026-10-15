@@ -31,6 +31,10 @@ extern "C" {
  */
 typedef struct UmiNativeWebFocusBinding { char element_id[UMI_NATIVE_WEB_ID_CAPACITY]; bool focusable; int32_t tab_index; } UmiNativeWebFocusBinding;
 /* Initialise validated focus binding state. */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_native_web_focus_binding_init(UmiNativeWebFocusBinding *binding, const char *element_id, bool focusable, int32_t tab_index);
 
 #ifdef __cplusplus

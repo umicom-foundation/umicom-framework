@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Synthetic access requests — Umicom Healthcare</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:960px;margin:auto;padding:32px;color:#162b3e;background:#f5f8fb}h1,h2{line-height:1.2}code{background:#e3ebf2;padding:2px 5px;border-radius:4px}section{padding:18px 24px;background:white;border:1px solid #d7e2ec;border-radius:10px;margin:20px 0}table{border-collapse:collapse;width:100%}td,th{text-align:left;padding:10px;border-bottom:1px solid #d7e2ec}aside{border-left:4px solid #256491;padding:16px;background:#eaf3fa}</style>
+</head><body>
+<h1>Synthetic access requests</h1>
+<p>Umicom Healthcare uses Framework services to demonstrate how an item request moves from registration to a provider reply, acceptance, simulated funding, a timed reservation and collection. The same C23 service is used by the native window and the verification console.</p>
+<aside><strong>Demonstration records only.</strong> Use fictional identifiers. This workspace does not contact providers, reserve real stock, transfer money, authenticate patients or provide clinical decisions. Records stay in memory and are discarded when the window closes. It is not a clinical record system.</aside>
+<section><h2>Open Healthcare from Desk</h2>
+<ol><li>Use an installation containing both <code>umicom-desk</code> and the native <code>umicom-healthcare</code> executable in its trusted <code>bin</code> directory. Windows adds <code>.exe</code> to both names.</li>
+<li>Open Desk and find <strong>Umicom Healthcare</strong> in its application selection.</li>
+<li>Select it and use the normal launch action. The native Healthcare window presents the synthetic access workspace.</li></ol>
+<p>Desk checks for the executable; registration alone does not make the application installed. The console named <code>umicom-healthcare-console</code> is a separate verification tool and is never used as a desktop fallback.</p>
+<p>If the entry is unavailable, check that Healthcare was selected in the application build, that Framework GTK support was enabled and that the native executable is beside Desk. Setting <code>UMICOM_HEALTHCARE_BUILD_GTK4=OFF</code> deliberately disables the native host; the suite respects this choice rather than generating a preview under the same name.</p></section>
+<section><h2>Try a full request</h2>
+<ol><li>Keep the patient ID <code>SYN-000001</code> and select <strong>Register patient</strong>.</li>
+<li>Keep item <code>ITM-000001</code>, enter a requested quantity of <strong>10</strong>, then select <strong>Create request</strong>. The generated request ID appears in the selector.</li>
+<li>Keep provider <code>PRV-000001</code>, enter offered quantity <strong>10</strong> and choose <strong>Full offer</strong>. The detail view still shows no acceptance or reservation.</li>
+<li>Review the item and offer, then choose <strong>Accept offer</strong>.</li>
+<li>Select <strong>Simulate funding</strong>, then <strong>Reserve for 5 minutes</strong>. The explicit deadline is shown in UTC epoch seconds, a numeric count of seconds since the start of 1970.</li>
+<li>Before that deadline, keep the matching patient ID and choose <strong>Record collection</strong>. Collected quantity becomes 10 and the remaining requested quantity becomes zero.</li></ol>
+<p>Repeating collection is rejected. These buttons exercise workflow rules; they are not an authorization system.</p></section>
+<section><h2>Partial supply and follow-up</h2>
+<ol><li>Create another request for quantity 10.</li><li>Enter offered quantity 6 and choose <strong>Partial offer</strong>. A partial offer must be positive and smaller than the requested quantity.</li>
+<li>Accept, simulate funding, reserve and record collection. The detail view keeps the original request of 10, collection of 6 and remaining need of 4.</li>
+<li>Enter fictional coordinator <code>STF-000001</code> and select <strong>Assign follow-up</strong>. This records responsibility for the remaining need; it does not declare the need resolved.</li></ol>
+<p>The item cannot be substituted silently. A different item requires a new request. Provider replies may be revised before acceptance; after acceptance the offer is fixed. Cancellation, refunds, split collections, terminology lookup and linked follow-up completion are not implemented in this exercise.</p></section>
+<section><h2>Unanswered requests and expiry</h2>
+<p><strong>Clarification</strong> leaves a request pending. A later reply may supply a full or partial offer. <strong>Unavailable</strong> and <strong>No response</strong> record distinct provider outcomes; use <strong>Close unmet</strong> and then assign a follow-up coordinator. <strong>Decline offer</strong> explicitly closes an unaccepted request.</p>
+<p>A collection at or after the reservation deadline is rejected. Select <strong>Expire reservation</strong> after the deadline to record the unmet outcome, then assign follow-up. Expiry is explicit: this in-memory exercise has no background scheduler and does not claim automatic provider cancellation.</p></section>
+<section><h2>Understanding rejected actions</h2>
+<table><thead><tr><th>Message or condition</th><th>What to check</th></tr></thead><tbody>
+<tr><td>Patient not found</td><td>Register the synthetic patient before creating a request.</td></tr>
+<tr><td>Invalid input</td><td>IDs contain the shown prefix and six ASCII digits. Quantities range from 1 to 1,000,000.</td></tr>
+<tr><td>Action unavailable in current state</td><td>Review the current request. Acceptance precedes funding; funding precedes reservation. Closed requests cannot be reopened.</td></tr>
+<tr><td>Collection patient mismatch</td><td>The entered synthetic patient must match the request. ID matching does not prove identity.</td></tr>
+<tr><td>Capacity exceeded</td><td>A session holds at most 32 patients and 32 requests. Existing records remain intact.</td></tr>
+<tr><td>Stale revision in a C23 consumer</td><td>Read the current record and let the user review it before submitting a new command. Do not automatically repeat a changed decision.</td></tr>
+</tbody></table></section>
+<section><h2>Extend the shared service</h2>
+<p>The public contract is <code>umicom/healthcare/synthetic_access.h</code>, owned by <code>Umicom::healthcare_core</code>. The native widget is <code>UmiHealthcareAccessWorkspaceNew</code> in <code>umicom/healthcare/access_gtk4.h</code>, owned by <code>Umicom::healthcare_access_gtk4</code>. Thin applications should consume these targets instead of copying their state transitions.</p>
+<p>Each accepted transition advances a revision. Failed operations leave stored records and caller outputs unchanged. The book is owned by one thread. The GTK root closes its controller before releasing child widgets, and retained controls become inert after that closure.</p>
+<p>Future persistent, authenticated workflows need separate reviewed contracts for storage, provider evidence, consent, access control, retries, event history and recovery. Do not turn this synthetic API into a real patient-data service simply by relaxing its identifier checks.</p></section>
+</body></html>

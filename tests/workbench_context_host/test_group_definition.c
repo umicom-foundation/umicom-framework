@@ -92,6 +92,12 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextHostGroupDefinitionTransferCases, Umi
     umi_workbench_context_host_group_definition_archive_encode, umi_workbench_context_host_group_definition_archive_decode,
     UmiWorkbenchContextHostGroupDefinitionTransferEqual, UmiWorkbenchContextHostGroupDefinitionTransferTails, UmiWorkbenchContextHostGroupDefinitionTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextHostGroupDefinitionConditionalArchiveCases, UmiWorkbenchContextHostGroupDefinition,
+    umi_workbench_context_host_group_definition_archive_encode, umi_workbench_context_host_group_definition_archive_decode_if_unchanged,
+    UmiWorkbenchContextHostGroupDefinitionTransferEqual, UmiWorkbenchContextHostGroupDefinitionTransferTails, UmiWorkbenchContextHostGroupDefinitionTransferMalformed)
+
+
 int main(void)
 {
 
@@ -106,6 +112,7 @@ int main(void)
     assert(umi_workbench_context_host_group_definition_validate(
         &group) == UMI_STATUS_OK);
     if (UmiWorkbenchContextHostGroupDefinitionTransferCases(&group) != 0) return 1;
+    if (UmiWorkbenchContextHostGroupDefinitionConditionalArchiveCases(&group) != 0) return 1;
 
     group.group_id[0] = '\0';
     assert(umi_workbench_context_host_group_definition_validate(

@@ -66,6 +66,9 @@ UmiStatus umi_ecosystem_migration_review_begin(
  * Provide the ecosystem migration review add step operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ecosystem_migration_review_add_step(
     UmiEcosystemMigrationReview *review,
     const char *step_id,
@@ -79,6 +82,9 @@ UmiStatus umi_ecosystem_migration_review_add_step(
  * Provide the ecosystem migration review set accepted operation used by this module and
  * its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ecosystem_migration_review_set_accepted(
     UmiEcosystemMigrationReview *review,
     const char *step_id,
@@ -87,6 +93,9 @@ UmiStatus umi_ecosystem_migration_review_set_accepted(
  * Provide the ecosystem migration review complete step operation used by this module and
  * its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ecosystem_migration_review_complete_step(
     UmiEcosystemMigrationReview *review,
     const char *step_id,

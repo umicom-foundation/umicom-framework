@@ -117,6 +117,32 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkMenuItemTransferCases, UmiWorkben
     umi_workbench_context_link_menu_item_archive_encode, umi_workbench_context_link_menu_item_archive_decode,
     UmiWorkbenchContextLinkMenuItemTransferEqual, UmiWorkbenchContextLinkMenuItemTransferTails, UmiWorkbenchContextLinkMenuItemTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkMenuItemConditionalArchiveCases, UmiWorkbenchContextLinkMenuItem,
+    umi_workbench_context_link_menu_item_archive_encode, umi_workbench_context_link_menu_item_archive_decode_if_unchanged,
+    UmiWorkbenchContextLinkMenuItemTransferEqual, UmiWorkbenchContextLinkMenuItemTransferTails, UmiWorkbenchContextLinkMenuItemTransferMalformed)
+
+
+/* Delayed context edits must preserve newer work and reject exhausted tokens. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextLinkMenuItemReviewedCases, UmiWorkbenchContextLinkMenuItem,
+    item_id, label, umi_workbench_context_link_menu_item_replace_if_current, UmiWorkbenchContextLinkMenuItemTransferEqual)
+static int UmiWorkbenchContextLinkMenuItemMutationGuards(const UmiWorkbenchContextLinkMenuItem *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkMenuItem, command_id, umi_workbench_context_link_menu_item_set_primary, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkMenuItem, label, umi_workbench_context_link_menu_item_set_secondary, sample);
+    UmiWorkbenchContextLinkMenuItem value = *sample;
+    unsigned char before[sizeof(value)];
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_link_menu_item_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U ||
+        value.timestamp_ms != 44U) return 1;
+    memcpy(before, &value, sizeof(value));
+    umi_workbench_context_link_menu_item_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof(value)) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextLinkMenuItem record;
@@ -125,6 +151,9 @@ int main(void)
     umi_workbench_context_link_menu_item_init(&record, "menu_item-id");
     assert(umi_workbench_context_link_menu_item_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkMenuItemTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkMenuItemConditionalArchiveCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkMenuItemReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkMenuItemMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_context_link_menu_item_set_primary(&record, "primary") == UMI_STATUS_OK);
     assert(umi_workbench_context_link_menu_item_set_secondary(&record, "secondary") == UMI_STATUS_OK);

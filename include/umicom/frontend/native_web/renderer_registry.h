@@ -35,6 +35,9 @@ typedef struct UmiNativeWebRendererRegistry { UmiNativeWebRendererDescriptor ite
 /* Initialise an empty renderer registry. */
 void umi_native_web_renderer_registry_init(UmiNativeWebRendererRegistry *registry);
 /* Add one renderer, rejecting duplicate renderer IDs or semantic contracts. */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_native_web_renderer_registry_add(UmiNativeWebRendererRegistry *registry, const UmiNativeWebRendererDescriptor *descriptor);
 /* Resolve a renderer by semantic contract. */
 const UmiNativeWebRendererDescriptor *umi_native_web_renderer_registry_resolve(const UmiNativeWebRendererRegistry *registry, const char *semantic_contract);

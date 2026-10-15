@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/desktop/control/application_catalogue_filter.h"
 #include "../../base/value_archive_internal.h"
 #include "umicom/base/text.h"
@@ -332,3 +333,8 @@ static UmiStatus ArchiveValidate(const UmiDesktopApplicationCatalogueFilterSnaps
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_desktop_application_catalogue_filter_archive_encode, umi_desktop_application_catalogue_filter_archive_decode,
     UmiDesktopApplicationCatalogueFilterSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Guard snapshot import with the complete encoded value reviewed by the
+ * caller. Imported metadata remains evidence; registry publication is separate. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_desktop_application_catalogue_filter_archive_decode_if_unchanged, umi_desktop_application_catalogue_filter_archive_encode,
+    UmiDesktopApplicationCatalogueFilterSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)

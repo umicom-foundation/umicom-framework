@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Desktop context links | Sammy Hegab | Umicom Foundation | MIT */
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 
@@ -44,9 +45,17 @@ int main(void)
     assert(umi_desktop_context_links_define(
         &links, "instrument-teal", "teal", UMI_UI_WINDOW_CONTEXT_ACCOUNT) ==
         UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDesktopContextLinks, &links,
+        (umi_desktop_context_links_define(
+        &links, "instrument-teal", "teal", UMI_UI_WINDOW_CONTEXT_ACCOUNT)));
+
     assert(umi_desktop_context_links_join(
         &links, "instrument-teal", "chart", UMI_UI_WINDOW_GROUP_SOURCE) ==
         UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDesktopContextLinks, &links,
+        (umi_desktop_context_links_join(
+        &links, "instrument-teal", "chart", UMI_UI_WINDOW_GROUP_SOURCE)));
+
     assert(umi_desktop_context_links_join(
         &links, "instrument-teal", "order-ticket",
         UMI_UI_WINDOW_GROUP_DESTINATION) == UMI_STATUS_OK);
@@ -59,6 +68,11 @@ int main(void)
     assert(umi_desktop_context_links_publish(
         &links, "instrument-teal", "org.umicom.trader", "instrument",
         "EUR.USD", "selection-1") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDesktopContextLinks, &links,
+        (umi_desktop_context_links_publish(
+        &links, "instrument-teal", "org.umicom.trader", "instrument",
+        "EUR.USD", "selection-1")));
+
     assert(strcmp(received.subject_id, "EUR.USD") == 0);
     assert(strcmp(received.source_application_id, "org.umicom.trader") == 0);
     umi_application_context_hub_destroy(hub);

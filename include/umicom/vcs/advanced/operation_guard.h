@@ -73,6 +73,16 @@ UmiStatus umi_vcs_advanced_operation_guard_archive_encode(const UmiVcsAdvancedOp
 UmiStatus umi_vcs_advanced_operation_guard_archive_decode(const void *bytes, size_t byte_count,
     UmiVcsAdvancedOperationGuard *value);
 
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the owner's publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_vcs_advanced_operation_guard_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiVcsAdvancedOperationGuard *expected, UmiVcsAdvancedOperationGuard *value);
+
+
 #ifdef __cplusplus
 }
 #endif

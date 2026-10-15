@@ -60,6 +60,9 @@ void umi_web_workbench_request_init(
  * Provide the web workbench request set header operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_web_workbench_request_set_header(
     UmiWebWorkbenchRequest *request,
     const char *name,
@@ -68,6 +71,9 @@ UmiStatus umi_web_workbench_request_set_header(
  * Provide the web workbench request remove header operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_web_workbench_request_remove_header(
     UmiWebWorkbenchRequest *request,
     const char *name);
@@ -82,6 +88,9 @@ const char *umi_web_workbench_request_header(
  * Provide the web workbench request set body operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_web_workbench_request_set_body(
     UmiWebWorkbenchRequest *request,
     UmiWebWorkbenchBodyKind kind,

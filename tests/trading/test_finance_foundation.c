@@ -72,6 +72,12 @@ UMI_TEST_VALUE_TRANSFER(UmiCurrencyTransferCases, UmiCurrency,
     umi_currency_archive_encode, umi_currency_archive_decode,
     UmiCurrencyTransferEqual, UmiCurrencyTransferTails, UmiCurrencyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCurrencyConditionalArchiveCases, UmiCurrency,
+    umi_currency_archive_encode, umi_currency_archive_decode_if_unchanged,
+    UmiCurrencyTransferEqual, UmiCurrencyTransferTails, UmiCurrencyTransferMalformed)
+
+
 #include "umicom/finance/types.h"
 /* Compare the complete domain value rather than using struct padding or
  * re-decoding an expected byte stream. Add new public fields to this check. */
@@ -113,12 +119,20 @@ UMI_TEST_VALUE_TRANSFER(UmiFinancialIdTransferCases, UmiFinancialId,
     umi_financial_id_archive_encode, umi_financial_id_archive_decode,
     UmiFinancialIdTransferEqual, UmiFinancialIdTransferTails, UmiFinancialIdTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFinancialIdConditionalArchiveCases, UmiFinancialId,
+    umi_financial_id_archive_encode, umi_financial_id_archive_decode_if_unchanged,
+    UmiFinancialIdTransferEqual, UmiFinancialIdTransferTails, UmiFinancialIdTransferMalformed)
+
+
 int main(void){
     UmiFinancialId id={0};(void)snprintf(id.value,sizeof(id.value),"%s","A-1");assert(umi_financial_id_valid(&id));
     if (UmiFinancialIdTransferCases(&id) != 0) return 1;
+    if (UmiFinancialIdConditionalArchiveCases(&id) != 0) return 1;
 
     UmiCurrency usd={{'U','S','D','\0'}};assert(umi_currency_valid(&usd));
     if (UmiCurrencyTransferCases(&usd) != 0) return 1;
+    if (UmiCurrencyConditionalArchiveCases(&usd) != 0) return 1;
 
     UmiMoney a={1000,2,{{'U','S','D','\0'}}},b={250,2,{{'U','S','D','\0'}}},out={0};
     assert(umi_money_add(&a,&b,&out)==UMI_STATUS_OK);assert(out.minor_units==1250);

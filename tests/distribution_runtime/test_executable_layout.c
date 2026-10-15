@@ -107,9 +107,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrExecutableLayoutTransferCases, UmiDrExecutableLayou
     umi_dr_executable_layout_archive_encode, umi_dr_executable_layout_archive_decode,
     UmiDrExecutableLayoutTransferEqual, UmiDrExecutableLayoutTransferTails, UmiDrExecutableLayoutTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrExecutableLayoutConditionalArchiveCases, UmiDrExecutableLayout,
+    umi_dr_executable_layout_archive_encode, umi_dr_executable_layout_archive_decode_if_unchanged,
+    UmiDrExecutableLayoutTransferEqual, UmiDrExecutableLayoutTransferTails, UmiDrExecutableLayoutTransferMalformed)
+
+
 int main(void) {
     UmiDrExecutableLayout value; umi_dr_executable_layout_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"exec")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.entrypoint,sizeof(value.entrypoint),"bin/app")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.bin_dir,sizeof(value.bin_dir),"bin")==UMI_STATUS_OK); CHECK(umi_dr_executable_layout_valid(&value));
     if (UmiDrExecutableLayoutTransferCases(&value) != 0) return 1;
+    if (UmiDrExecutableLayoutConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_executable_layout_fingerprint(&value) != 0U);
     return 0;
 }

@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/integration/fabric/api_operation.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -143,10 +144,96 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricApiOperationTransferCases, UmiFabricApiOperatio
     umi_fabric_api_operation_archive_encode, umi_fabric_api_operation_archive_decode,
     UmiFabricApiOperationTransferEqual, UmiFabricApiOperationTransferTails, UmiFabricApiOperationTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricApiOperationConditionalArchiveCases, UmiFabricApiOperation,
+    umi_fabric_api_operation_archive_encode, umi_fabric_api_operation_archive_decode_if_unchanged,
+    UmiFabricApiOperationTransferEqual, UmiFabricApiOperationTransferTails, UmiFabricApiOperationTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted api operation value. */
+static int UmiFabricApiOperationConstructionCases(void)
+{
+    UmiFabricApiOperation *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_fabric_api_operation_init(value, "get.order", "GET", "/orders/{id}", "none", "order", true) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->operation_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_api_operation_init(value, oversized, "GET", "/orders/{id}", "none", "order", true) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_api_operation_init(value, value->operation_id, "GET", "/orders/{id}", "none", "order", true) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->operation_id, "get.order") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->method) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_api_operation_init(value, "get.order", oversized, "/orders/{id}", "none", "order", true) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_api_operation_init(value, "get.order", value->method, "/orders/{id}", "none", "order", true) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->method, "GET") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->path) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_api_operation_init(value, "get.order", "GET", oversized, "none", "order", true) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_api_operation_init(value, "get.order", "GET", value->path, "none", "order", true) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->path, "/orders/{id}") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->request_schema) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_api_operation_init(value, "get.order", "GET", "/orders/{id}", oversized, "order", true) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_api_operation_init(value, "get.order", "GET", "/orders/{id}", value->request_schema, "order", true) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->request_schema, "none") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->response_schema) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_api_operation_init(value, "get.order", "GET", "/orders/{id}", "none", oversized, true) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_api_operation_init(value, "get.order", "GET", "/orders/{id}", "none", value->response_schema, true) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->response_schema, "order") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiFabricApiOperationConstructionCases() != 0) return 1;
+
     UmiFabricApiOperation item;
     CHECK(umi_fabric_api_operation_init(&item,"get.order","GET","/orders/{id}","none","order",true)==UMI_STATUS_OK);
     if (UmiFabricApiOperationTransferCases(&item) != 0) return 1;
+    if (UmiFabricApiOperationConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.idempotent);
     return 0;

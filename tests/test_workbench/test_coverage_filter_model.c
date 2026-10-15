@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiCoverageFilterModelTransferCases, UmiCoverageFilterMo
     umi_coverage_filter_model_archive_encode, umi_coverage_filter_model_archive_decode,
     UmiCoverageFilterModelTransferEqual, UmiCoverageFilterModelTransferTails, UmiCoverageFilterModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCoverageFilterModelConditionalArchiveCases, UmiCoverageFilterModel,
+    umi_coverage_filter_model_archive_encode, umi_coverage_filter_model_archive_decode_if_unchanged,
+    UmiCoverageFilterModelTransferEqual, UmiCoverageFilterModelTransferTails, UmiCoverageFilterModelTransferMalformed)
+
+
 int main(void){UmiCoverageFilterModel m;assert(umi_coverage_filter_model_init(&m,"coverage_filter_model","Coverage Filter Model")==UMI_STATUS_OK);assert(umi_coverage_filter_model_set_active(&m,true)==UMI_STATUS_OK);assert(umi_coverage_filter_model_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_coverage_filter_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_coverage_filter_model_valid(&m));
     if (UmiCoverageFilterModelTransferCases(&m) != 0) return 1;
+    if (UmiCoverageFilterModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

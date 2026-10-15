@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/editor/workbench/editor_layout.h"
 #include "../../base/value_archive_internal.h"
 
@@ -75,3 +76,8 @@ static UmiStatus UmiEditorWbEditorLayoutArchiveValidate(const UmiEditorWbEditorL
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_editor_wb_editor_layout_archive_encode, umi_editor_wb_editor_layout_archive_decode,
     UmiEditorWbEditorLayout, UmiEditorWbEditorLayoutArchiveSchema, UmiEditorWbEditorLayoutArchiveBound, UmiEditorWbEditorLayoutArchiveWrite, UmiEditorWbEditorLayoutArchiveRead, UmiEditorWbEditorLayoutArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_editor_wb_editor_layout_archive_decode_if_unchanged, umi_editor_wb_editor_layout_archive_encode,
+    UmiEditorWbEditorLayout, UmiEditorWbEditorLayoutArchiveSchema, UmiEditorWbEditorLayoutArchiveBound, UmiEditorWbEditorLayoutArchiveRead, UmiEditorWbEditorLayoutArchiveValidate)

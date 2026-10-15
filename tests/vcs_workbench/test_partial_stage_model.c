@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 
 #include "umicom/vcs/workbench/partial_stage_model.h"
@@ -34,13 +35,22 @@ int main(void)
     hunk.deleted_lines = 2U;
     assert(umi_vcs_workbench_partial_stage_model_add(&model, &hunk) ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiVcsWorkbenchPartialStageModel, &model,
+        (umi_vcs_workbench_partial_stage_model_add(&model, &hunk)));
+
     assert(model.ready);
     assert(model.added_lines == 3U);
     assert(umi_vcs_workbench_partial_stage_model_select(&model, 0U, 0) ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiVcsWorkbenchPartialStageModel, &model,
+        (umi_vcs_workbench_partial_stage_model_select(&model, 0U, 0)));
+
     assert(!model.ready);
     assert(umi_vcs_workbench_partial_stage_model_select_all(&model, 1) ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiVcsWorkbenchPartialStageModel, &model,
+        (umi_vcs_workbench_partial_stage_model_select_all(&model, 1)));
+
     assert(model.ready);
     return 0;
 }

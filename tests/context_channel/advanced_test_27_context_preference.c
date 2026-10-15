@@ -130,6 +130,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextPreferenceTransferCases, UmiContextPreference,
     umi_context_preference_archive_encode, umi_context_preference_archive_decode,
     UmiContextPreferenceTransferEqual, UmiContextPreferenceTransferTails, UmiContextPreferenceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextPreferenceConditionalArchiveCases, UmiContextPreference,
+    umi_context_preference_archive_encode, umi_context_preference_archive_decode_if_unchanged,
+    UmiContextPreferenceTransferEqual, UmiContextPreferenceTransferTails, UmiContextPreferenceTransferMalformed)
+
+
 int main(void)
 {
     UmiContextPreference state;
@@ -144,6 +150,7 @@ int main(void)
     assert(umi_context_preference_covers_sequence(&state,11U));
     assert(umi_context_preference_validate(&state) == UMI_STATUS_OK);
     if (UmiContextPreferenceTransferCases(&state) != 0) return 1;
+    if (UmiContextPreferenceConditionalArchiveCases(&state) != 0) return 1;
 
     return 0;
 }

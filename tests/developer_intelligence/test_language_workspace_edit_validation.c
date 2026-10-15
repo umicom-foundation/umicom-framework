@@ -17,6 +17,10 @@
 
 #include "umicom/developer_intelligence/language/workspace_edit_validation.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(UmiDeveloperIntelligenceEvaluateLanguageWorkspaceEditValidationBatchCases, UmiDeveloperIntelligenceEvaluateLanguageWorkspaceEditValidation,
+    UmiDeveloperIntelligenceEvaluateLanguageWorkspaceEditValidationBatch, UmiDeveloperIntelligenceInput, UmiDeveloperIntelligenceSnapshot, lexicalScore)
+
 int main(void)
 {
     UmiDeveloperIntelligenceInput input;
@@ -44,6 +48,7 @@ int main(void)
     input.active = 1;
     input.revision = 42U;
 
+    if (UmiDeveloperIntelligenceEvaluateLanguageWorkspaceEditValidationBatchCases(&input) != 0) return 1;
     assert(UmiDeveloperIntelligenceEvaluateLanguageWorkspaceEditValidation(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "language.workspace-edit-validation") == 0);
     assert(snapshot.revision == 42U);

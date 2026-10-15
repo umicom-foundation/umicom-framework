@@ -19,13 +19,29 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/platform/cross_target/os_service_descriptor.h"
+#include "../../base/value_construction_internal.h"
 
 #include <string.h>
 /*
  * Initialise ct os service descriptor from caller-provided values so later operations
  * receive a known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_ct_os_service_descriptor_init(UmiCtOsServiceDescriptor*s,const char*id,UmiCtOsServiceKind k,bool e){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==NULL||!umi_ct_id_valid(id)||k<UMI_CT_OS_SERVICE_KERNEL||k>UMI_CT_OS_SERVICE_USER)return UMI_STATUS_INVALID_ARGUMENT;memset(s,0,sizeof(*s));/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_ct_copy(s->service_id,sizeof(s->service_id),id)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;s->kind=k;s->essential=e;return UMI_STATUS_OK;}
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_ct_os_service_descriptor_init_build_value(UmiCtOsServiceDescriptor*s,const char*id,UmiCtOsServiceKind k,bool e){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==NULL||!umi_ct_id_valid(id)||k<UMI_CT_OS_SERVICE_KERNEL||k>UMI_CT_OS_SERVICE_USER)return UMI_STATUS_INVALID_ARGUMENT;memset(s,0,sizeof(*s));/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_ct_copy(s->service_id,sizeof(s->service_id),id)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;s->kind=k;s->essential=e;return UMI_STATUS_OK;}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_ct_os_service_descriptor_init, UmiCtOsServiceDescriptor, s,
+    (UmiCtOsServiceDescriptor*s, const char*id, UmiCtOsServiceKind k, bool e),
+    umi_ct_os_service_descriptor_init_build_value(candidate, id, k, e))
+
 /*
  * Provide the ct os service descriptor add dependency operation used by this module and
  * its client applications.

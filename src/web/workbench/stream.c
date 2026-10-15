@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/web/workbench/stream.h"
 
 #include <ctype.h>
@@ -85,10 +86,36 @@ void umi_web_workbench_stream_init(
  * Provide the web workbench stream set phase operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_web_workbench_stream_set_phase(
     UmiWebWorkbenchStreamSession *session,
     UmiWebWorkbenchPhase phase)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (session == NULL || phase > UMI_WEB_WORKBENCH_FAILED) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    session->phase = phase;
+    session->revision++;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_web_workbench_stream_set_phase(
+    UmiWebWorkbenchStreamSession *session,
+    UmiWebWorkbenchPhase phase)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (session != NULL && session->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.

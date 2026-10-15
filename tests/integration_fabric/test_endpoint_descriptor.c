@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/integration/fabric/endpoint_descriptor.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -91,10 +92,60 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricEndpointDescriptorTransferCases, UmiFabricEndpo
     umi_fabric_endpoint_descriptor_archive_encode, umi_fabric_endpoint_descriptor_archive_decode,
     UmiFabricEndpointDescriptorTransferEqual, UmiFabricEndpointDescriptorTransferTails, UmiFabricEndpointDescriptorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricEndpointDescriptorConditionalArchiveCases, UmiFabricEndpointDescriptor,
+    umi_fabric_endpoint_descriptor_archive_encode, umi_fabric_endpoint_descriptor_archive_decode_if_unchanged,
+    UmiFabricEndpointDescriptorTransferEqual, UmiFabricEndpointDescriptorTransferTails, UmiFabricEndpointDescriptorTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted endpoint descriptor value. */
+static int UmiFabricEndpointDescriptorConstructionCases(void)
+{
+    UmiFabricEndpointDescriptor *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_fabric_endpoint_descriptor_init(value, "e1", "https://risk", UMI_FABRIC_PROTOCOL_HTTP, true, 10U) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->endpoint_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_endpoint_descriptor_init(value, oversized, "https://risk", UMI_FABRIC_PROTOCOL_HTTP, true, 10U) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_endpoint_descriptor_init(value, value->endpoint_id, "https://risk", UMI_FABRIC_PROTOCOL_HTTP, true, 10U) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->endpoint_id, "e1") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->uri) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_endpoint_descriptor_init(value, "e1", oversized, UMI_FABRIC_PROTOCOL_HTTP, true, 10U) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_endpoint_descriptor_init(value, "e1", value->uri, UMI_FABRIC_PROTOCOL_HTTP, true, 10U) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->uri, "https://risk") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiFabricEndpointDescriptorConstructionCases() != 0) return 1;
+
     UmiFabricEndpointDescriptor item;
     CHECK(umi_fabric_endpoint_descriptor_init(&item,"e1","https://risk",UMI_FABRIC_PROTOCOL_HTTP,true,10U)==UMI_STATUS_OK);
     if (UmiFabricEndpointDescriptorTransferCases(&item) != 0) return 1;
+    if (UmiFabricEndpointDescriptorConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.secure);
     return 0;

@@ -71,6 +71,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveExpressionEvaluatorTransferCases, UmiUiReac
     umi_ui_reactive_expression_evaluator_archive_encode, umi_ui_reactive_expression_evaluator_archive_decode,
     UmiUiReactiveExpressionEvaluatorTransferEqual, UmiUiReactiveExpressionEvaluatorTransferTails, UmiUiReactiveExpressionEvaluatorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveExpressionEvaluatorConditionalArchiveCases, UmiUiReactiveExpressionEvaluator,
+    umi_ui_reactive_expression_evaluator_archive_encode, umi_ui_reactive_expression_evaluator_archive_decode_if_unchanged,
+    UmiUiReactiveExpressionEvaluatorTransferEqual, UmiUiReactiveExpressionEvaluatorTransferTails, UmiUiReactiveExpressionEvaluatorTransferMalformed)
+
+
 int main(void) { UmiUiReactiveExpressionEvaluator item; umi_ui_reactive_expression_evaluator_init(&item);
     /* Nonzero fields expose swapped or omitted values in a saved record.
      * The original initialized fixture remains available for its own checks. */
@@ -82,4 +88,5 @@ int main(void) { UmiUiReactiveExpressionEvaluator item; umi_ui_reactive_expressi
     populated.instructions_executed = (size_t)7;
     populated.success = true;
     if (UmiUiReactiveExpressionEvaluatorTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveExpressionEvaluatorConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_expression_evaluator_valid(&item) ? 0 : 1; }

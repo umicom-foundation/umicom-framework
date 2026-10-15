@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/language/intelligence/notebook_document.h"
 #include "../../base/value_archive_internal.h"
 #include "umicom/base/text.h"
@@ -253,3 +254,8 @@ static UmiStatus ArchiveValidate(const UmiLanguageIntelligenceNotebookDocument *
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_language_intelligence_notebook_document_archive_encode, umi_language_intelligence_notebook_document_archive_decode,
     UmiLanguageIntelligenceNotebookDocument, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Guard snapshot import with the complete encoded value reviewed by the
+ * caller. Imported metadata remains evidence; registry publication is separate. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_language_intelligence_notebook_document_archive_decode_if_unchanged, umi_language_intelligence_notebook_document_archive_encode,
+    UmiLanguageIntelligenceNotebookDocument, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)

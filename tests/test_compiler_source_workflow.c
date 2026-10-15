@@ -6,6 +6,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/build/parser.h"
+#include "value_archive/construction_cases.h"
 #include "umicom/diagnostics/compiler_parser.h"
 #include "umicom/diagnostic_ui/build_projection.h"
 #include "umicom/diagnostic_ui/navigation.h"
@@ -215,8 +216,63 @@ static int Positions(void)
     return 0;
 }
 
+
+/* A rejected replacement must preserve the previously accepted diagnostic value. */
+static int UmiDiagnosticSnapshotConstructionCases(void)
+{
+    UmiDiagnosticSnapshot *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_diagnostic_snapshot_init(value, "independent", UMI_DIAGNOSTIC_ERROR, UMI_DIAGNOSTIC_KIND_LANGUAGE, "language", "not from build") == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_diagnostic_snapshot_init(value, oversized, UMI_DIAGNOSTIC_ERROR, UMI_DIAGNOSTIC_KIND_LANGUAGE, "language", "not from build") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_diagnostic_snapshot_init(value, value->id, UMI_DIAGNOSTIC_ERROR, UMI_DIAGNOSTIC_KIND_LANGUAGE, "language", "not from build") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->id, "independent") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->source) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_diagnostic_snapshot_init(value, "independent", UMI_DIAGNOSTIC_ERROR, UMI_DIAGNOSTIC_KIND_LANGUAGE, oversized, "not from build") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_diagnostic_snapshot_init(value, "independent", UMI_DIAGNOSTIC_ERROR, UMI_DIAGNOSTIC_KIND_LANGUAGE, value->source, "not from build") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->source, "language") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->message) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_diagnostic_snapshot_init(value, "independent", UMI_DIAGNOSTIC_ERROR, UMI_DIAGNOSTIC_KIND_LANGUAGE, "language", oversized) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_diagnostic_snapshot_init(value, "independent", UMI_DIAGNOSTIC_ERROR, UMI_DIAGNOSTIC_KIND_LANGUAGE, "language", value->message) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->message, "not from build") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(int argc,char **argv)
 {
+    if (UmiDiagnosticSnapshotConstructionCases() != 0) return 1;
+
     CHECK(argc==2);
     if(strcmp(argv[1],"positions")==0) return Positions();
     for(size_t i=0U;i<sizeof cases/sizeof cases[0];++i) if(strcmp(argv[1],cases[i].name)==0) return ParseCase(&cases[i]);

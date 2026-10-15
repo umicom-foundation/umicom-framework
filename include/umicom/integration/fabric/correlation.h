@@ -30,6 +30,8 @@ extern "C" {
  * Provide the fabric correlation set causation operation used by this module and its
  * client applications.
  */
+/** Failed edits preserve the complete value. Input may borrow this field;
+ * callers still serialize access. Existing empty/null input rules apply. */
 UmiStatus umi_fabric_correlation_set_causation(UmiFabricMessageHeader *header,const char *causation_id);
 /**
  * Provide the fabric correlation matches operation used by this module and its client

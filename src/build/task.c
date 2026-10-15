@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/build/task.h"
 /* The former upper bound was UMI_BUILD_PHASE_INSTALL. Package, Rebuild
  * and local Deploy are now declared by include/umicom/build/types.h. */
@@ -140,6 +141,10 @@ void umi_build_task_init(UmiBuildTaskSnapshot *task,
     }
 }
 
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_build_task_set_command(UmiBuildTaskSnapshot *task,
                                      const char *command,
                                      const char *working_directory)
@@ -155,10 +160,69 @@ UmiStatus umi_build_task_set_command(UmiBuildTaskSnapshot *task,
     if (status == UMI_STATUS_OK) task->revision += 1U;
     return status;
 }
+#endif
+
+UmiStatus umi_build_task_set_command(UmiBuildTaskSnapshot *task,
+                                     const char *command,
+                                     const char *working_directory)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (task != NULL && task->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiStatus status;
+    if (task == NULL || command == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = copy_text(task->command, sizeof(task->command), command);
+    if (status == UMI_STATUS_OK && working_directory != NULL) {
+        status = copy_text(task->working_directory,
+                           sizeof(task->working_directory),
+                           working_directory);
+    }
+    if (status == UMI_STATUS_OK) task->revision += 1U;
+    return status;
+}
+
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
+UmiStatus umi_build_task_add_dependency(UmiBuildTaskSnapshot *task,
+                                        const char *dependency_task_id)
+{
+    UmiStatus status;
+    if (task == NULL || dependency_task_id == NULL ||
+        dependency_task_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (strcmp(task->task_id, dependency_task_id) == 0) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (dependency_exists(task, dependency_task_id)) {
+        return UMI_STATUS_ALREADY_EXISTS;
+    }
+    if (task->dependency_count >= UMI_BUILD_TASK_DEPENDENCY_CAPACITY) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    status = copy_text(task->dependencies[task->dependency_count],
+                       sizeof(task->dependencies[task->dependency_count]),
+                       dependency_task_id);
+    if (status == UMI_STATUS_OK) {
+        task->dependency_count += 1U;
+        task->revision += 1U;
+    }
+    return status;
+}
+#endif
 
 UmiStatus umi_build_task_add_dependency(UmiBuildTaskSnapshot *task,
                                         const char *dependency_task_id)
 {
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (task != NULL && task->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiStatus status;
     if (task == NULL || dependency_task_id == NULL ||
         dependency_task_id[0] == '\0') {
@@ -200,6 +264,10 @@ static UmiStatus add_path(char entries[][UMI_BUILD_PATH_CAPACITY],
     return status;
 }
 
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_build_task_add_input(UmiBuildTaskSnapshot *task,
                                    const char *input_pattern)
 {
@@ -210,7 +278,28 @@ UmiStatus umi_build_task_add_input(UmiBuildTaskSnapshot *task,
     if (status == UMI_STATUS_OK) task->revision += 1U;
     return status;
 }
+#endif
 
+UmiStatus umi_build_task_add_input(UmiBuildTaskSnapshot *task,
+                                   const char *input_pattern)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (task != NULL && task->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiStatus status;
+    if (task == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = add_path(task->inputs, &task->input_count,
+                      UMI_BUILD_TASK_INPUT_CAPACITY, input_pattern);
+    if (status == UMI_STATUS_OK) task->revision += 1U;
+    return status;
+}
+
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_build_task_add_output(UmiBuildTaskSnapshot *task,
                                     const char *output_pattern)
 {
@@ -221,10 +310,64 @@ UmiStatus umi_build_task_add_output(UmiBuildTaskSnapshot *task,
     if (status == UMI_STATUS_OK) task->revision += 1U;
     return status;
 }
+#endif
+
+UmiStatus umi_build_task_add_output(UmiBuildTaskSnapshot *task,
+                                    const char *output_pattern)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (task != NULL && task->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiStatus status;
+    if (task == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = add_path(task->outputs, &task->output_count,
+                      UMI_BUILD_TASK_OUTPUT_CAPACITY, output_pattern);
+    if (status == UMI_STATUS_OK) task->revision += 1U;
+    return status;
+}
+
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
+UmiStatus umi_build_task_add_environment(UmiBuildTaskSnapshot *task,
+                                         const char *name_value_pair)
+{
+    size_t index;
+    UmiStatus status;
+    if (task == NULL || name_value_pair == NULL ||
+        strchr(name_value_pair, '=') == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    for (index = 0U; index < task->environment_count; ++index) {
+        if (strcmp(task->environment[index], name_value_pair) == 0) {
+            return UMI_STATUS_ALREADY_EXISTS;
+        }
+    }
+    if (task->environment_count >= UMI_BUILD_TASK_ENVIRONMENT_CAPACITY) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    status = copy_text(task->environment[task->environment_count],
+                       sizeof(task->environment[task->environment_count]),
+                       name_value_pair);
+    if (status == UMI_STATUS_OK) {
+        task->environment_count += 1U;
+        task->revision += 1U;
+    }
+    return status;
+}
+#endif
 
 UmiStatus umi_build_task_add_environment(UmiBuildTaskSnapshot *task,
                                          const char *name_value_pair)
 {
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (task != NULL && task->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     UmiStatus status;
     if (task == NULL || name_value_pair == NULL ||

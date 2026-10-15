@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 
@@ -37,6 +38,10 @@ int main(void)
     event.context_kind = UMI_CONTEXT_KIND_PROJECT;
     assert(umi_workbench_context_event_add_metadata(
         &event, "language-id", "c") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchContextEvent, &event,
+        (umi_workbench_context_event_add_metadata(
+        &event, "language-id", "c")));
+
     assert(umi_workbench_context_event_validate(
         &event) == UMI_STATUS_OK);
     assert(umi_workbench_context_event_refresh_hash(&event) != 0U);

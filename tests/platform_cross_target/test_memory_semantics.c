@@ -64,6 +64,13 @@ UMI_TEST_VALUE_TRANSFER(UmiCtMemorySemanticsTransferCases, UmiCtMemorySemantics,
     umi_ct_memory_semantics_archive_encode, umi_ct_memory_semantics_archive_decode,
     UmiCtMemorySemanticsTransferEqual, UmiCtMemorySemanticsTransferTails, UmiCtMemorySemanticsTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtMemorySemanticsConditionalArchiveCases, UmiCtMemorySemantics,
+    umi_ct_memory_semantics_archive_encode, umi_ct_memory_semantics_archive_decode_if_unchanged,
+    UmiCtMemorySemanticsTransferEqual, UmiCtMemorySemanticsTransferTails, UmiCtMemorySemanticsTransferMalformed)
+
+
 int main(void){UmiCtMemorySemantics s={4096U,4096U,true,true,true,false};CHECK(umi_ct_memory_semantics_validate(&s)==UMI_STATUS_OK);
     if (UmiCtMemorySemanticsTransferCases(&s) != 0) return 1;
+    if (UmiCtMemorySemanticsConditionalArchiveCases(&s) != 0) return 1;
 CHECK(umi_ct_memory_round_up(&s,4097U)==8192U);return 0;}

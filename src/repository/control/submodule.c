@@ -16,7 +16,9 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/repository/submodule.h"
+#include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 
 #include <string.h>
@@ -49,6 +51,11 @@ static UmiStatus copy_field(
  * Initialise repository submodule from caller-provided values so later operations receive
  * a known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_repository_submodule_init(
     UmiRepositorySubmodule *submodule,
     const char *name,
@@ -89,6 +96,55 @@ UmiStatus umi_repository_submodule_init(
     submodule->required = required != 0;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_repository_submodule_init_build_value(
+    UmiRepositorySubmodule *submodule,
+    const char *name,
+    const char *path,
+    const char *url,
+    const char *branch,
+    int required)
+{
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (submodule == NULL || name == NULL || path == NULL || url == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    (void)memset(submodule, 0, sizeof(*submodule));
+    status = copy_field(submodule->name, sizeof(submodule->name), name, 0);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_repository_control_path_normalize(
+        path, submodule->path, sizeof(submodule->path));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = copy_field(submodule->url, sizeof(submodule->url), url, 1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (branch != NULL && branch[0] != '\0') {
+        status = umi_repository_ref_copy(
+            branch, submodule->branch, sizeof(submodule->branch));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+    }
+    submodule->required = required != 0;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_repository_submodule_init, UmiRepositorySubmodule, submodule,
+    (UmiRepositorySubmodule *submodule, const char *name, const char *path, const char *url, const char *branch, int required),
+    umi_repository_submodule_init_build_value(candidate, name, path, url, branch, required))
+
 
 /*
  * Check that repository submodule satisfies its contract before another service relies on
@@ -167,3 +223,8 @@ static UmiStatus UmiRepositorySubmoduleArchiveValidate(const UmiRepositorySubmod
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_repository_submodule_archive_encode, umi_repository_submodule_archive_decode,
     UmiRepositorySubmodule, UmiRepositorySubmoduleArchiveSchema, UmiRepositorySubmoduleArchiveBound, UmiRepositorySubmoduleArchiveWrite, UmiRepositorySubmoduleArchiveRead, UmiRepositorySubmoduleArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_repository_submodule_archive_decode_if_unchanged, umi_repository_submodule_archive_encode,
+    UmiRepositorySubmodule, UmiRepositorySubmoduleArchiveSchema, UmiRepositorySubmoduleArchiveBound, UmiRepositorySubmoduleArchiveRead, UmiRepositorySubmoduleArchiveValidate)

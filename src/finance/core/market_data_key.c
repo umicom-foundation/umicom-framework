@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/core/market_data_key.h"
 #include "../../base/value_archive_internal.h"
 
@@ -73,3 +74,9 @@ static UmiStatus UmiMarketDataKeyArchiveValidate(const UmiMarketDataKey *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_market_data_key_archive_encode, umi_market_data_key_archive_decode,
     UmiMarketDataKey, UmiMarketDataKeyArchiveSchema, UmiMarketDataKeyArchiveBound, UmiMarketDataKeyArchiveWrite, UmiMarketDataKeyArchiveRead, UmiMarketDataKeyArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_market_data_key_archive_decode_if_unchanged, umi_market_data_key_archive_encode,
+    UmiMarketDataKey, UmiMarketDataKeyArchiveSchema, UmiMarketDataKeyArchiveBound, UmiMarketDataKeyArchiveRead, UmiMarketDataKeyArchiveValidate)

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/treasury/settlement_netting.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -99,3 +100,9 @@ static UmiStatus UmiTreasurySettlementNettingArchiveValidate(const UmiTreasurySe
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_treasury_settlement_netting_archive_encode, umi_treasury_settlement_netting_archive_decode,
     UmiTreasurySettlementNetting, UmiTreasurySettlementNettingArchiveSchema, UmiTreasurySettlementNettingArchiveBound, UmiTreasurySettlementNettingArchiveWrite, UmiTreasurySettlementNettingArchiveRead, UmiTreasurySettlementNettingArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_treasury_settlement_netting_archive_decode_if_unchanged, umi_treasury_settlement_netting_archive_encode,
+    UmiTreasurySettlementNetting, UmiTreasurySettlementNettingArchiveSchema, UmiTreasurySettlementNettingArchiveBound, UmiTreasurySettlementNettingArchiveRead, UmiTreasurySettlementNettingArchiveValidate)

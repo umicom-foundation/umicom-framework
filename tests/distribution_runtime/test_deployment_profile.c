@@ -91,9 +91,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrDeploymentProfileTransferCases, UmiDrDeploymentProf
     umi_dr_deployment_profile_archive_encode, umi_dr_deployment_profile_archive_decode,
     UmiDrDeploymentProfileTransferEqual, UmiDrDeploymentProfileTransferTails, UmiDrDeploymentProfileTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrDeploymentProfileConditionalArchiveCases, UmiDrDeploymentProfile,
+    umi_dr_deployment_profile_archive_encode, umi_dr_deployment_profile_archive_decode_if_unchanged,
+    UmiDrDeploymentProfileTransferEqual, UmiDrDeploymentProfileTransferTails, UmiDrDeploymentProfileTransferMalformed)
+
+
 int main(void) {
     UmiDrDeploymentProfile value; umi_dr_deployment_profile_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"desktop")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.target,sizeof(value.target),"local")==UMI_STATUS_OK); value.scope=UMI_DR_SCOPE_USER; value.channel=UMI_DR_CHANNEL_STABLE; value.rollout_percent=100U; CHECK(umi_dr_deployment_profile_valid(&value));
     if (UmiDrDeploymentProfileTransferCases(&value) != 0) return 1;
+    if (UmiDrDeploymentProfileConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_deployment_profile_fingerprint(&value) != 0U);
     return 0;
 }

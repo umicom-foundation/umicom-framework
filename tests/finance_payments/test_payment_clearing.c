@@ -69,6 +69,12 @@ UMI_TEST_VALUE_TRANSFER(UmiPaymentsPaymentClearingTransferCases, UmiPaymentsPaym
     umi_payments_payment_clearing_archive_encode, umi_payments_payment_clearing_archive_decode,
     UmiPaymentsPaymentClearingTransferEqual, UmiPaymentsPaymentClearingTransferTails, UmiPaymentsPaymentClearingTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiPaymentsPaymentClearingConditionalArchiveCases, UmiPaymentsPaymentClearing,
+    umi_payments_payment_clearing_archive_encode, umi_payments_payment_clearing_archive_decode_if_unchanged,
+    UmiPaymentsPaymentClearingTransferEqual, UmiPaymentsPaymentClearingTransferTails, UmiPaymentsPaymentClearingTransferMalformed)
+
+
 int main(void) {
     UmiPaymentsPaymentClearing v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -76,6 +82,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if(!umi_payments_payment_clearing_valid(&v)) return 2;
     if (UmiPaymentsPaymentClearingTransferCases(&v) != 0) return 1;
+    if (UmiPaymentsPaymentClearingConditionalArchiveCases(&v) != 0) return 1;
 
     return 0;
 }

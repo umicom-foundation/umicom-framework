@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/financial_platform/ledger_batch.h"
@@ -33,9 +34,18 @@ int main(void)
     (void)strcpy(credit.accountId, "receivable");
 
     assert(umi_financial_ledger_batch_add(&batch, &debit) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFinancialLedgerBatch, &batch,
+        (umi_financial_ledger_batch_add(&batch, &debit)));
+
     assert(umi_financial_ledger_batch_add(&batch, &credit) == UMI_STATUS_OK);
     assert(umi_financial_ledger_batch_validate(&batch, 0.000001) == UMI_STATUS_OK);
     assert(umi_financial_ledger_batch_mark_approved(&batch) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFinancialLedgerBatch, &batch,
+        (umi_financial_ledger_batch_mark_approved(&batch)));
+
     assert(umi_financial_ledger_batch_mark_posted(&batch) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFinancialLedgerBatch, &batch,
+        (umi_financial_ledger_batch_mark_posted(&batch)));
+
     return 0;
 }

@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include "umicom/repository/controller.h"
 
@@ -28,7 +29,13 @@ int main(void)
     UmiRepositoryController c;
     umi_repository_controller_init(&c);
     assert(umi_repository_controller_begin(&c,1)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiRepositoryController, &c,
+        (umi_repository_controller_begin(&c,1)));
+
     assert(umi_repository_controller_mark_planned(&c)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiRepositoryController, &c,
+        (umi_repository_controller_mark_planned(&c)));
+
     assert(!umi_repository_controller_can_stage(&c));
     assert(umi_repository_controller_mark_staging(&c)==UMI_STATUS_INVALID_STATE);
     return 0;

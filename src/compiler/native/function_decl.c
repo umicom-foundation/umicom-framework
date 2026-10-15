@@ -13,12 +13,28 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/function_decl.h"
+#include "../../base/value_construction_internal.h"
 #include <string.h>
 /*
  * Initialise nc function decl from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_nc_function_decl_init(UmiNativeFunctionDecl *d,const char *name,uint32_t ret){ /* Protect caller-owned memory by checking that required state is available before it is used. */ if(d==NULL||name==NULL||name[0]=='\0'||ret==0U)return UMI_STATUS_INVALID_ARGUMENT;memset(d,0,sizeof(*d));/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_copy_text(d->name,sizeof(d->name),name)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;d->return_type_id=ret;return UMI_STATUS_OK; }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_nc_function_decl_init_build_value(UmiNativeFunctionDecl *d,const char *name,uint32_t ret){ /* Protect caller-owned memory by checking that required state is available before it is used. */ if(d==NULL||name==NULL||name[0]=='\0'||ret==0U)return UMI_STATUS_INVALID_ARGUMENT;memset(d,0,sizeof(*d));/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_copy_text(d->name,sizeof(d->name),name)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;d->return_type_id=ret;return UMI_STATUS_OK; }
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_nc_function_decl_init, UmiNativeFunctionDecl, d,
+    (UmiNativeFunctionDecl *d, const char *name, uint32_t ret),
+    umi_nc_function_decl_init_build_value(candidate, name, ret))
+
 /*
  * Provide the nc function decl add parameter operation used by this module and its client
  * applications.

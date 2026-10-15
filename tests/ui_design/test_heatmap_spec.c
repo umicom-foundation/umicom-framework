@@ -58,6 +58,13 @@ UMI_TEST_VALUE_TRANSFER(UmiDesignHeatmapSpecTransferCases, UmiDesignHeatmapSpec,
     umi_design_heatmap_spec_archive_encode, umi_design_heatmap_spec_archive_decode,
     UmiDesignHeatmapSpecTransferEqual, UmiDesignHeatmapSpecTransferTails, UmiDesignHeatmapSpecTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignHeatmapSpecConditionalArchiveCases, UmiDesignHeatmapSpec,
+    umi_design_heatmap_spec_archive_encode, umi_design_heatmap_spec_archive_decode_if_unchanged,
+    UmiDesignHeatmapSpecTransferEqual, UmiDesignHeatmapSpecTransferTails, UmiDesignHeatmapSpecTransferMalformed)
+
+
 int main(void){UmiDesignHeatmapSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_heatmap_spec_init(&s,10U,12U,-1.0,1.0,1)!=UMI_STATUS_OK)return 1;
     if (UmiDesignHeatmapSpecTransferCases(&s) != 0) return 1;
+    if (UmiDesignHeatmapSpecConditionalArchiveCases(&s) != 0) return 1;
 return s.columns==12U?0:2;}

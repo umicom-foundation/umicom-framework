@@ -117,6 +117,32 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkKeyboardNavigationTransferCases, 
     umi_workbench_context_link_keyboard_navigation_archive_encode, umi_workbench_context_link_keyboard_navigation_archive_decode,
     UmiWorkbenchContextLinkKeyboardNavigationTransferEqual, UmiWorkbenchContextLinkKeyboardNavigationTransferTails, UmiWorkbenchContextLinkKeyboardNavigationTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkKeyboardNavigationConditionalArchiveCases, UmiWorkbenchContextLinkKeyboardNavigation,
+    umi_workbench_context_link_keyboard_navigation_archive_encode, umi_workbench_context_link_keyboard_navigation_archive_decode_if_unchanged,
+    UmiWorkbenchContextLinkKeyboardNavigationTransferEqual, UmiWorkbenchContextLinkKeyboardNavigationTransferTails, UmiWorkbenchContextLinkKeyboardNavigationTransferMalformed)
+
+
+/* Delayed context edits must preserve newer work and reject exhausted tokens. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextLinkKeyboardNavigationReviewedCases, UmiWorkbenchContextLinkKeyboardNavigation,
+    navigation_id, group_id, umi_workbench_context_link_keyboard_navigation_replace_if_current, UmiWorkbenchContextLinkKeyboardNavigationTransferEqual)
+static int UmiWorkbenchContextLinkKeyboardNavigationMutationGuards(const UmiWorkbenchContextLinkKeyboardNavigation *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkKeyboardNavigation, panel_id, umi_workbench_context_link_keyboard_navigation_set_primary, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkKeyboardNavigation, group_id, umi_workbench_context_link_keyboard_navigation_set_secondary, sample);
+    UmiWorkbenchContextLinkKeyboardNavigation value = *sample;
+    unsigned char before[sizeof(value)];
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_link_keyboard_navigation_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U ||
+        value.timestamp_ms != 44U) return 1;
+    memcpy(before, &value, sizeof(value));
+    umi_workbench_context_link_keyboard_navigation_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof(value)) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextLinkKeyboardNavigation record;
@@ -125,6 +151,9 @@ int main(void)
     umi_workbench_context_link_keyboard_navigation_init(&record, "keyboard_navigation-id");
     assert(umi_workbench_context_link_keyboard_navigation_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkKeyboardNavigationTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkKeyboardNavigationConditionalArchiveCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkKeyboardNavigationReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkKeyboardNavigationMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_context_link_keyboard_navigation_set_primary(&record, "primary") == UMI_STATUS_OK);
     assert(umi_workbench_context_link_keyboard_navigation_set_secondary(&record, "secondary") == UMI_STATUS_OK);

@@ -68,6 +68,13 @@ UMI_TEST_VALUE_TRANSFER(UmiAnalyticsReferenceLineTransferCases, UmiAnalyticsRefe
     umi_analytics_reference_line_archive_encode, umi_analytics_reference_line_archive_decode,
     UmiAnalyticsReferenceLineTransferEqual, UmiAnalyticsReferenceLineTransferTails, UmiAnalyticsReferenceLineTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAnalyticsReferenceLineConditionalArchiveCases, UmiAnalyticsReferenceLine,
+    umi_analytics_reference_line_archive_encode, umi_analytics_reference_line_archive_decode_if_unchanged,
+    UmiAnalyticsReferenceLineTransferEqual, UmiAnalyticsReferenceLineTransferTails, UmiAnalyticsReferenceLineTransferMalformed)
+
+
 int main(void){UmiAnalyticsReferenceLine item;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_analytics_reference_line_init(&item)!=UMI_STATUS_OK)return 1;
     if (UmiAnalyticsReferenceLineTransferCases(&item) != 0) return 1;
+    if (UmiAnalyticsReferenceLineConditionalArchiveCases(&item) != 0) return 1;
 return (umi_analytics_reference_line_valid(&item))?0:2;}

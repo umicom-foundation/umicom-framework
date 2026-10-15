@@ -24,7 +24,12 @@
  */
 int main(void) {
   size_t index;
+  /* Healthcare adds one product and its three audience layouts. The previous
+   * fixed expectation is retained to document the catalogue expansion. */
+#if 0
   assert(umi_application_experience_profile_catalogue_count() == 78U);
+#endif
+  assert(umi_application_experience_profile_catalogue_count() == 81U);
   assert(umi_application_experience_profile_catalogue_validate() == UMI_STATUS_OK);
   /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < umi_application_portfolio_count(); ++index) {

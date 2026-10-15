@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../base/conditional_archive_internal.h"
 #include "umicom/broker_connectivity/types.h"
 #include "../base/value_archive_internal.h"
 
@@ -116,3 +117,9 @@ static UmiStatus UmiBrokerConnectivitySnapshotArchiveValidate(const UmiBrokerCon
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_broker_connectivity_snapshot_archive_encode, umi_broker_connectivity_snapshot_archive_decode,
     UmiBrokerConnectivitySnapshot, UmiBrokerConnectivitySnapshotArchiveSchema, UmiBrokerConnectivitySnapshotArchiveBound, UmiBrokerConnectivitySnapshotArchiveWrite, UmiBrokerConnectivitySnapshotArchiveRead, UmiBrokerConnectivitySnapshotArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_broker_connectivity_snapshot_archive_decode_if_unchanged, umi_broker_connectivity_snapshot_archive_encode,
+    UmiBrokerConnectivitySnapshot, UmiBrokerConnectivitySnapshotArchiveSchema, UmiBrokerConnectivitySnapshotArchiveBound, UmiBrokerConnectivitySnapshotArchiveRead, UmiBrokerConnectivitySnapshotArchiveValidate)

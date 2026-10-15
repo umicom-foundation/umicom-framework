@@ -57,6 +57,13 @@ UMI_TEST_VALUE_TRANSFER(UmiDesignMenuSpecTransferCases, UmiDesignMenuSpec,
     umi_design_menu_spec_archive_encode, umi_design_menu_spec_archive_decode,
     UmiDesignMenuSpecTransferEqual, UmiDesignMenuSpecTransferTails, UmiDesignMenuSpecTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignMenuSpecConditionalArchiveCases, UmiDesignMenuSpec,
+    umi_design_menu_spec_archive_encode, umi_design_menu_spec_archive_decode_if_unchanged,
+    UmiDesignMenuSpecTransferEqual, UmiDesignMenuSpecTransferTails, UmiDesignMenuSpecTransferMalformed)
+
+
 int main(void){UmiDesignMenuSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_menu_spec_init(&s,12U,1,1,1)!=UMI_STATUS_OK)return 1;
     if (UmiDesignMenuSpecTransferCases(&s) != 0) return 1;
+    if (UmiDesignMenuSpecConditionalArchiveCases(&s) != 0) return 1;
 return s.accelerators?0:2;}

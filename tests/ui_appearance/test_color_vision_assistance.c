@@ -69,6 +69,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceColorVisionAssistanceTransferCases, UmiAppe
     umi_appearance_color_vision_assistance_archive_encode, umi_appearance_color_vision_assistance_archive_decode,
     UmiAppearanceColorVisionAssistanceTransferEqual, UmiAppearanceColorVisionAssistanceTransferTails, UmiAppearanceColorVisionAssistanceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceColorVisionAssistanceConditionalArchiveCases, UmiAppearanceColorVisionAssistance,
+    umi_appearance_color_vision_assistance_archive_encode, umi_appearance_color_vision_assistance_archive_decode_if_unchanged,
+    UmiAppearanceColorVisionAssistanceTransferEqual, UmiAppearanceColorVisionAssistanceTransferTails, UmiAppearanceColorVisionAssistanceTransferMalformed)
+
+
 int main(void) {
     UmiAppearanceColorVisionAssistance item;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -76,6 +82,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_color_vision_assistance_is_valid(&item)) return 2;
     if (UmiAppearanceColorVisionAssistanceTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceColorVisionAssistanceConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;
 }

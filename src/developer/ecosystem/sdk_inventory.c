@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/developer/ecosystem/sdk_inventory.h"
 
 #include <string.h>
@@ -172,10 +173,64 @@ void umi_ecosystem_sdk_inventory_recalculate(
  * Provide the ecosystem sdk inventory upsert operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ecosystem_sdk_inventory_upsert(
     UmiEcosystemSdkInventory *inventory,
     const UmiEcosystemSdkEntry *entry)
 {
+    UmiEcosystemSdkEntry *existing;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (inventory == NULL || entry == NULL || entry->sdk_id[0] == '\0' ||
+        entry->display_name[0] == '\0' || entry->version[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (entry->installed && entry->install_root[0] == '\0') {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    existing = umi_ecosystem_sdk_inventory_find(inventory, entry->sdk_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (existing != NULL) {
+        bool was_default = existing->default_sdk;
+        *existing = *entry;
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (was_default && existing->installed &&
+            existing->compatibility == UMI_ECOSYSTEM_COMPATIBLE &&
+            existing->evidence != UMI_ECOSYSTEM_EVIDENCE_REJECTED) {
+            existing->default_sdk = true;
+        }
+        existing->revision++;
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (inventory->entry_count >= UMI_ECOSYSTEM_MAX_SDKS) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        inventory->entries[inventory->entry_count++] = *entry;
+    }
+    inventory->revision++;
+    umi_ecosystem_sdk_inventory_recalculate(inventory);
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_ecosystem_sdk_inventory_upsert(
+    UmiEcosystemSdkInventory *inventory,
+    const UmiEcosystemSdkEntry *entry)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (inventory != NULL && inventory->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiEcosystemSdkEntry *existing;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -220,10 +275,52 @@ UmiStatus umi_ecosystem_sdk_inventory_upsert(
  * Provide the ecosystem sdk inventory set default operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ecosystem_sdk_inventory_set_default(
     UmiEcosystemSdkInventory *inventory,
     const char *sdk_id)
 {
+    UmiEcosystemSdkEntry *selected;
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (inventory == NULL || sdk_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    selected = umi_ecosystem_sdk_inventory_find(inventory, sdk_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (selected == NULL) return UMI_STATUS_NOT_FOUND;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (!selected->installed ||
+        selected->compatibility != UMI_ECOSYSTEM_COMPATIBLE ||
+        selected->evidence == UMI_ECOSYSTEM_EVIDENCE_REJECTED) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < inventory->entry_count; ++index) {
+        inventory->entries[index].default_sdk =
+            strcmp(inventory->entries[index].sdk_id, sdk_id) == 0;
+    }
+    inventory->revision++;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_ecosystem_sdk_inventory_set_default(
+    UmiEcosystemSdkInventory *inventory,
+    const char *sdk_id)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (inventory != NULL && inventory->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiEcosystemSdkEntry *selected;
     size_t index;
     /*

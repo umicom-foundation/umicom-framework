@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiTestFailureDetailTransferCases, UmiTestFailureDetail,
     umi_test_failure_detail_archive_encode, umi_test_failure_detail_archive_decode,
     UmiTestFailureDetailTransferEqual, UmiTestFailureDetailTransferTails, UmiTestFailureDetailTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestFailureDetailConditionalArchiveCases, UmiTestFailureDetail,
+    umi_test_failure_detail_archive_encode, umi_test_failure_detail_archive_decode_if_unchanged,
+    UmiTestFailureDetailTransferEqual, UmiTestFailureDetailTransferTails, UmiTestFailureDetailTransferMalformed)
+
+
 int main(void){UmiTestFailureDetail m;assert(umi_test_failure_detail_init(&m,"test_failure_detail","Test Failure Detail")==UMI_STATUS_OK);assert(umi_test_failure_detail_set_active(&m,true)==UMI_STATUS_OK);assert(umi_test_failure_detail_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_test_failure_detail_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_failure_detail_valid(&m));
     if (UmiTestFailureDetailTransferCases(&m) != 0) return 1;
+    if (UmiTestFailureDetailConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

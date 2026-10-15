@@ -67,6 +67,12 @@ UMI_TEST_VALUE_TRANSFER(UmiBankingInterestRateTransferCases, UmiBankingInterestR
     umi_banking_interest_rate_archive_encode, umi_banking_interest_rate_archive_decode,
     UmiBankingInterestRateTransferEqual, UmiBankingInterestRateTransferTails, UmiBankingInterestRateTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiBankingInterestRateConditionalArchiveCases, UmiBankingInterestRate,
+    umi_banking_interest_rate_archive_encode, umi_banking_interest_rate_archive_decode_if_unchanged,
+    UmiBankingInterestRateTransferEqual, UmiBankingInterestRateTransferTails, UmiBankingInterestRateTransferMalformed)
+
+
 int main(void) {
     UmiBankingInterestRate v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -74,6 +80,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if(!umi_banking_interest_rate_valid(&v)) return 2;
     if (UmiBankingInterestRateTransferCases(&v) != 0) return 1;
+    if (UmiBankingInterestRateConditionalArchiveCases(&v) != 0) return 1;
 
     return 0;
 }

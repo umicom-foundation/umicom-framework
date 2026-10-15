@@ -13,9 +13,14 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
+#include <float.h>
 #include <string.h>
 
 #include "umicom/financial_platform/account/balance_consistency.h"
+
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(umi_financial_platform_evaluate_account_balance_consistency_batch_cases, umi_financial_platform_evaluate_account_balance_consistency,
+    umi_financial_platform_evaluate_account_balance_consistency_batch, UmiFinancialPlatformInput, UmiFinancialPlatformSnapshot, value)
 
 int main(void)
 {
@@ -73,11 +78,22 @@ int main(void)
     input.rollbackAvailable = 1;
     input.revision = 101U;
 
+    if (umi_financial_platform_evaluate_account_balance_consistency_batch_cases(&input) != 0) return 1;
     assert(umi_financial_platform_evaluate_account_balance_consistency(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "account.balance-consistency") == 0);
     assert(snapshot.revision == 101U);
     assert(snapshot.score >= 0.0 && snapshot.score <= 100.0);
     assert(snapshot.blocked == 0);
     assert(snapshot.ready == 1);
+    /* Finite source values can overflow when subtracted. Keep the accepted
+     * result instead of publishing an infinite difference. */
+    unsigned char accepted[sizeof(snapshot)];
+    memcpy(accepted, &snapshot, sizeof(snapshot));
+    input.debitTotal = DBL_MAX;
+    input.creditTotal = -DBL_MAX;
+    if (umi_financial_platform_evaluate_account_balance_consistency(&input, &snapshot)
+            != UMI_STATUS_INVALID_STATE ||
+        memcmp(accepted, &snapshot, sizeof(snapshot)) != 0)
+        return 1;
     return 0;
 }

@@ -123,15 +123,30 @@ void umi_build_task_init(UmiBuildTaskSnapshot *task,
                          const char *task_id,
                          const char *label,
                          UmiBuildTaskKind kind);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_build_task_set_command(UmiBuildTaskSnapshot *task,
                                      const char *command,
                                      const char *working_directory);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_build_task_add_dependency(UmiBuildTaskSnapshot *task,
                                         const char *dependency_task_id);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_build_task_add_input(UmiBuildTaskSnapshot *task,
                                    const char *input_pattern);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_build_task_add_output(UmiBuildTaskSnapshot *task,
                                     const char *output_pattern);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_build_task_add_environment(UmiBuildTaskSnapshot *task,
                                          const char *name_value_pair);
 UmiStatus umi_build_task_validate(const UmiBuildTaskSnapshot *task,

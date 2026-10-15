@@ -36,6 +36,9 @@ void umi_desktop_monitor_topology_init(UmiDesktopMonitorTopology *topology);
  * Add desktop monitor topology only after its inputs and available capacity have been
  * checked.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_desktop_monitor_topology_add(
     UmiDesktopMonitorTopology *topology,
     const UmiDesktopMonitor *monitor);
@@ -50,6 +53,9 @@ UmiStatus umi_desktop_monitor_topology_update(
  * Remove desktop monitor topology while keeping the remaining records in a valid and
  * discoverable state.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_desktop_monitor_topology_remove(
     UmiDesktopMonitorTopology *topology,
     const char *monitor_id);
@@ -57,6 +63,9 @@ UmiStatus umi_desktop_monitor_topology_remove(
  * Provide the desktop monitor topology set primary operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_desktop_monitor_topology_set_primary(
     UmiDesktopMonitorTopology *topology,
     const char *monitor_id);

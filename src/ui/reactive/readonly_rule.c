@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/reactive/readonly_rule.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -74,3 +75,8 @@ static UmiStatus UmiUiReactiveReadonlyRuleArchiveValidate(const UmiUiReactiveRea
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ui_reactive_readonly_rule_archive_encode, umi_ui_reactive_readonly_rule_archive_decode,
     UmiUiReactiveReadonlyRule, UmiUiReactiveReadonlyRuleArchiveSchema, UmiUiReactiveReadonlyRuleArchiveBound, UmiUiReactiveReadonlyRuleArchiveWrite, UmiUiReactiveReadonlyRuleArchiveRead, UmiUiReactiveReadonlyRuleArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_reactive_readonly_rule_archive_decode_if_unchanged, umi_ui_reactive_readonly_rule_archive_encode,
+    UmiUiReactiveReadonlyRule, UmiUiReactiveReadonlyRuleArchiveSchema, UmiUiReactiveReadonlyRuleArchiveBound, UmiUiReactiveReadonlyRuleArchiveRead, UmiUiReactiveReadonlyRuleArchiveValidate)

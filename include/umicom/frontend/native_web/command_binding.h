@@ -32,6 +32,10 @@ extern "C" {
  */
 typedef struct UmiNativeWebCommandBinding { char element_id[UMI_NATIVE_WEB_ID_CAPACITY]; char command_id[UMI_NATIVE_WEB_ID_CAPACITY]; bool enabled; } UmiNativeWebCommandBinding;
 /* Initialise validated command binding state. */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_native_web_command_binding_init(UmiNativeWebCommandBinding *binding, const char *element_id, const char *command_id, bool enabled);
 
 #ifdef __cplusplus

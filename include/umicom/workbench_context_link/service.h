@@ -95,6 +95,9 @@ void umi_workbench_context_link_service_destroy(
  * Provide the workbench context link service define group operation used by this module
  * and its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_context_link_service_define_group(
     UmiWorkbenchContextLinkService *service,
     const char *group_id,
@@ -106,6 +109,9 @@ UmiStatus umi_workbench_context_link_service_define_group(
  * Provide the workbench context link service bind panel operation used by this module and
  * its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_context_link_service_bind_panel(
     UmiWorkbenchContextLinkService *service,
     const char *binding_id,
@@ -125,6 +131,9 @@ UmiStatus umi_workbench_context_link_service_unbind_panel(
  * Provide the workbench context link service publish operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_context_link_service_publish(
     UmiWorkbenchContextLinkService *service,
     const char *group_id,
@@ -144,6 +153,9 @@ umi_workbench_context_link_service_current(
  * Provide the workbench context link service pin current operation used by this module and
  * its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_context_link_service_pin_current(
     UmiWorkbenchContextLinkService *service,
     const char *pin_id,

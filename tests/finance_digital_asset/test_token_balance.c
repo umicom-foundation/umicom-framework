@@ -91,12 +91,19 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalTokenBalanceTransferCases, UmiDigitalTokenBala
     umi_digital_asset_token_balance_archive_encode, umi_digital_asset_token_balance_archive_decode,
     UmiDigitalTokenBalanceTransferEqual, UmiDigitalTokenBalanceTransferTails, UmiDigitalTokenBalanceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalTokenBalanceConditionalArchiveCases, UmiDigitalTokenBalance,
+    umi_digital_asset_token_balance_archive_encode, umi_digital_asset_token_balance_archive_decode_if_unchanged,
+    UmiDigitalTokenBalanceTransferEqual, UmiDigitalTokenBalanceTransferTails, UmiDigitalTokenBalanceTransferMalformed)
+
+
 int main(void)
 {
     UmiDigitalTokenBalance value;
     CHECK(umi_digital_asset_token_balance_init(&value, "CUST-1", "ASSET-BTC", 100000000, 10000000, 8) == UMI_STATUS_OK);
     CHECK(umi_digital_asset_token_balance_valid(&value));
     if (UmiDigitalTokenBalanceTransferCases(&value) != 0) return 1;
+    if (UmiDigitalTokenBalanceConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(value.available_units - value.reserved_units == 90000000);
     return 0;

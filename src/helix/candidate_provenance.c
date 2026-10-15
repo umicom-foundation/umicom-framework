@@ -10,6 +10,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/helix/candidate_provenance.h"
+#include "../base/value_construction_internal.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -48,6 +49,11 @@ uint64_t umi_helix_candidate_provenance_hash_text(const char *text)
  * Initialise helix candidate provenance from caller-provided values so later operations
  * receive a known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_helix_candidate_provenance_init(
     UmiHelixCandidateProvenance *provenance,
     const char *operation_id,
@@ -84,3 +90,47 @@ UmiStatus umi_helix_candidate_provenance_init(
     provenance->content_hash = umi_helix_candidate_provenance_hash_text(content);
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_helix_candidate_provenance_init_build_value(
+    UmiHelixCandidateProvenance *provenance,
+    const char *operation_id,
+    const char *candidate_id,
+    const char *parent_candidate_id,
+    const char *agent_id,
+    const char *action_id,
+    const char *source_revision,
+    const char *content)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (provenance == NULL || operation_id == NULL || candidate_id == NULL ||
+        parent_candidate_id == NULL || agent_id == NULL || action_id == NULL ||
+        source_revision == NULL || content == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    (void)memset(provenance, 0, sizeof(*provenance));
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (!copy_text(provenance->operation_id,
+                   sizeof(provenance->operation_id), operation_id) ||
+        !copy_text(provenance->candidate_id,
+                   sizeof(provenance->candidate_id), candidate_id) ||
+        !copy_text(provenance->parent_candidate_id,
+                   sizeof(provenance->parent_candidate_id), parent_candidate_id) ||
+        !copy_text(provenance->agent_id, sizeof(provenance->agent_id), agent_id) ||
+        !copy_text(provenance->action_id, sizeof(provenance->action_id), action_id) ||
+        !copy_text(provenance->source_revision,
+                   sizeof(provenance->source_revision), source_revision)) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    provenance->content_hash = umi_helix_candidate_provenance_hash_text(content);
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_helix_candidate_provenance_init, UmiHelixCandidateProvenance, provenance,
+    (UmiHelixCandidateProvenance *provenance, const char *operation_id, const char *candidate_id, const char *parent_candidate_id, const char *agent_id, const char *action_id, const char *source_revision, const char *content),
+    umi_helix_candidate_provenance_init_build_value(candidate, operation_id, candidate_id, parent_candidate_id, agent_id, action_id, source_revision, content))

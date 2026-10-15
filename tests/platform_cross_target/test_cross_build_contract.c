@@ -159,6 +159,12 @@ UMI_TEST_VALUE_TRANSFER(UmiCtCrossBuildContractTransferCases, UmiCtCrossBuildCon
     umi_ct_cross_build_contract_archive_encode, umi_ct_cross_build_contract_archive_decode,
     UmiCtCrossBuildContractTransferEqual, UmiCtCrossBuildContractTransferTails, UmiCtCrossBuildContractTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtCrossBuildContractConditionalArchiveCases, UmiCtCrossBuildContract,
+    umi_ct_cross_build_contract_archive_encode, umi_ct_cross_build_contract_archive_decode_if_unchanged,
+    UmiCtCrossBuildContractTransferEqual, UmiCtCrossBuildContractTransferTails, UmiCtCrossBuildContractTransferMalformed)
+
+
 int main(void){UmiCtCrossBuildContract c={0};CHECK(umi_ct_copy(c.contract_id,sizeof(c.contract_id),"rv64.build")==UMI_STATUS_OK);c.target.architecture=UMI_CT_ARCH_RISCV64;c.target.operating_system=UMI_CT_OS_UMICOM;CHECK(umi_ct_copy(c.required_toolchain_family,sizeof(c.required_toolchain_family),"gnu")==UMI_STATUS_OK);CHECK(umi_ct_copy(c.required_abi,sizeof(c.required_abi),"lp64d")==UMI_STATUS_OK);c.require_sysroot=true;CHECK(umi_ct_cross_build_contract_validate(&c)==UMI_STATUS_OK);
 /* The archive reconstructs local ABI metadata rather than storing host structure sizes. Initialize the transfer fixture while retaining the earlier zero-initialized round-trip call for review. */
 #if 0
@@ -170,4 +176,5 @@ int main(void){UmiCtCrossBuildContract c={0};CHECK(umi_ct_copy(c.contract_id,siz
     c.target.structure_size = (uint32_t)sizeof(c.target);
     c.target.api_version = UMI_CT_API_VERSION;
     if (UmiCtCrossBuildContractTransferCases(&c) != 0) return 1;
+    if (UmiCtCrossBuildContractConditionalArchiveCases(&c) != 0) return 1;
 return 0;}

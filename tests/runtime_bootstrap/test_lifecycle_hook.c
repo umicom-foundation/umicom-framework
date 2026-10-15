@@ -21,6 +21,7 @@
  *   Focused regression coverage for Create lifecycle hooks bound to a service and ordered runtime phase.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>
+#include "../value_archive/construction_cases.h"
 #include <string.h>
 #include "umicom/runtime/bootstrap/lifecycle_hook.h"
 
@@ -30,7 +31,50 @@
  * Start this command or application, report setup failures, and return a process exit code
  * to the operating system.
  */
+
+/* A rejected replacement must preserve the previously accepted lifecycle hook value. */
+static int UmiBootstrapLifecycleHookConstructionCases(void)
+{
+    UmiBootstrapLifecycleHook *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_bootstrap_lifecycle_hook_init(value, "hook.start", "svc.a", UMI_BOOTSTRAP_PHASE_START, 5) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->hook_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_bootstrap_lifecycle_hook_init(value, oversized, "svc.a", UMI_BOOTSTRAP_PHASE_START, 5) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_bootstrap_lifecycle_hook_init(value, value->hook_id, "svc.a", UMI_BOOTSTRAP_PHASE_START, 5) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->hook_id, "hook.start") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->service_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_bootstrap_lifecycle_hook_init(value, "hook.start", oversized, UMI_BOOTSTRAP_PHASE_START, 5) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_bootstrap_lifecycle_hook_init(value, "hook.start", value->service_id, UMI_BOOTSTRAP_PHASE_START, 5) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->service_id, "svc.a") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiBootstrapLifecycleHookConstructionCases() != 0) return 1;
+
 
     UmiBootstrapLifecycleHook h;
     CHECK(umi_bootstrap_lifecycle_hook_init(&h,"hook.start","svc.a",UMI_BOOTSTRAP_PHASE_START,5)==UMI_STATUS_OK);

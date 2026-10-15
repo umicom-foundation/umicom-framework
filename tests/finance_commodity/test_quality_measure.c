@@ -91,12 +91,19 @@ UMI_TEST_VALUE_TRANSFER(UmiCommodityQualityMeasureTransferCases, UmiCommodityQua
     umi_commodity_quality_measure_archive_encode, umi_commodity_quality_measure_archive_decode,
     UmiCommodityQualityMeasureTransferEqual, UmiCommodityQualityMeasureTransferTails, UmiCommodityQualityMeasureTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCommodityQualityMeasureConditionalArchiveCases, UmiCommodityQualityMeasure,
+    umi_commodity_quality_measure_archive_encode, umi_commodity_quality_measure_archive_decode_if_unchanged,
+    UmiCommodityQualityMeasureTransferEqual, UmiCommodityQualityMeasureTransferTails, UmiCommodityQualityMeasureTransferMalformed)
+
+
 int main(void)
 {
     UmiCommodityQualityMeasure value;
     CHECK(umi_commodity_quality_measure_init(&value, "sulphur", "PCT", 0, 50, 2) == UMI_STATUS_OK);
     CHECK(umi_commodity_quality_measure_valid(&value));
     if (UmiCommodityQualityMeasureTransferCases(&value) != 0) return 1;
+    if (UmiCommodityQualityMeasureConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(value.maximum == 50);
     return 0;

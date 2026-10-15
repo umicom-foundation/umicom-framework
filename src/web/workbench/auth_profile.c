@@ -117,10 +117,47 @@ void umi_web_workbench_auth_catalogue_init(
  * Provide the web workbench auth catalogue upsert operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_web_workbench_auth_catalogue_upsert(
     UmiWebWorkbenchAuthCatalogue *catalogue,
     const UmiWebWorkbenchAuthProfile *profile)
 {
+    size_t index;
+    UmiStatus status = umi_web_workbench_auth_profile_validate(profile);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (catalogue == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    index = profile_index(catalogue, profile->profile_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == catalogue->profile_count) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (index >= UMI_WEB_WORKBENCH_MAX_AUTH_PROFILES) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        catalogue->profile_count++;
+    }
+    catalogue->profiles[index] = *profile;
+    catalogue->revision++;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_web_workbench_auth_catalogue_upsert(
+    UmiWebWorkbenchAuthCatalogue *catalogue,
+    const UmiWebWorkbenchAuthProfile *profile)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (catalogue != NULL && catalogue->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     UmiStatus status = umi_web_workbench_auth_profile_validate(profile);
     /*

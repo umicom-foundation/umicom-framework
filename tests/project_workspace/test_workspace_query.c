@@ -19,6 +19,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/project/workspace/workspace_query.h"
+#include "../value_archive/construction_cases.h"
 #define CHECK(x) do { if (!(x)) return __LINE__; } while (0)
 /*
  * Start this command or application, report setup failures, and return a process exit code
@@ -104,11 +105,73 @@ UMI_TEST_VALUE_TRANSFER(UmiProjectWorkspaceWorkspaceQueryTransferCases, UmiProje
     umi_project_workspace_workspace_query_archive_encode, umi_project_workspace_workspace_query_archive_decode,
     UmiProjectWorkspaceWorkspaceQueryTransferEqual, UmiProjectWorkspaceWorkspaceQueryTransferTails, UmiProjectWorkspaceWorkspaceQueryTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiProjectWorkspaceWorkspaceQueryConditionalArchiveCases, UmiProjectWorkspaceWorkspaceQuery,
+    umi_project_workspace_workspace_query_archive_encode, umi_project_workspace_workspace_query_archive_decode_if_unchanged,
+    UmiProjectWorkspaceWorkspaceQueryTransferEqual, UmiProjectWorkspaceWorkspaceQueryTransferTails, UmiProjectWorkspaceWorkspaceQueryTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted workspace query value. */
+static int UmiProjectWorkspaceWorkspaceQueryConstructionCases(void)
+{
+    UmiProjectWorkspaceWorkspaceQuery *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_project_workspace_workspace_query_init(value, "id", "workspace.changed", "{}") == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_project_workspace_workspace_query_init(value, oversized, "workspace.changed", "{}") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_project_workspace_workspace_query_init(value, value->id, "workspace.changed", "{}") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->id, "id") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->topic) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_project_workspace_workspace_query_init(value, "id", oversized, "{}") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_project_workspace_workspace_query_init(value, "id", value->topic, "{}") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->topic, "workspace.changed") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->payload) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_project_workspace_workspace_query_init(value, "id", "workspace.changed", oversized) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_project_workspace_workspace_query_init(value, "id", "workspace.changed", value->payload) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->payload, "{}") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiProjectWorkspaceWorkspaceQueryConstructionCases() != 0) return 1;
+
     UmiProjectWorkspaceWorkspaceQuery v;
     CHECK(umi_project_workspace_workspace_query_init(&v,"id","workspace.changed","{}") == UMI_STATUS_OK);
     CHECK(umi_project_workspace_workspace_query_validate(&v)==UMI_STATUS_OK);
     if (UmiProjectWorkspaceWorkspaceQueryTransferCases(&v) != 0) return 1;
+    if (UmiProjectWorkspaceWorkspaceQueryConditionalArchiveCases(&v) != 0) return 1;
 
     return 0;
 }

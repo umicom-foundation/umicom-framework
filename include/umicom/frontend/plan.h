@@ -33,6 +33,10 @@ typedef struct UmiFrontendPlan { char application_id[UMI_FRONTEND_ID_CAPACITY]; 
  * Initialise frontend plan from caller-provided values so later operations receive a known
  * state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_frontend_plan_init(UmiFrontendPlan *plan,const char *application_id,UmiFrontendKind kind);
 /**
  * Provide the frontend plan add page operation used by this module and its client

@@ -117,6 +117,32 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkContextDiffTransferCases, UmiWork
     umi_workbench_context_link_context_diff_archive_encode, umi_workbench_context_link_context_diff_archive_decode,
     UmiWorkbenchContextLinkContextDiffTransferEqual, UmiWorkbenchContextLinkContextDiffTransferTails, UmiWorkbenchContextLinkContextDiffTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkContextDiffConditionalArchiveCases, UmiWorkbenchContextLinkContextDiff,
+    umi_workbench_context_link_context_diff_archive_encode, umi_workbench_context_link_context_diff_archive_decode_if_unchanged,
+    UmiWorkbenchContextLinkContextDiffTransferEqual, UmiWorkbenchContextLinkContextDiffTransferTails, UmiWorkbenchContextLinkContextDiffTransferMalformed)
+
+
+/* Delayed context edits must preserve newer work and reject exhausted tokens. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextLinkContextDiffReviewedCases, UmiWorkbenchContextLinkContextDiff,
+    diff_id, right_context_id, umi_workbench_context_link_context_diff_replace_if_current, UmiWorkbenchContextLinkContextDiffTransferEqual)
+static int UmiWorkbenchContextLinkContextDiffMutationGuards(const UmiWorkbenchContextLinkContextDiff *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkContextDiff, left_context_id, umi_workbench_context_link_context_diff_set_primary, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkContextDiff, right_context_id, umi_workbench_context_link_context_diff_set_secondary, sample);
+    UmiWorkbenchContextLinkContextDiff value = *sample;
+    unsigned char before[sizeof(value)];
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_link_context_diff_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U ||
+        value.timestamp_ms != 44U) return 1;
+    memcpy(before, &value, sizeof(value));
+    umi_workbench_context_link_context_diff_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof(value)) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextLinkContextDiff record;
@@ -125,6 +151,9 @@ int main(void)
     umi_workbench_context_link_context_diff_init(&record, "context_diff-id");
     assert(umi_workbench_context_link_context_diff_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkContextDiffTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkContextDiffConditionalArchiveCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkContextDiffReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkContextDiffMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_context_link_context_diff_set_primary(&record, "primary") == UMI_STATUS_OK);
     assert(umi_workbench_context_link_context_diff_set_secondary(&record, "secondary") == UMI_STATUS_OK);

@@ -87,12 +87,19 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicDockDirectionTransferCases, UmiUiMosaicDockDi
     umi_ui_mosaic_dock_direction_archive_encode, umi_ui_mosaic_dock_direction_archive_decode,
     UmiUiMosaicDockDirectionTransferEqual, UmiUiMosaicDockDirectionTransferTails, UmiUiMosaicDockDirectionTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicDockDirectionConditionalArchiveCases, UmiUiMosaicDockDirection,
+    umi_ui_mosaic_dock_direction_archive_encode, umi_ui_mosaic_dock_direction_archive_decode_if_unchanged,
+    UmiUiMosaicDockDirectionTransferEqual, UmiUiMosaicDockDirectionTransferTails, UmiUiMosaicDockDirectionTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicDockDirection value;
     umi_ui_mosaic_dock_direction_init(&value);
     CHECK(umi_ui_mosaic_dock_direction_set(&value, "panel.source", "panel.target", UMI_UI_MOSAIC_DOCK_CENTRE) == UMI_STATUS_OK);
     CHECK(umi_ui_mosaic_dock_direction_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicDockDirectionTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicDockDirectionConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_dock_direction_is_centre(&value) == 1);
     return 0;

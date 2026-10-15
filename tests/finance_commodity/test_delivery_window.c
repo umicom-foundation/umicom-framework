@@ -55,12 +55,19 @@ UMI_TEST_VALUE_TRANSFER(UmiCommodityDeliveryWindowTransferCases, UmiCommodityDel
     umi_commodity_delivery_window_archive_encode, umi_commodity_delivery_window_archive_decode,
     UmiCommodityDeliveryWindowTransferEqual, UmiCommodityDeliveryWindowTransferTails, UmiCommodityDeliveryWindowTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCommodityDeliveryWindowConditionalArchiveCases, UmiCommodityDeliveryWindow,
+    umi_commodity_delivery_window_archive_encode, umi_commodity_delivery_window_archive_decode_if_unchanged,
+    UmiCommodityDeliveryWindowTransferEqual, UmiCommodityDeliveryWindowTransferTails, UmiCommodityDeliveryWindowTransferMalformed)
+
+
 int main(void)
 {
     UmiCommodityDeliveryWindow value;
     CHECK(umi_commodity_delivery_window_init(&value, 1000, 2000, true) == UMI_STATUS_OK);
     CHECK(umi_commodity_delivery_window_valid(&value));
     if (UmiCommodityDeliveryWindowTransferCases(&value) != 0) return 1;
+    if (UmiCommodityDeliveryWindowConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

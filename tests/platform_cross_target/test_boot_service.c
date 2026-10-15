@@ -79,6 +79,13 @@ UMI_TEST_VALUE_TRANSFER(UmiCtBootServiceTransferCases, UmiCtBootService,
     umi_ct_boot_service_archive_encode, umi_ct_boot_service_archive_decode,
     UmiCtBootServiceTransferEqual, UmiCtBootServiceTransferTails, UmiCtBootServiceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtBootServiceConditionalArchiveCases, UmiCtBootService,
+    umi_ct_boot_service_archive_encode, umi_ct_boot_service_archive_decode_if_unchanged,
+    UmiCtBootServiceTransferEqual, UmiCtBootServiceTransferTails, UmiCtBootServiceTransferMalformed)
+
+
 int main(void){UmiCtBootService k={"kernel",UMI_CT_BOOT_EARLY,true,1000U},n={"net",UMI_CT_BOOT_SERVICES,true,2000U};CHECK(umi_ct_boot_service_validate(&k)==UMI_STATUS_OK);
     if (UmiCtBootServiceTransferCases(&k) != 0) return 1;
+    if (UmiCtBootServiceConditionalArchiveCases(&k) != 0) return 1;
 CHECK(umi_ct_boot_dependency_phase_valid(&n,&k));CHECK(!umi_ct_boot_dependency_phase_valid(&k,&n));return 0;}

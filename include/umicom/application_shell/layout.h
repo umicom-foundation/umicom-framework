@@ -61,6 +61,9 @@ void umi_application_shell_layout_init(
  * Provide the application shell layout place operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_application_shell_layout_place(
     UmiApplicationShellLayout *layout,
     const char *contribution_id,

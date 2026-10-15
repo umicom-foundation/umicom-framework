@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/sdk/export_plan.h"
+#include "../base/value_construction_internal.h"
 #include "sdk_internal.h"
 
 /* Provide the sdk path operation used by this module and its client applications. */
@@ -34,6 +35,11 @@ static UmiStatus umi_sdk_path(char *output,
  * Initialise sdk export plan from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_sdk_export_plan_init(UmiSdkExportPlan *plan,
                                        const char *install_prefix,
                                        const char *minimum_version)
@@ -73,6 +79,54 @@ UmiStatus umi_sdk_export_plan_init(UmiSdkExportPlan *plan,
     umi_sdk_export_catalogue_init(&plan->catalogue);
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_sdk_export_plan_init_build_value(UmiSdkExportPlan *plan,
+                                       const char *install_prefix,
+                                       const char *minimum_version)
+{
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (plan == NULL || !umi_sdk_text(install_prefix) ||
+        !umi_sdk_text(minimum_version)) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(plan, 0, sizeof(*plan));
+    status = umi_sdk_copy(plan->install_prefix,
+                             sizeof(plan->install_prefix), install_prefix);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_sdk_path(plan->include_directory,
+                             sizeof(plan->include_directory), install_prefix,
+                             "include");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_sdk_path(plan->library_directory,
+                             sizeof(plan->library_directory), install_prefix,
+                             "lib");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_sdk_path(plan->examples_directory,
+                             sizeof(plan->examples_directory), install_prefix,
+                             "share/umicom/examples");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_sdk_consumer_package_init(
+        &plan->package, "UmicomFramework", "Umicom", minimum_version,
+        "lib/cmake/UmicomFramework");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    umi_sdk_export_catalogue_init(&plan->catalogue);
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_sdk_export_plan_init, UmiSdkExportPlan, plan,
+    (UmiSdkExportPlan *plan, const char *install_prefix, const char *minimum_version),
+    umi_sdk_export_plan_init_build_value(candidate, install_prefix, minimum_version))
+
 
 /*
  * Provide the sdk export plan add target operation used by this module and its client

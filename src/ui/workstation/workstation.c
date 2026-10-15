@@ -14,11 +14,17 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/workstation.h"
+#include "../../base/value_construction_internal.h"
 
 /*
  * Initialise ws workstation from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_ws_workstation_init(UmiWsWorkstation *workstation,
                                   const char *workstation_id,
                                   UmiWsDensity density) {
@@ -41,6 +47,37 @@ UmiStatus umi_ws_workstation_init(UmiWsWorkstation *workstation,
     workstation->layout_lock = umi_ws_layout_lock_default();
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_ws_workstation_init_build_value(UmiWsWorkstation *workstation,
+                                  const char *workstation_id,
+                                  UmiWsDensity density) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workstation == NULL || !umi_ws_id_valid(workstation_id)) return UMI_STATUS_INVALID_ARGUMENT;
+    *workstation = (UmiWsWorkstation){0};
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (umi_ws_copy_text(workstation->workstation_id, sizeof(workstation->workstation_id), workstation_id) != UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;
+    umi_ws_surface_catalogue_init(&workstation->surfaces);
+    umi_ws_layout_catalogue_init(&workstation->layouts);
+    umi_ws_perspective_catalogue_init(&workstation->perspectives);
+    umi_ws_workspace_strip_init(&workstation->workspaces);
+    umi_ws_toolbar_model_init(&workstation->toolbar);
+    umi_ws_status_strip_init(&workstation->status);
+    workstation->density = umi_ws_density_profile_make(density);
+    workstation->accessibility = umi_ws_accessibility_profile_default(density);
+    workstation->layout_lock = umi_ws_layout_lock_default();
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_ws_workstation_init, UmiWsWorkstation, workstation,
+    (UmiWsWorkstation *workstation, const char *workstation_id, UmiWsDensity density),
+    umi_ws_workstation_init_build_value(candidate, workstation_id, density))
+
 
 /*
  * Provide the ws workstation activate layout operation used by this module and its client

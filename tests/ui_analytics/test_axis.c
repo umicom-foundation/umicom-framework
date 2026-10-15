@@ -88,6 +88,13 @@ UMI_TEST_VALUE_TRANSFER(UmiAnalyticsAxisTransferCases, UmiAnalyticsAxis,
     umi_analytics_axis_archive_encode, umi_analytics_axis_archive_decode,
     UmiAnalyticsAxisTransferEqual, UmiAnalyticsAxisTransferTails, UmiAnalyticsAxisTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAnalyticsAxisConditionalArchiveCases, UmiAnalyticsAxis,
+    umi_analytics_axis_archive_encode, umi_analytics_axis_archive_decode_if_unchanged,
+    UmiAnalyticsAxisTransferEqual, UmiAnalyticsAxisTransferTails, UmiAnalyticsAxisTransferMalformed)
+
+
 int main(void){UmiAnalyticsAxis a;/* Apply this operation only while the related capability or state is available. */ if(umi_analytics_axis_init(&a,"y","Value",UMI_ANALYTICS_SCALE_LINEAR,-1,1)!=0)return 1;
     if (UmiAnalyticsAxisTransferCases(&a) != 0) return 1;
+    if (UmiAnalyticsAxisConditionalArchiveCases(&a) != 0) return 1;
 return umi_analytics_axis_valid(&a)?0:2;}

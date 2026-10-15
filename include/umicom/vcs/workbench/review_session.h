@@ -90,6 +90,9 @@ UmiStatus umi_vcs_workbench_review_session_begin(
  * Provide the vcs workbench review session add thread operation used by this module and
  * its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_vcs_workbench_review_session_add_thread(
     UmiVcsWorkbenchReviewSession *session,
     const char *thread_id,
@@ -115,6 +118,9 @@ UmiStatus umi_vcs_workbench_review_session_add_comment(
  * Provide the vcs workbench review session resolve thread operation used by this module
  * and its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_vcs_workbench_review_session_resolve_thread(
     UmiVcsWorkbenchReviewSession *session,
     const char *thread_id,
@@ -123,6 +129,9 @@ UmiStatus umi_vcs_workbench_review_session_resolve_thread(
  * Provide the vcs workbench review session set decision operation used by this module and
  * its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_vcs_workbench_review_session_set_decision(
     UmiVcsWorkbenchReviewSession *session,
     UmiVcsWorkbenchReviewDecision decision);

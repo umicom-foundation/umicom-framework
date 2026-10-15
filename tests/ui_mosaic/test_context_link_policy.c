@@ -104,6 +104,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicContextLinkPolicyTransferCases, UmiUiMosaicCo
     umi_ui_mosaic_context_link_policy_archive_encode, umi_ui_mosaic_context_link_policy_archive_decode,
     UmiUiMosaicContextLinkPolicyTransferEqual, UmiUiMosaicContextLinkPolicyTransferTails, UmiUiMosaicContextLinkPolicyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicContextLinkPolicyConditionalArchiveCases, UmiUiMosaicContextLinkPolicy,
+    umi_ui_mosaic_context_link_policy_archive_encode, umi_ui_mosaic_context_link_policy_archive_decode_if_unchanged,
+    UmiUiMosaicContextLinkPolicyTransferEqual, UmiUiMosaicContextLinkPolicyTransferTails, UmiUiMosaicContextLinkPolicyTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicContextLinkPolicy value;
     umi_ui_mosaic_context_link_policy_init(&value);
@@ -111,6 +117,7 @@ int main(void) {
     value.colour_index = 2U;
     CHECK(umi_ui_mosaic_context_link_policy_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicContextLinkPolicyTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicContextLinkPolicyConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

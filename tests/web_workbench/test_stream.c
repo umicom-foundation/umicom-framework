@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/web/workbench/stream.h"
@@ -25,6 +26,10 @@ int main(void)
         UMI_WEB_WORKBENCH_STREAM_SSE, "https://api.example.test/prices");
     assert(umi_web_workbench_stream_set_phase(&session,
         UMI_WEB_WORKBENCH_RUNNING) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWebWorkbenchStreamSession, &session,
+        (umi_web_workbench_stream_set_phase(&session,
+        UMI_WEB_WORKBENCH_RUNNING)));
+
     assert(umi_web_workbench_stream_ingest_sse(&session,
         "event: price\ndata: {\"symbol\":\"EURUSD\"}\n\n", 100U) == UMI_STATUS_OK);
     assert(session.message_count == 1U);

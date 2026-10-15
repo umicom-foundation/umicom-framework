@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/developer/ecosystem/install_review.h"
 
 #include <string.h>
@@ -59,6 +60,10 @@ UmiStatus umi_ecosystem_install_review_begin(
  * Provide the ecosystem install review add action operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ecosystem_install_review_add_action(
     UmiEcosystemInstallReview *review,
     UmiEcosystemActionKind kind,
@@ -104,11 +109,67 @@ UmiStatus umi_ecosystem_install_review_add_action(
     umi_ecosystem_install_review_recalculate(review);
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_ecosystem_install_review_add_action(
+    UmiEcosystemInstallReview *review,
+    UmiEcosystemActionKind kind,
+    const char *subject_id,
+    const char *summary,
+    UmiEcosystemReviewSeverity severity,
+    bool required,
+    bool requires_approval)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (review != NULL && review->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiEcosystemInstallAction *action;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (review == NULL || subject_id == NULL || summary == NULL ||
+        subject_id[0] == '\0' || summary[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (review->action_count >= UMI_ECOSYSTEM_MAX_ACTIONS) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    action = &review->actions[review->action_count];
+    (void)memset(action, 0, sizeof(*action));
+    status = umi_ecosystem_copy_text(
+        action->subject_id, sizeof(action->subject_id), subject_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_ecosystem_copy_text(
+        action->summary, sizeof(action->summary), summary);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    action->kind = kind;
+    action->severity = severity;
+    action->required = required;
+    action->requires_approval = requires_approval;
+    action->approved = !requires_approval;
+    action->status = severity == UMI_ECOSYSTEM_REVIEW_BLOCKER
+        ? UMI_STATUS_INVALID_STATE : UMI_STATUS_OK;
+    review->action_count++;
+    review->revision++;
+    umi_ecosystem_install_review_recalculate(review);
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the ecosystem install review set approved operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ecosystem_install_review_set_approved(
     UmiEcosystemInstallReview *review,
     size_t action_index,
@@ -134,16 +195,81 @@ UmiStatus umi_ecosystem_install_review_set_approved(
     umi_ecosystem_install_review_recalculate(review);
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_ecosystem_install_review_set_approved(
+    UmiEcosystemInstallReview *review,
+    size_t action_index,
+    bool approved)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (review != NULL && review->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiEcosystemInstallAction *action;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (review == NULL || action_index >= review->action_count) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    action = &review->actions[action_index];
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (!action->requires_approval) return UMI_STATUS_INVALID_STATE;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (action->severity == UMI_ECOSYSTEM_REVIEW_BLOCKER && approved) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    action->approved = approved;
+    review->revision++;
+    umi_ecosystem_install_review_recalculate(review);
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the ecosystem install review complete action operation used by this module and
  * its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ecosystem_install_review_complete_action(
     UmiEcosystemInstallReview *review,
     size_t action_index,
     UmiStatus status)
 {
+    UmiEcosystemInstallAction *action;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (review == NULL || action_index >= review->action_count) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    action = &review->actions[action_index];
+    action->completed = status == UMI_STATUS_OK;
+    action->status = status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) action->severity = UMI_ECOSYSTEM_REVIEW_BLOCKER;
+    review->revision++;
+    umi_ecosystem_install_review_recalculate(review);
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_ecosystem_install_review_complete_action(
+    UmiEcosystemInstallReview *review,
+    size_t action_index,
+    UmiStatus status)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (review != NULL && review->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiEcosystemInstallAction *action;
     /*
      * Protect caller-owned memory by checking that required state is available before it is

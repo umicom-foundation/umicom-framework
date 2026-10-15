@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/broker_connectivity/audit_journal.h"
@@ -36,9 +37,15 @@ int main(void)
 
     umi_broker_audit_journal_init(&journal);
     assert(umi_broker_audit_journal_append(&journal, &one) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiBrokerAuditJournal, &journal,
+        (umi_broker_audit_journal_append(&journal, &one)));
+
     assert(umi_broker_audit_journal_append(&journal, &three) == UMI_STATUS_OK);
     assert(journal.gapCount == 1U);
     assert(umi_broker_audit_journal_mark_persisted(&journal, 1U) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiBrokerAuditJournal, &journal,
+        (umi_broker_audit_journal_mark_persisted(&journal, 1U)));
+
     assert(umi_broker_audit_journal_persisted_count(&journal) == 1U);
     return 0;
 }

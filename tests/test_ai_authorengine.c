@@ -111,6 +111,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAiAuthorEngineConfigTransferCases, UmiAiAuthorEngineC
     umi_ai_authorengine_archive_encode, umi_ai_authorengine_archive_decode,
     UmiAiAuthorEngineConfigTransferEqual, UmiAiAuthorEngineConfigTransferTails, UmiAiAuthorEngineConfigTransferMalformed)
 
+#include "value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAiAuthorEngineConfigConditionalArchiveCases, UmiAiAuthorEngineConfig,
+    umi_ai_authorengine_archive_encode, umi_ai_authorengine_archive_decode_if_unchanged,
+    UmiAiAuthorEngineConfigTransferEqual, UmiAiAuthorEngineConfigTransferTails, UmiAiAuthorEngineConfigTransferMalformed)
+
+
 int main(void)
 {
     UmiAiAuthorEngineConfig config = {0};
@@ -119,6 +125,7 @@ int main(void)
     (void)strcpy(config.provider, "local");
     assert(umi_ai_authorengine_validate(&config) == UMI_STATUS_OK);
     if (UmiAiAuthorEngineConfigTransferCases(&config) != 0) return 1;
+    if (UmiAiAuthorEngineConfigConditionalArchiveCases(&config) != 0) return 1;
 
     return 0;
 }

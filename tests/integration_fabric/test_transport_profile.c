@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/integration/fabric/transport_profile.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -75,10 +76,48 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricTransportProfileTransferCases, UmiFabricTranspo
     umi_fabric_transport_profile_archive_encode, umi_fabric_transport_profile_archive_decode,
     UmiFabricTransportProfileTransferEqual, UmiFabricTransportProfileTransferTails, UmiFabricTransportProfileTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricTransportProfileConditionalArchiveCases, UmiFabricTransportProfile,
+    umi_fabric_transport_profile_archive_encode, umi_fabric_transport_profile_archive_decode_if_unchanged,
+    UmiFabricTransportProfileTransferEqual, UmiFabricTransportProfileTransferTails, UmiFabricTransportProfileTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted transport profile value. */
+static int UmiFabricTransportProfileConstructionCases(void)
+{
+    UmiFabricTransportProfile *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_fabric_transport_profile_init(value, "secure", 1048576U, 1000U, 5000U, true, true) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->profile_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_transport_profile_init(value, oversized, 1048576U, 1000U, 5000U, true, true) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_transport_profile_init(value, value->profile_id, 1048576U, 1000U, 5000U, true, true) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->profile_id, "secure") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiFabricTransportProfileConstructionCases() != 0) return 1;
+
     UmiFabricTransportProfile item;
     CHECK(umi_fabric_transport_profile_init(&item,"secure",1048576U,1000U,5000U,true,true)==UMI_STATUS_OK);
     if (UmiFabricTransportProfileTransferCases(&item) != 0) return 1;
+    if (UmiFabricTransportProfileConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.tls_required);
     return 0;

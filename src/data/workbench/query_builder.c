@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/data/workbench/query_builder.h"
 
 #include <stdarg.h>
@@ -88,10 +89,45 @@ UmiStatus umi_data_query_builder_init(
  * Provide the data query builder add projection operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_data_query_builder_add_projection(
     UmiDataQueryBuilder *builder,
     const UmiDataQueryProjection *projection)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (builder == NULL ||
+        umi_data_query_projection_validate(projection) != UMI_STATUS_OK) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (projection_exists(builder, projection->projection_id)) {
+        return UMI_STATUS_ALREADY_EXISTS;
+    }
+    /* Create this optional product surface only when its build option is enabled. */
+    if (builder->projection_count >= UMI_DATA_WORKBENCH_MAX_BUILDER_ITEMS) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    builder->projections[builder->projection_count++] = *projection;
+    builder->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_data_query_builder_add_projection(
+    UmiDataQueryBuilder *builder,
+    const UmiDataQueryProjection *projection)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (builder != NULL && builder->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -117,10 +153,50 @@ UmiStatus umi_data_query_builder_add_projection(
  * Provide the data query builder add predicate operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_data_query_builder_add_predicate(
     UmiDataQueryBuilder *builder,
     const UmiDataQueryExpression *predicate)
 {
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (builder == NULL ||
+        umi_data_query_expression_validate(predicate) != UMI_STATUS_OK) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < builder->predicate_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(builder->predicates[index].expression_id,
+                   predicate->expression_id) == 0) {
+            return UMI_STATUS_ALREADY_EXISTS;
+        }
+    }
+    /* Create this optional product surface only when its build option is enabled. */
+    if (builder->predicate_count >= UMI_DATA_WORKBENCH_MAX_BUILDER_ITEMS) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    builder->predicates[builder->predicate_count++] = *predicate;
+    builder->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_data_query_builder_add_predicate(
+    UmiDataQueryBuilder *builder,
+    const UmiDataQueryExpression *predicate)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (builder != NULL && builder->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -183,10 +259,49 @@ UmiStatus umi_data_query_builder_add_join(
  * Provide the data query builder add order operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_data_query_builder_add_order(
     UmiDataQueryBuilder *builder,
     const UmiDataQueryOrder *order)
 {
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (builder == NULL ||
+        umi_data_query_order_validate(order) != UMI_STATUS_OK) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < builder->order_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(builder->orders[index].order_id, order->order_id) == 0) {
+            return UMI_STATUS_ALREADY_EXISTS;
+        }
+    }
+    /* Create this optional product surface only when its build option is enabled. */
+    if (builder->order_count >= UMI_DATA_WORKBENCH_MAX_BUILDER_ITEMS) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    builder->orders[builder->order_count++] = *order;
+    builder->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_data_query_builder_add_order(
+    UmiDataQueryBuilder *builder,
+    const UmiDataQueryOrder *order)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (builder != NULL && builder->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -216,10 +331,38 @@ UmiStatus umi_data_query_builder_add_order(
  * Provide the data query builder set limit operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_data_query_builder_set_limit(
     UmiDataQueryBuilder *builder,
     uint64_t row_limit)
 {
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (builder == NULL || row_limit == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_data_query_plan_shape(
+        &builder->plan, builder->predicate_count, builder->projection_count,
+        builder->join_count, builder->order_count, row_limit);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) builder->revision += 1U;
+    return status;
+}
+#endif
+
+UmiStatus umi_data_query_builder_set_limit(
+    UmiDataQueryBuilder *builder,
+    uint64_t row_limit)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (builder != NULL && builder->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiStatus status;
     /*
      * Protect caller-owned memory by checking that required state is available before it is

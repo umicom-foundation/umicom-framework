@@ -37,6 +37,9 @@ typedef struct UmiDataReplicaSet {
 /* Reset the bounded replica set registry. */
 void umi_data_replica_set_init(UmiDataReplicaSet *registry);
 /* Add a unique item by stable identifier. */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_data_replica_set_add(UmiDataReplicaSet *registry, const UmiDataReplicaDescriptor *item);
 /* Find a registry item by stable identifier. */
 UmiStatus umi_data_replica_set_find(const UmiDataReplicaSet *registry, const char *id, UmiDataReplicaDescriptor *out_item);

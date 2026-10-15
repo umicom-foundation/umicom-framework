@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/developer_productivity/terminal_tabs.h"
 
 #include <stdio.h>
@@ -98,10 +99,48 @@ UmiStatus umi_developer_terminal_tabs_add(
  * Provide the developer terminal tabs activate operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_developer_terminal_tabs_activate(
     UmiDeveloperTerminalTabModel *model,
     const char *session_id)
 {
+    size_t index;
+    size_t target;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (model == NULL || session_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    target = find_index(model, session_id);
+    /* Configure the optional target only when its feature has created it. */
+    if (target == (size_t)-1) return UMI_STATUS_NOT_FOUND;
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < model->count; ++index) {
+        model->tabs[index].active = index == target;
+    }
+
+    model->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_developer_terminal_tabs_activate(
+    UmiDeveloperTerminalTabModel *model,
+    const char *session_id)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (model != NULL && model->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     size_t target;
 

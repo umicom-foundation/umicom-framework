@@ -67,11 +67,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryExposureTransferCases, UmiTreasuryExposure,
     umi_treasury_exposure_archive_encode, umi_treasury_exposure_archive_decode,
     UmiTreasuryExposureTransferEqual, UmiTreasuryExposureTransferTails, UmiTreasuryExposureTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryExposureConditionalArchiveCases, UmiTreasuryExposure,
+    umi_treasury_exposure_archive_encode, umi_treasury_exposure_archive_decode_if_unchanged,
+    UmiTreasuryExposureTransferEqual, UmiTreasuryExposureTransferTails, UmiTreasuryExposureTransferMalformed)
+
+
 int main(void) {
     UmiTreasuryExposure v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_exposure_init(&v, "exp", 1000, -600) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryExposureTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryExposureConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if(umi_treasury_exposure_net_absolute_minor(&v)!=600)return 2;

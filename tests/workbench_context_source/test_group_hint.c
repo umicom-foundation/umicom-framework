@@ -169,6 +169,12 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextSourceGroupHintTransferCases, UmiWork
     umi_workbench_context_source_group_hint_archive_encode, umi_workbench_context_source_group_hint_archive_decode,
     UmiWorkbenchContextSourceGroupHintTransferEqual, UmiWorkbenchContextSourceGroupHintTransferTails, UmiWorkbenchContextSourceGroupHintTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextSourceGroupHintConditionalArchiveCases, UmiWorkbenchContextSourceGroupHint,
+    umi_workbench_context_source_group_hint_archive_encode, umi_workbench_context_source_group_hint_archive_decode_if_unchanged,
+    UmiWorkbenchContextSourceGroupHintTransferEqual, UmiWorkbenchContextSourceGroupHintTransferTails, UmiWorkbenchContextSourceGroupHintTransferMalformed)
+
+
 /* Exercise the accepted domain fixture through reviewed publication and
  * legacy mutation boundaries. These checks stay active in release builds. */
 #include "../record_integrity/reviewed_value_cases.h"
@@ -202,6 +208,7 @@ int main(void)
     assert(umi_workbench_context_source_group_hint_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextSourceGroupHintTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceGroupHintConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextSourceGroupHintReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextSourceGroupHintMutationGuards(&record) != 0) return 1;
 

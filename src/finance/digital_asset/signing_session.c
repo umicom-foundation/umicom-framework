@@ -16,6 +16,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include <stdint.h>
 #include "umicom/finance/digital_asset/signing_session.h"
 
 #include <string.h>
@@ -35,8 +36,34 @@ UmiStatus umi_digital_asset_signing_session_init(UmiDigitalSigningSession *sessi
 }
 
 /* Approval accounting is deliberately separate from actual cryptographic signing. */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_digital_asset_signing_session_approve(UmiDigitalSigningSession *session)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (session == NULL || session->request.closed) return UMI_STATUS_INVALID_STATE;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (session->request.received_approvals >= session->request.required_approvals) return UMI_STATUS_ALREADY_EXISTS;
+    session->request.received_approvals++;
+    session->revision++;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (session->request.received_approvals == session->request.required_approvals) session->request.closed = true;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_digital_asset_signing_session_approve(UmiDigitalSigningSession *session)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (session != NULL && session->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.

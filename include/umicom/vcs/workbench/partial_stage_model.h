@@ -56,6 +56,9 @@ UmiStatus umi_vcs_workbench_partial_stage_model_begin(
  * Add vcs workbench partial stage model only after its inputs and available capacity have
  * been checked.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_vcs_workbench_partial_stage_model_add(
     UmiVcsWorkbenchPartialStageModel *model,
     const UmiVcsAdvancedStagingHunk *hunk);
@@ -63,6 +66,9 @@ UmiStatus umi_vcs_workbench_partial_stage_model_add(
  * Provide the vcs workbench partial stage model select operation used by this module and
  * its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_vcs_workbench_partial_stage_model_select(
     UmiVcsWorkbenchPartialStageModel *model,
     size_t index,
@@ -71,6 +77,9 @@ UmiStatus umi_vcs_workbench_partial_stage_model_select(
  * Provide the vcs workbench partial stage model select all operation used by this module
  * and its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_vcs_workbench_partial_stage_model_select_all(
     UmiVcsWorkbenchPartialStageModel *model,
     int selected);

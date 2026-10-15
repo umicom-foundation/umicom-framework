@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/mosaic/split_layout.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -132,3 +133,8 @@ static UmiStatus UmiUiMosaicSplitLayoutArchiveValidate(const UmiUiMosaicSplitLay
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ui_mosaic_split_layout_archive_encode, umi_ui_mosaic_split_layout_archive_decode,
     UmiUiMosaicSplitLayout, UmiUiMosaicSplitLayoutArchiveSchema, UmiUiMosaicSplitLayoutArchiveBound, UmiUiMosaicSplitLayoutArchiveWrite, UmiUiMosaicSplitLayoutArchiveRead, UmiUiMosaicSplitLayoutArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_mosaic_split_layout_archive_decode_if_unchanged, umi_ui_mosaic_split_layout_archive_encode,
+    UmiUiMosaicSplitLayout, UmiUiMosaicSplitLayoutArchiveSchema, UmiUiMosaicSplitLayoutArchiveBound, UmiUiMosaicSplitLayoutArchiveRead, UmiUiMosaicSplitLayoutArchiveValidate)

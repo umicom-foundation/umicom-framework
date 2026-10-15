@@ -93,6 +93,12 @@ UMI_TEST_VALUE_TRANSFER(UmiTradingProfessionalSnapshotTransferCases, UmiTradingP
     umi_trading_professional_snapshot_archive_encode, umi_trading_professional_snapshot_archive_decode,
     UmiTradingProfessionalSnapshotTransferEqual, UmiTradingProfessionalSnapshotTransferTails, UmiTradingProfessionalSnapshotTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTradingProfessionalSnapshotConditionalArchiveCases, UmiTradingProfessionalSnapshot,
+    umi_trading_professional_snapshot_archive_encode, umi_trading_professional_snapshot_archive_decode_if_unchanged,
+    UmiTradingProfessionalSnapshotTransferEqual, UmiTradingProfessionalSnapshotTransferTails, UmiTradingProfessionalSnapshotTransferMalformed)
+
+
 int main(void)
 {
     UmiTradingProfessionalInput input;
@@ -109,6 +115,7 @@ int main(void)
     assert(umi_trading_professional_snapshot_validate(&snapshot) ==
            UMI_STATUS_OK);
     if (UmiTradingProfessionalSnapshotTransferCases(&snapshot) != 0) return 1;
+    if (UmiTradingProfessionalSnapshotConditionalArchiveCases(&snapshot) != 0) return 1;
 
 
     snapshot.score = 101.0;

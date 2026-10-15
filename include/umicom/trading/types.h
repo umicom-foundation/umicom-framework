@@ -284,6 +284,16 @@ UmiStatus umi_replay_event_archive_encode(const UmiReplayEvent *value,
 UmiStatus umi_replay_event_archive_decode(const void *bytes, size_t byte_count,
     UmiReplayEvent *value);
 
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the owner's publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_replay_event_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiReplayEvent *expected, UmiReplayEvent *value);
+
+
 /** Transfer this value using the portable format described in value_archive.h.
  * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
  * validates every field before replacing the destination; refused input leaves
@@ -294,6 +304,16 @@ UmiStatus umi_risk_limit_archive_encode(const UmiRiskLimit *value,
     void *bytes, size_t capacity, size_t *out_size);
 UmiStatus umi_risk_limit_archive_decode(const void *bytes, size_t byte_count,
     UmiRiskLimit *value);
+
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the owner's publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_risk_limit_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiRiskLimit *expected, UmiRiskLimit *value);
+
 
 /** Transfer this value using the portable format described in value_archive.h.
  * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
@@ -306,6 +326,16 @@ UmiStatus umi_bar_archive_encode(const UmiBar *value,
 UmiStatus umi_bar_archive_decode(const void *bytes, size_t byte_count,
     UmiBar *value);
 
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the owner's publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_bar_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiBar *expected, UmiBar *value);
+
+
 /** Transfer this value using the portable format described in value_archive.h.
  * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
  * validates every field before replacing the destination; refused input leaves
@@ -316,6 +346,16 @@ UmiStatus umi_order_request_archive_encode(const UmiOrderRequest *value,
     void *bytes, size_t capacity, size_t *out_size);
 UmiStatus umi_order_request_archive_decode(const void *bytes, size_t byte_count,
     UmiOrderRequest *value);
+
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the owner's publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_order_request_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiOrderRequest *expected, UmiOrderRequest *value);
+
 
 #ifdef __cplusplus
 }

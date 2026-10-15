@@ -40,24 +40,36 @@ void umi_repository_controller_init(UmiRepositoryController *controller);
  * Provide the repository controller begin operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_repository_controller_begin(
     UmiRepositoryController *controller, int dry_run);
 /**
  * Provide the repository controller mark planned operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_repository_controller_mark_planned(
     UmiRepositoryController *controller);
 /**
  * Provide the repository controller mark staging operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_repository_controller_mark_staging(
     UmiRepositoryController *controller);
 /**
  * Provide the repository controller mark verified operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_repository_controller_mark_verified(
     UmiRepositoryController *controller);
 /**

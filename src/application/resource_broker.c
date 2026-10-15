@@ -294,6 +294,11 @@ static const UmiApplicationResourceDescriptor STATIC_RESOURCES[] = {
 };
 
 static const UmiApplicationPresentation APPLICATION_PRESENTATIONS[] = {
+    /* Reuse the Framework icon until a dedicated healthcare icon is supplied.
+     * Desk discovers the native executable before making this entry launchable. */
+    {sizeof(UmiApplicationPresentation), "org.umicom.healthcare",
+     "umicom.icon.application.generic", "healthcare", "healthcare",
+     UMI_APPLICATION_ENTRY_WORKBENCH, false, false},
     {sizeof(UmiApplicationPresentation), "org.umicom.studio",
      "umicom.icon.application.studio", "development", "development",
      UMI_APPLICATION_ENTRY_WORKBENCH, true, false},

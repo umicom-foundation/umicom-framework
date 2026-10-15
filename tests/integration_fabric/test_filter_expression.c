@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/integration/fabric/filter_expression.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -106,10 +107,72 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricFilterExpressionTransferCases, UmiFabricFilterE
     umi_fabric_filter_expression_archive_encode, umi_fabric_filter_expression_archive_decode,
     UmiFabricFilterExpressionTransferEqual, UmiFabricFilterExpressionTransferTails, UmiFabricFilterExpressionTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricFilterExpressionConditionalArchiveCases, UmiFabricFilterExpression,
+    umi_fabric_filter_expression_archive_encode, umi_fabric_filter_expression_archive_decode_if_unchanged,
+    UmiFabricFilterExpressionTransferEqual, UmiFabricFilterExpressionTransferTails, UmiFabricFilterExpressionTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted filter expression value. */
+static int UmiFabricFilterExpressionConstructionCases(void)
+{
+    UmiFabricFilterExpression *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_fabric_filter_expression_init(value, "type", "prefix", "trade.") == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->field) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_filter_expression_init(value, oversized, "prefix", "trade.") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_filter_expression_init(value, value->field, "prefix", "trade.") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->field, "type") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->operation) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_filter_expression_init(value, "type", oversized, "trade.") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_filter_expression_init(value, "type", value->operation, "trade.") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->operation, "prefix") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->value) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_filter_expression_init(value, "type", "prefix", oversized) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_filter_expression_init(value, "type", "prefix", value->value) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->value, "trade.") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiFabricFilterExpressionConstructionCases() != 0) return 1;
+
     UmiFabricFilterExpression item;
     CHECK(umi_fabric_filter_expression_init(&item,"type","prefix","trade.")==UMI_STATUS_OK);
     if (UmiFabricFilterExpressionTransferCases(&item) != 0) return 1;
+    if (UmiFabricFilterExpressionConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(strcmp(item.operation,"prefix")==0);
     return 0;

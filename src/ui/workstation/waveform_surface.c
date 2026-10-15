@@ -14,11 +14,17 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/waveform_surface.h"
+#include "../../base/value_construction_internal.h"
 
 /*
  * Initialise ws waveform surface from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_ws_waveform_surface_init(UmiWsWaveformSurface *surface,
                                        const char *waveform_id,
                                        int32_t sample_rate,
@@ -39,6 +45,35 @@ UmiStatus umi_ws_waveform_surface_init(UmiWsWaveformSurface *surface,
     surface->show_zero_line = true;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_ws_waveform_surface_init_build_value(UmiWsWaveformSurface *surface,
+                                       const char *waveform_id,
+                                       int32_t sample_rate,
+                                       int32_t channel_count,
+                                       int64_t duration_samples) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (surface == NULL || !umi_ws_id_valid(waveform_id) || sample_rate <= 0 || channel_count <= 0 || duration_samples < 0) return UMI_STATUS_INVALID_ARGUMENT;
+    *surface = (UmiWsWaveformSurface){0};
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (umi_ws_copy_text(surface->waveform_id, sizeof(surface->waveform_id), waveform_id) != UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;
+    surface->sample_rate = sample_rate;
+    surface->channel_count = channel_count;
+    surface->duration_samples = duration_samples;
+    surface->vertical_scale = 1.0;
+    surface->show_zero_line = true;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_ws_waveform_surface_init, UmiWsWaveformSurface, surface,
+    (UmiWsWaveformSurface *surface, const char *waveform_id, int32_t sample_rate, int32_t channel_count, int64_t duration_samples),
+    umi_ws_waveform_surface_init_build_value(candidate, waveform_id, sample_rate, channel_count, duration_samples))
+
 
 /*
  * Provide the ws waveform surface select operation used by this module and its client

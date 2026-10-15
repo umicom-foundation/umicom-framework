@@ -130,6 +130,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextReplayTransferCases, UmiContextReplay,
     umi_context_replay_archive_encode, umi_context_replay_archive_decode,
     UmiContextReplayTransferEqual, UmiContextReplayTransferTails, UmiContextReplayTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextReplayConditionalArchiveCases, UmiContextReplay,
+    umi_context_replay_archive_encode, umi_context_replay_archive_decode_if_unchanged,
+    UmiContextReplayTransferEqual, UmiContextReplayTransferTails, UmiContextReplayTransferMalformed)
+
+
 int main(void)
 {
     UmiContextReplay state;
@@ -144,6 +150,7 @@ int main(void)
     assert(umi_context_replay_covers_sequence(&state,11U));
     assert(umi_context_replay_validate(&state) == UMI_STATUS_OK);
     if (UmiContextReplayTransferCases(&state) != 0) return 1;
+    if (UmiContextReplayConditionalArchiveCases(&state) != 0) return 1;
 
     return 0;
 }

@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiTestDurationModelTransferCases, UmiTestDurationModel,
     umi_test_duration_model_archive_encode, umi_test_duration_model_archive_decode,
     UmiTestDurationModelTransferEqual, UmiTestDurationModelTransferTails, UmiTestDurationModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestDurationModelConditionalArchiveCases, UmiTestDurationModel,
+    umi_test_duration_model_archive_encode, umi_test_duration_model_archive_decode_if_unchanged,
+    UmiTestDurationModelTransferEqual, UmiTestDurationModelTransferTails, UmiTestDurationModelTransferMalformed)
+
+
 int main(void){UmiTestDurationModel m;assert(umi_test_duration_model_init(&m,"test_duration_model","Test Duration Model")==UMI_STATUS_OK);assert(umi_test_duration_model_set_active(&m,true)==UMI_STATUS_OK);assert(umi_test_duration_model_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_test_duration_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_duration_model_valid(&m));
     if (UmiTestDurationModelTransferCases(&m) != 0) return 1;
+    if (UmiTestDurationModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

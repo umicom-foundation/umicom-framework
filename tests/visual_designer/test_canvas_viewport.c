@@ -53,6 +53,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadCanvasViewportTransferCases, UmiRadCanvasViewport,
     umi_rad_canvas_viewport_archive_encode, umi_rad_canvas_viewport_archive_decode,
     UmiRadCanvasViewportTransferEqual, UmiRadCanvasViewportTransferTails, UmiRadCanvasViewportTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadCanvasViewportConditionalArchiveCases, UmiRadCanvasViewport,
+    umi_rad_canvas_viewport_archive_encode, umi_rad_canvas_viewport_archive_decode_if_unchanged,
+    UmiRadCanvasViewportTransferEqual, UmiRadCanvasViewportTransferTails, UmiRadCanvasViewportTransferMalformed)
+
+
 int main(void){UmiRadCanvasViewport item;CHECK(umi_rad_canvas_viewport_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_canvas_viewport_is_valid(&item));
     if (UmiRadCanvasViewportTransferCases(&item) != 0) return 1;
+    if (UmiRadCanvasViewportConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

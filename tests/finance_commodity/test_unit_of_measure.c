@@ -91,12 +91,19 @@ UMI_TEST_VALUE_TRANSFER(UmiCommodityUnitOfMeasureTransferCases, UmiCommodityUnit
     umi_commodity_unit_of_measure_archive_encode, umi_commodity_unit_of_measure_archive_decode,
     UmiCommodityUnitOfMeasureTransferEqual, UmiCommodityUnitOfMeasureTransferTails, UmiCommodityUnitOfMeasureTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCommodityUnitOfMeasureConditionalArchiveCases, UmiCommodityUnitOfMeasure,
+    umi_commodity_unit_of_measure_archive_encode, umi_commodity_unit_of_measure_archive_decode_if_unchanged,
+    UmiCommodityUnitOfMeasureTransferEqual, UmiCommodityUnitOfMeasureTransferTails, UmiCommodityUnitOfMeasureTransferMalformed)
+
+
 int main(void)
 {
     UmiCommodityUnitOfMeasure value;
     CHECK(umi_commodity_unit_of_measure_init(&value, "BBL", "VOLUME", 158987, 1000) == UMI_STATUS_OK);
     CHECK(umi_commodity_unit_of_measure_valid(&value));
     if (UmiCommodityUnitOfMeasureTransferCases(&value) != 0) return 1;
+    if (UmiCommodityUnitOfMeasureConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

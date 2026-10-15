@@ -130,6 +130,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextHealthTransferCases, UmiContextHealth,
     umi_context_health_archive_encode, umi_context_health_archive_decode,
     UmiContextHealthTransferEqual, UmiContextHealthTransferTails, UmiContextHealthTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextHealthConditionalArchiveCases, UmiContextHealth,
+    umi_context_health_archive_encode, umi_context_health_archive_decode_if_unchanged,
+    UmiContextHealthTransferEqual, UmiContextHealthTransferTails, UmiContextHealthTransferMalformed)
+
+
 int main(void)
 {
     UmiContextHealth state;
@@ -144,6 +150,7 @@ int main(void)
     assert(umi_context_health_covers_sequence(&state,11U));
     assert(umi_context_health_validate(&state) == UMI_STATUS_OK);
     if (UmiContextHealthTransferCases(&state) != 0) return 1;
+    if (UmiContextHealthConditionalArchiveCases(&state) != 0) return 1;
 
     return 0;
 }

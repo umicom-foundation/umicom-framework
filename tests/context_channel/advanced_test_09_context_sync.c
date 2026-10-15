@@ -130,6 +130,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextSyncTransferCases, UmiContextSync,
     umi_context_sync_archive_encode, umi_context_sync_archive_decode,
     UmiContextSyncTransferEqual, UmiContextSyncTransferTails, UmiContextSyncTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextSyncConditionalArchiveCases, UmiContextSync,
+    umi_context_sync_archive_encode, umi_context_sync_archive_decode_if_unchanged,
+    UmiContextSyncTransferEqual, UmiContextSyncTransferTails, UmiContextSyncTransferMalformed)
+
+
 int main(void)
 {
     UmiContextSync state;
@@ -144,6 +150,7 @@ int main(void)
     assert(umi_context_sync_covers_sequence(&state,11U));
     assert(umi_context_sync_validate(&state) == UMI_STATUS_OK);
     if (UmiContextSyncTransferCases(&state) != 0) return 1;
+    if (UmiContextSyncConditionalArchiveCases(&state) != 0) return 1;
 
     return 0;
 }

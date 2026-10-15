@@ -17,6 +17,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../base/conditional_archive_internal.h"
 #include "umicom/teacher/cpp_track.h"
 #include "../base/value_archive_internal.h"
 
@@ -171,3 +172,8 @@ static UmiStatus UmiTeacherCppTrackArchiveValidate(const UmiTeacherCppTrack *val
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_teacher_cpp_track_archive_encode, umi_teacher_cpp_track_archive_decode,
     UmiTeacherCppTrack, UmiTeacherCppTrackArchiveSchema, UmiTeacherCppTrackArchiveBound, UmiTeacherCppTrackArchiveWrite, UmiTeacherCppTrackArchiveRead, UmiTeacherCppTrackArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_teacher_cpp_track_archive_decode_if_unchanged, umi_teacher_cpp_track_archive_encode,
+    UmiTeacherCppTrack, UmiTeacherCppTrackArchiveSchema, UmiTeacherCppTrackArchiveBound, UmiTeacherCppTrackArchiveRead, UmiTeacherCppTrackArchiveValidate)

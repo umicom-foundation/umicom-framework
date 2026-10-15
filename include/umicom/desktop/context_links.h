@@ -38,6 +38,9 @@ void umi_desktop_context_links_init(
  * Provide the desktop context links define operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_desktop_context_links_define(
     UmiDesktopContextLinks *links,
     const char *group_id,
@@ -47,6 +50,9 @@ UmiStatus umi_desktop_context_links_define(
  * Provide the desktop context links join operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_desktop_context_links_join(
     UmiDesktopContextLinks *links,
     const char *group_id,
@@ -74,6 +80,9 @@ size_t umi_desktop_context_links_route(
  * Provide the desktop context links publish operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_desktop_context_links_publish(
     UmiDesktopContextLinks *links,
     const char *group_id,

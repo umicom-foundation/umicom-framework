@@ -117,6 +117,32 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkDeliveryPlanTransferCases, UmiWor
     umi_workbench_context_link_delivery_plan_archive_encode, umi_workbench_context_link_delivery_plan_archive_decode,
     UmiWorkbenchContextLinkDeliveryPlanTransferEqual, UmiWorkbenchContextLinkDeliveryPlanTransferTails, UmiWorkbenchContextLinkDeliveryPlanTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkDeliveryPlanConditionalArchiveCases, UmiWorkbenchContextLinkDeliveryPlan,
+    umi_workbench_context_link_delivery_plan_archive_encode, umi_workbench_context_link_delivery_plan_archive_decode_if_unchanged,
+    UmiWorkbenchContextLinkDeliveryPlanTransferEqual, UmiWorkbenchContextLinkDeliveryPlanTransferTails, UmiWorkbenchContextLinkDeliveryPlanTransferMalformed)
+
+
+/* Delayed context edits must preserve newer work and reject exhausted tokens. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextLinkDeliveryPlanReviewedCases, UmiWorkbenchContextLinkDeliveryPlan,
+    plan_id, source_panel_id, umi_workbench_context_link_delivery_plan_replace_if_current, UmiWorkbenchContextLinkDeliveryPlanTransferEqual)
+static int UmiWorkbenchContextLinkDeliveryPlanMutationGuards(const UmiWorkbenchContextLinkDeliveryPlan *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkDeliveryPlan, group_id, umi_workbench_context_link_delivery_plan_set_primary, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkDeliveryPlan, source_panel_id, umi_workbench_context_link_delivery_plan_set_secondary, sample);
+    UmiWorkbenchContextLinkDeliveryPlan value = *sample;
+    unsigned char before[sizeof(value)];
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_link_delivery_plan_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U ||
+        value.timestamp_ms != 44U) return 1;
+    memcpy(before, &value, sizeof(value));
+    umi_workbench_context_link_delivery_plan_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof(value)) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextLinkDeliveryPlan record;
@@ -125,6 +151,9 @@ int main(void)
     umi_workbench_context_link_delivery_plan_init(&record, "delivery_plan-id");
     assert(umi_workbench_context_link_delivery_plan_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkDeliveryPlanTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkDeliveryPlanConditionalArchiveCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkDeliveryPlanReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkDeliveryPlanMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_context_link_delivery_plan_set_primary(&record, "primary") == UMI_STATUS_OK);
     assert(umi_workbench_context_link_delivery_plan_set_secondary(&record, "secondary") == UMI_STATUS_OK);

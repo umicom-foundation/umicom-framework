@@ -99,6 +99,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextLinkGroupTransferCases, UmiContextLinkGroup,
     umi_context_link_group_archive_encode, umi_context_link_group_archive_decode,
     UmiContextLinkGroupTransferEqual, UmiContextLinkGroupTransferTails, UmiContextLinkGroupTransferMalformed)
 
+#include "../conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextLinkGroupConditionalArchiveCases, UmiContextLinkGroup,
+    umi_context_link_group_archive_encode, umi_context_link_group_archive_decode_if_unchanged,
+    UmiContextLinkGroupTransferEqual, UmiContextLinkGroupTransferTails, UmiContextLinkGroupTransferMalformed)
+
+
 int main(void)
 {
     UmiContextLinkGroup value;
@@ -111,6 +117,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_context_link_group_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiContextLinkGroupTransferCases(&value) != 0) return 1;
+    if (UmiContextLinkGroupConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

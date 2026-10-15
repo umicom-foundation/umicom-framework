@@ -49,6 +49,10 @@ void umi_workbench_context_link_binding_registry_destroy(
  * Provide the workbench context link binding registry upsert operation used by this module
  * and its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
+/** Replacing a record also refuses an exhausted input revision before copying it. */
 UmiStatus umi_workbench_context_link_binding_registry_upsert(
     UmiWorkbenchContextLinkBindingRegistry *registry,
     const UmiWorkbenchContextLinkPanelBinding *binding);
@@ -63,6 +67,9 @@ UmiStatus umi_workbench_context_link_binding_registry_remove(
  * Provide the workbench context link binding registry remove panel operation used by this
  * module and its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_context_link_binding_registry_remove_panel(
     UmiWorkbenchContextLinkBindingRegistry *registry,
     const char *panel_id);

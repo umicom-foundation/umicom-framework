@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/data/enterprise/backup_plan.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -92,10 +93,60 @@ UMI_TEST_VALUE_TRANSFER(UmiDataBackupPlanTransferCases, UmiDataBackupPlan,
     umi_data_backup_plan_archive_encode, umi_data_backup_plan_archive_decode,
     UmiDataBackupPlanTransferEqual, UmiDataBackupPlanTransferTails, UmiDataBackupPlanTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataBackupPlanConditionalArchiveCases, UmiDataBackupPlan,
+    umi_data_backup_plan_archive_encode, umi_data_backup_plan_archive_decode_if_unchanged,
+    UmiDataBackupPlanTransferEqual, UmiDataBackupPlanTransferTails, UmiDataBackupPlanTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted backup plan value. */
+static int UmiDataBackupPlanConstructionCases(void)
+{
+    UmiDataBackupPlan *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_data_backup_plan_init(value, "b1", "backup://daily", 10U, false) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->backup_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_backup_plan_init(value, oversized, "backup://daily", 10U, false) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_backup_plan_init(value, value->backup_id, "backup://daily", 10U, false) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->backup_id, "b1") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->destination) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_backup_plan_init(value, "b1", oversized, 10U, false) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_backup_plan_init(value, "b1", value->destination, 10U, false) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->destination, "backup://daily") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiDataBackupPlanConstructionCases() != 0) return 1;
+
     UmiDataBackupPlan item;
     CHECK(umi_data_backup_plan_init(&item,"b1","backup://daily",10U,false) == UMI_STATUS_OK);
     if (UmiDataBackupPlanTransferCases(&item) != 0) return 1;
+    if (UmiDataBackupPlanConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.encrypted);
     return 0;

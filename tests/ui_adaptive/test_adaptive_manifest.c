@@ -88,12 +88,19 @@ UMI_TEST_VALUE_TRANSFER(UmiAdaptiveManifestTransferCases, UmiAdaptiveManifest,
     umi_adaptive_manifest_archive_encode, umi_adaptive_manifest_archive_decode,
     UmiAdaptiveManifestTransferEqual, UmiAdaptiveManifestTransferTails, UmiAdaptiveManifestTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAdaptiveManifestConditionalArchiveCases, UmiAdaptiveManifest,
+    umi_adaptive_manifest_archive_encode, umi_adaptive_manifest_archive_decode_if_unchanged,
+    UmiAdaptiveManifestTransferEqual, UmiAdaptiveManifestTransferTails, UmiAdaptiveManifestTransferMalformed)
+
+
 int main(void)
 {
     UmiAdaptiveManifest manifest;
     CHECK(umi_adaptive_manifest_init(&manifest,"studio","studio.shell")==UMI_STATUS_OK);
     CHECK(umi_adaptive_manifest_valid(&manifest));
     if (UmiAdaptiveManifestTransferCases(&manifest) != 0) return 1;
+    if (UmiAdaptiveManifestConditionalArchiveCases(&manifest) != 0) return 1;
 
     return 0;
 }

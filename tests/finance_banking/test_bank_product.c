@@ -85,6 +85,12 @@ UMI_TEST_VALUE_TRANSFER(UmiBankingBankProductTransferCases, UmiBankingBankProduc
     umi_banking_bank_product_archive_encode, umi_banking_bank_product_archive_decode,
     UmiBankingBankProductTransferEqual, UmiBankingBankProductTransferTails, UmiBankingBankProductTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiBankingBankProductConditionalArchiveCases, UmiBankingBankProduct,
+    umi_banking_bank_product_archive_encode, umi_banking_bank_product_archive_decode_if_unchanged,
+    UmiBankingBankProductTransferEqual, UmiBankingBankProductTransferTails, UmiBankingBankProductTransferMalformed)
+
+
 int main(void) {
     UmiBankingBankProduct v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -92,6 +98,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if(!umi_banking_bank_product_valid(&v)) return 2;
     if (UmiBankingBankProductTransferCases(&v) != 0) return 1;
+    if (UmiBankingBankProductConditionalArchiveCases(&v) != 0) return 1;
 
     return 0;
 }

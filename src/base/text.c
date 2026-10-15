@@ -161,3 +161,17 @@ UmiStatus umi_text_update(char *destination, size_t capacity,
   *revision += 1U;
   return UMI_STATUS_OK;
 }
+
+/* Edited values keep the last accepted text when a replacement is too long.
+ * Scan before moving bytes; memmove permits a field to borrow its own suffix.
+ * Presentation callers may still choose umi_text_copy's empty-on-failure rule. */
+UmiStatus umi_text_replace(char *destination, size_t capacity, const char *source)
+{
+  if (destination == NULL || capacity == 0U || source == NULL)
+    return UMI_STATUS_INVALID_ARGUMENT;
+  size_t length = bounded_length(source, capacity);
+  if (length == capacity)
+    return UMI_STATUS_CAPACITY_EXCEEDED;
+  (void)memmove(destination, source, length + 1U);
+  return UMI_STATUS_OK;
+}

@@ -87,6 +87,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicLayoutRestorePlanTransferCases, UmiUiMosaicLa
     umi_ui_mosaic_layout_restore_plan_archive_encode, umi_ui_mosaic_layout_restore_plan_archive_decode,
     UmiUiMosaicLayoutRestorePlanTransferEqual, UmiUiMosaicLayoutRestorePlanTransferTails, UmiUiMosaicLayoutRestorePlanTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicLayoutRestorePlanConditionalArchiveCases, UmiUiMosaicLayoutRestorePlan,
+    umi_ui_mosaic_layout_restore_plan_archive_encode, umi_ui_mosaic_layout_restore_plan_archive_decode_if_unchanged,
+    UmiUiMosaicLayoutRestorePlanTransferEqual, UmiUiMosaicLayoutRestorePlanTransferTails, UmiUiMosaicLayoutRestorePlanTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicLayoutRestorePlan value;
     umi_ui_mosaic_layout_restore_plan_init(&value);
@@ -94,6 +100,7 @@ int main(void) {
     value.item_count = 4U;
     CHECK(umi_ui_mosaic_layout_restore_plan_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicLayoutRestorePlanTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicLayoutRestorePlanConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_layout_restore_plan_touch(&value) == UMI_STATUS_OK);
     CHECK(value.revision == 2U);

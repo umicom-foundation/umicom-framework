@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../base/conditional_archive_internal.h"
 #include "umicom/strategy_research/strategy_project.h"
 #include "../base/value_archive_internal.h"
 
@@ -170,3 +171,8 @@ static UmiStatus UmiStrategyProjectConfigArchiveValidate(const UmiStrategyProjec
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_strategy_project_config_archive_encode, umi_strategy_project_config_archive_decode,
     UmiStrategyProjectConfig, UmiStrategyProjectConfigArchiveSchema, UmiStrategyProjectConfigArchiveBound, UmiStrategyProjectConfigArchiveWrite, UmiStrategyProjectConfigArchiveRead, UmiStrategyProjectConfigArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_strategy_project_config_archive_decode_if_unchanged, umi_strategy_project_config_archive_encode,
+    UmiStrategyProjectConfig, UmiStrategyProjectConfigArchiveSchema, UmiStrategyProjectConfigArchiveBound, UmiStrategyProjectConfigArchiveRead, UmiStrategyProjectConfigArchiveValidate)

@@ -19,6 +19,7 @@
  * destination so the final rename is atomic on supported local filesystems.
  */
 #include "umicom/ai/conversation_archive.h"
+#include "../base/value_construction_internal.h"
 
 #include <errno.h>
 #include <stdarg.h>
@@ -107,6 +108,11 @@ static int record_valid(const UmiAiConversationRecord *record)
  * Initialise ai conversation record from caller-provided values so later operations
  * receive a known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_ai_conversation_record_init(
     UmiAiConversationRecord *record,
     const char *session_id,
@@ -146,6 +152,54 @@ UmiStatus umi_ai_conversation_record_init(
     record->revision = 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_ai_conversation_record_init_build_value(
+    UmiAiConversationRecord *record,
+    const char *session_id,
+    const char *provider_id,
+    const char *model_id,
+    const char *workspace_id,
+    const char *title,
+    uint64_t created_at_ns)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (record == NULL || session_id == NULL || provider_id == NULL ||
+        model_id == NULL || workspace_id == NULL || title == NULL ||
+        session_id[0] == '\0' || provider_id[0] == '\0' ||
+        model_id[0] == '\0' || workspace_id[0] == '\0' || title[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    (void)memset(record, 0, sizeof(*record));
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (!copy_text(record->session.session_id,
+                   sizeof(record->session.session_id), session_id) ||
+        !copy_text(record->session.provider_id,
+                   sizeof(record->session.provider_id), provider_id) ||
+        !copy_text(record->session.model_id,
+                   sizeof(record->session.model_id), model_id) ||
+        !copy_text(record->workspace_id, sizeof(record->workspace_id),
+                   workspace_id) ||
+        !copy_text(record->title, sizeof(record->title), title)) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    record->session.created_at_ns = created_at_ns;
+    umi_ai_conversation_init(&record->conversation, session_id);
+    record->classification = UMI_AI_DATA_INTERNAL;
+    record->updated_at_ns = created_at_ns;
+    record->revision = 1U;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_ai_conversation_record_init, UmiAiConversationRecord, record,
+    (UmiAiConversationRecord *record, const char *session_id, const char *provider_id, const char *model_id, const char *workspace_id, const char *title, uint64_t created_at_ns),
+    umi_ai_conversation_record_init_build_value(candidate, session_id, provider_id, model_id, workspace_id, title, created_at_ns))
+
 
 /*
  * Initialise ai conversation archive from caller-provided values so later operations

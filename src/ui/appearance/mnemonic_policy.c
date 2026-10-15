@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/appearance/mnemonic_policy.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -89,3 +90,8 @@ static UmiStatus UmiAppearanceMnemonicPolicyArchiveValidate(const UmiAppearanceM
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_appearance_mnemonic_policy_archive_encode, umi_appearance_mnemonic_policy_archive_decode,
     UmiAppearanceMnemonicPolicy, UmiAppearanceMnemonicPolicyArchiveSchema, UmiAppearanceMnemonicPolicyArchiveBound, UmiAppearanceMnemonicPolicyArchiveWrite, UmiAppearanceMnemonicPolicyArchiveRead, UmiAppearanceMnemonicPolicyArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_appearance_mnemonic_policy_archive_decode_if_unchanged, umi_appearance_mnemonic_policy_archive_encode,
+    UmiAppearanceMnemonicPolicy, UmiAppearanceMnemonicPolicyArchiveSchema, UmiAppearanceMnemonicPolicyArchiveBound, UmiAppearanceMnemonicPolicyArchiveRead, UmiAppearanceMnemonicPolicyArchiveValidate)

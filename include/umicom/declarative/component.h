@@ -45,6 +45,10 @@ typedef struct UmiDeclComponentDescriptor {
  * Initialise decl component descriptor from caller-provided values so later operations
  * receive a known state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_decl_component_descriptor_init(UmiDeclComponentDescriptor *descriptor, const char *component_type, const char *display_name, const char *category, int container);
 /**
  * Provide the decl component add property operation used by this module and its client

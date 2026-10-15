@@ -17,6 +17,10 @@
 
 #include "umicom/open_tms/pricing/valuation_quality.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(umi_open_tms_evaluate_pricing_valuation_quality_batch_cases, umi_open_tms_evaluate_pricing_valuation_quality,
+    umi_open_tms_evaluate_pricing_valuation_quality_batch, UmiOpenTmsInput, UmiOpenTmsSnapshot, value)
+
 int main(void)
 {
     UmiOpenTmsInput input;
@@ -76,6 +80,7 @@ int main(void)
     input.transitionAllowed = 1;
     input.revision = 111U;
 
+    if (umi_open_tms_evaluate_pricing_valuation_quality_batch_cases(&input) != 0) return 1;
     assert(umi_open_tms_evaluate_pricing_valuation_quality(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "pricing.valuation-quality") == 0);
     assert(snapshot.revision == 111U);

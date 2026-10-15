@@ -61,7 +61,11 @@ extern "C" {
     UmiProjectWorkspaceNamedState;
 
     const char *umi_project_workspace_state_text(UmiProjectWorkspaceState state);
-    UmiStatus umi_project_workspace_named_state_init(UmiProjectWorkspaceNamedState *value,
+    /** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
+UmiStatus umi_project_workspace_named_state_init(UmiProjectWorkspaceNamedState *value,
     const char *id);
     UmiStatus umi_project_workspace_named_state_validate(const UmiProjectWorkspaceNamedState *value);
     UmiStatus umi_project_workspace_named_state_set_name(UmiProjectWorkspaceNamedState *value,
@@ -82,6 +86,16 @@ UmiStatus umi_project_workspace_named_state_archive_encode(const UmiProjectWorks
     void *bytes, size_t capacity, size_t *out_size);
 UmiStatus umi_project_workspace_named_state_archive_decode(const void *bytes, size_t byte_count,
     UmiProjectWorkspaceNamedState *value);
+
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the owner's publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_project_workspace_named_state_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiProjectWorkspaceNamedState *expected, UmiProjectWorkspaceNamedState *value);
+
 
 #ifdef __cplusplus
 }

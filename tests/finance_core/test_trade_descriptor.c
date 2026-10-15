@@ -109,10 +109,17 @@ UMI_TEST_VALUE_TRANSFER(UmiTradeDescriptorTransferCases, UmiTradeDescriptor,
     umi_trade_descriptor_archive_encode, umi_trade_descriptor_archive_decode,
     UmiTradeDescriptorTransferEqual, UmiTradeDescriptorTransferTails, UmiTradeDescriptorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTradeDescriptorConditionalArchiveCases, UmiTradeDescriptor,
+    umi_trade_descriptor_archive_encode, umi_trade_descriptor_archive_decode_if_unchanged,
+    UmiTradeDescriptorTransferEqual, UmiTradeDescriptorTransferTails, UmiTradeDescriptorTransferMalformed)
+
+
 int main(void)
 {
     UmiTradeDescriptor x; CHECK(umi_trade_descriptor_init(&x,"ID","Name","PARENT",(UmiFinancialDate){2026,8U,25U},1U)==UMI_STATUS_OK); CHECK(umi_trade_descriptor_is_valid(&x));
     if (UmiTradeDescriptorTransferCases(&x) != 0) return 1;
+    if (UmiTradeDescriptorConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;
 }

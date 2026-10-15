@@ -87,6 +87,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicSplitRatioTransferCases, UmiUiMosaicSplitRati
     umi_ui_mosaic_split_ratio_archive_encode, umi_ui_mosaic_split_ratio_archive_decode,
     UmiUiMosaicSplitRatioTransferEqual, UmiUiMosaicSplitRatioTransferTails, UmiUiMosaicSplitRatioTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicSplitRatioConditionalArchiveCases, UmiUiMosaicSplitRatio,
+    umi_ui_mosaic_split_ratio_archive_encode, umi_ui_mosaic_split_ratio_archive_decode_if_unchanged,
+    UmiUiMosaicSplitRatioTransferEqual, UmiUiMosaicSplitRatioTransferTails, UmiUiMosaicSplitRatioTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicSplitRatio value;
     umi_ui_mosaic_split_ratio_init(&value);
@@ -94,6 +100,7 @@ int main(void) {
     value.item_count = 4U;
     CHECK(umi_ui_mosaic_split_ratio_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicSplitRatioTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicSplitRatioConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_split_ratio_touch(&value) == UMI_STATUS_OK);
     CHECK(value.revision == 2U);

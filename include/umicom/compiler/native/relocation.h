@@ -32,6 +32,10 @@ typedef struct UmiNativeRelocation { UmiNativeRelocationKind kind; char section[
  * Initialise nc relocation from caller-provided values so later operations receive a known
  * state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_nc_relocation_init(UmiNativeRelocation *relocation,UmiNativeRelocationKind kind,const char *section,uint64_t offset,const char *symbol,int64_t addend);
 /**
  * Check that nc relocation satisfies its contract before another service relies on it.

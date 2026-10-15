@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/web/workbench/history.h"
 
 #include <ctype.h>
@@ -107,11 +108,52 @@ uint64_t umi_web_workbench_history_begin(
  * Provide the web workbench history complete operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_web_workbench_history_complete(
     UmiWebWorkbenchHistory *history,
     uint64_t execution_id,
     const UmiWebWorkbenchResponse *response)
 {
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (history == NULL || execution_id == 0U || response == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < history->entry_count; ++index) {
+        UmiWebWorkbenchHistoryEntry *entry = &history->entries[index];
+        /* Use the stable identifier comparison to choose the matching record or policy. */
+        if (entry->execution_id == execution_id) {
+            entry->phase = response->phase;
+            entry->status = response->status;
+            entry->http_status = response->http_status;
+            entry->duration_us = response->timing.total_us;
+            entry->received_bytes = response->received_bytes;
+            entry->tls_verified = response->tls_verified;
+            history->revision++;
+            return UMI_STATUS_OK;
+        }
+    }
+    return UMI_STATUS_NOT_FOUND;
+}
+#endif
+
+UmiStatus umi_web_workbench_history_complete(
+    UmiWebWorkbenchHistory *history,
+    uint64_t execution_id,
+    const UmiWebWorkbenchResponse *response)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (history != NULL && history->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is

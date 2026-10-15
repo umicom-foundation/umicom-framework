@@ -119,6 +119,12 @@ UMI_TEST_VALUE_TRANSFER(UmiPaymentsPaymentPartyTransferCases, UmiPaymentsPayment
     umi_payments_payment_party_archive_encode, umi_payments_payment_party_archive_decode,
     UmiPaymentsPaymentPartyTransferEqual, UmiPaymentsPaymentPartyTransferTails, UmiPaymentsPaymentPartyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiPaymentsPaymentPartyConditionalArchiveCases, UmiPaymentsPaymentParty,
+    umi_payments_payment_party_archive_encode, umi_payments_payment_party_archive_decode_if_unchanged,
+    UmiPaymentsPaymentPartyTransferEqual, UmiPaymentsPaymentPartyTransferTails, UmiPaymentsPaymentPartyTransferMalformed)
+
+
 int main(void) {
     UmiPaymentsPaymentParty v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -126,6 +132,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if(!umi_payments_payment_party_valid(&v)) return 2;
     if (UmiPaymentsPaymentPartyTransferCases(&v) != 0) return 1;
+    if (UmiPaymentsPaymentPartyConditionalArchiveCases(&v) != 0) return 1;
 
     return 0;
 }

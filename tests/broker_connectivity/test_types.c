@@ -91,6 +91,12 @@ UMI_TEST_VALUE_TRANSFER(UmiBrokerConnectivitySnapshotTransferCases, UmiBrokerCon
     umi_broker_connectivity_snapshot_archive_encode, umi_broker_connectivity_snapshot_archive_decode,
     UmiBrokerConnectivitySnapshotTransferEqual, UmiBrokerConnectivitySnapshotTransferTails, UmiBrokerConnectivitySnapshotTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiBrokerConnectivitySnapshotConditionalArchiveCases, UmiBrokerConnectivitySnapshot,
+    umi_broker_connectivity_snapshot_archive_encode, umi_broker_connectivity_snapshot_archive_decode_if_unchanged,
+    UmiBrokerConnectivitySnapshotTransferEqual, UmiBrokerConnectivitySnapshotTransferTails, UmiBrokerConnectivitySnapshotTransferMalformed)
+
+
 int main(void)
 {
     UmiBrokerConnectivityInput input;
@@ -104,6 +110,7 @@ int main(void)
     snapshot.ready = 1;
     assert(umi_broker_connectivity_snapshot_validate(&snapshot) == UMI_STATUS_OK);
     if (UmiBrokerConnectivitySnapshotTransferCases(&snapshot) != 0) return 1;
+    if (UmiBrokerConnectivitySnapshotConditionalArchiveCases(&snapshot) != 0) return 1;
 
     snapshot.score = 101.0;
     assert(umi_broker_connectivity_snapshot_validate(&snapshot) ==

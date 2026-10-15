@@ -104,6 +104,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadPropertyBindingTransferCases, UmiRadPropertyBindin
     umi_rad_property_binding_archive_encode, umi_rad_property_binding_archive_decode,
     UmiRadPropertyBindingTransferEqual, UmiRadPropertyBindingTransferTails, UmiRadPropertyBindingTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadPropertyBindingConditionalArchiveCases, UmiRadPropertyBinding,
+    umi_rad_property_binding_archive_encode, umi_rad_property_binding_archive_decode_if_unchanged,
+    UmiRadPropertyBindingTransferEqual, UmiRadPropertyBindingTransferTails, UmiRadPropertyBindingTransferMalformed)
+
+
 int main(void){UmiRadPropertyBinding item;CHECK(umi_rad_property_binding_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_property_binding_is_valid(&item));
     if (UmiRadPropertyBindingTransferCases(&item) != 0) return 1;
+    if (UmiRadPropertyBindingConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

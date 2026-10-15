@@ -117,6 +117,32 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkWorkspaceBindingTransferCases, Um
     umi_workbench_context_link_workspace_binding_archive_encode, umi_workbench_context_link_workspace_binding_archive_decode,
     UmiWorkbenchContextLinkWorkspaceBindingTransferEqual, UmiWorkbenchContextLinkWorkspaceBindingTransferTails, UmiWorkbenchContextLinkWorkspaceBindingTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkWorkspaceBindingConditionalArchiveCases, UmiWorkbenchContextLinkWorkspaceBinding,
+    umi_workbench_context_link_workspace_binding_archive_encode, umi_workbench_context_link_workspace_binding_archive_decode_if_unchanged,
+    UmiWorkbenchContextLinkWorkspaceBindingTransferEqual, UmiWorkbenchContextLinkWorkspaceBindingTransferTails, UmiWorkbenchContextLinkWorkspaceBindingTransferMalformed)
+
+
+/* Delayed context edits must preserve newer work and reject exhausted tokens. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextLinkWorkspaceBindingReviewedCases, UmiWorkbenchContextLinkWorkspaceBinding,
+    binding_id, group_id, umi_workbench_context_link_workspace_binding_replace_if_current, UmiWorkbenchContextLinkWorkspaceBindingTransferEqual)
+static int UmiWorkbenchContextLinkWorkspaceBindingMutationGuards(const UmiWorkbenchContextLinkWorkspaceBinding *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkWorkspaceBinding, workspace_id, umi_workbench_context_link_workspace_binding_set_primary, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkWorkspaceBinding, group_id, umi_workbench_context_link_workspace_binding_set_secondary, sample);
+    UmiWorkbenchContextLinkWorkspaceBinding value = *sample;
+    unsigned char before[sizeof(value)];
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_link_workspace_binding_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U ||
+        value.timestamp_ms != 44U) return 1;
+    memcpy(before, &value, sizeof(value));
+    umi_workbench_context_link_workspace_binding_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof(value)) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextLinkWorkspaceBinding record;
@@ -125,6 +151,9 @@ int main(void)
     umi_workbench_context_link_workspace_binding_init(&record, "workspace_binding-id");
     assert(umi_workbench_context_link_workspace_binding_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkWorkspaceBindingTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkWorkspaceBindingConditionalArchiveCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkWorkspaceBindingReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkWorkspaceBindingMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_context_link_workspace_binding_set_primary(&record, "primary") == UMI_STATUS_OK);
     assert(umi_workbench_context_link_workspace_binding_set_secondary(&record, "secondary") == UMI_STATUS_OK);

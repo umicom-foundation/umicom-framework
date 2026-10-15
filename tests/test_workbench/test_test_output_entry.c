@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiTestOutputEntryTransferCases, UmiTestOutputEntry,
     umi_test_output_entry_archive_encode, umi_test_output_entry_archive_decode,
     UmiTestOutputEntryTransferEqual, UmiTestOutputEntryTransferTails, UmiTestOutputEntryTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestOutputEntryConditionalArchiveCases, UmiTestOutputEntry,
+    umi_test_output_entry_archive_encode, umi_test_output_entry_archive_decode_if_unchanged,
+    UmiTestOutputEntryTransferEqual, UmiTestOutputEntryTransferTails, UmiTestOutputEntryTransferMalformed)
+
+
 int main(void){UmiTestOutputEntry m;assert(umi_test_output_entry_init(&m,"test_output_entry","Test Output Entry")==UMI_STATUS_OK);assert(umi_test_output_entry_set_active(&m,true)==UMI_STATUS_OK);assert(umi_test_output_entry_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_test_output_entry_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_output_entry_valid(&m));
     if (UmiTestOutputEntryTransferCases(&m) != 0) return 1;
+    if (UmiTestOutputEntryConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

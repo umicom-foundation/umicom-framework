@@ -59,6 +59,12 @@ UMI_TEST_VALUE_TRANSFER(UmiVcsAdvancedRangeMappingTransferCases, UmiVcsAdvancedR
     umi_vcs_advanced_range_mapping_archive_encode, umi_vcs_advanced_range_mapping_archive_decode,
     UmiVcsAdvancedRangeMappingTransferEqual, UmiVcsAdvancedRangeMappingTransferTails, UmiVcsAdvancedRangeMappingTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiVcsAdvancedRangeMappingConditionalArchiveCases, UmiVcsAdvancedRangeMapping,
+    umi_vcs_advanced_range_mapping_archive_encode, umi_vcs_advanced_range_mapping_archive_decode_if_unchanged,
+    UmiVcsAdvancedRangeMappingTransferEqual, UmiVcsAdvancedRangeMappingTransferTails, UmiVcsAdvancedRangeMappingTransferMalformed)
+
+
 int main(void)
 {
     UmiVcsAdvancedRangeMapping value;
@@ -69,6 +75,7 @@ int main(void)
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_vcs_advanced_range_mapping_validate(&value) != UMI_STATUS_OK) return 2;
     if (UmiVcsAdvancedRangeMappingTransferCases(&value) != 0) return 1;
+    if (UmiVcsAdvancedRangeMappingConditionalArchiveCases(&value) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (umi_vcs_advanced_range_mapping_delta(&value) != 2LL) return 3;

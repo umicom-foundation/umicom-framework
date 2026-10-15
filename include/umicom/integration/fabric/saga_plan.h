@@ -41,6 +41,9 @@ void umi_fabric_saga_plan_init(UmiFabricSagaPlan *registry);
 /**
  * Add fabric saga plan only after its inputs and available capacity have been checked.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_fabric_saga_plan_add(UmiFabricSagaPlan *registry,const UmiFabricSagaStep *item);
 /**
  * Find fabric saga plan while leaving the underlying catalogue or model owned by this

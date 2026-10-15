@@ -91,6 +91,8 @@ static void ArchiveFillUnusedText(UmiEditorConfigurationSnapshot *value)
 #define ARCHIVE_TYPE UmiEditorConfigurationSnapshot
 #define ARCHIVE_ENCODE umi_editor_configuration_snapshot_archive_encode
 #define ARCHIVE_DECODE umi_editor_configuration_snapshot_archive_decode
+/* Exercise guarded import through this domain's public snapshot codec. */
+#define ARCHIVE_CONDITIONAL_DECODE umi_editor_configuration_snapshot_archive_decode_if_unchanged
 #define ARCHIVE_EQUAL ContractSnapshotEqual
 #include "../value_archive/record_cases.h"
 

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/studio_runtime/status_model.h"
 
 #include <stdio.h>
@@ -80,11 +81,237 @@ void umi_studio_status_model_init(UmiStudioRuntimeStatusModel *model)
  * Provide the studio status model build operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_studio_status_model_build(
     UmiStudioRuntimeStatusModel *model,
     const UmiIdeIntegrationPlatformSnapshot *snapshot,
     const UmiStudioRuntimeSelectionRouter *selection)
 {
+    char text[512];
+    uint32_t problem_badge = 0U;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (model == NULL || snapshot == NULL || selection == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    model->item_count = 0U;
+
+    status = append(
+        model,
+        UMI_STUDIO_STATUS_WORKSPACE,
+        "umicom.shell.status-bar.workspace",
+        snapshot->context.workspace_root,
+        "",
+        0U,
+        0);
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = append(
+            model,
+            UMI_STUDIO_STATUS_BRANCH,
+            "umicom.shell.status-bar.branch",
+            snapshot->context.has_source_control
+                ? snapshot->context.source_control.branch.name
+                : "No VCS",
+            "view.source-control",
+            snapshot->context.has_source_control
+                ? (uint32_t)(snapshot->context.source_control.change_count >
+                        UINT32_MAX
+                    ? UINT32_MAX
+                    : snapshot->context.source_control.change_count)
+                : 0U,
+            0);
+    }
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (snapshot->context.has_problems) {
+        const size_t severe =
+            snapshot->context.problems.errors +
+            snapshot->context.problems.fatals;
+        problem_badge =
+            severe > UINT32_MAX ? UINT32_MAX : (uint32_t)severe;
+    }
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        (void)snprintf(
+            text,
+            sizeof(text),
+            "Errors %zu  Warnings %zu",
+            snapshot->context.has_problems
+                ? snapshot->context.problems.errors +
+                  snapshot->context.problems.fatals
+                : 0U,
+            snapshot->context.has_problems
+                ? snapshot->context.problems.warnings
+                : 0U);
+
+        status = append(
+            model,
+            UMI_STUDIO_STATUS_PROBLEMS,
+            "umicom.shell.status-bar.problems",
+            text,
+            "view.problems",
+            problem_badge,
+            problem_badge > 0U);
+    }
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        (void)snprintf(
+            text,
+            sizeof(text),
+            "Tests %zu%s",
+            snapshot->context.has_tests
+                ? snapshot->context.tests.result_count
+                : 0U,
+            snapshot->context.has_tests &&
+                    snapshot->context.tests.operation_running
+                ? " running"
+                : "");
+
+        status = append(
+            model,
+            UMI_STUDIO_STATUS_TESTS,
+            "umicom.studio.status.tests",
+            text,
+            "view.test-explorer",
+            0U,
+            snapshot->context.has_tests &&
+                snapshot->context.tests.operation_running);
+    }
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = append(
+            model,
+            UMI_STUDIO_STATUS_BUILD,
+            "umicom.shell.status-bar.build",
+            snapshot->workflow.ready ? "Ready" : "Workflow blocked",
+            "view.build-dashboard",
+            snapshot->workflow.blocked_count > UINT32_MAX
+                ? UINT32_MAX
+                : (uint32_t)snapshot->workflow.blocked_count,
+            !snapshot->workflow.ready);
+    }
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        (void)snprintf(
+            text,
+            sizeof(text),
+            "%s%s",
+            snapshot->context.has_debug
+                ? (snapshot->context.debug.active ? "Debugging" : "Debugger idle")
+                : "Debugger unavailable",
+            snapshot->context.has_debug && snapshot->context.debug.paused
+                ? " paused"
+                : "");
+
+        status = append(
+            model,
+            UMI_STUDIO_STATUS_DEBUG,
+            "umicom.studio.status.debug",
+            text,
+            "view.debug",
+            0U,
+            snapshot->context.has_debug && snapshot->context.debug.active);
+    }
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = append(
+            model,
+            UMI_STUDIO_STATUS_AI,
+            "umicom.studio.status.ai",
+            snapshot->context.has_ai
+                ? umi_ai_coding_runtime_state_text(
+                    snapshot->context.ai.coding.agent.state)
+                : "AI unavailable",
+            "ai.assistant.open",
+            snapshot->context.has_ai
+                ? (uint32_t)(snapshot->context.ai.pending_approval_count >
+                        UINT32_MAX
+                    ? UINT32_MAX
+                    : snapshot->context.ai.pending_approval_count)
+                : 0U,
+            snapshot->context.has_ai &&
+                snapshot->context.ai.pending_approval_count > 0U);
+    }
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = append(
+            model,
+            UMI_STUDIO_STATUS_LANGUAGE,
+            "umicom.shell.status-bar.language",
+            snapshot->context.has_document
+                ? snapshot->context.document.language_id
+                : "",
+            "",
+            0U,
+            0);
+    }
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = append(
+            model,
+            UMI_STUDIO_STATUS_ENCODING,
+            "umicom.shell.status-bar.encoding",
+            snapshot->context.has_document
+                ? umi_document_encoding_text(
+                    snapshot->context.document.encoding)
+                : "",
+            "",
+            0U,
+            0);
+    }
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        (void)snprintf(
+            text,
+            sizeof(text),
+            "Ln %u, Col %u",
+            selection->state.current.line,
+            selection->state.current.column);
+
+        status = append(
+            model,
+            UMI_STUDIO_STATUS_CURSOR,
+            "umicom.shell.status-bar.line-column",
+            text,
+            "",
+            0U,
+            0);
+    }
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) model->revision += 1U;
+    return status;
+}
+#endif
+
+UmiStatus umi_studio_status_model_build(
+    UmiStudioRuntimeStatusModel *model,
+    const UmiIdeIntegrationPlatformSnapshot *snapshot,
+    const UmiStudioRuntimeSelectionRouter *selection)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (model != NULL && model->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     char text[512];
     uint32_t problem_badge = 0U;
     UmiStatus status;

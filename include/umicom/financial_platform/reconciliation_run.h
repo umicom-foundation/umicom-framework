@@ -51,10 +51,16 @@ void umi_financial_reconciliation_run_init(
     UmiFinancialReconciliationRun *run,
     const char *runId);
 
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_financial_reconciliation_run_add(
     UmiFinancialReconciliationRun *run,
     const UmiFinancialReconciliationItem *item);
 
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_financial_reconciliation_run_resolve(
     UmiFinancialReconciliationRun *run,
     const char *itemId);

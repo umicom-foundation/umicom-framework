@@ -85,6 +85,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceThemeResolutionTransferCases, UmiAppearance
     umi_appearance_theme_resolution_archive_encode, umi_appearance_theme_resolution_archive_decode,
     UmiAppearanceThemeResolutionTransferEqual, UmiAppearanceThemeResolutionTransferTails, UmiAppearanceThemeResolutionTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceThemeResolutionConditionalArchiveCases, UmiAppearanceThemeResolution,
+    umi_appearance_theme_resolution_archive_encode, umi_appearance_theme_resolution_archive_decode_if_unchanged,
+    UmiAppearanceThemeResolutionTransferEqual, UmiAppearanceThemeResolutionTransferTails, UmiAppearanceThemeResolutionTransferMalformed)
+
+
 int main(void) {
     UmiAppearanceThemeResolution item;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -92,6 +98,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_theme_resolution_is_valid(&item)) return 2;
     if (UmiAppearanceThemeResolutionTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceThemeResolutionConditionalArchiveCases(&item) != 0) return 1;
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_appearance_theme_resolution_choose(&item,"system","app","workspace","component")!=UMI_STATUS_OK || item.winning_scope!=UMI_APPEARANCE_SCOPE_COMPONENT) return 3;

@@ -17,6 +17,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../base/conditional_archive_internal.h"
 #include "umicom/teacher/lesson_section.h"
 #include "../base/value_archive_internal.h"
 
@@ -174,3 +175,8 @@ static UmiStatus UmiTeacherLessonSectionArchiveValidate(const UmiTeacherLessonSe
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_teacher_lesson_section_archive_encode, umi_teacher_lesson_section_archive_decode,
     UmiTeacherLessonSection, UmiTeacherLessonSectionArchiveSchema, UmiTeacherLessonSectionArchiveBound, UmiTeacherLessonSectionArchiveWrite, UmiTeacherLessonSectionArchiveRead, UmiTeacherLessonSectionArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_teacher_lesson_section_archive_decode_if_unchanged, umi_teacher_lesson_section_archive_encode,
+    UmiTeacherLessonSection, UmiTeacherLessonSectionArchiveSchema, UmiTeacherLessonSectionArchiveBound, UmiTeacherLessonSectionArchiveRead, UmiTeacherLessonSectionArchiveValidate)

@@ -69,11 +69,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryTreasurySnapshotTransferCases, UmiTreasuryTre
     umi_treasury_treasury_snapshot_archive_encode, umi_treasury_treasury_snapshot_archive_decode,
     UmiTreasuryTreasurySnapshotTransferEqual, UmiTreasuryTreasurySnapshotTransferTails, UmiTreasuryTreasurySnapshotTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryTreasurySnapshotConditionalArchiveCases, UmiTreasuryTreasurySnapshot,
+    umi_treasury_treasury_snapshot_archive_encode, umi_treasury_treasury_snapshot_archive_decode_if_unchanged,
+    UmiTreasuryTreasurySnapshotTransferEqual, UmiTreasuryTreasurySnapshotTransferTails, UmiTreasuryTreasurySnapshotTransferMalformed)
+
+
 int main(void) {
     UmiTreasuryTreasurySnapshot v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_treasury_snapshot_init(&v, "snapshot", 1000, -250, 400, 600) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryTreasurySnapshotTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryTreasurySnapshotConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if(umi_treasury_treasury_snapshot_net_liquidity_minor(&v)!=750)return 2;

@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/test_platform/build_readiness/artifact.h"
 #include "../../base/value_archive_internal.h"
 
@@ -148,3 +149,8 @@ static UmiStatus UmiTestPlatformBuildArtifactArchiveValidate(const UmiTestPlatfo
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_test_platform_build_artifact_archive_encode, umi_test_platform_build_artifact_archive_decode,
     UmiTestPlatformBuildArtifact, UmiTestPlatformBuildArtifactArchiveSchema, UmiTestPlatformBuildArtifactArchiveBound, UmiTestPlatformBuildArtifactArchiveWrite, UmiTestPlatformBuildArtifactArchiveRead, UmiTestPlatformBuildArtifactArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_test_platform_build_artifact_archive_decode_if_unchanged, umi_test_platform_build_artifact_archive_encode,
+    UmiTestPlatformBuildArtifact, UmiTestPlatformBuildArtifactArchiveSchema, UmiTestPlatformBuildArtifactArchiveBound, UmiTestPlatformBuildArtifactArchiveRead, UmiTestPlatformBuildArtifactArchiveValidate)

@@ -68,11 +68,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasurySettlementFailureTransferCases, UmiTreasurySe
     umi_treasury_settlement_failure_archive_encode, umi_treasury_settlement_failure_archive_decode,
     UmiTreasurySettlementFailureTransferEqual, UmiTreasurySettlementFailureTransferTails, UmiTreasurySettlementFailureTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasurySettlementFailureConditionalArchiveCases, UmiTreasurySettlementFailure,
+    umi_treasury_settlement_failure_archive_encode, umi_treasury_settlement_failure_archive_decode_if_unchanged,
+    UmiTreasurySettlementFailureTransferEqual, UmiTreasurySettlementFailureTransferTails, UmiTreasurySettlementFailureTransferMalformed)
+
+
 int main(void) {
     UmiTreasurySettlementFailure v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_settlement_failure_init(&v, "fail", 1000, 3U, 1U) != UMI_STATUS_OK) return 1;
     if (UmiTreasurySettlementFailureTransferCases(&v) != 0) return 1;
+    if (UmiTreasurySettlementFailureConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if(!umi_treasury_settlement_failure_aged(&v))return 2;

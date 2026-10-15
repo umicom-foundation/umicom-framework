@@ -106,6 +106,12 @@ UMI_TEST_VALUE_TRANSFER(UmiLanguageIntelligenceToolchainLanguageBridgeTransferCa
     umi_language_intelligence_toolchain_language_bridge_archive_encode, umi_language_intelligence_toolchain_language_bridge_archive_decode,
     UmiLanguageIntelligenceToolchainLanguageBridgeTransferEqual, UmiLanguageIntelligenceToolchainLanguageBridgeTransferTails, UmiLanguageIntelligenceToolchainLanguageBridgeTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiLanguageIntelligenceToolchainLanguageBridgeConditionalArchiveCases, UmiLanguageIntelligenceToolchainLanguageBridge,
+    umi_language_intelligence_toolchain_language_bridge_archive_encode, umi_language_intelligence_toolchain_language_bridge_archive_decode_if_unchanged,
+    UmiLanguageIntelligenceToolchainLanguageBridgeTransferEqual, UmiLanguageIntelligenceToolchainLanguageBridgeTransferTails, UmiLanguageIntelligenceToolchainLanguageBridgeTransferMalformed)
+
+
 int main(void)
 {
     UmiLanguageIntelligenceToolchainLanguageBridge mapping;
@@ -113,6 +119,7 @@ int main(void)
     CHECK(umi_language_intelligence_toolchain_language_bridge_set(&mapping, "c", "clangd", "workspace") == UMI_STATUS_OK);
     CHECK(umi_language_intelligence_toolchain_language_bridge_validate(&mapping) == UMI_STATUS_OK);
     if (UmiLanguageIntelligenceToolchainLanguageBridgeTransferCases(&mapping) != 0) return 1;
+    if (UmiLanguageIntelligenceToolchainLanguageBridgeConditionalArchiveCases(&mapping) != 0) return 1;
 
     CHECK(umi_language_intelligence_toolchain_language_bridge_matches(&mapping, "c", "workspace") != 0);
     CHECK(umi_language_intelligence_toolchain_language_bridge_matches(&mapping, "cpp", "workspace") == 0);

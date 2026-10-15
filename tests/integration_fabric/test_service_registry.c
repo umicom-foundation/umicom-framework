@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/integration/fabric/service_registry.h"
 #include <stdio.h>
 #include <string.h>
@@ -26,6 +27,9 @@ int main(void) {
     UmiFabricServiceRegistry r; UmiFabricServiceInstance item, found; umi_fabric_service_registry_init(&r);
     CHECK(umi_fabric_service_instance_init(&item,"risk.1","risk","ep.1",1U,10U)==UMI_STATUS_OK);
     CHECK(umi_fabric_service_registry_add(&r,&item)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFabricServiceRegistry, &r,
+        (umi_fabric_service_registry_add(&r,&item)));
+
     CHECK(umi_fabric_service_registry_add(&r,&item)==UMI_STATUS_ALREADY_EXISTS);
     CHECK(umi_fabric_service_registry_find(&r,item.instance_id,&found)==UMI_STATUS_OK);
     CHECK(umi_fabric_service_registry_count(&r)==1U);

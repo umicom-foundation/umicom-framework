@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/workbench_context_host/event_queue.h"
@@ -34,8 +35,16 @@ int main(void)
         event.event_id, sizeof(event.event_id), "event") == UMI_STATUS_OK);
     assert(umi_workbench_context_host_event_queue_push(
         &queue, &event) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchContextHostEventQueue, &queue,
+        (umi_workbench_context_host_event_queue_push(
+        &queue, &event)));
+
     assert(umi_workbench_context_host_event_queue_pop(
         &queue, &popped) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchContextHostEventQueue, &queue,
+        (umi_workbench_context_host_event_queue_pop(
+        &queue, &popped)));
+
     assert(strcmp(popped.event_id, "event") == 0);
     umi_workbench_context_host_event_queue_destroy(&queue);
 

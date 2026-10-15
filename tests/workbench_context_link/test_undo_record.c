@@ -117,6 +117,32 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkUndoRecordTransferCases, UmiWorkb
     umi_workbench_context_link_undo_record_archive_encode, umi_workbench_context_link_undo_record_archive_decode,
     UmiWorkbenchContextLinkUndoRecordTransferEqual, UmiWorkbenchContextLinkUndoRecordTransferTails, UmiWorkbenchContextLinkUndoRecordTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkUndoRecordConditionalArchiveCases, UmiWorkbenchContextLinkUndoRecord,
+    umi_workbench_context_link_undo_record_archive_encode, umi_workbench_context_link_undo_record_archive_decode_if_unchanged,
+    UmiWorkbenchContextLinkUndoRecordTransferEqual, UmiWorkbenchContextLinkUndoRecordTransferTails, UmiWorkbenchContextLinkUndoRecordTransferMalformed)
+
+
+/* Delayed context edits must preserve newer work and reject exhausted tokens. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextLinkUndoRecordReviewedCases, UmiWorkbenchContextLinkUndoRecord,
+    record_id, group_id, umi_workbench_context_link_undo_record_replace_if_current, UmiWorkbenchContextLinkUndoRecordTransferEqual)
+static int UmiWorkbenchContextLinkUndoRecordMutationGuards(const UmiWorkbenchContextLinkUndoRecord *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkUndoRecord, command_id, umi_workbench_context_link_undo_record_set_primary, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkUndoRecord, group_id, umi_workbench_context_link_undo_record_set_secondary, sample);
+    UmiWorkbenchContextLinkUndoRecord value = *sample;
+    unsigned char before[sizeof(value)];
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_link_undo_record_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U ||
+        value.timestamp_ms != 44U) return 1;
+    memcpy(before, &value, sizeof(value));
+    umi_workbench_context_link_undo_record_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof(value)) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextLinkUndoRecord record;
@@ -125,6 +151,9 @@ int main(void)
     umi_workbench_context_link_undo_record_init(&record, "undo_record-id");
     assert(umi_workbench_context_link_undo_record_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkUndoRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkUndoRecordConditionalArchiveCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkUndoRecordReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkUndoRecordMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_context_link_undo_record_set_primary(&record, "primary") == UMI_STATUS_OK);
     assert(umi_workbench_context_link_undo_record_set_secondary(&record, "secondary") == UMI_STATUS_OK);

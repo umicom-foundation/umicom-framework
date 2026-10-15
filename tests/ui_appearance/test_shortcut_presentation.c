@@ -102,6 +102,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceShortcutPresentationTransferCases, UmiAppea
     umi_appearance_shortcut_presentation_archive_encode, umi_appearance_shortcut_presentation_archive_decode,
     UmiAppearanceShortcutPresentationTransferEqual, UmiAppearanceShortcutPresentationTransferTails, UmiAppearanceShortcutPresentationTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceShortcutPresentationConditionalArchiveCases, UmiAppearanceShortcutPresentation,
+    umi_appearance_shortcut_presentation_archive_encode, umi_appearance_shortcut_presentation_archive_decode_if_unchanged,
+    UmiAppearanceShortcutPresentationTransferEqual, UmiAppearanceShortcutPresentationTransferTails, UmiAppearanceShortcutPresentationTransferMalformed)
+
+
 int main(void) {
     UmiAppearanceShortcutPresentation item;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -109,6 +115,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_shortcut_presentation_is_valid(&item)) return 2;
     if (UmiAppearanceShortcutPresentationTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceShortcutPresentationConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;
 }

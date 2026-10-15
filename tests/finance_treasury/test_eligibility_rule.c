@@ -67,11 +67,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryEligibilityRuleTransferCases, UmiTreasuryElig
     umi_treasury_eligibility_rule_archive_encode, umi_treasury_eligibility_rule_archive_decode,
     UmiTreasuryEligibilityRuleTransferEqual, UmiTreasuryEligibilityRuleTransferTails, UmiTreasuryEligibilityRuleTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryEligibilityRuleConditionalArchiveCases, UmiTreasuryEligibilityRule,
+    umi_treasury_eligibility_rule_archive_encode, umi_treasury_eligibility_rule_archive_decode_if_unchanged,
+    UmiTreasuryEligibilityRuleTransferEqual, UmiTreasuryEligibilityRuleTransferTails, UmiTreasuryEligibilityRuleTransferMalformed)
+
+
 int main(void) {
     UmiTreasuryEligibilityRule v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_eligibility_rule_init(&v, "elig", 100, 365U) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryEligibilityRuleTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryEligibilityRuleConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if(!umi_treasury_eligibility_rule_usable(&v))return 2;

@@ -14,11 +14,17 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/split_region.h"
+#include "../../base/value_construction_internal.h"
 
 /*
  * Initialise ws split region from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_ws_split_region_init(UmiWsSplitRegion *split,
                                    const char *split_id,
                                    UmiUiOrientation orientation,
@@ -43,6 +49,39 @@ UmiStatus umi_ws_split_region_init(UmiWsSplitRegion *split,
     if (split->ratio > split->maximum_ratio) split->ratio = split->maximum_ratio;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_ws_split_region_init_build_value(UmiWsSplitRegion *split,
+                                   const char *split_id,
+                                   UmiUiOrientation orientation,
+                                   double ratio) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (split == NULL || !umi_ws_id_valid(split_id)) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (orientation != UMI_UI_HORIZONTAL && orientation != UMI_UI_VERTICAL) return UMI_STATUS_INVALID_ARGUMENT;
+    *split = (UmiWsSplitRegion){0};
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (umi_ws_copy_text(split->split_id, sizeof(split->split_id), split_id) != UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;
+    split->orientation = orientation;
+    split->minimum_ratio = 0.15;
+    split->maximum_ratio = 0.85;
+    split->ratio = umi_ws_clamp_unit(ratio);
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (split->ratio < split->minimum_ratio) split->ratio = split->minimum_ratio;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (split->ratio > split->maximum_ratio) split->ratio = split->maximum_ratio;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_ws_split_region_init, UmiWsSplitRegion, split,
+    (UmiWsSplitRegion *split, const char *split_id, UmiUiOrientation orientation, double ratio),
+    umi_ws_split_region_init_build_value(candidate, split_id, orientation, ratio))
+
 
 /*
  * Provide the ws split region bind operation used by this module and its client

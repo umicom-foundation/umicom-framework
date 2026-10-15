@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/editor/intelligence_workbench/code_intelligence_status.h"
 #include "../../base/value_archive_internal.h"
 
@@ -90,3 +91,8 @@ static UmiStatus UmiEditorIntelCodeIntelligenceStatusArchiveValidate(const UmiEd
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_editor_intel_code_intelligence_status_archive_encode, umi_editor_intel_code_intelligence_status_archive_decode,
     UmiEditorIntelCodeIntelligenceStatus, UmiEditorIntelCodeIntelligenceStatusArchiveSchema, UmiEditorIntelCodeIntelligenceStatusArchiveBound, UmiEditorIntelCodeIntelligenceStatusArchiveWrite, UmiEditorIntelCodeIntelligenceStatusArchiveRead, UmiEditorIntelCodeIntelligenceStatusArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_editor_intel_code_intelligence_status_archive_decode_if_unchanged, umi_editor_intel_code_intelligence_status_archive_encode,
+    UmiEditorIntelCodeIntelligenceStatus, UmiEditorIntelCodeIntelligenceStatusArchiveSchema, UmiEditorIntelCodeIntelligenceStatusArchiveBound, UmiEditorIntelCodeIntelligenceStatusArchiveRead, UmiEditorIntelCodeIntelligenceStatusArchiveValidate)

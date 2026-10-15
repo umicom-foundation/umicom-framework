@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 /* Umicom Framework | Compiler requests | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/request.h"
+#include "../base/value_construction_internal.h"
 #include "umicom/compiler/language.h"
 #include <stdio.h>
 #include <string.h>
@@ -25,6 +26,11 @@ static UmiStatus copy_text(char *destination,size_t capacity,const char *value)
  * Initialise compiler request from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_compiler_request_init(UmiCompilerRequest *request,const char *project_id,const char *unit_id,UmiCompilerLanguage language,const char *source_path,const char *output_path)
 {
     UmiStatus status;
@@ -42,6 +48,32 @@ UmiStatus umi_compiler_request_init(UmiCompilerRequest *request,const char *proj
     (void)snprintf(request->standard,sizeof(request->standard),"%s",umi_compiler_language_default_standard(language));
     return umi_compiler_target_host(&request->target);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_compiler_request_init_build_value(UmiCompilerRequest *request,const char *project_id,const char *unit_id,UmiCompilerLanguage language,const char *source_path,const char *output_path)
+{
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (request == NULL || language <= UMI_COMPILER_LANGUAGE_UNKNOWN || language > UMI_COMPILER_LANGUAGE_UAI) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(request,0,sizeof(*request));
+    status = copy_text(request->project_id,sizeof(request->project_id),project_id); /* Preserve the original failure result so the caller can respond to the correct cause. */ if (status != UMI_STATUS_OK) return status;
+    status = copy_text(request->unit_id,sizeof(request->unit_id),unit_id); /* Preserve the original failure result so the caller can respond to the correct cause. */ if (status != UMI_STATUS_OK) return status;
+    status = copy_text(request->source_path,sizeof(request->source_path),source_path); /* Preserve the original failure result so the caller can respond to the correct cause. */ if (status != UMI_STATUS_OK) return status;
+    status = copy_text(request->output_path,sizeof(request->output_path),output_path); /* Preserve the original failure result so the caller can respond to the correct cause. */ if (status != UMI_STATUS_OK) return status;
+    request->language = language; request->action = language == UMI_COMPILER_LANGUAGE_ASSEMBLY ? UMI_COMPILER_ACTION_ASSEMBLE : UMI_COMPILER_ACTION_COMPILE;
+    (void)snprintf(request->standard,sizeof(request->standard),"%s",umi_compiler_language_default_standard(language));
+    return umi_compiler_target_host(&request->target);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_compiler_request_init, UmiCompilerRequest, request,
+    (UmiCompilerRequest *request, const char *project_id, const char *unit_id, UmiCompilerLanguage language, const char *source_path, const char *output_path),
+    umi_compiler_request_init_build_value(candidate, project_id, unit_id, language, source_path, output_path))
+
 /* Provide the add option operation used by this module and its client applications. */
 static UmiStatus add_option(char *items,size_t stride,size_t *count,const char *value)
 { int length; char *destination; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (items == NULL || count == NULL || value == NULL || value[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (*count >= UMI_COMPILER_MAX_OPTIONS) return UMI_STATUS_CAPACITY_EXCEEDED; destination = items + (*count * stride); length = snprintf(destination,stride,"%s",value); /* Protect caller-owned memory by checking that required state is available before it is used. */ if (length < 0 || (size_t)length >= stride) return UMI_STATUS_CAPACITY_EXCEEDED; *count += 1U; return UMI_STATUS_OK; }

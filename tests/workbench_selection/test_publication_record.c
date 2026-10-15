@@ -169,6 +169,12 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionPublicationRecordTransferCases, Umi
     umi_workbench_selection_publication_record_archive_encode, umi_workbench_selection_publication_record_archive_decode,
     UmiWorkbenchSelectionPublicationRecordTransferEqual, UmiWorkbenchSelectionPublicationRecordTransferTails, UmiWorkbenchSelectionPublicationRecordTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchSelectionPublicationRecordConditionalArchiveCases, UmiWorkbenchSelectionPublicationRecord,
+    umi_workbench_selection_publication_record_archive_encode, umi_workbench_selection_publication_record_archive_decode_if_unchanged,
+    UmiWorkbenchSelectionPublicationRecordTransferEqual, UmiWorkbenchSelectionPublicationRecordTransferTails, UmiWorkbenchSelectionPublicationRecordTransferMalformed)
+
+
 /* Exercise the accepted domain fixture through reviewed publication and
  * legacy mutation boundaries. These checks stay active in release builds. */
 #include "../record_integrity/reviewed_value_cases.h"
@@ -202,6 +208,7 @@ int main(void)
     assert(umi_workbench_selection_publication_record_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionPublicationRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionPublicationRecordConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchSelectionPublicationRecordReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchSelectionPublicationRecordMutationGuards(&record) != 0) return 1;
 

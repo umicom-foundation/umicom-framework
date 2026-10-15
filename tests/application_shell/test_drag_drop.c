@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 
 #include "umicom/application_shell/drag_drop.h"
@@ -35,10 +36,18 @@ int main(void)
 
     assert(umi_application_shell_drop_accept(
         &transaction) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiApplicationShellDropTransaction, &transaction,
+        (umi_application_shell_drop_accept(
+        &transaction)));
+
     assert(transaction.accepted == 1);
 
     assert(umi_application_shell_drop_reject(
         &transaction, "Policy rejected move.") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiApplicationShellDropTransaction, &transaction,
+        (umi_application_shell_drop_reject(
+        &transaction, "Policy rejected move.")));
+
     assert(transaction.accepted == 0);
 
     return 0;

@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/workbench_context_event/backpressure_record.h"
 #include "../base/value_archive_internal.h"
 #include "../base/record_update_internal.h"
@@ -370,3 +371,8 @@ UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_context_event_backpressure_record_archive
  * all fields together without emitting events or changing any external service. */
 UMI_DEFINE_REVIEWED_IDENTITY_RECORD_EDIT(umi_workbench_context_event_backpressure_record_replace_if_current,
     UmiWorkbenchContextEventBackpressureRecord, record_id, UmiWorkbenchContextEventBackpressureRecordArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_workbench_context_event_backpressure_record_archive_decode_if_unchanged, umi_workbench_context_event_backpressure_record_archive_encode,
+    UmiWorkbenchContextEventBackpressureRecord, UmiWorkbenchContextEventBackpressureRecordArchiveSchema, UmiWorkbenchContextEventBackpressureRecordArchiveBound, UmiWorkbenchContextEventBackpressureRecordArchiveRead, UmiWorkbenchContextEventBackpressureRecordArchiveValidate)

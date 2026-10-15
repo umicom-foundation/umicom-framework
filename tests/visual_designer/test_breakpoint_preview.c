@@ -70,6 +70,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadBreakpointPreviewTransferCases, UmiRadBreakpointPr
     umi_rad_breakpoint_preview_archive_encode, umi_rad_breakpoint_preview_archive_decode,
     UmiRadBreakpointPreviewTransferEqual, UmiRadBreakpointPreviewTransferTails, UmiRadBreakpointPreviewTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadBreakpointPreviewConditionalArchiveCases, UmiRadBreakpointPreview,
+    umi_rad_breakpoint_preview_archive_encode, umi_rad_breakpoint_preview_archive_decode_if_unchanged,
+    UmiRadBreakpointPreviewTransferEqual, UmiRadBreakpointPreviewTransferTails, UmiRadBreakpointPreviewTransferMalformed)
+
+
 int main(void){UmiRadBreakpointPreview item;CHECK(umi_rad_breakpoint_preview_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_breakpoint_preview_is_valid(&item));
     if (UmiRadBreakpointPreviewTransferCases(&item) != 0) return 1;
+    if (UmiRadBreakpointPreviewConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

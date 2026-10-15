@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/toolchain/probe_report.h"
 #include "../../base/value_archive_internal.h"
 
@@ -119,3 +120,8 @@ static UmiStatus UmiToolchainProbeReportArchiveValidate(const UmiToolchainProbeR
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_toolchain_probe_report_archive_encode, umi_toolchain_probe_report_archive_decode,
     UmiToolchainProbeReport, UmiToolchainProbeReportArchiveSchema, UmiToolchainProbeReportArchiveBound, UmiToolchainProbeReportArchiveWrite, UmiToolchainProbeReportArchiveRead, UmiToolchainProbeReportArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_toolchain_probe_report_archive_decode_if_unchanged, umi_toolchain_probe_report_archive_encode,
+    UmiToolchainProbeReport, UmiToolchainProbeReportArchiveSchema, UmiToolchainProbeReportArchiveBound, UmiToolchainProbeReportArchiveRead, UmiToolchainProbeReportArchiveValidate)

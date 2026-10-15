@@ -34,6 +34,10 @@ typedef struct UmiNativeDeclaration { uint32_t node_id; UmiNativeDeclarationKind
  * Initialise nc declaration from caller-provided values so later operations receive a
  * known state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_nc_declaration_init(UmiNativeDeclaration *declaration,uint32_t node_id,UmiNativeDeclarationKind kind,const char *name,uint32_t type_id);
 /**
  * Check that nc declaration satisfies its contract before another service relies on it.
@@ -49,6 +53,16 @@ UmiStatus umi_nc_declaration_archive_encode(const UmiNativeDeclaration *value,
     void *bytes, size_t capacity, size_t *out_size);
 UmiStatus umi_nc_declaration_archive_decode(const void *bytes, size_t byte_count,
     UmiNativeDeclaration *value);
+
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the owner's publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_nc_declaration_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiNativeDeclaration *expected, UmiNativeDeclaration *value);
+
 
 #ifdef __cplusplus
 }

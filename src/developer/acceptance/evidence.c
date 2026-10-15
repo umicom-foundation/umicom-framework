@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include <stdint.h>
 #include "umicom/developer/acceptance/evidence.h"
 #include <string.h>
 
@@ -58,10 +59,48 @@ const UmiDeveloperAcceptanceEvidence *umi_developer_acceptance_evidence_find(
  * Provide the developer acceptance evidence upsert operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_developer_acceptance_evidence_upsert(
     UmiDeveloperAcceptanceEvidenceStore *store,
     const UmiDeveloperAcceptanceEvidence *evidence)
 {
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (store == NULL || evidence == NULL || evidence->capability_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < store->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(store->items[index].capability_id, evidence->capability_id) == 0) {
+            store->items[index] = *evidence;
+            store->revision += 1U;
+            return UMI_STATUS_OK;
+        }
+    }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (store->count >= UMI_DEVELOPER_ACCEPTANCE_MAX_EVIDENCE)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    store->items[store->count++] = *evidence;
+    store->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_developer_acceptance_evidence_upsert(
+    UmiDeveloperAcceptanceEvidenceStore *store,
+    const UmiDeveloperAcceptanceEvidence *evidence)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (store != NULL && store->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is

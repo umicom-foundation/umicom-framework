@@ -155,6 +155,13 @@ UMI_TEST_VALUE_TRANSFER(UmiUiComponentSpecTransferCases, UmiUiComponentSpec,
     umi_ui_component_spec_archive_encode, umi_ui_component_spec_archive_decode,
     UmiUiComponentSpecTransferEqual, UmiUiComponentSpecTransferTails, UmiUiComponentSpecTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiComponentSpecConditionalArchiveCases, UmiUiComponentSpec,
+    umi_ui_component_spec_archive_encode, umi_ui_component_spec_archive_decode_if_unchanged,
+    UmiUiComponentSpecTransferEqual, UmiUiComponentSpecTransferTails, UmiUiComponentSpecTransferMalformed)
+
+
 int main(void){UmiUiComponentSpec s=umi_ui_component_spec_default(UMI_UI_COMPONENT_BUTTON);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_component_spec_set_id(&s,"save")!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_component_spec_set_text(&s,"Save")!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_component_spec_validate(&s)!=UMI_STATUS_OK)return 3;
     if (UmiUiComponentSpecTransferCases(&s) != 0) return 1;
+    if (UmiUiComponentSpecConditionalArchiveCases(&s) != 0) return 1;
 return strcmp(umi_ui_component_kind_name(s.kind),"button")==0?0:4;}

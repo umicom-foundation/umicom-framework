@@ -62,6 +62,13 @@ UMI_TEST_VALUE_TRANSFER(UmiCtPagePolicyTransferCases, UmiCtPagePolicy,
     umi_ct_page_policy_archive_encode, umi_ct_page_policy_archive_decode,
     UmiCtPagePolicyTransferEqual, UmiCtPagePolicyTransferTails, UmiCtPagePolicyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtPagePolicyConditionalArchiveCases, UmiCtPagePolicy,
+    umi_ct_page_policy_archive_encode, umi_ct_page_policy_archive_decode_if_unchanged,
+    UmiCtPagePolicyTransferEqual, UmiCtPagePolicyTransferTails, UmiCtPagePolicyTransferMalformed)
+
+
 int main(void){UmiCtPagePolicy p={4096U,2097152U,true,true};CHECK(umi_ct_page_policy_validate(&p)==UMI_STATUS_OK);
     if (UmiCtPagePolicyTransferCases(&p) != 0) return 1;
+    if (UmiCtPagePolicyConditionalArchiveCases(&p) != 0) return 1;
 CHECK(umi_ct_page_align_up(&p,4097U)==8192U);CHECK(umi_ct_page_count(&p,8193U)==3U);return 0;}

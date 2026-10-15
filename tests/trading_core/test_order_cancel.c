@@ -67,6 +67,12 @@ UMI_TEST_VALUE_TRANSFER(UmiTradingOrderCancelTransferCases, UmiTradingOrderCance
     umi_trading_order_cancel_archive_encode, umi_trading_order_cancel_archive_decode,
     UmiTradingOrderCancelTransferEqual, UmiTradingOrderCancelTransferTails, UmiTradingOrderCancelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTradingOrderCancelConditionalArchiveCases, UmiTradingOrderCancel,
+    umi_trading_order_cancel_archive_encode, umi_trading_order_cancel_archive_decode_if_unchanged,
+    UmiTradingOrderCancelTransferEqual, UmiTradingOrderCancelTransferTails, UmiTradingOrderCancelTransferMalformed)
+
+
 int main(void) {
     UmiFinancialId id;
      /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -77,6 +83,7 @@ int main(void) {
      /* Apply this operation only while the related capability or state is available. */
      if(!umi_trading_order_cancel_valid(&v)) return 2;
     if (UmiTradingOrderCancelTransferCases(&v) != 0) return 1;
+    if (UmiTradingOrderCancelConditionalArchiveCases(&v) != 0) return 1;
 
      return 0;
 }

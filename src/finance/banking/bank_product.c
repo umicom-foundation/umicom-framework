@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/banking/bank_product.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -108,3 +109,9 @@ static UmiStatus UmiBankingBankProductArchiveValidate(const UmiBankingBankProduc
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_banking_bank_product_archive_encode, umi_banking_bank_product_archive_decode,
     UmiBankingBankProduct, UmiBankingBankProductArchiveSchema, UmiBankingBankProductArchiveBound, UmiBankingBankProductArchiveWrite, UmiBankingBankProductArchiveRead, UmiBankingBankProductArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_banking_bank_product_archive_decode_if_unchanged, umi_banking_bank_product_archive_encode,
+    UmiBankingBankProduct, UmiBankingBankProductArchiveSchema, UmiBankingBankProductArchiveBound, UmiBankingBankProductArchiveRead, UmiBankingBankProductArchiveValidate)

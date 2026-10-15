@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/mosaic/panel_activation.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -128,3 +129,8 @@ static UmiStatus UmiUiMosaicPanelActivationArchiveValidate(const UmiUiMosaicPane
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ui_mosaic_panel_activation_archive_encode, umi_ui_mosaic_panel_activation_archive_decode,
     UmiUiMosaicPanelActivation, UmiUiMosaicPanelActivationArchiveSchema, UmiUiMosaicPanelActivationArchiveBound, UmiUiMosaicPanelActivationArchiveWrite, UmiUiMosaicPanelActivationArchiveRead, UmiUiMosaicPanelActivationArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_mosaic_panel_activation_archive_decode_if_unchanged, umi_ui_mosaic_panel_activation_archive_encode,
+    UmiUiMosaicPanelActivation, UmiUiMosaicPanelActivationArchiveSchema, UmiUiMosaicPanelActivationArchiveBound, UmiUiMosaicPanelActivationArchiveRead, UmiUiMosaicPanelActivationArchiveValidate)

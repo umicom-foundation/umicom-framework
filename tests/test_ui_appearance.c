@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/umicom.h"
+#include "value_archive/construction_cases.h"
 #include "umicom/ui/brand_palette.h"
 
 #include <assert.h>
@@ -25,8 +26,51 @@
  * Start this command or application, report setup failures, and return a process exit code
  * to the operating system.
  */
+
+/* A rejected replacement must preserve the previously accepted appearance value. */
+static int UmiUiAppearanceProfileConstructionCases(void)
+{
+    UmiUiAppearanceProfile *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_ui_appearance_profile_init(value, "umicom-dark", "Umicom Dark", UMI_UI_THEME_MODE_DARK, UMI_UI_DENSITY_COMPACT) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->profile_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_ui_appearance_profile_init(value, oversized, "Umicom Dark", UMI_UI_THEME_MODE_DARK, UMI_UI_DENSITY_COMPACT) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_ui_appearance_profile_init(value, value->profile_id, "Umicom Dark", UMI_UI_THEME_MODE_DARK, UMI_UI_DENSITY_COMPACT) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->profile_id, "umicom-dark") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->label) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_ui_appearance_profile_init(value, "umicom-dark", oversized, UMI_UI_THEME_MODE_DARK, UMI_UI_DENSITY_COMPACT) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_ui_appearance_profile_init(value, "umicom-dark", value->label, UMI_UI_THEME_MODE_DARK, UMI_UI_DENSITY_COMPACT) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->label, "Umicom Dark") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void)
 {
+    if (UmiUiAppearanceProfileConstructionCases() != 0) return 1;
+
     UmiUiAppearanceModel *model = NULL;
     UmiUiAppearanceProfile dark;
     UmiUiAppearanceProfile light;

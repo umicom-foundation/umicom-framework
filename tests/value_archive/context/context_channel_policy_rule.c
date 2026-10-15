@@ -116,6 +116,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextPolicyRuleTransferCases, UmiContextPolicyRule,
     umi_context_policy_rule_archive_encode, umi_context_policy_rule_archive_decode,
     UmiContextPolicyRuleTransferEqual, UmiContextPolicyRuleTransferTails, UmiContextPolicyRuleTransferMalformed)
 
+#include "../conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextPolicyRuleConditionalArchiveCases, UmiContextPolicyRule,
+    umi_context_policy_rule_archive_encode, umi_context_policy_rule_archive_decode_if_unchanged,
+    UmiContextPolicyRuleTransferEqual, UmiContextPolicyRuleTransferTails, UmiContextPolicyRuleTransferMalformed)
+
+
 int main(void)
 {
     UmiContextPolicyRule value;
@@ -129,6 +135,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_context_policy_rule_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiContextPolicyRuleTransferCases(&value) != 0) return 1;
+    if (UmiContextPolicyRuleConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

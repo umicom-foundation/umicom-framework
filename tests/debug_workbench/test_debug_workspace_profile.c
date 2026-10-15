@@ -77,6 +77,12 @@ UMI_TEST_VALUE_TRANSFER(UmiDebugWorkbenchDebugWorkspaceProfileTransferCases, Umi
     umi_debug_workbench_debug_workspace_profile_archive_encode, umi_debug_workbench_debug_workspace_profile_archive_decode,
     UmiDebugWorkbenchDebugWorkspaceProfileTransferEqual, UmiDebugWorkbenchDebugWorkspaceProfileTransferTails, UmiDebugWorkbenchDebugWorkspaceProfileTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDebugWorkbenchDebugWorkspaceProfileConditionalArchiveCases, UmiDebugWorkbenchDebugWorkspaceProfile,
+    umi_debug_workbench_debug_workspace_profile_archive_encode, umi_debug_workbench_debug_workspace_profile_archive_decode_if_unchanged,
+    UmiDebugWorkbenchDebugWorkspaceProfileTransferEqual, UmiDebugWorkbenchDebugWorkspaceProfileTransferTails, UmiDebugWorkbenchDebugWorkspaceProfileTransferMalformed)
+
+
 int main(void)
 {
     UmiDebugWorkbenchDebugWorkspaceProfile model;
@@ -86,6 +92,7 @@ int main(void)
     UMI_TEST_CHECK(umi_debug_workbench_debug_workspace_profile_set_primary_view(&model, UMI_DEBUG_WORKBENCH_VIEW_CALL_STACK) == UMI_STATUS_OK);
     UMI_TEST_CHECK(umi_debug_workbench_debug_workspace_profile_valid(&model));
     if (UmiDebugWorkbenchDebugWorkspaceProfileTransferCases(&model) != 0) return 1;
+    if (UmiDebugWorkbenchDebugWorkspaceProfileConditionalArchiveCases(&model) != 0) return 1;
 
     return 0;
 }

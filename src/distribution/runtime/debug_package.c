@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/distribution/runtime/debug_package.h"
 #include "../../base/value_archive_internal.h"
 
@@ -85,3 +86,9 @@ static UmiStatus UmiDrDebugPackageArchiveValidate(const UmiDrDebugPackage *value
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_dr_debug_package_archive_encode, umi_dr_debug_package_archive_decode,
     UmiDrDebugPackage, UmiDrDebugPackageArchiveSchema, UmiDrDebugPackageArchiveBound, UmiDrDebugPackageArchiveWrite, UmiDrDebugPackageArchiveRead, UmiDrDebugPackageArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_dr_debug_package_archive_decode_if_unchanged, umi_dr_debug_package_archive_encode,
+    UmiDrDebugPackage, UmiDrDebugPackageArchiveSchema, UmiDrDebugPackageArchiveBound, UmiDrDebugPackageArchiveRead, UmiDrDebugPackageArchiveValidate)

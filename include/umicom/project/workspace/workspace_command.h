@@ -30,7 +30,11 @@ extern "C" {
         uint64_t sequence;
     }
     UmiProjectWorkspaceWorkspaceCommand;
-    UmiStatus umi_project_workspace_workspace_command_init(UmiProjectWorkspaceWorkspaceCommand *value,const char *id,const char *topic,const char *payload);
+    /** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
+UmiStatus umi_project_workspace_workspace_command_init(UmiProjectWorkspaceWorkspaceCommand *value,const char *id,const char *topic,const char *payload);
     UmiStatus umi_project_workspace_workspace_command_validate(const UmiProjectWorkspaceWorkspaceCommand *value);
 /** Transfer this value using the portable format described in value_archive.h.
  * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
@@ -42,6 +46,16 @@ UmiStatus umi_project_workspace_workspace_command_archive_encode(const UmiProjec
     void *bytes, size_t capacity, size_t *out_size);
 UmiStatus umi_project_workspace_workspace_command_archive_decode(const void *bytes, size_t byte_count,
     UmiProjectWorkspaceWorkspaceCommand *value);
+
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the owner's publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_project_workspace_workspace_command_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiProjectWorkspaceWorkspaceCommand *expected, UmiProjectWorkspaceWorkspaceCommand *value);
+
 
 #ifdef __cplusplus
 }

@@ -118,6 +118,15 @@
       "entry_kind": "system",
       "pinned_by_default": true,
       "visible_when_unavailable": false
+    },
+    {
+      "application_id": "org.umicom.healthcare",
+      "icon_resource_id": "umicom.icon.application.generic",
+      "default_layout_id": "healthcare",
+      "taskbar_group": "healthcare",
+      "entry_kind": "workbench",
+      "pinned_by_default": false,
+      "visible_when_unavailable": false
     }
   ]
 }

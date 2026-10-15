@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 
@@ -36,13 +37,34 @@ int main(void)
         "org.umicom.studio",
         "studio.editor",
         "workspace") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchContextSourceSample, &sample,
+        (umi_workbench_context_source_sample_set_identity(
+        &sample,
+        "studio.editor.location",
+        "org.umicom.studio",
+        "studio.editor",
+        "workspace")));
+
     assert(umi_workbench_context_source_sample_set_subject(
         &sample, "main.c", "main") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchContextSourceSample, &sample,
+        (umi_workbench_context_source_sample_set_subject(
+        &sample, "main.c", "main")));
+
     assert(umi_workbench_context_source_sample_set_location(
         &sample, "C:/dev/main.c", "main",
         12U, 4U, 3U) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchContextSourceSample, &sample,
+        (umi_workbench_context_source_sample_set_location(
+        &sample, "C:/dev/main.c", "main",
+        12U, 4U, 3U)));
+
     assert(umi_workbench_context_source_sample_add_metadata(
         &sample, "language-id", "c") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchContextSourceSample, &sample,
+        (umi_workbench_context_source_sample_add_metadata(
+        &sample, "language-id", "c")));
+
     assert(umi_workbench_context_source_sample_validate(
         &sample) == UMI_STATUS_OK);
     assert(umi_workbench_context_source_sample_refresh_hash(

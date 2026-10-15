@@ -59,6 +59,12 @@ UMI_TEST_VALUE_TRANSFER(UmiVcsAdvancedHistoryCursorTransferCases, UmiVcsAdvanced
     umi_vcs_advanced_history_cursor_archive_encode, umi_vcs_advanced_history_cursor_archive_decode,
     UmiVcsAdvancedHistoryCursorTransferEqual, UmiVcsAdvancedHistoryCursorTransferTails, UmiVcsAdvancedHistoryCursorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiVcsAdvancedHistoryCursorConditionalArchiveCases, UmiVcsAdvancedHistoryCursor,
+    umi_vcs_advanced_history_cursor_archive_encode, umi_vcs_advanced_history_cursor_archive_decode_if_unchanged,
+    UmiVcsAdvancedHistoryCursorTransferEqual, UmiVcsAdvancedHistoryCursorTransferTails, UmiVcsAdvancedHistoryCursorTransferMalformed)
+
+
 int main(void)
 {
     UmiVcsAdvancedHistoryCursor value;
@@ -66,6 +72,7 @@ int main(void)
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_vcs_advanced_history_cursor_validate(&value) != UMI_STATUS_OK) return 2;
     if (UmiVcsAdvancedHistoryCursorTransferCases(&value) != 0) return 1;
+    if (UmiVcsAdvancedHistoryCursorConditionalArchiveCases(&value) != 0) return 1;
 
     umi_vcs_advanced_history_cursor_advance(&value, 25U, 1);
     /* Apply this branch only when its contract condition is satisfied. */

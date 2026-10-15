@@ -115,6 +115,12 @@ UMI_TEST_VALUE_TRANSFER(UmiPanelCapabilityTransferCases, UmiPanelCapability,
     umi_panel_capability_archive_encode, umi_panel_capability_archive_decode,
     UmiPanelCapabilityTransferEqual, UmiPanelCapabilityTransferTails, UmiPanelCapabilityTransferMalformed)
 
+#include "../conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiPanelCapabilityConditionalArchiveCases, UmiPanelCapability,
+    umi_panel_capability_archive_encode, umi_panel_capability_archive_decode_if_unchanged,
+    UmiPanelCapabilityTransferEqual, UmiPanelCapabilityTransferTails, UmiPanelCapabilityTransferMalformed)
+
+
 int main(void)
 {
     UmiPanelCapability value;
@@ -128,6 +134,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_panel_capability_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiPanelCapabilityTransferCases(&value) != 0) return 1;
+    if (UmiPanelCapabilityConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

@@ -64,6 +64,13 @@ UMI_TEST_VALUE_TRANSFER(UmiCtSchedulerProfileTransferCases, UmiCtSchedulerProfil
     umi_ct_scheduler_profile_archive_encode, umi_ct_scheduler_profile_archive_decode,
     UmiCtSchedulerProfileTransferEqual, UmiCtSchedulerProfileTransferTails, UmiCtSchedulerProfileTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtSchedulerProfileConditionalArchiveCases, UmiCtSchedulerProfile,
+    umi_ct_scheduler_profile_archive_encode, umi_ct_scheduler_profile_archive_decode_if_unchanged,
+    UmiCtSchedulerProfileTransferEqual, UmiCtSchedulerProfileTransferTails, UmiCtSchedulerProfileTransferMalformed)
+
+
 int main(void){UmiCtSchedulerProfile p={UMI_CT_SCHED_PREEMPTIVE,4U,2000U,32U,true,true};CHECK(umi_ct_scheduler_profile_validate(&p)==UMI_STATUS_OK);
     if (UmiCtSchedulerProfileTransferCases(&p) != 0) return 1;
+    if (UmiCtSchedulerProfileConditionalArchiveCases(&p) != 0) return 1;
 p.timeslice_us=0U;CHECK(umi_ct_scheduler_profile_validate(&p)==UMI_STATUS_INVALID_STATE);return 0;}

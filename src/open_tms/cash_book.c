@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/open_tms/cash_book.h"
 #include <string.h>
 
@@ -36,10 +37,46 @@ const UmiOpenTmsCashRecord *umi_open_tms_cash_book_find(
     return NULL;
 }
 
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_open_tms_cash_book_upsert(
     UmiOpenTmsCashBook *book,
     const UmiOpenTmsCashRecord *record)
 {
+    size_t i;
+    if (book == NULL || record == NULL ||
+        record->accountId[0] == '\0' || record->currency[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (i = 0U; i < book->count; ++i) {
+        UmiOpenTmsCashRecord *current = &book->records[i];
+        if (strcmp(current->accountId, record->accountId) == 0 &&
+            strcmp(current->currency, record->currency) == 0) {
+            if (record->eventMilliseconds < current->eventMilliseconds)
+                return UMI_STATUS_INVALID_STATE;
+            *current = *record;
+            book->revision += 1U;
+            return UMI_STATUS_OK;
+        }
+    }
+    if (book->count >= UMI_OPEN_TMS_CASH_CAPACITY)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    book->records[book->count++] = *record;
+    book->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_open_tms_cash_book_upsert(
+    UmiOpenTmsCashBook *book,
+    const UmiOpenTmsCashRecord *record)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (book != NULL && book->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t i;
     if (book == NULL || record == NULL ||
         record->accountId[0] == '\0' || record->currency[0] == '\0')

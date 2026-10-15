@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/editor/presentation.h"
+#include "../base/value_construction_internal.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -78,6 +79,11 @@ static int boolean_value(int value)
  * Initialise editor presentation from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_editor_presentation_init(
     UmiEditorPresentationSnapshot *presentation,
     const char *profile_id,
@@ -122,6 +128,59 @@ UmiStatus umi_editor_presentation_init(
     presentation->revision = 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_editor_presentation_init_build_value(
+    UmiEditorPresentationSnapshot *presentation,
+    const char *profile_id,
+    const char *language_id)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (presentation == NULL ||
+        !valid_identity(profile_id, UMI_EDITOR_PRESENTATION_ID_CAPACITY, 0) ||
+        !valid_identity(language_id, UMI_EDITOR_PRESENTATION_LANGUAGE_CAPACITY,
+                        1)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    (void)memset(presentation, 0, sizeof(*presentation));
+    presentation->struct_size = (uint32_t)sizeof(*presentation);
+    presentation->api_version = UMI_EDITOR_PRESENTATION_API_VERSION;
+    copy_text(presentation->profile_id, sizeof(presentation->profile_id),
+              profile_id);
+    copy_text(presentation->language_id, sizeof(presentation->language_id),
+              language_id);
+    presentation->tab_width = 4U;
+    presentation->indent_width = 4U;
+    presentation->right_margin_column = 100U;
+    presentation->overscroll_lines = 4U;
+    presentation->insert_spaces = 1;
+    presentation->show_line_numbers = 1;
+    presentation->highlight_current_line = 1;
+    presentation->highlight_matching_brackets = 1;
+    presentation->auto_indent = 1;
+    presentation->indent_on_tab = 1;
+    presentation->word_wrap = 0;
+    presentation->show_right_margin = 0;
+    presentation->code_folding = 1;
+    presentation->show_fold_gutter = 1;
+    presentation->show_minimap = 0;
+    presentation->smart_home_end = 1;
+    copy_text(presentation->font_family, sizeof(presentation->font_family),
+              "Cascadia Code, JetBrains Mono, Monospace");
+    presentation->font_size = 11.0;
+    presentation->revision = 1U;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_editor_presentation_init, UmiEditorPresentationSnapshot, presentation,
+    (UmiEditorPresentationSnapshot *presentation, const char *profile_id, const char *language_id),
+    umi_editor_presentation_init_build_value(candidate, profile_id, language_id))
+
 
 /*
  * Check that editor presentation satisfies its contract before another service relies on

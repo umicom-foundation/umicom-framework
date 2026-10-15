@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/designer/adaptive/shell_designer.h"
 #include <string.h>
 
@@ -27,9 +28,38 @@ UmiStatus umi_designer_shell_designer_init(UmiDesignerShellDesigner *designer,
     memset(designer,0,sizeof *designer); designer->profile=*profile; return UMI_STATUS_OK;
 }
 /* Select only regions that exist in the authored shell layout. */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_designer_shell_designer_select_region(UmiDesignerShellDesigner *designer,
                                                     const char *region_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if(designer==NULL||region_id==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if(umi_adaptive_shell_layout_find(&designer->profile.layout,region_id)==NULL)return UMI_STATUS_NOT_FOUND;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if(umi_designer_adaptive_copy_text(designer->selected_region_id,sizeof designer->selected_region_id,region_id)!=UMI_STATUS_OK)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    ++designer->revision; designer->dirty=1; return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_designer_shell_designer_select_region(UmiDesignerShellDesigner *designer,
+                                                    const char *region_id)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (designer != NULL && designer->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.

@@ -130,6 +130,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextSnapshotStoreTransferCases, UmiContextSnapshot
     umi_context_snapshot_store_archive_encode, umi_context_snapshot_store_archive_decode,
     UmiContextSnapshotStoreTransferEqual, UmiContextSnapshotStoreTransferTails, UmiContextSnapshotStoreTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextSnapshotStoreConditionalArchiveCases, UmiContextSnapshotStore,
+    umi_context_snapshot_store_archive_encode, umi_context_snapshot_store_archive_decode_if_unchanged,
+    UmiContextSnapshotStoreTransferEqual, UmiContextSnapshotStoreTransferTails, UmiContextSnapshotStoreTransferMalformed)
+
+
 int main(void)
 {
     UmiContextSnapshotStore state;
@@ -144,6 +150,7 @@ int main(void)
     assert(umi_context_snapshot_store_covers_sequence(&state,11U));
     assert(umi_context_snapshot_store_validate(&state) == UMI_STATUS_OK);
     if (UmiContextSnapshotStoreTransferCases(&state) != 0) return 1;
+    if (UmiContextSnapshotStoreConditionalArchiveCases(&state) != 0) return 1;
 
     return 0;
 }

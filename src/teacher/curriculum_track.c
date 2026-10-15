@@ -17,6 +17,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../base/conditional_archive_internal.h"
 #include "umicom/teacher/curriculum_track.h"
 #include "../base/value_archive_internal.h"
 
@@ -174,3 +175,8 @@ static UmiStatus UmiTeacherCurriculumTrackArchiveValidate(const UmiTeacherCurric
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_teacher_curriculum_track_archive_encode, umi_teacher_curriculum_track_archive_decode,
     UmiTeacherCurriculumTrack, UmiTeacherCurriculumTrackArchiveSchema, UmiTeacherCurriculumTrackArchiveBound, UmiTeacherCurriculumTrackArchiveWrite, UmiTeacherCurriculumTrackArchiveRead, UmiTeacherCurriculumTrackArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_teacher_curriculum_track_archive_decode_if_unchanged, umi_teacher_curriculum_track_archive_encode,
+    UmiTeacherCurriculumTrack, UmiTeacherCurriculumTrackArchiveSchema, UmiTeacherCurriculumTrackArchiveBound, UmiTeacherCurriculumTrackArchiveRead, UmiTeacherCurriculumTrackArchiveValidate)

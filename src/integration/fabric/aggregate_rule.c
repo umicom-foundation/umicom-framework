@@ -12,7 +12,9 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/integration/fabric/aggregate_rule.h"
+#include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
 #include <limits.h>
@@ -21,6 +23,11 @@
  * Initialise fabric aggregate rule from caller-provided values so later operations receive
  * a known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_fabric_aggregate_rule_init(UmiFabricAggregateRule *item, const char *rule_id, const char *correlation_field, size_t expected_count, uint64_t timeout_ms, bool partial_allowed) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -31,6 +38,25 @@ UmiStatus umi_fabric_aggregate_rule_init(UmiFabricAggregateRule *item, const cha
     UmiStatus s=umi_fabric_copy_text(item->rule_id,sizeof(item->rule_id),rule_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->correlation_field,sizeof(item->correlation_field),correlation_field);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->expected_count=expected_count;item->timeout_ms=timeout_ms;item->partial_allowed=partial_allowed;
     return umi_fabric_aggregate_rule_validate(item);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_fabric_aggregate_rule_init_build_value(UmiFabricAggregateRule *item, const char *rule_id, const char *correlation_field, size_t expected_count, uint64_t timeout_ms, bool partial_allowed) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (item==NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(item,0,sizeof(*item));
+    UmiStatus s=umi_fabric_copy_text(item->rule_id,sizeof(item->rule_id),rule_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->correlation_field,sizeof(item->correlation_field),correlation_field);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->expected_count=expected_count;item->timeout_ms=timeout_ms;item->partial_allowed=partial_allowed;
+    return umi_fabric_aggregate_rule_validate(item);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_fabric_aggregate_rule_init, UmiFabricAggregateRule, item,
+    (UmiFabricAggregateRule *item, const char *rule_id, const char *correlation_field, size_t expected_count, uint64_t timeout_ms, bool partial_allowed),
+    umi_fabric_aggregate_rule_init_build_value(candidate, rule_id, correlation_field, expected_count, timeout_ms, partial_allowed))
+
 /*
  * Check that fabric aggregate rule satisfies its contract before another service relies on
  * it.
@@ -96,3 +122,9 @@ static UmiStatus UmiFabricAggregateRuleArchiveValidate(const UmiFabricAggregateR
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_fabric_aggregate_rule_archive_encode, umi_fabric_aggregate_rule_archive_decode,
     UmiFabricAggregateRule, UmiFabricAggregateRuleArchiveSchema, UmiFabricAggregateRuleArchiveBound, UmiFabricAggregateRuleArchiveWrite, UmiFabricAggregateRuleArchiveRead, UmiFabricAggregateRuleArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_fabric_aggregate_rule_archive_decode_if_unchanged, umi_fabric_aggregate_rule_archive_encode,
+    UmiFabricAggregateRule, UmiFabricAggregateRuleArchiveSchema, UmiFabricAggregateRuleArchiveBound, UmiFabricAggregateRuleArchiveRead, UmiFabricAggregateRuleArchiveValidate)

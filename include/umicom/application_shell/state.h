@@ -47,6 +47,9 @@ void umi_application_shell_state_init(UmiApplicationShellState *state);
  * Provide the application shell state activate operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_application_shell_state_activate(
     UmiApplicationShellState *state,
     const char *activity_id,
@@ -56,6 +59,9 @@ UmiStatus umi_application_shell_state_activate(
  * Provide the application shell state focus operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_application_shell_state_focus(
     UmiApplicationShellState *state,
     const char *view_id);

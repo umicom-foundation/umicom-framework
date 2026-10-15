@@ -42,6 +42,9 @@ typedef struct UmiCommodityLocationCatalogue {
 void umi_commodity_location_catalogue_init(UmiCommodityLocationCatalogue *catalogue);
 
 /* Add a unique item and advance the deterministic catalogue revision. */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_commodity_location_catalogue_add(UmiCommodityLocationCatalogue *catalogue, const UmiCommodityLocation *item);
 
 /* Resolve an item by its stable Framework identifier. */

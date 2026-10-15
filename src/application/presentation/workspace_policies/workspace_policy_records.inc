@@ -91,3 +91,6 @@
 #include "web-studio/focus.inc"
 #include "web-studio/learning.inc"
 #include "web-studio/standard.inc"
+#include "healthcare/learning.inc"
+#include "healthcare/standard.inc"
+#include "healthcare/focus.inc"

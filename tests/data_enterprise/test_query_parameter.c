@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/data/enterprise/query_parameter.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -108,10 +109,72 @@ UMI_TEST_VALUE_TRANSFER(UmiDataQueryParameterTransferCases, UmiDataQueryParamete
     umi_data_query_parameter_archive_encode, umi_data_query_parameter_archive_decode,
     UmiDataQueryParameterTransferEqual, UmiDataQueryParameterTransferTails, UmiDataQueryParameterTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataQueryParameterConditionalArchiveCases, UmiDataQueryParameter,
+    umi_data_query_parameter_archive_encode, umi_data_query_parameter_archive_decode_if_unchanged,
+    UmiDataQueryParameterTransferEqual, UmiDataQueryParameterTransferTails, UmiDataQueryParameterTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted query parameter value. */
+static int UmiDataQueryParameterConstructionCases(void)
+{
+    UmiDataQueryParameter *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_data_query_parameter_init(value, "p1", "status", UMI_DATA_VALUE_TEXT, "OPEN", false) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->parameter_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_query_parameter_init(value, oversized, "status", UMI_DATA_VALUE_TEXT, "OPEN", false) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_query_parameter_init(value, value->parameter_id, "status", UMI_DATA_VALUE_TEXT, "OPEN", false) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->parameter_id, "p1") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->name) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_query_parameter_init(value, "p1", oversized, UMI_DATA_VALUE_TEXT, "OPEN", false) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_query_parameter_init(value, "p1", value->name, UMI_DATA_VALUE_TEXT, "OPEN", false) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->name, "status") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->value) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_query_parameter_init(value, "p1", "status", UMI_DATA_VALUE_TEXT, oversized, false) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_query_parameter_init(value, "p1", "status", UMI_DATA_VALUE_TEXT, value->value, false) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->value, "OPEN") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiDataQueryParameterConstructionCases() != 0) return 1;
+
     UmiDataQueryParameter item;
     CHECK(umi_data_query_parameter_init(&item,"p1","status",UMI_DATA_VALUE_TEXT,"OPEN",false) == UMI_STATUS_OK);
     if (UmiDataQueryParameterTransferCases(&item) != 0) return 1;
+    if (UmiDataQueryParameterConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(strcmp(item.value,"OPEN")==0);
     return 0;

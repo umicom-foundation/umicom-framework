@@ -88,12 +88,19 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicWorkbenchMosaicServiceTransferCases, UmiUiMos
     umi_ui_mosaic_workbench_mosaic_service_archive_encode, umi_ui_mosaic_workbench_mosaic_service_archive_decode,
     UmiUiMosaicWorkbenchMosaicServiceTransferEqual, UmiUiMosaicWorkbenchMosaicServiceTransferTails, UmiUiMosaicWorkbenchMosaicServiceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicWorkbenchMosaicServiceConditionalArchiveCases, UmiUiMosaicWorkbenchMosaicService,
+    umi_ui_mosaic_workbench_mosaic_service_archive_encode, umi_ui_mosaic_workbench_mosaic_service_archive_decode_if_unchanged,
+    UmiUiMosaicWorkbenchMosaicServiceTransferEqual, UmiUiMosaicWorkbenchMosaicServiceTransferTails, UmiUiMosaicWorkbenchMosaicServiceTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicWorkbenchMosaicService value;
     umi_ui_mosaic_workbench_mosaic_service_init(&value);
     CHECK(umi_ui_mosaic_workbench_mosaic_service_bind(&value, "workspace.main", "panel.active") == UMI_STATUS_OK);
     CHECK(umi_ui_mosaic_workbench_mosaic_service_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicWorkbenchMosaicServiceTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicWorkbenchMosaicServiceConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_workbench_mosaic_service_advance(&value) == UMI_STATUS_PERMISSION_DENIED);
     value.mode = UMI_UI_MOSAIC_EDIT_UNLOCKED;

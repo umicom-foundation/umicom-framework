@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include <stdint.h>
 #include "umicom/workbench_context_link/binding_registry.h"
 
 #include <stdlib.h>
@@ -112,6 +113,10 @@ umi_workbench_context_link_binding_registry_find(
  * Provide the workbench context link binding registry upsert operation used by this module
  * and its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_context_link_binding_registry_upsert(
     UmiWorkbenchContextLinkBindingRegistry *registry,
     const UmiWorkbenchContextLinkPanelBinding *binding)
@@ -131,6 +136,49 @@ UmiStatus umi_workbench_context_link_binding_registry_upsert(
     for (index = 0U; index < registry->count; ++index) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(registry->items[index].binding_id, binding->binding_id) == 0) {
+            registry->items[index] = *binding;
+            ++registry->items[index].revision;
+            ++registry->revision;
+            return UMI_STATUS_OK;
+        }
+    }
+    status = ensure_capacity(registry);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    registry->items[registry->count++] = *binding;
+    ++registry->revision;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_workbench_context_link_binding_registry_upsert(
+    UmiWorkbenchContextLinkBindingRegistry *registry,
+    const UmiWorkbenchContextLinkPanelBinding *binding)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    size_t index;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (registry == NULL || binding == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (umi_workbench_context_link_panel_binding_validate(binding) != UMI_STATUS_OK) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < registry->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(registry->items[index].binding_id, binding->binding_id) == 0) {
+            /* A replacement also advances the stored record's token. Refuse an
+             * exhausted input before copying it, keeping owner and child intact. */
+            if (binding->revision == UINT64_MAX)
+                return UMI_STATUS_CAPACITY_EXCEEDED;
             registry->items[index] = *binding;
             ++registry->items[index].revision;
             ++registry->revision;
@@ -182,10 +230,55 @@ UmiStatus umi_workbench_context_link_binding_registry_remove(
  * Provide the workbench context link binding registry remove panel operation used by this
  * module and its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_context_link_binding_registry_remove_panel(
     UmiWorkbenchContextLinkBindingRegistry *registry,
     const char *panel_id)
 {
+    size_t read_index;
+    size_t write_index = 0U;
+    size_t original_count;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (registry == NULL || panel_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    original_count = registry->count;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (read_index = 0U; read_index < original_count; ++read_index) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
+        if (strcmp(registry->items[read_index].panel_id, panel_id) == 0) continue;
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (write_index != read_index) {
+            registry->items[write_index] = registry->items[read_index];
+        }
+        ++write_index;
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (write_index == original_count) return UMI_STATUS_NOT_FOUND;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (write_index < original_count) {
+        memset(&registry->items[write_index], 0,
+               (original_count - write_index) * sizeof(registry->items[0]));
+    }
+    registry->count = write_index;
+    ++registry->revision;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_workbench_context_link_binding_registry_remove_panel(
+    UmiWorkbenchContextLinkBindingRegistry *registry,
+    const char *panel_id)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t read_index;
     size_t write_index = 0U;
     size_t original_count;

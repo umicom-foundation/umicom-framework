@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/policy_batch_internal.h"
 #include "umicom/strategy_research/replay/event_rate.h"
 #include "../strategy_research_internal.h"
 
@@ -34,3 +35,8 @@ UmiStatus umi_strategy_research_evaluate_replay_event_rate(
     return umi_strategy_research_evaluate_policy(
         &policy, input, outSnapshot);
 }
+
+/* Reuse the scalar policy for complete table refreshes; the shared batch
+ * owner stages all rows before publishing a successful calculation. */
+UMI_DEFINE_POLICY_BATCH(umi_strategy_research_evaluate_replay_event_rate_batch, umi_strategy_research_evaluate_replay_event_rate,
+    UmiStrategyResearchInput, UmiStrategyResearchSnapshot)

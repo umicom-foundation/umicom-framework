@@ -73,6 +73,9 @@ void umi_ecosystem_sdk_inventory_init(UmiEcosystemSdkInventory *inventory);
  * Provide the ecosystem sdk inventory upsert operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ecosystem_sdk_inventory_upsert(
     UmiEcosystemSdkInventory *inventory,
     const UmiEcosystemSdkEntry *entry);
@@ -94,6 +97,9 @@ const UmiEcosystemSdkEntry *umi_ecosystem_sdk_inventory_find_const(
  * Provide the ecosystem sdk inventory set default operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ecosystem_sdk_inventory_set_default(
     UmiEcosystemSdkInventory *inventory,
     const char *sdk_id);

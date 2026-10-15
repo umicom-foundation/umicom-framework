@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/developer/ecosystem/migration_review.h"
 
 #include <string.h>
@@ -77,6 +78,10 @@ static UmiEcosystemMigrationStep *find_step(
  * Provide the ecosystem migration review add step operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ecosystem_migration_review_add_step(
     UmiEcosystemMigrationReview *review,
     const char *step_id,
@@ -130,11 +135,75 @@ UmiStatus umi_ecosystem_migration_review_add_step(
     umi_ecosystem_migration_review_recalculate(review);
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_ecosystem_migration_review_add_step(
+    UmiEcosystemMigrationReview *review,
+    const char *step_id,
+    const char *title,
+    const char *detail,
+    UmiEcosystemMigrationKind kind,
+    UmiEcosystemReviewSeverity severity,
+    bool required,
+    bool automatic)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (review != NULL && review->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiEcosystemMigrationStep *step;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (review == NULL || step_id == NULL || title == NULL || detail == NULL ||
+        step_id[0] == '\0' || title[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (find_step(review, step_id) != NULL) return UMI_STATUS_ALREADY_EXISTS;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (review->step_count >= UMI_ECOSYSTEM_MAX_MIGRATION_STEPS) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    step = &review->steps[review->step_count];
+    (void)memset(step, 0, sizeof(*step));
+    status = umi_ecosystem_copy_text(step->step_id,
+        sizeof(step->step_id), step_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_ecosystem_copy_text(step->title, sizeof(step->title), title);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_ecosystem_copy_text(step->detail, sizeof(step->detail), detail);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    step->kind = kind;
+    step->severity = severity;
+    step->required = required;
+    step->automatic = automatic;
+    step->accepted = automatic && severity != UMI_ECOSYSTEM_REVIEW_BLOCKER;
+    step->status = severity == UMI_ECOSYSTEM_REVIEW_BLOCKER
+        ? UMI_STATUS_INVALID_STATE : UMI_STATUS_OK;
+    review->step_count++;
+    review->revision++;
+    umi_ecosystem_migration_review_recalculate(review);
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the ecosystem migration review set accepted operation used by this module and
  * its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ecosystem_migration_review_set_accepted(
     UmiEcosystemMigrationReview *review,
     const char *step_id,
@@ -155,16 +224,73 @@ UmiStatus umi_ecosystem_migration_review_set_accepted(
     umi_ecosystem_migration_review_recalculate(review);
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_ecosystem_migration_review_set_accepted(
+    UmiEcosystemMigrationReview *review,
+    const char *step_id,
+    bool accepted)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (review != NULL && review->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiEcosystemMigrationStep *step = find_step(review, step_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (step == NULL) return UMI_STATUS_NOT_FOUND;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (step->severity == UMI_ECOSYSTEM_REVIEW_BLOCKER && accepted) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    step->accepted = accepted;
+    review->revision++;
+    umi_ecosystem_migration_review_recalculate(review);
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the ecosystem migration review complete step operation used by this module and
  * its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ecosystem_migration_review_complete_step(
     UmiEcosystemMigrationReview *review,
     const char *step_id,
     UmiStatus status)
 {
+    UmiEcosystemMigrationStep *step = find_step(review, step_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (step == NULL) return UMI_STATUS_NOT_FOUND;
+    step->completed = status == UMI_STATUS_OK;
+    step->status = status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) step->severity = UMI_ECOSYSTEM_REVIEW_BLOCKER;
+    review->revision++;
+    umi_ecosystem_migration_review_recalculate(review);
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_ecosystem_migration_review_complete_step(
+    UmiEcosystemMigrationReview *review,
+    const char *step_id,
+    UmiStatus status)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (review != NULL && review->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiEcosystemMigrationStep *step = find_step(review, step_id);
     /*
      * Protect caller-owned memory by checking that required state is available before it is

@@ -13,11 +13,18 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include <string.h>
+#include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 #include "umicom/observability/performance/trace_event.h"
 
 /* Initialise deterministic record metadata before any measurement is observed. */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_performance_trace_event_init(UmiPerformanceTraceEvent *record, const char *id, const char *subject_id) {
     UmiStatus status;
     /*
@@ -39,6 +46,36 @@ UmiStatus umi_performance_trace_event_init(UmiPerformanceTraceEvent *record, con
     if (status != UMI_STATUS_OK) { record->id[0] = '\0'; return status; }
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_performance_trace_event_init_build_value(UmiPerformanceTraceEvent *record, const char *id, const char *subject_id) {
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (record == NULL || id == NULL || subject_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(record, 0, sizeof(*record));
+    record->structure_size = (uint32_t)sizeof(*record);
+    record->api_version = UMI_PERFORMANCE_API_VERSION;
+    record->state = UMI_PERFORMANCE_STATE_IDLE;
+    record->severity = UMI_PERFORMANCE_SEVERITY_INFO;
+    record->enabled = true;
+    status = umi_performance_copy_text(record->id, sizeof(record->id), id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_performance_copy_text(record->subject_id, sizeof(record->subject_id), subject_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) { record->id[0] = '\0'; return status; }
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_performance_trace_event_init, UmiPerformanceTraceEvent, record,
+    (UmiPerformanceTraceEvent *record, const char *id, const char *subject_id),
+    umi_performance_trace_event_init_build_value(candidate, id, subject_id))
+
 
 /* Reject incompatible ABI snapshots and malformed stable identifiers. */
 UmiStatus umi_performance_trace_event_validate(const UmiPerformanceTraceEvent *record) {
@@ -154,3 +191,8 @@ static UmiStatus UmiPerformanceTraceEventArchiveValidate(const UmiPerformanceTra
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_performance_trace_event_archive_encode, umi_performance_trace_event_archive_decode,
     UmiPerformanceTraceEvent, UmiPerformanceTraceEventArchiveSchema, UmiPerformanceTraceEventArchiveBound, UmiPerformanceTraceEventArchiveWrite, UmiPerformanceTraceEventArchiveRead, UmiPerformanceTraceEventArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_performance_trace_event_archive_decode_if_unchanged, umi_performance_trace_event_archive_encode,
+    UmiPerformanceTraceEvent, UmiPerformanceTraceEventArchiveSchema, UmiPerformanceTraceEventArchiveBound, UmiPerformanceTraceEventArchiveRead, UmiPerformanceTraceEventArchiveValidate)

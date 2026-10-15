@@ -43,6 +43,9 @@ void umi_ai_mcp_resource_catalogue_init(
  * Add ai mcp resource catalogue only after its inputs and available capacity have been
  * checked.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ai_mcp_resource_catalogue_add(
     UmiAiMcpResourceCatalogue *catalogue,
     const UmiAiMcpResourceDescriptor *item);

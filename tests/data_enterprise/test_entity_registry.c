@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/data/enterprise/entity_registry.h"
 #include <stdio.h>
 #include <string.h>
@@ -29,6 +30,9 @@ int main(void) {
     umi_data_entity_registry_init(&registry);
     CHECK(umi_data_entity_descriptor_init(&item,"Order","orders","id") == UMI_STATUS_OK);
     CHECK(umi_data_entity_registry_add(&registry, &item) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDataEntityRegistry, &registry,
+        (umi_data_entity_registry_add(&registry, &item)));
+
     CHECK(umi_data_entity_registry_add(&registry, &item) == UMI_STATUS_ALREADY_EXISTS);
     CHECK(umi_data_entity_registry_find(&registry, item.entity_id, &found) == UMI_STATUS_OK);
     CHECK(strcmp(found.entity_id, item.entity_id) == 0);

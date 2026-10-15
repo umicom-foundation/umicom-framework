@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/policy_batch_internal.h"
 #include "umicom/broker_connectivity/execution/quality.h"
 #include "../broker_connectivity_internal.h"
 
@@ -33,3 +34,8 @@ UmiStatus umi_broker_connectivity_evaluate_execution_quality(
     return umi_broker_connectivity_evaluate_policy(
         &policy, input, outSnapshot);
 }
+
+/* Reuse the scalar policy for complete table refreshes; the shared batch
+ * owner stages all rows before publishing a successful calculation. */
+UMI_DEFINE_POLICY_BATCH(umi_broker_connectivity_evaluate_execution_quality_batch, umi_broker_connectivity_evaluate_execution_quality,
+    UmiBrokerConnectivityInput, UmiBrokerConnectivitySnapshot)

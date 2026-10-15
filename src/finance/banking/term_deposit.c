@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/banking/term_deposit.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -130,3 +131,9 @@ static UmiStatus UmiBankingTermDepositArchiveValidate(const UmiBankingTermDeposi
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_banking_term_deposit_archive_encode, umi_banking_term_deposit_archive_decode,
     UmiBankingTermDeposit, UmiBankingTermDepositArchiveSchema, UmiBankingTermDepositArchiveBound, UmiBankingTermDepositArchiveWrite, UmiBankingTermDepositArchiveRead, UmiBankingTermDepositArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_banking_term_deposit_archive_decode_if_unchanged, umi_banking_term_deposit_archive_encode,
+    UmiBankingTermDeposit, UmiBankingTermDepositArchiveSchema, UmiBankingTermDepositArchiveBound, UmiBankingTermDepositArchiveRead, UmiBankingTermDepositArchiveValidate)

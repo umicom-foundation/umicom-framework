@@ -54,7 +54,8 @@ static const ExperienceGetter GETTERS[] = {
     umi_application_experience_operations,
     umi_application_experience_security_centre,
     umi_application_experience_marketplace,
-    umi_application_experience_education
+    umi_application_experience_education,
+    umi_application_experience_healthcare
 };
 
 /*

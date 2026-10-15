@@ -102,6 +102,12 @@ UMI_TEST_VALUE_TRANSFER(UmiPaymentsIdempotencyRecordTransferCases, UmiPaymentsId
     umi_payments_idempotency_record_archive_encode, umi_payments_idempotency_record_archive_decode,
     UmiPaymentsIdempotencyRecordTransferEqual, UmiPaymentsIdempotencyRecordTransferTails, UmiPaymentsIdempotencyRecordTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiPaymentsIdempotencyRecordConditionalArchiveCases, UmiPaymentsIdempotencyRecord,
+    umi_payments_idempotency_record_archive_encode, umi_payments_idempotency_record_archive_decode_if_unchanged,
+    UmiPaymentsIdempotencyRecordTransferEqual, UmiPaymentsIdempotencyRecordTransferTails, UmiPaymentsIdempotencyRecordTransferMalformed)
+
+
 int main(void) {
     UmiPaymentsIdempotencyRecord v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -109,6 +115,7 @@ int main(void) {
     /* Use the stable identifier comparison to choose the matching record or policy. */
     if(!umi_payments_idempotency_record_valid(&v)) return 2;
     if (UmiPaymentsIdempotencyRecordTransferCases(&v) != 0) return 1;
+    if (UmiPaymentsIdempotencyRecordConditionalArchiveCases(&v) != 0) return 1;
 
     return 0;
 }

@@ -17,6 +17,10 @@
 
 #include "umicom/open_tms/fx_forward/trade_readiness.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(umi_open_tms_evaluate_fx_forward_trade_readiness_batch_cases, umi_open_tms_evaluate_fx_forward_trade_readiness,
+    umi_open_tms_evaluate_fx_forward_trade_readiness_batch, UmiOpenTmsInput, UmiOpenTmsSnapshot, value)
+
 int main(void)
 {
     UmiOpenTmsInput input;
@@ -76,6 +80,7 @@ int main(void)
     input.transitionAllowed = 1;
     input.revision = 111U;
 
+    if (umi_open_tms_evaluate_fx_forward_trade_readiness_batch_cases(&input) != 0) return 1;
     assert(umi_open_tms_evaluate_fx_forward_trade_readiness(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "fx_forward.trade-readiness") == 0);
     assert(snapshot.revision == 111U);

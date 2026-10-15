@@ -102,6 +102,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceSurfaceSemanticsTransferCases, UmiAppearanc
     umi_appearance_surface_semantics_archive_encode, umi_appearance_surface_semantics_archive_decode,
     UmiAppearanceSurfaceSemanticsTransferEqual, UmiAppearanceSurfaceSemanticsTransferTails, UmiAppearanceSurfaceSemanticsTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceSurfaceSemanticsConditionalArchiveCases, UmiAppearanceSurfaceSemantics,
+    umi_appearance_surface_semantics_archive_encode, umi_appearance_surface_semantics_archive_decode_if_unchanged,
+    UmiAppearanceSurfaceSemanticsTransferEqual, UmiAppearanceSurfaceSemanticsTransferTails, UmiAppearanceSurfaceSemanticsTransferMalformed)
+
+
 int main(void) {
     UmiAppearanceSurfaceSemantics item;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -109,6 +115,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_surface_semantics_is_valid(&item)) return 2;
     if (UmiAppearanceSurfaceSemanticsTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceSurfaceSemanticsConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;
 }

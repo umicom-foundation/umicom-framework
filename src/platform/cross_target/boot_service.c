@@ -18,6 +18,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/platform/cross_target/boot_service.h"
 #include "../../base/value_archive_internal.h"
 
@@ -74,3 +75,9 @@ static UmiStatus UmiCtBootServiceArchiveValidate(const UmiCtBootService *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ct_boot_service_archive_encode, umi_ct_boot_service_archive_decode,
     UmiCtBootService, UmiCtBootServiceArchiveSchema, UmiCtBootServiceArchiveBound, UmiCtBootServiceArchiveWrite, UmiCtBootServiceArchiveRead, UmiCtBootServiceArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ct_boot_service_archive_decode_if_unchanged, umi_ct_boot_service_archive_encode,
+    UmiCtBootService, UmiCtBootServiceArchiveSchema, UmiCtBootServiceArchiveBound, UmiCtBootServiceArchiveRead, UmiCtBootServiceArchiveValidate)

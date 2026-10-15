@@ -91,6 +91,12 @@ UMI_TEST_VALUE_TRANSFER(UmiBankingTermDepositTransferCases, UmiBankingTermDeposi
     umi_banking_term_deposit_archive_encode, umi_banking_term_deposit_archive_decode,
     UmiBankingTermDepositTransferEqual, UmiBankingTermDepositTransferTails, UmiBankingTermDepositTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiBankingTermDepositConditionalArchiveCases, UmiBankingTermDeposit,
+    umi_banking_term_deposit_archive_encode, umi_banking_term_deposit_archive_decode_if_unchanged,
+    UmiBankingTermDepositTransferEqual, UmiBankingTermDepositTransferTails, UmiBankingTermDepositTransferMalformed)
+
+
 int main(void) {
     UmiBankingTermDeposit v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -98,6 +104,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if(!umi_banking_term_deposit_valid(&v)) return 2;
     if (UmiBankingTermDepositTransferCases(&v) != 0) return 1;
+    if (UmiBankingTermDepositConditionalArchiveCases(&v) != 0) return 1;
 
     return 0;
 }

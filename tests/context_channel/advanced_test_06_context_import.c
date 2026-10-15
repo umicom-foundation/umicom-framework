@@ -130,6 +130,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextImportTransferCases, UmiContextImport,
     umi_context_import_archive_encode, umi_context_import_archive_decode,
     UmiContextImportTransferEqual, UmiContextImportTransferTails, UmiContextImportTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextImportConditionalArchiveCases, UmiContextImport,
+    umi_context_import_archive_encode, umi_context_import_archive_decode_if_unchanged,
+    UmiContextImportTransferEqual, UmiContextImportTransferTails, UmiContextImportTransferMalformed)
+
+
 int main(void)
 {
     UmiContextImport state;
@@ -144,6 +150,7 @@ int main(void)
     assert(umi_context_import_covers_sequence(&state,11U));
     assert(umi_context_import_validate(&state) == UMI_STATUS_OK);
     if (UmiContextImportTransferCases(&state) != 0) return 1;
+    if (UmiContextImportConditionalArchiveCases(&state) != 0) return 1;
 
     return 0;
 }

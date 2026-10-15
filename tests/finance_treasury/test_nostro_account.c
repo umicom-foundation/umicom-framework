@@ -67,11 +67,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryNostroAccountTransferCases, UmiTreasuryNostro
     umi_treasury_nostro_account_archive_encode, umi_treasury_nostro_account_archive_decode,
     UmiTreasuryNostroAccountTransferEqual, UmiTreasuryNostroAccountTransferTails, UmiTreasuryNostroAccountTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryNostroAccountConditionalArchiveCases, UmiTreasuryNostroAccount,
+    umi_treasury_nostro_account_archive_encode, umi_treasury_nostro_account_archive_decode_if_unchanged,
+    UmiTreasuryNostroAccountTransferEqual, UmiTreasuryNostroAccountTransferTails, UmiTreasuryNostroAccountTransferMalformed)
+
+
 int main(void) {
     UmiTreasuryNostroAccount v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_nostro_account_init(&v, "nostro", 1000, 300) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryNostroAccountTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryNostroAccountConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if(umi_treasury_nostro_account_available_minor(&v)!=700)return 2;

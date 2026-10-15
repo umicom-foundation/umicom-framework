@@ -13,7 +13,9 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/frontend/native_web/render_context.h"
+#include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 
 #include <string.h>
@@ -21,7 +23,22 @@
  * Initialise native web render context from caller-provided values so later operations
  * receive a known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_native_web_render_context_init(UmiNativeWebRenderContext *context,const char *session_id,const char *route){UmiStatus s;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(context==NULL)return UMI_STATUS_INVALID_ARGUMENT;(void)memset(context,0,sizeof(*context));s=umi_native_web_copy_text(context->session_id,sizeof(context->session_id),session_id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK)return s;s=umi_native_web_copy_text(context->route,sizeof(context->route),route);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK)return s;(void)umi_native_web_copy_text(context->theme,sizeof(context->theme),"system");(void)umi_native_web_copy_text(context->density,sizeof(context->density),"compact");(void)umi_native_web_copy_text(context->locale,sizeof(context->locale),"en-GB");context->revision=1U;return UMI_STATUS_OK;}
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_native_web_render_context_init_build_value(UmiNativeWebRenderContext *context,const char *session_id,const char *route){UmiStatus s;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(context==NULL)return UMI_STATUS_INVALID_ARGUMENT;(void)memset(context,0,sizeof(*context));s=umi_native_web_copy_text(context->session_id,sizeof(context->session_id),session_id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK)return s;s=umi_native_web_copy_text(context->route,sizeof(context->route),route);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK)return s;(void)umi_native_web_copy_text(context->theme,sizeof(context->theme),"system");(void)umi_native_web_copy_text(context->density,sizeof(context->density),"compact");(void)umi_native_web_copy_text(context->locale,sizeof(context->locale),"en-GB");context->revision=1U;return UMI_STATUS_OK;}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_native_web_render_context_init, UmiNativeWebRenderContext, context,
+    (UmiNativeWebRenderContext *context, const char *session_id, const char *route),
+    umi_native_web_render_context_init_build_value(candidate, session_id, route))
+
 /*
  * Check that native web render context satisfies its contract before another service
  * relies on it.
@@ -88,3 +105,9 @@ static UmiStatus UmiNativeWebRenderContextArchiveValidate(const UmiNativeWebRend
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_native_web_render_context_archive_encode, umi_native_web_render_context_archive_decode,
     UmiNativeWebRenderContext, UmiNativeWebRenderContextArchiveSchema, UmiNativeWebRenderContextArchiveBound, UmiNativeWebRenderContextArchiveWrite, UmiNativeWebRenderContextArchiveRead, UmiNativeWebRenderContextArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_native_web_render_context_archive_decode_if_unchanged, umi_native_web_render_context_archive_encode,
+    UmiNativeWebRenderContext, UmiNativeWebRenderContextArchiveSchema, UmiNativeWebRenderContextArchiveBound, UmiNativeWebRenderContextArchiveRead, UmiNativeWebRenderContextArchiveValidate)

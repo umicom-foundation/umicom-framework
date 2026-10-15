@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 
@@ -39,6 +40,10 @@ int main(void)
 
     assert(umi_debug_runtime_publish_threads(
         &bridge, &threads, 7U, 1) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDebugRuntimeServiceBridge, &bridge,
+        (umi_debug_runtime_publish_threads(
+        &bridge, &threads, 7U, 1)));
+
     assert(umi_debug_thread_registry_count(
         umi_debug_service_thread(service)) == 1U);
 
@@ -51,6 +56,10 @@ int main(void)
 
     assert(umi_debug_runtime_publish_stack(
         &bridge, 7U, &stack) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDebugRuntimeServiceBridge, &bridge,
+        (umi_debug_runtime_publish_stack(
+        &bridge, 7U, &stack)));
+
     assert(umi_debug_stack_frame_registry_count(
         umi_debug_service_stack_frame(service)) == 1U);
 

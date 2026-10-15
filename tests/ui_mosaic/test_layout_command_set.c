@@ -87,6 +87,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicLayoutCommandSetTransferCases, UmiUiMosaicLay
     umi_ui_mosaic_layout_command_set_archive_encode, umi_ui_mosaic_layout_command_set_archive_decode,
     UmiUiMosaicLayoutCommandSetTransferEqual, UmiUiMosaicLayoutCommandSetTransferTails, UmiUiMosaicLayoutCommandSetTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicLayoutCommandSetConditionalArchiveCases, UmiUiMosaicLayoutCommandSet,
+    umi_ui_mosaic_layout_command_set_archive_encode, umi_ui_mosaic_layout_command_set_archive_decode_if_unchanged,
+    UmiUiMosaicLayoutCommandSetTransferEqual, UmiUiMosaicLayoutCommandSetTransferTails, UmiUiMosaicLayoutCommandSetTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicLayoutCommandSet value;
     umi_ui_mosaic_layout_command_set_init(&value);
@@ -94,6 +100,7 @@ int main(void) {
     value.requires_edit_mode = true;
     CHECK(umi_ui_mosaic_layout_command_set_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicLayoutCommandSetTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicLayoutCommandSetConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_layout_command_set_can_execute(&value, UMI_UI_MOSAIC_EDIT_LOCKED) == 0);
     CHECK(umi_ui_mosaic_layout_command_set_can_execute(&value, UMI_UI_MOSAIC_EDIT_UNLOCKED) == 1);

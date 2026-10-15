@@ -169,6 +169,12 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextSourceViewStateTransferCases, UmiWork
     umi_workbench_context_source_view_state_archive_encode, umi_workbench_context_source_view_state_archive_decode,
     UmiWorkbenchContextSourceViewStateTransferEqual, UmiWorkbenchContextSourceViewStateTransferTails, UmiWorkbenchContextSourceViewStateTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextSourceViewStateConditionalArchiveCases, UmiWorkbenchContextSourceViewState,
+    umi_workbench_context_source_view_state_archive_encode, umi_workbench_context_source_view_state_archive_decode_if_unchanged,
+    UmiWorkbenchContextSourceViewStateTransferEqual, UmiWorkbenchContextSourceViewStateTransferTails, UmiWorkbenchContextSourceViewStateTransferMalformed)
+
+
 /* Exercise the accepted domain fixture through reviewed publication and
  * legacy mutation boundaries. These checks stay active in release builds. */
 #include "../record_integrity/reviewed_value_cases.h"
@@ -202,6 +208,7 @@ int main(void)
     assert(umi_workbench_context_source_view_state_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextSourceViewStateTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceViewStateConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextSourceViewStateReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextSourceViewStateMutationGuards(&record) != 0) return 1;
 

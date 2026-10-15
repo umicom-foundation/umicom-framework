@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/workbench/sql_document.h"
+#include "../../base/value_construction_internal.h"
 
 #include <string.h>
 
@@ -20,6 +21,11 @@
  * Initialise data sql document from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_data_sql_document_init(
     UmiDataSqlDocument *document,
     const char *document_id,
@@ -50,6 +56,45 @@ UmiStatus umi_data_sql_document_init(
     if (status == UMI_STATUS_OK) document->revision = 1U;
     return status;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_data_sql_document_init_build_value(
+    UmiDataSqlDocument *document,
+    const char *document_id,
+    const char *title,
+    const char *dialect)
+{
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (document == NULL || document_id == NULL || document_id[0] == '\0' ||
+        title == NULL || dialect == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    (void)memset(document, 0, sizeof(*document));
+    document->struct_size = (uint32_t)sizeof(*document);
+    document->api_version = UMI_DATA_WORKBENCH_API_VERSION;
+    status = umi_data_workbench_copy_text(
+        document->document_id, sizeof(document->document_id), document_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) status = umi_data_workbench_copy_text(
+        document->title, sizeof(document->title), title);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) status = umi_data_workbench_copy_text(
+        document->dialect, sizeof(document->dialect), dialect);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) document->revision = 1U;
+    return status;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_data_sql_document_init, UmiDataSqlDocument, document,
+    (UmiDataSqlDocument *document, const char *document_id, const char *title, const char *dialect),
+    umi_data_sql_document_init_build_value(candidate, document_id, title, dialect))
+
 
 /*
  * Provide the data sql document bind connection operation used by this module and its

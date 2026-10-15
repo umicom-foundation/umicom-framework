@@ -167,6 +167,12 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionProviderDescriptorTransferCases, Um
     umi_workbench_selection_provider_descriptor_archive_encode, umi_workbench_selection_provider_descriptor_archive_decode,
     UmiWorkbenchSelectionProviderDescriptorTransferEqual, UmiWorkbenchSelectionProviderDescriptorTransferTails, UmiWorkbenchSelectionProviderDescriptorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchSelectionProviderDescriptorConditionalArchiveCases, UmiWorkbenchSelectionProviderDescriptor,
+    umi_workbench_selection_provider_descriptor_archive_encode, umi_workbench_selection_provider_descriptor_archive_decode_if_unchanged,
+    UmiWorkbenchSelectionProviderDescriptorTransferEqual, UmiWorkbenchSelectionProviderDescriptorTransferTails, UmiWorkbenchSelectionProviderDescriptorTransferMalformed)
+
+
 int main(void)
 {
     UmiWorkbenchSelectionProviderDescriptor descriptor;
@@ -184,6 +190,7 @@ int main(void)
     assert(umi_workbench_selection_provider_descriptor_validate(
         &descriptor) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionProviderDescriptorTransferCases(&descriptor) != 0) return 1;
+    if (UmiWorkbenchSelectionProviderDescriptorConditionalArchiveCases(&descriptor) != 0) return 1;
 
 
     return 0;

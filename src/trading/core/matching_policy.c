@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/trading/core/matching_policy.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -67,3 +68,8 @@ static UmiStatus UmiTradingMatchingPolicyArchiveValidate(const UmiTradingMatchin
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_trading_matching_policy_archive_encode, umi_trading_matching_policy_archive_decode,
     UmiTradingMatchingPolicy, UmiTradingMatchingPolicyArchiveSchema, UmiTradingMatchingPolicyArchiveBound, UmiTradingMatchingPolicyArchiveWrite, UmiTradingMatchingPolicyArchiveRead, UmiTradingMatchingPolicyArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_trading_matching_policy_archive_decode_if_unchanged, umi_trading_matching_policy_archive_encode,
+    UmiTradingMatchingPolicy, UmiTradingMatchingPolicyArchiveSchema, UmiTradingMatchingPolicyArchiveBound, UmiTradingMatchingPolicyArchiveRead, UmiTradingMatchingPolicyArchiveValidate)

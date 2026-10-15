@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/build/deployment_plan.h"
 
 #include <stdio.h>
@@ -294,8 +295,33 @@ UmiStatus umi_build_deployment_plan_compose_default(
     return UMI_STATUS_OK;
 }
 
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_build_deployment_plan_approve(UmiBuildDeploymentPlan *plan)
 {
+    if (plan == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!plan->requires_approval) {
+        plan->approved = 1;
+        return UMI_STATUS_OK;
+    }
+    if (plan->deployment_id[0] == '\0' || plan->step_count == 0U) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    plan->approved = 1;
+    plan->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_build_deployment_plan_approve(UmiBuildDeploymentPlan *plan)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (plan != NULL && plan->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     if (plan == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     if (!plan->requires_approval) {
         plan->approved = 1;

@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 
@@ -73,6 +74,10 @@ int main(void)
            UMI_STATUS_OK);
     assert(umi_editor_intel_navigation_projection_refresh(
                &projection, insights) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiEditorIntelNavigationProjection, &projection,
+        (umi_editor_intel_navigation_projection_refresh(
+               &projection, insights)));
+
     assert(projection.source_snapshot.active_surface ==
            UMI_EDITOR_NAVIGATION_INSIGHT_PEEK_DEFINITION);
     assert(umi_editor_intel_navigation_projection_count(&projection) == 2U);

@@ -83,6 +83,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceSemanticPaletteMapTransferCases, UmiAppeara
     umi_appearance_semantic_palette_map_archive_encode, umi_appearance_semantic_palette_map_archive_decode,
     UmiAppearanceSemanticPaletteMapTransferEqual, UmiAppearanceSemanticPaletteMapTransferTails, UmiAppearanceSemanticPaletteMapTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceSemanticPaletteMapConditionalArchiveCases, UmiAppearanceSemanticPaletteMap,
+    umi_appearance_semantic_palette_map_archive_encode, umi_appearance_semantic_palette_map_archive_decode_if_unchanged,
+    UmiAppearanceSemanticPaletteMapTransferEqual, UmiAppearanceSemanticPaletteMapTransferTails, UmiAppearanceSemanticPaletteMapTransferMalformed)
+
+
 int main(void) {
     UmiAppearanceSemanticPaletteMap item;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -90,6 +96,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_semantic_palette_map_is_valid(&item)) return 2;
     if (UmiAppearanceSemanticPaletteMapTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceSemanticPaletteMapConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;
 }

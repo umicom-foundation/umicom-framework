@@ -139,6 +139,12 @@ UMI_TEST_VALUE_TRANSFER(UmiTestPlatformBuildArtifactTransferCases, UmiTestPlatfo
     umi_test_platform_build_artifact_archive_encode, umi_test_platform_build_artifact_archive_decode,
     UmiTestPlatformBuildArtifactTransferEqual, UmiTestPlatformBuildArtifactTransferTails, UmiTestPlatformBuildArtifactTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestPlatformBuildArtifactConditionalArchiveCases, UmiTestPlatformBuildArtifact,
+    umi_test_platform_build_artifact_archive_encode, umi_test_platform_build_artifact_archive_decode_if_unchanged,
+    UmiTestPlatformBuildArtifactTransferEqual, UmiTestPlatformBuildArtifactTransferTails, UmiTestPlatformBuildArtifactTransferMalformed)
+
+
 int main(void) {
     UmiTestPlatformBuildArtifact artifact;
     assert(umi_test_platform_build_artifact_init(&artifact, "studio",
@@ -146,6 +152,7 @@ int main(void) {
         "windows-ucrt64-debug", true) == UMI_STATUS_OK);
     assert(umi_test_platform_build_artifact_validate(&artifact) == UMI_STATUS_OK);
     if (UmiTestPlatformBuildArtifactTransferCases(&artifact) != 0) return 1;
+    if (UmiTestPlatformBuildArtifactConditionalArchiveCases(&artifact) != 0) return 1;
 
     assert(strcmp(artifact.target_name, "studio-test-target") == 0);
     assert(artifact.required);

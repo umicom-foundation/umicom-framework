@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 
 #include "umicom/application_shell/layout.h"
@@ -37,6 +38,15 @@ int main(void)
         UMI_APPLICATION_SHELL_REGION_PRIMARY_SIDEBAR,
         0U,
         1) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiApplicationShellLayout, &layout,
+        (umi_application_shell_layout_place(
+        &layout,
+        "project.explorer",
+        "primary",
+        UMI_APPLICATION_SHELL_REGION_PRIMARY_SIDEBAR,
+        0U,
+        1)));
+
 
     assert(umi_application_shell_drop_prepare(
         &transaction,

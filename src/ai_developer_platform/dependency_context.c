@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../base/conditional_archive_internal.h"
 #include "umicom/ai/developer_platform/dependency_context.h"
 #include "../base/value_archive_internal.h"
 
@@ -156,3 +157,9 @@ static UmiStatus UmiAiDevDependencyContextArchiveValidate(const UmiAiDevDependen
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ai_dev_dependency_context_archive_encode, umi_ai_dev_dependency_context_archive_decode,
     UmiAiDevDependencyContext, UmiAiDevDependencyContextArchiveSchema, UmiAiDevDependencyContextArchiveBound, UmiAiDevDependencyContextArchiveWrite, UmiAiDevDependencyContextArchiveRead, UmiAiDevDependencyContextArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ai_dev_dependency_context_archive_decode_if_unchanged, umi_ai_dev_dependency_context_archive_encode,
+    UmiAiDevDependencyContext, UmiAiDevDependencyContextArchiveSchema, UmiAiDevDependencyContextArchiveBound, UmiAiDevDependencyContextArchiveRead, UmiAiDevDependencyContextArchiveValidate)

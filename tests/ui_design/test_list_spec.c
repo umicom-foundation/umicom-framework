@@ -57,6 +57,13 @@ UMI_TEST_VALUE_TRANSFER(UmiDesignListSpecTransferCases, UmiDesignListSpec,
     umi_design_list_spec_archive_encode, umi_design_list_spec_archive_decode,
     UmiDesignListSpecTransferEqual, UmiDesignListSpecTransferTails, UmiDesignListSpecTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignListSpecConditionalArchiveCases, UmiDesignListSpec,
+    umi_design_list_spec_archive_encode, umi_design_list_spec_archive_decode_if_unchanged,
+    UmiDesignListSpecTransferEqual, UmiDesignListSpecTransferTails, UmiDesignListSpecTransferMalformed)
+
+
 int main(void){UmiDesignListSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_list_spec_init(&s,50000U,UMI_DESIGN_DENSITY_COMPACT,1,1)!=UMI_STATUS_OK)return 1;
     if (UmiDesignListSpecTransferCases(&s) != 0) return 1;
+    if (UmiDesignListSpecConditionalArchiveCases(&s) != 0) return 1;
 return s.virtualised?0:2;}

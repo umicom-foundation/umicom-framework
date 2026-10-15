@@ -85,6 +85,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveContextBindingTransferCases, UmiUiReactiveC
     umi_ui_reactive_context_binding_archive_encode, umi_ui_reactive_context_binding_archive_decode,
     UmiUiReactiveContextBindingTransferEqual, UmiUiReactiveContextBindingTransferTails, UmiUiReactiveContextBindingTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveContextBindingConditionalArchiveCases, UmiUiReactiveContextBinding,
+    umi_ui_reactive_context_binding_archive_encode, umi_ui_reactive_context_binding_archive_decode_if_unchanged,
+    UmiUiReactiveContextBindingTransferEqual, UmiUiReactiveContextBindingTransferTails, UmiUiReactiveContextBindingTransferMalformed)
+
+
 int main(void) { UmiUiReactiveContextBinding item; umi_ui_reactive_context_binding_init(&item);
     /* Nonzero fields expose swapped or omitted values in a saved record.
      * The original initialized fixture remains available for its own checks. */
@@ -94,4 +100,5 @@ int main(void) { UmiUiReactiveContextBinding item; umi_ui_reactive_context_bindi
     populated.publish = true;
     populated.subscribe = true;
     if (UmiUiReactiveContextBindingTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveContextBindingConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_context_binding_valid(&item) ? 0 : 1; }

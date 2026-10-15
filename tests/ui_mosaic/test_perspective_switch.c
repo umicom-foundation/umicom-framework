@@ -104,12 +104,19 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicPerspectiveSwitchTransferCases, UmiUiMosaicPe
     umi_ui_mosaic_perspective_switch_archive_encode, umi_ui_mosaic_perspective_switch_archive_decode,
     UmiUiMosaicPerspectiveSwitchTransferEqual, UmiUiMosaicPerspectiveSwitchTransferTails, UmiUiMosaicPerspectiveSwitchTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicPerspectiveSwitchConditionalArchiveCases, UmiUiMosaicPerspectiveSwitch,
+    umi_ui_mosaic_perspective_switch_archive_encode, umi_ui_mosaic_perspective_switch_archive_decode_if_unchanged,
+    UmiUiMosaicPerspectiveSwitchTransferEqual, UmiUiMosaicPerspectiveSwitchTransferTails, UmiUiMosaicPerspectiveSwitchTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicPerspectiveSwitch value;
     umi_ui_mosaic_perspective_switch_init(&value);
     CHECK(umi_ui_mosaic_perspective_switch_set(&value, "perspective.perspective_switch", "Perspective Switch", "layout.default", UMI_UI_MOSAIC_APP_TMS) == UMI_STATUS_OK);
     CHECK(umi_ui_mosaic_perspective_switch_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicPerspectiveSwitchTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicPerspectiveSwitchConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

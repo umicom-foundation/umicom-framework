@@ -71,6 +71,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadDragSessionTransferCases, UmiRadDragSession,
     umi_rad_drag_session_archive_encode, umi_rad_drag_session_archive_decode,
     UmiRadDragSessionTransferEqual, UmiRadDragSessionTransferTails, UmiRadDragSessionTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadDragSessionConditionalArchiveCases, UmiRadDragSession,
+    umi_rad_drag_session_archive_encode, umi_rad_drag_session_archive_decode_if_unchanged,
+    UmiRadDragSessionTransferEqual, UmiRadDragSessionTransferTails, UmiRadDragSessionTransferMalformed)
+
+
 int main(void){UmiRadDragSession item;CHECK(umi_rad_drag_session_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_drag_session_is_valid(&item));
     if (UmiRadDragSessionTransferCases(&item) != 0) return 1;
+    if (UmiRadDragSessionConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

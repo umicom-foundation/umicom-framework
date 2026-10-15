@@ -122,6 +122,12 @@ UMI_TEST_VALUE_TRANSFER(UmiStrategyProjectConfigTransferCases, UmiStrategyProjec
     umi_strategy_project_config_archive_encode, umi_strategy_project_config_archive_decode,
     UmiStrategyProjectConfigTransferEqual, UmiStrategyProjectConfigTransferTails, UmiStrategyProjectConfigTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiStrategyProjectConfigConditionalArchiveCases, UmiStrategyProjectConfig,
+    umi_strategy_project_config_archive_encode, umi_strategy_project_config_archive_decode_if_unchanged,
+    UmiStrategyProjectConfigTransferEqual, UmiStrategyProjectConfigTransferTails, UmiStrategyProjectConfigTransferMalformed)
+
+
 int main(void)
 {
     UmiStrategyProjectConfig config;
@@ -131,6 +137,7 @@ int main(void)
     umi_strategy_project_config_init(&config);
     assert(umi_strategy_project_config_validate(&config) == UMI_STATUS_OK);
     if (UmiStrategyProjectConfigTransferCases(&config) != 0) return 1;
+    if (UmiStrategyProjectConfigConditionalArchiveCases(&config) != 0) return 1;
 
     assert(config.simulationOnly);
     assert(umi_strategy_project_render_c23(

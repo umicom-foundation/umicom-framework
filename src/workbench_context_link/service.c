@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include <stdint.h>
 #include "umicom/workbench_context_link/service.h"
 
 #include <stdio.h>
@@ -134,6 +135,10 @@ void umi_workbench_context_link_service_destroy(
  * Provide the workbench context link service define group operation used by this module
  * and its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_context_link_service_define_group(
     UmiWorkbenchContextLinkService *service,
     const char *group_id,
@@ -166,11 +171,54 @@ UmiStatus umi_workbench_context_link_service_define_group(
     if (status == UMI_STATUS_OK) ++service->revision;
     return status;
 }
+#endif
+
+UmiStatus umi_workbench_context_link_service_define_group(
+    UmiWorkbenchContextLinkService *service,
+    const char *group_id,
+    const char *title,
+    UmiContextChannelColour colour,
+    uint64_t allowed_kinds_mask,
+    UmiWorkbenchContextLinkMode default_mode)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (service != NULL && service->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiWorkbenchContextLinkGroupProfile profile;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (service == NULL || group_id == NULL || title == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    umi_workbench_context_link_group_profile_init(&profile, group_id);
+    status = umi_workbench_context_link_group_profile_set_primary(&profile, title);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    profile.colour = colour;
+    profile.mode = default_mode;
+    profile.state = UMI_WORKBENCH_CONTEXT_LINK_STATE_ATTACHED;
+    profile.flags = allowed_kinds_mask == 0U
+        ? UMI_WORKBENCH_CONTEXT_LINK_ALL_KINDS_MASK
+        : allowed_kinds_mask;
+    status = umi_workbench_context_link_group_catalogue_upsert(&service->groups, &profile);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) ++service->revision;
+    return status;
+}
 
 /*
  * Provide the workbench context link service bind panel operation used by this module and
  * its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_context_link_service_bind_panel(
     UmiWorkbenchContextLinkService *service,
     const char *binding_id,
@@ -180,6 +228,67 @@ UmiStatus umi_workbench_context_link_service_bind_panel(
     UmiContextKind context_kind,
     UmiWorkbenchContextLinkMode mode)
 {
+    UmiWorkbenchContextLinkPanelBinding binding;
+    const UmiWorkbenchContextLinkGroupProfile *group;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (service == NULL || binding_id == NULL || panel_id == NULL ||
+        application_id == NULL || group_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    group = umi_workbench_context_link_group_catalogue_find_const(
+        &service->groups, group_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (group == NULL) return UMI_STATUS_NOT_FOUND;
+    /* Apply this operation only while the related capability or state is available. */
+    if (!umi_workbench_context_link_kind_allowed(group->flags, context_kind) &&
+        context_kind != UMI_CONTEXT_KIND_GENERIC) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    umi_workbench_context_link_panel_binding_init(&binding, binding_id);
+    status = umi_workbench_context_link_panel_binding_set_primary(&binding, panel_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_workbench_context_link_panel_binding_set_secondary(
+        &binding, application_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_workbench_context_link_copy_text(
+        binding.group_id, sizeof(binding.group_id), group_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    binding.context_kind = context_kind;
+    binding.colour = group->colour;
+    binding.mode = mode;
+    binding.state = UMI_WORKBENCH_CONTEXT_LINK_STATE_ATTACHED;
+    status = umi_workbench_context_link_binding_registry_upsert(
+        &service->bindings, &binding);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) ++service->revision;
+    return status;
+}
+#endif
+
+UmiStatus umi_workbench_context_link_service_bind_panel(
+    UmiWorkbenchContextLinkService *service,
+    const char *binding_id,
+    const char *panel_id,
+    const char *application_id,
+    const char *group_id,
+    UmiContextKind context_kind,
+    UmiWorkbenchContextLinkMode mode)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (service != NULL && service->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiWorkbenchContextLinkPanelBinding binding;
     const UmiWorkbenchContextLinkGroupProfile *group;
     UmiStatus status;
@@ -251,6 +360,10 @@ UmiStatus umi_workbench_context_link_service_unbind_panel(
  * Provide the workbench context link service publish operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_context_link_service_publish(
     UmiWorkbenchContextLinkService *service,
     const char *group_id,
@@ -259,6 +372,92 @@ UmiStatus umi_workbench_context_link_service_publish(
     uint64_t now_ms,
     UmiWorkbenchContextLinkDeliveryBatch *out_deliveries)
 {
+    const UmiWorkbenchContextLinkGroupProfile *group;
+    size_t index;
+    bool source_authorised = source_panel_id == NULL || source_panel_id[0] == '\0';
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (service == NULL || group_id == NULL || payload == NULL ||
+        out_deliveries == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (service->suspended) return UMI_STATUS_BUSY;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (umi_context_payload_validate(payload) != UMI_STATUS_OK) {
+        ++service->metrics.rejected_count;
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    group = umi_workbench_context_link_group_catalogue_find_const(
+        &service->groups, group_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (group == NULL) {
+        ++service->metrics.rejected_count;
+        return UMI_STATUS_NOT_FOUND;
+    }
+    /* Apply this operation only while the related capability or state is available. */
+    if (!umi_workbench_context_link_kind_allowed(group->flags, payload->kind)) {
+        ++service->metrics.rejected_count;
+        return UMI_STATUS_PERMISSION_DENIED;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (!source_authorised) {
+        /* Visit each bounded item once so every record receives the same rule. */
+        for (index = 0U; index < service->bindings.count; ++index) {
+            const UmiWorkbenchContextLinkPanelBinding *binding = &service->bindings.items[index];
+            /* Use the stable identifier comparison to choose the matching record or policy. */
+            if (strcmp(binding->group_id, group_id) == 0 &&
+                strcmp(binding->panel_id, source_panel_id) == 0 &&
+                mode_can_publish(binding->mode)) {
+                source_authorised = true;
+                break;
+            }
+        }
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (!source_authorised) {
+        ++service->metrics.rejected_count;
+        return UMI_STATUS_PERMISSION_DENIED;
+    }
+
+    ++service->sequence;
+    status = umi_workbench_context_link_active_context_store_put(
+        &service->active, group_id, payload, service->sequence, now_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_workbench_context_link_history_store_append(
+        &service->history, group_id, payload, service->sequence, now_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = build_deliveries(service, group_id, source_panel_id,
+                              payload->kind, group->colour, out_deliveries);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    ++service->metrics.publish_count;
+    ++service->revision;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_workbench_context_link_service_publish(
+    UmiWorkbenchContextLinkService *service,
+    const char *group_id,
+    const char *source_panel_id,
+    const UmiContextPayload *payload,
+    uint64_t now_ms,
+    UmiWorkbenchContextLinkDeliveryBatch *out_deliveries)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (service != NULL && service->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     const UmiWorkbenchContextLinkGroupProfile *group;
     size_t index;
     bool source_authorised = source_panel_id == NULL || source_panel_id[0] == '\0';
@@ -353,12 +552,53 @@ umi_workbench_context_link_service_current(
  * Provide the workbench context link service pin current operation used by this module and
  * its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_context_link_service_pin_current(
     UmiWorkbenchContextLinkService *service,
     const char *pin_id,
     const char *group_id,
     uint64_t now_ms)
 {
+    const UmiWorkbenchContextLinkActiveSlot *slot;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (service == NULL || pin_id == NULL || group_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    slot = umi_workbench_context_link_service_current(service, group_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (slot == NULL) return UMI_STATUS_NOT_FOUND;
+    status = umi_workbench_context_link_pin_store_put(
+        &service->pins, pin_id, group_id, &slot->payload, now_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        ++service->metrics.pin_count;
+        ++service->revision;
+    }
+    return status;
+}
+#endif
+
+UmiStatus umi_workbench_context_link_service_pin_current(
+    UmiWorkbenchContextLinkService *service,
+    const char *pin_id,
+    const char *group_id,
+    uint64_t now_ms)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (service != NULL && service->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     const UmiWorkbenchContextLinkActiveSlot *slot;
     UmiStatus status;
     /*

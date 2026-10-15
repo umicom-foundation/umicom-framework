@@ -93,6 +93,12 @@ UMI_TEST_VALUE_TRANSFER(UmiPluginExtensionHostPluginCapabilityTransferCases, Umi
     umi_plugin_extension_host_plugin_capability_archive_encode, umi_plugin_extension_host_plugin_capability_archive_decode,
     UmiPluginExtensionHostPluginCapabilityTransferEqual, UmiPluginExtensionHostPluginCapabilityTransferTails, UmiPluginExtensionHostPluginCapabilityTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiPluginExtensionHostPluginCapabilityConditionalArchiveCases, UmiPluginExtensionHostPluginCapability,
+    umi_plugin_extension_host_plugin_capability_archive_encode, umi_plugin_extension_host_plugin_capability_archive_decode_if_unchanged,
+    UmiPluginExtensionHostPluginCapabilityTransferEqual, UmiPluginExtensionHostPluginCapabilityTransferTails, UmiPluginExtensionHostPluginCapabilityTransferMalformed)
+
+
 int main(void)
 {
     UmiPluginExtensionHostPluginCapability value; umi_plugin_extension_host_plugin_capability_init(&value);
@@ -101,6 +107,7 @@ int main(void)
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_plugin_extension_host_plugin_capability_validate(&value) != UMI_STATUS_OK) return 2;
     if (UmiPluginExtensionHostPluginCapabilityTransferCases(&value) != 0) return 1;
+    if (UmiPluginExtensionHostPluginCapabilityConditionalArchiveCases(&value) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (umi_plugin_extension_host_plugin_capability_fingerprint(&value) == 0U) return 3;

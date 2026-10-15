@@ -16,6 +16,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include <stdint.h>
 #include "umicom/finance/digital_asset/digital_asset_service.h"
 
 #include <string.h>
@@ -42,8 +43,30 @@ void umi_digital_asset_digital_asset_service_init(UmiDigitalAssetService *servic
 }
 
 /* Activation is explicit for runtime bootstrap, observability and policy control. */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_digital_asset_digital_asset_service_start(UmiDigitalAssetService *service)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    service->started = true;
+    service->revision++;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_digital_asset_digital_asset_service_start(UmiDigitalAssetService *service)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (service != NULL && service->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.

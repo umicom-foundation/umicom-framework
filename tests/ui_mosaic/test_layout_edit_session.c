@@ -87,6 +87,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicLayoutEditSessionTransferCases, UmiUiMosaicLa
     umi_ui_mosaic_layout_edit_session_archive_encode, umi_ui_mosaic_layout_edit_session_archive_decode,
     UmiUiMosaicLayoutEditSessionTransferEqual, UmiUiMosaicLayoutEditSessionTransferTails, UmiUiMosaicLayoutEditSessionTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicLayoutEditSessionConditionalArchiveCases, UmiUiMosaicLayoutEditSession,
+    umi_ui_mosaic_layout_edit_session_archive_encode, umi_ui_mosaic_layout_edit_session_archive_decode_if_unchanged,
+    UmiUiMosaicLayoutEditSessionTransferEqual, UmiUiMosaicLayoutEditSessionTransferTails, UmiUiMosaicLayoutEditSessionTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicLayoutEditSession value;
     umi_ui_mosaic_layout_edit_session_init(&value);
@@ -94,6 +100,7 @@ int main(void) {
     value.item_count = 4U;
     CHECK(umi_ui_mosaic_layout_edit_session_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicLayoutEditSessionTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicLayoutEditSessionConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_layout_edit_session_touch(&value) == UMI_STATUS_OK);
     CHECK(value.revision == 2U);

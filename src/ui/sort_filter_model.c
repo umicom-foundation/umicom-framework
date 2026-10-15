@@ -18,6 +18,7 @@
  * into bounded storage, revisions advance on mutation, and callers retain
  * responsibility for higher-level threading and persistence policy.
  */
+#include "../base/conditional_archive_internal.h"
 #include "umicom/ui/sort_filter_model.h"
 #include "../base/value_archive_internal.h"
 #include "../base/registry_archive_internal.h"
@@ -422,3 +423,8 @@ UMI_DEFINE_VALUE_ARCHIVE(umi_ui_sort_filter_model_snapshot_archive_encode, umi_u
 UMI_DEFINE_REGISTRY_ARCHIVE(umi_ui_sort_filter_model_registry_archive_encode, umi_ui_sort_filter_model_registry_archive_restore,
     UmiUiSortFilterRegistry, UmiUiSortFilterSnapshot, UMI_UI_SORT_FILTER_MODEL_CAPACITY, ArchiveSchema,
     umi_ui_sort_filter_model_snapshot_archive_encode, umi_ui_sort_filter_model_snapshot_archive_decode, umi_ui_sort_filter_model_registry_replace_if_current)
+
+/* Guard snapshot import with the complete encoded value reviewed by the
+ * caller. Imported metadata remains evidence; registry publication is separate. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_sort_filter_model_snapshot_archive_decode_if_unchanged, umi_ui_sort_filter_model_snapshot_archive_encode,
+    UmiUiSortFilterSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)

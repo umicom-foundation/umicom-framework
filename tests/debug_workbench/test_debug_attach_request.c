@@ -137,6 +137,12 @@ UMI_TEST_VALUE_TRANSFER(UmiDebugWorkbenchDebugAttachRequestTransferCases, UmiDeb
     umi_debug_workbench_debug_attach_request_archive_encode, umi_debug_workbench_debug_attach_request_archive_decode,
     UmiDebugWorkbenchDebugAttachRequestTransferEqual, UmiDebugWorkbenchDebugAttachRequestTransferTails, UmiDebugWorkbenchDebugAttachRequestTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDebugWorkbenchDebugAttachRequestConditionalArchiveCases, UmiDebugWorkbenchDebugAttachRequest,
+    umi_debug_workbench_debug_attach_request_archive_encode, umi_debug_workbench_debug_attach_request_archive_decode_if_unchanged,
+    UmiDebugWorkbenchDebugAttachRequestTransferEqual, UmiDebugWorkbenchDebugAttachRequestTransferTails, UmiDebugWorkbenchDebugAttachRequestTransferMalformed)
+
+
 int main(void)
 {
     UmiDebugWorkbenchDebugAttachRequest model;
@@ -151,6 +157,7 @@ int main(void)
     UMI_TEST_CHECK(!model.enabled);
     UMI_TEST_CHECK(umi_debug_workbench_debug_attach_request_valid(&model));
     if (UmiDebugWorkbenchDebugAttachRequestTransferCases(&model) != 0) return 1;
+    if (UmiDebugWorkbenchDebugAttachRequestConditionalArchiveCases(&model) != 0) return 1;
 
     return 0;
 }

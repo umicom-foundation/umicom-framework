@@ -68,6 +68,13 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorWbEditorLocationTransferCases, UmiEditorWbEdito
     umi_editor_wb_editor_location_archive_encode, umi_editor_wb_editor_location_archive_decode,
     UmiEditorWbEditorLocationTransferEqual, UmiEditorWbEditorLocationTransferTails, UmiEditorWbEditorLocationTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorWbEditorLocationConditionalArchiveCases, UmiEditorWbEditorLocation,
+    umi_editor_wb_editor_location_archive_encode, umi_editor_wb_editor_location_archive_decode_if_unchanged,
+    UmiEditorWbEditorLocationTransferEqual, UmiEditorWbEditorLocationTransferTails, UmiEditorWbEditorLocationTransferMalformed)
+
+
 int main(void){ UmiEditorWbEditorLocation l; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_editor_location_init(&l,"a.c",3U,4U)!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_wb_editor_location_valid(&l))return 2;
     if (UmiEditorWbEditorLocationTransferCases(&l) != 0) return 1;
+    if (UmiEditorWbEditorLocationConditionalArchiveCases(&l) != 0) return 1;
  /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_editor_location_init(&l,"a.c",0U,1U)!=UMI_STATUS_INVALID_ARGUMENT)return 3; return 0; }

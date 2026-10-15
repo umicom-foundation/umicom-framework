@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/vcs/advanced/range_mapping.h"
 #include "../../base/value_archive_internal.h"
 
@@ -125,3 +126,8 @@ static UmiStatus UmiVcsAdvancedRangeMappingArchiveValidate(const UmiVcsAdvancedR
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_vcs_advanced_range_mapping_archive_encode, umi_vcs_advanced_range_mapping_archive_decode,
     UmiVcsAdvancedRangeMapping, UmiVcsAdvancedRangeMappingArchiveSchema, UmiVcsAdvancedRangeMappingArchiveBound, UmiVcsAdvancedRangeMappingArchiveWrite, UmiVcsAdvancedRangeMappingArchiveRead, UmiVcsAdvancedRangeMappingArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_vcs_advanced_range_mapping_archive_decode_if_unchanged, umi_vcs_advanced_range_mapping_archive_encode,
+    UmiVcsAdvancedRangeMapping, UmiVcsAdvancedRangeMappingArchiveSchema, UmiVcsAdvancedRangeMappingArchiveBound, UmiVcsAdvancedRangeMappingArchiveRead, UmiVcsAdvancedRangeMappingArchiveValidate)

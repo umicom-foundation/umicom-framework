@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/developer_project/variable_set.h"
 
 #include <string.h>
@@ -59,11 +60,76 @@ void umi_developer_project_variable_set_init(
  * Copy developer project variable into module-owned storage so callers keep ownership of
  * their input values.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_developer_project_variable_set(
     UmiDeveloperProjectVariableSet *variables,
     const char *name,
     const char *value)
 {
+    size_t index;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (variables == NULL || name == NULL || name[0] == '\0' ||
+        value == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < variables->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(variables->variables[index].name, name) == 0) {
+            status = copy_text(
+                variables->variables[index].value,
+                sizeof(variables->variables[index].value),
+                value);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
+            if (status == UMI_STATUS_OK) variables->revision += 1U;
+            return status;
+        }
+    }
+
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (variables->count >= UMI_DEVELOPER_PROJECT_VARIABLE_CAPACITY) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    status = copy_text(
+        variables->variables[variables->count].name,
+        sizeof(variables->variables[variables->count].name),
+        name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    status = copy_text(
+        variables->variables[variables->count].value,
+        sizeof(variables->variables[variables->count].value),
+        value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    variables->count += 1U;
+    variables->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_developer_project_variable_set(
+    UmiDeveloperProjectVariableSet *variables,
+    const char *name,
+    const char *value)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (variables != NULL && variables->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     UmiStatus status;
 

@@ -52,6 +52,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadLayoutConstraintTransferCases, UmiRadLayoutConstra
     umi_rad_layout_constraint_archive_encode, umi_rad_layout_constraint_archive_decode,
     UmiRadLayoutConstraintTransferEqual, UmiRadLayoutConstraintTransferTails, UmiRadLayoutConstraintTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadLayoutConstraintConditionalArchiveCases, UmiRadLayoutConstraint,
+    umi_rad_layout_constraint_archive_encode, umi_rad_layout_constraint_archive_decode_if_unchanged,
+    UmiRadLayoutConstraintTransferEqual, UmiRadLayoutConstraintTransferTails, UmiRadLayoutConstraintTransferMalformed)
+
+
 int main(void){UmiRadLayoutConstraint item;CHECK(umi_rad_layout_constraint_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_layout_constraint_is_valid(&item));
     if (UmiRadLayoutConstraintTransferCases(&item) != 0) return 1;
+    if (UmiRadLayoutConstraintConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

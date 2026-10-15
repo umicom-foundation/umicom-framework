@@ -54,6 +54,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadSnapResultTransferCases, UmiRadSnapResult,
     umi_rad_snap_result_archive_encode, umi_rad_snap_result_archive_decode,
     UmiRadSnapResultTransferEqual, UmiRadSnapResultTransferTails, UmiRadSnapResultTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadSnapResultConditionalArchiveCases, UmiRadSnapResult,
+    umi_rad_snap_result_archive_encode, umi_rad_snap_result_archive_decode_if_unchanged,
+    UmiRadSnapResultTransferEqual, UmiRadSnapResultTransferTails, UmiRadSnapResultTransferMalformed)
+
+
 int main(void){UmiRadSnapResult item;CHECK(umi_rad_snap_result_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_snap_result_is_valid(&item));
     if (UmiRadSnapResultTransferCases(&item) != 0) return 1;
+    if (UmiRadSnapResultConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

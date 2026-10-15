@@ -16,6 +16,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/digital_asset/signing_policy.h"
 #include "../../base/value_archive_internal.h"
 
@@ -95,3 +96,9 @@ static UmiStatus UmiDigitalSigningPolicyArchiveValidate(const UmiDigitalSigningP
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_digital_asset_signing_policy_archive_encode, umi_digital_asset_signing_policy_archive_decode,
     UmiDigitalSigningPolicy, UmiDigitalSigningPolicyArchiveSchema, UmiDigitalSigningPolicyArchiveBound, UmiDigitalSigningPolicyArchiveWrite, UmiDigitalSigningPolicyArchiveRead, UmiDigitalSigningPolicyArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_digital_asset_signing_policy_archive_decode_if_unchanged, umi_digital_asset_signing_policy_archive_encode,
+    UmiDigitalSigningPolicy, UmiDigitalSigningPolicyArchiveSchema, UmiDigitalSigningPolicyArchiveBound, UmiDigitalSigningPolicyArchiveRead, UmiDigitalSigningPolicyArchiveValidate)

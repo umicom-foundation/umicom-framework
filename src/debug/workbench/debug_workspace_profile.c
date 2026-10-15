@@ -17,6 +17,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/debug/workbench/debug_workspace_profile.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -106,3 +107,9 @@ static UmiStatus UmiDebugWorkbenchDebugWorkspaceProfileArchiveValidate(const Umi
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_debug_workbench_debug_workspace_profile_archive_encode, umi_debug_workbench_debug_workspace_profile_archive_decode,
     UmiDebugWorkbenchDebugWorkspaceProfile, UmiDebugWorkbenchDebugWorkspaceProfileArchiveSchema, UmiDebugWorkbenchDebugWorkspaceProfileArchiveBound, UmiDebugWorkbenchDebugWorkspaceProfileArchiveWrite, UmiDebugWorkbenchDebugWorkspaceProfileArchiveRead, UmiDebugWorkbenchDebugWorkspaceProfileArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_debug_workbench_debug_workspace_profile_archive_decode_if_unchanged, umi_debug_workbench_debug_workspace_profile_archive_encode,
+    UmiDebugWorkbenchDebugWorkspaceProfile, UmiDebugWorkbenchDebugWorkspaceProfileArchiveSchema, UmiDebugWorkbenchDebugWorkspaceProfileArchiveBound, UmiDebugWorkbenchDebugWorkspaceProfileArchiveRead, UmiDebugWorkbenchDebugWorkspaceProfileArchiveValidate)

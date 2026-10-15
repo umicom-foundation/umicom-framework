@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/test/workbench/test_command_set.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -112,3 +113,8 @@ static UmiStatus UmiTestCommandSetArchiveValidate(const UmiTestCommandSet *value
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_test_command_set_archive_encode, umi_test_command_set_archive_decode,
     UmiTestCommandSet, UmiTestCommandSetArchiveSchema, UmiTestCommandSetArchiveBound, UmiTestCommandSetArchiveWrite, UmiTestCommandSetArchiveRead, UmiTestCommandSetArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_test_command_set_archive_decode_if_unchanged, umi_test_command_set_archive_encode,
+    UmiTestCommandSet, UmiTestCommandSetArchiveSchema, UmiTestCommandSetArchiveBound, UmiTestCommandSetArchiveRead, UmiTestCommandSetArchiveValidate)

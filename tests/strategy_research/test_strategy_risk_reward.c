@@ -18,6 +18,10 @@
 
 #include "umicom/strategy_research/strategy/risk_reward.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(umi_strategy_research_evaluate_strategy_risk_reward_batch_cases, umi_strategy_research_evaluate_strategy_risk_reward,
+    umi_strategy_research_evaluate_strategy_risk_reward_batch, UmiStrategyResearchInput, UmiStrategyResearchSnapshot, scoreOne)
+
 int main(void)
 {
     UmiStrategyResearchInput input;
@@ -108,6 +112,7 @@ int main(void)
     input.approved = 1;
     input.revision = 88U;
 
+    if (umi_strategy_research_evaluate_strategy_risk_reward_batch_cases(&input) != 0) return 1;
     assert(umi_strategy_research_evaluate_strategy_risk_reward(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "strategy.risk-reward") == 0);
     assert(snapshot.revision == 88U);

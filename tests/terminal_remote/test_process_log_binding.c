@@ -89,6 +89,13 @@ UMI_TEST_VALUE_TRANSFER(UmiTerminalRemoteProcessLogBindingTransferCases, UmiTerm
     umi_terminal_remote_process_log_binding_archive_encode, umi_terminal_remote_process_log_binding_archive_decode,
     UmiTerminalRemoteProcessLogBindingTransferEqual, UmiTerminalRemoteProcessLogBindingTransferTails, UmiTerminalRemoteProcessLogBindingTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTerminalRemoteProcessLogBindingConditionalArchiveCases, UmiTerminalRemoteProcessLogBinding,
+    umi_terminal_remote_process_log_binding_archive_encode, umi_terminal_remote_process_log_binding_archive_decode_if_unchanged,
+    UmiTerminalRemoteProcessLogBindingTransferEqual, UmiTerminalRemoteProcessLogBindingTransferTails, UmiTerminalRemoteProcessLogBindingTransferMalformed)
+
+
 int main(void) { UmiTerminalRemoteProcessLogBinding v; umi_terminal_remote_process_log_binding_init(&v,"left","right"); /* Apply this operation only while the related capability or state is available. */ if(!umi_terminal_remote_process_log_binding_valid(&v)) return 1;
     if (UmiTerminalRemoteProcessLogBindingTransferCases(&v) != 0) return 1;
+    if (UmiTerminalRemoteProcessLogBindingConditionalArchiveCases(&v) != 0) return 1;
  /* Apply this operation only while the related capability or state is available. */ if(umi_terminal_remote_process_log_binding_fingerprint(&v)==0U) return 2; umi_terminal_remote_process_log_binding_init(&v,"same","same"); return umi_terminal_remote_process_log_binding_valid(&v)?3:0; }

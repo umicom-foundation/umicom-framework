@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 
@@ -36,18 +37,34 @@ int main(void)
                         UMI_BUILD_TASK_CONFIGURE);
     assert(umi_build_task_set_command(
                &configure, "cmake --preset debug", ".") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiBuildTaskSnapshot, &configure,
+        (umi_build_task_set_command(
+               &configure, "cmake --preset debug", ".")));
+
     assert(umi_build_task_add_input(&configure, "CMakeLists.txt") ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiBuildTaskSnapshot, &configure,
+        (umi_build_task_add_input(&configure, "CMakeLists.txt")));
+
     assert(umi_build_task_add_output(&configure, "build/CMakeCache.txt") ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiBuildTaskSnapshot, &configure,
+        (umi_build_task_add_output(&configure, "build/CMakeCache.txt")));
+
     assert(umi_build_task_add_environment(&configure, "UMICOM_PROFILE=debug") ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiBuildTaskSnapshot, &configure,
+        (umi_build_task_add_environment(&configure, "UMICOM_PROFILE=debug")));
+
     configure.flags |= UMI_BUILD_TASK_DEFAULT;
 
     umi_build_task_init(&build, "build", "Build", UMI_BUILD_TASK_BUILD);
     assert(umi_build_task_set_command(
                &build, "cmake --build build", ".") == UMI_STATUS_OK);
     assert(umi_build_task_add_dependency(&build, "configure") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiBuildTaskSnapshot, &build,
+        (umi_build_task_add_dependency(&build, "configure")));
+
     build.maximum_attempts = 2U;
 
     umi_build_task_init(&composite, "verify", "Verify",

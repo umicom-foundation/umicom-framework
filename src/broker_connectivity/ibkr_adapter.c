@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../base/conditional_archive_internal.h"
 #include "umicom/broker_connectivity/ibkr_adapter.h"
 #include "umicom/broker_connectivity/order_observation.h"
 #include "../base/value_archive_internal.h"
@@ -228,3 +229,9 @@ static UmiStatus UmiIbkrAdapterConfigArchiveValidate(const UmiIbkrAdapterConfig 
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ibkr_adapter_config_archive_encode, umi_ibkr_adapter_config_archive_decode,
     UmiIbkrAdapterConfig, UmiIbkrAdapterConfigArchiveSchema, UmiIbkrAdapterConfigArchiveBound, UmiIbkrAdapterConfigArchiveWrite, UmiIbkrAdapterConfigArchiveRead, UmiIbkrAdapterConfigArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ibkr_adapter_config_archive_decode_if_unchanged, umi_ibkr_adapter_config_archive_encode,
+    UmiIbkrAdapterConfig, UmiIbkrAdapterConfigArchiveSchema, UmiIbkrAdapterConfigArchiveBound, UmiIbkrAdapterConfigArchiveRead, UmiIbkrAdapterConfigArchiveValidate)

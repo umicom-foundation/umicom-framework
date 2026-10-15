@@ -109,9 +109,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrInstallReceiptTransferCases, UmiDrInstallReceipt,
     umi_dr_install_receipt_archive_encode, umi_dr_install_receipt_archive_decode,
     UmiDrInstallReceiptTransferEqual, UmiDrInstallReceiptTransferTails, UmiDrInstallReceiptTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrInstallReceiptConditionalArchiveCases, UmiDrInstallReceipt,
+    umi_dr_install_receipt_archive_encode, umi_dr_install_receipt_archive_decode_if_unchanged,
+    UmiDrInstallReceiptTransferEqual, UmiDrInstallReceiptTransferTails, UmiDrInstallReceiptTransferMalformed)
+
+
 int main(void) {
     UmiDrInstallReceipt value; umi_dr_install_receipt_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"receipt")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.application_id,sizeof(value.application_id),"app")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.package_digest,sizeof(value.package_digest),"d")==UMI_STATUS_OK); value.installed_at=1U; CHECK(umi_dr_install_receipt_valid(&value));
     if (UmiDrInstallReceiptTransferCases(&value) != 0) return 1;
+    if (UmiDrInstallReceiptConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_install_receipt_fingerprint(&value) != 0U);
     return 0;
 }

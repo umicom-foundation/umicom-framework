@@ -69,6 +69,9 @@ void umi_web_workbench_stream_init(
  * Provide the web workbench stream set phase operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_web_workbench_stream_set_phase(
     UmiWebWorkbenchStreamSession *session,
     UmiWebWorkbenchPhase phase);

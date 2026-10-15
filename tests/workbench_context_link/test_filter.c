@@ -117,6 +117,32 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkFilterTransferCases, UmiWorkbench
     umi_workbench_context_link_filter_archive_encode, umi_workbench_context_link_filter_archive_decode,
     UmiWorkbenchContextLinkFilterTransferEqual, UmiWorkbenchContextLinkFilterTransferTails, UmiWorkbenchContextLinkFilterTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkFilterConditionalArchiveCases, UmiWorkbenchContextLinkFilter,
+    umi_workbench_context_link_filter_archive_encode, umi_workbench_context_link_filter_archive_decode_if_unchanged,
+    UmiWorkbenchContextLinkFilterTransferEqual, UmiWorkbenchContextLinkFilterTransferTails, UmiWorkbenchContextLinkFilterTransferMalformed)
+
+
+/* Delayed context edits must preserve newer work and reject exhausted tokens. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextLinkFilterReviewedCases, UmiWorkbenchContextLinkFilter,
+    filter_id, application_id, umi_workbench_context_link_filter_replace_if_current, UmiWorkbenchContextLinkFilterTransferEqual)
+static int UmiWorkbenchContextLinkFilterMutationGuards(const UmiWorkbenchContextLinkFilter *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkFilter, query_text, umi_workbench_context_link_filter_set_primary, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkFilter, application_id, umi_workbench_context_link_filter_set_secondary, sample);
+    UmiWorkbenchContextLinkFilter value = *sample;
+    unsigned char before[sizeof(value)];
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_link_filter_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U ||
+        value.timestamp_ms != 44U) return 1;
+    memcpy(before, &value, sizeof(value));
+    umi_workbench_context_link_filter_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof(value)) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextLinkFilter record;
@@ -125,6 +151,9 @@ int main(void)
     umi_workbench_context_link_filter_init(&record, "filter-id");
     assert(umi_workbench_context_link_filter_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkFilterTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkFilterConditionalArchiveCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkFilterReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkFilterMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_context_link_filter_set_primary(&record, "primary") == UMI_STATUS_OK);
     assert(umi_workbench_context_link_filter_set_secondary(&record, "secondary") == UMI_STATUS_OK);

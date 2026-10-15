@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/terminal/remote/remote_port_forward.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -75,3 +76,8 @@ static UmiStatus UmiTerminalRemoteRemotePortForwardArchiveValidate(const UmiTerm
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_terminal_remote_remote_port_forward_archive_encode, umi_terminal_remote_remote_port_forward_archive_decode,
     UmiTerminalRemoteRemotePortForward, UmiTerminalRemoteRemotePortForwardArchiveSchema, UmiTerminalRemoteRemotePortForwardArchiveBound, UmiTerminalRemoteRemotePortForwardArchiveWrite, UmiTerminalRemoteRemotePortForwardArchiveRead, UmiTerminalRemoteRemotePortForwardArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_terminal_remote_remote_port_forward_archive_decode_if_unchanged, umi_terminal_remote_remote_port_forward_archive_encode,
+    UmiTerminalRemoteRemotePortForward, UmiTerminalRemoteRemotePortForwardArchiveSchema, UmiTerminalRemoteRemotePortForwardArchiveBound, UmiTerminalRemoteRemotePortForwardArchiveRead, UmiTerminalRemoteRemotePortForwardArchiveValidate)

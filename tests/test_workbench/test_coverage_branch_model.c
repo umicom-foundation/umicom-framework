@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiCoverageBranchModelTransferCases, UmiCoverageBranchMo
     umi_coverage_branch_model_archive_encode, umi_coverage_branch_model_archive_decode,
     UmiCoverageBranchModelTransferEqual, UmiCoverageBranchModelTransferTails, UmiCoverageBranchModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCoverageBranchModelConditionalArchiveCases, UmiCoverageBranchModel,
+    umi_coverage_branch_model_archive_encode, umi_coverage_branch_model_archive_decode_if_unchanged,
+    UmiCoverageBranchModelTransferEqual, UmiCoverageBranchModelTransferTails, UmiCoverageBranchModelTransferMalformed)
+
+
 int main(void){UmiCoverageBranchModel m;assert(umi_coverage_branch_model_init(&m,"coverage_branch_model","Coverage Branch Model")==UMI_STATUS_OK);assert(umi_coverage_branch_model_set_active(&m,true)==UMI_STATUS_OK);assert(umi_coverage_branch_model_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_coverage_branch_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_coverage_branch_model_valid(&m));
     if (UmiCoverageBranchModelTransferCases(&m) != 0) return 1;
+    if (UmiCoverageBranchModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

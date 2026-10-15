@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/frontend/conformance/layout_snapshot.h"
 
 
@@ -22,6 +23,9 @@
  * to the operating system.
  */
 int main(void) {
-    UmiFcLayoutSnapshot s; umi_fc_layout_snapshot_init(&s,"code"); CHECK(umi_fc_layout_snapshot_append(&s,0.5)==UMI_STATUS_OK); CHECK(umi_fc_layout_snapshot_fingerprint(&s)!=0U);
+    UmiFcLayoutSnapshot s; umi_fc_layout_snapshot_init(&s,"code"); CHECK(umi_fc_layout_snapshot_append(&s,0.5)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFcLayoutSnapshot, &s,
+        (umi_fc_layout_snapshot_append(&s,0.5)));
+ CHECK(umi_fc_layout_snapshot_fingerprint(&s)!=0U);
     return 0;
 }

@@ -88,6 +88,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAiDevMemoryItemTransferCases, UmiAiDevMemoryItem,
     umi_ai_dev_memory_item_archive_encode, umi_ai_dev_memory_item_archive_decode,
     UmiAiDevMemoryItemTransferEqual, UmiAiDevMemoryItemTransferTails, UmiAiDevMemoryItemTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAiDevMemoryItemConditionalArchiveCases, UmiAiDevMemoryItem,
+    umi_ai_dev_memory_item_archive_encode, umi_ai_dev_memory_item_archive_decode_if_unchanged,
+    UmiAiDevMemoryItemTransferEqual, UmiAiDevMemoryItemTransferTails, UmiAiDevMemoryItemTransferMalformed)
+
+
 int main(void) {
     UmiAiDevMemoryItem v;
     umi_ai_dev_memory_item_init(&v);
@@ -96,6 +102,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ai_dev_memory_item_validate(&v) != UMI_STATUS_OK) return 2;
     if (UmiAiDevMemoryItemTransferCases(&v) != 0) return 1;
+    if (UmiAiDevMemoryItemConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ai_dev_memory_item_evidence_score(&v, 50U) != 62U) return 3;

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/data/enterprise/schema_snapshot.h"
 #include <string.h>
 
@@ -19,7 +20,32 @@
 void umi_data_schema_snapshot_init(UmiDataSchemaSnapshot *registry) { /* Protect caller-owned memory by checking that required state is available before it is used. */ if (registry != NULL) (void)memset(registry, 0, sizeof(*registry)); }
 
 /* Duplicate identifiers are rejected to keep mapping semantics unambiguous. */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_data_schema_snapshot_add(UmiDataSchemaSnapshot *registry, const UmiDataSchemaTable *item) {
+    size_t i;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (registry == NULL || item == NULL || item->table_id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (i = 0U; i < registry->count; ++i) /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (strcmp(registry->items[i].table_id, item->table_id) == 0) return UMI_STATUS_ALREADY_EXISTS;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (registry->count >= UMI_DATA_ENTERPRISE_MAX_ITEMS) return UMI_STATUS_CAPACITY_EXCEEDED;
+    registry->items[registry->count++] = *item; registry->revision++;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_data_schema_snapshot_add(UmiDataSchemaSnapshot *registry, const UmiDataSchemaTable *item) {
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t i;
     /*
      * Protect caller-owned memory by checking that required state is available before it is

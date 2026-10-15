@@ -58,6 +58,13 @@ UMI_TEST_VALUE_TRANSFER(UmiDesignGaugeSpecTransferCases, UmiDesignGaugeSpec,
     umi_design_gauge_spec_archive_encode, umi_design_gauge_spec_archive_decode,
     UmiDesignGaugeSpecTransferEqual, UmiDesignGaugeSpecTransferTails, UmiDesignGaugeSpecTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignGaugeSpecConditionalArchiveCases, UmiDesignGaugeSpec,
+    umi_design_gauge_spec_archive_encode, umi_design_gauge_spec_archive_decode_if_unchanged,
+    UmiDesignGaugeSpecTransferEqual, UmiDesignGaugeSpecTransferTails, UmiDesignGaugeSpecTransferMalformed)
+
+
 int main(void){UmiDesignGaugeSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_gauge_spec_init(&s,0.0,100.0,72.0,80.0,95.0)!=UMI_STATUS_OK)return 1;
     if (UmiDesignGaugeSpecTransferCases(&s) != 0) return 1;
+    if (UmiDesignGaugeSpecConditionalArchiveCases(&s) != 0) return 1;
 return s.value==72.0?0:2;}

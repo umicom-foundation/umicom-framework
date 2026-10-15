@@ -49,6 +49,9 @@ void umi_teacher_learning_plan_init(UmiTeacherLearningPlan *sequence);
  * Add teacher learning plan only after its inputs and available capacity have been
  * checked.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_teacher_learning_plan_append(UmiTeacherLearningPlan *sequence, const char *id);
 /**
  * Provide the teacher learning plan current operation used by this module and its client

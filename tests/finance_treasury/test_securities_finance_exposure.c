@@ -67,11 +67,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasurySecuritiesFinanceExposureTransferCases, UmiTr
     umi_treasury_securities_finance_exposure_archive_encode, umi_treasury_securities_finance_exposure_archive_decode,
     UmiTreasurySecuritiesFinanceExposureTransferEqual, UmiTreasurySecuritiesFinanceExposureTransferTails, UmiTreasurySecuritiesFinanceExposureTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasurySecuritiesFinanceExposureConditionalArchiveCases, UmiTreasurySecuritiesFinanceExposure,
+    umi_treasury_securities_finance_exposure_archive_encode, umi_treasury_securities_finance_exposure_archive_decode_if_unchanged,
+    UmiTreasurySecuritiesFinanceExposureTransferEqual, UmiTreasurySecuritiesFinanceExposureTransferTails, UmiTreasurySecuritiesFinanceExposureTransferMalformed)
+
+
 int main(void) {
     UmiTreasurySecuritiesFinanceExposure v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_securities_finance_exposure_init(&v, "sfe", 1000, 800) != UMI_STATUS_OK) return 1;
     if (UmiTreasurySecuritiesFinanceExposureTransferCases(&v) != 0) return 1;
+    if (UmiTreasurySecuritiesFinanceExposureConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if(umi_treasury_securities_finance_exposure_unsecured_minor(&v)!=200)return 2;

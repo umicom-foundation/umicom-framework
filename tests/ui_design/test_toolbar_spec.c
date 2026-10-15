@@ -57,6 +57,13 @@ UMI_TEST_VALUE_TRANSFER(UmiDesignToolbarSpecTransferCases, UmiDesignToolbarSpec,
     umi_design_toolbar_spec_archive_encode, umi_design_toolbar_spec_archive_decode,
     UmiDesignToolbarSpecTransferEqual, UmiDesignToolbarSpecTransferTails, UmiDesignToolbarSpecTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignToolbarSpecConditionalArchiveCases, UmiDesignToolbarSpec,
+    umi_design_toolbar_spec_archive_encode, umi_design_toolbar_spec_archive_decode_if_unchanged,
+    UmiDesignToolbarSpecTransferEqual, UmiDesignToolbarSpecTransferTails, UmiDesignToolbarSpecTransferMalformed)
+
+
 int main(void){UmiDesignToolbarSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_toolbar_spec_init(&s,UMI_UI_HORIZONTAL,UMI_DESIGN_DENSITY_COMPACT,8U,1)!=UMI_STATUS_OK)return 1;
     if (UmiDesignToolbarSpecTransferCases(&s) != 0) return 1;
+    if (UmiDesignToolbarSpecConditionalArchiveCases(&s) != 0) return 1;
 return s.overflow_menu?0:2;}

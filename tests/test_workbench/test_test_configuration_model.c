@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiTestConfigurationModelTransferCases, UmiTestConfigura
     umi_test_configuration_model_archive_encode, umi_test_configuration_model_archive_decode,
     UmiTestConfigurationModelTransferEqual, UmiTestConfigurationModelTransferTails, UmiTestConfigurationModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestConfigurationModelConditionalArchiveCases, UmiTestConfigurationModel,
+    umi_test_configuration_model_archive_encode, umi_test_configuration_model_archive_decode_if_unchanged,
+    UmiTestConfigurationModelTransferEqual, UmiTestConfigurationModelTransferTails, UmiTestConfigurationModelTransferMalformed)
+
+
 int main(void){UmiTestConfigurationModel m;assert(umi_test_configuration_model_init(&m,"test_configuration_model","Test Configuration Model")==UMI_STATUS_OK);assert(umi_test_configuration_model_set_active(&m,true)==UMI_STATUS_OK);assert(umi_test_configuration_model_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_test_configuration_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_configuration_model_valid(&m));
     if (UmiTestConfigurationModelTransferCases(&m) != 0) return 1;
+    if (UmiTestConfigurationModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

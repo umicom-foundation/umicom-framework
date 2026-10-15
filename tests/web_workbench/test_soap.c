@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/web/workbench/soap.h"
@@ -38,6 +39,9 @@ int main(void)
     operation.version = UMI_WEB_WORKBENCH_SOAP_11;
     umi_web_workbench_soap_catalogue_init(&catalogue);
     assert(umi_web_workbench_soap_catalogue_upsert(&catalogue, &operation) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWebWorkbenchSoapCatalogue, &catalogue,
+        (umi_web_workbench_soap_catalogue_upsert(&catalogue, &operation)));
+
     assert(umi_web_workbench_soap_make_request(&operation, &request) == UMI_STATUS_OK);
     assert(strstr(request.body, "soap:Envelope") != NULL);
     assert(strcmp(umi_web_workbench_request_header(&request, "SOAPAction"),

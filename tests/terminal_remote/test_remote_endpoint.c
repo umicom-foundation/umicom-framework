@@ -71,6 +71,13 @@ UMI_TEST_VALUE_TRANSFER(UmiTerminalRemoteRemoteEndpointTransferCases, UmiTermina
     umi_terminal_remote_remote_endpoint_archive_encode, umi_terminal_remote_remote_endpoint_archive_decode,
     UmiTerminalRemoteRemoteEndpointTransferEqual, UmiTerminalRemoteRemoteEndpointTransferTails, UmiTerminalRemoteRemoteEndpointTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTerminalRemoteRemoteEndpointConditionalArchiveCases, UmiTerminalRemoteRemoteEndpoint,
+    umi_terminal_remote_remote_endpoint_archive_encode, umi_terminal_remote_remote_endpoint_archive_decode_if_unchanged,
+    UmiTerminalRemoteRemoteEndpointTransferEqual, UmiTerminalRemoteRemoteEndpointTransferTails, UmiTerminalRemoteRemoteEndpointTransferMalformed)
+
+
 int main(void) { UmiTerminalRemoteRemoteEndpoint v; umi_terminal_remote_remote_endpoint_init(&v,"host",22U,true); /* Apply this operation only while the related capability or state is available. */ if(!umi_terminal_remote_remote_endpoint_valid(&v)) return 1;
     if (UmiTerminalRemoteRemoteEndpointTransferCases(&v) != 0) return 1;
+    if (UmiTerminalRemoteRemoteEndpointConditionalArchiveCases(&v) != 0) return 1;
  umi_terminal_remote_remote_endpoint_init(&v,"host",0U,true); return umi_terminal_remote_remote_endpoint_valid(&v)?2:0; }

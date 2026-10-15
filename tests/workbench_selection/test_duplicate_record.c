@@ -169,6 +169,12 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionDuplicateRecordTransferCases, UmiWo
     umi_workbench_selection_duplicate_record_archive_encode, umi_workbench_selection_duplicate_record_archive_decode,
     UmiWorkbenchSelectionDuplicateRecordTransferEqual, UmiWorkbenchSelectionDuplicateRecordTransferTails, UmiWorkbenchSelectionDuplicateRecordTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchSelectionDuplicateRecordConditionalArchiveCases, UmiWorkbenchSelectionDuplicateRecord,
+    umi_workbench_selection_duplicate_record_archive_encode, umi_workbench_selection_duplicate_record_archive_decode_if_unchanged,
+    UmiWorkbenchSelectionDuplicateRecordTransferEqual, UmiWorkbenchSelectionDuplicateRecordTransferTails, UmiWorkbenchSelectionDuplicateRecordTransferMalformed)
+
+
 /* Exercise the accepted domain fixture through reviewed publication and
  * legacy mutation boundaries. These checks stay active in release builds. */
 #include "../record_integrity/reviewed_value_cases.h"
@@ -202,6 +208,7 @@ int main(void)
     assert(umi_workbench_selection_duplicate_record_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionDuplicateRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionDuplicateRecordConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchSelectionDuplicateRecordReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchSelectionDuplicateRecordMutationGuards(&record) != 0) return 1;
 

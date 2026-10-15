@@ -57,6 +57,13 @@ UMI_TEST_VALUE_TRANSFER(UmiDesignCardSpecTransferCases, UmiDesignCardSpec,
     umi_design_card_spec_archive_encode, umi_design_card_spec_archive_decode,
     UmiDesignCardSpecTransferEqual, UmiDesignCardSpecTransferTails, UmiDesignCardSpecTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignCardSpecConditionalArchiveCases, UmiDesignCardSpec,
+    umi_design_card_spec_archive_encode, umi_design_card_spec_archive_decode_if_unchanged,
+    UmiDesignCardSpecTransferEqual, UmiDesignCardSpecTransferTails, UmiDesignCardSpecTransferMalformed)
+
+
 int main(void){UmiDesignCardSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_card_spec_init(&s,UMI_DESIGN_ROLE_NEUTRAL,2U,1,0)!=UMI_STATUS_OK)return 1;
     if (UmiDesignCardSpecTransferCases(&s) != 0) return 1;
+    if (UmiDesignCardSpecConditionalArchiveCases(&s) != 0) return 1;
 return s.elevation_level==2U?0:2;}

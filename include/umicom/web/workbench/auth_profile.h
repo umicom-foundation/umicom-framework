@@ -73,6 +73,9 @@ void umi_web_workbench_auth_catalogue_init(
  * Provide the web workbench auth catalogue upsert operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_web_workbench_auth_catalogue_upsert(
     UmiWebWorkbenchAuthCatalogue *catalogue,
     const UmiWebWorkbenchAuthProfile *profile);

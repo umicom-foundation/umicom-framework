@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/ai_coding_runtime/validation_plan.h"
 
 #include <string.h>
@@ -35,10 +36,44 @@ void umi_ai_coding_validation_plan_init(UmiAiCodingValidationPlan *plan)
  * Add ai coding validation plan only after its inputs and available capacity have been
  * checked.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ai_coding_validation_plan_add(
     UmiAiCodingValidationPlan *plan,
     const UmiAiCodingValidationStep *step)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (plan == NULL || step == NULL ||
+        step->id[0] == '\0' ||
+        step->executable[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (plan->step_count >= UMI_AI_CODING_RUNTIME_VALIDATION_CAPACITY) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    plan->steps[plan->step_count++] = *step;
+    plan->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_ai_coding_validation_plan_add(
+    UmiAiCodingValidationPlan *plan,
+    const UmiAiCodingValidationStep *step)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (plan != NULL && plan->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.

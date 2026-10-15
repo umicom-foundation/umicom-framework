@@ -31,6 +31,10 @@ typedef struct UmiNativeFunctionDecl { char name[UMI_NC_NAME_CAPACITY]; uint32_t
  * Initialise nc function decl from caller-provided values so later operations receive a
  * known state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_nc_function_decl_init(UmiNativeFunctionDecl *decl,const char *name,uint32_t return_type_id);
 /**
  * Provide the nc function decl add parameter operation used by this module and its client

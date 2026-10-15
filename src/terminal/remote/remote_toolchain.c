@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/terminal/remote/remote_toolchain.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -82,3 +83,8 @@ static UmiStatus UmiTerminalRemoteRemoteToolchainArchiveValidate(const UmiTermin
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_terminal_remote_remote_toolchain_archive_encode, umi_terminal_remote_remote_toolchain_archive_decode,
     UmiTerminalRemoteRemoteToolchain, UmiTerminalRemoteRemoteToolchainArchiveSchema, UmiTerminalRemoteRemoteToolchainArchiveBound, UmiTerminalRemoteRemoteToolchainArchiveWrite, UmiTerminalRemoteRemoteToolchainArchiveRead, UmiTerminalRemoteRemoteToolchainArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_terminal_remote_remote_toolchain_archive_decode_if_unchanged, umi_terminal_remote_remote_toolchain_archive_encode,
+    UmiTerminalRemoteRemoteToolchain, UmiTerminalRemoteRemoteToolchainArchiveSchema, UmiTerminalRemoteRemoteToolchainArchiveBound, UmiTerminalRemoteRemoteToolchainArchiveRead, UmiTerminalRemoteRemoteToolchainArchiveValidate)

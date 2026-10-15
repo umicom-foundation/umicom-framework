@@ -17,6 +17,10 @@
 
 #include "umicom/developer_intelligence/language/completion_prefix.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(UmiDeveloperIntelligenceEvaluateLanguageCompletionPrefixBatchCases, UmiDeveloperIntelligenceEvaluateLanguageCompletionPrefix,
+    UmiDeveloperIntelligenceEvaluateLanguageCompletionPrefixBatch, UmiDeveloperIntelligenceInput, UmiDeveloperIntelligenceSnapshot, lexicalScore)
+
 int main(void)
 {
     UmiDeveloperIntelligenceInput input;
@@ -44,6 +48,7 @@ int main(void)
     input.active = 1;
     input.revision = 42U;
 
+    if (UmiDeveloperIntelligenceEvaluateLanguageCompletionPrefixBatchCases(&input) != 0) return 1;
     assert(UmiDeveloperIntelligenceEvaluateLanguageCompletionPrefix(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "language.completion-prefix") == 0);
     assert(snapshot.revision == 42U);

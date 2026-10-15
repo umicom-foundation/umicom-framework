@@ -84,11 +84,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryTreasuryAuditTransferCases, UmiTreasuryTreasu
     umi_treasury_treasury_audit_archive_encode, umi_treasury_treasury_audit_archive_decode,
     UmiTreasuryTreasuryAuditTransferEqual, UmiTreasuryTreasuryAuditTransferTails, UmiTreasuryTreasuryAuditTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryTreasuryAuditConditionalArchiveCases, UmiTreasuryTreasuryAudit,
+    umi_treasury_treasury_audit_archive_encode, umi_treasury_treasury_audit_archive_decode_if_unchanged,
+    UmiTreasuryTreasuryAuditTransferEqual, UmiTreasuryTreasuryAuditTransferTails, UmiTreasuryTreasuryAuditTransferMalformed)
+
+
 int main(void) {
     UmiTreasuryTreasuryAudit v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_treasury_audit_init(&v, "audit", "operator", 7U) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryTreasuryAuditTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryTreasuryAuditConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if(!umi_treasury_treasury_audit_sequenced(&v))return 2;

@@ -54,6 +54,9 @@ typedef struct UmiDigitalAssetService {
 void umi_digital_asset_digital_asset_service_init(UmiDigitalAssetService *service);
 
 /* Activate the service after Framework dependency composition is ready. */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_digital_asset_digital_asset_service_start(UmiDigitalAssetService *service);
 
 /* Return true when the aggregate digital-asset service is ready for thin clients. */

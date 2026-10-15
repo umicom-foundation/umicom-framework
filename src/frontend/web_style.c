@@ -18,6 +18,7 @@
  * into bounded storage, revisions advance on mutation, and callers retain
  * responsibility for higher-level threading and persistence policy.
  */
+#include "../base/conditional_archive_internal.h"
 #include "umicom/frontend/web_style.h"
 #include "../base/value_archive_internal.h"
 #include "../base/registry_archive_internal.h"
@@ -309,3 +310,8 @@ UMI_DEFINE_VALUE_ARCHIVE(umi_frontend_web_style_snapshot_archive_encode, umi_fro
 UMI_DEFINE_REGISTRY_ARCHIVE(umi_frontend_web_style_registry_archive_encode, umi_frontend_web_style_registry_archive_restore,
     UmiFrontendStyleRegistry, UmiFrontendStyleSnapshot, UMI_FRONTEND_WEB_STYLE_CAPACITY, ArchiveSchema,
     umi_frontend_web_style_snapshot_archive_encode, umi_frontend_web_style_snapshot_archive_decode, umi_frontend_web_style_registry_replace_if_current)
+
+/* Guard snapshot import with the complete encoded value reviewed by the
+ * caller. Imported metadata remains evidence; registry publication is separate. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_frontend_web_style_snapshot_archive_decode_if_unchanged, umi_frontend_web_style_snapshot_archive_encode,
+    UmiFrontendStyleSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)

@@ -53,6 +53,9 @@ void umi_developer_bookmark_store_init(
  * Provide the developer bookmark store upsert operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_developer_bookmark_store_upsert(
     UmiDeveloperBookmarkStore *store,
     const UmiDeveloperBookmark *bookmark);

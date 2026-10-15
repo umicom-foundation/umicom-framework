@@ -48,6 +48,16 @@ UmiStatus umi_ui_reactive_expression_operator_archive_encode(const UmiUiReactive
 UmiStatus umi_ui_reactive_expression_operator_archive_decode(const void *bytes, size_t byte_count,
     UmiUiReactiveExpressionOperator *value);
 
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the owner's publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_ui_reactive_expression_operator_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiUiReactiveExpressionOperator *expected, UmiUiReactiveExpressionOperator *value);
+
+
 #ifdef __cplusplus
 }
 #endif

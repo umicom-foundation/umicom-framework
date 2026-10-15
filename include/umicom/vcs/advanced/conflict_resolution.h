@@ -41,6 +41,8 @@ void umi_vcs_advanced_conflict_resolution_init(UmiVcsAdvancedConflictResolution 
  * Provide the vcs advanced conflict resolution set path operation used by this module and
  * its client applications.
  */
+/** Failed edits preserve the complete value. Input may borrow this field;
+ * callers still serialize access. Existing empty/null input rules apply. */
 UmiStatus umi_vcs_advanced_conflict_resolution_set_path(UmiVcsAdvancedConflictResolution *r,const char *path);
 /**
  * Add vcs advanced conflict resolution only after its inputs and available capacity have

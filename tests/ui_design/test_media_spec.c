@@ -58,6 +58,13 @@ UMI_TEST_VALUE_TRANSFER(UmiDesignMediaSpecTransferCases, UmiDesignMediaSpec,
     umi_design_media_spec_archive_encode, umi_design_media_spec_archive_decode,
     UmiDesignMediaSpecTransferEqual, UmiDesignMediaSpecTransferTails, UmiDesignMediaSpecTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignMediaSpecConditionalArchiveCases, UmiDesignMediaSpec,
+    umi_design_media_spec_archive_encode, umi_design_media_spec_archive_decode_if_unchanged,
+    UmiDesignMediaSpecTransferEqual, UmiDesignMediaSpecTransferTails, UmiDesignMediaSpecTransferMalformed)
+
+
 int main(void){UmiDesignMediaSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_media_spec_init(&s,UMI_DESIGN_MEDIA_VIDEO,1,0,1,1)!=UMI_STATUS_OK)return 1;
     if (UmiDesignMediaSpecTransferCases(&s) != 0) return 1;
+    if (UmiDesignMediaSpecConditionalArchiveCases(&s) != 0) return 1;
 return s.loop?0:2;}

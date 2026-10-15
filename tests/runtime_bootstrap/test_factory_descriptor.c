@@ -117,6 +117,12 @@ UMI_TEST_VALUE_TRANSFER(UmiBootstrapFactoryDescriptorTransferCases, UmiBootstrap
     umi_bootstrap_factory_descriptor_archive_encode, umi_bootstrap_factory_descriptor_archive_decode,
     UmiBootstrapFactoryDescriptorTransferEqual, UmiBootstrapFactoryDescriptorTransferTails, UmiBootstrapFactoryDescriptorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiBootstrapFactoryDescriptorConditionalArchiveCases, UmiBootstrapFactoryDescriptor,
+    umi_bootstrap_factory_descriptor_archive_encode, umi_bootstrap_factory_descriptor_archive_decode_if_unchanged,
+    UmiBootstrapFactoryDescriptorTransferEqual, UmiBootstrapFactoryDescriptorTransferTails, UmiBootstrapFactoryDescriptorTransferMalformed)
+
+
 int main(void) {
 
     UmiBootstrapServiceKey key; UmiBootstrapFactoryDescriptor d;
@@ -124,6 +130,7 @@ int main(void) {
     CHECK(umi_bootstrap_factory_descriptor_init(&d,"factory.alpha",&key,10)==UMI_STATUS_OK);
     CHECK(umi_bootstrap_factory_descriptor_valid(&d));
     if (UmiBootstrapFactoryDescriptorTransferCases(&d) != 0) return 1;
+    if (UmiBootstrapFactoryDescriptorConditionalArchiveCases(&d) != 0) return 1;
 
     return 0;
 }

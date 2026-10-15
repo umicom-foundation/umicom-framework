@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiTestDiscoverySnapshotTransferCases, UmiTestDiscoveryS
     umi_test_discovery_snapshot_archive_encode, umi_test_discovery_snapshot_archive_decode,
     UmiTestDiscoverySnapshotTransferEqual, UmiTestDiscoverySnapshotTransferTails, UmiTestDiscoverySnapshotTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestDiscoverySnapshotConditionalArchiveCases, UmiTestDiscoverySnapshot,
+    umi_test_discovery_snapshot_archive_encode, umi_test_discovery_snapshot_archive_decode_if_unchanged,
+    UmiTestDiscoverySnapshotTransferEqual, UmiTestDiscoverySnapshotTransferTails, UmiTestDiscoverySnapshotTransferMalformed)
+
+
 int main(void){UmiTestDiscoverySnapshot m;assert(umi_test_discovery_snapshot_init(&m,"test_discovery_snapshot","Test Discovery Snapshot")==UMI_STATUS_OK);assert(umi_test_discovery_snapshot_set_active(&m,true)==UMI_STATUS_OK);assert(umi_test_discovery_snapshot_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_test_discovery_snapshot_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_discovery_snapshot_valid(&m));
     if (UmiTestDiscoverySnapshotTransferCases(&m) != 0) return 1;
+    if (UmiTestDiscoverySnapshotConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

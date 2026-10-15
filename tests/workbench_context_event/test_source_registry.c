@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 
@@ -32,10 +33,18 @@ int main(void)
         &source, "studio.editor") == UMI_STATUS_OK);
     assert(umi_workbench_context_event_source_registry_upsert(
         &registry, &source) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchContextEventSourceRegistry, &registry,
+        (umi_workbench_context_event_source_registry_upsert(
+        &registry, &source)));
+
     assert(umi_workbench_context_event_source_registry_find(
         &registry, "studio.editor") != NULL);
     assert(umi_workbench_context_event_source_registry_remove(
         &registry, "studio.editor") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchContextEventSourceRegistry, &registry,
+        (umi_workbench_context_event_source_registry_remove(
+        &registry, "studio.editor")));
+
     umi_workbench_context_event_source_registry_destroy(&registry);
 
     return 0;

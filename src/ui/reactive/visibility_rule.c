@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/reactive/visibility_rule.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -74,3 +75,8 @@ static UmiStatus UmiUiReactiveVisibilityRuleArchiveValidate(const UmiUiReactiveV
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ui_reactive_visibility_rule_archive_encode, umi_ui_reactive_visibility_rule_archive_decode,
     UmiUiReactiveVisibilityRule, UmiUiReactiveVisibilityRuleArchiveSchema, UmiUiReactiveVisibilityRuleArchiveBound, UmiUiReactiveVisibilityRuleArchiveWrite, UmiUiReactiveVisibilityRuleArchiveRead, UmiUiReactiveVisibilityRuleArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_reactive_visibility_rule_archive_decode_if_unchanged, umi_ui_reactive_visibility_rule_archive_encode,
+    UmiUiReactiveVisibilityRule, UmiUiReactiveVisibilityRuleArchiveSchema, UmiUiReactiveVisibilityRuleArchiveBound, UmiUiReactiveVisibilityRuleArchiveRead, UmiUiReactiveVisibilityRuleArchiveValidate)

@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Umicom Framework | Governed approval workflow | Sammy Hegab | Umicom Foundation | MIT */
+#include <stdint.h>
 #include "umicom/security/approval.h"
 #include <stdio.h>
 #include <string.h>
@@ -45,8 +46,38 @@ const UmiSecurityApproval *umi_security_approval_find(const UmiSecurityApprovalS
  * Provide the security approval request operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_security_approval_request(UmiSecurityApprovalStore *store,const UmiSecurityApproval *approval)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (store == NULL || approval == NULL || approval->approval_id[0] == '\0' || approval->subject_id[0] == '\0' || approval->requested_by[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (find_mutable(store,approval->approval_id) != NULL) return UMI_STATUS_ALREADY_EXISTS;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (store->count >= UMI_SECURITY_GOVERNANCE_MAX_APPROVALS) return UMI_STATUS_CAPACITY_EXCEEDED;
+    store->items[store->count] = *approval;
+    store->items[store->count].state = UMI_SECURITY_APPROVAL_PENDING;
+    store->count += 1U; store->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_security_approval_request(UmiSecurityApprovalStore *store,const UmiSecurityApproval *approval)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (store != NULL && store->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -68,8 +99,38 @@ UmiStatus umi_security_approval_request(UmiSecurityApprovalStore *store,const Um
  * Provide the security approval decide operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_security_approval_decide(UmiSecurityApprovalStore *store,const char *approval_id,const char *decided_by,UmiSecurityApprovalState state,const char *reason)
 {
+    UmiSecurityApproval *approval = find_mutable(store,approval_id);
+    int first;
+    int second;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (approval == NULL || decided_by == NULL || reason == NULL || (state != UMI_SECURITY_APPROVAL_APPROVED && state != UMI_SECURITY_APPROVAL_DENIED)) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (approval->state != UMI_SECURITY_APPROVAL_PENDING) return UMI_STATUS_INVALID_STATE;
+    first = snprintf(approval->decided_by,sizeof(approval->decided_by),"%s",decided_by);
+    second = snprintf(approval->reason,sizeof(approval->reason),"%s",reason);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (first < 0 || second < 0 || (size_t)first >= sizeof(approval->decided_by) || (size_t)second >= sizeof(approval->reason)) return UMI_STATUS_CAPACITY_EXCEEDED;
+    approval->state = state; store->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_security_approval_decide(UmiSecurityApprovalStore *store,const char *approval_id,const char *decided_by,UmiSecurityApprovalState state,const char *reason)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (store != NULL && store->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiSecurityApproval *approval = find_mutable(store,approval_id);
     int first;
     int second;

@@ -39,16 +39,25 @@ typedef struct UmiCodeGuardQualitySession {
 void umi_codeguard_quality_session_init(UmiCodeGuardQualitySession *session);
 
 /* Copy one evidence item into the session and advance its revision. */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_codeguard_quality_session_record(
     UmiCodeGuardQualitySession *session,
     const UmiCodeGuardEvidence *evidence);
 
 /* Aggregate one documentation report without retaining its source-file path. */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_codeguard_quality_session_record_documentation(
     UmiCodeGuardQualitySession *session,
     const UmiCodeGuardDocumentationReport *report);
 
 /* Recalculate release decisions and remediation from current evidence. */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_codeguard_quality_session_evaluate(UmiCodeGuardQualitySession *session);
 
 #endif

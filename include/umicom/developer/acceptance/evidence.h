@@ -40,6 +40,9 @@ void umi_developer_acceptance_evidence_store_init(
  * Add or replace evidence by capability id. This lets focused tests/build
  * probes update verification state without mutating capability definitions.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_developer_acceptance_evidence_upsert(
     UmiDeveloperAcceptanceEvidenceStore *store,
     const UmiDeveloperAcceptanceEvidence *evidence);

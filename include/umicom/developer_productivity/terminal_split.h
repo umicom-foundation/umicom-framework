@@ -64,6 +64,9 @@ void umi_developer_terminal_split_model_init(
  * Add developer terminal split model only after its inputs and available capacity have
  * been checked.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_developer_terminal_split_model_add(
     UmiDeveloperTerminalSplitModel *model,
     const UmiDeveloperTerminalSplit *split);

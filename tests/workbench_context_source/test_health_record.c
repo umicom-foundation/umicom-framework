@@ -169,6 +169,12 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextSourceHealthRecordTransferCases, UmiW
     umi_workbench_context_source_health_record_archive_encode, umi_workbench_context_source_health_record_archive_decode,
     UmiWorkbenchContextSourceHealthRecordTransferEqual, UmiWorkbenchContextSourceHealthRecordTransferTails, UmiWorkbenchContextSourceHealthRecordTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextSourceHealthRecordConditionalArchiveCases, UmiWorkbenchContextSourceHealthRecord,
+    umi_workbench_context_source_health_record_archive_encode, umi_workbench_context_source_health_record_archive_decode_if_unchanged,
+    UmiWorkbenchContextSourceHealthRecordTransferEqual, UmiWorkbenchContextSourceHealthRecordTransferTails, UmiWorkbenchContextSourceHealthRecordTransferMalformed)
+
+
 /* Exercise the accepted domain fixture through reviewed publication and
  * legacy mutation boundaries. These checks stay active in release builds. */
 #include "../record_integrity/reviewed_value_cases.h"
@@ -202,6 +208,7 @@ int main(void)
     assert(umi_workbench_context_source_health_record_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextSourceHealthRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceHealthRecordConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextSourceHealthRecordReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextSourceHealthRecordMutationGuards(&record) != 0) return 1;
 

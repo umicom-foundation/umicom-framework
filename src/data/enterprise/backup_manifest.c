@@ -12,11 +12,18 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/data/enterprise/backup_manifest.h"
+#include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
 
 /* Initialisation centralises bounded text handling and defaults. */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_data_backup_manifest_init(UmiDataBackupManifest *item, const char *backup_id, uint64_t created_at, uint64_t schema_fingerprint, uint64_t content_fingerprint, uint64_t bytes_written) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -27,6 +34,25 @@ UmiStatus umi_data_backup_manifest_init(UmiDataBackupManifest *item, const char 
     UmiStatus s=umi_data_enterprise_copy_text(item->backup_id,sizeof(item->backup_id),backup_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->created_at=created_at;item->schema_fingerprint=schema_fingerprint;item->content_fingerprint=content_fingerprint;item->bytes_written=bytes_written;item->complete=true;
     return umi_data_backup_manifest_validate(item);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_data_backup_manifest_init_build_value(UmiDataBackupManifest *item, const char *backup_id, uint64_t created_at, uint64_t schema_fingerprint, uint64_t content_fingerprint, uint64_t bytes_written) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(item, 0, sizeof(*item));
+    UmiStatus s=umi_data_enterprise_copy_text(item->backup_id,sizeof(item->backup_id),backup_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->created_at=created_at;item->schema_fingerprint=schema_fingerprint;item->content_fingerprint=content_fingerprint;item->bytes_written=bytes_written;item->complete=true;
+    return umi_data_backup_manifest_validate(item);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_data_backup_manifest_init, UmiDataBackupManifest, item,
+    (UmiDataBackupManifest *item, const char *backup_id, uint64_t created_at, uint64_t schema_fingerprint, uint64_t content_fingerprint, uint64_t bytes_written),
+    umi_data_backup_manifest_init_build_value(candidate, backup_id, created_at, schema_fingerprint, content_fingerprint, bytes_written))
+
 
 /* Validation prevents malformed metadata from leaking into later query/migration stages. */
 UmiStatus umi_data_backup_manifest_validate(const UmiDataBackupManifest *item) {
@@ -91,3 +117,9 @@ static UmiStatus UmiDataBackupManifestArchiveValidate(const UmiDataBackupManifes
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_data_backup_manifest_archive_encode, umi_data_backup_manifest_archive_decode,
     UmiDataBackupManifest, UmiDataBackupManifestArchiveSchema, UmiDataBackupManifestArchiveBound, UmiDataBackupManifestArchiveWrite, UmiDataBackupManifestArchiveRead, UmiDataBackupManifestArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_data_backup_manifest_archive_decode_if_unchanged, umi_data_backup_manifest_archive_encode,
+    UmiDataBackupManifest, UmiDataBackupManifestArchiveSchema, UmiDataBackupManifestArchiveBound, UmiDataBackupManifestArchiveRead, UmiDataBackupManifestArchiveValidate)

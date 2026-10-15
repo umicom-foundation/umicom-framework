@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/web/workbench/environment.h"
 
 #include <string.h>
@@ -81,6 +82,10 @@ void umi_web_workbench_environment_init(
  * Copy web workbench environment into module-owned storage so callers keep ownership of
  * their input values.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_web_workbench_environment_set(
     UmiWebWorkbenchEnvironment *environment,
     const char *name,
@@ -118,15 +123,94 @@ UmiStatus umi_web_workbench_environment_set(
     environment->revision++;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_web_workbench_environment_set(
+    UmiWebWorkbenchEnvironment *environment,
+    const char *name,
+    const char *value,
+    bool enabled)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (environment != NULL && environment->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    size_t index;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (environment == NULL || value == NULL || !valid_name(name)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    index = find_index(environment, name);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == environment->value_count) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (index >= UMI_WEB_WORKBENCH_MAX_ENVIRONMENT_VALUES) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        memset(&environment->values[index], 0, sizeof(environment->values[index]));
+        status = umi_web_workbench_copy_text(environment->values[index].name,
+            sizeof(environment->values[index].name), name);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+        environment->value_count++;
+    }
+    status = umi_web_workbench_copy_text(environment->values[index].value,
+        sizeof(environment->values[index].value), value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    environment->values[index].enabled = enabled;
+    environment->revision++;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Remove web workbench environment while keeping the remaining records in a valid and
  * discoverable state.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_web_workbench_environment_remove(
     UmiWebWorkbenchEnvironment *environment,
     const char *name)
 {
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (environment == NULL || name == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    index = find_index(environment, name);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == environment->value_count) return UMI_STATUS_NOT_FOUND;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index + 1U < environment->value_count) {
+        memmove(&environment->values[index], &environment->values[index + 1U],
+            (environment->value_count - index - 1U) * sizeof(environment->values[0]));
+    }
+    environment->value_count--;
+    memset(&environment->values[environment->value_count], 0,
+        sizeof(environment->values[0]));
+    environment->revision++;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_web_workbench_environment_remove(
+    UmiWebWorkbenchEnvironment *environment,
+    const char *name)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (environment != NULL && environment->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is

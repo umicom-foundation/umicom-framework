@@ -50,6 +50,12 @@ UMI_TEST_VALUE_TRANSFER(UmiTradingExecutionPolicyTransferCases, UmiTradingExecut
     umi_trading_execution_policy_archive_encode, umi_trading_execution_policy_archive_decode,
     UmiTradingExecutionPolicyTransferEqual, UmiTradingExecutionPolicyTransferTails, UmiTradingExecutionPolicyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTradingExecutionPolicyConditionalArchiveCases, UmiTradingExecutionPolicy,
+    umi_trading_execution_policy_archive_encode, umi_trading_execution_policy_archive_decode_if_unchanged,
+    UmiTradingExecutionPolicyTransferEqual, UmiTradingExecutionPolicyTransferTails, UmiTradingExecutionPolicyTransferMalformed)
+
+
 int main(void) {
     UmiTradingExecutionPolicy v;
      /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -57,6 +63,7 @@ int main(void) {
      /* Apply this operation only while the related capability or state is available. */
      if(!umi_trading_execution_policy_valid(&v)) return 2;
     if (UmiTradingExecutionPolicyTransferCases(&v) != 0) return 1;
+    if (UmiTradingExecutionPolicyConditionalArchiveCases(&v) != 0) return 1;
 
      return 0;
 }

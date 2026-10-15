@@ -37,6 +37,9 @@ void umi_desktop_window_manager_init(UmiDesktopWindowManager *manager);
  * Provide the desktop window manager open operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_desktop_window_manager_open(
     UmiDesktopWindowManager *manager,
     const UmiDesktopMonitorTopology *topology,
@@ -45,6 +48,9 @@ UmiStatus umi_desktop_window_manager_open(
  * Provide the desktop window manager close operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_desktop_window_manager_close(
     UmiDesktopWindowManager *manager,
     const char *window_id);
@@ -60,6 +66,9 @@ UmiStatus umi_desktop_window_manager_show(
  * Provide the desktop window manager place operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_desktop_window_manager_place(
     UmiDesktopWindowManager *manager,
     const UmiDesktopMonitorTopology *topology,
@@ -71,6 +80,9 @@ UmiStatus umi_desktop_window_manager_place(
  * Provide the desktop window manager maximise operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_desktop_window_manager_maximise(
     UmiDesktopWindowManager *manager,
     const char *window_id,

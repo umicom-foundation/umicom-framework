@@ -116,6 +116,12 @@ UMI_TEST_VALUE_TRANSFER(UmiRecentContextTransferCases, UmiRecentContext,
     umi_context_recent_context_archive_encode, umi_context_recent_context_archive_decode,
     UmiRecentContextTransferEqual, UmiRecentContextTransferTails, UmiRecentContextTransferMalformed)
 
+#include "../conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRecentContextConditionalArchiveCases, UmiRecentContext,
+    umi_context_recent_context_archive_encode, umi_context_recent_context_archive_decode_if_unchanged,
+    UmiRecentContextTransferEqual, UmiRecentContextTransferTails, UmiRecentContextTransferMalformed)
+
+
 int main(void)
 {
     UmiRecentContext value;
@@ -130,6 +136,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_context_recent_context_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiRecentContextTransferCases(&value) != 0) return 1;
+    if (UmiRecentContextConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

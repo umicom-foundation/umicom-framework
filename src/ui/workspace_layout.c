@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/ui/workspace_layout.h"
 #include <stdio.h>
 #include <string.h>
@@ -91,13 +92,56 @@ UmiStatus umi_ui_workspace_layout_init(UmiUiWorkspaceLayout *layout,const char *
  * Provide the ui workspace layout set locked operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ui_workspace_layout_set_locked(UmiUiWorkspaceLayout *layout,bool locked) { char reason[192U]; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (layout == NULL) return UMI_STATUS_INVALID_ARGUMENT; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (locked && umi_ui_workspace_layout_validate(layout,reason,sizeof(reason)) != UMI_STATUS_OK) return UMI_STATUS_INVALID_STATE; layout->locked = locked; layout->revision += 1U; return UMI_STATUS_OK; }
+#endif
+
+UmiStatus umi_ui_workspace_layout_set_locked(UmiUiWorkspaceLayout *layout,bool locked) {
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (layout != NULL && layout->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+ char reason[192U]; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (layout == NULL) return UMI_STATUS_INVALID_ARGUMENT; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (locked && umi_ui_workspace_layout_validate(layout,reason,sizeof(reason)) != UMI_STATUS_OK) return UMI_STATUS_INVALID_STATE; layout->locked = locked; layout->revision += 1U; return UMI_STATUS_OK; }
 /*
  * Provide the ui workspace layout add window operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ui_workspace_layout_add_window(UmiUiWorkspaceLayout *layout,const UmiUiWorkspaceWindow *window)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (layout == NULL || window == NULL || window->window_id[0] == '\0' || window->tool_id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (!rectangle_valid(window->x,window->y,window->width,window->height)) return UMI_STATUS_INVALID_ARGUMENT;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (find_mutable(layout,window->window_id) != NULL) return UMI_STATUS_ALREADY_EXISTS;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (layout->window_count >= UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS) return UMI_STATUS_CAPACITY_EXCEEDED;
+    layout->windows[layout->window_count++] = *window; layout->revision += 1U; return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_ui_workspace_layout_add_window(UmiUiWorkspaceLayout *layout,const UmiUiWorkspaceWindow *window)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (layout != NULL && layout->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -141,8 +185,30 @@ UmiStatus umi_ui_workspace_layout_remove_window(UmiUiWorkspaceLayout *layout,con
  * Provide the ui workspace layout place window operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ui_workspace_layout_place_window(UmiUiWorkspaceLayout *layout,const char *window_id,double x,double y,double width,double height)
 {
+    UmiUiWorkspaceWindow *window;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (layout == NULL || layout->locked || !rectangle_valid(x,y,width,height)) return layout != NULL && layout->locked ? UMI_STATUS_PERMISSION_DENIED : UMI_STATUS_INVALID_ARGUMENT;
+    window = find_mutable(layout,window_id); /* Protect caller-owned memory by checking that required state is available before it is used. */ if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    window->x = x; window->y = y; window->width = width; window->height = height; layout->revision += 1U; return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_ui_workspace_layout_place_window(UmiUiWorkspaceLayout *layout,const char *window_id,double x,double y,double width,double height)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (layout != NULL && layout->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiUiWorkspaceWindow *window;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -156,11 +222,49 @@ UmiStatus umi_ui_workspace_layout_place_window(UmiUiWorkspaceLayout *layout,cons
  * Provide the ui workspace layout set maximised operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ui_workspace_layout_set_maximised(
     UmiUiWorkspaceLayout *layout,
     const char *window_id,
     bool maximised)
 {
+    UmiUiWorkspaceWindow *window;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (layout == NULL || window_id == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    window = find_mutable(layout, window_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (window->maximised != maximised) {
+        window->maximised = maximised;
+        layout->revision += 1U;
+    }
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_ui_workspace_layout_set_maximised(
+    UmiUiWorkspaceLayout *layout,
+    const char *window_id,
+    bool maximised)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (layout != NULL && layout->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiUiWorkspaceWindow *window;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -284,6 +388,10 @@ UmiStatus umi_ui_workspace_layout_set_group(
  * Provide the ui workspace layout set placement operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ui_workspace_layout_set_placement(
     UmiUiWorkspaceLayout *layout,
     const char *window_id,
@@ -312,10 +420,49 @@ UmiStatus umi_ui_workspace_layout_set_placement(
     if (status == UMI_STATUS_OK) layout->revision += 1U;
     return status;
 }
+#endif
+
+UmiStatus umi_ui_workspace_layout_set_placement(
+    UmiUiWorkspaceLayout *layout,
+    const char *window_id,
+    const char *placement_id)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (layout != NULL && layout->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiUiWorkspaceWindow *window;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (layout == NULL || window_id == NULL || placement_id == NULL ||
+        placement_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    window = find_mutable(layout, window_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    status = copy_optional_text(window->placement_id,
+                                sizeof(window->placement_id), placement_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) layout->revision += 1U;
+    return status;
+}
 /*
  * Provide the ui workspace layout set stack operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ui_workspace_layout_set_stack(
     UmiUiWorkspaceLayout *layout,
     const char *window_id,
@@ -344,10 +491,49 @@ UmiStatus umi_ui_workspace_layout_set_stack(
     if (status == UMI_STATUS_OK) layout->revision += 1U;
     return status;
 }
+#endif
+
+UmiStatus umi_ui_workspace_layout_set_stack(
+    UmiUiWorkspaceLayout *layout,
+    const char *window_id,
+    const char *stack_id)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (layout != NULL && layout->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiUiWorkspaceWindow *window;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (layout == NULL || window_id == NULL || stack_id == NULL ||
+        stack_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    window = find_mutable(layout, window_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    status = CopyStackText(window, stack_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) layout->revision += 1U;
+    return status;
+}
 /*
  * Provide the ui workspace layout set context group operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ui_workspace_layout_set_context_group(
     UmiUiWorkspaceLayout *layout,
     const char *window_id,
@@ -376,15 +562,88 @@ UmiStatus umi_ui_workspace_layout_set_context_group(
     if (status == UMI_STATUS_OK) layout->revision += 1U;
     return status;
 }
+#endif
+
+UmiStatus umi_ui_workspace_layout_set_context_group(
+    UmiUiWorkspaceLayout *layout,
+    const char *window_id,
+    const char *context_group_id)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (layout != NULL && layout->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiUiWorkspaceWindow *window;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (layout == NULL || window_id == NULL || context_group_id == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    window = find_mutable(layout, window_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    status = copy_optional_text(window->context_group_id,
+                                sizeof(window->context_group_id),
+                                context_group_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) layout->revision += 1U;
+    return status;
+}
 /*
  * Provide the ui workspace layout set pinned operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ui_workspace_layout_set_pinned(
     UmiUiWorkspaceLayout *layout,
     const char *window_id,
     bool pinned)
 {
+    UmiUiWorkspaceWindow *window;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (layout == NULL || window_id == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    window = find_mutable(layout, window_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (window->pinned != pinned) {
+        window->pinned = pinned;
+        layout->revision += 1U;
+    }
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_ui_workspace_layout_set_pinned(
+    UmiUiWorkspaceLayout *layout,
+    const char *window_id,
+    bool pinned)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (layout != NULL && layout->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiUiWorkspaceWindow *window;
     /*
      * Protect caller-owned memory by checking that required state is available before it is

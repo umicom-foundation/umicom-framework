@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/integration/fabric/connector_descriptor.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -91,10 +92,60 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricConnectorDescriptorTransferCases, UmiFabricConn
     umi_fabric_connector_descriptor_archive_encode, umi_fabric_connector_descriptor_archive_decode,
     UmiFabricConnectorDescriptorTransferEqual, UmiFabricConnectorDescriptorTransferTails, UmiFabricConnectorDescriptorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricConnectorDescriptorConditionalArchiveCases, UmiFabricConnectorDescriptor,
+    umi_fabric_connector_descriptor_archive_encode, umi_fabric_connector_descriptor_archive_decode_if_unchanged,
+    UmiFabricConnectorDescriptorTransferEqual, UmiFabricConnectorDescriptorTransferTails, UmiFabricConnectorDescriptorTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted connector descriptor value. */
+static int UmiFabricConnectorDescriptorConstructionCases(void)
+{
+    UmiFabricConnectorDescriptor *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_fabric_connector_descriptor_init(value, "ibkr", "IBKR", UMI_FABRIC_PROTOCOL_TCP, 7U, false) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->connector_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_connector_descriptor_init(value, oversized, "IBKR", UMI_FABRIC_PROTOCOL_TCP, 7U, false) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_connector_descriptor_init(value, value->connector_id, "IBKR", UMI_FABRIC_PROTOCOL_TCP, 7U, false) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->connector_id, "ibkr") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->provider) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_connector_descriptor_init(value, "ibkr", oversized, UMI_FABRIC_PROTOCOL_TCP, 7U, false) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_connector_descriptor_init(value, "ibkr", value->provider, UMI_FABRIC_PROTOCOL_TCP, 7U, false) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->provider, "IBKR") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiFabricConnectorDescriptorConstructionCases() != 0) return 1;
+
     UmiFabricConnectorDescriptor item;
     CHECK(umi_fabric_connector_descriptor_init(&item,"ibkr","IBKR",UMI_FABRIC_PROTOCOL_TCP,7U,false)==UMI_STATUS_OK);
     if (UmiFabricConnectorDescriptorTransferCases(&item) != 0) return 1;
+    if (UmiFabricConnectorDescriptorConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(strcmp(item.provider,"IBKR")==0);
     return 0;

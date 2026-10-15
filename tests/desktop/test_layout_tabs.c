@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Desktop layout tabs | Sammy Hegab | Umicom Foundation | MIT */
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -46,18 +47,36 @@ int main(void)
     umi_desktop_layout_tabs_init(&tabs);
     assert(tabs.placement == UMI_DESKTOP_LAYOUT_TABS_BOTTOM);
     assert(umi_desktop_layout_tabs_add(&tabs, &develop) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDesktopLayoutTabs, &tabs,
+        (umi_desktop_layout_tabs_add(&tabs, &develop)));
+
     assert(umi_desktop_layout_tabs_add(&tabs, &trading) == UMI_STATUS_OK);
     assert(umi_desktop_layout_tabs_activate(&tabs, "trading") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDesktopLayoutTabs, &tabs,
+        (umi_desktop_layout_tabs_activate(&tabs, "trading")));
+
     assert(strcmp(umi_desktop_layout_tabs_active(&tabs)->tab_id, "trading") == 0);
     assert(umi_desktop_layout_tabs_move(&tabs, "trading", 0U) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDesktopLayoutTabs, &tabs,
+        (umi_desktop_layout_tabs_move(&tabs, "trading", 0U)));
+
     assert(strcmp(tabs.tabs[0].tab_id, "trading") == 0);
     assert(umi_desktop_layout_tabs_set_dirty(&tabs, "trading", true) ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDesktopLayoutTabs, &tabs,
+        (umi_desktop_layout_tabs_set_dirty(&tabs, "trading", true)));
+
     assert(umi_desktop_layout_tabs_find(&tabs, "trading")->dirty);
     assert(umi_desktop_layout_tabs_rename(&tabs, "trading", "My Trading") ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDesktopLayoutTabs, &tabs,
+        (umi_desktop_layout_tabs_rename(&tabs, "trading", "My Trading")));
+
     assert(strcmp(tabs.tabs[0].label, "My Trading") == 0);
     assert(umi_desktop_layout_tabs_remove(&tabs, "develop") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDesktopLayoutTabs, &tabs,
+        (umi_desktop_layout_tabs_remove(&tabs, "develop")));
+
     assert(tabs.count == 1U);
     return 0;
 }

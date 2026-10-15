@@ -16,6 +16,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/commodity/transport_route.h"
 #include "../../base/value_archive_internal.h"
 
@@ -107,3 +108,9 @@ static UmiStatus UmiCommodityTransportRouteArchiveValidate(const UmiCommodityTra
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_commodity_transport_route_archive_encode, umi_commodity_transport_route_archive_decode,
     UmiCommodityTransportRoute, UmiCommodityTransportRouteArchiveSchema, UmiCommodityTransportRouteArchiveBound, UmiCommodityTransportRouteArchiveWrite, UmiCommodityTransportRouteArchiveRead, UmiCommodityTransportRouteArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_commodity_transport_route_archive_decode_if_unchanged, umi_commodity_transport_route_archive_encode,
+    UmiCommodityTransportRoute, UmiCommodityTransportRouteArchiveSchema, UmiCommodityTransportRouteArchiveBound, UmiCommodityTransportRouteArchiveRead, UmiCommodityTransportRouteArchiveValidate)

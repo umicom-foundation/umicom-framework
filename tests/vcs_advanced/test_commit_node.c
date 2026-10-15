@@ -112,6 +112,12 @@ UMI_TEST_VALUE_TRANSFER(UmiVcsAdvancedCommitNodeTransferCases, UmiVcsAdvancedCom
     umi_vcs_advanced_commit_node_archive_encode, umi_vcs_advanced_commit_node_archive_decode,
     UmiVcsAdvancedCommitNodeTransferEqual, UmiVcsAdvancedCommitNodeTransferTails, UmiVcsAdvancedCommitNodeTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiVcsAdvancedCommitNodeConditionalArchiveCases, UmiVcsAdvancedCommitNode,
+    umi_vcs_advanced_commit_node_archive_encode, umi_vcs_advanced_commit_node_archive_decode_if_unchanged,
+    UmiVcsAdvancedCommitNodeTransferEqual, UmiVcsAdvancedCommitNodeTransferTails, UmiVcsAdvancedCommitNodeTransferMalformed)
+
+
 int main(void)
 {
     UmiVcsAdvancedCommitNode value;
@@ -125,6 +131,7 @@ int main(void)
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_vcs_advanced_commit_node_validate(&value) != UMI_STATUS_OK) return 3;
     if (UmiVcsAdvancedCommitNodeTransferCases(&value) != 0) return 1;
+    if (UmiVcsAdvancedCommitNodeConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

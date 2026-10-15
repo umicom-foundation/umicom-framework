@@ -97,9 +97,16 @@ UMI_TEST_VALUE_TRANSFER(UmiFixSessionInfoTransferCases, UmiFixSessionInfo,
     umi_fix_session_info_archive_encode, umi_fix_session_info_archive_decode,
     UmiFixSessionInfoTransferEqual, UmiFixSessionInfoTransferTails, UmiFixSessionInfoTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFixSessionInfoConditionalArchiveCases, UmiFixSessionInfo,
+    umi_fix_session_info_archive_encode, umi_fix_session_info_archive_decode_if_unchanged,
+    UmiFixSessionInfoTransferEqual, UmiFixSessionInfoTransferTails, UmiFixSessionInfoTransferMalformed)
+
+
 int main(void){
     int state=1;UmiVenueAdapter v={&state,"SIM",route};assert(umi_venue_adapter_valid(&v));
     UmiFixSessionInfo f={0};(void)snprintf(f.sender_comp_id,sizeof(f.sender_comp_id),"%s","UMI");(void)snprintf(f.target_comp_id,sizeof(f.target_comp_id),"%s","VENUE");f.next_out_sequence=1;f.next_in_sequence=1;assert(umi_fix_session_info_valid(&f));
     if (UmiFixSessionInfoTransferCases(&f) != 0) return 1;
+    if (UmiFixSessionInfoConditionalArchiveCases(&f) != 0) return 1;
 return 0;
 }

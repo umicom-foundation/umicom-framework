@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/debug_runtime/service_bridge.h"
 
 #include <stdio.h>
@@ -184,12 +185,75 @@ static void remove_session_threads(
  * Provide the debug runtime publish threads operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_debug_runtime_publish_threads(
     UmiDebugRuntimeServiceBridge *bridge,
     const UmiDebugRuntimeThreadList *result,
     uint64_t current_thread_id,
     int stopped)
 {
+    UmiDebugThreadRegistry *registry;
+    size_t index;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (bridge == NULL || result == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    registry = umi_debug_service_thread(bridge->service);
+    remove_session_threads(registry, bridge->session_id);
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < result->count; ++index) {
+        UmiDebugThreadSnapshot item;
+        UmiStatus status;
+
+        (void)memset(&item, 0, sizeof(item));
+        item.struct_size = (uint32_t)sizeof(item);
+        item.api_version = UMI_DEBUG_THREAD_API_VERSION;
+        (void)snprintf(
+            item.id, sizeof(item.id),
+            "thread.%016llx.%llu",
+            (unsigned long long)hash_text(bridge->session_id),
+            (unsigned long long)result->items[index].id);
+        copy_bounded(
+            item.session_id, sizeof(item.session_id),
+            bridge->session_id);
+        copy_bounded(
+            item.name, sizeof(item.name),
+            result->items[index].name);
+        item.native_id = result->items[index].id;
+        item.stopped = stopped != 0;
+        item.current = result->items[index].id == current_thread_id;
+        item.revision = bridge->revision + 1U;
+
+        status = umi_debug_thread_registry_upsert(registry, &item);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+    }
+
+    bridge->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_debug_runtime_publish_threads(
+    UmiDebugRuntimeServiceBridge *bridge,
+    const UmiDebugRuntimeThreadList *result,
+    uint64_t current_thread_id,
+    int stopped)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (bridge != NULL && bridge->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiDebugThreadRegistry *registry;
     size_t index;
 
@@ -267,11 +331,83 @@ static void remove_thread_frames(
  * Provide the debug runtime publish stack operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_debug_runtime_publish_stack(
     UmiDebugRuntimeServiceBridge *bridge,
     uint64_t thread_id,
     const UmiDebugRuntimeStackTrace *result)
 {
+    UmiDebugStackFrameRegistry *registry;
+    char framework_thread_id[128];
+    size_t index;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (bridge == NULL || result == NULL || thread_id == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    (void)snprintf(
+        framework_thread_id,
+        sizeof(framework_thread_id),
+        "thread.%016llx.%llu",
+        (unsigned long long)hash_text(bridge->session_id),
+        (unsigned long long)thread_id);
+
+    registry = umi_debug_service_stack_frame(bridge->service);
+    remove_thread_frames(registry, framework_thread_id);
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < result->count; ++index) {
+        UmiDebugStackFrameSnapshot item;
+        UmiStatus status;
+
+        (void)memset(&item, 0, sizeof(item));
+        item.struct_size = (uint32_t)sizeof(item);
+        item.api_version = UMI_DEBUG_STACK_FRAME_API_VERSION;
+        (void)snprintf(
+            item.id, sizeof(item.id),
+            "%llu",
+            (unsigned long long)result->items[index].id);
+        copy_bounded(
+            item.thread_id, sizeof(item.thread_id),
+            framework_thread_id);
+        copy_bounded(
+            item.name, sizeof(item.name),
+            result->items[index].name);
+        copy_bounded(
+            item.source_uri, sizeof(item.source_uri),
+            result->items[index].source.path);
+        item.line = result->items[index].line;
+        item.column = result->items[index].column;
+        item.order = (int32_t)index;
+        item.revision = bridge->revision + 1U;
+
+        status = umi_debug_stack_frame_registry_upsert(registry, &item);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+    }
+
+    bridge->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_debug_runtime_publish_stack(
+    UmiDebugRuntimeServiceBridge *bridge,
+    uint64_t thread_id,
+    const UmiDebugRuntimeStackTrace *result)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (bridge != NULL && bridge->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiDebugStackFrameRegistry *registry;
     char framework_thread_id[128];
     size_t index;

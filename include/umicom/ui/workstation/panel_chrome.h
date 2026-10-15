@@ -76,11 +76,17 @@ typedef enum UmiWsPanelAction {
  * Initialise ws panel chrome from caller-provided values so later operations receive a
  * known state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_ws_panel_chrome_init(UmiWsPanelChrome *chrome, const char *title);
 /**
  * Provide the ws panel chrome set badge operation used by this module and its client
  * applications.
  */
+/** Failed edits preserve the complete value. Input may borrow this field;
+ * callers still serialize access. Existing empty/null input rules apply. */
 UmiStatus umi_ws_panel_chrome_set_badge(UmiWsPanelChrome *chrome, const char *badge);
 /**
  * Provide the ws panel chrome set identity operation used by this module and its client

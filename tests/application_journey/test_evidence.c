@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/application/journey/evidence.h"
@@ -28,6 +29,11 @@ int main(void)
     assert(umi_application_journey_evidence_record(
                &registry, "journey", "step", UMI_APPLICATION_JOURNEY_PASSED,
                "first", 10U) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiApplicationJourneyEvidenceRegistry, &registry,
+        (umi_application_journey_evidence_record(
+               &registry, "journey", "step", UMI_APPLICATION_JOURNEY_PASSED,
+               "first", 10U)));
+
     assert(umi_application_journey_evidence_record(
                &registry, "journey", "step", UMI_APPLICATION_JOURNEY_FAILED,
                "updated", 20U) == UMI_STATUS_OK);

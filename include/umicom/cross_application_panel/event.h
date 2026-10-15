@@ -88,6 +88,16 @@ UmiStatus umi_panel_event_archive_encode(const UmiPanelEvent *value,
 UmiStatus umi_panel_event_archive_decode(const void *bytes, size_t byte_count,
     UmiPanelEvent *value);
 
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the owner's publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_panel_event_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiPanelEvent *expected, UmiPanelEvent *value);
+
+
 #ifdef __cplusplus
 }
 #endif

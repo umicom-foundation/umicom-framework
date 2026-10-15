@@ -18,6 +18,7 @@
  */
 
 #include "umicom/delivery/artifact.h"
+#include "../base/value_construction_internal.h"
 #include "delivery_internal.h"
 #include <string.h>
 
@@ -25,6 +26,11 @@
  * Initialise delivery artifact from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_delivery_artifact_init(UmiDeliveryArtifact *artifact,
                                      const char *artifact_id,
                                      UmiArtifactKind kind,
@@ -51,6 +57,41 @@ UmiStatus umi_delivery_artifact_init(UmiDeliveryArtifact *artifact,
     artifact->required = 1;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_delivery_artifact_init_build_value(UmiDeliveryArtifact *artifact,
+                                     const char *artifact_id,
+                                     UmiArtifactKind kind,
+                                     const char *path)
+{
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (artifact == NULL || artifact_id == NULL || path == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    (void)memset(artifact, 0, sizeof(*artifact));
+    status = umi_delivery_copy_text(artifact->artifact_id,
+                                    sizeof(artifact->artifact_id),
+                                    artifact_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_delivery_copy_text(artifact->path, sizeof(artifact->path), path);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    artifact->kind = kind;
+    artifact->required = 1;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_delivery_artifact_init, UmiDeliveryArtifact, artifact,
+    (UmiDeliveryArtifact *artifact, const char *artifact_id, UmiArtifactKind kind, const char *path),
+    umi_delivery_artifact_init_build_value(candidate, artifact_id, kind, path))
+
 
 /*
  * Provide the delivery artifact set digest operation used by this module and its client

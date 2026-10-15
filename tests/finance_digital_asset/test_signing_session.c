@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <stdio.h>
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "check failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return __LINE__; } } while (0)
 
@@ -29,6 +30,9 @@ int main(void)
     CHECK(umi_digital_asset_signing_request_init(&request, "SIGN-1", "TX-1", "POL-1", 2U) == UMI_STATUS_OK);
     CHECK(umi_digital_asset_signing_session_init(&session, &request) == UMI_STATUS_OK);
     CHECK(umi_digital_asset_signing_session_approve(&session) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDigitalSigningSession, &session,
+        (umi_digital_asset_signing_session_approve(&session)));
+
     CHECK(!umi_digital_asset_signing_session_ready(&session));
     CHECK(umi_digital_asset_signing_session_approve(&session) == UMI_STATUS_OK);
     CHECK(umi_digital_asset_signing_session_ready(&session));

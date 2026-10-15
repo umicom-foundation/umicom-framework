@@ -61,6 +61,7 @@ if(NOT _umicom_experience_integrated)
         "${CMAKE_CURRENT_LIST_DIR}/../src/application/experiences/security_centre.c"
         "${CMAKE_CURRENT_LIST_DIR}/../src/application/experiences/marketplace.c"
         "${CMAKE_CURRENT_LIST_DIR}/../src/application/experiences/education.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../src/application/experiences/healthcare.c"
         "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/session.c"
         "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/panel_state.c"
         "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/layout_session.c"

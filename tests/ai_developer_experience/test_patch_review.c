@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/ai_developer_experience/patch_review.h"
@@ -44,6 +45,10 @@ int main(void)
 
     assert(umi_ai_developer_patch_review_select(
         &review, 1U) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiAiDeveloperPatchReview, &review,
+        (umi_ai_developer_patch_review_select(
+        &review, 1U)));
+
     assert(review.files[1].selected);
 
     assert(umi_ai_developer_patch_review_diff(

@@ -37,6 +37,9 @@ void umi_fc_renderer_registry_init(UmiFcRendererRegistry *registry);
  * Provide the fc renderer registry upsert operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_fc_renderer_registry_upsert(UmiFcRendererRegistry *registry,const UmiFcRendererProfile *profile);
 /**
  * Find fc renderer registry while leaving the underlying catalogue or model owned by this

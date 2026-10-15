@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/open_tms/risk_book.h"
 
 #include <string.h>
@@ -38,10 +39,50 @@ const UmiOpenTmsRiskLimit *umi_open_tms_risk_book_find(
     return NULL;
 }
 
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_open_tms_risk_book_upsert(
     UmiOpenTmsRiskBook *book,
     const UmiOpenTmsRiskLimit *limit)
 {
+    size_t index;
+
+    if (book == NULL || limit == NULL || limit->id[0] == '\0' ||
+        limit->scopeId[0] == '\0' || limit->limit <= 0.0) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    for (index = 0U; index < book->count; ++index) {
+        if (strcmp(book->limits[index].id, limit->id) == 0) {
+            if (limit->version < book->limits[index].version) {
+                return UMI_STATUS_INVALID_STATE;
+            }
+            book->limits[index] = *limit;
+            book->revision += 1U;
+            return UMI_STATUS_OK;
+        }
+    }
+
+    if (book->count >= UMI_OPEN_TMS_RISK_LIMIT_CAPACITY) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    book->limits[book->count++] = *limit;
+    book->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_open_tms_risk_book_upsert(
+    UmiOpenTmsRiskBook *book,
+    const UmiOpenTmsRiskLimit *limit)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (book != NULL && book->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
 
     if (book == NULL || limit == NULL || limit->id[0] == '\0' ||

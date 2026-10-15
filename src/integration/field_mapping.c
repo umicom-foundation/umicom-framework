@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 /* Umicom Framework | Integration field mapping | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/integration/field_mapping.h"
+#include "../base/value_construction_internal.h"
 #include <ctype.h>
 #include <string.h>
 
@@ -22,6 +23,11 @@
  * Initialise integration field mapping from caller-provided values so later operations
  * receive a known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_integration_field_mapping_init(UmiIntegrationFieldMapping *mapping,const char *id,const char *source_schema_id,const char *target_schema_id)
 {
     UmiStatus status;
@@ -38,6 +44,31 @@ UmiStatus umi_integration_field_mapping_init(UmiIntegrationFieldMapping *mapping
     if (status == UMI_STATUS_OK) status = umi_integration_designer_copy(mapping->target_schema_id,sizeof(mapping->target_schema_id),target_schema_id);
     return status;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_integration_field_mapping_init_build_value(UmiIntegrationFieldMapping *mapping,const char *id,const char *source_schema_id,const char *target_schema_id)
+{
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (mapping == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(mapping,0,sizeof(*mapping));
+    status = umi_integration_designer_copy(mapping->id,sizeof(mapping->id),id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) status = umi_integration_designer_copy(mapping->source_schema_id,sizeof(mapping->source_schema_id),source_schema_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) status = umi_integration_designer_copy(mapping->target_schema_id,sizeof(mapping->target_schema_id),target_schema_id);
+    return status;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_integration_field_mapping_init, UmiIntegrationFieldMapping, mapping,
+    (UmiIntegrationFieldMapping *mapping, const char *id, const char *source_schema_id, const char *target_schema_id),
+    umi_integration_field_mapping_init_build_value(candidate, id, source_schema_id, target_schema_id))
+
 
 /*
  * Add integration field mapping only after its inputs and available capacity have been

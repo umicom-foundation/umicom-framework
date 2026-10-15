@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/vcs/workbench/review_session.h"
 
 #include <string.h>
@@ -161,6 +162,10 @@ UmiStatus umi_vcs_workbench_review_session_add_comment(
  * Provide the vcs workbench review session add thread operation used by this module and
  * its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_vcs_workbench_review_session_add_thread(
     UmiVcsWorkbenchReviewSession *session,
     const char *thread_id,
@@ -222,11 +227,83 @@ UmiStatus umi_vcs_workbench_review_session_add_thread(
     session->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_vcs_workbench_review_session_add_thread(
+    UmiVcsWorkbenchReviewSession *session,
+    const char *thread_id,
+    const char *path,
+    size_t line_number,
+    int right_side,
+    const char *comment_id,
+    const char *author,
+    const char *body,
+    uint64_t created_at_ms)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (session != NULL && session->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiVcsWorkbenchReviewThread *thread;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (session == NULL || !session->ready || thread_id == NULL ||
+        thread_id[0] == '\0' || path == NULL || path[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (thread_index(session, thread_id) < session->thread_count) {
+        return UMI_STATUS_ALREADY_EXISTS;
+    }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (session->thread_count >= UMI_VCS_WORKBENCH_MAX_REVIEW_THREADS) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    thread = &session->threads[session->thread_count];
+    (void)memset(thread, 0, sizeof(*thread));
+    thread->struct_size = (uint32_t)sizeof(*thread);
+    thread->api_version = UMI_VCS_WORKBENCH_API_VERSION;
+    thread->line_number = line_number;
+    thread->right_side = right_side != 0;
+    thread->revision = 1U;
+    status = umi_vcs_workbench_copy_text(
+        thread->thread_id, sizeof(thread->thread_id), thread_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) status = umi_vcs_workbench_copy_text(
+        thread->path, sizeof(thread->path), path);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) {
+        (void)memset(thread, 0, sizeof(*thread));
+        return status;
+    }
+    session->thread_count += 1U;
+    session->unresolved_count += 1U;
+    status = umi_vcs_workbench_review_session_add_comment(
+        session, thread_id, comment_id, author, body, created_at_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) {
+        session->thread_count -= 1U;
+        session->unresolved_count -= 1U;
+        (void)memset(thread, 0, sizeof(*thread));
+        return status;
+    }
+    session->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the vcs workbench review session resolve thread operation used by this module
  * and its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_vcs_workbench_review_session_resolve_thread(
     UmiVcsWorkbenchReviewSession *session,
     const char *thread_id,
@@ -258,15 +335,86 @@ UmiStatus umi_vcs_workbench_review_session_resolve_thread(
     }
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_vcs_workbench_review_session_resolve_thread(
+    UmiVcsWorkbenchReviewSession *session,
+    const char *thread_id,
+    int resolved)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (session != NULL && session->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    size_t index;
+    int target;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (session == NULL || !session->ready || thread_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    index = thread_index(session, thread_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index >= session->thread_count) return UMI_STATUS_NOT_FOUND;
+    target = resolved != 0;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (session->threads[index].resolved != target) {
+        session->threads[index].resolved = target;
+        /* Configure the optional target only when its feature has created it. */
+        if (target) session->unresolved_count -= 1U;
+        /* Use this fallback path when the earlier condition does not apply. */
+        else session->unresolved_count += 1U;
+        session->threads[index].revision += 1U;
+        session->revision += 1U;
+    }
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the vcs workbench review session set decision operation used by this module and
  * its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_vcs_workbench_review_session_set_decision(
     UmiVcsWorkbenchReviewSession *session,
     UmiVcsWorkbenchReviewDecision decision)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (session == NULL || !session->ready ||
+        decision < UMI_VCS_WORKBENCH_REVIEW_PENDING ||
+        decision > UMI_VCS_WORKBENCH_REVIEW_CHANGES_REQUESTED) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (decision == UMI_VCS_WORKBENCH_REVIEW_APPROVED &&
+        session->unresolved_count > 0U) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    session->decision = decision;
+    session->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_vcs_workbench_review_session_set_decision(
+    UmiVcsWorkbenchReviewSession *session,
+    UmiVcsWorkbenchReviewDecision decision)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (session != NULL && session->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.

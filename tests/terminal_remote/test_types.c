@@ -90,6 +90,12 @@ UMI_TEST_VALUE_TRANSFER(UmiTerminalRemoteNamedEntryTransferCases, UmiTerminalRem
     umi_terminal_remote_named_entry_archive_encode, umi_terminal_remote_named_entry_archive_decode,
     UmiTerminalRemoteNamedEntryTransferEqual, UmiTerminalRemoteNamedEntryTransferTails, UmiTerminalRemoteNamedEntryTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTerminalRemoteNamedEntryConditionalArchiveCases, UmiTerminalRemoteNamedEntry,
+    umi_terminal_remote_named_entry_archive_encode, umi_terminal_remote_named_entry_archive_decode_if_unchanged,
+    UmiTerminalRemoteNamedEntryTransferEqual, UmiTerminalRemoteNamedEntryTransferTails, UmiTerminalRemoteNamedEntryTransferMalformed)
+
+
 int main(void)
 {
     UmiTerminalRemoteNamedEntry entry;
@@ -98,6 +104,7 @@ int main(void)
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_terminal_remote_named_entry_valid(&entry)) return 1;
     if (UmiTerminalRemoteNamedEntryTransferCases(&entry) != 0) return 1;
+    if (UmiTerminalRemoteNamedEntryConditionalArchiveCases(&entry) != 0) return 1;
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_terminal_remote_copy_text(out, sizeof(out), "remote") != UMI_STATUS_OK) return 2;

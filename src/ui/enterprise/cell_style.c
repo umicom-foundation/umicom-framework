@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/enterprise/cell_style.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -71,3 +72,8 @@ static UmiStatus UmiUiEntCellStyleArchiveValidate(const UmiUiEntCellStyle *value
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ui_ent_cell_style_archive_encode, umi_ui_ent_cell_style_archive_decode,
     UmiUiEntCellStyle, UmiUiEntCellStyleArchiveSchema, UmiUiEntCellStyleArchiveBound, UmiUiEntCellStyleArchiveWrite, UmiUiEntCellStyleArchiveRead, UmiUiEntCellStyleArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_ent_cell_style_archive_decode_if_unchanged, umi_ui_ent_cell_style_archive_encode,
+    UmiUiEntCellStyle, UmiUiEntCellStyleArchiveSchema, UmiUiEntCellStyleArchiveBound, UmiUiEntCellStyleArchiveRead, UmiUiEntCellStyleArchiveValidate)

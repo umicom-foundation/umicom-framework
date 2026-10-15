@@ -104,6 +104,9 @@ void umi_ecosystem_component_wizard_init(UmiEcosystemComponentWizard *wizard);
  * Provide the ecosystem component wizard add template operation used by this module and
  * its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ecosystem_component_wizard_add_template(
     UmiEcosystemComponentWizard *wizard,
     const UmiEcosystemComponentTemplate *component_template);
@@ -111,6 +114,9 @@ UmiStatus umi_ecosystem_component_wizard_add_template(
  * Provide the ecosystem component wizard select operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ecosystem_component_wizard_select(
     UmiEcosystemComponentWizard *wizard,
     const char *template_id);

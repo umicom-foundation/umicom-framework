@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 
@@ -69,6 +70,10 @@ int main(void)
            UMI_STATUS_OK);
     assert(umi_editor_intel_search_projection_refresh(
                &projection, orchestration) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiEditorIntelSearchProjection, &projection,
+        (umi_editor_intel_search_projection_refresh(
+               &projection, orchestration)));
+
     assert(projection.results.count == 3U);
     assert(projection.groups.count == 2U);
     assert(projection.has_selection);

@@ -81,6 +81,13 @@ UMI_TEST_VALUE_TRANSFER(UmiCtTimerDescriptorTransferCases, UmiCtTimerDescriptor,
     umi_ct_timer_descriptor_archive_encode, umi_ct_timer_descriptor_archive_decode,
     UmiCtTimerDescriptorTransferEqual, UmiCtTimerDescriptorTransferTails, UmiCtTimerDescriptorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtTimerDescriptorConditionalArchiveCases, UmiCtTimerDescriptor,
+    umi_ct_timer_descriptor_archive_encode, umi_ct_timer_descriptor_archive_decode_if_unchanged,
+    UmiCtTimerDescriptorTransferEqual, UmiCtTimerDescriptorTransferTails, UmiCtTimerDescriptorTransferMalformed)
+
+
 int main(void){UmiCtTimerDescriptor d={"mtime",UINT64_C(10000000),64U,true,true,false};CHECK(umi_ct_timer_descriptor_validate(&d)==UMI_STATUS_OK);
     if (UmiCtTimerDescriptorTransferCases(&d) != 0) return 1;
+    if (UmiCtTimerDescriptorConditionalArchiveCases(&d) != 0) return 1;
 CHECK(umi_ct_timer_ns_to_ticks(&d,UINT64_C(1000000000))==UINT64_C(10000000));return 0;}

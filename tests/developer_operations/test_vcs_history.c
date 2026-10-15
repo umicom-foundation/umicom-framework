@@ -17,6 +17,10 @@
 
 #include "umicom/developer_operations/vcs/history.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(UmiDeveloperOperationsEvaluateVcsHistoryBatchCases, UmiDeveloperOperationsEvaluateVcsHistory,
+    UmiDeveloperOperationsEvaluateVcsHistoryBatch, UmiDeveloperOperationInput, UmiDeveloperOperationSnapshot, baseline)
+
 int main(void)
 {
     UmiDeveloperOperationInput input;
@@ -32,6 +36,7 @@ int main(void)
     input.blocked = 0;
     input.revision = 7U;
 
+    if (UmiDeveloperOperationsEvaluateVcsHistoryBatchCases(&input) != 0) return 1;
     assert(UmiDeveloperOperationsEvaluateVcsHistory(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "vcs.history") == 0);
     assert(snapshot.revision == 7U);

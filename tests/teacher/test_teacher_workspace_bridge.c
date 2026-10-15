@@ -90,6 +90,12 @@ UMI_TEST_VALUE_TRANSFER(UmiTeacherTeacherWorkspaceBridgeTransferCases, UmiTeache
     umi_teacher_teacher_workspace_bridge_archive_encode, umi_teacher_teacher_workspace_bridge_archive_decode,
     UmiTeacherTeacherWorkspaceBridgeTransferEqual, UmiTeacherTeacherWorkspaceBridgeTransferTails, UmiTeacherTeacherWorkspaceBridgeTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTeacherTeacherWorkspaceBridgeConditionalArchiveCases, UmiTeacherTeacherWorkspaceBridge,
+    umi_teacher_teacher_workspace_bridge_archive_encode, umi_teacher_teacher_workspace_bridge_archive_decode_if_unchanged,
+    UmiTeacherTeacherWorkspaceBridgeTransferEqual, UmiTeacherTeacherWorkspaceBridgeTransferTails, UmiTeacherTeacherWorkspaceBridgeTransferMalformed)
+
+
 int main(void) {
     UmiTeacherTeacherWorkspaceBridge value;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -97,6 +103,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_teacher_teacher_workspace_bridge_validate(&value) != UMI_STATUS_OK) return 2;
     if (UmiTeacherTeacherWorkspaceBridgeTransferCases(&value) != 0) return 1;
+    if (UmiTeacherTeacherWorkspaceBridgeConditionalArchiveCases(&value) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (umi_teacher_teacher_workspace_bridge_priority(&value, 60U) != 70U) return 3;

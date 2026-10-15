@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/developer/ecosystem/package_catalogue.h"
 
 #include <string.h>
@@ -185,6 +186,10 @@ const UmiEcosystemPackageRecord *umi_ecosystem_package_catalogue_find_const(
  * Provide the ecosystem package catalogue upsert operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ecosystem_package_catalogue_upsert(
     UmiEcosystemPackageCatalogue *catalogue,
     const UmiEcosystemPackageRecord *record)
@@ -206,6 +211,50 @@ UmiStatus umi_ecosystem_package_catalogue_upsert(
      */
     if (existing != NULL) {
         *existing = *record;
+        existing->revision++;
+        catalogue->revision++;
+        return UMI_STATUS_OK;
+    }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (catalogue->package_count >= UMI_ECOSYSTEM_MAX_PACKAGES) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    catalogue->packages[catalogue->package_count++] = *record;
+    catalogue->revision++;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_ecosystem_package_catalogue_upsert(
+    UmiEcosystemPackageCatalogue *catalogue,
+    const UmiEcosystemPackageRecord *record)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (catalogue != NULL && catalogue->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiEcosystemPackageRecord *existing;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (catalogue == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_ecosystem_package_record_validate(record);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    existing = umi_ecosystem_package_catalogue_find(catalogue, record->package_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (existing != NULL) {
+        /* A replacement also advances the stored record's token. Refuse an
+             * exhausted input before copying it, keeping owner and child intact. */
+            if (record->revision == UINT64_MAX)
+                return UMI_STATUS_CAPACITY_EXCEEDED;
+            *existing = *record;
         existing->revision++;
         catalogue->revision++;
         return UMI_STATUS_OK;

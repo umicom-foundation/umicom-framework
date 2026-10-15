@@ -127,6 +127,12 @@ UMI_TEST_VALUE_TRANSFER(UmiCommodityDescriptorTransferCases, UmiCommodityDescrip
     umi_commodity_commodity_descriptor_archive_encode, umi_commodity_commodity_descriptor_archive_decode,
     UmiCommodityDescriptorTransferEqual, UmiCommodityDescriptorTransferTails, UmiCommodityDescriptorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCommodityDescriptorConditionalArchiveCases, UmiCommodityDescriptor,
+    umi_commodity_commodity_descriptor_archive_encode, umi_commodity_commodity_descriptor_archive_decode_if_unchanged,
+    UmiCommodityDescriptorTransferEqual, UmiCommodityDescriptorTransferTails, UmiCommodityDescriptorTransferMalformed)
+
+
 int main(void)
 {
     UmiCommodityDescriptor value;
@@ -134,6 +140,7 @@ int main(void)
     CHECK(umi_commodity_commodity_descriptor_init(&value, "CMD-WTI", "West Texas Intermediate", "WTI", UMI_COMMODITY_KIND_ENERGY, &currency, true) == UMI_STATUS_OK);
     CHECK(umi_commodity_commodity_descriptor_valid(&value));
     if (UmiCommodityDescriptorTransferCases(&value) != 0) return 1;
+    if (UmiCommodityDescriptorConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(value.physical_delivery);
     return 0;

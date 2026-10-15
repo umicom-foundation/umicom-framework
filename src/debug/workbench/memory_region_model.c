@@ -17,6 +17,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/debug/workbench/memory_region_model.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -158,3 +159,9 @@ static UmiStatus UmiDebugWorkbenchMemoryRegionModelArchiveValidate(const UmiDebu
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_debug_workbench_memory_region_model_archive_encode, umi_debug_workbench_memory_region_model_archive_decode,
     UmiDebugWorkbenchMemoryRegionModel, UmiDebugWorkbenchMemoryRegionModelArchiveSchema, UmiDebugWorkbenchMemoryRegionModelArchiveBound, UmiDebugWorkbenchMemoryRegionModelArchiveWrite, UmiDebugWorkbenchMemoryRegionModelArchiveRead, UmiDebugWorkbenchMemoryRegionModelArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_debug_workbench_memory_region_model_archive_decode_if_unchanged, umi_debug_workbench_memory_region_model_archive_encode,
+    UmiDebugWorkbenchMemoryRegionModel, UmiDebugWorkbenchMemoryRegionModelArchiveSchema, UmiDebugWorkbenchMemoryRegionModelArchiveBound, UmiDebugWorkbenchMemoryRegionModelArchiveRead, UmiDebugWorkbenchMemoryRegionModelArchiveValidate)

@@ -42,6 +42,10 @@ typedef struct UmiFabricEndpointDescriptor {
  * Initialise fabric endpoint descriptor from caller-provided values so later operations
  * receive a known state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_fabric_endpoint_descriptor_init(UmiFabricEndpointDescriptor *item, const char *endpoint_id, const char *uri, UmiFabricProtocol protocol, bool secure, uint32_t weight);
 /**
  * Check that fabric endpoint descriptor satisfies its contract before another service
@@ -59,6 +63,16 @@ UmiStatus umi_fabric_endpoint_descriptor_archive_encode(const UmiFabricEndpointD
     void *bytes, size_t capacity, size_t *out_size);
 UmiStatus umi_fabric_endpoint_descriptor_archive_decode(const void *bytes, size_t byte_count,
     UmiFabricEndpointDescriptor *value);
+
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the owner's publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_fabric_endpoint_descriptor_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiFabricEndpointDescriptor *expected, UmiFabricEndpointDescriptor *value);
+
 
 #ifdef __cplusplus
 }

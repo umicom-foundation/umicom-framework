@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/developer_productivity/bookmarks.h"
@@ -34,6 +35,10 @@ int main(void)
 
     assert(umi_developer_bookmark_store_upsert(
         &store, &bookmark) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDeveloperBookmarkStore, &store,
+        (umi_developer_bookmark_store_upsert(
+        &store, &bookmark)));
+
     assert(store.count == 1U);
     return 0;
 }

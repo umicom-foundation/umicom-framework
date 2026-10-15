@@ -151,6 +151,12 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextEventQueueStateTransferCases, UmiWork
     umi_workbench_context_event_queue_state_archive_encode, umi_workbench_context_event_queue_state_archive_decode,
     UmiWorkbenchContextEventQueueStateTransferEqual, UmiWorkbenchContextEventQueueStateTransferTails, UmiWorkbenchContextEventQueueStateTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextEventQueueStateConditionalArchiveCases, UmiWorkbenchContextEventQueueState,
+    umi_workbench_context_event_queue_state_archive_encode, umi_workbench_context_event_queue_state_archive_decode_if_unchanged,
+    UmiWorkbenchContextEventQueueStateTransferEqual, UmiWorkbenchContextEventQueueStateTransferTails, UmiWorkbenchContextEventQueueStateTransferMalformed)
+
+
 /* Exercise the accepted domain fixture through reviewed publication and
  * legacy mutation boundaries. These checks stay active in release builds. */
 #include "../record_integrity/reviewed_value_cases.h"
@@ -183,6 +189,7 @@ int main(void)
     assert(umi_workbench_context_event_queue_state_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextEventQueueStateTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextEventQueueStateConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextEventQueueStateReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextEventQueueStateMutationGuards(&record) != 0) return 1;
 

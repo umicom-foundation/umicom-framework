@@ -17,6 +17,10 @@
 
 #include "umicom/developer_operations/terminal/task_history.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(UmiDeveloperOperationsEvaluateTerminalTaskHistoryBatchCases, UmiDeveloperOperationsEvaluateTerminalTaskHistory,
+    UmiDeveloperOperationsEvaluateTerminalTaskHistoryBatch, UmiDeveloperOperationInput, UmiDeveloperOperationSnapshot, baseline)
+
 int main(void)
 {
     UmiDeveloperOperationInput input;
@@ -32,6 +36,7 @@ int main(void)
     input.blocked = 0;
     input.revision = 7U;
 
+    if (UmiDeveloperOperationsEvaluateTerminalTaskHistoryBatchCases(&input) != 0) return 1;
     assert(UmiDeveloperOperationsEvaluateTerminalTaskHistory(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "terminal.task-history") == 0);
     assert(snapshot.revision == 7U);

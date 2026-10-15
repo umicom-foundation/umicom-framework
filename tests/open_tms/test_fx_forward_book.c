@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <math.h>
 #include <string.h>
@@ -32,9 +33,16 @@ int main(void)
     trade.marketForwardRate = 1.26;
     trade.version = 1U;
     assert(umi_open_tms_fx_forward_book_add(&book, &trade) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiOpenTmsFxForwardBook, &book,
+        (umi_open_tms_fx_forward_book_add(&book, &trade)));
+
     assert(fabs(umi_open_tms_fx_forward_mark_to_market(&trade) - 10000.0) < 0.01);
     assert(umi_open_tms_fx_forward_book_transition(
                &book, "fxf-1", UMI_OPEN_TMS_FX_FORWARD_CONFIRMED, 2U) ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiOpenTmsFxForwardBook, &book,
+        (umi_open_tms_fx_forward_book_transition(
+               &book, "fxf-1", UMI_OPEN_TMS_FX_FORWARD_CONFIRMED, 2U)));
+
     return 0;
 }

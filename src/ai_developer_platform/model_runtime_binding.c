@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../base/conditional_archive_internal.h"
 #include "umicom/ai/developer_platform/model_runtime_binding.h"
 #include "../base/value_archive_internal.h"
 
@@ -156,3 +157,9 @@ static UmiStatus UmiAiDevModelRuntimeBindingArchiveValidate(const UmiAiDevModelR
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ai_dev_model_runtime_binding_archive_encode, umi_ai_dev_model_runtime_binding_archive_decode,
     UmiAiDevModelRuntimeBinding, UmiAiDevModelRuntimeBindingArchiveSchema, UmiAiDevModelRuntimeBindingArchiveBound, UmiAiDevModelRuntimeBindingArchiveWrite, UmiAiDevModelRuntimeBindingArchiveRead, UmiAiDevModelRuntimeBindingArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ai_dev_model_runtime_binding_archive_decode_if_unchanged, umi_ai_dev_model_runtime_binding_archive_encode,
+    UmiAiDevModelRuntimeBinding, UmiAiDevModelRuntimeBindingArchiveSchema, UmiAiDevModelRuntimeBindingArchiveBound, UmiAiDevModelRuntimeBindingArchiveRead, UmiAiDevModelRuntimeBindingArchiveValidate)

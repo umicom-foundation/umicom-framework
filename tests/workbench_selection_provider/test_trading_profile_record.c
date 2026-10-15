@@ -188,6 +188,12 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionProviderTradingProfileRecordTransfe
     umi_workbench_selection_provider_trading_profile_record_archive_encode, umi_workbench_selection_provider_trading_profile_record_archive_decode,
     UmiWorkbenchSelectionProviderTradingProfileRecordTransferEqual, UmiWorkbenchSelectionProviderTradingProfileRecordTransferTails, UmiWorkbenchSelectionProviderTradingProfileRecordTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchSelectionProviderTradingProfileRecordConditionalArchiveCases, UmiWorkbenchSelectionProviderTradingProfileRecord,
+    umi_workbench_selection_provider_trading_profile_record_archive_encode, umi_workbench_selection_provider_trading_profile_record_archive_decode_if_unchanged,
+    UmiWorkbenchSelectionProviderTradingProfileRecordTransferEqual, UmiWorkbenchSelectionProviderTradingProfileRecordTransferTails, UmiWorkbenchSelectionProviderTradingProfileRecordTransferMalformed)
+
+
 /* Exercise the accepted domain fixture through reviewed publication and
  * legacy mutation boundaries. These checks stay active in release builds. */
 #include "../record_integrity/reviewed_value_cases.h"
@@ -222,6 +228,7 @@ int main(void)
     assert(umi_workbench_selection_provider_trading_profile_record_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionProviderTradingProfileRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionProviderTradingProfileRecordConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchSelectionProviderTradingProfileRecordReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchSelectionProviderTradingProfileRecordMutationGuards(&record) != 0) return 1;
 

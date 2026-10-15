@@ -52,6 +52,9 @@ void umi_application_journey_evidence_registry_init(
  * Provide the application journey evidence record operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_application_journey_evidence_record(
     UmiApplicationJourneyEvidenceRegistry *registry,
     const char *journey_id,

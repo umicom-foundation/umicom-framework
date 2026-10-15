@@ -17,6 +17,10 @@
 
 #include "umicom/broker_connectivity/order/route_readiness.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(umi_broker_connectivity_evaluate_order_route_readiness_batch_cases, umi_broker_connectivity_evaluate_order_route_readiness,
+    umi_broker_connectivity_evaluate_order_route_readiness_batch, UmiBrokerConnectivityInput, UmiBrokerConnectivitySnapshot, value)
+
 int main(void)
 {
     UmiBrokerConnectivityInput input;
@@ -85,6 +89,7 @@ int main(void)
     input.trusted = 1;
     input.revision = 123U;
 
+    if (umi_broker_connectivity_evaluate_order_route_readiness_batch_cases(&input) != 0) return 1;
     assert(umi_broker_connectivity_evaluate_order_route_readiness(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "order.route-readiness") == 0);
     assert(snapshot.revision == 123U);

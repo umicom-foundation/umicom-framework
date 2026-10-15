@@ -68,6 +68,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveStateSnapshotTransferCases, UmiUiReactiveSt
     umi_ui_reactive_state_snapshot_archive_encode, umi_ui_reactive_state_snapshot_archive_decode,
     UmiUiReactiveStateSnapshotTransferEqual, UmiUiReactiveStateSnapshotTransferTails, UmiUiReactiveStateSnapshotTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveStateSnapshotConditionalArchiveCases, UmiUiReactiveStateSnapshot,
+    umi_ui_reactive_state_snapshot_archive_encode, umi_ui_reactive_state_snapshot_archive_decode_if_unchanged,
+    UmiUiReactiveStateSnapshotTransferEqual, UmiUiReactiveStateSnapshotTransferTails, UmiUiReactiveStateSnapshotTransferMalformed)
+
+
 int main(void) { UmiUiReactiveStateSnapshot item; umi_ui_reactive_state_snapshot_init(&item);
     /* Nonzero fields expose swapped or omitted values in a saved record.
      * The original initialized fixture remains available for its own checks. */
@@ -77,4 +83,5 @@ int main(void) { UmiUiReactiveStateSnapshot item; umi_ui_reactive_state_snapshot
     populated.property_count = (size_t)4;
     populated.fingerprint = (uint64_t)5;
     if (UmiUiReactiveStateSnapshotTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveStateSnapshotConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_state_snapshot_valid(&item) ? 0 : 1; }

@@ -98,6 +98,13 @@ UMI_TEST_VALUE_TRANSFER(UmiDesignTokenTransferCases, UmiDesignToken,
     umi_design_token_archive_encode, umi_design_token_archive_decode,
     UmiDesignTokenTransferEqual, UmiDesignTokenTransferTails, UmiDesignTokenTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignTokenConditionalArchiveCases, UmiDesignToken,
+    umi_design_token_archive_encode, umi_design_token_archive_decode_if_unchanged,
+    UmiDesignTokenTransferEqual, UmiDesignTokenTransferTails, UmiDesignTokenTransferMalformed)
+
+
 int main(void){UmiDesignToken t;UmiDesignRgba c;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_color_make(0.2,0.6,0.9,1.0,&c)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_token_color(&t,"accent",c)!=UMI_STATUS_OK)return 2;
     if (UmiDesignTokenTransferCases(&t) != 0) return 1;
+    if (UmiDesignTokenConditionalArchiveCases(&t) != 0) return 1;
 return umi_design_token_valid(&t)?0:3;}

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/reactive/context_binding.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -77,3 +78,8 @@ static UmiStatus UmiUiReactiveContextBindingArchiveValidate(const UmiUiReactiveC
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ui_reactive_context_binding_archive_encode, umi_ui_reactive_context_binding_archive_decode,
     UmiUiReactiveContextBinding, UmiUiReactiveContextBindingArchiveSchema, UmiUiReactiveContextBindingArchiveBound, UmiUiReactiveContextBindingArchiveWrite, UmiUiReactiveContextBindingArchiveRead, UmiUiReactiveContextBindingArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_reactive_context_binding_archive_decode_if_unchanged, umi_ui_reactive_context_binding_archive_encode,
+    UmiUiReactiveContextBinding, UmiUiReactiveContextBindingArchiveSchema, UmiUiReactiveContextBindingArchiveBound, UmiUiReactiveContextBindingArchiveRead, UmiUiReactiveContextBindingArchiveValidate)

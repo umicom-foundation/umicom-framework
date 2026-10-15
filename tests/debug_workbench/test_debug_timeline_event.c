@@ -138,6 +138,12 @@ UMI_TEST_VALUE_TRANSFER(UmiDebugWorkbenchDebugTimelineEventTransferCases, UmiDeb
     umi_debug_workbench_debug_timeline_event_archive_encode, umi_debug_workbench_debug_timeline_event_archive_decode,
     UmiDebugWorkbenchDebugTimelineEventTransferEqual, UmiDebugWorkbenchDebugTimelineEventTransferTails, UmiDebugWorkbenchDebugTimelineEventTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDebugWorkbenchDebugTimelineEventConditionalArchiveCases, UmiDebugWorkbenchDebugTimelineEvent,
+    umi_debug_workbench_debug_timeline_event_archive_encode, umi_debug_workbench_debug_timeline_event_archive_decode_if_unchanged,
+    UmiDebugWorkbenchDebugTimelineEventTransferEqual, UmiDebugWorkbenchDebugTimelineEventTransferTails, UmiDebugWorkbenchDebugTimelineEventTransferMalformed)
+
+
 int main(void)
 {
     UmiDebugWorkbenchDebugTimelineEvent model;
@@ -146,6 +152,7 @@ int main(void)
     UMI_TEST_CHECK(model.timestamp_ns == 1200U);
     UMI_TEST_CHECK(umi_debug_workbench_debug_timeline_event_valid(&model));
     if (UmiDebugWorkbenchDebugTimelineEventTransferCases(&model) != 0) return 1;
+    if (UmiDebugWorkbenchDebugTimelineEventConditionalArchiveCases(&model) != 0) return 1;
 
     return 0;
 }

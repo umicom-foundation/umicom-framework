@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/core/rate_index.h"
 #include "../../base/value_archive_internal.h"
 
@@ -73,3 +74,9 @@ static UmiStatus UmiRateIndexArchiveValidate(const UmiRateIndex *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_rate_index_archive_encode, umi_rate_index_archive_decode,
     UmiRateIndex, UmiRateIndexArchiveSchema, UmiRateIndexArchiveBound, UmiRateIndexArchiveWrite, UmiRateIndexArchiveRead, UmiRateIndexArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_rate_index_archive_decode_if_unchanged, umi_rate_index_archive_encode,
+    UmiRateIndex, UmiRateIndexArchiveSchema, UmiRateIndexArchiveBound, UmiRateIndexArchiveRead, UmiRateIndexArchiveValidate)

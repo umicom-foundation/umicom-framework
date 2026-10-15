@@ -12,11 +12,18 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/data/enterprise/data_session.h"
+#include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
 
 /* Initialisation centralises bounded text handling and defaults. */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_data_data_session_init(UmiDataSession *item, const char *session_id, const char *principal_id, UmiDataConsistency consistency, uint64_t started_at) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -27,6 +34,25 @@ UmiStatus umi_data_data_session_init(UmiDataSession *item, const char *session_i
     UmiStatus s=umi_data_enterprise_copy_text(item->session_id,sizeof(item->session_id),session_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->principal_id,sizeof(item->principal_id),principal_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->consistency=consistency;item->started_at=started_at;item->last_activity=started_at;item->transaction_open=false;
     return umi_data_data_session_validate(item);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_data_data_session_init_build_value(UmiDataSession *item, const char *session_id, const char *principal_id, UmiDataConsistency consistency, uint64_t started_at) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(item, 0, sizeof(*item));
+    UmiStatus s=umi_data_enterprise_copy_text(item->session_id,sizeof(item->session_id),session_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->principal_id,sizeof(item->principal_id),principal_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->consistency=consistency;item->started_at=started_at;item->last_activity=started_at;item->transaction_open=false;
+    return umi_data_data_session_validate(item);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_data_data_session_init, UmiDataSession, item,
+    (UmiDataSession *item, const char *session_id, const char *principal_id, UmiDataConsistency consistency, uint64_t started_at),
+    umi_data_data_session_init_build_value(candidate, session_id, principal_id, consistency, started_at))
+
 
 /* Validation prevents malformed metadata from leaking into later query/migration stages. */
 UmiStatus umi_data_data_session_validate(const UmiDataSession *item) {
@@ -93,3 +119,9 @@ static UmiStatus UmiDataSessionArchiveValidate(const UmiDataSession *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_data_data_session_archive_encode, umi_data_data_session_archive_decode,
     UmiDataSession, UmiDataSessionArchiveSchema, UmiDataSessionArchiveBound, UmiDataSessionArchiveWrite, UmiDataSessionArchiveRead, UmiDataSessionArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_data_data_session_archive_decode_if_unchanged, umi_data_data_session_archive_encode,
+    UmiDataSession, UmiDataSessionArchiveSchema, UmiDataSessionArchiveBound, UmiDataSessionArchiveRead, UmiDataSessionArchiveValidate)

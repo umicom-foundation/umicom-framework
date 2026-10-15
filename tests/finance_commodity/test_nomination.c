@@ -111,12 +111,19 @@ UMI_TEST_VALUE_TRANSFER(UmiCommodityNominationTransferCases, UmiCommodityNominat
     umi_commodity_nomination_archive_encode, umi_commodity_nomination_archive_decode,
     UmiCommodityNominationTransferEqual, UmiCommodityNominationTransferTails, UmiCommodityNominationTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCommodityNominationConditionalArchiveCases, UmiCommodityNomination,
+    umi_commodity_nomination_archive_encode, umi_commodity_nomination_archive_decode_if_unchanged,
+    UmiCommodityNominationTransferEqual, UmiCommodityNominationTransferTails, UmiCommodityNominationTransferMalformed)
+
+
 int main(void)
 {
     UmiCommodityNomination value;
     CHECK(umi_commodity_nomination_init(&value, "NOM-1", "CTR-1", 250, 0, "MT", 1000, 2000) == UMI_STATUS_OK);
     CHECK(umi_commodity_nomination_valid(&value));
     if (UmiCommodityNominationTransferCases(&value) != 0) return 1;
+    if (UmiCommodityNominationConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

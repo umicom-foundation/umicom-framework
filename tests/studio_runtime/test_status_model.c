@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/studio_runtime/status_model.h"
@@ -35,6 +36,10 @@ int main(void)
     snapshot.workflow.blocked_count=2U;
     assert(umi_studio_status_model_build(
         &model,&snapshot,&selection)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiStudioRuntimeStatusModel, &model,
+        (umi_studio_status_model_build(
+        &model,&snapshot,&selection)));
+
     assert(model.item_count == 10U);
     assert(umi_studio_status_model_find(
         &model,UMI_STUDIO_STATUS_PROBLEMS)->badge_count==2U);

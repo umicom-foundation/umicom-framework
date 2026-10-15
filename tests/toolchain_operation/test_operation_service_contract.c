@@ -12,10 +12,14 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include "umicom/toolchain/operation_service.h"
 /*
  * Start this command or application, report setup failures, and return a process exit code
  * to the operating system.
  */
-int main(void){ UmiToolchainOperationService s; umi_toolchain_operation_service_init(&s); assert(umi_toolchain_operation_service_prepare(&s,UMI_TOOLCHAIN_OPERATION_RUN,NULL,NULL,NULL,NULL)==UMI_STATUS_OK); assert(umi_toolchain_operation_service_ready(&s)); return 0; }
+int main(void){ UmiToolchainOperationService s; umi_toolchain_operation_service_init(&s); assert(umi_toolchain_operation_service_prepare(&s,UMI_TOOLCHAIN_OPERATION_RUN,NULL,NULL,NULL,NULL)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiToolchainOperationService, &s,
+        (umi_toolchain_operation_service_prepare(&s,UMI_TOOLCHAIN_OPERATION_RUN,NULL,NULL,NULL,NULL)));
+ assert(umi_toolchain_operation_service_ready(&s)); return 0; }

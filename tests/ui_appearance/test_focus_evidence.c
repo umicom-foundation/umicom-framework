@@ -69,6 +69,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceFocusEvidenceTransferCases, UmiAppearanceFo
     umi_appearance_focus_evidence_archive_encode, umi_appearance_focus_evidence_archive_decode,
     UmiAppearanceFocusEvidenceTransferEqual, UmiAppearanceFocusEvidenceTransferTails, UmiAppearanceFocusEvidenceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceFocusEvidenceConditionalArchiveCases, UmiAppearanceFocusEvidence,
+    umi_appearance_focus_evidence_archive_encode, umi_appearance_focus_evidence_archive_decode_if_unchanged,
+    UmiAppearanceFocusEvidenceTransferEqual, UmiAppearanceFocusEvidenceTransferTails, UmiAppearanceFocusEvidenceTransferMalformed)
+
+
 int main(void) {
     UmiAppearanceFocusEvidence item;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -76,6 +82,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_focus_evidence_is_valid(&item)) return 2;
     if (UmiAppearanceFocusEvidenceTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceFocusEvidenceConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;
 }

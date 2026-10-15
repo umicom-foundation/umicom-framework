@@ -16,6 +16,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/commodity/inventory_lot.h"
 #include "../../base/value_archive_internal.h"
 
@@ -119,3 +120,9 @@ static UmiStatus UmiCommodityInventoryLotArchiveValidate(const UmiCommodityInven
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_commodity_inventory_lot_archive_encode, umi_commodity_inventory_lot_archive_decode,
     UmiCommodityInventoryLot, UmiCommodityInventoryLotArchiveSchema, UmiCommodityInventoryLotArchiveBound, UmiCommodityInventoryLotArchiveWrite, UmiCommodityInventoryLotArchiveRead, UmiCommodityInventoryLotArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_commodity_inventory_lot_archive_decode_if_unchanged, umi_commodity_inventory_lot_archive_encode,
+    UmiCommodityInventoryLot, UmiCommodityInventoryLotArchiveSchema, UmiCommodityInventoryLotArchiveBound, UmiCommodityInventoryLotArchiveRead, UmiCommodityInventoryLotArchiveValidate)

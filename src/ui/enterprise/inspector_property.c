@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/enterprise/inspector_property.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -88,3 +89,8 @@ static UmiStatus UmiUiEntInspectorPropertyArchiveValidate(const UmiUiEntInspecto
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ui_ent_inspector_property_archive_encode, umi_ui_ent_inspector_property_archive_decode,
     UmiUiEntInspectorProperty, UmiUiEntInspectorPropertyArchiveSchema, UmiUiEntInspectorPropertyArchiveBound, UmiUiEntInspectorPropertyArchiveWrite, UmiUiEntInspectorPropertyArchiveRead, UmiUiEntInspectorPropertyArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_ent_inspector_property_archive_decode_if_unchanged, umi_ui_ent_inspector_property_archive_encode,
+    UmiUiEntInspectorProperty, UmiUiEntInspectorPropertyArchiveSchema, UmiUiEntInspectorPropertyArchiveBound, UmiUiEntInspectorPropertyArchiveRead, UmiUiEntInspectorPropertyArchiveValidate)

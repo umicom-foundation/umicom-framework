@@ -42,6 +42,9 @@ void umi_studio_selection_state_init(
  * Copy studio selection state into module-owned storage so callers keep ownership of their
  * input values.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_studio_selection_state_set(
     UmiStudioRuntimeSelectionState *state,
     const UmiStudioRuntimeSelection *selection);

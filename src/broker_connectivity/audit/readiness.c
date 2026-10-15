@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/policy_batch_internal.h"
 #include "umicom/broker_connectivity/audit/readiness.h"
 #include "../broker_connectivity_internal.h"
 
@@ -33,3 +34,8 @@ UmiStatus umi_broker_connectivity_evaluate_audit_readiness(
     return umi_broker_connectivity_evaluate_policy(
         &policy, input, outSnapshot);
 }
+
+/* Reuse the scalar policy for complete table refreshes; the shared batch
+ * owner stages all rows before publishing a successful calculation. */
+UMI_DEFINE_POLICY_BATCH(umi_broker_connectivity_evaluate_audit_readiness_batch, umi_broker_connectivity_evaluate_audit_readiness,
+    UmiBrokerConnectivityInput, UmiBrokerConnectivitySnapshot)

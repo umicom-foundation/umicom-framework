@@ -94,6 +94,12 @@ UMI_TEST_VALUE_TRANSFER(UmiVcsAdvancedDirectoryFilterTransferCases, UmiVcsAdvanc
     umi_vcs_advanced_directory_filter_archive_encode, umi_vcs_advanced_directory_filter_archive_decode,
     UmiVcsAdvancedDirectoryFilterTransferEqual, UmiVcsAdvancedDirectoryFilterTransferTails, UmiVcsAdvancedDirectoryFilterTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiVcsAdvancedDirectoryFilterConditionalArchiveCases, UmiVcsAdvancedDirectoryFilter,
+    umi_vcs_advanced_directory_filter_archive_encode, umi_vcs_advanced_directory_filter_archive_decode_if_unchanged,
+    UmiVcsAdvancedDirectoryFilterTransferEqual, UmiVcsAdvancedDirectoryFilterTransferTails, UmiVcsAdvancedDirectoryFilterTransferMalformed)
+
+
 int main(void)
 {
     UmiVcsAdvancedDirectoryFilter value;
@@ -101,6 +107,7 @@ int main(void)
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_vcs_advanced_directory_filter_validate(&value) != UMI_STATUS_OK) return 2;
     if (UmiVcsAdvancedDirectoryFilterTransferCases(&value) != 0) return 1;
+    if (UmiVcsAdvancedDirectoryFilterConditionalArchiveCases(&value) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_vcs_advanced_directory_filter_accept(&value, "src/a.c", 12U, 0, 0, 0)) return 3;

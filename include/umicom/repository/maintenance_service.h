@@ -45,6 +45,9 @@ void umi_repository_maintenance_service_init(UmiRepositoryMaintenanceService *se
  * Provide the repository maintenance service evaluate operation used by this module and
  * its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_repository_maintenance_service_evaluate(UmiRepositoryMaintenanceService *service);
 
 #ifdef __cplusplus

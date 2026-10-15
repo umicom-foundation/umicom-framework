@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/designer/visual_designer/page_template.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -83,3 +84,8 @@ static UmiStatus UmiRadPageTemplateArchiveValidate(const UmiRadPageTemplate *val
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_rad_page_template_archive_encode, umi_rad_page_template_archive_decode,
     UmiRadPageTemplate, UmiRadPageTemplateArchiveSchema, UmiRadPageTemplateArchiveBound, UmiRadPageTemplateArchiveWrite, UmiRadPageTemplateArchiveRead, UmiRadPageTemplateArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_rad_page_template_archive_decode_if_unchanged, umi_rad_page_template_archive_encode,
+    UmiRadPageTemplate, UmiRadPageTemplateArchiveSchema, UmiRadPageTemplateArchiveBound, UmiRadPageTemplateArchiveRead, UmiRadPageTemplateArchiveValidate)

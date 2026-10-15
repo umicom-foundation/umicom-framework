@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiCoverageNavigationModelTransferCases, UmiCoverageNavi
     umi_coverage_navigation_model_archive_encode, umi_coverage_navigation_model_archive_decode,
     UmiCoverageNavigationModelTransferEqual, UmiCoverageNavigationModelTransferTails, UmiCoverageNavigationModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCoverageNavigationModelConditionalArchiveCases, UmiCoverageNavigationModel,
+    umi_coverage_navigation_model_archive_encode, umi_coverage_navigation_model_archive_decode_if_unchanged,
+    UmiCoverageNavigationModelTransferEqual, UmiCoverageNavigationModelTransferTails, UmiCoverageNavigationModelTransferMalformed)
+
+
 int main(void){UmiCoverageNavigationModel m;assert(umi_coverage_navigation_model_init(&m,"coverage_navigation_model","Coverage Navigation Model")==UMI_STATUS_OK);assert(umi_coverage_navigation_model_set_active(&m,true)==UMI_STATUS_OK);assert(umi_coverage_navigation_model_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_coverage_navigation_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_coverage_navigation_model_valid(&m));
     if (UmiCoverageNavigationModelTransferCases(&m) != 0) return 1;
+    if (UmiCoverageNavigationModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

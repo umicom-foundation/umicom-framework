@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include "umicom/developer_productivity/terminal_tabs.h"
 
@@ -32,6 +33,10 @@ int main(void)
     assert(model.tabs[1].active == 1);
     assert(umi_developer_terminal_tabs_activate(
         &model, "one") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDeveloperTerminalTabModel, &model,
+        (umi_developer_terminal_tabs_activate(
+        &model, "one")));
+
     assert(model.tabs[0].active == 1);
     return 0;
 }

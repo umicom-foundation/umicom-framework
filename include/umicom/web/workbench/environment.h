@@ -57,6 +57,9 @@ void umi_web_workbench_environment_init(
  * Copy web workbench environment into module-owned storage so callers keep ownership of
  * their input values.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_web_workbench_environment_set(
     UmiWebWorkbenchEnvironment *environment,
     const char *name,
@@ -66,6 +69,9 @@ UmiStatus umi_web_workbench_environment_set(
  * Remove web workbench environment while keeping the remaining records in a valid and
  * discoverable state.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_web_workbench_environment_remove(
     UmiWebWorkbenchEnvironment *environment,
     const char *name);

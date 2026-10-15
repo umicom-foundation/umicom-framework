@@ -90,6 +90,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicMosaicProfileTransferCases, UmiUiMosaicMosaic
     umi_ui_mosaic_mosaic_profile_archive_encode, umi_ui_mosaic_mosaic_profile_archive_decode,
     UmiUiMosaicMosaicProfileTransferEqual, UmiUiMosaicMosaicProfileTransferTails, UmiUiMosaicMosaicProfileTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicMosaicProfileConditionalArchiveCases, UmiUiMosaicMosaicProfile,
+    umi_ui_mosaic_mosaic_profile_archive_encode, umi_ui_mosaic_mosaic_profile_archive_decode_if_unchanged,
+    UmiUiMosaicMosaicProfileTransferEqual, UmiUiMosaicMosaicProfileTransferTails, UmiUiMosaicMosaicProfileTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicMosaicProfile value;
     umi_ui_mosaic_mosaic_profile_init(&value);
@@ -97,6 +103,7 @@ int main(void) {
     value.row_span = 2U; value.column_span = 3U;
     CHECK(umi_ui_mosaic_mosaic_profile_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicMosaicProfileTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicMosaicProfileConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_mosaic_profile_area(&value) == 6U);
     return 0;

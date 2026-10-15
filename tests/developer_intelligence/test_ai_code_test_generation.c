@@ -17,6 +17,10 @@
 
 #include "umicom/developer_intelligence/ai/code_test_generation.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(UmiDeveloperIntelligenceEvaluateAiCodeTestGenerationBatchCases, UmiDeveloperIntelligenceEvaluateAiCodeTestGeneration,
+    UmiDeveloperIntelligenceEvaluateAiCodeTestGenerationBatch, UmiDeveloperIntelligenceInput, UmiDeveloperIntelligenceSnapshot, lexicalScore)
+
 int main(void)
 {
     UmiDeveloperIntelligenceInput input;
@@ -44,6 +48,7 @@ int main(void)
     input.active = 1;
     input.revision = 42U;
 
+    if (UmiDeveloperIntelligenceEvaluateAiCodeTestGenerationBatchCases(&input) != 0) return 1;
     assert(UmiDeveloperIntelligenceEvaluateAiCodeTestGeneration(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "ai.code-test-generation") == 0);
     assert(snapshot.revision == 42U);

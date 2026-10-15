@@ -12,7 +12,9 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/integration/fabric/message_header.h"
+#include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
 #include <limits.h>
@@ -21,6 +23,11 @@
  * Initialise fabric message header from caller-provided values so later operations receive
  * a known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_fabric_message_header_init(UmiFabricMessageHeader *item, const char *message_id, const char *correlation_id, const char *tenant_id, const char *content_type, uint64_t created_ms) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -31,6 +38,25 @@ UmiStatus umi_fabric_message_header_init(UmiFabricMessageHeader *item, const cha
     UmiStatus s=umi_fabric_copy_text(item->message_id,sizeof(item->message_id),message_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->correlation_id,sizeof(item->correlation_id),correlation_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->tenant_id,sizeof(item->tenant_id),tenant_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->content_type,sizeof(item->content_type),content_type);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->created_ms=created_ms;
     return umi_fabric_message_header_validate(item);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_fabric_message_header_init_build_value(UmiFabricMessageHeader *item, const char *message_id, const char *correlation_id, const char *tenant_id, const char *content_type, uint64_t created_ms) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (item==NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(item,0,sizeof(*item));
+    UmiStatus s=umi_fabric_copy_text(item->message_id,sizeof(item->message_id),message_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->correlation_id,sizeof(item->correlation_id),correlation_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->tenant_id,sizeof(item->tenant_id),tenant_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->content_type,sizeof(item->content_type),content_type);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->created_ms=created_ms;
+    return umi_fabric_message_header_validate(item);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_fabric_message_header_init, UmiFabricMessageHeader, item,
+    (UmiFabricMessageHeader *item, const char *message_id, const char *correlation_id, const char *tenant_id, const char *content_type, uint64_t created_ms),
+    umi_fabric_message_header_init_build_value(candidate, message_id, correlation_id, tenant_id, content_type, created_ms))
+
 /*
  * Check that fabric message header satisfies its contract before another service relies on
  * it.
@@ -105,3 +131,9 @@ static UmiStatus UmiFabricMessageHeaderArchiveValidate(const UmiFabricMessageHea
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_fabric_message_header_archive_encode, umi_fabric_message_header_archive_decode,
     UmiFabricMessageHeader, UmiFabricMessageHeaderArchiveSchema, UmiFabricMessageHeaderArchiveBound, UmiFabricMessageHeaderArchiveWrite, UmiFabricMessageHeaderArchiveRead, UmiFabricMessageHeaderArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_fabric_message_header_archive_decode_if_unchanged, umi_fabric_message_header_archive_encode,
+    UmiFabricMessageHeader, UmiFabricMessageHeaderArchiveSchema, UmiFabricMessageHeaderArchiveBound, UmiFabricMessageHeaderArchiveRead, UmiFabricMessageHeaderArchiveValidate)

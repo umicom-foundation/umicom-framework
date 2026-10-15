@@ -92,10 +92,17 @@ UMI_TEST_VALUE_TRANSFER(UmiFinancialBalanceTransferCases, UmiFinancialBalance,
     umi_balance_archive_encode, umi_balance_archive_decode,
     UmiFinancialBalanceTransferEqual, UmiFinancialBalanceTransferTails, UmiFinancialBalanceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFinancialBalanceConditionalArchiveCases, UmiFinancialBalance,
+    umi_balance_archive_encode, umi_balance_archive_decode_if_unchanged,
+    UmiFinancialBalanceTransferEqual, UmiFinancialBalanceTransferTails, UmiFinancialBalanceTransferMalformed)
+
+
 int main(void)
 {
     UmiFinancialBalance x; UmiMoney m={10,2U,{{'U','S','D','\0'}}}; CHECK(umi_balance_init(&x,"ID",m,(UmiFinancialDate){2026,8U,25U},1U)==UMI_STATUS_OK); CHECK(umi_balance_is_valid(&x));
     if (UmiFinancialBalanceTransferCases(&x) != 0) return 1;
+    if (UmiFinancialBalanceConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;
 }

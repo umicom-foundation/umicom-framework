@@ -130,6 +130,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextThrottleTransferCases, UmiContextThrottle,
     umi_context_throttle_archive_encode, umi_context_throttle_archive_decode,
     UmiContextThrottleTransferEqual, UmiContextThrottleTransferTails, UmiContextThrottleTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextThrottleConditionalArchiveCases, UmiContextThrottle,
+    umi_context_throttle_archive_encode, umi_context_throttle_archive_decode_if_unchanged,
+    UmiContextThrottleTransferEqual, UmiContextThrottleTransferTails, UmiContextThrottleTransferMalformed)
+
+
 int main(void)
 {
     UmiContextThrottle state;
@@ -144,6 +150,7 @@ int main(void)
     assert(umi_context_throttle_covers_sequence(&state,11U));
     assert(umi_context_throttle_validate(&state) == UMI_STATUS_OK);
     if (UmiContextThrottleTransferCases(&state) != 0) return 1;
+    if (UmiContextThrottleConditionalArchiveCases(&state) != 0) return 1;
 
     return 0;
 }

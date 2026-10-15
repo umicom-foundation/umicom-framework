@@ -117,6 +117,32 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkHistoryStateTransferCases, UmiWor
     umi_workbench_context_link_history_state_archive_encode, umi_workbench_context_link_history_state_archive_decode,
     UmiWorkbenchContextLinkHistoryStateTransferEqual, UmiWorkbenchContextLinkHistoryStateTransferTails, UmiWorkbenchContextLinkHistoryStateTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkHistoryStateConditionalArchiveCases, UmiWorkbenchContextLinkHistoryState,
+    umi_workbench_context_link_history_state_archive_encode, umi_workbench_context_link_history_state_archive_decode_if_unchanged,
+    UmiWorkbenchContextLinkHistoryStateTransferEqual, UmiWorkbenchContextLinkHistoryStateTransferTails, UmiWorkbenchContextLinkHistoryStateTransferMalformed)
+
+
+/* Delayed context edits must preserve newer work and reject exhausted tokens. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextLinkHistoryStateReviewedCases, UmiWorkbenchContextLinkHistoryState,
+    state_id, cursor_id, umi_workbench_context_link_history_state_replace_if_current, UmiWorkbenchContextLinkHistoryStateTransferEqual)
+static int UmiWorkbenchContextLinkHistoryStateMutationGuards(const UmiWorkbenchContextLinkHistoryState *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkHistoryState, group_id, umi_workbench_context_link_history_state_set_primary, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkHistoryState, cursor_id, umi_workbench_context_link_history_state_set_secondary, sample);
+    UmiWorkbenchContextLinkHistoryState value = *sample;
+    unsigned char before[sizeof(value)];
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_link_history_state_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U ||
+        value.timestamp_ms != 44U) return 1;
+    memcpy(before, &value, sizeof(value));
+    umi_workbench_context_link_history_state_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof(value)) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextLinkHistoryState record;
@@ -125,6 +151,9 @@ int main(void)
     umi_workbench_context_link_history_state_init(&record, "history_state-id");
     assert(umi_workbench_context_link_history_state_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkHistoryStateTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkHistoryStateConditionalArchiveCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkHistoryStateReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkHistoryStateMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_context_link_history_state_set_primary(&record, "primary") == UMI_STATUS_OK);
     assert(umi_workbench_context_link_history_state_set_secondary(&record, "secondary") == UMI_STATUS_OK);

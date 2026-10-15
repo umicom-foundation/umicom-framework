@@ -13,7 +13,10 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/workbench_context_link/sync_state.h"
+#include "umicom/base/text.h"
+#include "../base/record_update_internal.h"
 #include "../base/value_archive_internal.h"
 
 #include <string.h>
@@ -161,6 +164,9 @@ uint64_t umi_workbench_context_link_sync_state_hash(
  * Provide the workbench context link sync state set primary operation used by this module
  * and its client applications.
  */
+/* Retain the earlier mutation for review. The replacement below publishes
+ * accepted text or sequence values without erasing data or wrapping revisions. */
+#if 0
 UmiStatus umi_workbench_context_link_sync_state_set_primary(
     UmiWorkbenchContextLinkSyncState *record,
     const char *value)
@@ -177,11 +183,25 @@ UmiStatus umi_workbench_context_link_sync_state_set_primary(
     if (status == UMI_STATUS_OK) ++record->revision;
     return status;
 }
+#endif
+UmiStatus umi_workbench_context_link_sync_state_set_primary(
+    UmiWorkbenchContextLinkSyncState *record,
+    const char *value)
+{
+    /* The shared edit validates before writing and handles overlapping text.
+     * Its revision guard also prevents an exhausted review token from wrapping. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_update(record->group_id, sizeof(record->group_id),
+        value, &record->revision);
+}
 
 /*
  * Provide the workbench context link sync state set secondary operation used by this
  * module and its client applications.
  */
+/* Retain the earlier mutation for review. The replacement below publishes
+ * accepted text or sequence values without erasing data or wrapping revisions. */
+#if 0
 UmiStatus umi_workbench_context_link_sync_state_set_secondary(
     UmiWorkbenchContextLinkSyncState *record,
     const char *value)
@@ -198,11 +218,25 @@ UmiStatus umi_workbench_context_link_sync_state_set_secondary(
     if (status == UMI_STATUS_OK) ++record->revision;
     return status;
 }
+#endif
+UmiStatus umi_workbench_context_link_sync_state_set_secondary(
+    UmiWorkbenchContextLinkSyncState *record,
+    const char *value)
+{
+    /* The shared edit validates before writing and handles overlapping text.
+     * Its revision guard also prevents an exhausted review token from wrapping. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_update(record->peer_id, sizeof(record->peer_id),
+        value, &record->revision);
+}
 
 /*
  * Provide the workbench context link sync state touch operation used by this module and
  * its client applications.
  */
+/* Retain the earlier mutation for review. The replacement below publishes
+ * accepted text or sequence values without erasing data or wrapping revisions. */
+#if 0
 void umi_workbench_context_link_sync_state_touch(
     UmiWorkbenchContextLinkSyncState *record,
     uint64_t sequence,
@@ -213,6 +247,19 @@ void umi_workbench_context_link_sync_state_touch(
      * used.
      */
     if (record == NULL) return;
+    record->sequence = sequence;
+    record->timestamp_ms = timestamp_ms;
+    ++record->revision;
+}
+#endif
+void umi_workbench_context_link_sync_state_touch(
+    UmiWorkbenchContextLinkSyncState *record,
+    uint64_t sequence,
+    uint64_t timestamp_ms)
+{
+    /* The legacy void API cannot report exhaustion. Leave all fields untouched
+     * when its token cannot advance; reviewed replacement returns a status. */
+    if (record == NULL || record->revision == UINT64_MAX) return;
     record->sequence = sequence;
     record->timestamp_ms = timestamp_ms;
     ++record->revision;
@@ -287,3 +334,14 @@ static UmiStatus UmiWorkbenchContextLinkSyncStateArchiveValidate(const UmiWorkbe
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_context_link_sync_state_archive_encode, umi_workbench_context_link_sync_state_archive_decode,
     UmiWorkbenchContextLinkSyncState, UmiWorkbenchContextLinkSyncStateArchiveSchema, UmiWorkbenchContextLinkSyncStateArchiveBound, UmiWorkbenchContextLinkSyncStateArchiveWrite, UmiWorkbenchContextLinkSyncStateArchiveRead, UmiWorkbenchContextLinkSyncStateArchiveValidate)
+
+/* Reviewed drafts belong to one context identity. Validation remains with this
+ * owner, and publication advances exactly once without dispatching UI events. */
+UMI_DEFINE_REVIEWED_IDENTITY_RECORD_EDIT(umi_workbench_context_link_sync_state_replace_if_current,
+    UmiWorkbenchContextLinkSyncState, sync_id, umi_workbench_context_link_sync_state_validate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_workbench_context_link_sync_state_archive_decode_if_unchanged, umi_workbench_context_link_sync_state_archive_encode,
+    UmiWorkbenchContextLinkSyncState, UmiWorkbenchContextLinkSyncStateArchiveSchema, UmiWorkbenchContextLinkSyncStateArchiveBound, UmiWorkbenchContextLinkSyncStateArchiveRead, UmiWorkbenchContextLinkSyncStateArchiveValidate)

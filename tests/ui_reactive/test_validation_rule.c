@@ -70,6 +70,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveValidationRuleTransferCases, UmiUiReactiveV
     umi_ui_reactive_validation_rule_archive_encode, umi_ui_reactive_validation_rule_archive_decode,
     UmiUiReactiveValidationRuleTransferEqual, UmiUiReactiveValidationRuleTransferTails, UmiUiReactiveValidationRuleTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveValidationRuleConditionalArchiveCases, UmiUiReactiveValidationRule,
+    umi_ui_reactive_validation_rule_archive_encode, umi_ui_reactive_validation_rule_archive_decode_if_unchanged,
+    UmiUiReactiveValidationRuleTransferEqual, UmiUiReactiveValidationRuleTransferTails, UmiUiReactiveValidationRuleTransferMalformed)
+
+
 int main(void) { UmiUiReactiveValidationRule item; umi_ui_reactive_validation_rule_init(&item);
     /* Nonzero fields expose swapped or omitted values in a saved record.
      * The original initialized fixture remains available for its own checks. */
@@ -81,4 +87,5 @@ int main(void) { UmiUiReactiveValidationRule item; umi_ui_reactive_validation_ru
     populated.min_length = (size_t)6;
     populated.max_length = (size_t)7;
     if (UmiUiReactiveValidationRuleTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveValidationRuleConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_validation_rule_valid(&item) ? 0 : 1; }

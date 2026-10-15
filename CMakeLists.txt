@@ -3437,6 +3437,18 @@ if(BUILD_TESTING)
         framework.data.connector
         tests/data/test_connector.c)
     umicom_add_framework_test(umicom-base-text-test framework.base_text tests/test_base_text.c)
+    umicom_add_framework_test(umicom-policy-batch-test framework.policy.batch tests/policy_batch/test_batch.c)
+    umicom_add_framework_test(umicom-policy-table-example framework.policy.table_example examples/policy_batch/table.c)
+    set_tests_properties(framework.policy.batch framework.policy.table_example
+        PROPERTIES LABELS "framework;policy;publication")
+    # Candidate publication must retain the live value on allocation or builder
+    # failure. The allocator substitution exists only in this isolated test.
+    umicom_add_framework_test(umicom-value-construction-test
+        framework.value.construction tests/value_archive/test_construction.c)
+    # Guarded imports compare canonical state and must release scratch storage
+    # after either allocation failure or a malformed candidate.
+    umicom_add_framework_test(umicom-conditional-archive-test
+        framework.value.conditional_archive tests/value_archive/test_conditional.c)
     # Batch 58: unified compiler providers, polyglot ABI/build graphs and Umicc.
     umicom_add_framework_test(umicom-compiler-language-target-test framework.compiler.language_target tests/test_compiler_language_target.c)
     umicom_add_framework_test(umicom-compiler-provider-registry-test framework.compiler.provider_registry tests/test_compiler_provider_registry.c)
@@ -5720,6 +5732,9 @@ include(cmake/UmicomNativeArguments.cmake)
 include(cmake/UmicomLocalProfileDatabase.cmake)
 include(cmake/UmicomWorkingTreeReview.cmake)
 include(cmake/UmicomLearningLibrary.cmake)
+# Healthcare services are Framework-owned and available to every parent build.
+# Thin product modules no longer need to be present to exercise their core tests.
+include(cmake/UmicomHealthcareCore.cmake)
 include(cmake/UmicomValueOwnerBuildChecks.cmake)
 
 # Scope filters run through the same indexed search and owned worker session.

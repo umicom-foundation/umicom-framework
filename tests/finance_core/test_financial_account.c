@@ -123,10 +123,17 @@ UMI_TEST_VALUE_TRANSFER(UmiFinancialCoreAccountTransferCases, UmiFinancialCoreAc
     umi_financial_account_archive_encode, umi_financial_account_archive_decode,
     UmiFinancialCoreAccountTransferEqual, UmiFinancialCoreAccountTransferTails, UmiFinancialCoreAccountTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFinancialCoreAccountConditionalArchiveCases, UmiFinancialCoreAccount,
+    umi_financial_account_archive_encode, umi_financial_account_archive_decode_if_unchanged,
+    UmiFinancialCoreAccountTransferEqual, UmiFinancialCoreAccountTransferTails, UmiFinancialCoreAccountTransferMalformed)
+
+
 int main(void)
 {
     UmiFinancialCoreAccount x; CHECK(umi_financial_account_init(&x,"ID","Name","PARENT","CODE")==UMI_STATUS_OK); CHECK(umi_financial_account_is_valid(&x));
     if (UmiFinancialCoreAccountTransferCases(&x) != 0) return 1;
+    if (UmiFinancialCoreAccountConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;
 }

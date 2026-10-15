@@ -29,9 +29,15 @@ extern "C" {
     }
     UmiProjectWorkspaceProjectConfigurationSet;
     void umi_project_workspace_project_configuration_set_init(UmiProjectWorkspaceProjectConfigurationSet *value);
-    UmiStatus umi_project_workspace_project_configuration_set_add(UmiProjectWorkspaceProjectConfigurationSet *value, const char *text);
+    /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
+UmiStatus umi_project_workspace_project_configuration_set_add(UmiProjectWorkspaceProjectConfigurationSet *value, const char *text);
     bool umi_project_workspace_project_configuration_set_contains(const UmiProjectWorkspaceProjectConfigurationSet *value, const char *text);
-    UmiStatus umi_project_workspace_project_configuration_set_remove(UmiProjectWorkspaceProjectConfigurationSet *value, const char *text);
+    /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
+UmiStatus umi_project_workspace_project_configuration_set_remove(UmiProjectWorkspaceProjectConfigurationSet *value, const char *text);
 #ifdef __cplusplus
 }
 #endif

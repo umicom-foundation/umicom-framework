@@ -17,6 +17,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "umicom/base/text.h"
 #include "umicom/vcs/advanced/conflict_resolution.h"
 
 #include <string.h>
@@ -45,6 +46,9 @@ void umi_vcs_advanced_conflict_resolution_init(
  * Provide the vcs advanced conflict resolution set path operation used by this module and
  * its client applications.
  */
+/* The presentation copy could erase a rejected field or overlap its input.
+ * Retain it for review; the replacement validates before publishing any text. */
+#if 0
 UmiStatus umi_vcs_advanced_conflict_resolution_set_path(
     UmiVcsAdvancedConflictResolution *resolution,
     const char *path)
@@ -58,6 +62,22 @@ UmiStatus umi_vcs_advanced_conflict_resolution_set_path(
     }
     return umi_vcs_advanced_copy_text(
         resolution->path, sizeof(resolution->path), path);
+}
+#endif
+
+UmiStatus umi_vcs_advanced_conflict_resolution_set_path(
+    UmiVcsAdvancedConflictResolution *resolution,
+    const char *path)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (resolution == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    return umi_text_replace(
+        resolution->path, sizeof(resolution->path), path != NULL ? path : "");
 }
 
 /*

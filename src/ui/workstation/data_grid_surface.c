@@ -14,11 +14,17 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/data_grid_surface.h"
+#include "../../base/value_construction_internal.h"
 
 /*
  * Initialise ws data grid surface from caller-provided values so later operations receive
  * a known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_ws_data_grid_surface_init(UmiWsDataGridSurface *grid, const char *grid_id) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -29,6 +35,25 @@ UmiStatus umi_ws_data_grid_surface_init(UmiWsDataGridSurface *grid, const char *
     grid->striped = true;
     return umi_ws_copy_text(grid->grid_id, sizeof(grid->grid_id), grid_id);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_ws_data_grid_surface_init_build_value(UmiWsDataGridSurface *grid, const char *grid_id) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (grid == NULL || !umi_ws_id_valid(grid_id)) return UMI_STATUS_INVALID_ARGUMENT;
+    *grid = (UmiWsDataGridSurface){0};
+    grid->striped = true;
+    return umi_ws_copy_text(grid->grid_id, sizeof(grid->grid_id), grid_id);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_ws_data_grid_surface_init, UmiWsDataGridSurface, grid,
+    (UmiWsDataGridSurface *grid, const char *grid_id),
+    umi_ws_data_grid_surface_init_build_value(candidate, grid_id))
+
 
 /*
  * Provide the ws data grid surface add column operation used by this module and its client

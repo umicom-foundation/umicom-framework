@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <stdio.h>
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "check failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return __LINE__; } } while (0)
 
@@ -29,6 +30,9 @@ int main(void)
     umi_commodity_shipment_book_init(&catalogue);
     CHECK(umi_commodity_shipment_init(&item, "SHIP-1", "CTR-1", "ROUTE-1", 500, 0, "MT") == UMI_STATUS_OK);
     CHECK(umi_commodity_shipment_book_add(&catalogue, &item) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiCommodityShipmentBook, &catalogue,
+        (umi_commodity_shipment_book_add(&catalogue, &item)));
+
     CHECK(umi_commodity_shipment_book_add(&catalogue, &item) == UMI_STATUS_ALREADY_EXISTS);
     CHECK(umi_commodity_shipment_book_find(&catalogue, "SHIP-1") != NULL);
     CHECK(catalogue.revision == 1U);

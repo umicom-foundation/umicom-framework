@@ -75,6 +75,13 @@ UMI_TEST_VALUE_TRANSFER(UmiDesignButtonSpecTransferCases, UmiDesignButtonSpec,
     umi_design_button_spec_archive_encode, umi_design_button_spec_archive_decode,
     UmiDesignButtonSpecTransferEqual, UmiDesignButtonSpecTransferTails, UmiDesignButtonSpecTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignButtonSpecConditionalArchiveCases, UmiDesignButtonSpec,
+    umi_design_button_spec_archive_encode, umi_design_button_spec_archive_decode_if_unchanged,
+    UmiDesignButtonSpecTransferEqual, UmiDesignButtonSpecTransferTails, UmiDesignButtonSpecTransferMalformed)
+
+
 int main(void){UmiDesignButtonSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_button_spec_init(&s,"Save",UMI_DESIGN_ROLE_PRIMARY,UMI_DESIGN_DENSITY_STANDARD,0,0)!=UMI_STATUS_OK)return 1;
     if (UmiDesignButtonSpecTransferCases(&s) != 0) return 1;
+    if (UmiDesignButtonSpecConditionalArchiveCases(&s) != 0) return 1;
 return s.label[0]=='S'?0:2;}

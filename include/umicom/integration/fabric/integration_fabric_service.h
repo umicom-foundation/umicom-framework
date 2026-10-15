@@ -47,6 +47,9 @@ void umi_integration_fabric_service_init(UmiIntegrationFabricService *service);
  * Provide the integration fabric service start operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_integration_fabric_service_start(UmiIntegrationFabricService *service);
 /**
  * Provide the integration fabric service snapshot operation used by this module and its

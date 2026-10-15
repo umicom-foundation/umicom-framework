@@ -47,6 +47,10 @@ typedef struct UmiWsInspectorModel {
  * Initialise ws inspector model from caller-provided values so later operations receive a
  * known state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_ws_inspector_model_init(UmiWsInspectorModel *model, const char *subject_id);
 /**
  * Copy ws inspector model into module-owned storage so callers keep ownership of their

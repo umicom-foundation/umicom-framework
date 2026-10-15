@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/data/enterprise/replica_set.h"
 #include <stdio.h>
 #include <string.h>
@@ -29,6 +30,9 @@ int main(void) {
     umi_data_replica_set_init(&registry);
     CHECK(umi_data_replica_descriptor_init(&item,"r1","db://primary",1U,true) == UMI_STATUS_OK);
     CHECK(umi_data_replica_set_add(&registry, &item) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDataReplicaSet, &registry,
+        (umi_data_replica_set_add(&registry, &item)));
+
     CHECK(umi_data_replica_set_add(&registry, &item) == UMI_STATUS_ALREADY_EXISTS);
     CHECK(umi_data_replica_set_find(&registry, item.replica_id, &found) == UMI_STATUS_OK);
     CHECK(strcmp(found.replica_id, item.replica_id) == 0);

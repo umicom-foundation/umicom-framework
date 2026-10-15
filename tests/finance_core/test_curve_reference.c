@@ -105,10 +105,17 @@ UMI_TEST_VALUE_TRANSFER(UmiCurveReferenceTransferCases, UmiCurveReference,
     umi_curve_reference_archive_encode, umi_curve_reference_archive_decode,
     UmiCurveReferenceTransferEqual, UmiCurveReferenceTransferTails, UmiCurveReferenceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCurveReferenceConditionalArchiveCases, UmiCurveReference,
+    umi_curve_reference_archive_encode, umi_curve_reference_archive_decode_if_unchanged,
+    UmiCurveReferenceTransferEqual, UmiCurveReferenceTransferTails, UmiCurveReferenceTransferMalformed)
+
+
 int main(void)
 {
     UmiCurveReference x; CHECK(umi_curve_reference_init(&x,"ID","Name","CODE")==UMI_STATUS_OK); CHECK(umi_curve_reference_is_valid(&x));
     if (UmiCurveReferenceTransferCases(&x) != 0) return 1;
+    if (UmiCurveReferenceConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;
 }

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/appearance/icon_descriptor.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -90,3 +91,8 @@ static UmiStatus UmiAppearanceIconDescriptorArchiveValidate(const UmiAppearanceI
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_appearance_icon_descriptor_archive_encode, umi_appearance_icon_descriptor_archive_decode,
     UmiAppearanceIconDescriptor, UmiAppearanceIconDescriptorArchiveSchema, UmiAppearanceIconDescriptorArchiveBound, UmiAppearanceIconDescriptorArchiveWrite, UmiAppearanceIconDescriptorArchiveRead, UmiAppearanceIconDescriptorArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_appearance_icon_descriptor_archive_decode_if_unchanged, umi_appearance_icon_descriptor_archive_encode,
+    UmiAppearanceIconDescriptor, UmiAppearanceIconDescriptorArchiveSchema, UmiAppearanceIconDescriptorArchiveBound, UmiAppearanceIconDescriptorArchiveRead, UmiAppearanceIconDescriptorArchiveValidate)

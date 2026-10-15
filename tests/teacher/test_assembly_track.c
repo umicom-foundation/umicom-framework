@@ -90,6 +90,12 @@ UMI_TEST_VALUE_TRANSFER(UmiTeacherAssemblyTrackTransferCases, UmiTeacherAssembly
     umi_teacher_assembly_track_archive_encode, umi_teacher_assembly_track_archive_decode,
     UmiTeacherAssemblyTrackTransferEqual, UmiTeacherAssemblyTrackTransferTails, UmiTeacherAssemblyTrackTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTeacherAssemblyTrackConditionalArchiveCases, UmiTeacherAssemblyTrack,
+    umi_teacher_assembly_track_archive_encode, umi_teacher_assembly_track_archive_decode_if_unchanged,
+    UmiTeacherAssemblyTrackTransferEqual, UmiTeacherAssemblyTrackTransferTails, UmiTeacherAssemblyTrackTransferMalformed)
+
+
 int main(void) {
     UmiTeacherAssemblyTrack value;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -97,6 +103,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_teacher_assembly_track_validate(&value) != UMI_STATUS_OK) return 2;
     if (UmiTeacherAssemblyTrackTransferCases(&value) != 0) return 1;
+    if (UmiTeacherAssemblyTrackConditionalArchiveCases(&value) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (umi_teacher_assembly_track_priority(&value, 60U) != 70U) return 3;

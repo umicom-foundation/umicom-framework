@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Refreshing complete policy tables</title>
+<style>body{max-width:60rem;margin:3rem auto;padding:0 1rem;font:17px/1.6 system-ui;color:#182536}code,pre{font-family:ui-monospace,monospace}pre{padding:1rem;background:#eef2f5;overflow:auto}h1,h2{line-height:1.2}</style></head><body>
+<h1>Refreshing complete policy tables</h1>
+<p>A policy evaluator turns application observations into a result, such as a readiness flag,
+a score or a balance difference. A complete-group evaluator prepares every row in temporary
+memory before replacing the caller's result table. A rejected row leaves the previous table intact.</p>
+<h2>Try the account observation example</h2>
+<ol><li>Open <code>examples/policy_batch/table.c</code> in the Framework source checkout.
+It uses synthetic observations and the public balance-consistency API; it does not connect to a bank.</li>
+<li>Configure the parent Applications checkout with testing enabled, then build the example:
+<pre>cmake --preset windows-ucrt64-all-debug -DBUILD_TESTING=ON
+cmake --build --preset windows-ucrt64-all-debug --target umicom-policy-table-example --parallel 2
+ctest --preset windows-ucrt64-all-debug -R "^framework[.]policy[.]table_example$" --output-on-failure --no-tests=error</pre>
+Run the next command only if the preceding command succeeds. These commands use the Applications
+Windows preset. Other hosts should use their configured build directory and the same target.</li>
+<li>The example evaluates a balanced row and a row with a difference of 100.
+It then supplies a non-finite value and checks that both previous results remain unchanged.
+Run CTest with <code>--verbose</code> to see its output:
+<pre>Balanced example: difference 0.00, ready 1
+Difference example: difference 100.00, ready 0
+Invalid refresh refused; the previous complete table is unchanged.</pre></li></ol>
+<h2>Use the shared interface</h2>
+<ol><li>Include the header for the required policy. Initialize each input with its domain
+initializer and fill in the relevant fields. All numeric signals must be finite, including fields
+not used by the selected policy.</li>
+<li>Provide an array of inputs, a count, an output array and its capacity.
+The plural function uses the same domain rules as the scalar function.
+Snake-case interfaces use <code>_batch</code>; other existing naming families use <code>Batch</code>.</li>
+<li>Check the returned <code>UmiStatus</code> before displaying the new results.
+On failure, retain the old results and explain the refusal to the user. Do not mark the table
+as refreshed merely because the function was called.</li>
+<li>Keep any borrowed labels valid throughout the call. A label may refer to the previous output
+table because publication takes place only after every row has been evaluated.</li></ol>
+<h2>Bounds and refusal</h2>
+<p>A zero count is a successful no-op and permits null arrays. Nonempty groups require readable
+inputs and writable output capacity. The function accepts at most 4,096 rows and 16 MiB of
+temporary result storage. It reports <code>UMI_STATUS_CAPACITY_EXCEEDED</code> when these limits,
+output capacity or label capacity are exceeded. Allocation failure reports
+<code>UMI_STATUS_OUT_OF_MEMORY</code>. Non-finite input reports <code>UMI_STATUS_INVALID_ARGUMENT</code>;
+a non-finite calculated result reports <code>UMI_STATUS_INVALID_STATE</code>.
+Every refusal preserves all caller-owned outputs, including unused capacity.</p>
+<p>If a table is larger than the bound, divide it into independently displayed pages and describe
+each page's refresh state. Separate calls do not provide whole-table publication across pages.</p>
+<h2>Ownership and extension</h2>
+<p>The application must serialize access while evaluating and publishing. This is an in-memory
+publication rule, not a lock, database transaction or crash-recovery guarantee. These calculations
+do not submit trades, transfer money, run jobs or grant permission to perform those actions.</p>
+<p>Reusable policy rules belong in Framework. To add a policy, retain the scalar evaluator as the
+single definition of its calculation and use the shared complete-group implementation for the
+plural interface. Add tests for a valid group, a later invalid row and preservation of the prior
+table. Keep output records small or adapt the scalar staging strategy before enlarging them.</p>
+<p>If CMake cannot find the example target, confirm that testing is enabled and that the parent
+checkout uses the Framework revision containing this source. A failed test is a reason to inspect
+its reported condition; do not replace expected results merely to hide a failure.</p>
+</body></html>

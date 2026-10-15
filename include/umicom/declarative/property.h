@@ -42,6 +42,10 @@ typedef struct UmiDeclPropertyDescriptor {
  * Initialise decl property descriptor from caller-provided values so later operations
  * receive a known state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_decl_property_descriptor_init(UmiDeclPropertyDescriptor *descriptor, const char *name, UmiDeclValueKind kind, const char *default_value, int required);
 /**
  * Provide the decl property validate text operation used by this module and its client

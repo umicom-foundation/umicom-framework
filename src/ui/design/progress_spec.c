@@ -17,6 +17,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/design/progress_spec.h"
 #include "../../base/value_archive_internal.h"
 
@@ -84,3 +85,8 @@ static UmiStatus UmiDesignProgressSpecArchiveValidate(const UmiDesignProgressSpe
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_design_progress_spec_archive_encode, umi_design_progress_spec_archive_decode,
     UmiDesignProgressSpec, UmiDesignProgressSpecArchiveSchema, UmiDesignProgressSpecArchiveBound, UmiDesignProgressSpecArchiveWrite, UmiDesignProgressSpecArchiveRead, UmiDesignProgressSpecArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_design_progress_spec_archive_decode_if_unchanged, umi_design_progress_spec_archive_encode,
+    UmiDesignProgressSpec, UmiDesignProgressSpecArchiveSchema, UmiDesignProgressSpecArchiveBound, UmiDesignProgressSpecArchiveRead, UmiDesignProgressSpecArchiveValidate)

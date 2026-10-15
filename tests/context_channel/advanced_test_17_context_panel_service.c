@@ -130,6 +130,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextPanelServiceTransferCases, UmiContextPanelServ
     umi_context_panel_service_archive_encode, umi_context_panel_service_archive_decode,
     UmiContextPanelServiceTransferEqual, UmiContextPanelServiceTransferTails, UmiContextPanelServiceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextPanelServiceConditionalArchiveCases, UmiContextPanelService,
+    umi_context_panel_service_archive_encode, umi_context_panel_service_archive_decode_if_unchanged,
+    UmiContextPanelServiceTransferEqual, UmiContextPanelServiceTransferTails, UmiContextPanelServiceTransferMalformed)
+
+
 int main(void)
 {
     UmiContextPanelService state;
@@ -144,6 +150,7 @@ int main(void)
     assert(umi_context_panel_service_covers_sequence(&state,11U));
     assert(umi_context_panel_service_validate(&state) == UMI_STATUS_OK);
     if (UmiContextPanelServiceTransferCases(&state) != 0) return 1;
+    if (UmiContextPanelServiceConditionalArchiveCases(&state) != 0) return 1;
 
     return 0;
 }

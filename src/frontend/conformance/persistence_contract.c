@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/frontend/conformance/persistence_contract.h"
 #include "../../base/value_archive_internal.h"
 
@@ -57,3 +58,9 @@ static UmiStatus UmiFcPersistenceContractArchiveValidate(const UmiFcPersistenceC
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_fc_persistence_contract_archive_encode, umi_fc_persistence_contract_archive_decode,
     UmiFcPersistenceContract, UmiFcPersistenceContractArchiveSchema, UmiFcPersistenceContractArchiveBound, UmiFcPersistenceContractArchiveWrite, UmiFcPersistenceContractArchiveRead, UmiFcPersistenceContractArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_fc_persistence_contract_archive_decode_if_unchanged, umi_fc_persistence_contract_archive_encode,
+    UmiFcPersistenceContract, UmiFcPersistenceContractArchiveSchema, UmiFcPersistenceContractArchiveBound, UmiFcPersistenceContractArchiveRead, UmiFcPersistenceContractArchiveValidate)

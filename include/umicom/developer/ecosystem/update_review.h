@@ -59,6 +59,9 @@ void umi_ecosystem_update_review_init(UmiEcosystemUpdateReview *review);
  * Add ecosystem update review only after its inputs and available capacity have been
  * checked.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ecosystem_update_review_add(
     UmiEcosystemUpdateReview *review,
     const UmiEcosystemPackageRecord *record);

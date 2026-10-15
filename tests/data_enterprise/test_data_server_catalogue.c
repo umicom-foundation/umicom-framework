@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/data/enterprise/data_server_catalogue.h"
 #include <stdio.h>
 #include <string.h>
@@ -29,6 +30,9 @@ int main(void) {
     umi_data_data_server_catalogue_init(&registry);
     CHECK(umi_data_data_server_profile_init(&item,"production",2U,8U,1000U) == UMI_STATUS_OK);
     CHECK(umi_data_data_server_catalogue_add(&registry, &item) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDataServerCatalogue, &registry,
+        (umi_data_data_server_catalogue_add(&registry, &item)));
+
     CHECK(umi_data_data_server_catalogue_add(&registry, &item) == UMI_STATUS_ALREADY_EXISTS);
     CHECK(umi_data_data_server_catalogue_find(&registry, item.profile_id, &found) == UMI_STATUS_OK);
     CHECK(strcmp(found.profile_id, item.profile_id) == 0);

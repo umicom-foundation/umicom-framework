@@ -41,8 +41,14 @@ extern "C" {
     }
     UmiProjectWorkspaceApplicationGeneratorPlan;
     void umi_project_workspace_application_generator_plan_init(UmiProjectWorkspaceApplicationGeneratorPlan *value);
-    UmiStatus umi_project_workspace_application_generator_plan_add(UmiProjectWorkspaceApplicationGeneratorPlan *value,const char *id,const char *action,bool required);
-    UmiStatus umi_project_workspace_application_generator_plan_complete(UmiProjectWorkspaceApplicationGeneratorPlan *value,const char *id);
+    /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
+UmiStatus umi_project_workspace_application_generator_plan_add(UmiProjectWorkspaceApplicationGeneratorPlan *value,const char *id,const char *action,bool required);
+    /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
+UmiStatus umi_project_workspace_application_generator_plan_complete(UmiProjectWorkspaceApplicationGeneratorPlan *value,const char *id);
     bool umi_project_workspace_application_generator_plan_ready(const UmiProjectWorkspaceApplicationGeneratorPlan *value);
 #ifdef __cplusplus
 }

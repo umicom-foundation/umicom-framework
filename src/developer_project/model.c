@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/developer_project/model.h"
 
 #include <stdio.h>
@@ -151,10 +152,66 @@ UmiStatus umi_developer_project_model_validate(
  * Provide the developer project model add language operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_developer_project_model_add_language(
     UmiDeveloperProjectModel *model,
     const char *language_id)
 {
+    size_t index;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (model == NULL || language_id == NULL || language_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(model->primary_language_id, language_id) == 0) {
+        return UMI_STATUS_OK;
+    }
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < model->secondary_language_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(model->secondary_language_ids[index], language_id) == 0) {
+            return UMI_STATUS_OK;
+        }
+    }
+
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (model->secondary_language_count >=
+        UMI_DEVELOPER_PROJECT_LANGUAGE_CAPACITY) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    status = copy_text(
+        model->secondary_language_ids[model->secondary_language_count],
+        sizeof(model->secondary_language_ids[0]),
+        language_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    model->secondary_language_count += 1U;
+    model->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_developer_project_model_add_language(
+    UmiDeveloperProjectModel *model,
+    const char *language_id)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (model != NULL && model->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     UmiStatus status;
 

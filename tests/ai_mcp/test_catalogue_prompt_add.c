@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/ai/mcp/prompt_catalogue.h"
@@ -20,4 +21,7 @@
  * Add test ai mcp catalogue prompt only after its inputs and available capacity have been
  * checked.
  */
-int test_ai_mcp_catalogue_prompt_add(void){UmiAiMcpPromptCatalogue c;UmiAiMcpPromptDescriptor d={0};umi_ai_mcp_prompt_catalogue_init(&c);strcpy(d.name,"review");assert(umi_ai_mcp_prompt_catalogue_add(&c,&d)==UMI_STATUS_OK);assert(c.count==1U);return 0;}
+int test_ai_mcp_catalogue_prompt_add(void){UmiAiMcpPromptCatalogue c;UmiAiMcpPromptDescriptor d={0};umi_ai_mcp_prompt_catalogue_init(&c);strcpy(d.name,"review");assert(umi_ai_mcp_prompt_catalogue_add(&c,&d)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiAiMcpPromptCatalogue, &c,
+        (umi_ai_mcp_prompt_catalogue_add(&c,&d)));
+assert(c.count==1U);return 0;}

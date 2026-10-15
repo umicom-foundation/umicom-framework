@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 
@@ -32,6 +33,10 @@ int main(void)
     item.state = UMI_CODEGUARD_EVIDENCE_PASS;
     assert(umi_codeguard_quality_session_record(
         &session, &item) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiCodeGuardQualitySession, &session,
+        (umi_codeguard_quality_session_record(
+        &session, &item)));
+
     /* Populate one passing documentation report without retaining its path. */
     documentation.structure_size = (uint32_t)sizeof(documentation);
     documentation.function_count = 2U;
@@ -40,7 +45,14 @@ int main(void)
     documentation.passes = true;
     assert(umi_codeguard_quality_session_record_documentation(
         &session, &documentation) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiCodeGuardQualitySession, &session,
+        (umi_codeguard_quality_session_record_documentation(
+        &session, &documentation)));
+
     assert(umi_codeguard_quality_session_evaluate(&session) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiCodeGuardQualitySession, &session,
+        (umi_codeguard_quality_session_evaluate(&session)));
+
     /* Three successful operations after initialisation produce revision four. */
     assert(session.evaluation.decision == UMI_CODEGUARD_QUALITY_PASS);
     assert(session.documentation.file_count == 1U);

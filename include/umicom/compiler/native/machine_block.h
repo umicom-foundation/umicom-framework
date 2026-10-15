@@ -29,6 +29,10 @@ typedef struct UmiNativeMachineBlock { uint32_t id; char label[UMI_NC_NAME_CAPAC
  * Initialise nc machine block from caller-provided values so later operations receive a
  * known state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_nc_machine_block_init(UmiNativeMachineBlock *block,uint32_t id,const char *label);
 /**
  * Add nc machine block only after its inputs and available capacity have been checked.

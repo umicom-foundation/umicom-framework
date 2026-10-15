@@ -20,6 +20,7 @@
  * are rolled back if a later callback fails.
  */
 #include "umicom/ai/coding_patch.h"
+#include "../base/value_construction_internal.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -69,6 +70,11 @@ UmiAiCodingPatchPolicy umi_ai_coding_patch_policy_default(void)
  * Initialise ai coding patch from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_ai_coding_patch_init(UmiAiCodingPatch *patch,
                                    const char *patch_id,
                                    const char *request_id,
@@ -98,6 +104,44 @@ UmiStatus umi_ai_coding_patch_init(UmiAiCodingPatch *patch,
     }
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_ai_coding_patch_init_build_value(UmiAiCodingPatch *patch,
+                                   const char *patch_id,
+                                   const char *request_id,
+                                   const char *title,
+                                   const char *rationale)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (patch == NULL || patch_id == NULL || patch_id[0] == '\0' ||
+        request_id == NULL || request_id[0] == '\0' || title == NULL ||
+        title[0] == '\0' || rationale == NULL || rationale[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    (void)memset(patch, 0, sizeof(*patch));
+    patch->structure_size = (uint32_t)sizeof(*patch);
+    patch->abi_version = UMI_AI_CODING_ABI_VERSION;
+    patch->state = UMI_AI_CODING_PATCH_DRAFT;
+    patch->revision = 1U;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (!copy_text(patch->patch_id, sizeof(patch->patch_id), patch_id) ||
+        !copy_text(patch->request_id, sizeof(patch->request_id), request_id) ||
+        !copy_text(patch->title, sizeof(patch->title), title) ||
+        !copy_text(patch->rationale, sizeof(patch->rationale), rationale)) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_ai_coding_patch_init, UmiAiCodingPatch, patch,
+    (UmiAiCodingPatch *patch, const char *patch_id, const char *request_id, const char *title, const char *rationale),
+    umi_ai_coding_patch_init_build_value(candidate, patch_id, request_id, title, rationale))
+
 
 /*
  * Provide the ai coding patch add file operation used by this module and its client

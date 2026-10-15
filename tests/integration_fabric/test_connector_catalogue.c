@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/integration/fabric/connector_catalogue.h"
 #include <stdio.h>
 #include <string.h>
@@ -26,6 +27,9 @@ int main(void) {
     UmiFabricConnectorCatalogue r; UmiFabricConnectorDescriptor item, found; umi_fabric_connector_catalogue_init(&r);
     CHECK(umi_fabric_connector_descriptor_init(&item,"x","X",UMI_FABRIC_PROTOCOL_HTTP,1U,false)==UMI_STATUS_OK);
     CHECK(umi_fabric_connector_catalogue_add(&r,&item)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFabricConnectorCatalogue, &r,
+        (umi_fabric_connector_catalogue_add(&r,&item)));
+
     CHECK(umi_fabric_connector_catalogue_add(&r,&item)==UMI_STATUS_ALREADY_EXISTS);
     CHECK(umi_fabric_connector_catalogue_find(&r,item.connector_id,&found)==UMI_STATUS_OK);
     CHECK(umi_fabric_connector_catalogue_count(&r)==1U);

@@ -21,6 +21,7 @@
  *   Track validated bootstrap-stage state transitions.
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/bootstrap/bootstrap_stage.h"
+#include "../../base/value_construction_internal.h"
 
 
 #include <string.h>
@@ -28,6 +29,11 @@
  * Initialise bootstrap stage from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_bootstrap_stage_init(UmiBootstrapStage *stage,
                                    const char *stage_id,
                                    int32_t order) {
@@ -46,6 +52,33 @@ UmiStatus umi_bootstrap_stage_init(UmiBootstrapStage *stage,
     stage->state = UMI_BOOTSTRAP_STAGE_PENDING;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_bootstrap_stage_init_build_value(UmiBootstrapStage *stage,
+                                   const char *stage_id,
+                                   int32_t order) {
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (stage == NULL || !umi_bootstrap_id_valid(stage_id))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    memset(stage, 0, sizeof(*stage));
+    status = umi_bootstrap_copy_text(stage->stage_id, sizeof(stage->stage_id), stage_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    stage->order = order;
+    stage->state = UMI_BOOTSTRAP_STAGE_PENDING;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_bootstrap_stage_init, UmiBootstrapStage, stage,
+    (UmiBootstrapStage *stage, const char *stage_id, int32_t order),
+    umi_bootstrap_stage_init_build_value(candidate, stage_id, order))
+
 /*
  * Provide the bootstrap stage transition operation used by this module and its client
  * applications.

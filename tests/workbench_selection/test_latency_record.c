@@ -170,6 +170,12 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionLatencyRecordTransferCases, UmiWork
     umi_workbench_selection_latency_record_archive_encode, umi_workbench_selection_latency_record_archive_decode,
     UmiWorkbenchSelectionLatencyRecordTransferEqual, UmiWorkbenchSelectionLatencyRecordTransferTails, UmiWorkbenchSelectionLatencyRecordTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchSelectionLatencyRecordConditionalArchiveCases, UmiWorkbenchSelectionLatencyRecord,
+    umi_workbench_selection_latency_record_archive_encode, umi_workbench_selection_latency_record_archive_decode_if_unchanged,
+    UmiWorkbenchSelectionLatencyRecordTransferEqual, UmiWorkbenchSelectionLatencyRecordTransferTails, UmiWorkbenchSelectionLatencyRecordTransferMalformed)
+
+
 /* Exercise the accepted domain fixture through reviewed publication and
  * legacy mutation boundaries. These checks stay active in release builds. */
 #include "../record_integrity/reviewed_value_cases.h"
@@ -202,6 +208,7 @@ int main(void)
     assert(umi_workbench_selection_latency_record_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionLatencyRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionLatencyRecordConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchSelectionLatencyRecordReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchSelectionLatencyRecordMutationGuards(&record) != 0) return 1;
 

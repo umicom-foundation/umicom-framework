@@ -188,6 +188,12 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionProviderHierarchyRecordTransferCase
     umi_workbench_selection_provider_hierarchy_record_archive_encode, umi_workbench_selection_provider_hierarchy_record_archive_decode,
     UmiWorkbenchSelectionProviderHierarchyRecordTransferEqual, UmiWorkbenchSelectionProviderHierarchyRecordTransferTails, UmiWorkbenchSelectionProviderHierarchyRecordTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchSelectionProviderHierarchyRecordConditionalArchiveCases, UmiWorkbenchSelectionProviderHierarchyRecord,
+    umi_workbench_selection_provider_hierarchy_record_archive_encode, umi_workbench_selection_provider_hierarchy_record_archive_decode_if_unchanged,
+    UmiWorkbenchSelectionProviderHierarchyRecordTransferEqual, UmiWorkbenchSelectionProviderHierarchyRecordTransferTails, UmiWorkbenchSelectionProviderHierarchyRecordTransferMalformed)
+
+
 /* Exercise the accepted domain fixture through reviewed publication and
  * legacy mutation boundaries. These checks stay active in release builds. */
 #include "../record_integrity/reviewed_value_cases.h"
@@ -222,6 +228,7 @@ int main(void)
     assert(umi_workbench_selection_provider_hierarchy_record_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionProviderHierarchyRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionProviderHierarchyRecordConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchSelectionProviderHierarchyRecordReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchSelectionProviderHierarchyRecordMutationGuards(&record) != 0) return 1;
 

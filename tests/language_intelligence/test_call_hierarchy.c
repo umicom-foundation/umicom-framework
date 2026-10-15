@@ -105,6 +105,12 @@ UMI_TEST_VALUE_TRANSFER(UmiLanguageIntelligenceCallHierarchyEdgeTransferCases, U
     umi_language_intelligence_call_hierarchy_edge_archive_encode, umi_language_intelligence_call_hierarchy_edge_archive_decode,
     UmiLanguageIntelligenceCallHierarchyEdgeTransferEqual, UmiLanguageIntelligenceCallHierarchyEdgeTransferTails, UmiLanguageIntelligenceCallHierarchyEdgeTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiLanguageIntelligenceCallHierarchyEdgeConditionalArchiveCases, UmiLanguageIntelligenceCallHierarchyEdge,
+    umi_language_intelligence_call_hierarchy_edge_archive_encode, umi_language_intelligence_call_hierarchy_edge_archive_decode_if_unchanged,
+    UmiLanguageIntelligenceCallHierarchyEdgeTransferEqual, UmiLanguageIntelligenceCallHierarchyEdgeTransferTails, UmiLanguageIntelligenceCallHierarchyEdgeTransferMalformed)
+
+
 int main(void)
 {
     UmiLanguageIntelligenceCallHierarchyEdge edge;
@@ -112,6 +118,7 @@ int main(void)
     CHECK(umi_language_intelligence_call_hierarchy_edge_set(&edge, "caller", "callee", "calls", 1U) == UMI_STATUS_OK);
     CHECK(umi_language_intelligence_call_hierarchy_edge_validate(&edge) == UMI_STATUS_OK);
     if (UmiLanguageIntelligenceCallHierarchyEdgeTransferCases(&edge) != 0) return 1;
+    if (UmiLanguageIntelligenceCallHierarchyEdgeConditionalArchiveCases(&edge) != 0) return 1;
 
     CHECK(umi_language_intelligence_call_hierarchy_edge_matches_source(&edge, "caller") != 0);
     return 0;

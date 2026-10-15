@@ -164,6 +164,8 @@ static void ArchiveFillUnusedText(UmiDesktopSearchCatalogueSnapshot *value)
 #define ARCHIVE_TYPE UmiDesktopSearchCatalogueSnapshot
 #define ARCHIVE_ENCODE umi_desktop_search_catalogue_archive_encode
 #define ARCHIVE_DECODE umi_desktop_search_catalogue_archive_decode
+/* Exercise guarded import through this domain's public snapshot codec. */
+#define ARCHIVE_CONDITIONAL_DECODE umi_desktop_search_catalogue_archive_decode_if_unchanged
 #define ARCHIVE_EQUAL RecordDefaultsEqual
 #include "../value_archive/record_cases.h"
 

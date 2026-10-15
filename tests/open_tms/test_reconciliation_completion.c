@@ -17,6 +17,10 @@
 
 #include "umicom/open_tms/reconciliation/completion.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(umi_open_tms_evaluate_reconciliation_completion_batch_cases, umi_open_tms_evaluate_reconciliation_completion,
+    umi_open_tms_evaluate_reconciliation_completion_batch, UmiOpenTmsInput, UmiOpenTmsSnapshot, value)
+
 int main(void)
 {
     UmiOpenTmsInput input;
@@ -76,6 +80,7 @@ int main(void)
     input.transitionAllowed = 1;
     input.revision = 111U;
 
+    if (umi_open_tms_evaluate_reconciliation_completion_batch_cases(&input) != 0) return 1;
     assert(umi_open_tms_evaluate_reconciliation_completion(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "reconciliation.completion") == 0);
     assert(snapshot.revision == 111U);

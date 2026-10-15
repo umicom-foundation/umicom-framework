@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../base/conditional_archive_internal.h"
 #include "umicom/ai/developer_platform/review_finding.h"
 #include "../base/value_archive_internal.h"
 
@@ -156,3 +157,9 @@ static UmiStatus UmiAiDevReviewFindingArchiveValidate(const UmiAiDevReviewFindin
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ai_dev_review_finding_archive_encode, umi_ai_dev_review_finding_archive_decode,
     UmiAiDevReviewFinding, UmiAiDevReviewFindingArchiveSchema, UmiAiDevReviewFindingArchiveBound, UmiAiDevReviewFindingArchiveWrite, UmiAiDevReviewFindingArchiveRead, UmiAiDevReviewFindingArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ai_dev_review_finding_archive_decode_if_unchanged, umi_ai_dev_review_finding_archive_encode,
+    UmiAiDevReviewFinding, UmiAiDevReviewFindingArchiveSchema, UmiAiDevReviewFindingArchiveBound, UmiAiDevReviewFindingArchiveRead, UmiAiDevReviewFindingArchiveValidate)

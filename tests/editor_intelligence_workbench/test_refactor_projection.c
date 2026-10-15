@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 
@@ -87,6 +88,10 @@ int main(void)
            UMI_STATUS_OK);
     assert(umi_editor_intel_refactor_projection_refresh(
                &projection, orchestration) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiEditorIntelRefactorProjection, &projection,
+        (umi_editor_intel_refactor_projection_refresh(
+               &projection, orchestration)));
+
     assert(projection.preview.count == 2U);
     assert(projection.phase == UMI_EDITOR_INTEL_PHASE_READY);
     assert(umi_editor_intel_refactor_projection_set_included(
@@ -95,6 +100,10 @@ int main(void)
             UMI_EDITOR_INTEL_PROJECTION_SELECTED) == 0U);
     assert(umi_editor_intel_refactor_projection_record_history(
                &projection, "Prepared rename") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiEditorIntelRefactorProjection, &projection,
+        (umi_editor_intel_refactor_projection_record_history(
+               &projection, "Prepared rename")));
+
     assert(projection.history.count == 1U);
     assert(umi_editor_intel_refactor_projection_valid(&projection));
     umi_editor_code_action_orchestration_destroy(orchestration);

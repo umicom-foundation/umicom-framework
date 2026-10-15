@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/language/intelligence/document_link.h"
 #include "../../base/value_archive_internal.h"
 #include "umicom/base/text.h"
@@ -253,3 +254,8 @@ static UmiStatus ArchiveValidate(const UmiLanguageIntelligenceDocumentLink *valu
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_language_intelligence_document_link_archive_encode, umi_language_intelligence_document_link_archive_decode,
     UmiLanguageIntelligenceDocumentLink, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Guard snapshot import with the complete encoded value reviewed by the
+ * caller. Imported metadata remains evidence; registry publication is separate. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_language_intelligence_document_link_archive_decode_if_unchanged, umi_language_intelligence_document_link_archive_encode,
+    UmiLanguageIntelligenceDocumentLink, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)

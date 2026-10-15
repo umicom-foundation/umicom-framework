@@ -36,6 +36,9 @@ typedef struct UmiNativeWebRuntime { UmiNativeWebRendererRegistry renderers; Umi
 /* Initialise the native-web runtime and register all built-in semantic renderers. */
 UmiStatus umi_native_web_runtime_init(UmiNativeWebRuntime *runtime);
 /* Render a surface by semantic contract through the canonical native-web registry. */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_native_web_runtime_render(UmiNativeWebRuntime *runtime, const UmiNativeWebRenderContext *context, const UmiNativeWebSurface *surface, UmiNativeWebRenderResult *result);
 
 #ifdef __cplusplus

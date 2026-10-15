@@ -50,6 +50,12 @@ UMI_TEST_VALUE_TRANSFER(UmiTradingMarketStatusTransferCases, UmiTradingMarketSta
     umi_trading_market_status_archive_encode, umi_trading_market_status_archive_decode,
     UmiTradingMarketStatusTransferEqual, UmiTradingMarketStatusTransferTails, UmiTradingMarketStatusTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTradingMarketStatusConditionalArchiveCases, UmiTradingMarketStatus,
+    umi_trading_market_status_archive_encode, umi_trading_market_status_archive_decode_if_unchanged,
+    UmiTradingMarketStatusTransferEqual, UmiTradingMarketStatusTransferTails, UmiTradingMarketStatusTransferMalformed)
+
+
 int main(void) {
     UmiTradingMarketStatus v;
      /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -57,6 +63,7 @@ int main(void) {
      /* Preserve the original failure result so the caller can respond to the correct cause. */
      if(!umi_trading_market_status_valid(&v)) return 2;
     if (UmiTradingMarketStatusTransferCases(&v) != 0) return 1;
+    if (UmiTradingMarketStatusConditionalArchiveCases(&v) != 0) return 1;
 
      return 0;
 }

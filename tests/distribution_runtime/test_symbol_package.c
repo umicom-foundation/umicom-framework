@@ -106,9 +106,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrSymbolPackageTransferCases, UmiDrSymbolPackage,
     umi_dr_symbol_package_archive_encode, umi_dr_symbol_package_archive_decode,
     UmiDrSymbolPackageTransferEqual, UmiDrSymbolPackageTransferTails, UmiDrSymbolPackageTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrSymbolPackageConditionalArchiveCases, UmiDrSymbolPackage,
+    umi_dr_symbol_package_archive_encode, umi_dr_symbol_package_archive_decode_if_unchanged,
+    UmiDrSymbolPackageTransferEqual, UmiDrSymbolPackageTransferTails, UmiDrSymbolPackageTransferMalformed)
+
+
 int main(void) {
     UmiDrSymbolPackage value; umi_dr_symbol_package_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"sym")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.build_id,sizeof(value.build_id),"b")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.digest,sizeof(value.digest),"d")==UMI_STATUS_OK); CHECK(umi_dr_symbol_package_valid(&value));
     if (UmiDrSymbolPackageTransferCases(&value) != 0) return 1;
+    if (UmiDrSymbolPackageConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_symbol_package_fingerprint(&value) != 0U);
     return 0;
 }

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 
@@ -31,10 +32,18 @@ int main(void)
 
     assert(umi_application_shell_state_activate(
         &state, "explorer", "project-explorer") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiApplicationShellState, &state,
+        (umi_application_shell_state_activate(
+        &state, "explorer", "project-explorer")));
+
     assert(strcmp(state.active_activity_id, "explorer") == 0);
 
     assert(umi_application_shell_state_focus(
         &state, "editor.main") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiApplicationShellState, &state,
+        (umi_application_shell_state_focus(
+        &state, "editor.main")));
+
     assert(strcmp(state.focused_view_id, "editor.main") == 0);
 
     umi_application_shell_state_set_zen(&state, 1);

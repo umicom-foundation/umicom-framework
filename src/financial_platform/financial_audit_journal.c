@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/financial_platform/financial_audit_journal.h"
 
 #include <string.h>
@@ -23,6 +24,10 @@ void umi_financial_audit_journal_init(UmiFinancialAuditJournal *journal)
     journal->revision = 1U;
 }
 
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_financial_audit_journal_append(
     UmiFinancialAuditJournal *journal,
     const UmiFinancialAuditRecord *record)
@@ -51,11 +56,73 @@ UmiStatus umi_financial_audit_journal_append(
     journal->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_financial_audit_journal_append(
+    UmiFinancialAuditJournal *journal,
+    const UmiFinancialAuditRecord *record)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (journal != NULL && journal->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    uint64_t expected;
+    if (journal == NULL || record == NULL ||
+        record->sequence == 0U ||
+        record->eventId[0] == '\0' ||
+        record->lineageId[0] == '\0' ||
+        record->actorId[0] == '\0' ||
+        record->domain[0] == '\0' ||
+        record->entityId[0] == '\0' ||
+        record->action[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (journal->count >= UMI_FINANCIAL_AUDIT_CAPACITY)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    expected = journal->count == 0U
+        ? record->sequence
+        : journal->records[journal->count - 1U].sequence + 1U;
+    if (record->sequence < expected)
+        return UMI_STATUS_INVALID_STATE;
+    if (record->sequence > expected)
+        journal->gapCount += record->sequence - expected;
+    journal->records[journal->count++] = *record;
+    journal->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
+UmiStatus umi_financial_audit_journal_mark_persisted(
+    UmiFinancialAuditJournal *journal,
+    uint64_t sequence)
+{
+    size_t i;
+    if (journal == NULL || sequence == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (i = 0U; i < journal->count; ++i) {
+        if (journal->records[i].sequence == sequence) {
+            journal->records[i].persisted = 1;
+            journal->revision += 1U;
+            return UMI_STATUS_OK;
+        }
+    }
+    return UMI_STATUS_NOT_FOUND;
+}
+#endif
 
 UmiStatus umi_financial_audit_journal_mark_persisted(
     UmiFinancialAuditJournal *journal,
     uint64_t sequence)
 {
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (journal != NULL && journal->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t i;
     if (journal == NULL || sequence == 0U)
         return UMI_STATUS_INVALID_ARGUMENT;

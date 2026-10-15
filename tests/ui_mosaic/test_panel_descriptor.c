@@ -87,6 +87,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicPanelDescriptorTransferCases, UmiUiMosaicPane
     umi_ui_mosaic_panel_descriptor_archive_encode, umi_ui_mosaic_panel_descriptor_archive_decode,
     UmiUiMosaicPanelDescriptorTransferEqual, UmiUiMosaicPanelDescriptorTransferTails, UmiUiMosaicPanelDescriptorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicPanelDescriptorConditionalArchiveCases, UmiUiMosaicPanelDescriptor,
+    umi_ui_mosaic_panel_descriptor_archive_encode, umi_ui_mosaic_panel_descriptor_archive_decode_if_unchanged,
+    UmiUiMosaicPanelDescriptorTransferEqual, UmiUiMosaicPanelDescriptorTransferTails, UmiUiMosaicPanelDescriptorTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicPanelDescriptor value;
     umi_ui_mosaic_panel_descriptor_init(&value);
@@ -95,6 +101,7 @@ int main(void) {
     value.priority = 10U;
     CHECK(umi_ui_mosaic_panel_descriptor_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicPanelDescriptorTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicPanelDescriptorConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_panel_descriptor_rank(&value, 5U) == 16U);
     return 0;

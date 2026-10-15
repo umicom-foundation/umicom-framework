@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/test/workbench/flaky_test_history.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -115,3 +116,8 @@ static UmiStatus UmiFlakyTestHistoryArchiveValidate(const UmiFlakyTestHistory *v
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_flaky_test_history_archive_encode, umi_flaky_test_history_archive_decode,
     UmiFlakyTestHistory, UmiFlakyTestHistoryArchiveSchema, UmiFlakyTestHistoryArchiveBound, UmiFlakyTestHistoryArchiveWrite, UmiFlakyTestHistoryArchiveRead, UmiFlakyTestHistoryArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_flaky_test_history_archive_decode_if_unchanged, umi_flaky_test_history_archive_encode,
+    UmiFlakyTestHistory, UmiFlakyTestHistoryArchiveSchema, UmiFlakyTestHistoryArchiveBound, UmiFlakyTestHistoryArchiveRead, UmiFlakyTestHistoryArchiveValidate)

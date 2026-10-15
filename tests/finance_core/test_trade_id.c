@@ -68,10 +68,17 @@ UMI_TEST_VALUE_TRANSFER(UmiTradeIdTransferCases, UmiTradeId,
     umi_trade_id_archive_encode, umi_trade_id_archive_decode,
     UmiTradeIdTransferEqual, UmiTradeIdTransferTails, UmiTradeIdTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTradeIdConditionalArchiveCases, UmiTradeId,
+    umi_trade_id_archive_encode, umi_trade_id_archive_decode_if_unchanged,
+    UmiTradeIdTransferEqual, UmiTradeIdTransferTails, UmiTradeIdTransferMalformed)
+
+
 int main(void)
 {
     UmiTradeId x= {0}; CHECK(umi_trade_id_set(&x,"ID")==UMI_STATUS_OK); CHECK(umi_trade_id_is_valid(&x));
     if (UmiTradeIdTransferCases(&x) != 0) return 1;
+    if (UmiTradeIdConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;
 }

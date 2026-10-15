@@ -110,9 +110,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrApplicationBundleTransferCases, UmiDrApplicationBun
     umi_dr_application_bundle_archive_encode, umi_dr_application_bundle_archive_decode,
     UmiDrApplicationBundleTransferEqual, UmiDrApplicationBundleTransferTails, UmiDrApplicationBundleTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrApplicationBundleConditionalArchiveCases, UmiDrApplicationBundle,
+    umi_dr_application_bundle_archive_encode, umi_dr_application_bundle_archive_decode_if_unchanged,
+    UmiDrApplicationBundleTransferEqual, UmiDrApplicationBundleTransferTails, UmiDrApplicationBundleTransferMalformed)
+
+
 int main(void) {
     UmiDrApplicationBundle value; umi_dr_application_bundle_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"bundle") == UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.application_id,sizeof(value.application_id),"studio") == UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.variant_id,sizeof(value.variant_id),"win-x64") == UMI_STATUS_OK); value.file_count=1U; CHECK(umi_dr_application_bundle_valid(&value));
     if (UmiDrApplicationBundleTransferCases(&value) != 0) return 1;
+    if (UmiDrApplicationBundleConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_application_bundle_fingerprint(&value) != 0U);
     return 0;
 }

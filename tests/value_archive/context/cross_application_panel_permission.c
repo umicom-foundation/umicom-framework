@@ -100,6 +100,12 @@ UMI_TEST_VALUE_TRANSFER(UmiPanelPermissionTransferCases, UmiPanelPermission,
     umi_panel_permission_archive_encode, umi_panel_permission_archive_decode,
     UmiPanelPermissionTransferEqual, UmiPanelPermissionTransferTails, UmiPanelPermissionTransferMalformed)
 
+#include "../conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiPanelPermissionConditionalArchiveCases, UmiPanelPermission,
+    umi_panel_permission_archive_encode, umi_panel_permission_archive_decode_if_unchanged,
+    UmiPanelPermissionTransferEqual, UmiPanelPermissionTransferTails, UmiPanelPermissionTransferMalformed)
+
+
 int main(void)
 {
     UmiPanelPermission value;
@@ -115,6 +121,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_panel_permission_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiPanelPermissionTransferCases(&value) != 0) return 1;
+    if (UmiPanelPermissionConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

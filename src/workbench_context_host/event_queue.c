@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include <stdint.h>
 #include "umicom/workbench_context_host/event_queue.h"
 
 #include <stdlib.h>
@@ -97,10 +98,41 @@ void umi_workbench_context_host_event_queue_destroy(
  * Provide the workbench context host event queue push operation used by this module and
  * its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_context_host_event_queue_push(
     UmiWorkbenchContextHostEventQueue *queue,
     const UmiWorkbenchContextHostEvent *event)
 {
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (queue == NULL || event == NULL ||
+        event->structure_size != sizeof(*event)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = grow(queue);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    queue->items[queue->count++] = *event;
+    ++queue->revision;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_workbench_context_host_event_queue_push(
+    UmiWorkbenchContextHostEventQueue *queue,
+    const UmiWorkbenchContextHostEvent *event)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (queue != NULL && queue->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiStatus status;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -122,10 +154,47 @@ UmiStatus umi_workbench_context_host_event_queue_push(
  * Provide the workbench context host event queue pop operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_context_host_event_queue_pop(
     UmiWorkbenchContextHostEventQueue *queue,
     UmiWorkbenchContextHostEvent *out_event)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (queue == NULL || out_event == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (queue->count == 0U) return UMI_STATUS_NOT_FOUND;
+    *out_event = queue->items[0];
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (queue->count > 1U) {
+        memmove(
+            &queue->items[0],
+            &queue->items[1],
+            (queue->count - 1U) * sizeof(queue->items[0]));
+    }
+    --queue->count;
+    memset(&queue->items[queue->count], 0, sizeof(queue->items[0]));
+    ++queue->revision;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_workbench_context_host_event_queue_pop(
+    UmiWorkbenchContextHostEventQueue *queue,
+    UmiWorkbenchContextHostEvent *out_event)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (queue != NULL && queue->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.

@@ -34,11 +34,17 @@ UmiStatus umi_database_connection_registry_init(UmiDatabaseConnectionRegistry *r
  * Provide the database connection registry upsert operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_database_connection_registry_upsert(UmiDatabaseConnectionRegistry *registry,const UmiDatabaseConnectionProfile *profile);
 /**
  * Provide the database connection registry activate operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_database_connection_registry_activate(UmiDatabaseConnectionRegistry *registry,const char *id);
 /**
  * Provide the database connection registry active operation used by this module and its

@@ -130,6 +130,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextJournalTransferCases, UmiContextJournal,
     umi_context_journal_archive_encode, umi_context_journal_archive_decode,
     UmiContextJournalTransferEqual, UmiContextJournalTransferTails, UmiContextJournalTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextJournalConditionalArchiveCases, UmiContextJournal,
+    umi_context_journal_archive_encode, umi_context_journal_archive_decode_if_unchanged,
+    UmiContextJournalTransferEqual, UmiContextJournalTransferTails, UmiContextJournalTransferMalformed)
+
+
 int main(void)
 {
     UmiContextJournal state;
@@ -144,6 +150,7 @@ int main(void)
     assert(umi_context_journal_covers_sequence(&state,11U));
     assert(umi_context_journal_validate(&state) == UMI_STATUS_OK);
     if (UmiContextJournalTransferCases(&state) != 0) return 1;
+    if (UmiContextJournalConditionalArchiveCases(&state) != 0) return 1;
 
     return 0;
 }

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/ai_developer_experience/patch_review.h"
 
 #include <string.h>
@@ -125,10 +126,44 @@ UmiStatus umi_ai_developer_patch_review_build(
  * Provide the ai developer patch review select operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ai_developer_patch_review_select(
     UmiAiDeveloperPatchReview *review,
     size_t file_index)
 {
+    size_t index;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (review == NULL || file_index >= review->file_count) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < review->file_count; ++index) {
+        review->files[index].selected = index == file_index;
+    }
+
+    review->selected_file_index = file_index;
+    review->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_ai_developer_patch_review_select(
+    UmiAiDeveloperPatchReview *review,
+    size_t file_index)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (review != NULL && review->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
 
     /*

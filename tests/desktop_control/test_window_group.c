@@ -164,6 +164,8 @@ static void ArchiveFillUnusedText(UmiDesktopWindowGroupSnapshot *value)
 #define ARCHIVE_TYPE UmiDesktopWindowGroupSnapshot
 #define ARCHIVE_ENCODE umi_desktop_window_group_archive_encode
 #define ARCHIVE_DECODE umi_desktop_window_group_archive_decode
+/* Exercise guarded import through this domain's public snapshot codec. */
+#define ARCHIVE_CONDITIONAL_DECODE umi_desktop_window_group_archive_decode_if_unchanged
 #define ARCHIVE_EQUAL RecordDefaultsEqual
 #include "../value_archive/record_cases.h"
 

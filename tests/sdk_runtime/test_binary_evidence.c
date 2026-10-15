@@ -233,6 +233,8 @@ static void ArchiveFillUnusedText(UmiSdkRuntimeBinaryEvidence *value)
 #define ARCHIVE_TYPE UmiSdkRuntimeBinaryEvidence
 #define ARCHIVE_ENCODE umi_sdk_runtime_binary_evidence_archive_encode
 #define ARCHIVE_DECODE umi_sdk_runtime_binary_evidence_archive_decode
+/* Exercise guarded import through this domain's public snapshot codec. */
+#define ARCHIVE_CONDITIONAL_DECODE umi_sdk_runtime_binary_evidence_archive_decode_if_unchanged
 #define ARCHIVE_EQUAL RecordDefaultsEqual
 #include "../value_archive/record_cases.h"
 

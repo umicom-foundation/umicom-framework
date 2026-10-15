@@ -68,6 +68,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceTransitionBudgetTransferCases, UmiAppearanc
     umi_appearance_transition_budget_archive_encode, umi_appearance_transition_budget_archive_decode,
     UmiAppearanceTransitionBudgetTransferEqual, UmiAppearanceTransitionBudgetTransferTails, UmiAppearanceTransitionBudgetTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceTransitionBudgetConditionalArchiveCases, UmiAppearanceTransitionBudget,
+    umi_appearance_transition_budget_archive_encode, umi_appearance_transition_budget_archive_decode_if_unchanged,
+    UmiAppearanceTransitionBudgetTransferEqual, UmiAppearanceTransitionBudgetTransferTails, UmiAppearanceTransitionBudgetTransferMalformed)
+
+
 int main(void) {
     UmiAppearanceTransitionBudget item;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -75,6 +81,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_transition_budget_is_valid(&item)) return 2;
     if (UmiAppearanceTransitionBudgetTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceTransitionBudgetConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;
 }

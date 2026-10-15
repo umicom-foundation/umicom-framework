@@ -90,6 +90,12 @@ UMI_TEST_VALUE_TRANSFER(UmiTeacherLessonResourceTransferCases, UmiTeacherLessonR
     umi_teacher_lesson_resource_archive_encode, umi_teacher_lesson_resource_archive_decode,
     UmiTeacherLessonResourceTransferEqual, UmiTeacherLessonResourceTransferTails, UmiTeacherLessonResourceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTeacherLessonResourceConditionalArchiveCases, UmiTeacherLessonResource,
+    umi_teacher_lesson_resource_archive_encode, umi_teacher_lesson_resource_archive_decode_if_unchanged,
+    UmiTeacherLessonResourceTransferEqual, UmiTeacherLessonResourceTransferTails, UmiTeacherLessonResourceTransferMalformed)
+
+
 int main(void) {
     UmiTeacherLessonResource value;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -97,6 +103,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_teacher_lesson_resource_validate(&value) != UMI_STATUS_OK) return 2;
     if (UmiTeacherLessonResourceTransferCases(&value) != 0) return 1;
+    if (UmiTeacherLessonResourceConditionalArchiveCases(&value) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (umi_teacher_lesson_resource_priority(&value, 60U) != 70U) return 3;

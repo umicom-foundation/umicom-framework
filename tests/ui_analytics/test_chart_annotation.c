@@ -86,6 +86,13 @@ UMI_TEST_VALUE_TRANSFER(UmiAnalyticsChartAnnotationTransferCases, UmiAnalyticsCh
     umi_analytics_chart_annotation_archive_encode, umi_analytics_chart_annotation_archive_decode,
     UmiAnalyticsChartAnnotationTransferEqual, UmiAnalyticsChartAnnotationTransferTails, UmiAnalyticsChartAnnotationTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAnalyticsChartAnnotationConditionalArchiveCases, UmiAnalyticsChartAnnotation,
+    umi_analytics_chart_annotation_archive_encode, umi_analytics_chart_annotation_archive_decode_if_unchanged,
+    UmiAnalyticsChartAnnotationTransferEqual, UmiAnalyticsChartAnnotationTransferTails, UmiAnalyticsChartAnnotationTransferMalformed)
+
+
 int main(void){UmiAnalyticsChartAnnotation item;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_analytics_chart_annotation_init(&item)!=UMI_STATUS_OK)return 1;
     if (UmiAnalyticsChartAnnotationTransferCases(&item) != 0) return 1;
+    if (UmiAnalyticsChartAnnotationConditionalArchiveCases(&item) != 0) return 1;
 return (umi_analytics_chart_annotation_valid(&item))?0:2;}

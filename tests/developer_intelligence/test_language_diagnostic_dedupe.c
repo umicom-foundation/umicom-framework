@@ -17,6 +17,10 @@
 
 #include "umicom/developer_intelligence/language/diagnostic_dedupe.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(UmiDeveloperIntelligenceEvaluateLanguageDiagnosticDedupeBatchCases, UmiDeveloperIntelligenceEvaluateLanguageDiagnosticDedupe,
+    UmiDeveloperIntelligenceEvaluateLanguageDiagnosticDedupeBatch, UmiDeveloperIntelligenceInput, UmiDeveloperIntelligenceSnapshot, lexicalScore)
+
 int main(void)
 {
     UmiDeveloperIntelligenceInput input;
@@ -44,6 +48,7 @@ int main(void)
     input.active = 1;
     input.revision = 42U;
 
+    if (UmiDeveloperIntelligenceEvaluateLanguageDiagnosticDedupeBatchCases(&input) != 0) return 1;
     assert(UmiDeveloperIntelligenceEvaluateLanguageDiagnosticDedupe(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "language.diagnostic-dedupe") == 0);
     assert(snapshot.revision == 42U);

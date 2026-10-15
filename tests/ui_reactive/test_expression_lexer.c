@@ -67,6 +67,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveExpressionLexerTransferCases, UmiUiReactive
     umi_ui_reactive_expression_lexer_archive_encode, umi_ui_reactive_expression_lexer_archive_decode,
     UmiUiReactiveExpressionLexerTransferEqual, UmiUiReactiveExpressionLexerTransferTails, UmiUiReactiveExpressionLexerTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveExpressionLexerConditionalArchiveCases, UmiUiReactiveExpressionLexer,
+    umi_ui_reactive_expression_lexer_archive_encode, umi_ui_reactive_expression_lexer_archive_decode_if_unchanged,
+    UmiUiReactiveExpressionLexerTransferEqual, UmiUiReactiveExpressionLexerTransferTails, UmiUiReactiveExpressionLexerTransferMalformed)
+
+
 int main(void) { UmiUiReactiveExpressionLexer item; umi_ui_reactive_expression_lexer_init(&item);
     /* Nonzero fields expose swapped or omitted values in a saved record.
      * The original initialized fixture remains available for its own checks. */
@@ -75,4 +81,5 @@ int main(void) { UmiUiReactiveExpressionLexer item; umi_ui_reactive_expression_l
     populated.offset = (size_t)3;
     populated.token_count = (size_t)4;
     if (UmiUiReactiveExpressionLexerTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveExpressionLexerConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_expression_lexer_valid(&item) ? 0 : 1; }

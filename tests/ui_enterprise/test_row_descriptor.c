@@ -71,6 +71,13 @@ UMI_TEST_VALUE_TRANSFER(UmiUiEntRowDescriptorTransferCases, UmiUiEntRowDescripto
     umi_ui_ent_row_descriptor_archive_encode, umi_ui_ent_row_descriptor_archive_decode,
     UmiUiEntRowDescriptorTransferEqual, UmiUiEntRowDescriptorTransferTails, UmiUiEntRowDescriptorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiEntRowDescriptorConditionalArchiveCases, UmiUiEntRowDescriptor,
+    umi_ui_ent_row_descriptor_archive_encode, umi_ui_ent_row_descriptor_archive_decode_if_unchanged,
+    UmiUiEntRowDescriptorTransferEqual, UmiUiEntRowDescriptorTransferTails, UmiUiEntRowDescriptorTransferMalformed)
+
+
 int main(void){UmiUiEntRowDescriptor v;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_row_descriptor_init(&v)!=UMI_STATUS_OK)return 1;v.row_key=42U;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_ui_ent_row_descriptor_validate(&v))return 9;
     if (UmiUiEntRowDescriptorTransferCases(&v) != 0) return 1;
+    if (UmiUiEntRowDescriptorConditionalArchiveCases(&v) != 0) return 1;
 puts("ok");return 0;}

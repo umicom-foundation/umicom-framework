@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/financial_platform/instrument_link_store.h"
@@ -27,6 +28,9 @@ int main(void)
     link.version = 2U;
     link.active = 1;
     assert(umi_financial_instrument_link_store_upsert(&store, &link) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFinancialInstrumentLinkStore, &store,
+        (umi_financial_instrument_link_store_upsert(&store, &link)));
+
     assert(umi_financial_instrument_link_store_find(&store, "GBPUSD") != NULL);
     link.version = 1U;
     assert(umi_financial_instrument_link_store_upsert(&store, &link) ==

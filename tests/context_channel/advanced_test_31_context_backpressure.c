@@ -130,6 +130,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextBackpressureTransferCases, UmiContextBackpress
     umi_context_backpressure_archive_encode, umi_context_backpressure_archive_decode,
     UmiContextBackpressureTransferEqual, UmiContextBackpressureTransferTails, UmiContextBackpressureTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextBackpressureConditionalArchiveCases, UmiContextBackpressure,
+    umi_context_backpressure_archive_encode, umi_context_backpressure_archive_decode_if_unchanged,
+    UmiContextBackpressureTransferEqual, UmiContextBackpressureTransferTails, UmiContextBackpressureTransferMalformed)
+
+
 int main(void)
 {
     UmiContextBackpressure state;
@@ -144,6 +150,7 @@ int main(void)
     assert(umi_context_backpressure_covers_sequence(&state,11U));
     assert(umi_context_backpressure_validate(&state) == UMI_STATUS_OK);
     if (UmiContextBackpressureTransferCases(&state) != 0) return 1;
+    if (UmiContextBackpressureConditionalArchiveCases(&state) != 0) return 1;
 
     return 0;
 }

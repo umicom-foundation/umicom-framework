@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Desktop window manager | Sammy Hegab | Umicom Foundation | MIT */
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -55,15 +56,29 @@ int main(void)
     window.resizable = true;
     assert(umi_desktop_window_manager_open(&manager, &topology, &window) ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDesktopWindowManager, &manager,
+        (umi_desktop_window_manager_open(&manager, &topology, &window)));
+
     assert(manager.windows[0].bounds.x == 1120);
     assert(manager.windows[0].bounds.y == 440);
     assert(umi_desktop_window_manager_place(
         &manager, &topology, "chart-one", "primary",
         (UmiDesktopRect){0, 0, 960, 1040}, UMI_DESKTOP_DOCK_LEFT) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDesktopWindowManager, &manager,
+        (umi_desktop_window_manager_place(
+        &manager, &topology, "chart-one", "primary",
+        (UmiDesktopRect){0, 0, 960, 1040}, UMI_DESKTOP_DOCK_LEFT)));
+
     assert(manager.windows[0].dock_placement == UMI_DESKTOP_DOCK_LEFT);
     assert(umi_desktop_window_manager_maximise(&manager, "chart-one", true) ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDesktopWindowManager, &manager,
+        (umi_desktop_window_manager_maximise(&manager, "chart-one", true)));
+
     assert(umi_desktop_window_manager_close(&manager, "chart-one") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDesktopWindowManager, &manager,
+        (umi_desktop_window_manager_close(&manager, "chart-one")));
+
     assert(manager.count == 0U);
     return 0;
 }

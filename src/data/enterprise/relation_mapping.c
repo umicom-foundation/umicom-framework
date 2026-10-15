@@ -12,11 +12,18 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/data/enterprise/relation_mapping.h"
+#include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
 
 /* Initialisation centralises bounded text handling and defaults. */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_data_relation_mapping_init(UmiDataRelationMapping *item, const char *relation_id, const char *source_entity, const char *target_entity, const char *source_field, bool collection) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -27,6 +34,25 @@ UmiStatus umi_data_relation_mapping_init(UmiDataRelationMapping *item, const cha
     UmiStatus s=umi_data_enterprise_copy_text(item->relation_id,sizeof(item->relation_id),relation_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->source_entity,sizeof(item->source_entity),source_entity);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->target_entity,sizeof(item->target_entity),target_entity);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->source_field,sizeof(item->source_field),source_field);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->collection=collection;item->required=false;
     return umi_data_relation_mapping_validate(item);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_data_relation_mapping_init_build_value(UmiDataRelationMapping *item, const char *relation_id, const char *source_entity, const char *target_entity, const char *source_field, bool collection) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(item, 0, sizeof(*item));
+    UmiStatus s=umi_data_enterprise_copy_text(item->relation_id,sizeof(item->relation_id),relation_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->source_entity,sizeof(item->source_entity),source_entity);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->target_entity,sizeof(item->target_entity),target_entity);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->source_field,sizeof(item->source_field),source_field);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->collection=collection;item->required=false;
+    return umi_data_relation_mapping_validate(item);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_data_relation_mapping_init, UmiDataRelationMapping, item,
+    (UmiDataRelationMapping *item, const char *relation_id, const char *source_entity, const char *target_entity, const char *source_field, bool collection),
+    umi_data_relation_mapping_init_build_value(candidate, relation_id, source_entity, target_entity, source_field, collection))
+
 
 /* Validation prevents malformed metadata from leaking into later query/migration stages. */
 UmiStatus umi_data_relation_mapping_validate(const UmiDataRelationMapping *item) {
@@ -97,3 +123,9 @@ static UmiStatus UmiDataRelationMappingArchiveValidate(const UmiDataRelationMapp
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_data_relation_mapping_archive_encode, umi_data_relation_mapping_archive_decode,
     UmiDataRelationMapping, UmiDataRelationMappingArchiveSchema, UmiDataRelationMappingArchiveBound, UmiDataRelationMappingArchiveWrite, UmiDataRelationMappingArchiveRead, UmiDataRelationMappingArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_data_relation_mapping_archive_decode_if_unchanged, umi_data_relation_mapping_archive_encode,
+    UmiDataRelationMapping, UmiDataRelationMappingArchiveSchema, UmiDataRelationMappingArchiveBound, UmiDataRelationMappingArchiveRead, UmiDataRelationMappingArchiveValidate)

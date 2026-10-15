@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiDiagnosticSourceSummaryTransferCases, UmiDiagnosticSo
     umi_diagnostic_source_summary_archive_encode, umi_diagnostic_source_summary_archive_decode,
     UmiDiagnosticSourceSummaryTransferEqual, UmiDiagnosticSourceSummaryTransferTails, UmiDiagnosticSourceSummaryTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDiagnosticSourceSummaryConditionalArchiveCases, UmiDiagnosticSourceSummary,
+    umi_diagnostic_source_summary_archive_encode, umi_diagnostic_source_summary_archive_decode_if_unchanged,
+    UmiDiagnosticSourceSummaryTransferEqual, UmiDiagnosticSourceSummaryTransferTails, UmiDiagnosticSourceSummaryTransferMalformed)
+
+
 int main(void){UmiDiagnosticSourceSummary m;assert(umi_diagnostic_source_summary_init(&m,"diagnostic_source_summary","Diagnostic Source Summary")==UMI_STATUS_OK);assert(umi_diagnostic_source_summary_set_active(&m,true)==UMI_STATUS_OK);assert(umi_diagnostic_source_summary_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_diagnostic_source_summary_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_diagnostic_source_summary_valid(&m));
     if (UmiDiagnosticSourceSummaryTransferCases(&m) != 0) return 1;
+    if (UmiDiagnosticSourceSummaryConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

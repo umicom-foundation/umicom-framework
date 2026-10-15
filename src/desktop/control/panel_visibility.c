@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/desktop/control/panel_visibility.h"
 #include "../../base/value_archive_internal.h"
 #include "umicom/base/text.h"
@@ -326,3 +327,8 @@ static UmiStatus ArchiveValidate(const UmiDesktopPanelVisibilitySnapshot *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_desktop_panel_visibility_archive_encode, umi_desktop_panel_visibility_archive_decode,
     UmiDesktopPanelVisibilitySnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
+
+/* Guard snapshot import with the complete encoded value reviewed by the
+ * caller. Imported metadata remains evidence; registry publication is separate. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_desktop_panel_visibility_archive_decode_if_unchanged, umi_desktop_panel_visibility_archive_encode,
+    UmiDesktopPanelVisibilitySnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)

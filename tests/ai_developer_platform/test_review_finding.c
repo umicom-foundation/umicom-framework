@@ -88,6 +88,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAiDevReviewFindingTransferCases, UmiAiDevReviewFindin
     umi_ai_dev_review_finding_archive_encode, umi_ai_dev_review_finding_archive_decode,
     UmiAiDevReviewFindingTransferEqual, UmiAiDevReviewFindingTransferTails, UmiAiDevReviewFindingTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAiDevReviewFindingConditionalArchiveCases, UmiAiDevReviewFinding,
+    umi_ai_dev_review_finding_archive_encode, umi_ai_dev_review_finding_archive_decode_if_unchanged,
+    UmiAiDevReviewFindingTransferEqual, UmiAiDevReviewFindingTransferTails, UmiAiDevReviewFindingTransferMalformed)
+
+
 int main(void) {
     UmiAiDevReviewFinding v;
     umi_ai_dev_review_finding_init(&v);
@@ -96,6 +102,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ai_dev_review_finding_validate(&v) != UMI_STATUS_OK) return 2;
     if (UmiAiDevReviewFindingTransferCases(&v) != 0) return 1;
+    if (UmiAiDevReviewFindingConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ai_dev_review_finding_evidence_score(&v, 50U) != 62U) return 3;

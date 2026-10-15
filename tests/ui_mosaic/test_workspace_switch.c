@@ -104,12 +104,19 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicWorkspaceSwitchTransferCases, UmiUiMosaicWork
     umi_ui_mosaic_workspace_switch_archive_encode, umi_ui_mosaic_workspace_switch_archive_decode,
     UmiUiMosaicWorkspaceSwitchTransferEqual, UmiUiMosaicWorkspaceSwitchTransferTails, UmiUiMosaicWorkspaceSwitchTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicWorkspaceSwitchConditionalArchiveCases, UmiUiMosaicWorkspaceSwitch,
+    umi_ui_mosaic_workspace_switch_archive_encode, umi_ui_mosaic_workspace_switch_archive_decode_if_unchanged,
+    UmiUiMosaicWorkspaceSwitchTransferEqual, UmiUiMosaicWorkspaceSwitchTransferTails, UmiUiMosaicWorkspaceSwitchTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicWorkspaceSwitch value;
     umi_ui_mosaic_workspace_switch_init(&value);
     CHECK(umi_ui_mosaic_workspace_switch_set(&value, "perspective.workspace_switch", "Workspace Switch", "layout.default", UMI_UI_MOSAIC_APP_TMS) == UMI_STATUS_OK);
     CHECK(umi_ui_mosaic_workspace_switch_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicWorkspaceSwitchTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicWorkspaceSwitchConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiTestImpactSummaryTransferCases, UmiTestImpactSummary,
     umi_test_impact_summary_archive_encode, umi_test_impact_summary_archive_decode,
     UmiTestImpactSummaryTransferEqual, UmiTestImpactSummaryTransferTails, UmiTestImpactSummaryTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestImpactSummaryConditionalArchiveCases, UmiTestImpactSummary,
+    umi_test_impact_summary_archive_encode, umi_test_impact_summary_archive_decode_if_unchanged,
+    UmiTestImpactSummaryTransferEqual, UmiTestImpactSummaryTransferTails, UmiTestImpactSummaryTransferMalformed)
+
+
 int main(void){UmiTestImpactSummary m;assert(umi_test_impact_summary_init(&m,"test_impact_summary","Test Impact Summary")==UMI_STATUS_OK);assert(umi_test_impact_summary_set_active(&m,true)==UMI_STATUS_OK);assert(umi_test_impact_summary_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_test_impact_summary_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_impact_summary_valid(&m));
     if (UmiTestImpactSummaryTransferCases(&m) != 0) return 1;
+    if (UmiTestImpactSummaryConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
+#include <stdint.h>
 #include "umicom/data/backup_catalog.h"
 #include <string.h>
 /* Provide the find index operation used by this module and its client applications. */
@@ -27,7 +28,19 @@ UmiStatus umi_database_backup_catalog_init(UmiDatabaseBackupCatalog *c){/* Prote
  * Add database backup catalog only after its inputs and available capacity have been
  * checked.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_database_backup_catalog_add(UmiDatabaseBackupCatalog *c,const UmiDatabaseBackupRecord *r){size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(c==NULL||r==NULL||r->id[0]=='\0'||r->path[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;i=find_index(c,r->id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i==SIZE_MAX){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(c->count>=UMI_DATABASE_MAX_BACKUPS)return UMI_STATUS_CAPACITY_EXCEEDED;i=c->count++;}c->items[i]=*r;c->revision+=1U;return UMI_STATUS_OK;}
+#endif
+
+UmiStatus umi_database_backup_catalog_add(UmiDatabaseBackupCatalog *c,const UmiDatabaseBackupRecord *r){
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (c != NULL && c->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(c==NULL||r==NULL||r->id[0]=='\0'||r->path[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;i=find_index(c,r->id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i==SIZE_MAX){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(c->count>=UMI_DATABASE_MAX_BACKUPS)return UMI_STATUS_CAPACITY_EXCEEDED;i=c->count++;}c->items[i]=*r;c->revision+=1U;return UMI_STATUS_OK;}
 /*
  * Provide the database backup catalog mark verified operation used by this module and its
  * client applications.

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <math.h>
 #include <string.h>
@@ -29,6 +30,9 @@ int main(void)
     p.marketPrice = 101.0;
     p.sourceVersion = 2U;
     assert(umi_financial_position_control_book_upsert(&book, &p) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFinancialPositionControlBook, &book,
+        (umi_financial_position_control_book_upsert(&book, &p)));
+
     assert(fabs(umi_financial_position_control_book_market_value(
                     &book, "acct-1") - 1010.0) < 0.001);
     p.sourceVersion = 1U;

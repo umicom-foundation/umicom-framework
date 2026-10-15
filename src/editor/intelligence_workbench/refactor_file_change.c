@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/editor/intelligence_workbench/refactor_file_change.h"
 #include "../../base/value_archive_internal.h"
 
@@ -123,3 +124,8 @@ static UmiStatus UmiEditorIntelRefactorFileChangeArchiveValidate(const UmiEditor
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_editor_intel_refactor_file_change_archive_encode, umi_editor_intel_refactor_file_change_archive_decode,
     UmiEditorIntelRefactorFileChange, UmiEditorIntelRefactorFileChangeArchiveSchema, UmiEditorIntelRefactorFileChangeArchiveBound, UmiEditorIntelRefactorFileChangeArchiveWrite, UmiEditorIntelRefactorFileChangeArchiveRead, UmiEditorIntelRefactorFileChangeArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_editor_intel_refactor_file_change_archive_decode_if_unchanged, umi_editor_intel_refactor_file_change_archive_encode,
+    UmiEditorIntelRefactorFileChange, UmiEditorIntelRefactorFileChangeArchiveSchema, UmiEditorIntelRefactorFileChangeArchiveBound, UmiEditorIntelRefactorFileChangeArchiveRead, UmiEditorIntelRefactorFileChangeArchiveValidate)

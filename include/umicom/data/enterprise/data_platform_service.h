@@ -32,10 +32,19 @@ extern "C" {
  */
 typedef struct UmiDataPlatformService { char service_id[UMI_DATA_ENTERPRISE_ID_CAPACITY]; UmiDataServerProfile profile; UmiDataHealth health; UmiDataOperationQueue queue; bool started; bool maintenance_mode; uint64_t revision; } UmiDataPlatformService;
 /* Initialise the aggregate service around an existing Data Server profile. */ UmiStatus umi_data_data_platform_service_init(UmiDataPlatformService *service,const char *service_id,const UmiDataServerProfile *profile);
-/* Start the service only when profile invariants are valid. */ UmiStatus umi_data_data_platform_service_start(UmiDataPlatformService *service);
+/* Start the service only when profile invariants are valid. */ /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
+UmiStatus umi_data_data_platform_service_start(UmiDataPlatformService *service);
 /* Enter or leave maintenance mode; admission is blocked while enabled. */ UmiStatus umi_data_data_platform_service_set_maintenance(UmiDataPlatformService *service,bool enabled);
-/* Admit an operation when service and health gates allow it. */ UmiStatus umi_data_data_platform_service_submit(UmiDataPlatformService *service,const UmiDataOperation *operation);
-/* Update aggregate health evidence and service revision. */ UmiStatus umi_data_data_platform_service_update_health(UmiDataPlatformService *service,const UmiDataHealth *health);
+/* Admit an operation when service and health gates allow it. */ /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
+UmiStatus umi_data_data_platform_service_submit(UmiDataPlatformService *service,const UmiDataOperation *operation);
+/* Update aggregate health evidence and service revision. */ /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
+UmiStatus umi_data_data_platform_service_update_health(UmiDataPlatformService *service,const UmiDataHealth *health);
 
 #ifdef __cplusplus
 }

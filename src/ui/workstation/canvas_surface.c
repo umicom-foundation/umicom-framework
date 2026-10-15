@@ -14,11 +14,17 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/workstation/canvas_surface.h"
+#include "../../base/value_construction_internal.h"
 
 /*
  * Initialise ws canvas surface from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_ws_canvas_surface_init(UmiWsCanvasSurface *surface, const char *canvas_id) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -35,6 +41,31 @@ UmiStatus umi_ws_canvas_surface_init(UmiWsCanvasSurface *surface, const char *ca
     surface->show_rulers = true;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_ws_canvas_surface_init_build_value(UmiWsCanvasSurface *surface, const char *canvas_id) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (surface == NULL || !umi_ws_id_valid(canvas_id)) return UMI_STATUS_INVALID_ARGUMENT;
+    *surface = (UmiWsCanvasSurface){0};
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (umi_ws_copy_text(surface->canvas_id, sizeof(surface->canvas_id), canvas_id) != UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;
+    surface->zoom = 1.0;
+    surface->grid_size = 16;
+    surface->show_grid = true;
+    surface->snap_to_grid = true;
+    surface->show_rulers = true;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_ws_canvas_surface_init, UmiWsCanvasSurface, surface,
+    (UmiWsCanvasSurface *surface, const char *canvas_id),
+    umi_ws_canvas_surface_init_build_value(candidate, canvas_id))
+
 
 /*
  * Provide the ws canvas surface set zoom operation used by this module and its client

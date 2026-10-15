@@ -47,6 +47,9 @@ void umi_workbench_selection_provider_registry_destroy(
  * Provide the workbench selection provider registry upsert operation used by this module
  * and its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_selection_provider_registry_upsert(
     UmiWorkbenchSelectionProviderRegistry *registry,
     const UmiWorkbenchSelectionProviderDescriptor *descriptor);
@@ -70,6 +73,9 @@ umi_workbench_selection_provider_registry_find_panel(
  * Remove workbench selection provider registry while keeping the remaining records in a
  * valid and discoverable state.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_selection_provider_registry_remove(
     UmiWorkbenchSelectionProviderRegistry *registry,
     const char *provider_id);

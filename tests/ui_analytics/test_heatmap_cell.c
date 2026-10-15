@@ -69,6 +69,13 @@ UMI_TEST_VALUE_TRANSFER(UmiAnalyticsHeatmapCellTransferCases, UmiAnalyticsHeatma
     umi_analytics_heatmap_cell_archive_encode, umi_analytics_heatmap_cell_archive_decode,
     UmiAnalyticsHeatmapCellTransferEqual, UmiAnalyticsHeatmapCellTransferTails, UmiAnalyticsHeatmapCellTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAnalyticsHeatmapCellConditionalArchiveCases, UmiAnalyticsHeatmapCell,
+    umi_analytics_heatmap_cell_archive_encode, umi_analytics_heatmap_cell_archive_decode_if_unchanged,
+    UmiAnalyticsHeatmapCellTransferEqual, UmiAnalyticsHeatmapCellTransferTails, UmiAnalyticsHeatmapCellTransferMalformed)
+
+
 int main(void){UmiAnalyticsHeatmapCell item;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_analytics_heatmap_cell_init(&item)!=UMI_STATUS_OK)return 1;
     if (UmiAnalyticsHeatmapCellTransferCases(&item) != 0) return 1;
+    if (UmiAnalyticsHeatmapCellConditionalArchiveCases(&item) != 0) return 1;
 return (umi_analytics_heatmap_cell_valid(&item))?0:2;}

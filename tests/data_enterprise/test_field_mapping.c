@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/data/enterprise/field_mapping.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -126,10 +127,84 @@ UMI_TEST_VALUE_TRANSFER(UmiDataFieldMappingTransferCases, UmiDataFieldMapping,
     umi_data_field_mapping_archive_encode, umi_data_field_mapping_archive_decode,
     UmiDataFieldMappingTransferEqual, UmiDataFieldMappingTransferTails, UmiDataFieldMappingTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataFieldMappingConditionalArchiveCases, UmiDataFieldMapping,
+    umi_data_field_mapping_archive_encode, umi_data_field_mapping_archive_decode_if_unchanged,
+    UmiDataFieldMappingTransferEqual, UmiDataFieldMappingTransferTails, UmiDataFieldMappingTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted field mapping value. */
+static int UmiDataFieldMappingConstructionCases(void)
+{
+    UmiDataFieldMapping *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_data_field_mapping_init(value, "Order.id", "Order", "id", "id", UMI_DATA_VALUE_INTEGER) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->mapping_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_field_mapping_init(value, oversized, "Order", "id", "id", UMI_DATA_VALUE_INTEGER) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_field_mapping_init(value, value->mapping_id, "Order", "id", "id", UMI_DATA_VALUE_INTEGER) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->mapping_id, "Order.id") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->entity_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_field_mapping_init(value, "Order.id", oversized, "id", "id", UMI_DATA_VALUE_INTEGER) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_field_mapping_init(value, "Order.id", value->entity_id, "id", "id", UMI_DATA_VALUE_INTEGER) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->entity_id, "Order") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->field_name) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_field_mapping_init(value, "Order.id", "Order", oversized, "id", UMI_DATA_VALUE_INTEGER) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_field_mapping_init(value, "Order.id", "Order", value->field_name, "id", UMI_DATA_VALUE_INTEGER) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->field_name, "id") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->column_name) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_field_mapping_init(value, "Order.id", "Order", "id", oversized, UMI_DATA_VALUE_INTEGER) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_field_mapping_init(value, "Order.id", "Order", "id", value->column_name, UMI_DATA_VALUE_INTEGER) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->column_name, "id") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiDataFieldMappingConstructionCases() != 0) return 1;
+
     UmiDataFieldMapping item;
     CHECK(umi_data_field_mapping_init(&item,"Order.id","Order","id","id",UMI_DATA_VALUE_INTEGER) == UMI_STATUS_OK);
     if (UmiDataFieldMappingTransferCases(&item) != 0) return 1;
+    if (UmiDataFieldMappingConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.kind==UMI_DATA_VALUE_INTEGER);
     return 0;

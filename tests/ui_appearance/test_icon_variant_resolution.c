@@ -86,6 +86,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceIconVariantResolutionTransferCases, UmiAppe
     umi_appearance_icon_variant_resolution_archive_encode, umi_appearance_icon_variant_resolution_archive_decode,
     UmiAppearanceIconVariantResolutionTransferEqual, UmiAppearanceIconVariantResolutionTransferTails, UmiAppearanceIconVariantResolutionTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceIconVariantResolutionConditionalArchiveCases, UmiAppearanceIconVariantResolution,
+    umi_appearance_icon_variant_resolution_archive_encode, umi_appearance_icon_variant_resolution_archive_decode_if_unchanged,
+    UmiAppearanceIconVariantResolutionTransferEqual, UmiAppearanceIconVariantResolutionTransferTails, UmiAppearanceIconVariantResolutionTransferMalformed)
+
+
 int main(void) {
     UmiAppearanceIconVariantResolution item;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -93,6 +99,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_icon_variant_resolution_is_valid(&item)) return 2;
     if (UmiAppearanceIconVariantResolutionTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceIconVariantResolutionConditionalArchiveCases(&item) != 0) return 1;
 
     umi_appearance_icon_variant_resolution_set_direction(&item,1,1); /* Apply this branch only when its contract condition is satisfied. */ if(!item.mirrored) return 3;
     return 0;

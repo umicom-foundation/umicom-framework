@@ -49,6 +49,9 @@ typedef struct UmiCommodityService {
 void umi_commodity_commodity_service_init(UmiCommodityService *service);
 
 /* Mark the service started only when its reusable reference-data boundary is usable. */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_commodity_commodity_service_start(UmiCommodityService *service);
 
 /* Build aggregate operational evidence without exposing mutable registries. */

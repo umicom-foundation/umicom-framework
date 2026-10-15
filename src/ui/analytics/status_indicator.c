@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/analytics/status_indicator.h"
 #include "../../base/value_archive_internal.h"
 
@@ -69,3 +70,8 @@ static UmiStatus UmiAnalyticsStatusIndicatorArchiveValidate(const UmiAnalyticsSt
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_analytics_status_indicator_archive_encode, umi_analytics_status_indicator_archive_decode,
     UmiAnalyticsStatusIndicator, UmiAnalyticsStatusIndicatorArchiveSchema, UmiAnalyticsStatusIndicatorArchiveBound, UmiAnalyticsStatusIndicatorArchiveWrite, UmiAnalyticsStatusIndicatorArchiveRead, UmiAnalyticsStatusIndicatorArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_analytics_status_indicator_archive_decode_if_unchanged, umi_analytics_status_indicator_archive_encode,
+    UmiAnalyticsStatusIndicator, UmiAnalyticsStatusIndicatorArchiveSchema, UmiAnalyticsStatusIndicatorArchiveBound, UmiAnalyticsStatusIndicatorArchiveRead, UmiAnalyticsStatusIndicatorArchiveValidate)

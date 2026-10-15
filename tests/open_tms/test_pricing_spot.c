@@ -17,6 +17,10 @@
 
 #include "umicom/open_tms/pricing/spot.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(umi_open_tms_evaluate_pricing_spot_batch_cases, umi_open_tms_evaluate_pricing_spot,
+    umi_open_tms_evaluate_pricing_spot_batch, UmiOpenTmsInput, UmiOpenTmsSnapshot, value)
+
 int main(void)
 {
     UmiOpenTmsInput input;
@@ -76,6 +80,7 @@ int main(void)
     input.transitionAllowed = 1;
     input.revision = 111U;
 
+    if (umi_open_tms_evaluate_pricing_spot_batch_cases(&input) != 0) return 1;
     assert(umi_open_tms_evaluate_pricing_spot(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "pricing.spot") == 0);
     assert(snapshot.revision == 111U);

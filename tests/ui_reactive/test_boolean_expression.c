@@ -49,6 +49,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveBooleanExpressionTransferCases, UmiUiReacti
     umi_ui_reactive_boolean_expression_archive_encode, umi_ui_reactive_boolean_expression_archive_decode,
     UmiUiReactiveBooleanExpressionTransferEqual, UmiUiReactiveBooleanExpressionTransferTails, UmiUiReactiveBooleanExpressionTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveBooleanExpressionConditionalArchiveCases, UmiUiReactiveBooleanExpression,
+    umi_ui_reactive_boolean_expression_archive_encode, umi_ui_reactive_boolean_expression_archive_decode_if_unchanged,
+    UmiUiReactiveBooleanExpressionTransferEqual, UmiUiReactiveBooleanExpressionTransferTails, UmiUiReactiveBooleanExpressionTransferMalformed)
+
+
 int main(void) { UmiUiReactiveBooleanExpression item; umi_ui_reactive_boolean_expression_init(&item);
     /* Nonzero fields expose swapped or omitted values in a saved record.
      * The original initialized fixture remains available for its own checks. */
@@ -56,4 +62,5 @@ int main(void) { UmiUiReactiveBooleanExpression item; umi_ui_reactive_boolean_ex
     populated.value = true;
     populated.source_revision = (uint64_t)3;
     if (UmiUiReactiveBooleanExpressionTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveBooleanExpressionConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_boolean_expression_valid(&item) ? 0 : 1; }

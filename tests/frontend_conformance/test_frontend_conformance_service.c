@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/frontend/conformance/frontend_conformance_service.h"
 #include "umicom/frontend/conformance/renderer_profile.h"
 
@@ -22,6 +23,9 @@
  * to the operating system.
  */
 int main(void) {
-    UmiFcFrontendConformanceService s; UmiFcRendererProfile p; UmiFcFrontendHealth h; umi_fc_frontend_conformance_service_init(&s); CHECK(umi_fc_renderer_profile_make("gtk4",UMI_FC_FRONTEND_GTK4,7U,1U,&p)==UMI_STATUS_OK); CHECK(umi_fc_frontend_conformance_service_register(&s,&p)==UMI_STATUS_OK); CHECK(umi_fc_frontend_conformance_service_evaluate(&s,"gtk4",3U,0.96,0.98,0.95,0U,&h)==UMI_FC_PASS); CHECK(h.blockers==0U);
+    UmiFcFrontendConformanceService s; UmiFcRendererProfile p; UmiFcFrontendHealth h; umi_fc_frontend_conformance_service_init(&s); CHECK(umi_fc_renderer_profile_make("gtk4",UMI_FC_FRONTEND_GTK4,7U,1U,&p)==UMI_STATUS_OK); CHECK(umi_fc_frontend_conformance_service_register(&s,&p)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFcFrontendConformanceService, &s,
+        (umi_fc_frontend_conformance_service_register(&s,&p)));
+ CHECK(umi_fc_frontend_conformance_service_evaluate(&s,"gtk4",3U,0.96,0.98,0.95,0U,&h)==UMI_FC_PASS); CHECK(h.blockers==0U);
     return 0;
 }

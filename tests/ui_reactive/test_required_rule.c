@@ -84,6 +84,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveRequiredRuleTransferCases, UmiUiReactiveReq
     umi_ui_reactive_required_rule_archive_encode, umi_ui_reactive_required_rule_archive_decode,
     UmiUiReactiveRequiredRuleTransferEqual, UmiUiReactiveRequiredRuleTransferTails, UmiUiReactiveRequiredRuleTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveRequiredRuleConditionalArchiveCases, UmiUiReactiveRequiredRule,
+    umi_ui_reactive_required_rule_archive_encode, umi_ui_reactive_required_rule_archive_decode_if_unchanged,
+    UmiUiReactiveRequiredRuleTransferEqual, UmiUiReactiveRequiredRuleTransferTails, UmiUiReactiveRequiredRuleTransferMalformed)
+
+
 int main(void) { UmiUiReactiveRequiredRule item; umi_ui_reactive_required_rule_init(&item);
     /* Nonzero fields expose swapped or omitted values in a saved record.
      * The original initialized fixture remains available for its own checks. */
@@ -92,4 +98,5 @@ int main(void) { UmiUiReactiveRequiredRule item; umi_ui_reactive_required_rule_i
     (void)snprintf(populated.expression, sizeof(populated.expression), "field-1");
     populated.required = true;
     if (UmiUiReactiveRequiredRuleTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveRequiredRuleConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_required_rule_valid(&item) ? 0 : 1; }

@@ -117,6 +117,32 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkQueryTransferCases, UmiWorkbenchC
     umi_workbench_context_link_query_archive_encode, umi_workbench_context_link_query_archive_decode,
     UmiWorkbenchContextLinkQueryTransferEqual, UmiWorkbenchContextLinkQueryTransferTails, UmiWorkbenchContextLinkQueryTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkQueryConditionalArchiveCases, UmiWorkbenchContextLinkQuery,
+    umi_workbench_context_link_query_archive_encode, umi_workbench_context_link_query_archive_decode_if_unchanged,
+    UmiWorkbenchContextLinkQueryTransferEqual, UmiWorkbenchContextLinkQueryTransferTails, UmiWorkbenchContextLinkQueryTransferMalformed)
+
+
+/* Delayed context edits must preserve newer work and reject exhausted tokens. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextLinkQueryReviewedCases, UmiWorkbenchContextLinkQuery,
+    query_id, panel_id, umi_workbench_context_link_query_replace_if_current, UmiWorkbenchContextLinkQueryTransferEqual)
+static int UmiWorkbenchContextLinkQueryMutationGuards(const UmiWorkbenchContextLinkQuery *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkQuery, group_id, umi_workbench_context_link_query_set_primary, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkQuery, panel_id, umi_workbench_context_link_query_set_secondary, sample);
+    UmiWorkbenchContextLinkQuery value = *sample;
+    unsigned char before[sizeof(value)];
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_link_query_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U ||
+        value.timestamp_ms != 44U) return 1;
+    memcpy(before, &value, sizeof(value));
+    umi_workbench_context_link_query_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof(value)) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextLinkQuery record;
@@ -125,6 +151,9 @@ int main(void)
     umi_workbench_context_link_query_init(&record, "query-id");
     assert(umi_workbench_context_link_query_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkQueryTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkQueryConditionalArchiveCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkQueryReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkQueryMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_context_link_query_set_primary(&record, "primary") == UMI_STATUS_OK);
     assert(umi_workbench_context_link_query_set_secondary(&record, "secondary") == UMI_STATUS_OK);

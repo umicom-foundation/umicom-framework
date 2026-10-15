@@ -18,6 +18,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/platform/cross_target/timer_descriptor.h"
 #include "../../base/value_archive_internal.h"
 
@@ -83,3 +84,8 @@ static UmiStatus UmiCtTimerDescriptorArchiveValidate(const UmiCtTimerDescriptor 
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ct_timer_descriptor_archive_encode, umi_ct_timer_descriptor_archive_decode,
     UmiCtTimerDescriptor, UmiCtTimerDescriptorArchiveSchema, UmiCtTimerDescriptorArchiveBound, UmiCtTimerDescriptorArchiveWrite, UmiCtTimerDescriptorArchiveRead, UmiCtTimerDescriptorArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ct_timer_descriptor_archive_decode_if_unchanged, umi_ct_timer_descriptor_archive_encode,
+    UmiCtTimerDescriptor, UmiCtTimerDescriptorArchiveSchema, UmiCtTimerDescriptorArchiveBound, UmiCtTimerDescriptorArchiveRead, UmiCtTimerDescriptorArchiveValidate)

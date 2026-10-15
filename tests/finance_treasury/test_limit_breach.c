@@ -67,11 +67,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryLimitBreachTransferCases, UmiTreasuryLimitBre
     umi_treasury_limit_breach_archive_encode, umi_treasury_limit_breach_archive_decode,
     UmiTreasuryLimitBreachTransferEqual, UmiTreasuryLimitBreachTransferTails, UmiTreasuryLimitBreachTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryLimitBreachConditionalArchiveCases, UmiTreasuryLimitBreach,
+    umi_treasury_limit_breach_archive_encode, umi_treasury_limit_breach_archive_decode_if_unchanged,
+    UmiTreasuryLimitBreachTransferEqual, UmiTreasuryLimitBreachTransferTails, UmiTreasuryLimitBreachTransferMalformed)
+
+
 int main(void) {
     UmiTreasuryLimitBreach v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_limit_breach_init(&v, "breach", 50, false) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryLimitBreachTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryLimitBreachConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if(!umi_treasury_limit_breach_open(&v))return 2;

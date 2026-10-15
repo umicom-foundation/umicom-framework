@@ -35,6 +35,10 @@ typedef struct UmiFabricCompensationRecord { char workflow_id[UMI_FABRIC_ID_CAPA
  * Initialise fabric compensation record from caller-provided values so later operations
  * receive a known state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_fabric_compensation_record_init(UmiFabricCompensationRecord *record,const char *workflow_id,const char *step_id);
 /**
  * Provide the fabric compensation record attempt operation used by this module and its

@@ -68,11 +68,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryStockBorrowContractTransferCases, UmiTreasury
     umi_treasury_stock_borrow_contract_archive_encode, umi_treasury_stock_borrow_contract_archive_decode,
     UmiTreasuryStockBorrowContractTransferEqual, UmiTreasuryStockBorrowContractTransferTails, UmiTreasuryStockBorrowContractTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryStockBorrowContractConditionalArchiveCases, UmiTreasuryStockBorrowContract,
+    umi_treasury_stock_borrow_contract_archive_encode, umi_treasury_stock_borrow_contract_archive_decode_if_unchanged,
+    UmiTreasuryStockBorrowContractTransferEqual, UmiTreasuryStockBorrowContractTransferTails, UmiTreasuryStockBorrowContractTransferMalformed)
+
+
 int main(void) {
     UmiTreasuryStockBorrowContract v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_stock_borrow_contract_init(&v, "borrow", 50, 20000, 100U) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryStockBorrowContractTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryStockBorrowContractConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if(umi_treasury_stock_borrow_contract_annual_fee_minor(&v)!=200)return 2;

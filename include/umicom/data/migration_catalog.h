@@ -37,11 +37,17 @@ UmiStatus umi_database_migration_catalog_init(UmiDatabaseMigrationCatalog *catal
  * Provide the database migration catalog upsert operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_database_migration_catalog_upsert(UmiDatabaseMigrationCatalog *catalog,const UmiDatabaseMigrationInfo *migration);
 /**
  * Provide the database migration catalog mark applied operation used by this module and
  * its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_database_migration_catalog_mark_applied(UmiDatabaseMigrationCatalog *catalog,uint32_t version,uint64_t applied_at);
 /**
  * Provide the database migration catalog pending operation used by this module and its

@@ -133,6 +133,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextSessionTransferCases, UmiContextSession,
     umi_context_session_archive_encode, umi_context_session_archive_decode,
     UmiContextSessionTransferEqual, UmiContextSessionTransferTails, UmiContextSessionTransferMalformed)
 
+#include "../conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextSessionConditionalArchiveCases, UmiContextSession,
+    umi_context_session_archive_encode, umi_context_session_archive_decode_if_unchanged,
+    UmiContextSessionTransferEqual, UmiContextSessionTransferTails, UmiContextSessionTransferMalformed)
+
+
 int main(void)
 {
     UmiContextSession value;
@@ -147,6 +153,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_context_session_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiContextSessionTransferCases(&value) != 0) return 1;
+    if (UmiContextSessionConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/test/workbench/coverage_function_model.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -115,3 +116,8 @@ static UmiStatus UmiCoverageFunctionModelArchiveValidate(const UmiCoverageFuncti
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_coverage_function_model_archive_encode, umi_coverage_function_model_archive_decode,
     UmiCoverageFunctionModel, UmiCoverageFunctionModelArchiveSchema, UmiCoverageFunctionModelArchiveBound, UmiCoverageFunctionModelArchiveWrite, UmiCoverageFunctionModelArchiveRead, UmiCoverageFunctionModelArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_coverage_function_model_archive_decode_if_unchanged, umi_coverage_function_model_archive_encode,
+    UmiCoverageFunctionModel, UmiCoverageFunctionModelArchiveSchema, UmiCoverageFunctionModelArchiveBound, UmiCoverageFunctionModelArchiveRead, UmiCoverageFunctionModelArchiveValidate)

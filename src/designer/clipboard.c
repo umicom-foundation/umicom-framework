@@ -18,6 +18,7 @@
  * into bounded storage, revisions advance on mutation, and callers retain
  * responsibility for higher-level threading and persistence policy.
  */
+#include "../base/conditional_archive_internal.h"
 #include "umicom/designer/clipboard.h"
 #include "../base/value_archive_internal.h"
 #include "../base/registry_archive_internal.h"
@@ -303,3 +304,8 @@ UMI_DEFINE_VALUE_ARCHIVE(umi_designer_clipboard_snapshot_archive_encode, umi_des
 UMI_DEFINE_REGISTRY_ARCHIVE(umi_designer_clipboard_registry_archive_encode, umi_designer_clipboard_registry_archive_restore,
     UmiDesignerClipboardItemRegistry, UmiDesignerClipboardItemSnapshot, UMI_DESIGNER_CLIPBOARD_CAPACITY, ArchiveSchema,
     umi_designer_clipboard_snapshot_archive_encode, umi_designer_clipboard_snapshot_archive_decode, umi_designer_clipboard_registry_replace_if_current)
+
+/* Guard snapshot import with the complete encoded value reviewed by the
+ * caller. Imported metadata remains evidence; registry publication is separate. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_designer_clipboard_snapshot_archive_decode_if_unchanged, umi_designer_clipboard_snapshot_archive_encode,
+    UmiDesignerClipboardItemSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)

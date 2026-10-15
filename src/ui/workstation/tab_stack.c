@@ -14,12 +14,18 @@
  *---------------------------------------------------------------------------*/
 
 #include <string.h>
+#include "../../base/value_construction_internal.h"
 #include "umicom/ui/workstation/tab_stack.h"
 
 /*
  * Initialise ws tab stack from caller-provided values so later operations receive a known
  * state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_ws_tab_stack_init(UmiWsTabStack *stack, const char *stack_id) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -30,6 +36,25 @@ UmiStatus umi_ws_tab_stack_init(UmiWsTabStack *stack, const char *stack_id) {
     stack->allow_reorder = true;
     return umi_ws_copy_text(stack->stack_id, sizeof(stack->stack_id), stack_id);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_ws_tab_stack_init_build_value(UmiWsTabStack *stack, const char *stack_id) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (stack == NULL || !umi_ws_id_valid(stack_id)) return UMI_STATUS_INVALID_ARGUMENT;
+    *stack = (UmiWsTabStack){0};
+    stack->allow_reorder = true;
+    return umi_ws_copy_text(stack->stack_id, sizeof(stack->stack_id), stack_id);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_ws_tab_stack_init, UmiWsTabStack, stack,
+    (UmiWsTabStack *stack, const char *stack_id),
+    umi_ws_tab_stack_init_build_value(candidate, stack_id))
+
 
 /* Add ws tab stack only after its inputs and available capacity have been checked. */
 UmiStatus umi_ws_tab_stack_add(UmiWsTabStack *stack, const char *surface_id) {

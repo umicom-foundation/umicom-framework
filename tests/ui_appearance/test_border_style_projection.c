@@ -86,6 +86,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceBorderStyleProjectionTransferCases, UmiAppe
     umi_appearance_border_style_projection_archive_encode, umi_appearance_border_style_projection_archive_decode,
     UmiAppearanceBorderStyleProjectionTransferEqual, UmiAppearanceBorderStyleProjectionTransferTails, UmiAppearanceBorderStyleProjectionTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceBorderStyleProjectionConditionalArchiveCases, UmiAppearanceBorderStyleProjection,
+    umi_appearance_border_style_projection_archive_encode, umi_appearance_border_style_projection_archive_decode_if_unchanged,
+    UmiAppearanceBorderStyleProjectionTransferEqual, UmiAppearanceBorderStyleProjectionTransferTails, UmiAppearanceBorderStyleProjectionTransferMalformed)
+
+
 int main(void) {
     UmiAppearanceBorderStyleProjection item;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -93,6 +99,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_border_style_projection_is_valid(&item)) return 2;
     if (UmiAppearanceBorderStyleProjectionTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceBorderStyleProjectionConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;
 }

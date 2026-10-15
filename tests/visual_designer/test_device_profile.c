@@ -70,6 +70,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadDeviceProfileTransferCases, UmiRadDeviceProfile,
     umi_rad_device_profile_archive_encode, umi_rad_device_profile_archive_decode,
     UmiRadDeviceProfileTransferEqual, UmiRadDeviceProfileTransferTails, UmiRadDeviceProfileTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadDeviceProfileConditionalArchiveCases, UmiRadDeviceProfile,
+    umi_rad_device_profile_archive_encode, umi_rad_device_profile_archive_decode_if_unchanged,
+    UmiRadDeviceProfileTransferEqual, UmiRadDeviceProfileTransferTails, UmiRadDeviceProfileTransferMalformed)
+
+
 int main(void){UmiRadDeviceProfile item;CHECK(umi_rad_device_profile_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_device_profile_is_valid(&item));
     if (UmiRadDeviceProfileTransferCases(&item) != 0) return 1;
+    if (UmiRadDeviceProfileConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

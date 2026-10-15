@@ -34,6 +34,10 @@ typedef struct UmiFabricAuditRecord { char record_id[UMI_FABRIC_ID_CAPACITY]; ch
  * Initialise fabric audit record from caller-provided values so later operations receive a
  * known state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_fabric_audit_record_init(UmiFabricAuditRecord *record,const char *record_id,const char *operation_id,const char *actor_id,UmiStatus status,uint64_t occurred_ms);
 
 #ifdef __cplusplus

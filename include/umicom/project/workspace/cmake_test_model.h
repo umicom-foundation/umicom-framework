@@ -28,7 +28,11 @@ extern "C" {
         uint64_t metric;
     }
     UmiProjectWorkspaceCmakeTestModel;
-    UmiStatus umi_project_workspace_cmake_test_model_init(UmiProjectWorkspaceCmakeTestModel *value,const char *id);
+    /** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
+UmiStatus umi_project_workspace_cmake_test_model_init(UmiProjectWorkspaceCmakeTestModel *value,const char *id);
     UmiStatus umi_project_workspace_cmake_test_model_validate(const UmiProjectWorkspaceCmakeTestModel *value);
     UmiStatus umi_project_workspace_cmake_test_model_set_name(UmiProjectWorkspaceCmakeTestModel *value,const char *name);
     UmiStatus umi_project_workspace_cmake_test_model_set_detail(UmiProjectWorkspaceCmakeTestModel *value,const char *detail);
@@ -45,6 +49,16 @@ UmiStatus umi_project_workspace_cmake_test_model_archive_encode(const UmiProject
     void *bytes, size_t capacity, size_t *out_size);
 UmiStatus umi_project_workspace_cmake_test_model_archive_decode(const void *bytes, size_t byte_count,
     UmiProjectWorkspaceCmakeTestModel *value);
+
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the owner's publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_project_workspace_cmake_test_model_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiProjectWorkspaceCmakeTestModel *expected, UmiProjectWorkspaceCmakeTestModel *value);
+
 
 #ifdef __cplusplus
 }

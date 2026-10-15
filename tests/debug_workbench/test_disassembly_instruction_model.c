@@ -139,6 +139,12 @@ UMI_TEST_VALUE_TRANSFER(UmiDebugWorkbenchDisassemblyInstructionModelTransferCase
     umi_debug_workbench_disassembly_instruction_model_archive_encode, umi_debug_workbench_disassembly_instruction_model_archive_decode,
     UmiDebugWorkbenchDisassemblyInstructionModelTransferEqual, UmiDebugWorkbenchDisassemblyInstructionModelTransferTails, UmiDebugWorkbenchDisassemblyInstructionModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDebugWorkbenchDisassemblyInstructionModelConditionalArchiveCases, UmiDebugWorkbenchDisassemblyInstructionModel,
+    umi_debug_workbench_disassembly_instruction_model_archive_encode, umi_debug_workbench_disassembly_instruction_model_archive_decode_if_unchanged,
+    UmiDebugWorkbenchDisassemblyInstructionModelTransferEqual, UmiDebugWorkbenchDisassemblyInstructionModelTransferTails, UmiDebugWorkbenchDisassemblyInstructionModelTransferMalformed)
+
+
 int main(void)
 {
     UmiDebugWorkbenchDisassemblyInstructionModel model;
@@ -149,6 +155,7 @@ int main(void)
     UMI_TEST_CHECK(umi_debug_workbench_disassembly_instruction_model_set_follow_execution(&model, true) == UMI_STATUS_OK);
     UMI_TEST_CHECK(umi_debug_workbench_disassembly_instruction_model_valid(&model));
     if (UmiDebugWorkbenchDisassemblyInstructionModelTransferCases(&model) != 0) return 1;
+    if (UmiDebugWorkbenchDisassemblyInstructionModelConditionalArchiveCases(&model) != 0) return 1;
 
     return 0;
 }

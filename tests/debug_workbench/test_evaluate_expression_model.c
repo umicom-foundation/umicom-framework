@@ -137,6 +137,12 @@ UMI_TEST_VALUE_TRANSFER(UmiDebugWorkbenchEvaluateExpressionModelTransferCases, U
     umi_debug_workbench_evaluate_expression_model_archive_encode, umi_debug_workbench_evaluate_expression_model_archive_decode,
     UmiDebugWorkbenchEvaluateExpressionModelTransferEqual, UmiDebugWorkbenchEvaluateExpressionModelTransferTails, UmiDebugWorkbenchEvaluateExpressionModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDebugWorkbenchEvaluateExpressionModelConditionalArchiveCases, UmiDebugWorkbenchEvaluateExpressionModel,
+    umi_debug_workbench_evaluate_expression_model_archive_encode, umi_debug_workbench_evaluate_expression_model_archive_decode_if_unchanged,
+    UmiDebugWorkbenchEvaluateExpressionModelTransferEqual, UmiDebugWorkbenchEvaluateExpressionModelTransferTails, UmiDebugWorkbenchEvaluateExpressionModelTransferMalformed)
+
+
 int main(void)
 {
     UmiDebugWorkbenchEvaluateExpressionModel model;
@@ -151,6 +157,7 @@ int main(void)
     UMI_TEST_CHECK(!model.enabled);
     UMI_TEST_CHECK(umi_debug_workbench_evaluate_expression_model_valid(&model));
     if (UmiDebugWorkbenchEvaluateExpressionModelTransferCases(&model) != 0) return 1;
+    if (UmiDebugWorkbenchEvaluateExpressionModelConditionalArchiveCases(&model) != 0) return 1;
 
     return 0;
 }

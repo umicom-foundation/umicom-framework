@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/data/enterprise/query_join.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -125,10 +126,84 @@ UMI_TEST_VALUE_TRANSFER(UmiDataQueryJoinTransferCases, UmiDataQueryJoin,
     umi_data_query_join_archive_encode, umi_data_query_join_archive_decode,
     UmiDataQueryJoinTransferEqual, UmiDataQueryJoinTransferTails, UmiDataQueryJoinTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataQueryJoinConditionalArchiveCases, UmiDataQueryJoin,
+    umi_data_query_join_archive_encode, umi_data_query_join_archive_decode_if_unchanged,
+    UmiDataQueryJoinTransferEqual, UmiDataQueryJoinTransferTails, UmiDataQueryJoinTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted query join value. */
+static int UmiDataQueryJoinConstructionCases(void)
+{
+    UmiDataQueryJoin *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_data_query_join_init(value, "j1", "orders", "customers", "orders.customer_id=customers.id", false) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->join_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_query_join_init(value, oversized, "orders", "customers", "orders.customer_id=customers.id", false) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_query_join_init(value, value->join_id, "orders", "customers", "orders.customer_id=customers.id", false) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->join_id, "j1") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->left_table) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_query_join_init(value, "j1", oversized, "customers", "orders.customer_id=customers.id", false) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_query_join_init(value, "j1", value->left_table, "customers", "orders.customer_id=customers.id", false) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->left_table, "orders") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->right_table) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_query_join_init(value, "j1", "orders", oversized, "orders.customer_id=customers.id", false) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_query_join_init(value, "j1", "orders", value->right_table, "orders.customer_id=customers.id", false) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->right_table, "customers") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->condition) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_query_join_init(value, "j1", "orders", "customers", oversized, false) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_query_join_init(value, "j1", "orders", "customers", value->condition, false) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->condition, "orders.customer_id=customers.id") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiDataQueryJoinConstructionCases() != 0) return 1;
+
     UmiDataQueryJoin item;
     CHECK(umi_data_query_join_init(&item,"j1","orders","customers","orders.customer_id=customers.id",false) == UMI_STATUS_OK);
     if (UmiDataQueryJoinTransferCases(&item) != 0) return 1;
+    if (UmiDataQueryJoinConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(!item.outer_join);
     return 0;

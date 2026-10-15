@@ -86,6 +86,12 @@ UMI_TEST_VALUE_TRANSFER(UmiTradingBrokerRouteTransferCases, UmiTradingBrokerRout
     umi_trading_broker_route_archive_encode, umi_trading_broker_route_archive_decode,
     UmiTradingBrokerRouteTransferEqual, UmiTradingBrokerRouteTransferTails, UmiTradingBrokerRouteTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTradingBrokerRouteConditionalArchiveCases, UmiTradingBrokerRoute,
+    umi_trading_broker_route_archive_encode, umi_trading_broker_route_archive_decode_if_unchanged,
+    UmiTradingBrokerRouteTransferEqual, UmiTradingBrokerRouteTransferTails, UmiTradingBrokerRouteTransferMalformed)
+
+
 int main(void) {
     UmiFinancialId rid,vid;
     umi_trading_core_id_assign(&rid,"r");
@@ -96,6 +102,7 @@ int main(void) {
      /* Preserve the original failure result so the caller can respond to the correct cause. */
      if(!umi_trading_broker_route_valid(&v)) return 2;
     if (UmiTradingBrokerRouteTransferCases(&v) != 0) return 1;
+    if (UmiTradingBrokerRouteConditionalArchiveCases(&v) != 0) return 1;
 
      return 0;
 }

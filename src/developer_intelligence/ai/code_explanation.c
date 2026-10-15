@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/policy_batch_internal.h"
 #include "umicom/developer_intelligence/ai/code_explanation.h"
 #include "../developer_intelligence_internal.h"
 
@@ -37,3 +38,8 @@ UmiStatus UmiDeveloperIntelligenceEvaluateAiCodeExplanation(
     return UmiDeveloperIntelligenceEvaluatePolicy(
         &policy, input, outSnapshot);
 }
+
+/* Reuse the scalar policy for complete table refreshes; the shared batch
+ * owner stages all rows before publishing a successful calculation. */
+UMI_DEFINE_POLICY_BATCH(UmiDeveloperIntelligenceEvaluateAiCodeExplanationBatch, UmiDeveloperIntelligenceEvaluateAiCodeExplanation,
+    UmiDeveloperIntelligenceInput, UmiDeveloperIntelligenceSnapshot)

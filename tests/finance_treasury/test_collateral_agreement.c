@@ -67,11 +67,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryCollateralAgreementTransferCases, UmiTreasury
     umi_treasury_collateral_agreement_archive_encode, umi_treasury_collateral_agreement_archive_decode,
     UmiTreasuryCollateralAgreementTransferEqual, UmiTreasuryCollateralAgreementTransferTails, UmiTreasuryCollateralAgreementTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryCollateralAgreementConditionalArchiveCases, UmiTreasuryCollateralAgreement,
+    umi_treasury_collateral_agreement_archive_encode, umi_treasury_collateral_agreement_archive_decode_if_unchanged,
+    UmiTreasuryCollateralAgreementTransferEqual, UmiTreasuryCollateralAgreementTransferTails, UmiTreasuryCollateralAgreementTransferMalformed)
+
+
 int main(void) {
     UmiTreasuryCollateralAgreement v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_collateral_agreement_init(&v, "csa", 100, 25) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryCollateralAgreementTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryCollateralAgreementConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if(umi_treasury_collateral_agreement_secured_threshold_minor(&v)!=125)return 2;

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/developer_productivity/directory_compare.h"
@@ -32,6 +33,10 @@ int main(void)
 
     assert(umi_developer_directory_compare_add(
         &model, &item) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDeveloperDirectoryCompareModel, &model,
+        (umi_developer_directory_compare_add(
+        &model, &item)));
+
     assert(model.different_count == 1U);
     return 0;
 }

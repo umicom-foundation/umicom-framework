@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/treasury/cash_sweep_plan.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -99,3 +100,9 @@ static UmiStatus UmiTreasuryCashSweepPlanArchiveValidate(const UmiTreasuryCashSw
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_treasury_cash_sweep_plan_archive_encode, umi_treasury_cash_sweep_plan_archive_decode,
     UmiTreasuryCashSweepPlan, UmiTreasuryCashSweepPlanArchiveSchema, UmiTreasuryCashSweepPlanArchiveBound, UmiTreasuryCashSweepPlanArchiveWrite, UmiTreasuryCashSweepPlanArchiveRead, UmiTreasuryCashSweepPlanArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_treasury_cash_sweep_plan_archive_decode_if_unchanged, umi_treasury_cash_sweep_plan_archive_encode,
+    UmiTreasuryCashSweepPlan, UmiTreasuryCashSweepPlanArchiveSchema, UmiTreasuryCashSweepPlanArchiveBound, UmiTreasuryCashSweepPlanArchiveRead, UmiTreasuryCashSweepPlanArchiveValidate)

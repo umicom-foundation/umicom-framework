@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/trading/core/fee_schedule.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -67,3 +68,8 @@ static UmiStatus UmiTradingFeeScheduleArchiveValidate(const UmiTradingFeeSchedul
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_trading_fee_schedule_archive_encode, umi_trading_fee_schedule_archive_decode,
     UmiTradingFeeSchedule, UmiTradingFeeScheduleArchiveSchema, UmiTradingFeeScheduleArchiveBound, UmiTradingFeeScheduleArchiveWrite, UmiTradingFeeScheduleArchiveRead, UmiTradingFeeScheduleArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_trading_fee_schedule_archive_decode_if_unchanged, umi_trading_fee_schedule_archive_encode,
+    UmiTradingFeeSchedule, UmiTradingFeeScheduleArchiveSchema, UmiTradingFeeScheduleArchiveBound, UmiTradingFeeScheduleArchiveRead, UmiTradingFeeScheduleArchiveValidate)

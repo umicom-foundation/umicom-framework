@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 
@@ -32,6 +33,10 @@ int main(void)
         &definition, "application", "panel", "Source") == UMI_STATUS_OK);
     assert(umi_workbench_context_source_registry_upsert(
         &registry, &definition) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchContextSourceRegistry, &registry,
+        (umi_workbench_context_source_registry_upsert(
+        &registry, &definition)));
+
     assert(umi_workbench_context_source_registry_count(&registry) == 1U);
     assert(umi_workbench_context_source_registry_find(
         &registry, "source") != NULL);
@@ -41,6 +46,10 @@ int main(void)
     assert(umi_workbench_context_source_registry_count(&registry) == 1U);
     assert(umi_workbench_context_source_registry_remove(
         &registry, "source") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWorkbenchContextSourceRegistry, &registry,
+        (umi_workbench_context_source_registry_remove(
+        &registry, "source")));
+
     umi_workbench_context_source_registry_destroy(&registry);
 
     return 0;

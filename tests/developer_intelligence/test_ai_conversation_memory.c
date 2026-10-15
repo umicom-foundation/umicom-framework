@@ -17,6 +17,10 @@
 
 #include "umicom/developer_intelligence/ai/conversation_memory.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(UmiDeveloperIntelligenceEvaluateAiConversationMemoryBatchCases, UmiDeveloperIntelligenceEvaluateAiConversationMemory,
+    UmiDeveloperIntelligenceEvaluateAiConversationMemoryBatch, UmiDeveloperIntelligenceInput, UmiDeveloperIntelligenceSnapshot, lexicalScore)
+
 int main(void)
 {
     UmiDeveloperIntelligenceInput input;
@@ -44,6 +48,7 @@ int main(void)
     input.active = 1;
     input.revision = 42U;
 
+    if (UmiDeveloperIntelligenceEvaluateAiConversationMemoryBatchCases(&input) != 0) return 1;
     assert(UmiDeveloperIntelligenceEvaluateAiConversationMemory(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "ai.conversation-memory") == 0);
     assert(snapshot.revision == 42U);

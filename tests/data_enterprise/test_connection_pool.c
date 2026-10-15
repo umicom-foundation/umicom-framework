@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/data/enterprise/connection_pool.h"
 #include <stdio.h>
 #include <string.h>
@@ -23,6 +24,15 @@
  * to the operating system.
  */
 int main(void) {
-    UmiDataConnectionPool p; UmiDataConnectionSlot s; uint64_t token=0U; umi_data_connection_pool_init(&p); CHECK(umi_data_connection_slot_init(&s,"slot1",101U)==UMI_STATUS_OK); CHECK(umi_data_connection_pool_add(&p,&s)==UMI_STATUS_OK); CHECK(umi_data_connection_pool_acquire(&p,10U,&token)==UMI_STATUS_OK); CHECK(token==101U); CHECK(umi_data_connection_pool_release(&p,token,20U)==UMI_STATUS_OK); CHECK(p.leased_count==0U);
+    UmiDataConnectionPool p; UmiDataConnectionSlot s; uint64_t token=0U; umi_data_connection_pool_init(&p); CHECK(umi_data_connection_slot_init(&s,"slot1",101U)==UMI_STATUS_OK); CHECK(umi_data_connection_pool_add(&p,&s)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDataConnectionPool, &p,
+        (umi_data_connection_pool_add(&p,&s)));
+ CHECK(umi_data_connection_pool_acquire(&p,10U,&token)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDataConnectionPool, &p,
+        (umi_data_connection_pool_acquire(&p,10U,&token)));
+ CHECK(token==101U); CHECK(umi_data_connection_pool_release(&p,token,20U)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDataConnectionPool, &p,
+        (umi_data_connection_pool_release(&p,token,20U)));
+ CHECK(p.leased_count==0U);
     return 0;
 }

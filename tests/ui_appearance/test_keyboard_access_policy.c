@@ -69,6 +69,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceKeyboardAccessPolicyTransferCases, UmiAppea
     umi_appearance_keyboard_access_policy_archive_encode, umi_appearance_keyboard_access_policy_archive_decode,
     UmiAppearanceKeyboardAccessPolicyTransferEqual, UmiAppearanceKeyboardAccessPolicyTransferTails, UmiAppearanceKeyboardAccessPolicyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceKeyboardAccessPolicyConditionalArchiveCases, UmiAppearanceKeyboardAccessPolicy,
+    umi_appearance_keyboard_access_policy_archive_encode, umi_appearance_keyboard_access_policy_archive_decode_if_unchanged,
+    UmiAppearanceKeyboardAccessPolicyTransferEqual, UmiAppearanceKeyboardAccessPolicyTransferTails, UmiAppearanceKeyboardAccessPolicyTransferMalformed)
+
+
 int main(void) {
     UmiAppearanceKeyboardAccessPolicy item;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -76,6 +82,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_keyboard_access_policy_is_valid(&item)) return 2;
     if (UmiAppearanceKeyboardAccessPolicyTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceKeyboardAccessPolicyConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;
 }

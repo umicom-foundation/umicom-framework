@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/core/valuation.h"
 #include "../../base/value_archive_internal.h"
 
@@ -78,3 +79,9 @@ static UmiStatus UmiValuationArchiveValidate(const UmiValuation *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_valuation_archive_encode, umi_valuation_archive_decode,
     UmiValuation, UmiValuationArchiveSchema, UmiValuationArchiveBound, UmiValuationArchiveWrite, UmiValuationArchiveRead, UmiValuationArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_valuation_archive_decode_if_unchanged, umi_valuation_archive_encode,
+    UmiValuation, UmiValuationArchiveSchema, UmiValuationArchiveBound, UmiValuationArchiveRead, UmiValuationArchiveValidate)

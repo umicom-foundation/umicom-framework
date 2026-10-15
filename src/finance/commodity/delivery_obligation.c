@@ -16,6 +16,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/commodity/delivery_obligation.h"
 #include "../../base/value_archive_internal.h"
 
@@ -111,3 +112,9 @@ static UmiStatus UmiCommodityDeliveryObligationArchiveValidate(const UmiCommodit
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_commodity_delivery_obligation_archive_encode, umi_commodity_delivery_obligation_archive_decode,
     UmiCommodityDeliveryObligation, UmiCommodityDeliveryObligationArchiveSchema, UmiCommodityDeliveryObligationArchiveBound, UmiCommodityDeliveryObligationArchiveWrite, UmiCommodityDeliveryObligationArchiveRead, UmiCommodityDeliveryObligationArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_commodity_delivery_obligation_archive_decode_if_unchanged, umi_commodity_delivery_obligation_archive_encode,
+    UmiCommodityDeliveryObligation, UmiCommodityDeliveryObligationArchiveSchema, UmiCommodityDeliveryObligationArchiveBound, UmiCommodityDeliveryObligationArchiveRead, UmiCommodityDeliveryObligationArchiveValidate)

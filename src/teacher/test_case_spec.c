@@ -17,6 +17,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../base/conditional_archive_internal.h"
 #include "umicom/teacher/test_case_spec.h"
 #include "../base/value_archive_internal.h"
 
@@ -174,3 +175,8 @@ static UmiStatus UmiTeacherTestCaseSpecArchiveValidate(const UmiTeacherTestCaseS
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_teacher_test_case_spec_archive_encode, umi_teacher_test_case_spec_archive_decode,
     UmiTeacherTestCaseSpec, UmiTeacherTestCaseSpecArchiveSchema, UmiTeacherTestCaseSpecArchiveBound, UmiTeacherTestCaseSpecArchiveWrite, UmiTeacherTestCaseSpecArchiveRead, UmiTeacherTestCaseSpecArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_teacher_test_case_spec_archive_decode_if_unchanged, umi_teacher_test_case_spec_archive_encode,
+    UmiTeacherTestCaseSpec, UmiTeacherTestCaseSpecArchiveSchema, UmiTeacherTestCaseSpecArchiveBound, UmiTeacherTestCaseSpecArchiveRead, UmiTeacherTestCaseSpecArchiveValidate)

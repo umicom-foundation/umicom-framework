@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/frontend/conformance/frontend_conformance_service.h"
 
 /*
@@ -23,7 +24,19 @@ void umi_fc_frontend_conformance_service_init(UmiFcFrontendConformanceService *s
  * Add fc frontend conformance service only after its inputs and available capacity have
  * been checked.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_fc_frontend_conformance_service_register(UmiFcFrontendConformanceService *service,const UmiFcRendererProfile *profile){UmiStatus st;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(service==NULL)return UMI_STATUS_INVALID_ARGUMENT;st=umi_fc_renderer_registry_upsert(&service->renderers,profile);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(st==UMI_STATUS_OK)service->revision++;return st;}
+#endif
+
+UmiStatus umi_fc_frontend_conformance_service_register(UmiFcFrontendConformanceService *service,const UmiFcRendererProfile *profile){
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (service != NULL && service->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+UmiStatus st;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(service==NULL)return UMI_STATUS_INVALID_ARGUMENT;st=umi_fc_renderer_registry_upsert(&service->renderers,profile);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(st==UMI_STATUS_OK)service->revision++;return st;}
 /*
  * Provide the fc frontend conformance service evaluate operation used by this module and
  * its client applications.

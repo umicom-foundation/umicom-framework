@@ -30,6 +30,9 @@ UmiStatus umi_rad_hierarchy_tree_init(UmiRadHierarchyTree *tree);
 /**
  * Add visual designer hierarchy tree only after its inputs and available capacity have been checked.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_rad_hierarchy_tree_add(UmiRadHierarchyTree *tree,const UmiRadHierarchyNode *node);
 /**
  * Find visual designer hierarchy tree while leaving the underlying catalogue or model owned by this

@@ -17,7 +17,9 @@
  * The same Studio release can be packaged as a directory, ZIP, Windows installer or another format through one contract.
  */
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/delivery/package.h"
+#include "../base/value_construction_internal.h"
 #include "../base/value_archive_internal.h"
 #include "delivery_internal.h"
 #include <string.h>
@@ -26,6 +28,11 @@
  * Initialise package spec from caller-provided values so later operations receive a known
  * state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_package_spec_init(UmiPackageSpec *spec,
                                 const char *package_id,
                                 UmiPackageFormat format,
@@ -52,6 +59,41 @@ UmiStatus umi_package_spec_init(UmiPackageSpec *spec,
     spec->format = format;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_package_spec_init_build_value(UmiPackageSpec *spec,
+                                const char *package_id,
+                                UmiPackageFormat format,
+                                const char *staging_root,
+                                const char *output_path)
+{
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (spec == NULL || package_id == NULL || staging_root == NULL ||
+        output_path == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(spec, 0, sizeof(*spec));
+    status = umi_delivery_copy_text(spec->package_id, sizeof(spec->package_id), package_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_delivery_copy_text(spec->staging_root, sizeof(spec->staging_root), staging_root);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_delivery_copy_text(spec->output_path, sizeof(spec->output_path), output_path);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    spec->format = format;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_package_spec_init, UmiPackageSpec, spec,
+    (UmiPackageSpec *spec, const char *package_id, UmiPackageFormat format, const char *staging_root, const char *output_path),
+    umi_package_spec_init_build_value(candidate, package_id, format, staging_root, output_path))
+
 
 /* Check that package spec satisfies its contract before another service relies on it. */
 UmiStatus umi_package_spec_validate(const UmiPackageSpec *spec)
@@ -132,3 +174,8 @@ static UmiStatus UmiPackageSpecArchiveValidate(const UmiPackageSpec *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_package_spec_archive_encode, umi_package_spec_archive_decode,
     UmiPackageSpec, UmiPackageSpecArchiveSchema, UmiPackageSpecArchiveBound, UmiPackageSpecArchiveWrite, UmiPackageSpecArchiveRead, UmiPackageSpecArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_package_spec_archive_decode_if_unchanged, umi_package_spec_archive_encode,
+    UmiPackageSpec, UmiPackageSpecArchiveSchema, UmiPackageSpecArchiveBound, UmiPackageSpecArchiveRead, UmiPackageSpecArchiveValidate)

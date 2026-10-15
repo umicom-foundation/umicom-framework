@@ -12,11 +12,18 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/data/enterprise/schema_foreign_key.h"
+#include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
 
 /* Initialisation centralises bounded text handling and defaults. */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_data_schema_foreign_key_init(UmiDataSchemaForeignKey *item, const char *constraint_id, const char *source_table, const char *source_column, const char *target_table, const char *target_column) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -27,6 +34,25 @@ UmiStatus umi_data_schema_foreign_key_init(UmiDataSchemaForeignKey *item, const 
     UmiStatus s=umi_data_enterprise_copy_text(item->constraint_id,sizeof(item->constraint_id),constraint_id); /* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s; s=umi_data_enterprise_copy_text(item->source_table,sizeof(item->source_table),source_table); /* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s; s=umi_data_enterprise_copy_text(item->source_column,sizeof(item->source_column),source_column); /* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s; s=umi_data_enterprise_copy_text(item->target_table,sizeof(item->target_table),target_table); /* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s; s=umi_data_enterprise_copy_text(item->target_column,sizeof(item->target_column),target_column); /* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s; item->cascade_delete=false;
     return umi_data_schema_foreign_key_validate(item);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_data_schema_foreign_key_init_build_value(UmiDataSchemaForeignKey *item, const char *constraint_id, const char *source_table, const char *source_column, const char *target_table, const char *target_column) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(item, 0, sizeof(*item));
+    UmiStatus s=umi_data_enterprise_copy_text(item->constraint_id,sizeof(item->constraint_id),constraint_id); /* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s; s=umi_data_enterprise_copy_text(item->source_table,sizeof(item->source_table),source_table); /* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s; s=umi_data_enterprise_copy_text(item->source_column,sizeof(item->source_column),source_column); /* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s; s=umi_data_enterprise_copy_text(item->target_table,sizeof(item->target_table),target_table); /* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s; s=umi_data_enterprise_copy_text(item->target_column,sizeof(item->target_column),target_column); /* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s; item->cascade_delete=false;
+    return umi_data_schema_foreign_key_validate(item);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_data_schema_foreign_key_init, UmiDataSchemaForeignKey, item,
+    (UmiDataSchemaForeignKey *item, const char *constraint_id, const char *source_table, const char *source_column, const char *target_table, const char *target_column),
+    umi_data_schema_foreign_key_init_build_value(candidate, constraint_id, source_table, source_column, target_table, target_column))
+
 
 /* Validation prevents malformed metadata from leaking into later query/migration stages. */
 UmiStatus umi_data_schema_foreign_key_validate(const UmiDataSchemaForeignKey *item) {
@@ -99,3 +125,9 @@ static UmiStatus UmiDataSchemaForeignKeyArchiveValidate(const UmiDataSchemaForei
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_data_schema_foreign_key_archive_encode, umi_data_schema_foreign_key_archive_decode,
     UmiDataSchemaForeignKey, UmiDataSchemaForeignKeyArchiveSchema, UmiDataSchemaForeignKeyArchiveBound, UmiDataSchemaForeignKeyArchiveWrite, UmiDataSchemaForeignKeyArchiveRead, UmiDataSchemaForeignKeyArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_data_schema_foreign_key_archive_decode_if_unchanged, umi_data_schema_foreign_key_archive_encode,
+    UmiDataSchemaForeignKey, UmiDataSchemaForeignKeyArchiveSchema, UmiDataSchemaForeignKeyArchiveBound, UmiDataSchemaForeignKeyArchiveRead, UmiDataSchemaForeignKeyArchiveValidate)

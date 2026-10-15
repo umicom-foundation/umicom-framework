@@ -106,9 +106,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrLibraryLayoutTransferCases, UmiDrLibraryLayout,
     umi_dr_library_layout_archive_encode, umi_dr_library_layout_archive_decode,
     UmiDrLibraryLayoutTransferEqual, UmiDrLibraryLayoutTransferTails, UmiDrLibraryLayoutTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrLibraryLayoutConditionalArchiveCases, UmiDrLibraryLayout,
+    umi_dr_library_layout_archive_encode, umi_dr_library_layout_archive_decode_if_unchanged,
+    UmiDrLibraryLayoutTransferEqual, UmiDrLibraryLayoutTransferTails, UmiDrLibraryLayoutTransferMalformed)
+
+
 int main(void) {
     UmiDrLibraryLayout value; umi_dr_library_layout_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"libs")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.private_dir,sizeof(value.private_dir),"lib")==UMI_STATUS_OK); value.search_relative=true; CHECK(umi_dr_library_layout_valid(&value));
     if (UmiDrLibraryLayoutTransferCases(&value) != 0) return 1;
+    if (UmiDrLibraryLayoutConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_library_layout_fingerprint(&value) != 0U);
     return 0;
 }

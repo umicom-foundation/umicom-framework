@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/workbench_context_source/range_state.h"
 #include "../base/value_archive_internal.h"
 #include "../base/record_update_internal.h"
@@ -274,3 +275,9 @@ UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_context_source_range_state_archive_encode
  * all fields together without emitting events or changing any external service. */
 UMI_DEFINE_REVIEWED_IDENTITY_RECORD_EDIT(umi_workbench_context_source_range_state_replace_if_current,
     UmiWorkbenchContextSourceRangeState, record_id, UmiWorkbenchContextSourceRangeStateArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_workbench_context_source_range_state_archive_decode_if_unchanged, umi_workbench_context_source_range_state_archive_encode,
+    UmiWorkbenchContextSourceRangeState, UmiWorkbenchContextSourceRangeStateArchiveSchema, UmiWorkbenchContextSourceRangeStateArchiveBound, UmiWorkbenchContextSourceRangeStateArchiveRead, UmiWorkbenchContextSourceRangeStateArchiveValidate)

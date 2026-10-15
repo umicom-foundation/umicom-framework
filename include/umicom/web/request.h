@@ -45,6 +45,9 @@ void umi_web_request_init(UmiWebRequest *request);
  * Provide the web request set target operation used by this module and its client
  * applications.
  */
+/** Replace path and query together. A query-free target clears the old query.
+ * Input may borrow request storage. INVALID_ARGUMENT, CAPACITY_EXCEEDED and
+ * OUT_OF_MEMORY leave the request unchanged; the owner serializes access. */
 UmiStatus umi_web_request_set_target(UmiWebRequest *request,const char *target);
 /**
  * Provide the web request header operation used by this module and its client

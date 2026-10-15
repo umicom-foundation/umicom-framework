@@ -73,9 +73,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrChannelTransferCases, UmiDrChannel,
     umi_dr_channel_archive_encode, umi_dr_channel_archive_decode,
     UmiDrChannelTransferEqual, UmiDrChannelTransferTails, UmiDrChannelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrChannelConditionalArchiveCases, UmiDrChannel,
+    umi_dr_channel_archive_encode, umi_dr_channel_archive_decode_if_unchanged,
+    UmiDrChannelTransferEqual, UmiDrChannelTransferTails, UmiDrChannelTransferMalformed)
+
+
 int main(void) {
     UmiDrChannel value; umi_dr_channel_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"stable")==UMI_STATUS_OK); CHECK(umi_dr_channel_valid(&value));
     if (UmiDrChannelTransferCases(&value) != 0) return 1;
+    if (UmiDrChannelConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_channel_fingerprint(&value) != 0U);
     return 0;
 }

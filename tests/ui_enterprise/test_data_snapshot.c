@@ -53,6 +53,13 @@ UMI_TEST_VALUE_TRANSFER(UmiUiEntDataSnapshotTransferCases, UmiUiEntDataSnapshot,
     umi_ui_ent_data_snapshot_archive_encode, umi_ui_ent_data_snapshot_archive_decode,
     UmiUiEntDataSnapshotTransferEqual, UmiUiEntDataSnapshotTransferTails, UmiUiEntDataSnapshotTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiEntDataSnapshotConditionalArchiveCases, UmiUiEntDataSnapshot,
+    umi_ui_ent_data_snapshot_archive_encode, umi_ui_ent_data_snapshot_archive_decode_if_unchanged,
+    UmiUiEntDataSnapshotTransferEqual, UmiUiEntDataSnapshotTransferTails, UmiUiEntDataSnapshotTransferMalformed)
+
+
 int main(void){UmiUiEntDataSnapshot v;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_data_snapshot_init(&v)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_ui_ent_data_snapshot_validate(&v))return 9;
     if (UmiUiEntDataSnapshotTransferCases(&v) != 0) return 1;
+    if (UmiUiEntDataSnapshotConditionalArchiveCases(&v) != 0) return 1;
 puts("ok");return 0;}

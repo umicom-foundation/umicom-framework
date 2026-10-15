@@ -34,7 +34,10 @@ typedef struct UmiDataTrackedChange { char change_id[UMI_DATA_ENTERPRISE_ID_CAPA
  */
 typedef struct UmiDataChangeTracker { UmiDataTrackedChange items[UMI_DATA_ENTERPRISE_MAX_ITEMS]; size_t count; uint64_t revision; } UmiDataChangeTracker;
 /* Reset change evidence for a new unit of work. */ void umi_data_change_tracker_init(UmiDataChangeTracker *tracker);
-/* Track a logical entity change, merging compatible state transitions. */ UmiStatus umi_data_change_tracker_track(UmiDataChangeTracker *tracker,const char *change_id,const char *entity_id,const char *key,UmiDataChangeKind kind);
+/* Track a logical entity change, merging compatible state transitions. */ /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
+UmiStatus umi_data_change_tracker_track(UmiDataChangeTracker *tracker,const char *change_id,const char *entity_id,const char *key,UmiDataChangeKind kind);
 /* Count pending mutations of a requested kind. */ size_t umi_data_change_tracker_count_kind(const UmiDataChangeTracker *tracker,UmiDataChangeKind kind);
 
 #ifdef __cplusplus

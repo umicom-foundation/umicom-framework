@@ -91,11 +91,18 @@ UMI_TEST_VALUE_TRANSFER(UmiRepositoryDependencyTransferCases, UmiRepositoryDepen
     umi_repository_dependency_archive_encode, umi_repository_dependency_archive_decode,
     UmiRepositoryDependencyTransferEqual, UmiRepositoryDependencyTransferTails, UmiRepositoryDependencyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRepositoryDependencyConditionalArchiveCases, UmiRepositoryDependency,
+    umi_repository_dependency_archive_encode, umi_repository_dependency_archive_decode_if_unchanged,
+    UmiRepositoryDependencyTransferEqual, UmiRepositoryDependencyTransferTails, UmiRepositoryDependencyTransferMalformed)
+
+
 int main(void)
 {
     UmiRepositoryDependency d;
     assert(umi_repository_dependency_init(&d, "studio", "applications\\studio", 0) == UMI_STATUS_OK);
     if (UmiRepositoryDependencyTransferCases(&d) != 0) return 1;
+    if (UmiRepositoryDependencyConditionalArchiveCases(&d) != 0) return 1;
 
     assert(strcmp(d.path, "applications/studio") == 0);
     return 0;

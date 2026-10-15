@@ -117,6 +117,32 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkGroupStateTransferCases, UmiWorkb
     umi_workbench_context_link_group_state_archive_encode, umi_workbench_context_link_group_state_archive_decode,
     UmiWorkbenchContextLinkGroupStateTransferEqual, UmiWorkbenchContextLinkGroupStateTransferTails, UmiWorkbenchContextLinkGroupStateTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkGroupStateConditionalArchiveCases, UmiWorkbenchContextLinkGroupState,
+    umi_workbench_context_link_group_state_archive_encode, umi_workbench_context_link_group_state_archive_decode_if_unchanged,
+    UmiWorkbenchContextLinkGroupStateTransferEqual, UmiWorkbenchContextLinkGroupStateTransferTails, UmiWorkbenchContextLinkGroupStateTransferMalformed)
+
+
+/* Delayed context edits must preserve newer work and reject exhausted tokens. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextLinkGroupStateReviewedCases, UmiWorkbenchContextLinkGroupState,
+    state_id, context_id, umi_workbench_context_link_group_state_replace_if_current, UmiWorkbenchContextLinkGroupStateTransferEqual)
+static int UmiWorkbenchContextLinkGroupStateMutationGuards(const UmiWorkbenchContextLinkGroupState *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkGroupState, group_id, umi_workbench_context_link_group_state_set_primary, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkGroupState, context_id, umi_workbench_context_link_group_state_set_secondary, sample);
+    UmiWorkbenchContextLinkGroupState value = *sample;
+    unsigned char before[sizeof(value)];
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_link_group_state_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U ||
+        value.timestamp_ms != 44U) return 1;
+    memcpy(before, &value, sizeof(value));
+    umi_workbench_context_link_group_state_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof(value)) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextLinkGroupState record;
@@ -125,6 +151,9 @@ int main(void)
     umi_workbench_context_link_group_state_init(&record, "group_state-id");
     assert(umi_workbench_context_link_group_state_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkGroupStateTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkGroupStateConditionalArchiveCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkGroupStateReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkGroupStateMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_context_link_group_state_set_primary(&record, "primary") == UMI_STATUS_OK);
     assert(umi_workbench_context_link_group_state_set_secondary(&record, "secondary") == UMI_STATUS_OK);

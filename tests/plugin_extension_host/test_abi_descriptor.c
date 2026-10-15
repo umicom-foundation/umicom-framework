@@ -93,6 +93,12 @@ UMI_TEST_VALUE_TRANSFER(UmiPluginExtensionHostAbiDescriptorTransferCases, UmiPlu
     umi_plugin_extension_host_abi_descriptor_archive_encode, umi_plugin_extension_host_abi_descriptor_archive_decode,
     UmiPluginExtensionHostAbiDescriptorTransferEqual, UmiPluginExtensionHostAbiDescriptorTransferTails, UmiPluginExtensionHostAbiDescriptorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiPluginExtensionHostAbiDescriptorConditionalArchiveCases, UmiPluginExtensionHostAbiDescriptor,
+    umi_plugin_extension_host_abi_descriptor_archive_encode, umi_plugin_extension_host_abi_descriptor_archive_decode_if_unchanged,
+    UmiPluginExtensionHostAbiDescriptorTransferEqual, UmiPluginExtensionHostAbiDescriptorTransferTails, UmiPluginExtensionHostAbiDescriptorTransferMalformed)
+
+
 int main(void)
 {
     UmiPluginExtensionHostAbiDescriptor value; umi_plugin_extension_host_abi_descriptor_init(&value);
@@ -101,6 +107,7 @@ int main(void)
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_plugin_extension_host_abi_descriptor_validate(&value) != UMI_STATUS_OK) return 2;
     if (UmiPluginExtensionHostAbiDescriptorTransferCases(&value) != 0) return 1;
+    if (UmiPluginExtensionHostAbiDescriptorConditionalArchiveCases(&value) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (umi_plugin_extension_host_abi_descriptor_fingerprint(&value) == 0U) return 3;

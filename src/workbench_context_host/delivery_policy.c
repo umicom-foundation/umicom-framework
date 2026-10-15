@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/workbench_context_host/delivery_policy.h"
 #include "../base/value_archive_internal.h"
 /*
@@ -88,3 +89,8 @@ static UmiStatus UmiWorkbenchContextHostDeliveryPolicyArchiveValidate(const UmiW
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_context_host_delivery_policy_archive_encode, umi_workbench_context_host_delivery_policy_archive_decode,
     UmiWorkbenchContextHostDeliveryPolicy, UmiWorkbenchContextHostDeliveryPolicyArchiveSchema, UmiWorkbenchContextHostDeliveryPolicyArchiveBound, UmiWorkbenchContextHostDeliveryPolicyArchiveWrite, UmiWorkbenchContextHostDeliveryPolicyArchiveRead, UmiWorkbenchContextHostDeliveryPolicyArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_workbench_context_host_delivery_policy_archive_decode_if_unchanged, umi_workbench_context_host_delivery_policy_archive_encode,
+    UmiWorkbenchContextHostDeliveryPolicy, UmiWorkbenchContextHostDeliveryPolicyArchiveSchema, UmiWorkbenchContextHostDeliveryPolicyArchiveBound, UmiWorkbenchContextHostDeliveryPolicyArchiveRead, UmiWorkbenchContextHostDeliveryPolicyArchiveValidate)

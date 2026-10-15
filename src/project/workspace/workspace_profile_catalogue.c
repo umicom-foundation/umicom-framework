@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Umicom Framework | Workspace Profile Catalogue | Sammy Hegab | Umicom Foundation | MIT */
+#include <stdint.h>
 #include "umicom/project/workspace/workspace_profile_catalogue.h"
 #include "internal.h"
 #include <string.h>
@@ -53,8 +54,38 @@ bool umi_project_workspace_workspace_profile_catalogue_contains(const UmiProject
  * Add project workspace workspace profile catalogue only after its inputs and available
  * capacity have been checked.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_project_workspace_workspace_profile_catalogue_add(UmiProjectWorkspaceWorkspaceProfileCatalogue *value, const char *id)
 {
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (value == NULL || id == NULL || id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (umi_project_workspace_workspace_profile_catalogue_contains(value, id)) return UMI_STATUS_ALREADY_EXISTS;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (value->count >= UMI_PROJECT_WORKSPACE_MEDIUM_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = umi_pw_copy(value->ids[value->count], sizeof(value->ids[value->count]), id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    value->count += 1U;
+    value->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_project_workspace_workspace_profile_catalogue_add(UmiProjectWorkspaceWorkspaceProfileCatalogue *value, const char *id)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (value != NULL && value->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiStatus status;
     /*
      * Protect caller-owned memory by checking that required state is available before it is

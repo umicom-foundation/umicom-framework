@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/project/workspace/workspace_root_catalogue.h"
 #include <string.h>
 #define CHECK(x) do { if (!(x)) return __LINE__; } while (0)
@@ -25,6 +26,9 @@ int main(void) {
     const char *id = NULL;
     umi_project_workspace_workspace_root_catalogue_init(&v);
     CHECK(umi_project_workspace_workspace_root_catalogue_add(&v,"alpha")==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiProjectWorkspaceWorkspaceRootCatalogue, &v,
+        (umi_project_workspace_workspace_root_catalogue_add(&v,"alpha")));
+
     CHECK(umi_project_workspace_workspace_root_catalogue_add(&v,"alpha")==UMI_STATUS_ALREADY_EXISTS);
     CHECK(umi_project_workspace_workspace_root_catalogue_contains(&v,"alpha"));
     CHECK(umi_project_workspace_workspace_root_catalogue_at(&v,0U,&id)==UMI_STATUS_OK);

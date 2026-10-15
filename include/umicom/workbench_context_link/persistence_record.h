@@ -103,6 +103,23 @@ UmiStatus umi_workbench_context_link_persistence_record_archive_encode(const Umi
 UmiStatus umi_workbench_context_link_persistence_record_archive_decode(const void *bytes, size_t byte_count,
     UmiWorkbenchContextLinkPersistenceRecord *value);
 
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the owner's publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_workbench_context_link_persistence_record_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiWorkbenchContextLinkPersistenceRecord *expected, UmiWorkbenchContextLinkPersistenceRecord *value);
+
+
+/** Replace this inline value only while the observed revision is current.
+ * Keep the same identity and a valid domain value. On failure nothing changes;
+ * successful publication advances the live revision once. The proposal token
+ * does not grant authority. The caller serializes access to the owner. */
+UmiStatus umi_workbench_context_link_persistence_record_replace_if_current(UmiWorkbenchContextLinkPersistenceRecord *value,
+    uint64_t expected_revision, const UmiWorkbenchContextLinkPersistenceRecord *proposal);
+
 #ifdef __cplusplus
 }
 #endif

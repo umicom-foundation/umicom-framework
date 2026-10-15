@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/toolchain/task_executor.h"
 
 #include <string.h>
@@ -74,11 +75,61 @@ UmiStatus umi_toolchain_task_executor_init(
  * Provide the toolchain task executor set workspace trust operation used by this module
  * and its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_toolchain_task_executor_set_workspace_trust(
     UmiToolchainTaskExecutor *executor,
     const UmiWorkspaceTrustStore *trust_store,
     const char *workspace_root)
 {
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (executor == NULL ||
+        executor->structure_size != sizeof(*executor) ||
+        executor->api_version != UMI_TOOLCHAIN_TASK_EXECUTOR_API_VERSION) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (trust_store == NULL || workspace_root == NULL ||
+        workspace_root[0] == '\0') {
+        executor->trust_store = NULL;
+        executor->workspace_root[0] = '\0';
+        executor->revision += 1U;
+        return UMI_STATUS_OK;
+    }
+
+    status = copy_text(executor->workspace_root,
+                       sizeof(executor->workspace_root),
+                       workspace_root);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    executor->trust_store = trust_store;
+    executor->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_toolchain_task_executor_set_workspace_trust(
+    UmiToolchainTaskExecutor *executor,
+    const UmiWorkspaceTrustStore *trust_store,
+    const char *workspace_root)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (executor != NULL && executor->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiStatus status;
 
     /*

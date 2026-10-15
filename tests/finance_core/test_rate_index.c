@@ -106,10 +106,17 @@ UMI_TEST_VALUE_TRANSFER(UmiRateIndexTransferCases, UmiRateIndex,
     umi_rate_index_archive_encode, umi_rate_index_archive_decode,
     UmiRateIndexTransferEqual, UmiRateIndexTransferTails, UmiRateIndexTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRateIndexConditionalArchiveCases, UmiRateIndex,
+    umi_rate_index_archive_encode, umi_rate_index_archive_decode_if_unchanged,
+    UmiRateIndexTransferEqual, UmiRateIndexTransferTails, UmiRateIndexTransferMalformed)
+
+
 int main(void)
 {
     UmiRateIndex x; CHECK(umi_rate_index_init(&x,"ID","Name","CODE",1U)==UMI_STATUS_OK); CHECK(umi_rate_index_is_valid(&x));
     if (UmiRateIndexTransferCases(&x) != 0) return 1;
+    if (UmiRateIndexConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;
 }

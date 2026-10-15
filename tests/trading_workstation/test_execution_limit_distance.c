@@ -18,6 +18,10 @@
 
 #include "umicom/trading_workstation/execution/limit_distance.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(umi_trading_professional_evaluate_execution_limit_distance_batch_cases, umi_trading_professional_evaluate_execution_limit_distance,
+    umi_trading_professional_evaluate_execution_limit_distance_batch, UmiTradingProfessionalInput, UmiTradingProfessionalSnapshot, bid)
+
 int main(void)
 {
     UmiTradingProfessionalInput input;
@@ -97,6 +101,7 @@ int main(void)
     input.canCancelOrder = 1;
     input.revision = 55U;
 
+    if (umi_trading_professional_evaluate_execution_limit_distance_batch_cases(&input) != 0) return 1;
     assert(umi_trading_professional_evaluate_execution_limit_distance(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "execution.limit-distance") == 0);
     assert(snapshot.revision == 55U);

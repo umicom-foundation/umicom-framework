@@ -92,9 +92,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrRollbackPlanTransferCases, UmiDrRollbackPlan,
     umi_dr_rollback_plan_archive_encode, umi_dr_rollback_plan_archive_decode,
     UmiDrRollbackPlanTransferEqual, UmiDrRollbackPlanTransferTails, UmiDrRollbackPlanTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrRollbackPlanConditionalArchiveCases, UmiDrRollbackPlan,
+    umi_dr_rollback_plan_archive_encode, umi_dr_rollback_plan_archive_decode_if_unchanged,
+    UmiDrRollbackPlanTransferEqual, UmiDrRollbackPlanTransferTails, UmiDrRollbackPlanTransferMalformed)
+
+
 int main(void) {
     UmiDrRollbackPlan value; umi_dr_rollback_plan_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"rb")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.checkpoint_id,sizeof(value.checkpoint_id),"cp")==UMI_STATUS_OK); value.verified=true; CHECK(umi_dr_rollback_plan_valid(&value));
     if (UmiDrRollbackPlanTransferCases(&value) != 0) return 1;
+    if (UmiDrRollbackPlanConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_rollback_plan_fingerprint(&value) != 0U);
     return 0;
 }

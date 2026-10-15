@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/financial_platform/payment_control_book.h"
@@ -28,6 +29,9 @@ int main(void)
     payment.amount = 100.0;
     payment.version = 1U;
     assert(umi_financial_payment_control_book_add(&book, &payment) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFinancialPaymentControlBook, &book,
+        (umi_financial_payment_control_book_add(&book, &payment)));
+
     assert(umi_financial_payment_control_book_transition(
                &book, "payment-1", UMI_FINANCIAL_PAYMENT_SENT, 2U) ==
            UMI_STATUS_PERMISSION_DENIED);
@@ -35,6 +39,10 @@ int main(void)
     assert(umi_financial_payment_control_book_transition(
                &book, "payment-1", UMI_FINANCIAL_PAYMENT_SENT, 2U) ==
            UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFinancialPaymentControlBook, &book,
+        (umi_financial_payment_control_book_transition(
+               &book, "payment-1", UMI_FINANCIAL_PAYMENT_SENT, 2U)));
+
     assert(umi_financial_payment_control_book_transition(
                &book, "payment-1", UMI_FINANCIAL_PAYMENT_SETTLED, 3U) ==
            UMI_STATUS_OK);

@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiFlakyTestModelTransferCases, UmiFlakyTestModel,
     umi_flaky_test_model_archive_encode, umi_flaky_test_model_archive_decode,
     UmiFlakyTestModelTransferEqual, UmiFlakyTestModelTransferTails, UmiFlakyTestModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFlakyTestModelConditionalArchiveCases, UmiFlakyTestModel,
+    umi_flaky_test_model_archive_encode, umi_flaky_test_model_archive_decode_if_unchanged,
+    UmiFlakyTestModelTransferEqual, UmiFlakyTestModelTransferTails, UmiFlakyTestModelTransferMalformed)
+
+
 int main(void){UmiFlakyTestModel m;assert(umi_flaky_test_model_init(&m,"flaky_test_model","Flaky Test Model")==UMI_STATUS_OK);assert(umi_flaky_test_model_set_active(&m,true)==UMI_STATUS_OK);assert(umi_flaky_test_model_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_flaky_test_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_flaky_test_model_valid(&m));
     if (UmiFlakyTestModelTransferCases(&m) != 0) return 1;
+    if (UmiFlakyTestModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

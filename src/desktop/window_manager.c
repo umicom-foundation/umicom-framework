@@ -22,6 +22,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/desktop/window_manager.h"
 
 #include <stdio.h>
@@ -77,6 +78,10 @@ void umi_desktop_window_manager_init(UmiDesktopWindowManager *manager)
  * Provide the desktop window manager open operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_desktop_window_manager_open(
     UmiDesktopWindowManager *manager,
     const UmiDesktopMonitorTopology *topology,
@@ -111,15 +116,96 @@ UmiStatus umi_desktop_window_manager_open(
     manager->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_desktop_window_manager_open(
+    UmiDesktopWindowManager *manager,
+    const UmiDesktopMonitorTopology *topology,
+    const UmiDesktopWindow *window)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (manager != NULL && manager->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiDesktopWindow stored;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (manager == NULL || topology == NULL || !valid_window(window))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (umi_application_component_catalogue_find(window->component_id) == NULL)
+        return UMI_STATUS_NOT_FOUND;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (find_window_index(manager, window->window_id) != SIZE_MAX)
+        return UMI_STATUS_ALREADY_EXISTS;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (manager->count >= UMI_DESKTOP_MAX_WINDOWS)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    stored = *window;
+    status = umi_desktop_monitor_topology_constrain(
+        topology, stored.monitor_id, &stored.bounds);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    manager->windows[manager->count++] = stored;
+    manager->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the desktop window manager close operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_desktop_window_manager_close(
     UmiDesktopWindowManager *manager,
     const char *window_id)
 {
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (manager == NULL || window_id == NULL || window_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    index = find_window_index(manager, window_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (!manager->windows[index].closable)
+        return UMI_STATUS_PERMISSION_DENIED;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index + 1U < manager->count) {
+        (void)memmove(&manager->windows[index], &manager->windows[index + 1U],
+                      (manager->count - index - 1U) *
+                          sizeof(manager->windows[0]));
+    }
+    manager->count -= 1U;
+    (void)memset(&manager->windows[manager->count], 0,
+                 sizeof(manager->windows[0]));
+    manager->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_desktop_window_manager_close(
+    UmiDesktopWindowManager *manager,
+    const char *window_id)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (manager != NULL && manager->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -177,6 +263,10 @@ UmiStatus umi_desktop_window_manager_show(
  * Provide the desktop window manager place operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_desktop_window_manager_place(
     UmiDesktopWindowManager *manager,
     const UmiDesktopMonitorTopology *topology,
@@ -218,16 +308,97 @@ UmiStatus umi_desktop_window_manager_place(
     manager->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_desktop_window_manager_place(
+    UmiDesktopWindowManager *manager,
+    const UmiDesktopMonitorTopology *topology,
+    const char *window_id,
+    const char *monitor_id,
+    UmiDesktopRect bounds,
+    UmiDesktopDockPlacement placement)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (manager != NULL && manager->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiDesktopWindow *window;
+    UmiStatus status;
+    int length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (manager == NULL || topology == NULL || window_id == NULL ||
+        monitor_id == NULL || monitor_id[0] == '\0' || bounds.width <= 0 ||
+        bounds.height <= 0 || placement < UMI_DESKTOP_DOCK_CANVAS ||
+        placement > UMI_DESKTOP_DOCK_FLOATING)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    window = umi_desktop_window_manager_find_mutable(manager, window_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    status = umi_desktop_monitor_topology_constrain(
+        topology, monitor_id, &bounds);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    length = snprintf(window->monitor_id, sizeof(window->monitor_id), "%s",
+                      monitor_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (length < 0 || (size_t)length >= sizeof(window->monitor_id))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    window->bounds = bounds;
+    window->dock_placement = placement;
+    window->maximised = false;
+    manager->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the desktop window manager maximise operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_desktop_window_manager_maximise(
     UmiDesktopWindowManager *manager,
     const char *window_id,
     bool maximised)
 {
+    UmiDesktopWindow *window =
+        umi_desktop_window_manager_find_mutable(manager, window_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (manager == NULL || window_id == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    window->maximised = maximised;
+    manager->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_desktop_window_manager_maximise(
+    UmiDesktopWindowManager *manager,
+    const char *window_id,
+    bool maximised)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (manager != NULL && manager->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiDesktopWindow *window =
         umi_desktop_window_manager_find_mutable(manager, window_id);
     /*

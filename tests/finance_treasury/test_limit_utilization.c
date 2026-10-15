@@ -67,11 +67,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryLimitUtilizationTransferCases, UmiTreasuryLim
     umi_treasury_limit_utilization_archive_encode, umi_treasury_limit_utilization_archive_decode,
     UmiTreasuryLimitUtilizationTransferEqual, UmiTreasuryLimitUtilizationTransferTails, UmiTreasuryLimitUtilizationTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryLimitUtilizationConditionalArchiveCases, UmiTreasuryLimitUtilization,
+    umi_treasury_limit_utilization_archive_encode, umi_treasury_limit_utilization_archive_decode_if_unchanged,
+    UmiTreasuryLimitUtilizationTransferEqual, UmiTreasuryLimitUtilizationTransferTails, UmiTreasuryLimitUtilizationTransferMalformed)
+
+
 int main(void) {
     UmiTreasuryLimitUtilization v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_limit_utilization_init(&v, "util", 750, 1000) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryLimitUtilizationTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryLimitUtilizationConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if(umi_treasury_limit_utilization_utilization_bps(&v)!=7500U)return 2;

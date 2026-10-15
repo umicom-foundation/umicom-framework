@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/web/workbench/environment.h"
@@ -25,6 +26,10 @@ int main(void)
     umi_web_workbench_environment_init(&environment, "dev", "Development");
     assert(umi_web_workbench_environment_set(&environment, "baseUrl",
         "https://api.example.test", true) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWebWorkbenchEnvironment, &environment,
+        (umi_web_workbench_environment_set(&environment, "baseUrl",
+        "https://api.example.test", true)));
+
     assert(umi_web_workbench_environment_set(&environment, "disabled", "x", false) == UMI_STATUS_OK);
     assert(umi_web_workbench_environment_resolve(&environment,
         "{{baseUrl}}/v1/{{missing}}/{{disabled}}", resolved, sizeof(resolved),
@@ -32,6 +37,9 @@ int main(void)
     assert(strcmp(resolved, "https://api.example.test/v1/{{missing}}/{{disabled}}") == 0);
     assert(unresolved == 2U);
     assert(umi_web_workbench_environment_remove(&environment, "baseUrl") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWebWorkbenchEnvironment, &environment,
+        (umi_web_workbench_environment_remove(&environment, "baseUrl")));
+
     assert(umi_web_workbench_environment_find(&environment, "baseUrl") == NULL);
     return 0;
 }

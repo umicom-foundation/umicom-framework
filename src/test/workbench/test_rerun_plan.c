@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/test/workbench/test_rerun_plan.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -112,3 +113,8 @@ static UmiStatus UmiTestRerunPlanArchiveValidate(const UmiTestRerunPlan *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_test_rerun_plan_archive_encode, umi_test_rerun_plan_archive_decode,
     UmiTestRerunPlan, UmiTestRerunPlanArchiveSchema, UmiTestRerunPlanArchiveBound, UmiTestRerunPlanArchiveWrite, UmiTestRerunPlanArchiveRead, UmiTestRerunPlanArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_test_rerun_plan_archive_decode_if_unchanged, umi_test_rerun_plan_archive_encode,
+    UmiTestRerunPlan, UmiTestRerunPlanArchiveSchema, UmiTestRerunPlanArchiveBound, UmiTestRerunPlanArchiveRead, UmiTestRerunPlanArchiveValidate)

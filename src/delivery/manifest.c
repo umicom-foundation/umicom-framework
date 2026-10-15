@@ -17,7 +17,9 @@
  * The manifest is the stable identity card for a release and links source revision, version, channel and generation.
  */
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/delivery/manifest.h"
+#include "../base/value_construction_internal.h"
 #include "../base/value_archive_internal.h"
 #include "delivery_internal.h"
 #include <string.h>
@@ -26,6 +28,11 @@
  * Initialise delivery manifest from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_delivery_manifest_init(UmiDeliveryManifest *manifest,
                                      const char *application_id,
                                      const char *release_id,
@@ -56,6 +63,45 @@ UmiStatus umi_delivery_manifest_init(UmiDeliveryManifest *manifest,
     manifest->channel = channel;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_delivery_manifest_init_build_value(UmiDeliveryManifest *manifest,
+                                     const char *application_id,
+                                     const char *release_id,
+                                     const char *version,
+                                     UmiReleaseChannel channel)
+{
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (manifest == NULL || application_id == NULL || release_id == NULL ||
+        version == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(manifest, 0, sizeof(*manifest));
+    status = umi_delivery_copy_text(manifest->application_id,
+                                    sizeof(manifest->application_id),
+                                    application_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_delivery_copy_text(manifest->release_id,
+                                    sizeof(manifest->release_id), release_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_delivery_copy_text(manifest->version,
+                                    sizeof(manifest->version), version);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    manifest->channel = channel;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_delivery_manifest_init, UmiDeliveryManifest, manifest,
+    (UmiDeliveryManifest *manifest, const char *application_id, const char *release_id, const char *version, UmiReleaseChannel channel),
+    umi_delivery_manifest_init_build_value(candidate, application_id, release_id, version, channel))
+
 
 /*
  * Provide the delivery manifest set generation operation used by this module and its
@@ -168,3 +214,8 @@ static UmiStatus UmiDeliveryManifestArchiveValidate(const UmiDeliveryManifest *v
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_delivery_manifest_archive_encode, umi_delivery_manifest_archive_decode,
     UmiDeliveryManifest, UmiDeliveryManifestArchiveSchema, UmiDeliveryManifestArchiveBound, UmiDeliveryManifestArchiveWrite, UmiDeliveryManifestArchiveRead, UmiDeliveryManifestArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_delivery_manifest_archive_decode_if_unchanged, umi_delivery_manifest_archive_encode,
+    UmiDeliveryManifest, UmiDeliveryManifestArchiveSchema, UmiDeliveryManifestArchiveBound, UmiDeliveryManifestArchiveRead, UmiDeliveryManifestArchiveValidate)

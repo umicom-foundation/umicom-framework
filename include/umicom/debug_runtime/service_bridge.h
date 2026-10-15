@@ -69,6 +69,9 @@ UmiStatus umi_debug_runtime_publish_breakpoints(
  * Provide the debug runtime publish threads operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_debug_runtime_publish_threads(
     UmiDebugRuntimeServiceBridge *bridge,
     const UmiDebugRuntimeThreadList *result,
@@ -79,6 +82,9 @@ UmiStatus umi_debug_runtime_publish_threads(
  * Provide the debug runtime publish stack operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_debug_runtime_publish_stack(
     UmiDebugRuntimeServiceBridge *bridge,
     uint64_t thread_id,

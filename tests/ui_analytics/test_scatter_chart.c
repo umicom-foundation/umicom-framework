@@ -50,6 +50,13 @@ UMI_TEST_VALUE_TRANSFER(UmiAnalyticsScatterChartTransferCases, UmiAnalyticsScatt
     umi_analytics_scatter_chart_archive_encode, umi_analytics_scatter_chart_archive_decode,
     UmiAnalyticsScatterChartTransferEqual, UmiAnalyticsScatterChartTransferTails, UmiAnalyticsScatterChartTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAnalyticsScatterChartConditionalArchiveCases, UmiAnalyticsScatterChart,
+    umi_analytics_scatter_chart_archive_encode, umi_analytics_scatter_chart_archive_decode_if_unchanged,
+    UmiAnalyticsScatterChartTransferEqual, UmiAnalyticsScatterChartTransferTails, UmiAnalyticsScatterChartTransferMalformed)
+
+
 int main(void){UmiAnalyticsScatterChart item;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_analytics_scatter_chart_init(&item)!=UMI_STATUS_OK)return 1;
     if (UmiAnalyticsScatterChartTransferCases(&item) != 0) return 1;
+    if (UmiAnalyticsScatterChartConditionalArchiveCases(&item) != 0) return 1;
 return (umi_analytics_scatter_chart_valid(&item))?0:2;}

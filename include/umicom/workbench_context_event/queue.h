@@ -44,12 +44,18 @@ void umi_workbench_context_event_queue_destroy(UmiWorkbenchContextEventQueue *qu
  * Provide the workbench context event queue push operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_context_event_queue_push(
     UmiWorkbenchContextEventQueue *queue,const UmiWorkbenchContextEvent *event);
 /**
  * Provide the workbench context event queue pop operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_context_event_queue_pop(
     UmiWorkbenchContextEventQueue *queue,UmiWorkbenchContextEvent *out_event);
 /**

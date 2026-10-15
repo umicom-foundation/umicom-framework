@@ -60,6 +60,9 @@ void umi_workbench_context_host_diagnostics_init(UmiWorkbenchContextHostDiagnost
  * Add workbench context host diagnostics only after its inputs and available capacity have
  * been checked.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_context_host_diagnostics_add(
     UmiWorkbenchContextHostDiagnostics *diagnostics,
     const UmiWorkbenchContextHostDiagnostic *diagnostic);

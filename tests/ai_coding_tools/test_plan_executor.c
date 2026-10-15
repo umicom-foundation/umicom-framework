@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include <assert.h>
+#include "../value_archive/construction_cases.h"
 #include <string.h>
 #include "tool_test_support.h"
 
@@ -23,8 +24,14 @@
  */
 /* The original automatic fixture can exceed the native Windows stack before its first assertion. The replacement owns the same records on the heap; retain the earlier test and its comments for review. */
 #if 0
+
+/* A rejected replacement must preserve the previously accepted plan value. */
+
+
 int main(void)
 {
+
+
     ToolTestFixture f;
     UmiAiCodingToolPlan plan;
     UmiAiCodingToolPlanStep step = {0};
@@ -115,8 +122,62 @@ static int CheckFixture(FixtureStorage *state)
     return 0;
 }
 
+/* Validate constructor refusal before the active service scenario. */
+static int UmiAiCodingToolPlanConstructionCases(void)
+{
+    UmiAiCodingToolPlan *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_ai_coding_tool_plan_init(value, "inspect", "Inspect", "Read before reasoning.") == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->plan_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_ai_coding_tool_plan_init(value, oversized, "Inspect", "Read before reasoning.") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_ai_coding_tool_plan_init(value, value->plan_id, "Inspect", "Read before reasoning.") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->plan_id, "inspect") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->title) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_ai_coding_tool_plan_init(value, "inspect", oversized, "Read before reasoning.") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_ai_coding_tool_plan_init(value, "inspect", value->title, "Read before reasoning.") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->title, "Inspect") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->rationale) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_ai_coding_tool_plan_init(value, "inspect", "Inspect", oversized) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_ai_coding_tool_plan_init(value, "inspect", "Inspect", value->rationale) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->rationale, "Read before reasoning.") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void)
 {
+    if (UmiAiCodingToolPlanConstructionCases() != 0) return 1;
+
     FixtureStorage *state = calloc(1U, sizeof *state);
     if (state == NULL) {
         fputs("Cannot allocate fixture storage\n", stderr);

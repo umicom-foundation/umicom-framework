@@ -72,6 +72,13 @@ UMI_TEST_VALUE_TRANSFER(UmiTerminalRemoteRemotePortForwardTransferCases, UmiTerm
     umi_terminal_remote_remote_port_forward_archive_encode, umi_terminal_remote_remote_port_forward_archive_decode,
     UmiTerminalRemoteRemotePortForwardTransferEqual, UmiTerminalRemoteRemotePortForwardTransferTails, UmiTerminalRemoteRemotePortForwardTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTerminalRemoteRemotePortForwardConditionalArchiveCases, UmiTerminalRemoteRemotePortForward,
+    umi_terminal_remote_remote_port_forward_archive_encode, umi_terminal_remote_remote_port_forward_archive_decode_if_unchanged,
+    UmiTerminalRemoteRemotePortForwardTransferEqual, UmiTerminalRemoteRemotePortForwardTransferTails, UmiTerminalRemoteRemotePortForwardTransferMalformed)
+
+
 int main(void) { UmiTerminalRemoteRemotePortForward v; umi_terminal_remote_remote_port_forward_init(&v,8080U,"127.0.0.1",80U); /* Apply this operation only while the related capability or state is available. */ if(!umi_terminal_remote_remote_port_forward_valid(&v)) return 1;
     if (UmiTerminalRemoteRemotePortForwardTransferCases(&v) != 0) return 1;
+    if (UmiTerminalRemoteRemotePortForwardConditionalArchiveCases(&v) != 0) return 1;
  umi_terminal_remote_remote_port_forward_init(&v,0U,"host",80U); return umi_terminal_remote_remote_port_forward_valid(&v)?2:0; }

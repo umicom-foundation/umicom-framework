@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/frontend/conformance/renderer_registry.h"
 #include "umicom/frontend/conformance/renderer_profile.h"
 
@@ -22,6 +23,9 @@
  * to the operating system.
  */
 int main(void) {
-    UmiFcRendererRegistry r; UmiFcRendererProfile p,q; umi_fc_renderer_registry_init(&r); CHECK(umi_fc_renderer_profile_make("web",UMI_FC_FRONTEND_NATIVE_WEB,3U,1U,&p)==UMI_STATUS_OK); CHECK(umi_fc_renderer_registry_upsert(&r,&p)==UMI_STATUS_OK); CHECK(umi_fc_renderer_registry_find(&r,"web",&q)==UMI_STATUS_OK); CHECK(q.kind==UMI_FC_FRONTEND_NATIVE_WEB);
+    UmiFcRendererRegistry r; UmiFcRendererProfile p,q; umi_fc_renderer_registry_init(&r); CHECK(umi_fc_renderer_profile_make("web",UMI_FC_FRONTEND_NATIVE_WEB,3U,1U,&p)==UMI_STATUS_OK); CHECK(umi_fc_renderer_registry_upsert(&r,&p)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFcRendererRegistry, &r,
+        (umi_fc_renderer_registry_upsert(&r,&p)));
+ CHECK(umi_fc_renderer_registry_find(&r,"web",&q)==UMI_STATUS_OK); CHECK(q.kind==UMI_FC_FRONTEND_NATIVE_WEB);
     return 0;
 }

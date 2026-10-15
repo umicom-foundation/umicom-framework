@@ -104,6 +104,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadDesignerWorkspaceTransferCases, UmiRadDesignerWork
     umi_rad_designer_workspace_archive_encode, umi_rad_designer_workspace_archive_decode,
     UmiRadDesignerWorkspaceTransferEqual, UmiRadDesignerWorkspaceTransferTails, UmiRadDesignerWorkspaceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadDesignerWorkspaceConditionalArchiveCases, UmiRadDesignerWorkspace,
+    umi_rad_designer_workspace_archive_encode, umi_rad_designer_workspace_archive_decode_if_unchanged,
+    UmiRadDesignerWorkspaceTransferEqual, UmiRadDesignerWorkspaceTransferTails, UmiRadDesignerWorkspaceTransferMalformed)
+
+
 int main(void){UmiRadDesignerWorkspace item;CHECK(umi_rad_designer_workspace_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_designer_workspace_is_valid(&item));
     if (UmiRadDesignerWorkspaceTransferCases(&item) != 0) return 1;
+    if (UmiRadDesignerWorkspaceConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

@@ -121,6 +121,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceThemePackTransferCases, UmiAppearanceThemeP
     umi_appearance_theme_pack_archive_encode, umi_appearance_theme_pack_archive_decode,
     UmiAppearanceThemePackTransferEqual, UmiAppearanceThemePackTransferTails, UmiAppearanceThemePackTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceThemePackConditionalArchiveCases, UmiAppearanceThemePack,
+    umi_appearance_theme_pack_archive_encode, umi_appearance_theme_pack_archive_decode_if_unchanged,
+    UmiAppearanceThemePackTransferEqual, UmiAppearanceThemePackTransferTails, UmiAppearanceThemePackTransferMalformed)
+
+
 int main(void) {
     UmiAppearanceThemePack item;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -128,6 +134,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_theme_pack_is_valid(&item)) return 2;
     if (UmiAppearanceThemePackTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceThemePackConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;
 }

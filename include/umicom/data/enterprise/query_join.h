@@ -38,6 +38,10 @@ typedef struct UmiDataQueryJoin {
 } UmiDataQueryJoin;
 
 /* Initialise a validated query join descriptor. */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_data_query_join_init(UmiDataQueryJoin *item, const char *join_id, const char *left_table, const char *right_table, const char *condition, bool outer_join);
 /* Validate invariants before the descriptor is admitted to a catalogue or plan. */
 UmiStatus umi_data_query_join_validate(const UmiDataQueryJoin *item);
@@ -52,6 +56,16 @@ UmiStatus umi_data_query_join_archive_encode(const UmiDataQueryJoin *value,
     void *bytes, size_t capacity, size_t *out_size);
 UmiStatus umi_data_query_join_archive_decode(const void *bytes, size_t byte_count,
     UmiDataQueryJoin *value);
+
+/** Decode only if value's encoded fields still match the expected snapshot.
+ * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
+ * Comparison ignores padding and unused text; decoded revisions remain archive
+ * evidence. This allocating operation requires owner-thread serialization and
+ * grants no execution authority. Use the owner's publication API for live state.
+ * See umicom/base/value_archive.h for limits and snapshot ownership. */
+UmiStatus umi_data_query_join_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
+    const UmiDataQueryJoin *expected, UmiDataQueryJoin *value);
+
 
 #ifdef __cplusplus
 }

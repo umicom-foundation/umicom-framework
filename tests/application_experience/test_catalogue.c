@@ -55,6 +55,21 @@ int test_experience_catalogue(void)
         assert(readiness.panel_count == experience->panel_count);
         assert(readiness.reason[0] != '\0');
     }
+    /* Healthcare must be discoverable without presenting the synthetic exercise
+     * as a clinically verified product. Launch readiness describes the surface,
+     * while feature maturity continues to describe its restricted scope. */
+    {
+        const UmiApplicationExperienceDefinition *healthcare =
+            umi_application_experience_catalogue_find("org.umicom.healthcare");
+        const UmiExperienceFeatureDefinition *access;
+        assert(healthcare != NULL);
+        access = umi_application_experience_feature_find(
+            healthcare, "healthcare.synthetic-access");
+        assert(access != NULL);
+        assert(access->state == UMI_EXPERIENCE_FEATURE_FOUNDATION);
+        assert(umi_application_experience_layout_find(
+            healthcare, healthcare->default_layout_id) != NULL);
+    }
     /* Unknown IDs remain diagnosable without being offered as launch choices. */
     {
         UmiApplicationLaunchReadiness readiness;

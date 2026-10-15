@@ -23,6 +23,7 @@
 #undef NDEBUG
 #endif
 #include <assert.h>
+#include "value_archive/construction_cases.h"
 #include "umicom/delivery/provenance.h"
 #include "umicom/delivery/release.h"
 /*
@@ -127,13 +128,75 @@ UMI_TEST_VALUE_TRANSFER(UmiProvenanceTransferCases, UmiProvenance,
     umi_provenance_archive_encode, umi_provenance_archive_decode,
     UmiProvenanceTransferEqual, UmiProvenanceTransferTails, UmiProvenanceTransferMalformed)
 
+#include "value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiProvenanceConditionalArchiveCases, UmiProvenance,
+    umi_provenance_archive_encode, umi_provenance_archive_decode_if_unchanged,
+    UmiProvenanceTransferEqual, UmiProvenanceTransferTails, UmiProvenanceTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted provenance value. */
+static int UmiProvenanceConstructionCases(void)
+{
+    UmiProvenance *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_provenance_init(value, "abc", "builder", "debug") == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->source_revision) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_provenance_init(value, oversized, "builder", "debug") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_provenance_init(value, value->source_revision, "builder", "debug") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->source_revision, "abc") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->builder_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_provenance_init(value, "abc", oversized, "debug") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_provenance_init(value, "abc", value->builder_id, "debug") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->builder_id, "builder") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->build_preset) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_provenance_init(value, "abc", "builder", oversized) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_provenance_init(value, "abc", "builder", value->build_preset) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->build_preset, "debug") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiProvenanceConstructionCases() != 0) return 1;
+
     UmiProvenance p;
     UmiDeliveryManifest m;
     UmiRelease r;
     assert(umi_provenance_init(&p, "abc", "builder", "debug") == UMI_STATUS_OK);
     assert(umi_provenance_validate(&p) == UMI_STATUS_OK);
     if (UmiProvenanceTransferCases(&p) != 0) return 1;
+    if (UmiProvenanceConditionalArchiveCases(&p) != 0) return 1;
 
     assert(umi_delivery_manifest_init(&m, "studio", "rel", "0.14.0", UMI_RELEASE_BETA) == UMI_STATUS_OK);
     assert(umi_release_init(&r, &m, 7U) == UMI_STATUS_OK);

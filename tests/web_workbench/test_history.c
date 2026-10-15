@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/web/workbench/history.h"
@@ -35,6 +36,9 @@ int main(void)
     umi_web_workbench_response_complete(&response, UMI_STATUS_OK, 200,
         &timing, true, NULL);
     assert(umi_web_workbench_history_complete(&history, id, &response) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWebWorkbenchHistory, &history,
+        (umi_web_workbench_history_complete(&history, id, &response)));
+
     assert(umi_web_workbench_history_query(&history, "position", 200,
         matches, 4U) == 1U);
     assert(matches[0].duration_us == 123U);

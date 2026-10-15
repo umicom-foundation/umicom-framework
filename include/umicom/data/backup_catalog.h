@@ -32,6 +32,9 @@ UmiStatus umi_database_backup_catalog_init(UmiDatabaseBackupCatalog *catalog);
  * Add database backup catalog only after its inputs and available capacity have been
  * checked.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_database_backup_catalog_add(UmiDatabaseBackupCatalog *catalog,const UmiDatabaseBackupRecord *record);
 /**
  * Provide the database backup catalog mark verified operation used by this module and its

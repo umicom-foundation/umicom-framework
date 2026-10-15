@@ -39,6 +39,10 @@ typedef struct UmiFabricWorkflowExecution { char workflow_id[UMI_FABRIC_ID_CAPAC
  * Initialise fabric workflow execution from caller-provided values so later operations
  * receive a known state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_fabric_workflow_execution_init(UmiFabricWorkflowExecution *execution,const char *workflow_id);
 /**
  * Provide the fabric workflow execution transition operation used by this module and its

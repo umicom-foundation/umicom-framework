@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/vcs/advanced/compare_navigation.h"
 #include "../../base/value_archive_internal.h"
 
@@ -144,3 +145,8 @@ static UmiStatus UmiVcsAdvancedCompareNavigationArchiveValidate(const UmiVcsAdva
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_vcs_advanced_compare_navigation_archive_encode, umi_vcs_advanced_compare_navigation_archive_decode,
     UmiVcsAdvancedCompareNavigation, UmiVcsAdvancedCompareNavigationArchiveSchema, UmiVcsAdvancedCompareNavigationArchiveBound, UmiVcsAdvancedCompareNavigationArchiveWrite, UmiVcsAdvancedCompareNavigationArchiveRead, UmiVcsAdvancedCompareNavigationArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_vcs_advanced_compare_navigation_archive_decode_if_unchanged, umi_vcs_advanced_compare_navigation_archive_encode,
+    UmiVcsAdvancedCompareNavigation, UmiVcsAdvancedCompareNavigationArchiveSchema, UmiVcsAdvancedCompareNavigationArchiveBound, UmiVcsAdvancedCompareNavigationArchiveRead, UmiVcsAdvancedCompareNavigationArchiveValidate)

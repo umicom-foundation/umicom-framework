@@ -17,6 +17,7 @@
  * This module uses a small, explicit C API and bounded storage.  The public
  * contract does not expose toolkit objects, C++ types, or private structures.
  */
+#include "../base/conditional_archive_internal.h"
 #include "umicom/language/code_action.h"
 #include "../base/value_archive_internal.h"
 #include "../base/registry_archive_internal.h"
@@ -324,3 +325,8 @@ UMI_DEFINE_VALUE_ARCHIVE(umi_language_code_action_snapshot_archive_encode, umi_l
 UMI_DEFINE_REGISTRY_ARCHIVE(umi_language_code_action_registry_archive_encode, umi_language_code_action_registry_archive_restore,
     UmiLanguageCodeActionRegistry, UmiLanguageCodeActionSnapshot, UMI_LANGUAGE_CODE_ACTION_CAPACITY, ArchiveSchema,
     umi_language_code_action_snapshot_archive_encode, umi_language_code_action_snapshot_archive_decode, umi_language_code_action_registry_replace_if_current)
+
+/* Guard snapshot import with the complete encoded value reviewed by the
+ * caller. Imported metadata remains evidence; registry publication is separate. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_language_code_action_snapshot_archive_decode_if_unchanged, umi_language_code_action_snapshot_archive_encode,
+    UmiLanguageCodeActionSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)

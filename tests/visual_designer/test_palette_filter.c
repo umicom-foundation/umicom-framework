@@ -103,6 +103,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadPaletteFilterTransferCases, UmiRadPaletteFilter,
     umi_rad_palette_filter_archive_encode, umi_rad_palette_filter_archive_decode,
     UmiRadPaletteFilterTransferEqual, UmiRadPaletteFilterTransferTails, UmiRadPaletteFilterTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadPaletteFilterConditionalArchiveCases, UmiRadPaletteFilter,
+    umi_rad_palette_filter_archive_encode, umi_rad_palette_filter_archive_decode_if_unchanged,
+    UmiRadPaletteFilterTransferEqual, UmiRadPaletteFilterTransferTails, UmiRadPaletteFilterTransferMalformed)
+
+
 int main(void){UmiRadPaletteFilter item;CHECK(umi_rad_palette_filter_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_palette_filter_is_valid(&item));
     if (UmiRadPaletteFilterTransferCases(&item) != 0) return 1;
+    if (UmiRadPaletteFilterConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

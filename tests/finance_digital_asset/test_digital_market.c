@@ -126,12 +126,19 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalMarketTransferCases, UmiDigitalMarket,
     umi_digital_asset_digital_market_archive_encode, umi_digital_asset_digital_market_archive_decode,
     UmiDigitalMarketTransferEqual, UmiDigitalMarketTransferTails, UmiDigitalMarketTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalMarketConditionalArchiveCases, UmiDigitalMarket,
+    umi_digital_asset_digital_market_archive_encode, umi_digital_asset_digital_market_archive_decode_if_unchanged,
+    UmiDigitalMarketTransferEqual, UmiDigitalMarketTransferTails, UmiDigitalMarketTransferMalformed)
+
+
 int main(void)
 {
     UmiDigitalMarket value;
     CHECK(umi_digital_asset_digital_market_init(&value, "BTC-USD", "ASSET-BTC", "ASSET-USD", "UMICOM-X", 1) == UMI_STATUS_OK);
     CHECK(umi_digital_asset_digital_market_valid(&value));
     if (UmiDigitalMarketTransferCases(&value) != 0) return 1;
+    if (UmiDigitalMarketConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

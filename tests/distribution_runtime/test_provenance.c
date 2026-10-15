@@ -124,9 +124,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrProvenanceTransferCases, UmiDrProvenance,
     umi_dr_provenance_archive_encode, umi_dr_provenance_archive_decode,
     UmiDrProvenanceTransferEqual, UmiDrProvenanceTransferTails, UmiDrProvenanceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrProvenanceConditionalArchiveCases, UmiDrProvenance,
+    umi_dr_provenance_archive_encode, umi_dr_provenance_archive_decode_if_unchanged,
+    UmiDrProvenanceTransferEqual, UmiDrProvenanceTransferTails, UmiDrProvenanceTransferMalformed)
+
+
 int main(void) {
     UmiDrProvenance value; umi_dr_provenance_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"prov")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.source_revision,sizeof(value.source_revision),"rev")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.toolchain,sizeof(value.toolchain),"gcc-14")==UMI_STATUS_OK); CHECK(umi_dr_provenance_valid(&value));
     if (UmiDrProvenanceTransferCases(&value) != 0) return 1;
+    if (UmiDrProvenanceConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_provenance_fingerprint(&value) != 0U);
     return 0;
 }

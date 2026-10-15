@@ -109,10 +109,17 @@ UMI_TEST_VALUE_TRANSFER(UmiLifecycleEventTransferCases, UmiLifecycleEvent,
     umi_lifecycle_event_archive_encode, umi_lifecycle_event_archive_decode,
     UmiLifecycleEventTransferEqual, UmiLifecycleEventTransferTails, UmiLifecycleEventTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiLifecycleEventConditionalArchiveCases, UmiLifecycleEvent,
+    umi_lifecycle_event_archive_encode, umi_lifecycle_event_archive_decode_if_unchanged,
+    UmiLifecycleEventTransferEqual, UmiLifecycleEventTransferTails, UmiLifecycleEventTransferMalformed)
+
+
 int main(void)
 {
     UmiLifecycleEvent x; CHECK(umi_lifecycle_event_init(&x,"ID","Name","PARENT",(UmiFinancialDate){2026,8U,25U},1U)==UMI_STATUS_OK); CHECK(umi_lifecycle_event_is_valid(&x));
     if (UmiLifecycleEventTransferCases(&x) != 0) return 1;
+    if (UmiLifecycleEventConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;
 }

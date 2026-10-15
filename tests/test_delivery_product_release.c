@@ -13,14 +13,58 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
+#include "value_archive/construction_cases.h"
 #include "umicom/delivery/delivery.h"
 
 /*
  * Start this command or application, report setup failures, and return a process exit code
  * to the operating system.
  */
+
+/* A rejected replacement must preserve the previously accepted update channel value. */
+static int UmiUpdateChannelConstructionCases(void)
+{
+    UmiUpdateChannel *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_update_channel_init(value, "stable", "https://updates.umicom.org/studio/stable.json", UMI_RELEASE_STABLE, 100U) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->channel_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_update_channel_init(value, oversized, "https://updates.umicom.org/studio/stable.json", UMI_RELEASE_STABLE, 100U) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_update_channel_init(value, value->channel_id, "https://updates.umicom.org/studio/stable.json", UMI_RELEASE_STABLE, 100U) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->channel_id, "stable") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->feed_url) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_update_channel_init(value, "stable", oversized, UMI_RELEASE_STABLE, 100U) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_update_channel_init(value, "stable", value->feed_url, UMI_RELEASE_STABLE, 100U) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->feed_url, "https://updates.umicom.org/studio/stable.json") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void)
 {
+    if (UmiUpdateChannelConstructionCases() != 0) return 1;
+
     UmiPackageManifest package;
     UmiUpdateChannel channel;
     UmiInstallerPlan installer;

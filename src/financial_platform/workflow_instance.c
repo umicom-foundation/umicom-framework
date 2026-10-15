@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/financial_platform/workflow_instance.h"
 
 #include <stdio.h>
@@ -46,6 +47,10 @@ static UmiFinancialWorkflowTask *find_task(
     return NULL;
 }
 
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_financial_workflow_instance_add_task(
     UmiFinancialWorkflowInstance *workflow,
     const UmiFinancialWorkflowTask *task)
@@ -64,7 +69,36 @@ UmiStatus umi_financial_workflow_instance_add_task(
     workflow->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
 
+UmiStatus umi_financial_workflow_instance_add_task(
+    UmiFinancialWorkflowInstance *workflow,
+    const UmiFinancialWorkflowTask *task)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (workflow != NULL && workflow->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    if (workflow == NULL || task == NULL ||
+        workflow->workflowId[0] == '\0' ||
+        workflow->subjectId[0] == '\0' ||
+        task->taskId[0] == '\0' || task->role[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (find_task(workflow, task->taskId) != NULL)
+        return UMI_STATUS_ALREADY_EXISTS;
+    if (workflow->count >= UMI_FINANCIAL_WORKFLOW_TASK_CAPACITY)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    workflow->tasks[workflow->count++] = *task;
+    workflow->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_financial_workflow_instance_approve(
     UmiFinancialWorkflowInstance *workflow,
     const char *taskId)
@@ -77,7 +111,30 @@ UmiStatus umi_financial_workflow_instance_approve(
     workflow->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
 
+UmiStatus umi_financial_workflow_instance_approve(
+    UmiFinancialWorkflowInstance *workflow,
+    const char *taskId)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (workflow != NULL && workflow->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiFinancialWorkflowTask *task = find_task(workflow, taskId);
+    if (task == NULL) return UMI_STATUS_NOT_FOUND;
+    if (!task->approvalRequired) return UMI_STATUS_INVALID_STATE;
+    task->approved = 1;
+    task->state = UMI_FINANCIAL_WORKFLOW_PENDING;
+    workflow->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_financial_workflow_instance_complete(
     UmiFinancialWorkflowInstance *workflow,
     const char *taskId)
@@ -93,11 +150,59 @@ UmiStatus umi_financial_workflow_instance_complete(
     workflow->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_financial_workflow_instance_complete(
+    UmiFinancialWorkflowInstance *workflow,
+    const char *taskId)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (workflow != NULL && workflow->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiFinancialWorkflowTask *task = find_task(workflow, taskId);
+    if (task == NULL) return UMI_STATUS_NOT_FOUND;
+    if (task->approvalRequired && !task->approved)
+        return UMI_STATUS_PERMISSION_DENIED;
+    if (task->state == UMI_FINANCIAL_WORKFLOW_REJECTED ||
+        task->state == UMI_FINANCIAL_WORKFLOW_ROLLED_BACK)
+        return UMI_STATUS_INVALID_STATE;
+    task->state = UMI_FINANCIAL_WORKFLOW_COMPLETED;
+    workflow->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
+UmiStatus umi_financial_workflow_instance_rollback(
+    UmiFinancialWorkflowInstance *workflow,
+    const char *taskId)
+{
+    UmiFinancialWorkflowTask *task;
+    if (workflow == NULL || !workflow->rollbackAvailable)
+        return UMI_STATUS_PERMISSION_DENIED;
+    task = find_task(workflow, taskId);
+    if (task == NULL) return UMI_STATUS_NOT_FOUND;
+    if (task->state != UMI_FINANCIAL_WORKFLOW_COMPLETED)
+        return UMI_STATUS_INVALID_STATE;
+    task->state = UMI_FINANCIAL_WORKFLOW_ROLLED_BACK;
+    workflow->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
 
 UmiStatus umi_financial_workflow_instance_rollback(
     UmiFinancialWorkflowInstance *workflow,
     const char *taskId)
 {
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (workflow != NULL && workflow->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiFinancialWorkflowTask *task;
     if (workflow == NULL || !workflow->rollbackAvailable)
         return UMI_STATUS_PERMISSION_DENIED;

@@ -17,6 +17,7 @@
  * This module uses a small, explicit C API and bounded storage.  The public
  * contract does not expose toolkit objects, C++ types, or private structures.
  */
+#include "../base/conditional_archive_internal.h"
 #include "umicom/ui/notification_item.h"
 #include "../base/value_archive_internal.h"
 #include "../base/registry_archive_internal.h"
@@ -322,3 +323,8 @@ UMI_DEFINE_VALUE_ARCHIVE(umi_ui_notification_item_snapshot_archive_encode, umi_u
 UMI_DEFINE_REGISTRY_ARCHIVE(umi_ui_notification_item_registry_archive_encode, umi_ui_notification_item_registry_archive_restore,
     UmiUiNotificationItemRegistry, UmiUiNotificationItemSnapshot, UMI_UI_NOTIFICATION_ITEM_CAPACITY, ArchiveSchema,
     umi_ui_notification_item_snapshot_archive_encode, umi_ui_notification_item_snapshot_archive_decode, umi_ui_notification_item_registry_replace_if_current)
+
+/* Guard snapshot import with the complete encoded value reviewed by the
+ * caller. Imported metadata remains evidence; registry publication is separate. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_notification_item_snapshot_archive_decode_if_unchanged, umi_ui_notification_item_snapshot_archive_encode,
+    UmiUiNotificationItemSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)

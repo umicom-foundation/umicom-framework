@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/integration/fabric/endpoint_registry.h"
 #include <stdio.h>
 #include <string.h>
@@ -26,6 +27,9 @@ int main(void) {
     UmiFabricEndpointRegistry r; UmiFabricEndpointDescriptor item, found; umi_fabric_endpoint_registry_init(&r);
     CHECK(umi_fabric_endpoint_descriptor_init(&item,"e1","https://risk",UMI_FABRIC_PROTOCOL_HTTP,true,10U)==UMI_STATUS_OK);
     CHECK(umi_fabric_endpoint_registry_add(&r,&item)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFabricEndpointRegistry, &r,
+        (umi_fabric_endpoint_registry_add(&r,&item)));
+
     CHECK(umi_fabric_endpoint_registry_add(&r,&item)==UMI_STATUS_ALREADY_EXISTS);
     CHECK(umi_fabric_endpoint_registry_find(&r,item.endpoint_id,&found)==UMI_STATUS_OK);
     CHECK(umi_fabric_endpoint_registry_count(&r)==1U);

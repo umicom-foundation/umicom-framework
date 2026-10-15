@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/vcs/advanced/operation_guard.h"
 #include "../../base/value_archive_internal.h"
 
@@ -133,3 +134,8 @@ static UmiStatus UmiVcsAdvancedOperationGuardArchiveValidate(const UmiVcsAdvance
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_vcs_advanced_operation_guard_archive_encode, umi_vcs_advanced_operation_guard_archive_decode,
     UmiVcsAdvancedOperationGuard, UmiVcsAdvancedOperationGuardArchiveSchema, UmiVcsAdvancedOperationGuardArchiveBound, UmiVcsAdvancedOperationGuardArchiveWrite, UmiVcsAdvancedOperationGuardArchiveRead, UmiVcsAdvancedOperationGuardArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_vcs_advanced_operation_guard_archive_decode_if_unchanged, umi_vcs_advanced_operation_guard_archive_encode,
+    UmiVcsAdvancedOperationGuard, UmiVcsAdvancedOperationGuardArchiveSchema, UmiVcsAdvancedOperationGuardArchiveBound, UmiVcsAdvancedOperationGuardArchiveRead, UmiVcsAdvancedOperationGuardArchiveValidate)

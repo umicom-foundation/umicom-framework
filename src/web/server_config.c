@@ -17,6 +17,7 @@
  * The code below implements one small part of the web stack. It uses bounded data and explicit status values so failures are visible and testable.
  */
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/web/server_config.h"
 #include "../base/value_archive_internal.h"
 #include <string.h>
@@ -73,3 +74,8 @@ static UmiStatus UmiWebServerConfigArchiveValidate(const UmiWebServerConfig *val
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_web_server_config_archive_encode, umi_web_server_config_archive_decode,
     UmiWebServerConfig, UmiWebServerConfigArchiveSchema, UmiWebServerConfigArchiveBound, UmiWebServerConfigArchiveWrite, UmiWebServerConfigArchiveRead, UmiWebServerConfigArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_web_server_config_archive_decode_if_unchanged, umi_web_server_config_archive_encode,
+    UmiWebServerConfig, UmiWebServerConfigArchiveSchema, UmiWebServerConfigArchiveBound, UmiWebServerConfigArchiveRead, UmiWebServerConfigArchiveValidate)

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/integration/fabric/route_table.h"
 #include <stdio.h>
 #include <string.h>
@@ -26,6 +27,9 @@ int main(void) {
     UmiFabricRouteTable r; UmiFabricRouteRule item, found; umi_fabric_route_table_init(&r);
     CHECK(umi_fabric_route_rule_init(&item,"r1","*","trade.*","risk",10U)==UMI_STATUS_OK);
     CHECK(umi_fabric_route_table_add(&r,&item)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFabricRouteTable, &r,
+        (umi_fabric_route_table_add(&r,&item)));
+
     CHECK(umi_fabric_route_table_add(&r,&item)==UMI_STATUS_ALREADY_EXISTS);
     CHECK(umi_fabric_route_table_find(&r,item.route_id,&found)==UMI_STATUS_OK);
     CHECK(umi_fabric_route_table_count(&r)==1U);

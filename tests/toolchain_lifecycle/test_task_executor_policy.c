@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 
@@ -48,6 +49,10 @@ int main(void)
     assert(umi_workspace_trust_store_create(&trust) == UMI_STATUS_OK);
     assert(umi_toolchain_task_executor_set_workspace_trust(
         &executor, trust, "C:/work/example") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiToolchainTaskExecutor, &executor,
+        (umi_toolchain_task_executor_set_workspace_trust(
+        &executor, trust, "C:/work/example")));
+
 
     assert(umi_workspace_trust_store_set(
         trust, "C:/work/example", UMI_WORKSPACE_RESTRICTED,

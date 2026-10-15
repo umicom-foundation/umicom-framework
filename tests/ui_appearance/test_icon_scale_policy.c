@@ -68,6 +68,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceIconScalePolicyTransferCases, UmiAppearance
     umi_appearance_icon_scale_policy_archive_encode, umi_appearance_icon_scale_policy_archive_decode,
     UmiAppearanceIconScalePolicyTransferEqual, UmiAppearanceIconScalePolicyTransferTails, UmiAppearanceIconScalePolicyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceIconScalePolicyConditionalArchiveCases, UmiAppearanceIconScalePolicy,
+    umi_appearance_icon_scale_policy_archive_encode, umi_appearance_icon_scale_policy_archive_decode_if_unchanged,
+    UmiAppearanceIconScalePolicyTransferEqual, UmiAppearanceIconScalePolicyTransferTails, UmiAppearanceIconScalePolicyTransferMalformed)
+
+
 int main(void) {
     UmiAppearanceIconScalePolicy item;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -75,6 +81,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_icon_scale_policy_is_valid(&item)) return 2;
     if (UmiAppearanceIconScalePolicyTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceIconScalePolicyConditionalArchiveCases(&item) != 0) return 1;
 
     item.logical_size_dp=20.0; item.scale=1.5; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_appearance_icon_scale_policy_resolve(&item)!=UMI_STATUS_OK || item.physical_size_px!=30U) return 3;
     return 0;

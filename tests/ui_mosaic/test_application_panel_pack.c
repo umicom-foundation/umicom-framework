@@ -90,6 +90,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicApplicationPanelPackTransferCases, UmiUiMosai
     umi_ui_mosaic_application_panel_pack_archive_encode, umi_ui_mosaic_application_panel_pack_archive_decode,
     UmiUiMosaicApplicationPanelPackTransferEqual, UmiUiMosaicApplicationPanelPackTransferTails, UmiUiMosaicApplicationPanelPackTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicApplicationPanelPackConditionalArchiveCases, UmiUiMosaicApplicationPanelPack,
+    umi_ui_mosaic_application_panel_pack_archive_encode, umi_ui_mosaic_application_panel_pack_archive_decode_if_unchanged,
+    UmiUiMosaicApplicationPanelPackTransferEqual, UmiUiMosaicApplicationPanelPackTransferTails, UmiUiMosaicApplicationPanelPackTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicApplicationPanelPack value;
     umi_ui_mosaic_application_panel_pack_init(&value);
@@ -97,6 +103,7 @@ int main(void) {
     value.row_span = 2U; value.column_span = 3U;
     CHECK(umi_ui_mosaic_application_panel_pack_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicApplicationPanelPackTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicApplicationPanelPackConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_application_panel_pack_area(&value) == 6U);
     return 0;

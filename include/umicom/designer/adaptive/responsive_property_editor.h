@@ -36,6 +36,9 @@ typedef struct UmiDesignerResponsivePropertyEditor {
 UmiStatus umi_designer_responsive_property_editor_init(UmiDesignerResponsivePropertyEditor *editor,
                                                        const UmiDesignerAdaptiveProperty *property);
 /* Set a text override for one adaptive variant. */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_designer_responsive_property_editor_override(UmiDesignerResponsivePropertyEditor *editor,
                                                            const char *variant_id,
                                                            const char *text);

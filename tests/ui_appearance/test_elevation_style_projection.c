@@ -102,6 +102,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceElevationStyleProjectionTransferCases, UmiA
     umi_appearance_elevation_style_projection_archive_encode, umi_appearance_elevation_style_projection_archive_decode,
     UmiAppearanceElevationStyleProjectionTransferEqual, UmiAppearanceElevationStyleProjectionTransferTails, UmiAppearanceElevationStyleProjectionTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceElevationStyleProjectionConditionalArchiveCases, UmiAppearanceElevationStyleProjection,
+    umi_appearance_elevation_style_projection_archive_encode, umi_appearance_elevation_style_projection_archive_decode_if_unchanged,
+    UmiAppearanceElevationStyleProjectionTransferEqual, UmiAppearanceElevationStyleProjectionTransferTails, UmiAppearanceElevationStyleProjectionTransferMalformed)
+
+
 int main(void) {
     UmiAppearanceElevationStyleProjection item;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -109,6 +115,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_elevation_style_projection_is_valid(&item)) return 2;
     if (UmiAppearanceElevationStyleProjectionTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceElevationStyleProjectionConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;
 }

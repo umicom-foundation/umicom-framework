@@ -13,12 +13,19 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "umicom/base/text.h"
 #include "umicom/ui/workstation/panel_chrome.h"
+#include "../../base/value_construction_internal.h"
 
 /*
  * Initialise ws panel chrome from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_ws_panel_chrome_init(UmiWsPanelChrome *chrome, const char *title) {
     UmiStatus status;
     /*
@@ -40,6 +47,36 @@ UmiStatus umi_ws_panel_chrome_init(UmiWsPanelChrome *chrome, const char *title) 
     chrome->show_settings = true;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_ws_panel_chrome_init_build_value(UmiWsPanelChrome *chrome, const char *title) {
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (chrome == NULL || title == NULL || title[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    *chrome = (UmiWsPanelChrome){0};
+    status = umi_ws_copy_text(chrome->title, sizeof(chrome->title), title);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    chrome->show_close = true;
+    chrome->show_pin = true;
+    chrome->show_menu = true;
+    chrome->show_context = true;
+    chrome->show_move = true;
+    chrome->show_float = true;
+    chrome->show_maximise = true;
+    chrome->show_settings = true;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_ws_panel_chrome_init, UmiWsPanelChrome, chrome,
+    (UmiWsPanelChrome *chrome, const char *title),
+    umi_ws_panel_chrome_init_build_value(candidate, title))
+
 
 /*
  * Provide the ws panel chrome set identity operation used by this module and its client
@@ -97,6 +134,9 @@ UmiStatus umi_ws_panel_chrome_set_context(
  * Provide the ws panel chrome set badge operation used by this module and its client
  * applications.
  */
+/* The presentation copy could erase a rejected field or overlap its input.
+ * Retain it for review; the replacement validates before publishing any text. */
+#if 0
 UmiStatus umi_ws_panel_chrome_set_badge(UmiWsPanelChrome *chrome, const char *badge) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -104,6 +144,16 @@ UmiStatus umi_ws_panel_chrome_set_badge(UmiWsPanelChrome *chrome, const char *ba
      */
     if (chrome == NULL || badge == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_ws_copy_text(chrome->badge, sizeof(chrome->badge), badge);
+}
+#endif
+
+UmiStatus umi_ws_panel_chrome_set_badge(UmiWsPanelChrome *chrome, const char *badge) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (chrome == NULL || badge == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_replace(chrome->badge, sizeof(chrome->badge), badge);
 }
 
 /*

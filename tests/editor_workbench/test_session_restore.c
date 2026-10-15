@@ -87,6 +87,13 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorWbSessionRestoreTransferCases, UmiEditorWbSessi
     umi_editor_wb_session_restore_archive_encode, umi_editor_wb_session_restore_archive_decode,
     UmiEditorWbSessionRestoreTransferEqual, UmiEditorWbSessionRestoreTransferTails, UmiEditorWbSessionRestoreTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorWbSessionRestoreConditionalArchiveCases, UmiEditorWbSessionRestore,
+    umi_editor_wb_session_restore_archive_encode, umi_editor_wb_session_restore_archive_decode_if_unchanged,
+    UmiEditorWbSessionRestoreTransferEqual, UmiEditorWbSessionRestoreTransferTails, UmiEditorWbSessionRestoreTransferMalformed)
+
+
 int main(void){ UmiEditorWbSessionRestore s; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_session_restore_init(&s,"id","text")!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_session_restore_set_values(&s,3U,4U,true)!=UMI_STATUS_OK)return 2; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_wb_session_restore_valid(&s)||s.primary!=3U)return 3;
     if (UmiEditorWbSessionRestoreTransferCases(&s) != 0) return 1;
+    if (UmiEditorWbSessionRestoreConditionalArchiveCases(&s) != 0) return 1;
  return 0; }

@@ -70,6 +70,13 @@ UMI_TEST_VALUE_TRANSFER(UmiUiEntCellStyleTransferCases, UmiUiEntCellStyle,
     umi_ui_ent_cell_style_archive_encode, umi_ui_ent_cell_style_archive_decode,
     UmiUiEntCellStyleTransferEqual, UmiUiEntCellStyleTransferTails, UmiUiEntCellStyleTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiEntCellStyleConditionalArchiveCases, UmiUiEntCellStyle,
+    umi_ui_ent_cell_style_archive_encode, umi_ui_ent_cell_style_archive_decode_if_unchanged,
+    UmiUiEntCellStyleTransferEqual, UmiUiEntCellStyleTransferTails, UmiUiEntCellStyleTransferMalformed)
+
+
 int main(void){UmiUiEntCellStyle v;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_cell_style_init(&v)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_ui_ent_cell_style_validate(&v))return 9;
     if (UmiUiEntCellStyleTransferCases(&v) != 0) return 1;
+    if (UmiUiEntCellStyleConditionalArchiveCases(&v) != 0) return 1;
 puts("ok");return 0;}

@@ -51,6 +51,13 @@ UMI_TEST_VALUE_TRANSFER(UmiToolchainRequirementTransferCases, UmiToolchainRequir
     umi_toolchain_requirement_archive_encode, umi_toolchain_requirement_archive_decode,
     UmiToolchainRequirementTransferEqual, UmiToolchainRequirementTransferTails, UmiToolchainRequirementTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiToolchainRequirementConditionalArchiveCases, UmiToolchainRequirement,
+    umi_toolchain_requirement_archive_encode, umi_toolchain_requirement_archive_decode_if_unchanged,
+    UmiToolchainRequirementTransferEqual, UmiToolchainRequirementTransferTails, UmiToolchainRequirementTransferMalformed)
+
+
 int main(void){ UmiToolchainRequirement r; umi_toolchain_requirement_init(&r, UMI_TOOL_GIT, 1); assert(umi_toolchain_requirement_validate(&r)==UMI_STATUS_OK);
     if (UmiToolchainRequirementTransferCases(&r) != 0) return 1;
+    if (UmiToolchainRequirementConditionalArchiveCases(&r) != 0) return 1;
  assert(r.required); return 0; }

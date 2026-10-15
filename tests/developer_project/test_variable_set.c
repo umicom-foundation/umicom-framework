@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 
@@ -28,6 +29,10 @@ int main(void)
     umi_developer_project_variable_set_init(&variables);
     assert(umi_developer_project_variable_set(
         &variables, "NAME", "Alpha") == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDeveloperProjectVariableSet, &variables,
+        (umi_developer_project_variable_set(
+        &variables, "NAME", "Alpha")));
+
     assert(strcmp(
         umi_developer_project_variable_get(&variables, "NAME"),
         "Alpha") == 0);

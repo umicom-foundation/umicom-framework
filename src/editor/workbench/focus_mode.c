@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/editor/workbench/focus_mode.h"
 #include "../../base/value_archive_internal.h"
 
@@ -77,3 +78,8 @@ static UmiStatus UmiEditorWbFocusModeArchiveValidate(const UmiEditorWbFocusMode 
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_editor_wb_focus_mode_archive_encode, umi_editor_wb_focus_mode_archive_decode,
     UmiEditorWbFocusMode, UmiEditorWbFocusModeArchiveSchema, UmiEditorWbFocusModeArchiveBound, UmiEditorWbFocusModeArchiveWrite, UmiEditorWbFocusModeArchiveRead, UmiEditorWbFocusModeArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_editor_wb_focus_mode_archive_decode_if_unchanged, umi_editor_wb_focus_mode_archive_encode,
+    UmiEditorWbFocusMode, UmiEditorWbFocusModeArchiveSchema, UmiEditorWbFocusModeArchiveBound, UmiEditorWbFocusModeArchiveRead, UmiEditorWbFocusModeArchiveValidate)

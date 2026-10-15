@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/policy_batch_internal.h"
 #include "umicom/developer_operations/terminal/task_execution.h"
 #include "../developer_operations_internal.h"
 
@@ -28,3 +29,8 @@ UmiStatus UmiDeveloperOperationsEvaluateTerminalTaskExecution(
     };
     return UmiDeveloperOperationsEvaluatePolicy(&policy, input, outSnapshot);
 }
+
+/* Reuse the scalar policy for complete table refreshes; the shared batch
+ * owner stages all rows before publishing a successful calculation. */
+UMI_DEFINE_POLICY_BATCH(UmiDeveloperOperationsEvaluateTerminalTaskExecutionBatch, UmiDeveloperOperationsEvaluateTerminalTaskExecution,
+    UmiDeveloperOperationInput, UmiDeveloperOperationSnapshot)

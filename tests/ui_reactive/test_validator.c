@@ -68,6 +68,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveValidatorTransferCases, UmiUiReactiveValida
     umi_ui_reactive_validator_archive_encode, umi_ui_reactive_validator_archive_decode,
     UmiUiReactiveValidatorTransferEqual, UmiUiReactiveValidatorTransferTails, UmiUiReactiveValidatorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveValidatorConditionalArchiveCases, UmiUiReactiveValidator,
+    umi_ui_reactive_validator_archive_encode, umi_ui_reactive_validator_archive_decode_if_unchanged,
+    UmiUiReactiveValidatorTransferEqual, UmiUiReactiveValidatorTransferTails, UmiUiReactiveValidatorTransferMalformed)
+
+
 int main(void) { UmiUiReactiveValidator item; umi_ui_reactive_validator_init(&item);
     /* Nonzero fields expose swapped or omitted values in a saved record.
      * The original initialized fixture remains available for its own checks. */
@@ -75,4 +81,5 @@ int main(void) { UmiUiReactiveValidator item; umi_ui_reactive_validator_init(&it
     (void)snprintf(populated.validator_id, sizeof(populated.validator_id), "field-0");
     populated.enabled = true;
     if (UmiUiReactiveValidatorTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveValidatorConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_validator_valid(&item) ? 0 : 1; }

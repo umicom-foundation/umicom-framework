@@ -108,6 +108,13 @@ UMI_TEST_VALUE_TRANSFER(UmiToolchainProbeReportTransferCases, UmiToolchainProbeR
     umi_toolchain_probe_report_archive_encode, umi_toolchain_probe_report_archive_decode,
     UmiToolchainProbeReportTransferEqual, UmiToolchainProbeReportTransferTails, UmiToolchainProbeReportTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiToolchainProbeReportConditionalArchiveCases, UmiToolchainProbeReport,
+    umi_toolchain_probe_report_archive_encode, umi_toolchain_probe_report_archive_decode_if_unchanged,
+    UmiToolchainProbeReportTransferEqual, UmiToolchainProbeReportTransferTails, UmiToolchainProbeReportTransferMalformed)
+
+
 int main(void){ UmiToolchainProbeReport r; umi_toolchain_probe_report_init(&r,UMI_TOOL_GIT); r.found=1; r.validated=1; strcpy(r.path,"git"); assert(umi_toolchain_probe_report_validate(&r)==UMI_STATUS_OK);
     if (UmiToolchainProbeReportTransferCases(&r) != 0) return 1;
+    if (UmiToolchainProbeReportConditionalArchiveCases(&r) != 0) return 1;
  return 0; }

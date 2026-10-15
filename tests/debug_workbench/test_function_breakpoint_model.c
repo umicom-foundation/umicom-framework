@@ -137,6 +137,12 @@ UMI_TEST_VALUE_TRANSFER(UmiDebugWorkbenchFunctionBreakpointModelTransferCases, U
     umi_debug_workbench_function_breakpoint_model_archive_encode, umi_debug_workbench_function_breakpoint_model_archive_decode,
     UmiDebugWorkbenchFunctionBreakpointModelTransferEqual, UmiDebugWorkbenchFunctionBreakpointModelTransferTails, UmiDebugWorkbenchFunctionBreakpointModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDebugWorkbenchFunctionBreakpointModelConditionalArchiveCases, UmiDebugWorkbenchFunctionBreakpointModel,
+    umi_debug_workbench_function_breakpoint_model_archive_encode, umi_debug_workbench_function_breakpoint_model_archive_decode_if_unchanged,
+    UmiDebugWorkbenchFunctionBreakpointModelTransferEqual, UmiDebugWorkbenchFunctionBreakpointModelTransferTails, UmiDebugWorkbenchFunctionBreakpointModelTransferMalformed)
+
+
 int main(void)
 {
     UmiDebugWorkbenchFunctionBreakpointModel model;
@@ -151,6 +157,7 @@ int main(void)
     UMI_TEST_CHECK(!model.enabled);
     UMI_TEST_CHECK(umi_debug_workbench_function_breakpoint_model_valid(&model));
     if (UmiDebugWorkbenchFunctionBreakpointModelTransferCases(&model) != 0) return 1;
+    if (UmiDebugWorkbenchFunctionBreakpointModelConditionalArchiveCases(&model) != 0) return 1;
 
     return 0;
 }

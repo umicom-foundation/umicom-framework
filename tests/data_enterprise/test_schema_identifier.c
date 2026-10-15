@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/data/enterprise/schema_identifier.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -106,10 +107,72 @@ UMI_TEST_VALUE_TRANSFER(UmiDataSchemaIdentifierTransferCases, UmiDataSchemaIdent
     umi_data_schema_identifier_archive_encode, umi_data_schema_identifier_archive_decode,
     UmiDataSchemaIdentifierTransferEqual, UmiDataSchemaIdentifierTransferTails, UmiDataSchemaIdentifierTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataSchemaIdentifierConditionalArchiveCases, UmiDataSchemaIdentifier,
+    umi_data_schema_identifier_archive_encode, umi_data_schema_identifier_archive_decode_if_unchanged,
+    UmiDataSchemaIdentifierTransferEqual, UmiDataSchemaIdentifierTransferTails, UmiDataSchemaIdentifierTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted schema identifier value. */
+static int UmiDataSchemaIdentifierConstructionCases(void)
+{
+    UmiDataSchemaIdentifier *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_data_schema_identifier_init(value, "main", "public", "orders") == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->catalog) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_schema_identifier_init(value, oversized, "public", "orders") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_schema_identifier_init(value, value->catalog, "public", "orders") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->catalog, "main") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->schema) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_schema_identifier_init(value, "main", oversized, "orders") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_schema_identifier_init(value, "main", value->schema, "orders") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->schema, "public") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->name) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_schema_identifier_init(value, "main", "public", oversized) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_schema_identifier_init(value, "main", "public", value->name) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->name, "orders") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiDataSchemaIdentifierConstructionCases() != 0) return 1;
+
     UmiDataSchemaIdentifier item;
     CHECK(umi_data_schema_identifier_init(&item, "main", "public", "orders") == UMI_STATUS_OK);
     if (UmiDataSchemaIdentifierTransferCases(&item) != 0) return 1;
+    if (UmiDataSchemaIdentifierConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(strcmp(item.name,"orders")==0);
     return 0;

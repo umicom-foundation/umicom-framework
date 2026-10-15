@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/web/workbench/server_diagnostics.h"
@@ -32,6 +33,10 @@ int main(void)
     umi_web_workbench_server_diagnostics_init(&diagnostics);
     assert(umi_web_workbench_server_diagnostics_capture(&diagnostics,
         &state, &metrics) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWebWorkbenchServerDiagnostics, &diagnostics,
+        (umi_web_workbench_server_diagnostics_capture(&diagnostics,
+        &state, &metrics)));
+
     assert(diagnostics.requests == 2U);
     assert(diagnostics.error_rate == 0.5);
     assert(!diagnostics.healthy);

@@ -68,6 +68,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceScaleFactorTransferCases, UmiAppearanceScal
     umi_appearance_scale_factor_archive_encode, umi_appearance_scale_factor_archive_decode,
     UmiAppearanceScaleFactorTransferEqual, UmiAppearanceScaleFactorTransferTails, UmiAppearanceScaleFactorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceScaleFactorConditionalArchiveCases, UmiAppearanceScaleFactor,
+    umi_appearance_scale_factor_archive_encode, umi_appearance_scale_factor_archive_decode_if_unchanged,
+    UmiAppearanceScaleFactorTransferEqual, UmiAppearanceScaleFactorTransferTails, UmiAppearanceScaleFactorTransferMalformed)
+
+
 int main(void) {
     UmiAppearanceScaleFactor item;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -75,6 +81,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_scale_factor_is_valid(&item)) return 2;
     if (UmiAppearanceScaleFactorTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceScaleFactorConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;
 }

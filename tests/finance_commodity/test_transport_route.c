@@ -125,12 +125,19 @@ UMI_TEST_VALUE_TRANSFER(UmiCommodityTransportRouteTransferCases, UmiCommodityTra
     umi_commodity_transport_route_archive_encode, umi_commodity_transport_route_archive_decode,
     UmiCommodityTransportRouteTransferEqual, UmiCommodityTransportRouteTransferTails, UmiCommodityTransportRouteTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCommodityTransportRouteConditionalArchiveCases, UmiCommodityTransportRoute,
+    umi_commodity_transport_route_archive_encode, umi_commodity_transport_route_archive_decode_if_unchanged,
+    UmiCommodityTransportRouteTransferEqual, UmiCommodityTransportRouteTransferTails, UmiCommodityTransportRouteTransferMalformed)
+
+
 int main(void)
 {
     UmiCommodityTransportRoute value;
     CHECK(umi_commodity_transport_route_init(&value, "ROUTE-1", "LOC-A", "LOC-B", "VESSEL") == UMI_STATUS_OK);
     CHECK(umi_commodity_transport_route_valid(&value));
     if (UmiCommodityTransportRouteTransferCases(&value) != 0) return 1;
+    if (UmiCommodityTransportRouteConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

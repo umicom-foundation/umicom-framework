@@ -70,6 +70,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadPreviewTargetTransferCases, UmiRadPreviewTarget,
     umi_rad_preview_target_archive_encode, umi_rad_preview_target_archive_decode,
     UmiRadPreviewTargetTransferEqual, UmiRadPreviewTargetTransferTails, UmiRadPreviewTargetTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadPreviewTargetConditionalArchiveCases, UmiRadPreviewTarget,
+    umi_rad_preview_target_archive_encode, umi_rad_preview_target_archive_decode_if_unchanged,
+    UmiRadPreviewTargetTransferEqual, UmiRadPreviewTargetTransferTails, UmiRadPreviewTargetTransferMalformed)
+
+
 int main(void){UmiRadPreviewTarget item;CHECK(umi_rad_preview_target_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_preview_target_is_valid(&item));
     if (UmiRadPreviewTargetTransferCases(&item) != 0) return 1;
+    if (UmiRadPreviewTargetConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

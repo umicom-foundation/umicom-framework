@@ -31,6 +31,10 @@ extern "C" {
  */
 typedef struct UmiNativeWebUiEvent { UmiNativeWebEventKind kind; char target_id[UMI_NATIVE_WEB_ID_CAPACITY]; char name[UMI_NATIVE_WEB_ID_CAPACITY]; char value[UMI_NATIVE_WEB_VALUE_CAPACITY]; uint64_t sequence; } UmiNativeWebUiEvent;
 /* Initialise one semantic browser event. */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_native_web_ui_event_init(UmiNativeWebUiEvent *event, UmiNativeWebEventKind kind, const char *target_id, const char *name, const char *value, uint64_t sequence);
 
 #ifdef __cplusplus

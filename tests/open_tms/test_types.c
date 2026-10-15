@@ -91,6 +91,12 @@ UMI_TEST_VALUE_TRANSFER(UmiOpenTmsSnapshotTransferCases, UmiOpenTmsSnapshot,
     umi_open_tms_snapshot_archive_encode, umi_open_tms_snapshot_archive_decode,
     UmiOpenTmsSnapshotTransferEqual, UmiOpenTmsSnapshotTransferTails, UmiOpenTmsSnapshotTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiOpenTmsSnapshotConditionalArchiveCases, UmiOpenTmsSnapshot,
+    umi_open_tms_snapshot_archive_encode, umi_open_tms_snapshot_archive_decode_if_unchanged,
+    UmiOpenTmsSnapshotTransferEqual, UmiOpenTmsSnapshotTransferTails, UmiOpenTmsSnapshotTransferMalformed)
+
+
 int main(void)
 {
     UmiOpenTmsInput input; UmiOpenTmsSnapshot snapshot;
@@ -99,6 +105,7 @@ int main(void)
     (void)strcpy(snapshot.id,"cash.forecast-net"); snapshot.score=75.0; snapshot.ready=1;
     assert(umi_open_tms_snapshot_validate(&snapshot)==UMI_STATUS_OK);
     if (UmiOpenTmsSnapshotTransferCases(&snapshot) != 0) return 1;
+    if (UmiOpenTmsSnapshotConditionalArchiveCases(&snapshot) != 0) return 1;
 
     snapshot.score=101.0;
     assert(umi_open_tms_snapshot_validate(&snapshot)==UMI_STATUS_INVALID_STATE);

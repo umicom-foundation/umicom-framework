@@ -31,6 +31,10 @@ typedef struct UmiChartSeries { char id[UMI_CHART_NAME_CAPACITY]; UmiChartSeries
  * Initialise chart series from caller-provided values so later operations receive a known
  * state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_chart_series_init(UmiChartSeries *series,const char *id,UmiChartSeriesKind kind);
 /**
  * Add chart series only after its inputs and available capacity have been checked.

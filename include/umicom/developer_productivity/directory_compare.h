@@ -75,6 +75,9 @@ void umi_developer_directory_compare_init(
  * Add developer directory compare only after its inputs and available capacity have been
  * checked.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_developer_directory_compare_add(
     UmiDeveloperDirectoryCompareModel *model,
     const UmiDeveloperDirectoryCompareItem *item);

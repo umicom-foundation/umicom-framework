@@ -117,6 +117,32 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkSourceLocationBridgeTransferCases
     umi_workbench_context_link_source_location_bridge_archive_encode, umi_workbench_context_link_source_location_bridge_archive_decode,
     UmiWorkbenchContextLinkSourceLocationBridgeTransferEqual, UmiWorkbenchContextLinkSourceLocationBridgeTransferTails, UmiWorkbenchContextLinkSourceLocationBridgeTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkSourceLocationBridgeConditionalArchiveCases, UmiWorkbenchContextLinkSourceLocationBridge,
+    umi_workbench_context_link_source_location_bridge_archive_encode, umi_workbench_context_link_source_location_bridge_archive_decode_if_unchanged,
+    UmiWorkbenchContextLinkSourceLocationBridgeTransferEqual, UmiWorkbenchContextLinkSourceLocationBridgeTransferTails, UmiWorkbenchContextLinkSourceLocationBridgeTransferMalformed)
+
+
+/* Delayed context edits must preserve newer work and reject exhausted tokens. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextLinkSourceLocationBridgeReviewedCases, UmiWorkbenchContextLinkSourceLocationBridge,
+    bridge_id, group_id, umi_workbench_context_link_source_location_bridge_replace_if_current, UmiWorkbenchContextLinkSourceLocationBridgeTransferEqual)
+static int UmiWorkbenchContextLinkSourceLocationBridgeMutationGuards(const UmiWorkbenchContextLinkSourceLocationBridge *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkSourceLocationBridge, panel_id, umi_workbench_context_link_source_location_bridge_set_primary, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextLinkSourceLocationBridge, group_id, umi_workbench_context_link_source_location_bridge_set_secondary, sample);
+    UmiWorkbenchContextLinkSourceLocationBridge value = *sample;
+    unsigned char before[sizeof(value)];
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_link_source_location_bridge_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U ||
+        value.timestamp_ms != 44U) return 1;
+    memcpy(before, &value, sizeof(value));
+    umi_workbench_context_link_source_location_bridge_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof(value)) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextLinkSourceLocationBridge record;
@@ -125,6 +151,9 @@ int main(void)
     umi_workbench_context_link_source_location_bridge_init(&record, "source_location_bridge-id");
     assert(umi_workbench_context_link_source_location_bridge_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkSourceLocationBridgeTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkSourceLocationBridgeConditionalArchiveCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkSourceLocationBridgeReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkSourceLocationBridgeMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_context_link_source_location_bridge_set_primary(&record, "primary") == UMI_STATUS_OK);
     assert(umi_workbench_context_link_source_location_bridge_set_secondary(&record, "secondary") == UMI_STATUS_OK);

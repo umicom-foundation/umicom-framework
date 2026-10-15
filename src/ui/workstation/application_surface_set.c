@@ -14,12 +14,18 @@
  *---------------------------------------------------------------------------*/
 
 #include <string.h>
+#include "../../base/value_construction_internal.h"
 #include "umicom/ui/workstation/application_surface_set.h"
 
 /*
  * Initialise ws application surface set from caller-provided values so later operations
  * receive a known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_ws_application_surface_set_init(UmiWsApplicationSurfaceSet *set,
                                               const char *application_id,
                                               UmiWsApplicationDomain domain) {
@@ -35,6 +41,30 @@ UmiStatus umi_ws_application_surface_set_init(UmiWsApplicationSurfaceSet *set,
     set->allow_cross_application_hosting = true;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_ws_application_surface_set_init_build_value(UmiWsApplicationSurfaceSet *set,
+                                              const char *application_id,
+                                              UmiWsApplicationDomain domain) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (set == NULL || !umi_ws_id_valid(application_id)) return UMI_STATUS_INVALID_ARGUMENT;
+    *set = (UmiWsApplicationSurfaceSet){0};
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (umi_ws_copy_text(set->application_id, sizeof(set->application_id), application_id) != UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;
+    set->domain = domain;
+    set->allow_cross_application_hosting = true;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_ws_application_surface_set_init, UmiWsApplicationSurfaceSet, set,
+    (UmiWsApplicationSurfaceSet *set, const char *application_id, UmiWsApplicationDomain domain),
+    umi_ws_application_surface_set_init_build_value(candidate, application_id, domain))
+
 
 /*
  * Add ws application surface set only after its inputs and available capacity have been

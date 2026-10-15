@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiTestDiscoveryStateTransferCases, UmiTestDiscoveryStat
     umi_test_discovery_state_archive_encode, umi_test_discovery_state_archive_decode,
     UmiTestDiscoveryStateTransferEqual, UmiTestDiscoveryStateTransferTails, UmiTestDiscoveryStateTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestDiscoveryStateConditionalArchiveCases, UmiTestDiscoveryState,
+    umi_test_discovery_state_archive_encode, umi_test_discovery_state_archive_decode_if_unchanged,
+    UmiTestDiscoveryStateTransferEqual, UmiTestDiscoveryStateTransferTails, UmiTestDiscoveryStateTransferMalformed)
+
+
 int main(void){UmiTestDiscoveryState m;assert(umi_test_discovery_state_init(&m,"test_discovery_state","Test Discovery State")==UMI_STATUS_OK);assert(umi_test_discovery_state_set_active(&m,true)==UMI_STATUS_OK);assert(umi_test_discovery_state_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_test_discovery_state_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_discovery_state_valid(&m));
     if (UmiTestDiscoveryStateTransferCases(&m) != 0) return 1;
+    if (UmiTestDiscoveryStateConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

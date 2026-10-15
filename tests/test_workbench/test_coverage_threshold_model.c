@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiCoverageThresholdModelTransferCases, UmiCoverageThres
     umi_coverage_threshold_model_archive_encode, umi_coverage_threshold_model_archive_decode,
     UmiCoverageThresholdModelTransferEqual, UmiCoverageThresholdModelTransferTails, UmiCoverageThresholdModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCoverageThresholdModelConditionalArchiveCases, UmiCoverageThresholdModel,
+    umi_coverage_threshold_model_archive_encode, umi_coverage_threshold_model_archive_decode_if_unchanged,
+    UmiCoverageThresholdModelTransferEqual, UmiCoverageThresholdModelTransferTails, UmiCoverageThresholdModelTransferMalformed)
+
+
 int main(void){UmiCoverageThresholdModel m;assert(umi_coverage_threshold_model_init(&m,"coverage_threshold_model","Coverage Threshold Model")==UMI_STATUS_OK);assert(umi_coverage_threshold_model_set_active(&m,true)==UMI_STATUS_OK);assert(umi_coverage_threshold_model_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_coverage_threshold_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_coverage_threshold_model_valid(&m));
     if (UmiCoverageThresholdModelTransferCases(&m) != 0) return 1;
+    if (UmiCoverageThresholdModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

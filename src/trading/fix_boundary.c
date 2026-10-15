@@ -17,6 +17,7 @@
  * This source implements the small deterministic core of fix boundary. Product-specific UI and vendor details stay outside this file.
  */
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/trading/fix_boundary.h"
 #include "../base/value_archive_internal.h"
 /* Check that fix session info satisfies its contract before another service relies on it. */
@@ -69,3 +70,8 @@ static UmiStatus UmiFixSessionInfoArchiveValidate(const UmiFixSessionInfo *value
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_fix_session_info_archive_encode, umi_fix_session_info_archive_decode,
     UmiFixSessionInfo, UmiFixSessionInfoArchiveSchema, UmiFixSessionInfoArchiveBound, UmiFixSessionInfoArchiveWrite, UmiFixSessionInfoArchiveRead, UmiFixSessionInfoArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_fix_session_info_archive_decode_if_unchanged, umi_fix_session_info_archive_encode,
+    UmiFixSessionInfo, UmiFixSessionInfoArchiveSchema, UmiFixSessionInfoArchiveBound, UmiFixSessionInfoArchiveRead, UmiFixSessionInfoArchiveValidate)

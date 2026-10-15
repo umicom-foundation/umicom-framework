@@ -68,10 +68,17 @@ UMI_TEST_VALUE_TRANSFER(UmiProductIdTransferCases, UmiProductId,
     umi_product_id_archive_encode, umi_product_id_archive_decode,
     UmiProductIdTransferEqual, UmiProductIdTransferTails, UmiProductIdTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiProductIdConditionalArchiveCases, UmiProductId,
+    umi_product_id_archive_encode, umi_product_id_archive_decode_if_unchanged,
+    UmiProductIdTransferEqual, UmiProductIdTransferTails, UmiProductIdTransferMalformed)
+
+
 int main(void)
 {
     UmiProductId x= {0}; CHECK(umi_product_id_set(&x,"ID")==UMI_STATUS_OK); CHECK(umi_product_id_is_valid(&x));
     if (UmiProductIdTransferCases(&x) != 0) return 1;
+    if (UmiProductIdConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;
 }

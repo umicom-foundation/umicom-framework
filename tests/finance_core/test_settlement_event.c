@@ -109,10 +109,17 @@ UMI_TEST_VALUE_TRANSFER(UmiSettlementEventTransferCases, UmiSettlementEvent,
     umi_settlement_event_archive_encode, umi_settlement_event_archive_decode,
     UmiSettlementEventTransferEqual, UmiSettlementEventTransferTails, UmiSettlementEventTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiSettlementEventConditionalArchiveCases, UmiSettlementEvent,
+    umi_settlement_event_archive_encode, umi_settlement_event_archive_decode_if_unchanged,
+    UmiSettlementEventTransferEqual, UmiSettlementEventTransferTails, UmiSettlementEventTransferMalformed)
+
+
 int main(void)
 {
     UmiSettlementEvent x; CHECK(umi_settlement_event_init(&x,"ID","Name","PARENT",(UmiFinancialDate){2026,8U,25U},1U)==UMI_STATUS_OK); CHECK(umi_settlement_event_is_valid(&x));
     if (UmiSettlementEventTransferCases(&x) != 0) return 1;
+    if (UmiSettlementEventConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;
 }

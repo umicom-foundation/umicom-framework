@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include <stdint.h>
 #include "umicom/application/runtime/layout_session.h"
 
 #include <stdio.h>
@@ -75,10 +76,37 @@ UmiStatus umi_application_layout_session_select(
  * Provide the application layout session set locked operation used by this module and its
  * client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_application_layout_session_set_locked(
     UmiApplicationLayoutSession *session,
     bool locked)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (session == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (session->locked != locked) {
+        session->locked = locked;
+        session->revision += 1U;
+    }
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_application_layout_session_set_locked(
+    UmiApplicationLayoutSession *session,
+    bool locked)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (session != NULL && session->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.

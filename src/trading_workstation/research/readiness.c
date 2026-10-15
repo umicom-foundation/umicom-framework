@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/policy_batch_internal.h"
 #include "umicom/trading_workstation/research/readiness.h"
 #include "../trading_workstation_internal.h"
 
@@ -36,3 +37,8 @@ UmiStatus umi_trading_professional_evaluate_research_readiness(
     return umi_trading_professional_evaluate_policy(
         &policy, input, outSnapshot);
 }
+
+/* Reuse the scalar policy for complete table refreshes; the shared batch
+ * owner stages all rows before publishing a successful calculation. */
+UMI_DEFINE_POLICY_BATCH(umi_trading_professional_evaluate_research_readiness_batch, umi_trading_professional_evaluate_research_readiness,
+    UmiTradingProfessionalInput, UmiTradingProfessionalSnapshot)

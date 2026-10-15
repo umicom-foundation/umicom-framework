@@ -31,9 +31,18 @@ typedef struct UmiOpenTmsAccountingBook {
     size_t count; uint64_t revision; int approved; int posted;
 } UmiOpenTmsAccountingBook;
 void umi_open_tms_accounting_book_init(UmiOpenTmsAccountingBook *book);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_open_tms_accounting_book_add(UmiOpenTmsAccountingBook *book,const UmiOpenTmsAccountingLine *line);
 UmiStatus umi_open_tms_accounting_book_totals(const UmiOpenTmsAccountingBook *book,double *outDebit,double *outCredit);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_open_tms_accounting_book_approve(UmiOpenTmsAccountingBook *book);
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_open_tms_accounting_book_post(UmiOpenTmsAccountingBook *book);
 #ifdef __cplusplus
 }

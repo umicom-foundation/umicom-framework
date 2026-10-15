@@ -32,6 +32,10 @@ extern "C" {
  */
 typedef struct UmiNativeWebDragDropBinding { char source_id[UMI_NATIVE_WEB_ID_CAPACITY]; char target_id[UMI_NATIVE_WEB_ID_CAPACITY]; char payload_type[64]; bool allowed; } UmiNativeWebDragDropBinding;
 /* Initialise validated drag drop binding state. */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_native_web_drag_drop_binding_init(UmiNativeWebDragDropBinding *binding, const char *source_id, const char *target_id, const char *payload_type, bool allowed);
 
 #ifdef __cplusplus

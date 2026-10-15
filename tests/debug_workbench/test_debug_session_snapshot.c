@@ -95,6 +95,12 @@ UMI_TEST_VALUE_TRANSFER(UmiDebugWorkbenchDebugSessionSnapshotTransferCases, UmiD
     umi_debug_workbench_debug_session_snapshot_archive_encode, umi_debug_workbench_debug_session_snapshot_archive_decode,
     UmiDebugWorkbenchDebugSessionSnapshotTransferEqual, UmiDebugWorkbenchDebugSessionSnapshotTransferTails, UmiDebugWorkbenchDebugSessionSnapshotTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDebugWorkbenchDebugSessionSnapshotConditionalArchiveCases, UmiDebugWorkbenchDebugSessionSnapshot,
+    umi_debug_workbench_debug_session_snapshot_archive_encode, umi_debug_workbench_debug_session_snapshot_archive_decode_if_unchanged,
+    UmiDebugWorkbenchDebugSessionSnapshotTransferEqual, UmiDebugWorkbenchDebugSessionSnapshotTransferTails, UmiDebugWorkbenchDebugSessionSnapshotTransferMalformed)
+
+
 int main(void)
 {
     UmiDebugWorkbenchDebugSessionSnapshot model;
@@ -104,6 +110,7 @@ int main(void)
     UMI_TEST_CHECK(model.thread_count == 3U && model.watch_count == 4U);
     UMI_TEST_CHECK(umi_debug_workbench_debug_session_snapshot_valid(&model));
     if (UmiDebugWorkbenchDebugSessionSnapshotTransferCases(&model) != 0) return 1;
+    if (UmiDebugWorkbenchDebugSessionSnapshotConditionalArchiveCases(&model) != 0) return 1;
 
     return 0;
 }

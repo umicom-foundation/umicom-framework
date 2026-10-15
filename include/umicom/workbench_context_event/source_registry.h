@@ -43,6 +43,9 @@ void umi_workbench_context_event_source_registry_destroy(UmiWorkbenchContextEven
  * Provide the workbench context event source registry upsert operation used by this module
  * and its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_context_event_source_registry_upsert(
     UmiWorkbenchContextEventSourceRegistry *registry,
     const UmiWorkbenchContextEventSourceDescriptor *descriptor);
@@ -57,6 +60,9 @@ umi_workbench_context_event_source_registry_find(
  * Remove workbench context event source registry while keeping the remaining records in a
  * valid and discoverable state.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_context_event_source_registry_remove(
     UmiWorkbenchContextEventSourceRegistry *registry,const char *source_id);
 #ifdef __cplusplus

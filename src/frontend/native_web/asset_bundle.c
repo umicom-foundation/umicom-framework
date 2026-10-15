@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include <stdint.h>
 #include "umicom/frontend/native_web/asset_bundle.h"
 
 #include <string.h>
@@ -25,5 +26,17 @@ void umi_native_web_asset_bundle_init(UmiNativeWebAssetBundle *bundle){/* Protec
  * Add native web asset bundle only after its inputs and available capacity have been
  * checked.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_native_web_asset_bundle_add(UmiNativeWebAssetBundle *bundle,const UmiNativeWebAsset *asset){size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(bundle==NULL||asset==NULL||asset->path[0]=='\0'||asset->content_type[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;/* Visit each bounded item once so every record receives the same rule. */ for(i=0;i<bundle->count;++i)/* Protect caller-owned memory by checking that required state is available before it is used. */ if(strcmp(bundle->items[i].path,asset->path)==0)return UMI_STATUS_ALREADY_EXISTS;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(bundle->count>=UMI_NATIVE_WEB_MAX_ASSETS)return UMI_STATUS_CAPACITY_EXCEEDED;bundle->items[bundle->count++]=*asset;++bundle->revision;return UMI_STATUS_OK;}
+#endif
+
+UmiStatus umi_native_web_asset_bundle_add(UmiNativeWebAssetBundle *bundle,const UmiNativeWebAsset *asset){
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (bundle != NULL && bundle->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(bundle==NULL||asset==NULL||asset->path[0]=='\0'||asset->content_type[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;/* Visit each bounded item once so every record receives the same rule. */ for(i=0;i<bundle->count;++i)/* Protect caller-owned memory by checking that required state is available before it is used. */ if(strcmp(bundle->items[i].path,asset->path)==0)return UMI_STATUS_ALREADY_EXISTS;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(bundle->count>=UMI_NATIVE_WEB_MAX_ASSETS)return UMI_STATUS_CAPACITY_EXCEEDED;bundle->items[bundle->count++]=*asset;++bundle->revision;return UMI_STATUS_OK;}
 

@@ -43,7 +43,10 @@ typedef struct UmiFinancialCoreService {
   bool ready;
 } UmiFinancialCoreService;
 /* Initialize service. */ void umi_financial_core_service_init(UmiFinancialCoreService *s);
-/* Start service after reference data configuration. */ UmiStatus
+/* Start service after reference data configuration. */ /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
+UmiStatus
 umi_financial_core_service_start(UmiFinancialCoreService *s);
 /* Return total registered reference-data records. */ size_t
 umi_financial_core_service_inventory(const UmiFinancialCoreService *s);

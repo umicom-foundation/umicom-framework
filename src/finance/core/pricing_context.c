@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/core/pricing_context.h"
 #include "../../base/value_archive_internal.h"
 
@@ -79,3 +80,9 @@ static UmiStatus UmiPricingContextArchiveValidate(const UmiPricingContext *value
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_pricing_context_archive_encode, umi_pricing_context_archive_decode,
     UmiPricingContext, UmiPricingContextArchiveSchema, UmiPricingContextArchiveBound, UmiPricingContextArchiveWrite, UmiPricingContextArchiveRead, UmiPricingContextArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_pricing_context_archive_decode_if_unchanged, umi_pricing_context_archive_encode,
+    UmiPricingContext, UmiPricingContextArchiveSchema, UmiPricingContextArchiveBound, UmiPricingContextArchiveRead, UmiPricingContextArchiveValidate)

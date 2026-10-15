@@ -21,6 +21,7 @@
  *   Focused regression coverage for Coordinate graph validation, starter and auto-configuration planning for application launch.
  *---------------------------------------------------------------------------*/
 #include <stdint.h>
+#include "../value_archive/construction_cases.h"
 #include <string.h>
 #include "umicom/runtime/bootstrap/bootstrap_context.h"
 #include "umicom/runtime/bootstrap/graph_node.h"
@@ -40,7 +41,13 @@
  * The replacement owns those same records on the heap, checks allocation and
  * releases them after the checks, including a failed assertion path. */
 #if 0
+
+/* A rejected replacement must preserve the previously accepted graph node value. */
+
+
 int main(void) {
+
+
 
     UmiBootstrapContext ctx; UmiBootstrapServiceGraph graph; UmiBootstrapGraphNode node;
     UmiBootstrapStarterCatalogue starters; UmiBootstrapAutoConfigurationCatalogue ac;
@@ -93,8 +100,38 @@ static int CheckBootstrapService(BootstrapServiceFixture *fixture)
     return 0;
 }
 
+/* Validate constructor refusal before the active service scenario. */
+static int UmiBootstrapGraphNodeConstructionCases(void)
+{
+    UmiBootstrapGraphNode *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_bootstrap_graph_node_init(value, "svc.runtime", 0, true) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_bootstrap_graph_node_init(value, oversized, 0, true) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_bootstrap_graph_node_init(value, value->id, 0, true) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->id, "svc.runtime") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void)
 {
+    if (UmiBootstrapGraphNodeConstructionCases() != 0) return 1;
+
     BootstrapServiceFixture *fixture = calloc(1U, sizeof *fixture);
     if (fixture == NULL) { fputs("Cannot allocate bootstrap fixture\n", stderr); return 1; }
     int result = CheckBootstrapService(fixture);

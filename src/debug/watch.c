@@ -17,6 +17,7 @@
  * This module uses a small, explicit C API and bounded storage.  The public
  * contract does not expose toolkit objects, C++ types, or private structures.
  */
+#include "../base/conditional_archive_internal.h"
 #include "umicom/debug/watch.h"
 #include "../base/value_archive_internal.h"
 #include "../base/registry_archive_internal.h"
@@ -359,3 +360,8 @@ UmiStatus UmiDebugWatchRegistryInvalidateValues(UmiDebugWatchRegistry *registry)
     }
     return UMI_STATUS_OK;
 }
+
+/* Guard snapshot import with the complete encoded value reviewed by the
+ * caller. Imported metadata remains evidence; registry publication is separate. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_debug_watch_snapshot_archive_decode_if_unchanged, umi_debug_watch_snapshot_archive_encode,
+    UmiDebugWatchSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)

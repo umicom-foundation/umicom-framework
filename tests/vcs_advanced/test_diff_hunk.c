@@ -62,6 +62,12 @@ UMI_TEST_VALUE_TRANSFER(UmiVcsAdvancedDiffHunkTransferCases, UmiVcsAdvancedDiffH
     umi_vcs_advanced_diff_hunk_archive_encode, umi_vcs_advanced_diff_hunk_archive_decode,
     UmiVcsAdvancedDiffHunkTransferEqual, UmiVcsAdvancedDiffHunkTransferTails, UmiVcsAdvancedDiffHunkTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiVcsAdvancedDiffHunkConditionalArchiveCases, UmiVcsAdvancedDiffHunk,
+    umi_vcs_advanced_diff_hunk_archive_encode, umi_vcs_advanced_diff_hunk_archive_decode_if_unchanged,
+    UmiVcsAdvancedDiffHunkTransferEqual, UmiVcsAdvancedDiffHunkTransferTails, UmiVcsAdvancedDiffHunkTransferMalformed)
+
+
 int main(void)
 {
     UmiVcsAdvancedDiffHunk value;
@@ -73,6 +79,7 @@ int main(void)
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_vcs_advanced_diff_hunk_validate(&value) != UMI_STATUS_OK) return 2;
     if (UmiVcsAdvancedDiffHunkTransferCases(&value) != 0) return 1;
+    if (UmiVcsAdvancedDiffHunkConditionalArchiveCases(&value) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (umi_vcs_advanced_diff_hunk_change_count(&value) != 2U) return 3;

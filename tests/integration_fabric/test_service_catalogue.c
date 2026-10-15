@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/integration/fabric/service_catalogue.h"
 #include <stdio.h>
 #include <string.h>
@@ -26,6 +27,9 @@ int main(void) {
     UmiFabricServiceCatalogue r; UmiFabricServiceDescriptor item, found; umi_fabric_service_catalogue_init(&r);
     CHECK(umi_fabric_service_descriptor_init(&item,"risk","Risk",(UmiFabricVersion){1U,0U,0U},1U)==UMI_STATUS_OK);
     CHECK(umi_fabric_service_catalogue_add(&r,&item)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiFabricServiceCatalogue, &r,
+        (umi_fabric_service_catalogue_add(&r,&item)));
+
     CHECK(umi_fabric_service_catalogue_add(&r,&item)==UMI_STATUS_ALREADY_EXISTS);
     CHECK(umi_fabric_service_catalogue_find(&r,item.service_id,&found)==UMI_STATUS_OK);
     CHECK(umi_fabric_service_catalogue_count(&r)==1U);

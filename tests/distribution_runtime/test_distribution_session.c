@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/distribution/runtime/distribution_session.h"
 
 
@@ -22,6 +23,9 @@
  * to the operating system.
  */
 int main(void) {
-    UmiDrDistributionSession s; umi_dr_distribution_session_init(&s,"release"); s.runtime_ready=s.package_ready=s.release_gate_passed=s.deployment_ready=true; CHECK(umi_dr_distribution_session_ready(&s)); CHECK(umi_dr_distribution_session_commit(&s)==UMI_STATUS_OK); CHECK(s.state==UMI_DR_STATE_COMMITTED && s.revision==1U);
+    UmiDrDistributionSession s; umi_dr_distribution_session_init(&s,"release"); s.runtime_ready=s.package_ready=s.release_gate_passed=s.deployment_ready=true; CHECK(umi_dr_distribution_session_ready(&s)); CHECK(umi_dr_distribution_session_commit(&s)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDrDistributionSession, &s,
+        (umi_dr_distribution_session_commit(&s)));
+ CHECK(s.state==UMI_DR_STATE_COMMITTED && s.revision==1U);
     return 0;
 }

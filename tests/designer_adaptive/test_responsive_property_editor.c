@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include "umicom/designer/adaptive/responsive_property_editor.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)
 /*
@@ -22,6 +23,9 @@ int main(void)
 {
     UmiDesignerAdaptiveProperty p; UmiDesignerResponsivePropertyEditor e;
     CHECK(umi_designer_adaptive_property_init(&p,"visible","true",1)==UMI_STATUS_OK); CHECK(umi_designer_responsive_property_editor_init(&e,&p)==UMI_STATUS_OK);
-    CHECK(umi_designer_responsive_property_editor_override(&e,"phone","false")==UMI_STATUS_OK); CHECK(e.has_override);
+    CHECK(umi_designer_responsive_property_editor_override(&e,"phone","false")==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDesignerResponsivePropertyEditor, &e,
+        (umi_designer_responsive_property_editor_override(&e,"phone","false")));
+ CHECK(e.has_override);
     return 0;
 }

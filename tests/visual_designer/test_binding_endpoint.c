@@ -85,6 +85,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadBindingEndpointTransferCases, UmiRadBindingEndpoin
     umi_rad_binding_endpoint_archive_encode, umi_rad_binding_endpoint_archive_decode,
     UmiRadBindingEndpointTransferEqual, UmiRadBindingEndpointTransferTails, UmiRadBindingEndpointTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadBindingEndpointConditionalArchiveCases, UmiRadBindingEndpoint,
+    umi_rad_binding_endpoint_archive_encode, umi_rad_binding_endpoint_archive_decode_if_unchanged,
+    UmiRadBindingEndpointTransferEqual, UmiRadBindingEndpointTransferTails, UmiRadBindingEndpointTransferMalformed)
+
+
 int main(void){UmiRadBindingEndpoint item;CHECK(umi_rad_binding_endpoint_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_binding_endpoint_is_valid(&item));
     if (UmiRadBindingEndpointTransferCases(&item) != 0) return 1;
+    if (UmiRadBindingEndpointConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

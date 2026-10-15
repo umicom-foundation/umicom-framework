@@ -74,6 +74,13 @@ UMI_TEST_VALUE_TRANSFER(UmiWebServerConfigTransferCases, UmiWebServerConfig,
     umi_web_server_config_archive_encode, umi_web_server_config_archive_decode,
     UmiWebServerConfigTransferEqual, UmiWebServerConfigTransferTails, UmiWebServerConfigTransferMalformed)
 
+#include "value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWebServerConfigConditionalArchiveCases, UmiWebServerConfig,
+    umi_web_server_config_archive_encode, umi_web_server_config_archive_decode_if_unchanged,
+    UmiWebServerConfigTransferEqual, UmiWebServerConfigTransferTails, UmiWebServerConfigTransferMalformed)
+
+
 int main(void){UmiWebServerConfig c=umi_web_server_config_default();UmiWebServerState s;assert(umi_web_server_config_validate(&c)==UMI_STATUS_OK);
     if (UmiWebServerConfigTransferCases(&c) != 0) return 1;
+    if (UmiWebServerConfigConditionalArchiveCases(&c) != 0) return 1;
 umi_web_server_state_init(&s);assert(s.phase==UMI_WEB_SERVER_STOPPED);return 0;}

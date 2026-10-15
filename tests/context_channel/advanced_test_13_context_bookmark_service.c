@@ -130,6 +130,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextBookmarkServiceTransferCases, UmiContextBookma
     umi_context_bookmark_service_archive_encode, umi_context_bookmark_service_archive_decode,
     UmiContextBookmarkServiceTransferEqual, UmiContextBookmarkServiceTransferTails, UmiContextBookmarkServiceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextBookmarkServiceConditionalArchiveCases, UmiContextBookmarkService,
+    umi_context_bookmark_service_archive_encode, umi_context_bookmark_service_archive_decode_if_unchanged,
+    UmiContextBookmarkServiceTransferEqual, UmiContextBookmarkServiceTransferTails, UmiContextBookmarkServiceTransferMalformed)
+
+
 int main(void)
 {
     UmiContextBookmarkService state;
@@ -144,6 +150,7 @@ int main(void)
     assert(umi_context_bookmark_service_covers_sequence(&state,11U));
     assert(umi_context_bookmark_service_validate(&state) == UMI_STATUS_OK);
     if (UmiContextBookmarkServiceTransferCases(&state) != 0) return 1;
+    if (UmiContextBookmarkServiceConditionalArchiveCases(&state) != 0) return 1;
 
     return 0;
 }

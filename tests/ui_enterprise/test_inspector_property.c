@@ -140,6 +140,13 @@ UMI_TEST_VALUE_TRANSFER(UmiUiEntInspectorPropertyTransferCases, UmiUiEntInspecto
     umi_ui_ent_inspector_property_archive_encode, umi_ui_ent_inspector_property_archive_decode,
     UmiUiEntInspectorPropertyTransferEqual, UmiUiEntInspectorPropertyTransferTails, UmiUiEntInspectorPropertyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiEntInspectorPropertyConditionalArchiveCases, UmiUiEntInspectorProperty,
+    umi_ui_ent_inspector_property_archive_encode, umi_ui_ent_inspector_property_archive_decode_if_unchanged,
+    UmiUiEntInspectorPropertyTransferEqual, UmiUiEntInspectorPropertyTransferTails, UmiUiEntInspectorPropertyTransferMalformed)
+
+
 int main(void){UmiUiEntInspectorProperty v;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_inspector_property_init(&v)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_copy_text(v.property_id,sizeof v.property_id,"id")!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_copy_text(v.section_id,sizeof v.section_id,"general")!=UMI_STATUS_OK)return 3;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_copy_text(v.label,sizeof v.label,"Name")!=UMI_STATUS_OK)return 4;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_ui_ent_inspector_property_validate(&v))return 9;
     if (UmiUiEntInspectorPropertyTransferCases(&v) != 0) return 1;
+    if (UmiUiEntInspectorPropertyConditionalArchiveCases(&v) != 0) return 1;
 puts("ok");return 0;}

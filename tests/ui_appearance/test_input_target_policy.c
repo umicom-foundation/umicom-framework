@@ -68,6 +68,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceInputTargetPolicyTransferCases, UmiAppearan
     umi_appearance_input_target_policy_archive_encode, umi_appearance_input_target_policy_archive_decode,
     UmiAppearanceInputTargetPolicyTransferEqual, UmiAppearanceInputTargetPolicyTransferTails, UmiAppearanceInputTargetPolicyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceInputTargetPolicyConditionalArchiveCases, UmiAppearanceInputTargetPolicy,
+    umi_appearance_input_target_policy_archive_encode, umi_appearance_input_target_policy_archive_decode_if_unchanged,
+    UmiAppearanceInputTargetPolicyTransferEqual, UmiAppearanceInputTargetPolicyTransferTails, UmiAppearanceInputTargetPolicyTransferMalformed)
+
+
 int main(void) {
     UmiAppearanceInputTargetPolicy item;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -75,6 +81,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_input_target_policy_is_valid(&item)) return 2;
     if (UmiAppearanceInputTargetPolicyTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceInputTargetPolicyConditionalArchiveCases(&item) != 0) return 1;
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_appearance_input_target_policy_for_modality(&item,UMI_APPEARANCE_INPUT_TOUCH)!=UMI_STATUS_OK || item.minimum_width_dp!=44.0) return 3;

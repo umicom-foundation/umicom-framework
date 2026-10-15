@@ -42,6 +42,10 @@ typedef struct UmiCtOsServiceDescriptor { char service_id[UMI_CT_ID_CAPACITY]; U
  * Initialise ct os service descriptor from caller-provided values so later operations
  * receive a known state.
  */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_ct_os_service_descriptor_init(UmiCtOsServiceDescriptor *service,const char *service_id,UmiCtOsServiceKind kind,bool essential);
 /**
  * Provide the ct os service descriptor add dependency operation used by this module and

@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/mosaic/layout_restore_plan.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -132,3 +133,8 @@ static UmiStatus UmiUiMosaicLayoutRestorePlanArchiveValidate(const UmiUiMosaicLa
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ui_mosaic_layout_restore_plan_archive_encode, umi_ui_mosaic_layout_restore_plan_archive_decode,
     UmiUiMosaicLayoutRestorePlan, UmiUiMosaicLayoutRestorePlanArchiveSchema, UmiUiMosaicLayoutRestorePlanArchiveBound, UmiUiMosaicLayoutRestorePlanArchiveWrite, UmiUiMosaicLayoutRestorePlanArchiveRead, UmiUiMosaicLayoutRestorePlanArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_mosaic_layout_restore_plan_archive_decode_if_unchanged, umi_ui_mosaic_layout_restore_plan_archive_encode,
+    UmiUiMosaicLayoutRestorePlan, UmiUiMosaicLayoutRestorePlanArchiveSchema, UmiUiMosaicLayoutRestorePlanArchiveBound, UmiUiMosaicLayoutRestorePlanArchiveRead, UmiUiMosaicLayoutRestorePlanArchiveValidate)

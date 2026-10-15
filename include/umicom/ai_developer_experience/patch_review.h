@@ -71,6 +71,9 @@ UmiStatus umi_ai_developer_patch_review_build(
  * Provide the ai developer patch review select operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ai_developer_patch_review_select(
     UmiAiDeveloperPatchReview *review,
     size_t file_index);

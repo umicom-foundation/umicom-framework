@@ -49,6 +49,9 @@ void umi_data_admin_model_init(UmiDataAdminModel *model);
  * Provide the data admin model refresh operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_data_admin_model_refresh(
     UmiDataAdminModel *model,
     const UmiDataServer *server,

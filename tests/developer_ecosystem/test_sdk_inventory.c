@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 
 #include "umicom/developer/ecosystem/sdk_inventory.h"
@@ -28,9 +29,15 @@ int main(void)
     entry.evidence = UMI_ECOSYSTEM_EVIDENCE_VERIFIED;
     assert(umi_ecosystem_sdk_inventory_upsert(&inventory, &entry) ==
         UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiEcosystemSdkInventory, &inventory,
+        (umi_ecosystem_sdk_inventory_upsert(&inventory, &entry)));
+
     assert(inventory.installed_count == 1U && inventory.compatible_count == 1U);
     assert(umi_ecosystem_sdk_inventory_set_default(&inventory, "umicom-1") ==
         UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiEcosystemSdkInventory, &inventory,
+        (umi_ecosystem_sdk_inventory_set_default(&inventory, "umicom-1")));
+
     assert(inventory.entries[0].default_sdk);
     entry.compatibility = UMI_ECOSYSTEM_INCOMPATIBLE;
     assert(umi_ecosystem_sdk_inventory_upsert(&inventory, &entry) ==

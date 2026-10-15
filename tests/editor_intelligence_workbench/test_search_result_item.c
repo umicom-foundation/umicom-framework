@@ -130,6 +130,13 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorIntelSearchResultItemTransferCases, UmiEditorIn
     umi_editor_intel_search_result_item_archive_encode, umi_editor_intel_search_result_item_archive_decode,
     UmiEditorIntelSearchResultItemTransferEqual, UmiEditorIntelSearchResultItemTransferTails, UmiEditorIntelSearchResultItemTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelSearchResultItemConditionalArchiveCases, UmiEditorIntelSearchResultItem,
+    umi_editor_intel_search_result_item_archive_encode, umi_editor_intel_search_result_item_archive_decode_if_unchanged,
+    UmiEditorIntelSearchResultItemTransferEqual, UmiEditorIntelSearchResultItemTransferTails, UmiEditorIntelSearchResultItemTransferMalformed)
+
+
 int main(void){UmiEditorIntelSearchResultItem model;UmiEditorIntelRange range={{3U,4U},{3U,12U}};/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_search_result_item_init(&model,"model-1","item","src/main.c",range)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_search_result_item_set_score(&model,91U)!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_search_result_item_set_selected(&model,true)!=UMI_STATUS_OK)return 3;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_intel_search_result_item_valid(&model)||model.value.score!=91U||!model.selected)return 4;
     if (UmiEditorIntelSearchResultItemTransferCases(&model) != 0) return 1;
+    if (UmiEditorIntelSearchResultItemConditionalArchiveCases(&model) != 0) return 1;
 return 0;}

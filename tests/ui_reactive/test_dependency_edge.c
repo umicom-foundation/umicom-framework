@@ -83,6 +83,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveDependencyEdgeTransferCases, UmiUiReactiveD
     umi_ui_reactive_dependency_edge_archive_encode, umi_ui_reactive_dependency_edge_archive_decode,
     UmiUiReactiveDependencyEdgeTransferEqual, UmiUiReactiveDependencyEdgeTransferTails, UmiUiReactiveDependencyEdgeTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveDependencyEdgeConditionalArchiveCases, UmiUiReactiveDependencyEdge,
+    umi_ui_reactive_dependency_edge_archive_encode, umi_ui_reactive_dependency_edge_archive_decode_if_unchanged,
+    UmiUiReactiveDependencyEdgeTransferEqual, UmiUiReactiveDependencyEdgeTransferTails, UmiUiReactiveDependencyEdgeTransferMalformed)
+
+
 int main(void) { UmiUiReactiveDependencyEdge item; umi_ui_reactive_dependency_edge_init(&item);
     /* Nonzero fields expose swapped or omitted values in a saved record.
      * The original initialized fixture remains available for its own checks. */
@@ -90,4 +96,5 @@ int main(void) { UmiUiReactiveDependencyEdge item; umi_ui_reactive_dependency_ed
     (void)snprintf(populated.from_id, sizeof(populated.from_id), "field-0");
     (void)snprintf(populated.to_id, sizeof(populated.to_id), "field-1");
     if (UmiUiReactiveDependencyEdgeTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveDependencyEdgeConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_dependency_edge_valid(&item) ? 0 : 1; }

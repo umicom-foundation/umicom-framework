@@ -12,14 +12,31 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/compiler/native/declaration.h"
+#include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
 /*
  * Initialise nc declaration from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_nc_declaration_init(UmiNativeDeclaration *d,uint32_t node,UmiNativeDeclarationKind kind,const char *name,uint32_t type){ /* Protect caller-owned memory by checking that required state is available before it is used. */ if(d==NULL||node==0U||name==NULL||name[0]=='\0'||type==0U)return UMI_STATUS_INVALID_ARGUMENT;memset(d,0,sizeof(*d));d->node_id=node;d->kind=kind;d->type_id=type;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_copy_text(d->name,sizeof(d->name),name)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;return UMI_STATUS_OK; }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_nc_declaration_init_build_value(UmiNativeDeclaration *d,uint32_t node,UmiNativeDeclarationKind kind,const char *name,uint32_t type){ /* Protect caller-owned memory by checking that required state is available before it is used. */ if(d==NULL||node==0U||name==NULL||name[0]=='\0'||type==0U)return UMI_STATUS_INVALID_ARGUMENT;memset(d,0,sizeof(*d));d->node_id=node;d->kind=kind;d->type_id=type;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_copy_text(d->name,sizeof(d->name),name)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;return UMI_STATUS_OK; }
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_nc_declaration_init, UmiNativeDeclaration, d,
+    (UmiNativeDeclaration *d, uint32_t node, UmiNativeDeclarationKind kind, const char *name, uint32_t type),
+    umi_nc_declaration_init_build_value(candidate, node, kind, name, type))
+
 /* Check that nc declaration satisfies its contract before another service relies on it. */
 UmiStatus umi_nc_declaration_validate(const UmiNativeDeclaration *d){
     /* Fixed-size fields may come from a plug-in or restored state. Check
@@ -77,3 +94,9 @@ static UmiStatus UmiNativeDeclarationArchiveValidate(const UmiNativeDeclaration 
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_nc_declaration_archive_encode, umi_nc_declaration_archive_decode,
     UmiNativeDeclaration, UmiNativeDeclarationArchiveSchema, UmiNativeDeclarationArchiveBound, UmiNativeDeclarationArchiveWrite, UmiNativeDeclarationArchiveRead, UmiNativeDeclarationArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_nc_declaration_archive_decode_if_unchanged, umi_nc_declaration_archive_encode,
+    UmiNativeDeclaration, UmiNativeDeclarationArchiveSchema, UmiNativeDeclarationArchiveBound, UmiNativeDeclarationArchiveRead, UmiNativeDeclarationArchiveValidate)

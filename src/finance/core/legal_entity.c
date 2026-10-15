@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/core/legal_entity.h"
 #include "../../base/value_archive_internal.h"
 
@@ -70,3 +71,9 @@ static UmiStatus UmiLegalEntityArchiveValidate(const UmiLegalEntity *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_legal_entity_archive_encode, umi_legal_entity_archive_decode,
     UmiLegalEntity, UmiLegalEntityArchiveSchema, UmiLegalEntityArchiveBound, UmiLegalEntityArchiveWrite, UmiLegalEntityArchiveRead, UmiLegalEntityArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_legal_entity_archive_decode_if_unchanged, umi_legal_entity_archive_encode,
+    UmiLegalEntity, UmiLegalEntityArchiveSchema, UmiLegalEntityArchiveBound, UmiLegalEntityArchiveRead, UmiLegalEntityArchiveValidate)

@@ -17,6 +17,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../base/conditional_archive_internal.h"
 #include "umicom/teacher/teacher_workspace_bridge.h"
 #include "../base/value_archive_internal.h"
 
@@ -174,3 +175,8 @@ static UmiStatus UmiTeacherTeacherWorkspaceBridgeArchiveValidate(const UmiTeache
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_teacher_teacher_workspace_bridge_archive_encode, umi_teacher_teacher_workspace_bridge_archive_decode,
     UmiTeacherTeacherWorkspaceBridge, UmiTeacherTeacherWorkspaceBridgeArchiveSchema, UmiTeacherTeacherWorkspaceBridgeArchiveBound, UmiTeacherTeacherWorkspaceBridgeArchiveWrite, UmiTeacherTeacherWorkspaceBridgeArchiveRead, UmiTeacherTeacherWorkspaceBridgeArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_teacher_teacher_workspace_bridge_archive_decode_if_unchanged, umi_teacher_teacher_workspace_bridge_archive_encode,
+    UmiTeacherTeacherWorkspaceBridge, UmiTeacherTeacherWorkspaceBridgeArchiveSchema, UmiTeacherTeacherWorkspaceBridgeArchiveBound, UmiTeacherTeacherWorkspaceBridgeArchiveRead, UmiTeacherTeacherWorkspaceBridgeArchiveValidate)

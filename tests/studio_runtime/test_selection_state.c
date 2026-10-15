@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/studio_runtime/selection_state.h"
@@ -28,6 +29,9 @@ int main(void)
     selection.kind = UMI_STUDIO_SELECTION_TEST;
     (void)strcpy(selection.subject_id,"test.a");
     assert(umi_studio_selection_state_set(&state,&selection)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiStudioRuntimeSelectionState, &state,
+        (umi_studio_selection_state_set(&state,&selection)));
+
     assert(state.current.kind == UMI_STUDIO_SELECTION_TEST);
     umi_studio_selection_state_clear(&state);
     assert(state.current.kind == UMI_STUDIO_SELECTION_NONE);

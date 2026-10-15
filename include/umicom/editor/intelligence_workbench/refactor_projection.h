@@ -57,6 +57,9 @@ UmiStatus umi_editor_intel_refactor_projection_init(
  * Provide the editor intel refactor projection refresh operation used by this module and
  * its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_editor_intel_refactor_projection_refresh(
     UmiEditorIntelRefactorProjection *projection,
     UmiEditorCodeActionOrchestration *orchestration);
@@ -73,6 +76,9 @@ UmiStatus umi_editor_intel_refactor_projection_set_included(
  * Provide the editor intel refactor projection record history operation used by this
  * module and its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_editor_intel_refactor_projection_record_history(
     UmiEditorIntelRefactorProjection *projection,
     const char *label);

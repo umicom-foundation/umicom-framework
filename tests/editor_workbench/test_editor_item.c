@@ -88,6 +88,13 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorWbEditorItemTransferCases, UmiEditorWbEditorIte
     umi_editor_wb_editor_item_archive_encode, umi_editor_wb_editor_item_archive_decode,
     UmiEditorWbEditorItemTransferEqual, UmiEditorWbEditorItemTransferTails, UmiEditorWbEditorItemTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorWbEditorItemConditionalArchiveCases, UmiEditorWbEditorItem,
+    umi_editor_wb_editor_item_archive_encode, umi_editor_wb_editor_item_archive_decode_if_unchanged,
+    UmiEditorWbEditorItemTransferEqual, UmiEditorWbEditorItemTransferTails, UmiEditorWbEditorItemTransferMalformed)
+
+
 int main(void){ UmiEditorWbEditorItem x; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_editor_item_init(&x,"e1","a.c",UMI_EDITOR_WB_OPEN_PREVIEW)!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_wb_editor_item_valid(&x))return 2;
     if (UmiEditorWbEditorItemTransferCases(&x) != 0) return 1;
+    if (UmiEditorWbEditorItemConditionalArchiveCases(&x) != 0) return 1;
  /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_editor_item_set_dirty(&x,true)!=UMI_STATUS_OK||!x.dirty)return 3; return 0; }

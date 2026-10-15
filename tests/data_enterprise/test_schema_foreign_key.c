@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/data/enterprise/schema_foreign_key.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -143,10 +144,96 @@ UMI_TEST_VALUE_TRANSFER(UmiDataSchemaForeignKeyTransferCases, UmiDataSchemaForei
     umi_data_schema_foreign_key_archive_encode, umi_data_schema_foreign_key_archive_decode,
     UmiDataSchemaForeignKeyTransferEqual, UmiDataSchemaForeignKeyTransferTails, UmiDataSchemaForeignKeyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataSchemaForeignKeyConditionalArchiveCases, UmiDataSchemaForeignKey,
+    umi_data_schema_foreign_key_archive_encode, umi_data_schema_foreign_key_archive_decode_if_unchanged,
+    UmiDataSchemaForeignKeyTransferEqual, UmiDataSchemaForeignKeyTransferTails, UmiDataSchemaForeignKeyTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted schema foreign key value. */
+static int UmiDataSchemaForeignKeyConstructionCases(void)
+{
+    UmiDataSchemaForeignKey *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_data_schema_foreign_key_init(value, "fk.order.customer", "orders", "customer_id", "customers", "id") == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->constraint_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_schema_foreign_key_init(value, oversized, "orders", "customer_id", "customers", "id") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_schema_foreign_key_init(value, value->constraint_id, "orders", "customer_id", "customers", "id") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->constraint_id, "fk.order.customer") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->source_table) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_schema_foreign_key_init(value, "fk.order.customer", oversized, "customer_id", "customers", "id") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_schema_foreign_key_init(value, "fk.order.customer", value->source_table, "customer_id", "customers", "id") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->source_table, "orders") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->source_column) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_schema_foreign_key_init(value, "fk.order.customer", "orders", oversized, "customers", "id") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_schema_foreign_key_init(value, "fk.order.customer", "orders", value->source_column, "customers", "id") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->source_column, "customer_id") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->target_table) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_schema_foreign_key_init(value, "fk.order.customer", "orders", "customer_id", oversized, "id") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_schema_foreign_key_init(value, "fk.order.customer", "orders", "customer_id", value->target_table, "id") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->target_table, "customers") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->target_column) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_schema_foreign_key_init(value, "fk.order.customer", "orders", "customer_id", "customers", oversized) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_schema_foreign_key_init(value, "fk.order.customer", "orders", "customer_id", "customers", value->target_column) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->target_column, "id") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiDataSchemaForeignKeyConstructionCases() != 0) return 1;
+
     UmiDataSchemaForeignKey item;
     CHECK(umi_data_schema_foreign_key_init(&item,"fk.order.customer","orders","customer_id","customers","id") == UMI_STATUS_OK);
     if (UmiDataSchemaForeignKeyTransferCases(&item) != 0) return 1;
+    if (UmiDataSchemaForeignKeyConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(strcmp(item.target_table,"customers")==0);
     return 0;

@@ -36,6 +36,9 @@ void umi_fc_layout_snapshot_init(UmiFcLayoutSnapshot *snapshot,const char *id);
 /**
  * Add fc layout snapshot only after its inputs and available capacity have been checked.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_fc_layout_snapshot_append(UmiFcLayoutSnapshot *snapshot,double value);
 /**
  * Provide the fc layout snapshot fingerprint operation used by this module and its client

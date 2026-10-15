@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/appearance/color_vision_assistance.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -88,3 +89,8 @@ static UmiStatus UmiAppearanceColorVisionAssistanceArchiveValidate(const UmiAppe
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_appearance_color_vision_assistance_archive_encode, umi_appearance_color_vision_assistance_archive_decode,
     UmiAppearanceColorVisionAssistance, UmiAppearanceColorVisionAssistanceArchiveSchema, UmiAppearanceColorVisionAssistanceArchiveBound, UmiAppearanceColorVisionAssistanceArchiveWrite, UmiAppearanceColorVisionAssistanceArchiveRead, UmiAppearanceColorVisionAssistanceArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_appearance_color_vision_assistance_archive_decode_if_unchanged, umi_appearance_color_vision_assistance_archive_encode,
+    UmiAppearanceColorVisionAssistance, UmiAppearanceColorVisionAssistanceArchiveSchema, UmiAppearanceColorVisionAssistanceArchiveBound, UmiAppearanceColorVisionAssistanceArchiveRead, UmiAppearanceColorVisionAssistanceArchiveValidate)

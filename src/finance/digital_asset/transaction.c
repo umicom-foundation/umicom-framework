@@ -16,6 +16,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/digital_asset/transaction.h"
 #include "../../base/value_archive_internal.h"
 
@@ -131,3 +132,9 @@ static UmiStatus UmiDigitalAssetTransactionArchiveValidate(const UmiDigitalAsset
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_digital_asset_transaction_archive_encode, umi_digital_asset_transaction_archive_decode,
     UmiDigitalAssetTransaction, UmiDigitalAssetTransactionArchiveSchema, UmiDigitalAssetTransactionArchiveBound, UmiDigitalAssetTransactionArchiveWrite, UmiDigitalAssetTransactionArchiveRead, UmiDigitalAssetTransactionArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_digital_asset_transaction_archive_decode_if_unchanged, umi_digital_asset_transaction_archive_encode,
+    UmiDigitalAssetTransaction, UmiDigitalAssetTransactionArchiveSchema, UmiDigitalAssetTransactionArchiveBound, UmiDigitalAssetTransactionArchiveRead, UmiDigitalAssetTransactionArchiveValidate)

@@ -20,7 +20,9 @@
  * PURPOSE:
  *   Describe modules that contribute replaceable service implementations.
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/runtime/bootstrap/provider_descriptor.h"
+#include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 
 
@@ -29,6 +31,11 @@
  * Initialise bootstrap provider descriptor from caller-provided values so later operations
  * receive a known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_bootstrap_provider_descriptor_init(
     UmiBootstrapProviderDescriptor *descriptor,
     const char *provider_id,
@@ -54,6 +61,40 @@ UmiStatus umi_bootstrap_provider_descriptor_init(
     descriptor->enabled = true;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_bootstrap_provider_descriptor_init_build_value(
+    UmiBootstrapProviderDescriptor *descriptor,
+    const char *provider_id,
+    const char *module_id,
+    int32_t priority) {
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (descriptor == NULL || !umi_bootstrap_id_valid(provider_id) ||
+        !umi_bootstrap_id_valid(module_id)) return UMI_STATUS_INVALID_ARGUMENT;
+    memset(descriptor, 0, sizeof(*descriptor));
+    status = umi_bootstrap_copy_text(descriptor->provider_id,
+        sizeof(descriptor->provider_id), provider_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_bootstrap_copy_text(descriptor->module_id,
+        sizeof(descriptor->module_id), module_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    descriptor->priority = priority;
+    descriptor->enabled = true;
+    return UMI_STATUS_OK;
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_bootstrap_provider_descriptor_init, UmiBootstrapProviderDescriptor, descriptor,
+    (UmiBootstrapProviderDescriptor *descriptor, const char *provider_id, const char *module_id, int32_t priority),
+    umi_bootstrap_provider_descriptor_init_build_value(candidate, provider_id, module_id, priority))
+
 /*
  * Check that bootstrap provider descriptor satisfies its contract before another service
  * relies on it.
@@ -112,3 +153,9 @@ static UmiStatus UmiBootstrapProviderDescriptorArchiveValidate(const UmiBootstra
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_bootstrap_provider_descriptor_archive_encode, umi_bootstrap_provider_descriptor_archive_decode,
     UmiBootstrapProviderDescriptor, UmiBootstrapProviderDescriptorArchiveSchema, UmiBootstrapProviderDescriptorArchiveBound, UmiBootstrapProviderDescriptorArchiveWrite, UmiBootstrapProviderDescriptorArchiveRead, UmiBootstrapProviderDescriptorArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_bootstrap_provider_descriptor_archive_decode_if_unchanged, umi_bootstrap_provider_descriptor_archive_encode,
+    UmiBootstrapProviderDescriptor, UmiBootstrapProviderDescriptorArchiveSchema, UmiBootstrapProviderDescriptorArchiveBound, UmiBootstrapProviderDescriptorArchiveRead, UmiBootstrapProviderDescriptorArchiveValidate)

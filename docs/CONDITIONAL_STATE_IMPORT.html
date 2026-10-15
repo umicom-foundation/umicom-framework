@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Constructing values and reviewing saved state — Umicom Framework</title>
+<style>body{max-width:62rem;margin:2rem auto;padding:0 1rem;font:17px/1.65 system-ui;color:#192733;background:#fafcfd}h1,h2{line-height:1.2;color:#123950}pre{padding:1rem;background:#eef3f6;overflow:auto}code{font-family:Consolas,monospace}a{color:#075a9a}aside{border-left:4px solid #267384;padding:1rem;background:#edf7f8}li{margin:.6rem 0}</style></head>
+<body><main><h1>Constructing values and reviewing saved state</h1>
+<p>A value is a record that keeps its data in its own fields. It owns no open file, network connection or external resource. Framework provides checked construction and guarded archive import for selected value types so a failed operation does not erase the last accepted state.</p>
+<h2>Construct a replacement without losing the old value</h2>
+<ol><li>Use the type's status-returning initializer and inspect its result. Headers that document construction before replacement support the stronger failure contract.</li>
+<li>On success, use the new value. On failure, keep displaying the existing value and explain the returned status. Do not clear the record as an error-handling step.</li>
+<li>Inputs may refer to existing inline text fields when the header explicitly permits it. The initializer reads them before replacing the destination.</li></ol>
+<pre><code>UmiWsChartSurface chart;
+UmiStatus status = umi_ws_chart_surface_init(&amp;chart, "market.chart", "Market");
+if (status != UMI_STATUS_OK) return status;
+
+/* The identifier belongs to chart. Construction reads it before publication. */
+status = umi_ws_chart_surface_init(&amp;chart, chart.chart_id, "Reviewed market");
+if (status != UMI_STATUS_OK) {
+    /* chart still contains its previous accepted fields. */
+    return status;
+}</code></pre>
+<p>These initializers allocate temporary heap storage. They can return OUT_OF_MEMORY. This keeps large records off the call stack, but adds allocation cost; it is not a real-time allocation guarantee. Types that own resources require their own lifetime protocol and are not interchangeable with inline values.</p>
+<h2>Import saved data without overwriting a changed draft</h2>
+<p>Reading a file and reviewing it can take time. If the displayed draft changes in that interval, importing against the old review would discard work. Typed functions ending in <code>_archive_decode_if_unchanged</code> compare the destination's encoded fields with a snapshot retained by the caller.</p>
+<ol><li>Copy the value being reviewed into independent storage. Retain that snapshot until the review finishes.</li>
+<li>Read the archive into a separate bounded byte buffer. Do not treat a checksum as proof of a trusted sender.</li>
+<li>Serialize access to the destination for the entire import call. For an owner-thread UI, run the final comparison and import on that thread.</li>
+<li>Call the matching typed guarded decoder with the archive, expected snapshot and destination.</li>
+<li>If it returns INVALID_STATE, retain the current draft and ask the user to review the difference. Do not silently replace the expected snapshot and retry.</li>
+<li>After successful import into a draft, use the domain's reviewed publication API to update a live registry or service. Importing data does not authorize a command.</li></ol>
+<pre><code>/* reviewed_plan and draft_plan are UmiDataQueryPlan values. */
+UmiStatus status = umi_data_query_plan_archive_decode_if_unchanged(
+    archive_bytes, archive_size, &amp;reviewed_plan, &amp;draft_plan);
+if (status == UMI_STATUS_INVALID_STATE) {
+    /* The current draft differs from the reviewed snapshot. Show it for review. */
+    return status;
+}
+if (status != UMI_STATUS_OK) return status;
+/* Continue with the query plan owner's normal review and publication workflow. */</code></pre>
+<aside><strong>What this checks:</strong> the complete canonical encoding, including all fields represented by that codec. It ignores struct padding and unused string tails. It validates the imported schema and fields before replacing any destination bytes.</aside>
+<h2>Limits and recovery</h2>
+<ul><li>INVALID_ARGUMENT: check required pointers and domain field validity.</li>
+<li>INVALID_STATE: the expected and current encoded states differ. Obtain a new review; preserve the current work.</li>
+<li>PARSE_ERROR or UNAVAILABLE: the archive is damaged or uses another schema. Use the matching supported schema or an explicit migration.</li>
+<li>OUT_OF_MEMORY: temporary comparison or decoding storage could not be allocated. The destination remains intact; keep it and report the failure.</li></ul>
+<p>Comparison temporarily uses at most twice the encoded size. That storage is released before allocating one candidate record. The archive byte limit bounds encoded data; the type defines the candidate's size. Applications may impose smaller import budgets.</p>
+<p>This is not a mutex, transaction log, automatic recovery service or historical change detector. A value that changes away and back has the same encoded state. Use an owner's monotonic revision token when history matters. Decoded identities and revisions remain archive evidence; the destination slot and publication policy belong to the caller. No network access, clinical action, payment or order submission is performed.</p>
+<h2>Text edits and context records</h2>
+<p><code>umi_text_replace</code> checks capacity before replacing a fixed text field and supports overlapping input. <code>umi_text_update</code> also advances a separate revision. Existing presentation-copy functions retain their original failure behavior. Choose the function whose documented contract matches the operation.</p>
+<p>Context-link reviewed replacement checks identity and expected revision. Text setters reject exhausted revisions, and a void touch operation leaves the record unchanged when its revision cannot advance. Call a status-returning reviewed operation when the caller needs to display a refusal reason.</p>
+<h2>Run the focused regression checks</h2>
+<p>From an Applications checkout configured with its all-applications debug preset and BUILD_TESTING enabled, build normally, then run:</p>
+<pre><code>cmake --build --preset windows-ucrt64-all-debug --parallel 2
+ctest --preset windows-ucrt64-all-debug --output-on-failure --no-tests=error -R "framework.value.(construction|conditional_archive)"
+ctest --preset windows-ucrt64-all-debug --output-on-failure --no-tests=error -R "archive-value|workbench_context_link|base_text"</code></pre>
+<p>Successful results mean the selected checks passed in that build. They do not replace the full suite or application workflow testing. If a check fails, keep its output with the compiler and dependency versions and inspect the first failing assertion before proceeding.</p>
+</main></body></html>

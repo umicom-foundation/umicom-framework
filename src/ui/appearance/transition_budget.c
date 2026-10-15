@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/appearance/transition_budget.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -85,3 +86,8 @@ static UmiStatus UmiAppearanceTransitionBudgetArchiveValidate(const UmiAppearanc
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_appearance_transition_budget_archive_encode, umi_appearance_transition_budget_archive_decode,
     UmiAppearanceTransitionBudget, UmiAppearanceTransitionBudgetArchiveSchema, UmiAppearanceTransitionBudgetArchiveBound, UmiAppearanceTransitionBudgetArchiveWrite, UmiAppearanceTransitionBudgetArchiveRead, UmiAppearanceTransitionBudgetArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_appearance_transition_budget_archive_decode_if_unchanged, umi_appearance_transition_budget_archive_encode,
+    UmiAppearanceTransitionBudget, UmiAppearanceTransitionBudgetArchiveSchema, UmiAppearanceTransitionBudgetArchiveBound, UmiAppearanceTransitionBudgetArchiveRead, UmiAppearanceTransitionBudgetArchiveValidate)

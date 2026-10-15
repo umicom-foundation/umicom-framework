@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/repository/maintenance_service.h"
 
 #include <string.h>
@@ -43,8 +44,36 @@ void umi_repository_maintenance_service_init(UmiRepositoryMaintenanceService *se
  * Provide the repository maintenance service evaluate operation used by this module and
  * its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_repository_maintenance_service_evaluate(UmiRepositoryMaintenanceService *service)
 {
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_repository_status_summary_refresh(&service->summary);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = umi_repository_doctor_evaluate(&service->summary, &service->policy, &service->report);
+    }
+    service->last_status = status;
+    service->revision += 1U;
+    return status;
+}
+#endif
+
+UmiStatus umi_repository_maintenance_service_evaluate(UmiRepositoryMaintenanceService *service)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (service != NULL && service->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiStatus status;
     /*
      * Protect caller-owned memory by checking that required state is available before it is

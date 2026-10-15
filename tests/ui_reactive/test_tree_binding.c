@@ -119,6 +119,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveTreeBindingTransferCases, UmiUiReactiveTree
     umi_ui_reactive_tree_binding_archive_encode, umi_ui_reactive_tree_binding_archive_decode,
     UmiUiReactiveTreeBindingTransferEqual, UmiUiReactiveTreeBindingTransferTails, UmiUiReactiveTreeBindingTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveTreeBindingConditionalArchiveCases, UmiUiReactiveTreeBinding,
+    umi_ui_reactive_tree_binding_archive_encode, umi_ui_reactive_tree_binding_archive_decode_if_unchanged,
+    UmiUiReactiveTreeBindingTransferEqual, UmiUiReactiveTreeBindingTransferTails, UmiUiReactiveTreeBindingTransferMalformed)
+
+
 int main(void) { UmiUiReactiveTreeBinding item; umi_ui_reactive_tree_binding_init(&item);
     /* Nonzero fields expose swapped or omitted values in a saved record.
      * The original initialized fixture remains available for its own checks. */
@@ -128,4 +134,5 @@ int main(void) { UmiUiReactiveTreeBinding item; umi_ui_reactive_tree_binding_ini
     (void)snprintf(populated.expansion_path, sizeof(populated.expansion_path), "field-2");
     (void)snprintf(populated.selection_path, sizeof(populated.selection_path), "field-3");
     if (UmiUiReactiveTreeBindingTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveTreeBindingConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_tree_binding_valid(&item) ? 0 : 1; }

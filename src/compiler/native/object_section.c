@@ -13,12 +13,28 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/object_section.h"
+#include "../../base/value_construction_internal.h"
 #include <string.h>
 /*
  * Initialise nc object section from caller-provided values so later operations receive a
  * known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_nc_object_section_init(UmiNativeObjectSection *s,const char *name,UmiNativeSectionKind kind,size_t align){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==NULL||name==NULL||align==0U)return UMI_STATUS_INVALID_ARGUMENT;memset(s,0,sizeof(*s));/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_copy_text(s->name,sizeof(s->name),name)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;s->kind=kind;s->alignment=align;s->readable=true;s->writable=kind==UMI_NC_SECTION_DATA||kind==UMI_NC_SECTION_BSS;s->executable=kind==UMI_NC_SECTION_TEXT;return UMI_STATUS_OK;}
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_nc_object_section_init_build_value(UmiNativeObjectSection *s,const char *name,UmiNativeSectionKind kind,size_t align){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==NULL||name==NULL||align==0U)return UMI_STATUS_INVALID_ARGUMENT;memset(s,0,sizeof(*s));/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_copy_text(s->name,sizeof(s->name),name)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;s->kind=kind;s->alignment=align;s->readable=true;s->writable=kind==UMI_NC_SECTION_DATA||kind==UMI_NC_SECTION_BSS;s->executable=kind==UMI_NC_SECTION_TEXT;return UMI_STATUS_OK;}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_nc_object_section_init, UmiNativeObjectSection, s,
+    (UmiNativeObjectSection *s, const char *name, UmiNativeSectionKind kind, size_t align),
+    umi_nc_object_section_init_build_value(candidate, name, kind, align))
+
 /*
  * Provide the nc object section reserve operation used by this module and its client
  * applications.

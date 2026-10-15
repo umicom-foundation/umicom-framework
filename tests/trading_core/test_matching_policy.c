@@ -50,6 +50,12 @@ UMI_TEST_VALUE_TRANSFER(UmiTradingMatchingPolicyTransferCases, UmiTradingMatchin
     umi_trading_matching_policy_archive_encode, umi_trading_matching_policy_archive_decode,
     UmiTradingMatchingPolicyTransferEqual, UmiTradingMatchingPolicyTransferTails, UmiTradingMatchingPolicyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTradingMatchingPolicyConditionalArchiveCases, UmiTradingMatchingPolicy,
+    umi_trading_matching_policy_archive_encode, umi_trading_matching_policy_archive_decode_if_unchanged,
+    UmiTradingMatchingPolicyTransferEqual, UmiTradingMatchingPolicyTransferTails, UmiTradingMatchingPolicyTransferMalformed)
+
+
 int main(void) {
     UmiTradingMatchingPolicy v;
      /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -57,6 +63,7 @@ int main(void) {
      /* Use the stable identifier comparison to choose the matching record or policy. */
      if(!umi_trading_matching_policy_valid(&v)) return 2;
     if (UmiTradingMatchingPolicyTransferCases(&v) != 0) return 1;
+    if (UmiTradingMatchingPolicyConditionalArchiveCases(&v) != 0) return 1;
 
      return 0;
 }

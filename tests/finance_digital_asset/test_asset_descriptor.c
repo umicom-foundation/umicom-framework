@@ -127,12 +127,19 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalAssetDescriptorTransferCases, UmiDigitalAssetD
     umi_digital_asset_asset_descriptor_archive_encode, umi_digital_asset_asset_descriptor_archive_decode,
     UmiDigitalAssetDescriptorTransferEqual, UmiDigitalAssetDescriptorTransferTails, UmiDigitalAssetDescriptorTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalAssetDescriptorConditionalArchiveCases, UmiDigitalAssetDescriptor,
+    umi_digital_asset_asset_descriptor_archive_encode, umi_digital_asset_asset_descriptor_archive_decode_if_unchanged,
+    UmiDigitalAssetDescriptorTransferEqual, UmiDigitalAssetDescriptorTransferTails, UmiDigitalAssetDescriptorTransferMalformed)
+
+
 int main(void)
 {
     UmiDigitalAssetDescriptor value;
     CHECK(umi_digital_asset_asset_descriptor_init(&value, "ASSET-BTC", "BTC", "Bitcoin", "BTC", 8U, true) == UMI_STATUS_OK);
     CHECK(umi_digital_asset_asset_descriptor_valid(&value));
     if (UmiDigitalAssetDescriptorTransferCases(&value) != 0) return 1;
+    if (UmiDigitalAssetDescriptorConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

@@ -87,6 +87,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadGenerationPlanTransferCases, UmiRadGenerationPlan,
     umi_rad_generation_plan_archive_encode, umi_rad_generation_plan_archive_decode,
     UmiRadGenerationPlanTransferEqual, UmiRadGenerationPlanTransferTails, UmiRadGenerationPlanTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadGenerationPlanConditionalArchiveCases, UmiRadGenerationPlan,
+    umi_rad_generation_plan_archive_encode, umi_rad_generation_plan_archive_decode_if_unchanged,
+    UmiRadGenerationPlanTransferEqual, UmiRadGenerationPlanTransferTails, UmiRadGenerationPlanTransferMalformed)
+
+
 int main(void){UmiRadGenerationPlan item;CHECK(umi_rad_generation_plan_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_generation_plan_is_valid(&item));
     if (UmiRadGenerationPlanTransferCases(&item) != 0) return 1;
+    if (UmiRadGenerationPlanConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

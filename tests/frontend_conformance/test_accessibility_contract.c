@@ -55,9 +55,16 @@ UMI_TEST_VALUE_TRANSFER(UmiFcAccessibilityContractTransferCases, UmiFcAccessibil
     umi_fc_accessibility_contract_archive_encode, umi_fc_accessibility_contract_archive_decode,
     UmiFcAccessibilityContractTransferEqual, UmiFcAccessibilityContractTransferTails, UmiFcAccessibilityContractTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFcAccessibilityContractConditionalArchiveCases, UmiFcAccessibilityContract,
+    umi_fc_accessibility_contract_archive_encode, umi_fc_accessibility_contract_archive_decode_if_unchanged,
+    UmiFcAccessibilityContractTransferEqual, UmiFcAccessibilityContractTransferTails, UmiFcAccessibilityContractTransferMalformed)
+
+
 int main(void) {
     UmiFcAccessibilityContract x={1U,true,true,true}; CHECK(umi_fc_accessibility_contract_validate(&x));
     if (UmiFcAccessibilityContractTransferCases(&x) != 0) return 1;
+    if (UmiFcAccessibilityContractConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;
 }

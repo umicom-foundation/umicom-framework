@@ -17,6 +17,7 @@
  * This source implements the small deterministic core of bar. Product-specific UI and vendor details stay outside this file.
  */
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/trading/bar.h"
 #include "../base/value_archive_internal.h"
 
@@ -119,3 +120,8 @@ static UmiStatus UmiBarArchiveValidate(const UmiBar *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_bar_archive_encode, umi_bar_archive_decode,
     UmiBar, UmiBarArchiveSchema, UmiBarArchiveBound, UmiBarArchiveWrite, UmiBarArchiveRead, UmiBarArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_bar_archive_decode_if_unchanged, umi_bar_archive_encode,
+    UmiBar, UmiBarArchiveSchema, UmiBarArchiveBound, UmiBarArchiveRead, UmiBarArchiveValidate)

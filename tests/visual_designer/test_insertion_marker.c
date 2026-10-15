@@ -72,6 +72,13 @@ UMI_TEST_VALUE_TRANSFER(UmiRadInsertionMarkerTransferCases, UmiRadInsertionMarke
     umi_rad_insertion_marker_archive_encode, umi_rad_insertion_marker_archive_decode,
     UmiRadInsertionMarkerTransferEqual, UmiRadInsertionMarkerTransferTails, UmiRadInsertionMarkerTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadInsertionMarkerConditionalArchiveCases, UmiRadInsertionMarker,
+    umi_rad_insertion_marker_archive_encode, umi_rad_insertion_marker_archive_decode_if_unchanged,
+    UmiRadInsertionMarkerTransferEqual, UmiRadInsertionMarkerTransferTails, UmiRadInsertionMarkerTransferMalformed)
+
+
 int main(void){UmiRadInsertionMarker item;CHECK(umi_rad_insertion_marker_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_insertion_marker_is_valid(&item));
     if (UmiRadInsertionMarkerTransferCases(&item) != 0) return 1;
+    if (UmiRadInsertionMarkerConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

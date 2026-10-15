@@ -28,6 +28,17 @@ extern "C" {
 /* Copy the complete source or leave an empty destination when it does not fit. */
 UmiStatus umi_text_copy(char *destination, size_t capacity, const char *source);
 
+/**
+ * @brief Replace a fixed text field without changing it on failure.
+ * @param destination Writable storage with capacity bytes.
+ * @param capacity Size of destination, including space for the terminator.
+ * @param source Readable, terminated text; overlap with destination is allowed.
+ * @return OK, INVALID_ARGUMENT for missing storage, or CAPACITY_EXCEEDED.
+ * At most capacity source bytes are inspected. Bytes following the new
+ * terminator remain untouched. The caller owns synchronization and persistence.
+ */
+UmiStatus umi_text_replace(char *destination, size_t capacity, const char *source);
+
 /* Copy the largest valid prefix and always terminate a non-empty destination. */
 size_t umi_text_copy_truncated(char *destination, size_t capacity,
                                const char *source);

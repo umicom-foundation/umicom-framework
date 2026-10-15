@@ -101,6 +101,12 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceApplicationBrandBindingTransferCases, UmiAp
     umi_appearance_application_brand_binding_archive_encode, umi_appearance_application_brand_binding_archive_decode,
     UmiAppearanceApplicationBrandBindingTransferEqual, UmiAppearanceApplicationBrandBindingTransferTails, UmiAppearanceApplicationBrandBindingTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceApplicationBrandBindingConditionalArchiveCases, UmiAppearanceApplicationBrandBinding,
+    umi_appearance_application_brand_binding_archive_encode, umi_appearance_application_brand_binding_archive_decode_if_unchanged,
+    UmiAppearanceApplicationBrandBindingTransferEqual, UmiAppearanceApplicationBrandBindingTransferTails, UmiAppearanceApplicationBrandBindingTransferMalformed)
+
+
 int main(void) {
     UmiAppearanceApplicationBrandBinding item;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -108,6 +114,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_application_brand_binding_is_valid(&item)) return 2;
     if (UmiAppearanceApplicationBrandBindingTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceApplicationBrandBindingConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;
 }

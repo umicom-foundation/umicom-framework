@@ -68,6 +68,9 @@ void umi_workbench_context_source_sample_init(
  * Provide the workbench context source sample set identity operation used by this module
  * and its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_context_source_sample_set_identity(
     UmiWorkbenchContextSourceSample *sample,
     const char *source_id,
@@ -78,6 +81,9 @@ UmiStatus umi_workbench_context_source_sample_set_identity(
  * Provide the workbench context source sample set subject operation used by this module
  * and its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_context_source_sample_set_subject(
     UmiWorkbenchContextSourceSample *sample,
     const char *subject_id,
@@ -86,6 +92,9 @@ UmiStatus umi_workbench_context_source_sample_set_subject(
  * Provide the workbench context source sample set location operation used by this module
  * and its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_context_source_sample_set_location(
     UmiWorkbenchContextSourceSample *sample,
     const char *path,
@@ -97,6 +106,9 @@ UmiStatus umi_workbench_context_source_sample_set_location(
  * Provide the workbench context source sample add metadata operation used by this module
  * and its client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_workbench_context_source_sample_add_metadata(
     UmiWorkbenchContextSourceSample *sample,
     const char *name,

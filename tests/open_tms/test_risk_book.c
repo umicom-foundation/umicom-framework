@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <stdio.h>
 #include "umicom/open_tms/risk_book.h"
@@ -24,6 +25,9 @@ int main(void)
     (void)snprintf(limit.scopeId,sizeof(limit.scopeId),"%s","portfolio-1");
     limit.limit=100.0;limit.utilisation=80.0;limit.version=1U;
     assert(umi_open_tms_risk_book_upsert(&book,&limit)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiOpenTmsRiskBook, &book,
+        (umi_open_tms_risk_book_upsert(&book,&limit)));
+
     assert(umi_open_tms_risk_limit_utilisation_percent(&limit)==80.0);
     assert(umi_open_tms_risk_book_breach_count(&book)==0U);
     limit.utilisation=101.0;limit.version=2U;

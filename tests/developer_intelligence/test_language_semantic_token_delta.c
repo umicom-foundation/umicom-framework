@@ -17,6 +17,10 @@
 
 #include "umicom/developer_intelligence/language/semantic_token_delta.h"
 
+#include "../policy_batch/cases.h"
+UMI_TEST_POLICY_BATCH(UmiDeveloperIntelligenceEvaluateLanguageSemanticTokenDeltaBatchCases, UmiDeveloperIntelligenceEvaluateLanguageSemanticTokenDelta,
+    UmiDeveloperIntelligenceEvaluateLanguageSemanticTokenDeltaBatch, UmiDeveloperIntelligenceInput, UmiDeveloperIntelligenceSnapshot, lexicalScore)
+
 int main(void)
 {
     UmiDeveloperIntelligenceInput input;
@@ -44,6 +48,7 @@ int main(void)
     input.active = 1;
     input.revision = 42U;
 
+    if (UmiDeveloperIntelligenceEvaluateLanguageSemanticTokenDeltaBatchCases(&input) != 0) return 1;
     assert(UmiDeveloperIntelligenceEvaluateLanguageSemanticTokenDelta(&input, &snapshot) == UMI_STATUS_OK);
     assert(strcmp(snapshot.id, "language.semantic-token-delta") == 0);
     assert(snapshot.revision == 42U);

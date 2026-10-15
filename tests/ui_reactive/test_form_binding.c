@@ -85,6 +85,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveFormBindingTransferCases, UmiUiReactiveForm
     umi_ui_reactive_form_binding_archive_encode, umi_ui_reactive_form_binding_archive_decode,
     UmiUiReactiveFormBindingTransferEqual, UmiUiReactiveFormBindingTransferTails, UmiUiReactiveFormBindingTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveFormBindingConditionalArchiveCases, UmiUiReactiveFormBinding,
+    umi_ui_reactive_form_binding_archive_encode, umi_ui_reactive_form_binding_archive_decode_if_unchanged,
+    UmiUiReactiveFormBindingTransferEqual, UmiUiReactiveFormBindingTransferTails, UmiUiReactiveFormBindingTransferMalformed)
+
+
 int main(void) { UmiUiReactiveFormBinding item; umi_ui_reactive_form_binding_init(&item);
     /* Nonzero fields expose swapped or omitted values in a saved record.
      * The original initialized fixture remains available for its own checks. */
@@ -93,4 +99,5 @@ int main(void) { UmiUiReactiveFormBinding item; umi_ui_reactive_form_binding_ini
     (void)snprintf(populated.model_prefix, sizeof(populated.model_prefix), "field-1");
     populated.validate_before_commit = true;
     if (UmiUiReactiveFormBindingTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveFormBindingConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_form_binding_valid(&item) ? 0 : 1; }

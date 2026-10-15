@@ -125,12 +125,19 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalDepositAddressTransferCases, UmiDigitalDeposit
     umi_digital_asset_deposit_address_archive_encode, umi_digital_asset_deposit_address_archive_decode,
     UmiDigitalDepositAddressTransferEqual, UmiDigitalDepositAddressTransferTails, UmiDigitalDepositAddressTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalDepositAddressConditionalArchiveCases, UmiDigitalDepositAddress,
+    umi_digital_asset_deposit_address_archive_encode, umi_digital_asset_deposit_address_archive_decode_if_unchanged,
+    UmiDigitalDepositAddressTransferEqual, UmiDigitalDepositAddressTransferTails, UmiDigitalDepositAddressTransferMalformed)
+
+
 int main(void)
 {
     UmiDigitalDepositAddress value;
     CHECK(umi_digital_asset_deposit_address_init(&value, "CUST-1", "ASSET-BTC", "BTC", "bc1qdeposit") == UMI_STATUS_OK);
     CHECK(umi_digital_asset_deposit_address_valid(&value));
     if (UmiDigitalDepositAddressTransferCases(&value) != 0) return 1;
+    if (UmiDigitalDepositAddressConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../base/conditional_archive_internal.h"
 #include "umicom/workbench_selection_provider/mapping_state.h"
 #include "../base/value_archive_internal.h"
 #include "../base/record_update_internal.h"
@@ -299,3 +300,9 @@ UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_selection_provider_mapping_state_archive_
  * all fields together without emitting events or changing any external service. */
 UMI_DEFINE_REVIEWED_IDENTITY_RECORD_EDIT(umi_workbench_selection_provider_mapping_state_replace_if_current,
     UmiWorkbenchSelectionProviderMappingState, record_id, UmiWorkbenchSelectionProviderMappingStateArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_workbench_selection_provider_mapping_state_archive_decode_if_unchanged, umi_workbench_selection_provider_mapping_state_archive_encode,
+    UmiWorkbenchSelectionProviderMappingState, UmiWorkbenchSelectionProviderMappingStateArchiveSchema, UmiWorkbenchSelectionProviderMappingStateArchiveBound, UmiWorkbenchSelectionProviderMappingStateArchiveRead, UmiWorkbenchSelectionProviderMappingStateArchiveValidate)

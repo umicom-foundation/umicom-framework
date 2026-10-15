@@ -58,6 +58,12 @@ UMI_TEST_VALUE_TRANSFER(UmiRepositoryLockPolicyTransferCases, UmiRepositoryLockP
     umi_repository_lock_policy_archive_encode, umi_repository_lock_policy_archive_decode,
     UmiRepositoryLockPolicyTransferEqual, UmiRepositoryLockPolicyTransferTails, UmiRepositoryLockPolicyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiRepositoryLockPolicyConditionalArchiveCases, UmiRepositoryLockPolicy,
+    umi_repository_lock_policy_archive_encode, umi_repository_lock_policy_archive_decode_if_unchanged,
+    UmiRepositoryLockPolicyTransferEqual, UmiRepositoryLockPolicyTransferTails, UmiRepositoryLockPolicyTransferMalformed)
+
+
 int main(void)
 {
     UmiRepositoryLockPolicy p;
@@ -66,6 +72,7 @@ int main(void)
     assert(p.require_all_heads);
     assert(umi_repository_lock_policy_validate(&p) == UMI_STATUS_OK);
     if (UmiRepositoryLockPolicyTransferCases(&p) != 0) return 1;
+    if (UmiRepositoryLockPolicyConditionalArchiveCases(&p) != 0) return 1;
 
     return 0;
 }

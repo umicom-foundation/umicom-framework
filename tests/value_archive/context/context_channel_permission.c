@@ -99,6 +99,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextPermissionTransferCases, UmiContextPermission,
     umi_context_permission_archive_encode, umi_context_permission_archive_decode,
     UmiContextPermissionTransferEqual, UmiContextPermissionTransferTails, UmiContextPermissionTransferMalformed)
 
+#include "../conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextPermissionConditionalArchiveCases, UmiContextPermission,
+    umi_context_permission_archive_encode, umi_context_permission_archive_decode_if_unchanged,
+    UmiContextPermissionTransferEqual, UmiContextPermissionTransferTails, UmiContextPermissionTransferMalformed)
+
+
 int main(void)
 {
     UmiContextPermission value;
@@ -113,6 +119,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_context_permission_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiContextPermissionTransferCases(&value) != 0) return 1;
+    if (UmiContextPermissionConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

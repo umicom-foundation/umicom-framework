@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/plugin/extension_host/update_channel.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -168,3 +169,9 @@ static UmiStatus UmiPluginExtensionHostUpdateChannelArchiveValidate(const UmiPlu
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_plugin_extension_host_update_channel_archive_encode, umi_plugin_extension_host_update_channel_archive_decode,
     UmiPluginExtensionHostUpdateChannel, UmiPluginExtensionHostUpdateChannelArchiveSchema, UmiPluginExtensionHostUpdateChannelArchiveBound, UmiPluginExtensionHostUpdateChannelArchiveWrite, UmiPluginExtensionHostUpdateChannelArchiveRead, UmiPluginExtensionHostUpdateChannelArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_plugin_extension_host_update_channel_archive_decode_if_unchanged, umi_plugin_extension_host_update_channel_archive_encode,
+    UmiPluginExtensionHostUpdateChannel, UmiPluginExtensionHostUpdateChannelArchiveSchema, UmiPluginExtensionHostUpdateChannelArchiveBound, UmiPluginExtensionHostUpdateChannelArchiveRead, UmiPluginExtensionHostUpdateChannelArchiveValidate)

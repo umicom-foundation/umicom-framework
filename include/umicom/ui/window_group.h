@@ -58,11 +58,17 @@ typedef struct UmiUiWindowGroupStore { UmiUiWindowGroup items[UMI_UI_WINDOW_GROU
  * Provide the ui window group define operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ui_window_group_define(UmiUiWindowGroupStore *store,const char *group_id,const char *colour_token,UmiUiWindowContextKind context_kind);
 /**
  * Provide the ui window group join operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ui_window_group_join(UmiUiWindowGroupStore *store,const char *group_id,const char *window_id,UmiUiWindowGroupRole role);
 /**
  * Provide the ui window group leave operation used by this module and its client
@@ -73,6 +79,9 @@ UmiStatus umi_ui_window_group_leave(UmiUiWindowGroupStore *store,const char *gro
  * Copy ui window group into module-owned storage so callers keep ownership of their input
  * values.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ui_window_group_assign(
     UmiUiWindowGroupStore *store,
     const char *group_id,
@@ -82,6 +91,9 @@ UmiStatus umi_ui_window_group_assign(
  * Provide the ui window group unassign operation used by this module and its client
  * applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_ui_window_group_unassign(
     UmiUiWindowGroupStore *store,
     const char *window_id);

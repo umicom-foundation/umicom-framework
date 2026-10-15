@@ -164,6 +164,12 @@ UMI_TEST_VALUE_TRANSFER(UmiDeveloperWorkbenchProjectWizardTransferCases, UmiDeve
     umi_developer_workbench_project_wizard_archive_encode, umi_developer_workbench_project_wizard_archive_decode,
     UmiDeveloperWorkbenchProjectWizardTransferEqual, UmiDeveloperWorkbenchProjectWizardTransferTails, UmiDeveloperWorkbenchProjectWizardTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDeveloperWorkbenchProjectWizardConditionalArchiveCases, UmiDeveloperWorkbenchProjectWizard,
+    umi_developer_workbench_project_wizard_archive_encode, umi_developer_workbench_project_wizard_archive_decode_if_unchanged,
+    UmiDeveloperWorkbenchProjectWizardTransferEqual, UmiDeveloperWorkbenchProjectWizardTransferTails, UmiDeveloperWorkbenchProjectWizardTransferMalformed)
+
+
 int main(void)
 {
     UmiDeveloperWorkbenchProjectWizard wizard;
@@ -182,6 +188,7 @@ int main(void)
     assert(umi_developer_workbench_project_wizard_validate(&wizard) ==
            UMI_STATUS_OK);
     if (UmiDeveloperWorkbenchProjectWizardTransferCases(&wizard) != 0) return 1;
+    if (UmiDeveloperWorkbenchProjectWizardConditionalArchiveCases(&wizard) != 0) return 1;
 
 
     assert(umi_developer_project_request_from_wizard(

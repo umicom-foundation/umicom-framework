@@ -74,9 +74,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrPackageProfileTransferCases, UmiDrPackageProfile,
     umi_dr_package_profile_archive_encode, umi_dr_package_profile_archive_decode,
     UmiDrPackageProfileTransferEqual, UmiDrPackageProfileTransferTails, UmiDrPackageProfileTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrPackageProfileConditionalArchiveCases, UmiDrPackageProfile,
+    umi_dr_package_profile_archive_encode, umi_dr_package_profile_archive_decode_if_unchanged,
+    UmiDrPackageProfileTransferEqual, UmiDrPackageProfileTransferTails, UmiDrPackageProfileTransferMalformed)
+
+
 int main(void) {
     UmiDrPackageProfile value; umi_dr_package_profile_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"release")==UMI_STATUS_OK); value.format=UMI_DR_PACKAGE_ZIP; value.scope=UMI_DR_SCOPE_PORTABLE; CHECK(umi_dr_package_profile_valid(&value));
     if (UmiDrPackageProfileTransferCases(&value) != 0) return 1;
+    if (UmiDrPackageProfileConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_package_profile_fingerprint(&value) != 0U);
     return 0;
 }

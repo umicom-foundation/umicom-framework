@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include <stdint.h>
 #include "umicom/workbench_context_source/registry.h"
 
 #include <stdlib.h>
@@ -116,10 +117,54 @@ umi_workbench_context_source_registry_find(
  * Provide the workbench context source registry upsert operation used by this module and
  * its client applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_context_source_registry_upsert(
     UmiWorkbenchContextSourceRegistry *registry,
     const UmiWorkbenchContextSourceDefinition *definition)
 {
+    size_t index;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (registry == NULL || definition == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_workbench_context_source_definition_validate(definition);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < registry->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(registry->items[index].source_id,
+                   definition->source_id) == 0) {
+            registry->items[index] = *definition;
+            ++registry->revision;
+            return UMI_STATUS_OK;
+        }
+    }
+    status = ensure_capacity(registry);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    registry->items[registry->count++] = *definition;
+    ++registry->revision;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_workbench_context_source_registry_upsert(
+    UmiWorkbenchContextSourceRegistry *registry,
+    const UmiWorkbenchContextSourceDefinition *definition)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     UmiStatus status;
     /*
@@ -154,10 +199,56 @@ UmiStatus umi_workbench_context_source_registry_upsert(
  * Remove workbench context source registry while keeping the remaining records in a valid
  * and discoverable state.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_workbench_context_source_registry_remove(
     UmiWorkbenchContextSourceRegistry *registry,
     const char *source_id)
 {
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (registry == NULL || source_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < registry->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(registry->items[index].source_id, source_id) == 0) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+            if (index + 1U < registry->count) {
+                memmove(
+                    &registry->items[index],
+                    &registry->items[index + 1U],
+                    (registry->count - index - 1U) *
+                        sizeof(registry->items[0]));
+            }
+            --registry->count;
+            memset(
+                &registry->items[registry->count],
+                0,
+                sizeof(registry->items[0]));
+            ++registry->revision;
+            return UMI_STATUS_OK;
+        }
+    }
+    return UMI_STATUS_NOT_FOUND;
+}
+#endif
+
+UmiStatus umi_workbench_context_source_registry_remove(
+    UmiWorkbenchContextSourceRegistry *registry,
+    const char *source_id)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (registry != NULL && registry->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t index;
     /*
      * Protect caller-owned memory by checking that required state is available before it is

@@ -32,6 +32,10 @@ extern "C" {
  */
 typedef struct UmiNativeWebKeyboardBinding { char chord[96]; char command_id[UMI_NATIVE_WEB_ID_CAPACITY]; bool prevent_default; } UmiNativeWebKeyboardBinding;
 /* Initialise validated keyboard binding state. */
+/** Construct a complete value before replacing the destination. Any failure,
+ * including allocation failure, leaves its previous bytes unchanged. Text inputs
+ * may refer to its existing inline fields. This call allocates temporary storage;
+ * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_native_web_keyboard_binding_init(UmiNativeWebKeyboardBinding *binding, const char *chord, const char *command_id, bool prevent_default);
 
 #ifdef __cplusplus

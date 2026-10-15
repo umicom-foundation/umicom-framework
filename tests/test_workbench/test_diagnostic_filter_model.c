@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiDiagnosticFilterModelTransferCases, UmiDiagnosticFilt
     umi_diagnostic_filter_model_archive_encode, umi_diagnostic_filter_model_archive_decode,
     UmiDiagnosticFilterModelTransferEqual, UmiDiagnosticFilterModelTransferTails, UmiDiagnosticFilterModelTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDiagnosticFilterModelConditionalArchiveCases, UmiDiagnosticFilterModel,
+    umi_diagnostic_filter_model_archive_encode, umi_diagnostic_filter_model_archive_decode_if_unchanged,
+    UmiDiagnosticFilterModelTransferEqual, UmiDiagnosticFilterModelTransferTails, UmiDiagnosticFilterModelTransferMalformed)
+
+
 int main(void){UmiDiagnosticFilterModel m;assert(umi_diagnostic_filter_model_init(&m,"diagnostic_filter_model","Diagnostic Filter Model")==UMI_STATUS_OK);assert(umi_diagnostic_filter_model_set_active(&m,true)==UMI_STATUS_OK);assert(umi_diagnostic_filter_model_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_diagnostic_filter_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_diagnostic_filter_model_valid(&m));
     if (UmiDiagnosticFilterModelTransferCases(&m) != 0) return 1;
+    if (UmiDiagnosticFilterModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

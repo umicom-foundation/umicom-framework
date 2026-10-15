@@ -67,11 +67,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryCounterpartyExposureTransferCases, UmiTreasur
     umi_treasury_counterparty_exposure_archive_encode, umi_treasury_counterparty_exposure_archive_decode,
     UmiTreasuryCounterpartyExposureTransferEqual, UmiTreasuryCounterpartyExposureTransferTails, UmiTreasuryCounterpartyExposureTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryCounterpartyExposureConditionalArchiveCases, UmiTreasuryCounterpartyExposure,
+    umi_treasury_counterparty_exposure_archive_encode, umi_treasury_counterparty_exposure_archive_decode_if_unchanged,
+    UmiTreasuryCounterpartyExposureTransferEqual, UmiTreasuryCounterpartyExposureTransferTails, UmiTreasuryCounterpartyExposureTransferMalformed)
+
+
 int main(void) {
     UmiTreasuryCounterpartyExposure v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_counterparty_exposure_init(&v, "cpty", 300, 200) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryCounterpartyExposureTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryCounterpartyExposureConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if(umi_treasury_counterparty_exposure_total_minor(&v)!=500)return 2;

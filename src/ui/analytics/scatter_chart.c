@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/analytics/scatter_chart.h"
 #include "../../base/value_archive_internal.h"
 
@@ -60,3 +61,8 @@ static UmiStatus UmiAnalyticsScatterChartArchiveValidate(const UmiAnalyticsScatt
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_analytics_scatter_chart_archive_encode, umi_analytics_scatter_chart_archive_decode,
     UmiAnalyticsScatterChart, UmiAnalyticsScatterChartArchiveSchema, UmiAnalyticsScatterChartArchiveBound, UmiAnalyticsScatterChartArchiveWrite, UmiAnalyticsScatterChartArchiveRead, UmiAnalyticsScatterChartArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_analytics_scatter_chart_archive_decode_if_unchanged, umi_analytics_scatter_chart_archive_encode,
+    UmiAnalyticsScatterChart, UmiAnalyticsScatterChartArchiveSchema, UmiAnalyticsScatterChartArchiveBound, UmiAnalyticsScatterChartArchiveRead, UmiAnalyticsScatterChartArchiveValidate)

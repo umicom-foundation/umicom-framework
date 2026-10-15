@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/data/workbench/er_model.h"
 
 #include <string.h>
@@ -89,10 +90,53 @@ UmiStatus umi_data_er_model_build(
  * Provide the data er model add relation operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_data_er_model_add_relation(
     UmiDataErModel *model,
     const UmiDataSchemaForeignKey *foreign_key)
 {
+    size_t source;
+    size_t target;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (model == NULL ||
+        umi_data_schema_foreign_key_validate(foreign_key) != UMI_STATUS_OK) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (model->relation_count >= UMI_DATA_WORKBENCH_MAX_RELATIONS) {
+        model->truncated = 1;
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    source = entity_index(model, foreign_key->source_table);
+    target = entity_index(model, foreign_key->target_table);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (source >= model->entity_count || target >= model->entity_count) {
+        return UMI_STATUS_NOT_FOUND;
+    }
+    model->relations[model->relation_count].foreign_key = *foreign_key;
+    model->relations[model->relation_count].source_entity = source;
+    model->relations[model->relation_count].target_entity = target;
+    model->relation_count += 1U;
+    model->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_data_er_model_add_relation(
+    UmiDataErModel *model,
+    const UmiDataSchemaForeignKey *foreign_key)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (model != NULL && model->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     size_t source;
     size_t target;
     /*

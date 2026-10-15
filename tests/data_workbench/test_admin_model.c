@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 
 #include "umicom/data/workbench/admin_model.h"
@@ -28,6 +29,9 @@ int main(void)
     assert(umi_data_server_set(server, "key", "value") == UMI_STATUS_OK);
     umi_data_admin_model_init(&model);
     assert(umi_data_admin_model_refresh(&model, server, NULL) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiDataAdminModel, &model,
+        (umi_data_admin_model_refresh(&model, server, NULL)));
+
     assert(model.server.record_count == 1U);
     assert(model.healthy);
     umi_data_server_destroy(server);

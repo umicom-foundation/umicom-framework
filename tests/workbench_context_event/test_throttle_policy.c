@@ -151,6 +151,12 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextEventThrottlePolicyTransferCases, Umi
     umi_workbench_context_event_throttle_policy_archive_encode, umi_workbench_context_event_throttle_policy_archive_decode,
     UmiWorkbenchContextEventThrottlePolicyTransferEqual, UmiWorkbenchContextEventThrottlePolicyTransferTails, UmiWorkbenchContextEventThrottlePolicyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextEventThrottlePolicyConditionalArchiveCases, UmiWorkbenchContextEventThrottlePolicy,
+    umi_workbench_context_event_throttle_policy_archive_encode, umi_workbench_context_event_throttle_policy_archive_decode_if_unchanged,
+    UmiWorkbenchContextEventThrottlePolicyTransferEqual, UmiWorkbenchContextEventThrottlePolicyTransferTails, UmiWorkbenchContextEventThrottlePolicyTransferMalformed)
+
+
 /* Exercise the accepted domain fixture through reviewed publication and
  * legacy mutation boundaries. These checks stay active in release builds. */
 #include "../record_integrity/reviewed_value_cases.h"
@@ -183,6 +189,7 @@ int main(void)
     assert(umi_workbench_context_event_throttle_policy_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextEventThrottlePolicyTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextEventThrottlePolicyConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextEventThrottlePolicyReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextEventThrottlePolicyMutationGuards(&record) != 0) return 1;
 

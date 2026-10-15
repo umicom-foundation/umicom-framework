@@ -16,6 +16,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/finance/digital_asset/chain_observation.h"
 #include "../../base/value_archive_internal.h"
 
@@ -95,3 +96,9 @@ static UmiStatus UmiDigitalChainObservationArchiveValidate(const UmiDigitalChain
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_digital_asset_chain_observation_archive_encode, umi_digital_asset_chain_observation_archive_decode,
     UmiDigitalChainObservation, UmiDigitalChainObservationArchiveSchema, UmiDigitalChainObservationArchiveBound, UmiDigitalChainObservationArchiveWrite, UmiDigitalChainObservationArchiveRead, UmiDigitalChainObservationArchiveValidate)
+
+/* Restore this typed value only while its encoded state still matches the
+ * caller's reviewed snapshot. The shared guard checks every encoded byte;
+ * domain decoding and validation stay with this owner. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_digital_asset_chain_observation_archive_decode_if_unchanged, umi_digital_asset_chain_observation_archive_encode,
+    UmiDigitalChainObservation, UmiDigitalChainObservationArchiveSchema, UmiDigitalChainObservationArchiveBound, UmiDigitalChainObservationArchiveRead, UmiDigitalChainObservationArchiveValidate)

@@ -67,11 +67,18 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryCollateralAllocationTransferCases, UmiTreasur
     umi_treasury_collateral_allocation_archive_encode, umi_treasury_collateral_allocation_archive_decode,
     UmiTreasuryCollateralAllocationTransferEqual, UmiTreasuryCollateralAllocationTransferTails, UmiTreasuryCollateralAllocationTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryCollateralAllocationConditionalArchiveCases, UmiTreasuryCollateralAllocation,
+    umi_treasury_collateral_allocation_archive_encode, umi_treasury_collateral_allocation_archive_decode_if_unchanged,
+    UmiTreasuryCollateralAllocationTransferEqual, UmiTreasuryCollateralAllocationTransferTails, UmiTreasuryCollateralAllocationTransferMalformed)
+
+
 int main(void) {
     UmiTreasuryCollateralAllocation v;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_collateral_allocation_init(&v, "alloc", 1000, 850) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryCollateralAllocationTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryCollateralAllocationConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if(umi_treasury_collateral_allocation_shortfall_minor(&v)!=150)return 2;

@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/integration/fabric/connector_binding.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -125,10 +126,84 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricConnectorBindingTransferCases, UmiFabricConnect
     umi_fabric_connector_binding_archive_encode, umi_fabric_connector_binding_archive_decode,
     UmiFabricConnectorBindingTransferEqual, UmiFabricConnectorBindingTransferTails, UmiFabricConnectorBindingTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricConnectorBindingConditionalArchiveCases, UmiFabricConnectorBinding,
+    umi_fabric_connector_binding_archive_encode, umi_fabric_connector_binding_archive_decode_if_unchanged,
+    UmiFabricConnectorBindingTransferEqual, UmiFabricConnectorBindingTransferTails, UmiFabricConnectorBindingTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted connector binding value. */
+static int UmiFabricConnectorBindingConstructionCases(void)
+{
+    UmiFabricConnectorBinding *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_fabric_connector_binding_init(value, "b", "ibkr", "ep", "secure") == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->binding_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_connector_binding_init(value, oversized, "ibkr", "ep", "secure") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_connector_binding_init(value, value->binding_id, "ibkr", "ep", "secure") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->binding_id, "b") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->connector_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_connector_binding_init(value, "b", oversized, "ep", "secure") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_connector_binding_init(value, "b", value->connector_id, "ep", "secure") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->connector_id, "ibkr") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->endpoint_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_connector_binding_init(value, "b", "ibkr", oversized, "secure") != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_connector_binding_init(value, "b", "ibkr", value->endpoint_id, "secure") == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->endpoint_id, "ep") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->transport_profile_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_connector_binding_init(value, "b", "ibkr", "ep", oversized) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_fabric_connector_binding_init(value, "b", "ibkr", "ep", value->transport_profile_id) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->transport_profile_id, "secure") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiFabricConnectorBindingConstructionCases() != 0) return 1;
+
     UmiFabricConnectorBinding item;
     CHECK(umi_fabric_connector_binding_init(&item,"b","ibkr","ep","secure")==UMI_STATUS_OK);
     if (UmiFabricConnectorBindingTransferCases(&item) != 0) return 1;
+    if (UmiFabricConnectorBindingConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.enabled);
     return 0;

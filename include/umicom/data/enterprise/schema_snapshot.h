@@ -37,6 +37,9 @@ typedef struct UmiDataSchemaSnapshot {
 /* Reset the bounded schema snapshot registry. */
 void umi_data_schema_snapshot_init(UmiDataSchemaSnapshot *registry);
 /* Add a unique item by stable identifier. */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_data_schema_snapshot_add(UmiDataSchemaSnapshot *registry, const UmiDataSchemaTable *item);
 /* Find a registry item by stable identifier. */
 UmiStatus umi_data_schema_snapshot_find(const UmiDataSchemaSnapshot *registry, const char *id, UmiDataSchemaTable *out_item);

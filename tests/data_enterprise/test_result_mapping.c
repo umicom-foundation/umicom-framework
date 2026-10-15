@@ -18,6 +18,7 @@
 #undef NDEBUG
 #endif
 #include "umicom/data/enterprise/result_mapping.h"
+#include "../value_archive/construction_cases.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -108,10 +109,72 @@ UMI_TEST_VALUE_TRANSFER(UmiDataResultMappingTransferCases, UmiDataResultMapping,
     umi_data_result_mapping_archive_encode, umi_data_result_mapping_archive_decode,
     UmiDataResultMappingTransferEqual, UmiDataResultMappingTransferTails, UmiDataResultMappingTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataResultMappingConditionalArchiveCases, UmiDataResultMapping,
+    umi_data_result_mapping_archive_encode, umi_data_result_mapping_archive_decode_if_unchanged,
+    UmiDataResultMappingTransferEqual, UmiDataResultMappingTransferTails, UmiDataResultMappingTransferMalformed)
+
+
+
+/* A rejected replacement must preserve the previously accepted result mapping value. */
+static int UmiDataResultMappingConstructionCases(void)
+{
+    UmiDataResultMapping *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value));
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_data_result_mapping_init(value, "m1", "Order", "id", 0U, UMI_DATA_VALUE_INTEGER) == UMI_STATUS_OK);
+    memcpy(before, value, sizeof(*value));
+    {
+        char oversized[sizeof(value->mapping_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_result_mapping_init(value, oversized, "Order", "id", 0U, UMI_DATA_VALUE_INTEGER) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_result_mapping_init(value, value->mapping_id, "Order", "id", 0U, UMI_DATA_VALUE_INTEGER) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->mapping_id, "m1") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->entity_id) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_result_mapping_init(value, "m1", oversized, "id", 0U, UMI_DATA_VALUE_INTEGER) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_result_mapping_init(value, "m1", value->entity_id, "id", 0U, UMI_DATA_VALUE_INTEGER) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->entity_id, "Order") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    {
+        char oversized[sizeof(value->field_name) + 1U];
+        memset(oversized, 'x', sizeof(oversized) - 1U);
+        oversized[sizeof(oversized) - 1U] = '\0';
+        /* Fail after earlier arguments were accepted, without clearing other fields. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_result_mapping_init(value, "m1", "Order", oversized, 0U, UMI_DATA_VALUE_INTEGER) != UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+        /* Borrowing this field must not erase it before the constructor reads it. */
+        UMI_CONSTRUCTION_REQUIRE(umi_data_result_mapping_init(value, "m1", "Order", value->field_name, 0U, UMI_DATA_VALUE_INTEGER) == UMI_STATUS_OK);
+        UMI_CONSTRUCTION_REQUIRE(strcmp(value->field_name, "id") == 0);
+        memcpy(before, value, sizeof(*value));
+    }
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void) {
+    if (UmiDataResultMappingConstructionCases() != 0) return 1;
+
     UmiDataResultMapping item;
     CHECK(umi_data_result_mapping_init(&item,"m1","Order","id",0U,UMI_DATA_VALUE_INTEGER) == UMI_STATUS_OK);
     if (UmiDataResultMappingTransferCases(&item) != 0) return 1;
+    if (UmiDataResultMappingConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.column_ordinal==0U);
     return 0;

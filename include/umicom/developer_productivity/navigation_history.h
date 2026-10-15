@@ -47,6 +47,9 @@ void umi_developer_navigation_history_init(
  * Provide the developer navigation history push operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_developer_navigation_history_push(
     UmiDeveloperNavigationHistory *history,
     const UmiDeveloperProductivityLocation *location);
@@ -55,6 +58,9 @@ UmiStatus umi_developer_navigation_history_push(
  * Provide the developer navigation history back operation used by this module and its
  * client applications.
  */
+/** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
+ * before this operation changes state or invokes nested work. Initialize the
+ * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_developer_navigation_history_back(
     UmiDeveloperNavigationHistory *history,
     UmiDeveloperProductivityLocation *out_location);

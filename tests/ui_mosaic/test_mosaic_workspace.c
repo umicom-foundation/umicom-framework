@@ -90,6 +90,12 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicMosaicWorkspaceTransferCases, UmiUiMosaicMosa
     umi_ui_mosaic_mosaic_workspace_archive_encode, umi_ui_mosaic_mosaic_workspace_archive_decode,
     UmiUiMosaicMosaicWorkspaceTransferEqual, UmiUiMosaicMosaicWorkspaceTransferTails, UmiUiMosaicMosaicWorkspaceTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicMosaicWorkspaceConditionalArchiveCases, UmiUiMosaicMosaicWorkspace,
+    umi_ui_mosaic_mosaic_workspace_archive_encode, umi_ui_mosaic_mosaic_workspace_archive_decode_if_unchanged,
+    UmiUiMosaicMosaicWorkspaceTransferEqual, UmiUiMosaicMosaicWorkspaceTransferTails, UmiUiMosaicMosaicWorkspaceTransferMalformed)
+
+
 int main(void) {
     UmiUiMosaicMosaicWorkspace value;
     umi_ui_mosaic_mosaic_workspace_init(&value);
@@ -97,6 +103,7 @@ int main(void) {
     value.row_span = 2U; value.column_span = 3U;
     CHECK(umi_ui_mosaic_mosaic_workspace_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicMosaicWorkspaceTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicMosaicWorkspaceConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_mosaic_workspace_area(&value) == 6U);
     return 0;

@@ -17,6 +17,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/design/text_input_spec.h"
 #include "../../base/value_archive_internal.h"
 
@@ -90,3 +91,8 @@ static UmiStatus UmiDesignTextInputSpecArchiveValidate(const UmiDesignTextInputS
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_design_text_input_spec_archive_encode, umi_design_text_input_spec_archive_decode,
     UmiDesignTextInputSpec, UmiDesignTextInputSpecArchiveSchema, UmiDesignTextInputSpecArchiveBound, UmiDesignTextInputSpecArchiveWrite, UmiDesignTextInputSpecArchiveRead, UmiDesignTextInputSpecArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_design_text_input_spec_archive_decode_if_unchanged, umi_design_text_input_spec_archive_encode,
+    UmiDesignTextInputSpec, UmiDesignTextInputSpecArchiveSchema, UmiDesignTextInputSpecArchiveBound, UmiDesignTextInputSpecArchiveRead, UmiDesignTextInputSpecArchiveValidate)

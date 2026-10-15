@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include <string.h>
+#include "../../base/value_construction_internal.h"
 #include "umicom/ui/workstation/node_graph_surface.h"
 
 /* Provide the node exists operation used by this module and its client applications. */
@@ -28,6 +29,11 @@ static bool node_exists(const UmiWsNodeGraphSurface *graph, const char *node_id)
  * Initialise ws node graph surface from caller-provided values so later operations receive
  * a known state.
  */
+/* Construction formerly wrote into the live destination before all inputs
+ * were accepted. The staged wrapper below now preserves the previous value on
+ * failure and supports inputs borrowed from it. Keep this implementation for
+ * review of the original defaults and failure behaviour. */
+#if 0
 UmiStatus umi_ws_node_graph_surface_init(UmiWsNodeGraphSurface *graph, const char *graph_id) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -38,6 +44,25 @@ UmiStatus umi_ws_node_graph_surface_init(UmiWsNodeGraphSurface *graph, const cha
     graph->zoom = 1.0;
     return umi_ws_copy_text(graph->graph_id, sizeof(graph->graph_id), graph_id);
 }
+#endif
+
+/* This private builder retains the original field initialization and validation.
+ * It now receives temporary storage owned by the shared publication wrapper. */
+static UmiStatus umi_ws_node_graph_surface_init_build_value(UmiWsNodeGraphSurface *graph, const char *graph_id) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (graph == NULL || !umi_ws_id_valid(graph_id)) return UMI_STATUS_INVALID_ARGUMENT;
+    *graph = (UmiWsNodeGraphSurface){0};
+    graph->zoom = 1.0;
+    return umi_ws_copy_text(graph->graph_id, sizeof(graph->graph_id), graph_id);
+}
+
+UMI_DEFINE_STAGED_VALUE_INIT(umi_ws_node_graph_surface_init, UmiWsNodeGraphSurface, graph,
+    (UmiWsNodeGraphSurface *graph, const char *graph_id),
+    umi_ws_node_graph_surface_init_build_value(candidate, graph_id))
+
 
 /*
  * Provide the ws node graph surface add node operation used by this module and its client

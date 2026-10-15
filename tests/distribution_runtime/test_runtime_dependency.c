@@ -92,9 +92,16 @@ UMI_TEST_VALUE_TRANSFER(UmiDrRuntimeDependencyTransferCases, UmiDrRuntimeDepende
     umi_dr_runtime_dependency_archive_encode, umi_dr_runtime_dependency_archive_decode,
     UmiDrRuntimeDependencyTransferEqual, UmiDrRuntimeDependencyTransferTails, UmiDrRuntimeDependencyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrRuntimeDependencyConditionalArchiveCases, UmiDrRuntimeDependency,
+    umi_dr_runtime_dependency_archive_encode, umi_dr_runtime_dependency_archive_decode_if_unchanged,
+    UmiDrRuntimeDependencyTransferEqual, UmiDrRuntimeDependencyTransferTails, UmiDrRuntimeDependencyTransferMalformed)
+
+
 int main(void) {
     UmiDrRuntimeDependency value; umi_dr_runtime_dependency_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"libc")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.soname,sizeof(value.soname),"libc.so.6")==UMI_STATUS_OK); value.system_provided=true; CHECK(umi_dr_runtime_dependency_valid(&value));
     if (UmiDrRuntimeDependencyTransferCases(&value) != 0) return 1;
+    if (UmiDrRuntimeDependencyConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_runtime_dependency_fingerprint(&value) != 0U);
     return 0;
 }

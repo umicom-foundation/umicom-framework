@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiQualityGateResultTransferCases, UmiQualityGateResult,
     umi_quality_gate_result_archive_encode, umi_quality_gate_result_archive_decode,
     UmiQualityGateResultTransferEqual, UmiQualityGateResultTransferTails, UmiQualityGateResultTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiQualityGateResultConditionalArchiveCases, UmiQualityGateResult,
+    umi_quality_gate_result_archive_encode, umi_quality_gate_result_archive_decode_if_unchanged,
+    UmiQualityGateResultTransferEqual, UmiQualityGateResultTransferTails, UmiQualityGateResultTransferMalformed)
+
+
 int main(void){UmiQualityGateResult m;assert(umi_quality_gate_result_init(&m,"quality_gate_result","Quality Gate Result")==UMI_STATUS_OK);assert(umi_quality_gate_result_set_active(&m,true)==UMI_STATUS_OK);assert(umi_quality_gate_result_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_quality_gate_result_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_quality_gate_result_valid(&m));
     if (UmiQualityGateResultTransferCases(&m) != 0) return 1;
+    if (UmiQualityGateResultConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

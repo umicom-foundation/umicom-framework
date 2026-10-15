@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include <stdint.h>
 #include "umicom/developer/ecosystem/update_review.h"
 
 #include <string.h>
@@ -46,10 +47,69 @@ bool umi_ecosystem_update_candidate_selectable(
  * Add ecosystem update review only after its inputs and available capacity have been
  * checked.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_ecosystem_update_review_add(
     UmiEcosystemUpdateReview *review,
     const UmiEcosystemPackageRecord *record)
 {
+    UmiEcosystemUpdateCandidate *candidate;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (review == NULL || record == NULL ||
+        !umi_ecosystem_package_has_update(record)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (review->candidate_count >= UMI_ECOSYSTEM_MAX_UPDATES) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    candidate = &review->candidates[review->candidate_count];
+    (void)memset(candidate, 0, sizeof(*candidate));
+    status = umi_ecosystem_copy_text(candidate->package_id,
+        sizeof(candidate->package_id), record->package_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_ecosystem_copy_text(candidate->from_version,
+        sizeof(candidate->from_version), record->installed_version);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_ecosystem_copy_text(candidate->to_version,
+        sizeof(candidate->to_version), record->available_version);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_ecosystem_copy_text(candidate->channel,
+        sizeof(candidate->channel), record->channel[0] != '\0'
+            ? record->channel : "stable");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    candidate->compatibility = record->compatibility;
+    candidate->evidence = record->evidence;
+    candidate->pinned = record->pinned;
+    candidate->requires_restart = record->requires_restart;
+    candidate->requires_migration = record->requires_migration;
+    candidate->download_bytes = record->download_bytes;
+    review->candidate_count++;
+    review->revision++;
+    umi_ecosystem_update_review_recalculate(review);
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_ecosystem_update_review_add(
+    UmiEcosystemUpdateReview *review,
+    const UmiEcosystemPackageRecord *record)
+{
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (review != NULL && review->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     UmiEcosystemUpdateCandidate *candidate;
     UmiStatus status;
     /*

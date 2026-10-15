@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include <stdint.h>
 #include "umicom/frontend/native_web/runtime.h"
 #include "umicom/frontend/native_web/workbench_renderer.h"
 #include "umicom/frontend/native_web/application_shell_renderer.h"
@@ -72,5 +73,17 @@ UmiStatus umi_native_web_runtime_init(UmiNativeWebRuntime *runtime){UmiStatus s;
  * Provide the native web runtime render operation used by this module and its client
  * applications.
  */
+/* Retained for review: the former mutation could wrap its owner revision.
+ * The active implementation keeps its behaviour and adds a refusal before any
+ * write when no newer revision token can be represented. */
+#if 0
 UmiStatus umi_native_web_runtime_render(UmiNativeWebRuntime *runtime,const UmiNativeWebRenderContext *context,const UmiNativeWebSurface *surface,UmiNativeWebRenderResult *result){const UmiNativeWebRendererDescriptor *d;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(runtime==NULL||!runtime->started||surface==NULL||result==NULL)return UMI_STATUS_INVALID_STATE;d=umi_native_web_renderer_registry_resolve(&runtime->renderers,surface->semantic_contract);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(d==NULL)return UMI_STATUS_NOT_FOUND;umi_native_web_render_result_init(result,++runtime->revision);return d->render(context,surface,result);}
+#endif
+
+UmiStatus umi_native_web_runtime_render(UmiNativeWebRuntime *runtime,const UmiNativeWebRenderContext *context,const UmiNativeWebSurface *surface,UmiNativeWebRenderResult *result){
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (runtime != NULL && runtime->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+const UmiNativeWebRendererDescriptor *d;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(runtime==NULL||!runtime->started||surface==NULL||result==NULL)return UMI_STATUS_INVALID_STATE;d=umi_native_web_renderer_registry_resolve(&runtime->renderers,surface->semantic_contract);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(d==NULL)return UMI_STATUS_NOT_FOUND;umi_native_web_render_result_init(result,++runtime->revision);return d->render(context,surface,result);}
 

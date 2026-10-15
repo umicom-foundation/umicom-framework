@@ -128,12 +128,19 @@ UMI_TEST_VALUE_TRANSFER(UmiCommodityShipmentTransferCases, UmiCommodityShipment,
     umi_commodity_shipment_archive_encode, umi_commodity_shipment_archive_decode,
     UmiCommodityShipmentTransferEqual, UmiCommodityShipmentTransferTails, UmiCommodityShipmentTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiCommodityShipmentConditionalArchiveCases, UmiCommodityShipment,
+    umi_commodity_shipment_archive_encode, umi_commodity_shipment_archive_decode_if_unchanged,
+    UmiCommodityShipmentTransferEqual, UmiCommodityShipmentTransferTails, UmiCommodityShipmentTransferMalformed)
+
+
 int main(void)
 {
     UmiCommodityShipment value;
     CHECK(umi_commodity_shipment_init(&value, "SHIP-1", "CTR-1", "ROUTE-1", 500, 0, "MT") == UMI_STATUS_OK);
     CHECK(umi_commodity_shipment_valid(&value));
     if (UmiCommodityShipmentTransferCases(&value) != 0) return 1;
+    if (UmiCommodityShipmentConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

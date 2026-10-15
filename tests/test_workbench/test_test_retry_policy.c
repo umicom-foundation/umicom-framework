@@ -111,6 +111,13 @@ UMI_TEST_VALUE_TRANSFER(UmiTestRetryPolicyTransferCases, UmiTestRetryPolicy,
     umi_test_retry_policy_archive_encode, umi_test_retry_policy_archive_decode,
     UmiTestRetryPolicyTransferEqual, UmiTestRetryPolicyTransferTails, UmiTestRetryPolicyTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestRetryPolicyConditionalArchiveCases, UmiTestRetryPolicy,
+    umi_test_retry_policy_archive_encode, umi_test_retry_policy_archive_decode_if_unchanged,
+    UmiTestRetryPolicyTransferEqual, UmiTestRetryPolicyTransferTails, UmiTestRetryPolicyTransferMalformed)
+
+
 int main(void){UmiTestRetryPolicy m;assert(umi_test_retry_policy_init(&m,"test_retry_policy","Test Retry Policy")==UMI_STATUS_OK);assert(umi_test_retry_policy_set_active(&m,true)==UMI_STATUS_OK);assert(umi_test_retry_policy_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_test_retry_policy_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_retry_policy_valid(&m));
     if (UmiTestRetryPolicyTransferCases(&m) != 0) return 1;
+    if (UmiTestRetryPolicyConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

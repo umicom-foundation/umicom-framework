@@ -133,6 +133,12 @@ UMI_TEST_VALUE_TRANSFER(UmiContextRouteTraceTransferCases, UmiContextRouteTrace,
     umi_context_route_trace_archive_encode, umi_context_route_trace_archive_decode,
     UmiContextRouteTraceTransferEqual, UmiContextRouteTraceTransferTails, UmiContextRouteTraceTransferMalformed)
 
+#include "../conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextRouteTraceConditionalArchiveCases, UmiContextRouteTrace,
+    umi_context_route_trace_archive_encode, umi_context_route_trace_archive_decode_if_unchanged,
+    UmiContextRouteTraceTransferEqual, UmiContextRouteTraceTransferTails, UmiContextRouteTraceTransferMalformed)
+
+
 int main(void)
 {
     UmiContextRouteTrace value;
@@ -146,6 +152,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_context_route_trace_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiContextRouteTraceTransferCases(&value) != 0) return 1;
+    if (UmiContextRouteTraceConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;
 }

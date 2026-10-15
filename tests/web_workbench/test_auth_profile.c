@@ -9,6 +9,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/web/workbench/auth_profile.h"
@@ -27,6 +28,9 @@ int main(void)
     umi_web_workbench_auth_profile_init(&bearer, "oauth", "OAuth",
         UMI_WEB_WORKBENCH_AUTH_BEARER, "secret://api/oauth");
     assert(umi_web_workbench_auth_catalogue_upsert(&catalogue, &bearer) == UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiWebWorkbenchAuthCatalogue, &catalogue,
+        (umi_web_workbench_auth_catalogue_upsert(&catalogue, &bearer)));
+
     umi_web_workbench_request_init(&request, "r", "R", UMI_HTTP_METHOD_GET,
         "https://api.example.test/items");
     assert(umi_web_workbench_auth_apply(&bearer, "temporary-token", &request) == UMI_STATUS_OK);

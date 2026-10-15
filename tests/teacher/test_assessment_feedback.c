@@ -90,6 +90,12 @@ UMI_TEST_VALUE_TRANSFER(UmiTeacherAssessmentFeedbackTransferCases, UmiTeacherAss
     umi_teacher_assessment_feedback_archive_encode, umi_teacher_assessment_feedback_archive_decode,
     UmiTeacherAssessmentFeedbackTransferEqual, UmiTeacherAssessmentFeedbackTransferTails, UmiTeacherAssessmentFeedbackTransferMalformed)
 
+#include "../value_archive/conditional_cases.h"
+UMI_TEST_CONDITIONAL_ARCHIVE(UmiTeacherAssessmentFeedbackConditionalArchiveCases, UmiTeacherAssessmentFeedback,
+    umi_teacher_assessment_feedback_archive_encode, umi_teacher_assessment_feedback_archive_decode_if_unchanged,
+    UmiTeacherAssessmentFeedbackTransferEqual, UmiTeacherAssessmentFeedbackTransferTails, UmiTeacherAssessmentFeedbackTransferMalformed)
+
+
 int main(void) {
     UmiTeacherAssessmentFeedback value;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -97,6 +103,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_teacher_assessment_feedback_validate(&value) != UMI_STATUS_OK) return 2;
     if (UmiTeacherAssessmentFeedbackTransferCases(&value) != 0) return 1;
+    if (UmiTeacherAssessmentFeedbackConditionalArchiveCases(&value) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (umi_teacher_assessment_feedback_priority(&value, 60U) != 70U) return 3;

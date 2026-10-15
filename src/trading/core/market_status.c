@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/trading/core/market_status.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -67,3 +68,8 @@ static UmiStatus UmiTradingMarketStatusArchiveValidate(const UmiTradingMarketSta
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_trading_market_status_archive_encode, umi_trading_market_status_archive_decode,
     UmiTradingMarketStatus, UmiTradingMarketStatusArchiveSchema, UmiTradingMarketStatusArchiveBound, UmiTradingMarketStatusArchiveWrite, UmiTradingMarketStatusArchiveRead, UmiTradingMarketStatusArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_trading_market_status_archive_decode_if_unchanged, umi_trading_market_status_archive_encode,
+    UmiTradingMarketStatus, UmiTradingMarketStatusArchiveSchema, UmiTradingMarketStatusArchiveBound, UmiTradingMarketStatusArchiveRead, UmiTradingMarketStatusArchiveValidate)

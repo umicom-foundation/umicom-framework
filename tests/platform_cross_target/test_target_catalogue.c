@@ -18,6 +18,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../value_archive/revision_cases.h"
 #include "umicom/platform/cross_target/target_catalogue.h"
 
 #include <stdio.h>
@@ -28,4 +29,7 @@
  * Start this command or application, report setup failures, and return a process exit code
  * to the operating system.
  */
-int main(void){UmiCtTargetCatalogue c;UmiCtTarget t={0};UmiCtTargetProfile p;umi_ct_target_catalogue_init(&c);CHECK(umi_ct_target_profile_init(&p,"rv64",&t,"lp64")==UMI_STATUS_OK);CHECK(umi_ct_target_catalogue_add(&c,&p)==UMI_STATUS_OK);CHECK(umi_ct_target_catalogue_add(&c,&p)==UMI_STATUS_ALREADY_EXISTS);CHECK(umi_ct_target_catalogue_find(&c,"rv64")!=NULL);return 0;}
+int main(void){UmiCtTargetCatalogue c;UmiCtTarget t={0};UmiCtTargetProfile p;umi_ct_target_catalogue_init(&c);CHECK(umi_ct_target_profile_init(&p,"rv64",&t,"lp64")==UMI_STATUS_OK);CHECK(umi_ct_target_catalogue_add(&c,&p)==UMI_STATUS_OK);
+    UMI_TEST_REVISION_EXHAUSTION(UmiCtTargetCatalogue, &c,
+        (umi_ct_target_catalogue_add(&c,&p)));
+CHECK(umi_ct_target_catalogue_add(&c,&p)==UMI_STATUS_ALREADY_EXISTS);CHECK(umi_ct_target_catalogue_find(&c,"rv64")!=NULL);return 0;}

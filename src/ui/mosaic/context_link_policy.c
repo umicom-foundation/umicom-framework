@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../../base/conditional_archive_internal.h"
 #include "umicom/ui/mosaic/context_link_policy.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
@@ -119,3 +120,8 @@ static UmiStatus UmiUiMosaicContextLinkPolicyArchiveValidate(const UmiUiMosaicCo
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_ui_mosaic_context_link_policy_archive_encode, umi_ui_mosaic_context_link_policy_archive_decode,
     UmiUiMosaicContextLinkPolicy, UmiUiMosaicContextLinkPolicyArchiveSchema, UmiUiMosaicContextLinkPolicyArchiveBound, UmiUiMosaicContextLinkPolicyArchiveWrite, UmiUiMosaicContextLinkPolicyArchiveRead, UmiUiMosaicContextLinkPolicyArchiveValidate)
+
+/* Guard restoration with the previously reviewed encoded value. Domain field
+ * decoding and validation remain here; the shared helper owns temporary memory. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_mosaic_context_link_policy_archive_decode_if_unchanged, umi_ui_mosaic_context_link_policy_archive_encode,
+    UmiUiMosaicContextLinkPolicy, UmiUiMosaicContextLinkPolicyArchiveSchema, UmiUiMosaicContextLinkPolicyArchiveBound, UmiUiMosaicContextLinkPolicyArchiveRead, UmiUiMosaicContextLinkPolicyArchiveValidate)
