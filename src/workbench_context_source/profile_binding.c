@@ -15,6 +15,8 @@
 
 #include "umicom/workbench_context_source/profile_binding.h"
 #include "../base/value_archive_internal.h"
+#include "../base/record_update_internal.h"
+#include "umicom/base/text.h"
 
 #include <string.h>
 
@@ -85,6 +87,10 @@ UmiStatus umi_workbench_context_source_profile_binding_validate(
     return UMI_STATUS_OK;
 }
 
+/* Text and its observation token are one publication. The shared Framework
+ * edit checks bounds and revision exhaustion before writing, including when
+ * input aliases this field. Keep the former copy/increment for review. */
+#if 0
 #define UMI_CONTEXT_SOURCE_SETTER(function_name, field_name) \
 UmiStatus function_name(UmiWorkbenchContextSourceProfileBinding *record, const char *value) \
 { \
@@ -94,6 +100,13 @@ UmiStatus function_name(UmiWorkbenchContextSourceProfileBinding *record, const c
         record->field_name, sizeof(record->field_name), value); \
     if (status == UMI_STATUS_OK) ++record->revision; \
     return status; \
+}
+#endif
+#define UMI_CONTEXT_SOURCE_SETTER(function_name, field_name) \
+UmiStatus function_name(UmiWorkbenchContextSourceProfileBinding *record, const char *value) \
+{ \
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT; \
+    return umi_text_update(record->field_name, sizeof record->field_name, value, &record->revision); \
 }
 
 UMI_CONTEXT_SOURCE_SETTER(
@@ -147,6 +160,10 @@ uint64_t umi_workbench_context_source_profile_binding_hash(
  * Provide the workbench context source profile binding touch operation used by this module
  * and its client applications.
  */
+/* Guard sequence/timestamp publication before any write so an exhausted
+ * revision never wraps and makes an old review appear current. The original
+ * touch operation remains below for engineering review. */
+#if 0
 void umi_workbench_context_source_profile_binding_touch(
     UmiWorkbenchContextSourceProfileBinding *record,
     uint64_t sequence,
@@ -161,6 +178,20 @@ void umi_workbench_context_source_profile_binding_touch(
     record->timestamp_ms = timestamp_ms;
     ++record->revision;
 }
+#endif
+void umi_workbench_context_source_profile_binding_touch(
+    UmiWorkbenchContextSourceProfileBinding *record,
+    uint64_t sequence,
+    uint64_t timestamp_ms)
+{
+    /* This legacy void API cannot report exhaustion. Preserve the whole record
+     * when its token cannot advance; use reviewed replacement for a status. */
+    if (record == NULL || record->revision == UINT64_MAX) return;
+    record->sequence = sequence;
+    record->timestamp_ms = timestamp_ms;
+    ++record->revision;
+}
+
 
 /* State transfer belongs to this Framework value owner. Explicit fields keep
  * padding and unused text out of saved data. Extend both directions and the
@@ -237,3 +268,9 @@ static UmiStatus UmiWorkbenchContextSourceProfileBindingArchiveValidate(const Um
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_context_source_profile_binding_archive_encode, umi_workbench_context_source_profile_binding_archive_decode,
     UmiWorkbenchContextSourceProfileBinding, UmiWorkbenchContextSourceProfileBindingArchiveSchema, UmiWorkbenchContextSourceProfileBindingArchiveBound, UmiWorkbenchContextSourceProfileBindingArchiveWrite, UmiWorkbenchContextSourceProfileBindingArchiveRead, UmiWorkbenchContextSourceProfileBindingArchiveValidate)
+
+/* A delayed profile binding draft must name the revision it reviewed.
+ * Domain validation remains with this value owner; the shared guard publishes
+ * all fields together without emitting events or changing any external service. */
+UMI_DEFINE_REVIEWED_IDENTITY_RECORD_EDIT(umi_workbench_context_source_profile_binding_replace_if_current,
+    UmiWorkbenchContextSourceProfileBinding, record_id, UmiWorkbenchContextSourceProfileBindingArchiveValidate)

@@ -151,6 +151,27 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextEventFilterTransferCases, UmiWorkbenc
     umi_workbench_context_event_filter_archive_encode, umi_workbench_context_event_filter_archive_decode,
     UmiWorkbenchContextEventFilterTransferEqual, UmiWorkbenchContextEventFilterTransferTails, UmiWorkbenchContextEventFilterTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextEventFilterReviewedCases, UmiWorkbenchContextEventFilter,
+    record_id, label, umi_workbench_context_event_filter_replace_if_current, UmiWorkbenchContextEventFilterTransferEqual)
+static int UmiWorkbenchContextEventFilterMutationGuards(const UmiWorkbenchContextEventFilter *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventFilter, source_id, umi_workbench_context_event_filter_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventFilter, subject_id, umi_workbench_context_event_filter_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventFilter, group_id, umi_workbench_context_event_filter_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventFilter, label, umi_workbench_context_event_filter_set_label, sample);
+    UmiWorkbenchContextEventFilter value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_event_filter_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_context_event_filter_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextEventFilter record;
@@ -162,6 +183,8 @@ int main(void)
     assert(umi_workbench_context_event_filter_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextEventFilterTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextEventFilterReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextEventFilterMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_context_event_filter_set_source(

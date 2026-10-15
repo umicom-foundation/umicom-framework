@@ -1,0 +1,21 @@
+schema: umicom.application.v1
+
+application:
+  id: org.umicom.module-example
+  name: Umicom Module Example
+  version: 0.1.0
+  executable: umicom-module-example
+  console_executable: umicom-module-example
+
+framework:
+  minimum_version: 0.9.0
+  compatible_major: 0
+
+frontends:
+  - console
+
+installation:
+  component: ModuleExample
+
+capabilities:
+  - diagnostics

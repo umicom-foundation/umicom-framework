@@ -7,6 +7,8 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/bank_feed/transactions.h"
+#include "umicom/bank_feed/csv_import.h"
+#include "umicom/bank_feed/csv_mapping.h"
 #include "umicom/platform/input_file.h"
 #include "umicom/ui/gtk4/bank_feed.h"
 #include "umicom/ui/gtk4/bank_statement.h"
@@ -18,6 +20,10 @@
 typedef struct BankFeedUi {
   GtkWindow *window;
   GtkWidget *path, *groups, *view, *note, *save;
+  GtkWidget *format;
+  GtkWidget *schema;
+  GtkWidget *mapping, *mapHeaders[UMI_BANK_CSV_FIELD_COUNT], *mapAccount, *mapCurrency;
+  GtkWidget *mapDate, *mapAmount, *mapStatus, *mapMutability;
   GtkTextBuffer *csv;
   UmiBankFeed *feed;
   size_t groupRows[UMI_BANK_FEED_MAX_ROWS], groupCount;
@@ -30,6 +36,9 @@ typedef struct BankFeedLoad {
   guint64 generation;
   UmiBankFeed *feed;
   UmiStatus status;
+  guint format;
+  UmiBankFeedCsvIssue issue;
+  UmiBankFeedCsvMapping mapping;
 } BankFeedLoad;
 /* Retaining a GTK object does not keep its native window open. Every control
  * callback checks both ownership and native registration before using children. */
@@ -75,8 +84,23 @@ static void FeedWorker(GTask *task, gpointer source, gpointer data, GCancellable
   unsigned char *bytes = NULL;
   size_t length = 0U;
   load->status = UmiInputFileRead(load->path, UMI_BANK_FEED_MAX_BYTES, &bytes, &length);
+  /* Preserve the JSON-only dispatch for review. Explicit format selection
+   * replaces it so a filename extension never decides financial semantics. */
+#if 0
   if (load->status == UMI_STATUS_OK)
     load->status = UmiBankFeedCreate(bytes, length, &load->feed);
+#endif
+  if (load->status == UMI_STATUS_OK) {
+    if (load->format == 0U)
+      load->status = UmiBankFeedCreate(bytes, length, &load->feed);
+    else if (load->format == 1U)
+      load->status = UmiBankFeedCsvCreate(bytes, length, &load->feed, &load->issue);
+    else if (load->format == 2U)
+      load->status = UmiBankFeedCsvMappedCreate(bytes, length, &load->mapping,
+                                                &load->feed, &load->issue);
+    else
+      load->status = UMI_STATUS_INVALID_ARGUMENT;
+  }
   UmiInputFileFree(bytes);
   g_task_return_boolean(task, TRUE);
 }
@@ -173,7 +197,12 @@ static void FeedInvalidate(GtkWindow *window) {
   ui = FeedOwner(window);
   if (ui == NULL)
     return;
+  /* The earlier prompt is retained because it describes the existing JSON
+   * workflow; the replacement also covers the explicit CSV import path. */
+#if 0
   gtk_label_set_text(GTK_LABEL(ui->note), "Choose a saved Open Banking transaction response.");
+#endif
+  gtk_label_set_text(GTK_LABEL(ui->note), "Choose the file format and a saved transaction file.");
   ui = FeedOwner(window);
   if (ui != NULL)
     ui->invalidating = FALSE;
@@ -182,6 +211,23 @@ static void FeedChanged(GtkEditable *editable, gpointer data) {
   (void)editable;
   GtkWindow *window = g_object_ref(GTK_WINDOW(data));
   FeedInvalidate(window);
+  g_object_unref(window);
+}
+/* Format belongs to the same request generation as the path. Changing either
+ * retires the previous report and any pending worker result before reuse. */
+static void FeedFormatChanged(GObject *object, GParamSpec *property, gpointer data) {
+  (void)object;
+  (void)property;
+  GtkWindow *window = g_object_ref(GTK_WINDOW(data));
+  FeedInvalidate(window);
+  BankFeedUi *ui = FeedOwner(window);
+  if (ui != NULL && ui->mapping != NULL)
+    gtk_widget_set_visible(ui->mapping,
+        gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->format)) == 2U);
+  ui = FeedOwner(window);
+  if (ui != NULL && ui->schema != NULL)
+    gtk_widget_set_visible(ui->schema,
+        gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->format)) == 1U);
   g_object_unref(window);
 }
 static void FeedClear(GtkButton *button, gpointer data) {
@@ -213,6 +259,14 @@ static void FeedLoaded(GObject *source, GAsyncResult *result, gpointer unused) {
   if (load->status != UMI_STATUS_OK) {
     char *message = g_strdup_printf("Import failed: %s. The previous report has been cleared.",
                                     umi_status_text(load->status));
+    /* Error locations describe the input record, without echoing private
+     * account identifiers or descriptions into diagnostics. */
+    if (load->issue.record != 0U) {
+      char *located = g_strdup_printf("%s CSV record %zu, column %zu (0 means the whole record).",
+                                     message, load->issue.record, load->issue.column);
+      g_free(message);
+      message = located;
+    }
     gtk_label_set_text(GTK_LABEL(ui->note), message);
     g_free(message);
     g_object_unref(window);
@@ -280,6 +334,7 @@ finished:
   UmiCsvDocumentDestroy(csv);
   g_object_unref(window);
 }
+#include "bank_feed_mapping.inc"
 static void FeedLoadClicked(GtkButton *button, gpointer data) {
   (void)button;
   GtkWindow *window = g_object_ref(GTK_WINDOW(data));
@@ -293,12 +348,37 @@ static void FeedLoadClicked(GtkButton *button, gpointer data) {
   ui->loading = TRUE;
   guint64 generation = ui->generation + 1U;
   char *path = g_strdup(gtk_editable_get_text(GTK_EDITABLE(ui->path)));
+  guint format = gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->format));
+  UmiBankFeedCsvMapping mapping = {0};
+  if (format == 2U && !FeedMappingRead(ui, &mapping)) {
+    ui->loading = FALSE;
+    gtk_label_set_text(GTK_LABEL(ui->note),
+        "A mapping name or constant is too long, or a format choice is missing.");
+    g_free(path);
+    g_object_unref(window);
+    return;
+  }
   FeedInvalidate(window);
   ui = FeedOwner(window);
   /* Resetting controls can invoke application callbacks. The selected file
    * must still match this click before the worker receives an owned path. */
+  /* The previous guard remains for review; the active guard also binds
+   * the parser choice to the captured path and request generation. */
+#if 0
   if (ui == NULL || ui->generation != generation ||
       strcmp(path, gtk_editable_get_text(GTK_EDITABLE(ui->path))) != 0) {
+#endif
+  /* Retain the two-format guard for review. Mapped imports additionally bind
+   * every column and interpretation setting to this request. */
+#if 0
+  if (ui == NULL || ui->generation != generation ||
+      strcmp(path, gtk_editable_get_text(GTK_EDITABLE(ui->path))) != 0 ||
+      format != gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->format))) {
+#endif
+  if (ui == NULL || ui->generation != generation ||
+      strcmp(path, gtk_editable_get_text(GTK_EDITABLE(ui->path))) != 0 ||
+      format != gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->format)) ||
+      (format == 2U && !FeedMappingMatches(ui, &mapping))) {
     BankFeedUi *retained = g_object_get_data(G_OBJECT(window), BANK_FEED_UI);
     if (retained != NULL)
       retained->loading = FALSE;
@@ -309,6 +389,8 @@ static void FeedLoadClicked(GtkButton *button, gpointer data) {
   BankFeedLoad *load = g_new0(BankFeedLoad, 1);
   g_weak_ref_init(&load->window, window);
   load->path = path;
+  load->format = format;
+  load->mapping = mapping;
   load->generation = ui->generation;
   gtk_label_set_text(GTK_LABEL(ui->note), "Reading selected file...");
   if (FeedCurrent(window, load->generation)) {
@@ -369,13 +451,54 @@ GtkWindow *UmiBankFeedGtk4Create(GtkWindow *parent) {
   gtk_widget_set_margin_top(root, 16);
   gtk_widget_set_margin_bottom(root, 16);
   gtk_window_set_child(window, root);
+  /* Retain the JSON introduction for review. The shared window now offers
+   * a second local format while keeping broker authentication separate. */
+#if 0
   GtkWidget *intro = gtk_label_new("Review a saved Open Banking JSON response. This imports data "
                                    "only; it does not connect to a bank.");
+#endif
+  /* Retain the earlier CSV introduction for review. Custom mappings now let
+   * users describe their source headers before the same local validation. */
+#if 0
+  GtkWidget *intro = gtk_label_new("Review a saved Open Banking JSON response or a statement CSV "
+                                   "prepared in the format below. This imports data only; it does "
+                                   "not connect to a bank.");
+#endif
+  GtkWidget *intro = gtk_label_new("Review a saved transaction file. Choose Open Banking JSON, "
+                                   "the standard statement CSV, or CSV with your own column names. "
+                                   "Importing does not connect to a bank or post transactions.");
   gtk_label_set_wrap(GTK_LABEL(intro), TRUE);
   gtk_box_append(GTK_BOX(root), intro);
+  /* Named, explicit choices are keyboard accessible and copied into each
+   * worker. Future formats need their own documented parser and regression cases. */
+  /* Keep the original choices for review; custom mapping extends the same
+   * import boundary without changing the JSON or normalised CSV choices. */
+#if 0
+  const char *formats[] = {"Open Banking JSON", "Statement CSV", NULL};
+#endif
+  const char *formats[] = {"Open Banking JSON", "Statement CSV", "CSV with custom columns", NULL};
+  ui->format = FeedNamed(gtk_drop_down_new_from_strings(formats), "bank-feed-format");
+  gtk_widget_set_tooltip_text(ui->format, "Select the format of the file you are importing.");
+  gtk_box_append(GTK_BOX(root), ui->format);
+  ui->mapping = FeedMappingCreate(ui);
+  gtk_box_append(GTK_BOX(root), ui->mapping);
+  GtkWidget *schema = gtk_label_new(
+      "CSV columns: account,transaction,reference,information,booking_date,currency,amount,status,"
+      "mutability. Date: YYYY-MM-DD. Negative amounts are debits. Status: BOOK or PDNG. "
+      "Mutability: Immutable or Mutable.");
+  gtk_label_set_wrap(GTK_LABEL(schema), TRUE);
+  gtk_box_append(GTK_BOX(root), schema);
+  ui->schema = schema;
+  gtk_widget_set_visible(schema, FALSE);
   ui->path = FeedNamed(gtk_entry_new(), "bank-feed-path");
+  /* Keep the original JSON hint for source review. Both supported formats
+   * use the same explicit, user-selected file location. */
+#if 0
   gtk_entry_set_placeholder_text(GTK_ENTRY(ui->path),
                                  "Absolute path to a bank transaction JSON file");
+#endif
+  gtk_entry_set_placeholder_text(GTK_ENTRY(ui->path),
+                                 "Absolute path to a bank transaction JSON or statement CSV file");
   gtk_box_append(GTK_BOX(root), ui->path);
   GtkWidget *actions = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
   gtk_box_append(GTK_BOX(root), actions);
@@ -408,6 +531,7 @@ GtkWindow *UmiBankFeedGtk4Create(GtkWindow *parent) {
    * before a retained native window is finally released. */
   g_object_ref(ui->save);
   g_signal_connect_object(ui->path, "changed", G_CALLBACK(FeedChanged), window, 0);
+  g_signal_connect_object(ui->format, "notify::selected", G_CALLBACK(FeedFormatChanged), window, 0);
   g_signal_connect_object(load, "clicked", G_CALLBACK(FeedLoadClicked), window, 0);
   g_signal_connect_object(clear, "clicked", G_CALLBACK(FeedClear), window, 0);
   g_signal_connect_object(ui->groups, "notify::selected", G_CALLBACK(FeedSelection), window, 0);

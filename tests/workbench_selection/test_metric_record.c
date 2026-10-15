@@ -169,6 +169,28 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionMetricRecordTransferCases, UmiWorkb
     umi_workbench_selection_metric_record_archive_encode, umi_workbench_selection_metric_record_archive_decode,
     UmiWorkbenchSelectionMetricRecordTransferEqual, UmiWorkbenchSelectionMetricRecordTransferTails, UmiWorkbenchSelectionMetricRecordTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchSelectionMetricRecordReviewedCases, UmiWorkbenchSelectionMetricRecord,
+    record_id, label, umi_workbench_selection_metric_record_replace_if_current, UmiWorkbenchSelectionMetricRecordTransferEqual)
+static int UmiWorkbenchSelectionMetricRecordMutationGuards(const UmiWorkbenchSelectionMetricRecord *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionMetricRecord, source_id, umi_workbench_selection_metric_record_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionMetricRecord, subject_id, umi_workbench_selection_metric_record_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionMetricRecord, secondary_id, umi_workbench_selection_metric_record_set_secondary, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionMetricRecord, group_id, umi_workbench_selection_metric_record_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionMetricRecord, label, umi_workbench_selection_metric_record_set_label, sample);
+    UmiWorkbenchSelectionMetricRecord value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_selection_metric_record_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_selection_metric_record_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchSelectionMetricRecord record;
@@ -180,6 +202,8 @@ int main(void)
     assert(umi_workbench_selection_metric_record_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionMetricRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionMetricRecordReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionMetricRecordMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_selection_metric_record_set_source(
         &record, "source") == UMI_STATUS_OK);

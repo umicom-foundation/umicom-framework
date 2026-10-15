@@ -473,6 +473,8 @@ add_library(umicom_runtime STATIC
     src/runtime/contract.c
     src/runtime/health.c
     src/runtime/application_manifest.c
+    # Native tools share build identity validation with application discovery.
+    src/runtime/application_module.c
     src/runtime/suite.c
     src/runtime/module_registry.c
     src/runtime/master_controller.c
@@ -1087,6 +1089,7 @@ add_library(umicom_build STATIC
     src/build/types.c
     src/build/profile.c
     src/build/configure_definitions.c
+    src/build/configure_definition_edit.c
     src/build/diagnostic_location.c
     src/build/run_current.c
     src/build/configuration_library.c
@@ -1664,6 +1667,8 @@ target_link_libraries(umicom_repository PUBLIC
     Umicom::platform
     Umicom::toolchain
 )
+# Repository maintenance projects the same observations as native Source Control.
+target_link_libraries(umicom_repository PUBLIC Umicom::vcs)
 target_include_directories(umicom_repository PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -1746,9 +1751,16 @@ umicom_apply_sanitizers(umicom_plugin_ui)
 add_library(umicom_scaffold STATIC
     src/scaffold/scaffold.c
     src/scaffold/repository.c
+    src/scaffold/application_module.c
+    src/scaffold/application_resources.c
+    src/scaffold/application_catalogue.c
 )
 add_library(Umicom::scaffold ALIAS umicom_scaffold)
 set_target_properties(umicom_scaffold PROPERTIES EXPORT_NAME scaffold)
+# Shared resource lookup serves both installed graphical hosts and the native CLI.
+target_compile_definitions(umicom_scaffold PRIVATE
+    UMICOM_APPLICATION_MODULE_TEMPLATE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}/templates/application_module"
+    UMICOM_APPLICATION_MODULE_TEMPLATE_INSTALL_DIR="${CMAKE_INSTALL_DATADIR}/umicom/templates/application_module")
 target_link_libraries(umicom_scaffold PUBLIC
     Umicom::base
     Umicom::platform
@@ -2249,6 +2261,8 @@ add_library(umicom_sdk STATIC
     src/sdk/component.c
     src/sdk/manifest.c
     src/sdk/package.c
+    src/sdk/installed_metadata.c
+    src/sdk/installation_inspection.c
     src/sdk/locator.c
     src/sdk/probe.c
     src/sdk/compatibility.c
@@ -3320,11 +3334,15 @@ target_link_libraries(umicom_framework INTERFACE
 if(UMICOM_BUILD_NATIVE_TOOL)
     add_executable(umicom
         tools/umicom/src/main.c
+        tools/umicom/src/command_sdk.c
         tools/umicom/src/common.c
         tools/umicom/src/command_check.c
         tools/umicom/src/command_build.c
         tools/umicom/src/command_automation.c
         tools/umicom/src/command_repository.c
+        tools/umicom/src/command_application_module.c
+        tools/umicom/src/command_application_catalogue.c
+            tools/umicom/src/command_application_registration.c
         tools/umicom/src/command_repository_workflow.c
         tools/umicom/src/command_catalogue.c
         tools/umicom/src/command_security.c
@@ -3334,6 +3352,8 @@ if(UMICOM_BUILD_NATIVE_TOOL)
     target_include_directories(umicom PRIVATE tools/umicom/src)
     target_compile_definitions(umicom PRIVATE
         UMICOM_REPOSITORY_TEMPLATE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}/templates/repository"
+        UMICOM_APPLICATION_MODULE_TEMPLATE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}/templates/application_module"
+        UMICOM_APPLICATION_MODULE_TEMPLATE_INSTALL_DIR="${CMAKE_INSTALL_DATADIR}/umicom/templates/application_module"
     )
     target_link_libraries(umicom PRIVATE Umicom::Framework)
     umicom_apply_warnings(umicom)
@@ -5022,6 +5042,12 @@ endif()
 # -----------------------------------------------------------------------------
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(DIRECTORY templates/ DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/templates)
+# Preserve the existing complete-template install and include native module
+# templates when an SDK consumer installs only the Framework component.
+install(DIRECTORY templates/application_module/
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/templates/application_module
+    COMPONENT Framework)
+
 # Public guides and the SDK example travel with the Framework installation.
 install(DIRECTORY docs/guides/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides
@@ -5048,6 +5074,10 @@ install(DIRECTORY examples/action_recovery/
     FILES_MATCHING PATTERN "*.c" PATTERN "CMakeLists.txt")
 install(DIRECTORY examples/editor_workflow/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/editor_workflow
+    COMPONENT Framework)
+# Module authors can build this complete example against the installed SDK.
+install(DIRECTORY examples/application_module/
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/application_module
     COMPONENT Framework)
 install(DIRECTORY examples/sdk_consumer/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/examples/sdk_consumer)
@@ -5178,6 +5208,9 @@ configure_package_config_file(
     INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework
 )
 
+# Install passive identity/layout evidence alongside the SDK package.
+include(cmake/UmicomInstalledSdkMetadata.cmake)
+
 write_basic_package_version_file(
     ${CMAKE_CURRENT_BINARY_DIR}/UmicomFrameworkConfigVersion.cmake
     VERSION ${PROJECT_VERSION}
@@ -5188,6 +5221,7 @@ install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/UmicomFrameworkConfig.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/UmicomFrameworkConfigVersion.cmake
     cmake/UmicomApplicationBranding.cmake
+    cmake/UmicomApplicationModules.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework
 )
 
@@ -5429,6 +5463,8 @@ endif()
 # Read-only document review shares the existing developer comparison engine.
 if(TARGET umicom_ui_gtk4)
     target_link_libraries(umicom_ui_gtk4 PRIVATE Umicom::developer)
+    # Build Settings observes SDK metadata without executing package scripts.
+    target_link_libraries(umicom_ui_gtk4 PRIVATE Umicom::sdk)
 endif()
 if(BUILD_TESTING)
     add_executable(umicom-text-comparison-test tests/developer_productivity/test_text_comparison.c)
@@ -5567,6 +5603,8 @@ endif()
 
 # Product reports reuse the base-owned CSV document and domain snapshots.
 include(cmake/UmicomReportExport.cmake)
+# The shared CSV reader serves imports without depending on a financial application.
+include(cmake/UmicomCsvImport.cmake)
 
 # Keep the beginner report workflow with the installed documentation.
 install(FILES docs/CSV_REPORTS.md
@@ -5773,3 +5811,9 @@ include(cmake/UmicomTextExport.cmake)
 
 # Studio and education share the same read-only teaching trace surface.
 include(cmake/UmicomEducationInspectionGtk4.cmake)
+
+# Share manifest discovery regression coverage with all Framework consumers.
+include(cmake/UmicomApplicationModuleTests.cmake)
+
+# Passive SDK inspection fixtures do not compile or execute package scripts.
+include(cmake/UmicomSdkInspectionChecks.cmake)

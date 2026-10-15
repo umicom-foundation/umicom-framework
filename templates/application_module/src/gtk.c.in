@@ -1,0 +1,62 @@
+/* @NAME@: module-owned GTK4 frontend.
+ * Sammy Hegab, Umicom Foundation. MIT licence. */
+#include "model.h"
+#include <gtk/gtk.h>
+
+typedef struct GreetingView {
+    GtkWidget *entry;
+    GtkWidget *result;
+} GreetingView;
+
+static void greet(GtkButton *button, gpointer user_data)
+{
+    GreetingView *view = user_data;
+    char text[320];
+    (void)button;
+    /* The model owns validation. The window owns widget references for exactly
+     * as long as this callback can be invoked by its child button. */
+    UmiStatus status = @IDENTIFIER@_greeting(
+        gtk_editable_get_text(GTK_EDITABLE(view->entry)), text, sizeof(text));
+    gtk_label_set_text(GTK_LABEL(view->result),
+        status == UMI_STATUS_OK ? text : umi_status_text(status));
+}
+
+static void activate(GtkApplication *application, gpointer user_data)
+{
+    (void)user_data;
+    GtkWindow *existing = gtk_application_get_active_window(application);
+    if (existing != NULL) { gtk_window_present(existing); return; }
+    GtkWidget *window = gtk_application_window_new(application);
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 12);
+    GtkWidget *button = gtk_button_new_with_label("Create greeting");
+    GreetingView *view = g_new0(GreetingView, 1);
+    gtk_window_set_title(GTK_WINDOW(window), "@NAME@");
+    gtk_window_set_default_size(GTK_WINDOW(window), 560, 240);
+    gtk_widget_set_margin_top(box, 20);
+    gtk_widget_set_margin_bottom(box, 20);
+    gtk_widget_set_margin_start(box, 20);
+    gtk_widget_set_margin_end(box, 20);
+    gtk_box_append(GTK_BOX(box), gtk_label_new("Enter a name to try the shared application model."));
+    view->entry = gtk_entry_new();
+    gtk_entry_set_placeholder_text(GTK_ENTRY(view->entry), "Your name");
+    view->result = gtk_label_new("");
+    gtk_label_set_wrap(GTK_LABEL(view->result), TRUE);
+    gtk_box_append(GTK_BOX(box), view->entry);
+    gtk_box_append(GTK_BOX(box), button);
+    gtk_box_append(GTK_BOX(box), view->result);
+    gtk_window_set_child(GTK_WINDOW(window), box);
+    /* Callback state belongs to the button that invokes it. Closing the
+     * window destroys its children and releases the state once. */
+    g_object_set_data_full(G_OBJECT(button), "greeting-view", view, g_free);
+    g_signal_connect(button, "clicked", G_CALLBACK(greet), view);
+    gtk_window_present(GTK_WINDOW(window));
+}
+
+int main(int argc, char **argv)
+{
+    GtkApplication *application = gtk_application_new("@ID@", G_APPLICATION_DEFAULT_FLAGS);
+    g_signal_connect(application, "activate", G_CALLBACK(activate), NULL);
+    int result = g_application_run(G_APPLICATION(application), argc, argv);
+    g_object_unref(application);
+    return result;
+}

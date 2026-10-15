@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Repository observations and repair proposals</title>
+<style>body{font:17px/1.65 system-ui,sans-serif;max-width:1050px;margin:auto;padding:32px;color:#172536;background:#f7f9fc}h1,h2{line-height:1.25}pre{background:#e9eff5;padding:18px;overflow:auto}code{font-size:.92em}a{color:#165b97}th,td{border:1px solid #c6d1df;text-align:left;padding:10px}table{border-collapse:collapse}aside{background:#e7f1fa;padding:16px}</style>
+<main><h1>Repository observations and repair proposals</h1>
+<p>A repository observation describes what Git reported during a read. It is useful
+for a source-control panel, a project health view, or a proposal to repair missing
+repository configuration. It is not a lock on the checkout, proof of a successful
+build, or confirmation that commits have reached a remote server.</p>
+<h2>1. Choose the information your application needs</h2>
+<p>Link your application to <code>Umicom::repository</code> for inspection and
+repair proposals. This target also provides the shared <code>Umicom::vcs</code>
+dependency. Use <code>UmiVcsWorkingTreeRead</code> when you need individual paths,
+rename sources, staged changes, conflicts, or separate child-repository flags.
+Use <code>umi_repository_inspection_service_refresh</code> for the existing
+maintenance and structural reports.</p>
+<p>The inspection status probe uses the same immutable working-tree observation
+as Source Control. A filename containing spaces, tabs, or a newline remains one
+path. Renames carry both the original and destination path. A staged gitlink is
+an index entry that records a child repository commit; a child with uncommitted
+files is separate evidence.</p>
+<h2>2. Give the service an explicit directory</h2>
+<pre>#include &lt;umicom/repository/inspection_service.h&gt;
+#include &lt;stdlib.h&gt;
+
+UmiRepositoryInspectionService *service = malloc(sizeof *service);
+if (service != NULL) {
+    umi_repository_inspection_service_init(service);
+    UmiRepositoryInspectionContext context;
+    umi_repository_inspection_context_init(&amp;context, project_directory);
+    UmiStatus status = umi_repository_inspection_service_refresh(service, &amp;context);
+    /* Present status before interpreting the retained observation. */
+    present_repository_result(service, status);
+    free(service);
+}</pre>
+<p><code>project_directory</code> and <code>present_repository_result</code> belong
+to your application. Keep the service alive if you want to retain the last complete
+report between refreshes. The context borrows its directory and executable strings
+for the call. Run refreshes on a worker, with one owner and no simultaneous access
+to the same service. Large report arrays belong on the heap rather than a small
+UI worker stack.</p>
+<h2>3. Show whether evidence is available</h2>
+<table><thead><tr><th>State</th><th>Meaning</th><th>What to show</th></tr></thead><tbody>
+<tr><td>No successful observation</td><td>No refresh has completed.</td><td>Offer Refresh and explain any failure. Zero counts do not mean a clean checkout.</td></tr>
+<tr><td>Last refresh succeeded</td><td>The accepted snapshot and reports belong to a completed refresh.</td><td>Show findings and their accepted revision. Files may have changed afterwards.</td></tr>
+<tr><td>Stale retained observation</td><td>A refresh failed or the snapshot revision no longer matches.</td><td>Keep the older report visible with a stale label and the latest error.</td></tr>
+</tbody></table>
+<p><code>UmiRepositoryInspectionEvidenceRead</code> supplies these states.
+<code>umi_repository_inspection_text_format</code> includes the state, revision,
+and last refresh result. Successfully formatting a stale report does not make
+its evidence current. Health and audit helpers also require collected evidence.</p>
+<h2>4. Keep a proposal beside its evidence</h2>
+<p><code>umi_repository_remediation_service_plan</code> collects inspection evidence,
+builds a proposal, and evaluates its policy report before publishing the new value.
+If a later stage fails, the older observation and proposal remain together and
+<code>last_status</code> records the failed attempt. Check
+<code>UmiRepositoryRemediationEvidenceCurrent</code> before presenting a proposal as
+current. This check does not authorize any Git mutation.</p>
+<p>These services do not stage, commit, fetch, merge, push, or automatically apply
+repair commands. A separate workflow must review the proposed actions and obtain
+the application's required user authorization. Recheck the repository before
+applying a proposal because other programs can edit it after observation.</p>
+<h2>5. Handle limits and errors</h2>
+<ol>
+<li>On a malformed record or incomplete output, retain the prior report and show the error. Do not reinterpret the missing data as zero changes.</li>
+<li>On a timeout, confirm the selected directory and Git executable, then offer a retry. A retry is a new observation.</li>
+<li>On a capacity error, explain that the observation exceeded a bound. The shared VCS reader limits input to 32 MiB, paths to its fixed path capacity, and entries to its shared change-list bound. The aggregate byte-parser compatibility entry point additionally limits its input to 4 MiB.</li>
+<li>Do not retry a mutation to repair a read failure. Inspection does not grant permission to change repository contents.</li>
+</ol>
+<aside>The publication guarantee concerns the service's in-memory value. Independent
+Git queries and optional metadata probes do not form a filesystem transaction.
+A successful inspection does not claim remote freshness, atomic disk recovery,
+or release qualification.</aside>
+<h2>Extending the integration</h2>
+<p>Add status grammar support to the shared VCS parser and then project it into the
+maintenance model. Avoid teaching each UI its own Git text parser. Keep exact paths
+in the observation; escape them only when creating a display label or serialized
+document. The lower-level <code>UmiRepositoryGitCapture</code> API captures bounded
+binary output for other Git protocols, such as module registration. Its caller owns
+the returned bytes and releases them with <code>UmiRepositoryGitCaptureRelease</code>.
+It is an execution primitive, not an authorization policy.</p>
+<p>See <a href="application-module-discovery.html">application module discovery</a>
+for registered-module validation and
+<a href="https://git-scm.com/docs/git-status">Git's porcelain status format</a>
+for the protocol specification.</p></main></html>

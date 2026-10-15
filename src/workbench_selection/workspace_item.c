@@ -15,6 +15,8 @@
 
 #include "umicom/workbench_selection/workspace_item.h"
 #include "../base/value_archive_internal.h"
+#include "../base/record_update_internal.h"
+#include "umicom/base/text.h"
 
 #include <string.h>
 
@@ -85,6 +87,10 @@ UmiStatus umi_workbench_selection_workspace_item_validate(
     return UMI_STATUS_OK;
 }
 
+/* Text and its observation token are one publication. The shared Framework
+ * edit checks bounds and revision exhaustion before writing, including when
+ * input aliases this field. Keep the former copy/increment for review. */
+#if 0
 #define UMI_SELECTION_SETTER(fn, field) \
 UmiStatus fn(UmiWorkbenchSelectionWorkspaceItem *record, const char *value) \
 { \
@@ -94,6 +100,13 @@ UmiStatus fn(UmiWorkbenchSelectionWorkspaceItem *record, const char *value) \
         record->field, sizeof(record->field), value); \
     if (status == UMI_STATUS_OK) ++record->revision; \
     return status; \
+}
+#endif
+#define UMI_SELECTION_SETTER(fn, field) \
+UmiStatus fn(UmiWorkbenchSelectionWorkspaceItem *record, const char *value) \
+{ \
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT; \
+    return umi_text_update(record->field, sizeof record->field, value, &record->revision); \
 }
 
 UMI_SELECTION_SETTER(umi_workbench_selection_workspace_item_set_source, source_id)
@@ -140,6 +153,10 @@ uint64_t umi_workbench_selection_workspace_item_hash(
  * Provide the workbench selection workspace item touch operation used by this module and
  * its client applications.
  */
+/* Guard sequence/timestamp publication before any write so an exhausted
+ * revision never wraps and makes an old review appear current. The original
+ * touch operation remains below for engineering review. */
+#if 0
 void umi_workbench_selection_workspace_item_touch(
     UmiWorkbenchSelectionWorkspaceItem *record,
     uint64_t sequence,
@@ -154,6 +171,20 @@ void umi_workbench_selection_workspace_item_touch(
     record->timestamp_ms = timestamp_ms;
     ++record->revision;
 }
+#endif
+void umi_workbench_selection_workspace_item_touch(
+    UmiWorkbenchSelectionWorkspaceItem *record,
+    uint64_t sequence,
+    uint64_t timestamp_ms)
+{
+    /* This legacy void API cannot report exhaustion. Preserve the whole record
+     * when its token cannot advance; use reviewed replacement for a status. */
+    if (record == NULL || record->revision == UINT64_MAX) return;
+    record->sequence = sequence;
+    record->timestamp_ms = timestamp_ms;
+    ++record->revision;
+}
+
 
 /* State transfer belongs to this Framework value owner. Explicit fields keep
  * padding and unused text out of saved data. Extend both directions and the
@@ -230,3 +261,9 @@ static UmiStatus UmiWorkbenchSelectionWorkspaceItemArchiveValidate(const UmiWork
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_selection_workspace_item_archive_encode, umi_workbench_selection_workspace_item_archive_decode,
     UmiWorkbenchSelectionWorkspaceItem, UmiWorkbenchSelectionWorkspaceItemArchiveSchema, UmiWorkbenchSelectionWorkspaceItemArchiveBound, UmiWorkbenchSelectionWorkspaceItemArchiveWrite, UmiWorkbenchSelectionWorkspaceItemArchiveRead, UmiWorkbenchSelectionWorkspaceItemArchiveValidate)
+
+/* A delayed workspace item draft must name the revision it reviewed.
+ * Domain validation remains with this value owner; the shared guard publishes
+ * all fields together without emitting events or changing any external service. */
+UMI_DEFINE_REVIEWED_IDENTITY_RECORD_EDIT(umi_workbench_selection_workspace_item_replace_if_current,
+    UmiWorkbenchSelectionWorkspaceItem, record_id, UmiWorkbenchSelectionWorkspaceItemArchiveValidate)

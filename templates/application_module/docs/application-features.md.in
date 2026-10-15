@@ -1,0 +1,21 @@
+# Supported features
+
+@NAME@ contains a shared C23 greeting model, a console frontend and an optional
+GTK4 window. Enter a name and create a greeting. The same validation is used by
+both frontends. This is a working starter application for your own features.
+
+# Getting started
+
+1. Read the root README for SDK, build and test instructions.
+2. Add business behaviour to `src/model.c` and declare it in `src/model.h`.
+3. Extend `tests/test_model.c` with expected results and invalid-input cases.
+4. Call the model from the frontend and show errors to the user.
+5. Keep this guide accurate as you add capabilities.
+
+# Limitations
+
+There are no account connections, persistent documents, background services,
+web frontend or mobile frontend in this starter. GTK4 needs its development
+package. The console-only manifest does not advertise a native GUI. To add that
+frontend later, add its manifest declarations, give the console a distinct
+executable name, and update the CMake capability check and option together.

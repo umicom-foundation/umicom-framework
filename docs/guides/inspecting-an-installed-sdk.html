@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Choose an installed Framework SDK</title>
+<style>body{max-width:56rem;margin:2rem auto;padding:0 1rem;font:1rem/1.65 system-ui;color:#162130}pre{white-space:pre-wrap;background:#eef2f6;padding:1rem}code{overflow-wrap:anywhere}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:.5rem;text-align:left}</style></head>
+<body><h1>Choose an installed Framework SDK</h1>
+<p>An SDK is the installed set of headers, libraries and package files that another
+project uses to compile and link. Choosing its installation folder should not accidentally
+select a different SDK, or confuse the version of an inspection tool with the version installed there.</p>
+<h2>Inspect an installation</h2>
+<ol><li>Install the Framework development files into a folder you control.
+A current installation with relative include and library directories provides
+<code>share/umicom/framework/sdk.properties</code>.</li>
+<li>Use the native command with that installation folder:
+<pre>umicom sdk inspect "C:/SDKs/Umicom"</pre>
+The command accepts a relative folder and resolves it at invocation time. Framework worker APIs require an absolute folder.</li>
+<li>Review the declared version, ABI and paths. ABI means the binary interface
+expected by compiled code. The receipt describes these values; it does not prove that
+an archive was built for your machine or compiler.</li>
+<li>Check the five presence results: package configuration, exported targets,
+package version, public umbrella header and base library. An empty directory is not
+a library file. Exit code zero means these files were found. Exit code one means
+inspection failed or required files were missing; two means incorrect command usage.</li></ol>
+<p>Inspection does not evaluate CMake, execute a package script, invoke a compiler or
+linker, load a library, or connect to a remote service. Compile and link your consumer
+to establish whether the selected installation can actually be used.</p>
+<h2>Select the SDK in Studio Build Settings</h2>
+<ol><li>Open a project, then Build Settings.</li>
+<li>Enter the full installation folder in <strong>Framework SDK installation folder</strong>
+and select <strong>Inspect SDK</strong>. The read runs off the UI thread.</li>
+<li>Review the installed paths and missing-file messages. Editing the location,
+even back to its original text, invalidates the review. Closing or hiding the form
+also invalidates it.</li>
+<li>Select <strong>Use inspected SDK in this profile</strong>. This inserts or replaces
+<code>-DUmicomFramework_DIR:PATH=...</code> in the current CMake definitions.
+Other definitions retain their values. The exact package folder is used, including
+custom relative library folders such as <code>lib64</code>.</li>
+<li>Review the complete form, select <strong>Apply Settings</strong>, and configure
+when ready. Neither inspection nor selecting the package grants workspace trust or starts a build.
+Use a fresh build folder when changing compiler or target architecture.</li></ol>
+<p>The installation may change after inspection. CMake and the compiler remain responsible
+for checking the files at actual use. A saved package location remains a local project
+setting; it is not a portable promise that another computer has the same SDK.</p>
+<h2>Use the services from C</h2>
+<p><code>UmiSdkInstallationInspect</code> reads a bounded receipt and reports owned
+paths and presence flags. <code>umi_sdk_validate_prefix</code> compares its declared
+version and ABI with the caller's requirement. It no longer substitutes the inspecting
+process's own Framework identity. A successful comparison is still metadata evidence.</p>
+<p><code>UmiBuildConfigureDefinitionSet</code> and
+<code>UmiBuildConfigureDefinitionRemove</code> edit a private build-profile draft.
+They validate the complete definition list, preserve the profile on failure and do
+not execute a shell. Dedicated settings such as the compiler and installation prefix
+remain owned by their existing profile fields. Removing a definition does not clear
+a value already cached in a build directory.</p>
+<h2>Understand older and custom installations</h2>
+<table><thead><tr><th>Situation</th><th>What to do</th></tr></thead><tbody>
+<tr><td>No receipt</td><td>Install the updated SDK into a separate prefix. The legacy
+presence probe can inspect conventional include/lib layouts, but version validation,
+the native inspection command and Studio's SDK selector require metadata.</td></tr>
+<tr><td>Malformed receipt</td><td>Reinstall from a known build. The service refuses malformed,
+duplicate, unknown, oversized or unsafe relative paths instead of falling back to another SDK.</td></tr>
+<tr><td>Missing archive or package file</td><td>Check that the development installation completed.
+A partial installation cannot satisfy inspection merely because its directories exist.</td></tr>
+<tr><td>Absolute install directories or unsupported layout characters</td><td>CMake may still
+support your layout, but no relocatable receipt is emitted. Use the package's explicit
+CMake location. Do not reuse an old receipt from a different layout; choose a clean prefix.</td></tr>
+</tbody></table>
+<p>The receipt is bounded to 16 KiB and contains exactly one schema, Framework version,
+ABI, include directory, library directory and base-library path. Versions have three
+numeric components. Relative paths reject traversal and executable expressions.
+Trusted parent-directory aliases may still be followed; this is not a filesystem sandbox.
+Presence inspection does not qualify optional SDK components, dependencies or every exported target.</p>
+<p>When adding SDK metadata fields, update the producer, bounded parser, inspection
+consumer and regression fixtures together. Keep executable package logic out of the receipt.</p>
+</body></html>

@@ -115,3 +115,21 @@ umicom_add_framework_completion_test(
 endif()
 
 message(STATUS "Framework repository operation backend enabled")
+
+# Keep observation and proposal failures visible to repository consumers.
+if(BUILD_TESTING)
+    add_executable(umicom-repository-operations-operation-boundary-tests
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/repository_operations/test_operation_boundary.c")
+    target_link_libraries(umicom-repository-operations-operation-boundary-tests PRIVATE Umicom::repository)
+    umicom_apply_warnings(umicom-repository-operations-operation-boundary-tests)
+    umicom_apply_sanitizers(umicom-repository-operations-operation-boundary-tests)
+    foreach(_case success allocation plan format invalid_kind empty_root null_root null_output null)
+        add_test(NAME "framework.repository_operations.operation_boundary.${_case}"
+            COMMAND umicom-repository-operations-operation-boundary-tests "${_case}")
+        set_tests_properties("framework.repository_operations.operation_boundary.${_case}" PROPERTIES
+            LABELS "framework;repository;ownership;regression" TIMEOUT 15)
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-repository-operations-operation-boundary-tests)
+    endif()
+endif()

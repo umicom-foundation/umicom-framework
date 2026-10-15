@@ -35,10 +35,59 @@
  *---------------------------------------------------------------------------*/
 #include "cli.h"
 #include "umicom/repository/submodule_lock.h"
+#include "umicom/runtime/application_module.h"
+#include "umicom/platform/filesystem.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+/* Inspection is deliberately independent of compiler detection and Git
+ * mutation. Studio can reuse the same descriptor API for a creation preview. */
+static int umi_repo_inspect_module(int argc, char **argv)
+{
+    UmiApplicationModuleDescriptor descriptor;
+    char absolute[UMI_PATH_CAPACITY];
+    char directory[UMI_PATH_CAPACITY];
+    const char *path;
+    UmiStatus status;
+    if (argc != 1 || argv[0][0] == '\0') {
+        (void)fprintf(stderr, "Usage: umicom repo inspect-module MANIFEST\n");
+        return 2;
+    }
+    path = argv[0];
+    if (!umi_fs_is_absolute(path)) {
+        status = umi_fs_current_directory(directory, sizeof(directory));
+        if (status == UMI_STATUS_OK)
+            status = umi_fs_join(absolute, sizeof(absolute), directory, path);
+        if (status != UMI_STATUS_OK) {
+            (void)fprintf(stderr, "Cannot resolve manifest: %s\n", umi_status_text(status));
+            return 1;
+        }
+        path = absolute;
+    } else {
+        /* Canonical syntax removes dot segments before the bounded reader
+         * checks a regular file; it does not follow or authorise symlinks. */
+        status = umi_path_normalise(path, absolute, sizeof(absolute));
+        if (status != UMI_STATUS_OK) {
+            (void)fprintf(stderr, "Cannot normalise manifest: %s\n", umi_status_text(status));
+            return 1;
+        }
+        path = absolute;
+    }
+    status = umi_application_module_load(path, &descriptor);
+    if (status != UMI_STATUS_OK) {
+        (void)fprintf(stderr, "Application module manifest: %s\n", umi_status_text(status));
+        return 1;
+    }
+    (void)printf("Application: %s\nIdentity: %s\nBuild option: %s\n"
+        "Installer component: %s\nNative executable: %s\nConsole executable: %s\n"
+        "Source metadata only; no configure, build, launch or Git changes performed.\n",
+        descriptor.name, descriptor.id, descriptor.option, descriptor.component,
+        descriptor.native_executable[0] ? descriptor.native_executable : "(undeclared)",
+        descriptor.console_executable[0] ? descriptor.console_executable : "(undeclared)");
+    return 0;
+}
 
 /* Provide the repo option value operation used by this module and its client applications. */
 static const char *umi_repo_option_value(
@@ -588,6 +637,13 @@ int umi_cli_command_repo(
         return 0;
     }
     /* Use the stable identifier comparison to choose the matching record or policy. */
+    /* Manifest inspection reads source without toolchain discovery. */
+    if (strcmp(argv[0], "check-module") == 0)
+        return umi_cli_command_application_registration(argc - 1, argv + 1);
+    if (strcmp(argv[0], "modules") == 0)
+        return umi_cli_command_application_catalogue(argc - 1, argv + 1);
+    if (strcmp(argv[0], "inspect-module") == 0)
+        return umi_repo_inspect_module(argc - 1, argv + 1);
     /* Read-only review requires only Git, not compiler or SDK discovery. */
     if (strcmp(argv[0], "review") == 0)
         return umi_cli_command_repository_review(argc - 1, argv + 1);
@@ -629,6 +685,11 @@ int umi_cli_command_repo(
     }
     /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(argv[0], "create") == 0 || strcmp(argv[0], "new") == 0) {
+        /* Module creation is an explicit source-only workflow. Preserve the
+         * established repository creator and its Git options for other calls. */
+        for (int index = 2; index < argc; ++index)
+            if (strcmp(argv[index], "--module") == 0)
+                return umi_cli_command_application_module(argc - 1, argv + 1);
         return umi_cli_command_repository(context, argc - 1, argv + 1);
     }
     /* Use the stable identifier comparison to choose the matching record or policy. */

@@ -33,6 +33,17 @@ foreach(case migration missing damaged downgrade roundtrip)
     set_tests_properties(framework.configure_definitions.storage.${case} PROPERTIES
         TIMEOUT 30 LABELS "framework;build;configure-definitions;persistence")
 endforeach()
+
+# Programmatic SDK selection shares the manually entered definition grammar.
+umicom_configure_definitions_test(umicom-configure-edit-test test_edit.c Umicom::build)
+foreach(case replace append empty_value quoted_value untyped remove missing invalid_name
+        invalid_type reserved control duplicate malformed unterminated full full_replace
+        alias null token_capacity text_capacity)
+    add_test(NAME framework.configure_definitions.edit.${case} COMMAND umicom-configure-edit-test "${case}")
+    set_tests_properties(framework.configure_definitions.edit.${case} PROPERTIES
+        TIMEOUT 30 LABELS "framework;build;configure-definitions;regression")
+endforeach()
+
 if(TARGET Umicom::ui_gtk4)
     umicom_configure_definitions_test(umicom-configure-gtk-test test_gtk4.c Umicom::ui_gtk4)
     foreach(case values invalid preset retained cancel)
@@ -41,3 +52,10 @@ if(TARGET Umicom::ui_gtk4)
             TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;build;configure-definitions;gtk4")
     endforeach()
 endif()
+
+umicom_configure_definitions_test(umicom-profile-initialization-test test_profile_initialization.c Umicom::build)
+foreach(case alias null_id null_source null_build long_id long_source long_build)
+    add_test(NAME framework.build.profile_initialization.${case} COMMAND umicom-profile-initialization-test "${case}")
+    set_tests_properties(framework.build.profile_initialization.${case} PROPERTIES
+        TIMEOUT 15 LABELS "framework;build;regression")
+endforeach()

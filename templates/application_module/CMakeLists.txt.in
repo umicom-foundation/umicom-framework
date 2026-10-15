@@ -1,0 +1,58 @@
+# @NAME@ application module
+# Sammy Hegab, Umicom Foundation. MIT licence.
+cmake_minimum_required(VERSION 3.24)
+
+# The same source works as an independent SDK consumer or a suite submodule.
+# Only the independent build establishes a project and enables CTest itself.
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    project(@IDENTIFIER@ LANGUAGES C)
+    include(CTest)
+endif()
+if(NOT TARGET Umicom::base)
+    find_package(UmicomFramework CONFIG REQUIRED COMPONENTS base)
+endif()
+
+option(UMICOM_@IDENTIFIER@_BUILD_GTK4 "Build the @NAME@ GTK4 frontend" @GTK_DEFAULT@)
+add_library(umicom_@IDENTIFIER@_model STATIC src/model.c)
+target_include_directories(umicom_@IDENTIFIER@_model PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(umicom_@IDENTIFIER@_model PUBLIC Umicom::base)
+add_executable(@CONSOLE_EXECUTABLE@ src/console.c)
+target_link_libraries(@CONSOLE_EXECUTABLE@ PRIVATE umicom_@IDENTIFIER@_model)
+set(_module_targets umicom_@IDENTIFIER@_model @CONSOLE_EXECUTABLE@)
+set(_module_frontends @CONSOLE_EXECUTABLE@)
+
+# The application owns its GTK window. Shared suite hosting recognises this
+# executable through the manifest; no generic product controller is assumed.
+if(UMICOM_@IDENTIFIER@_BUILD_GTK4)
+    if("@GTK_DEFAULT@" STREQUAL "OFF")
+        message(FATAL_ERROR "This source was created console-only. Add native_executable and gtk4 to the manifest, give the console a distinct target name, and update this capability check before enabling GTK4.")
+    endif()
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(UMICOM_@IDENTIFIER@_GTK REQUIRED IMPORTED_TARGET gtk4)
+    add_executable(umicom-@SLUG@ src/gtk.c)
+    target_link_libraries(umicom-@SLUG@ PRIVATE umicom_@IDENTIFIER@_model
+        PkgConfig::UMICOM_@IDENTIFIER@_GTK)
+    list(APPEND _module_targets umicom-@SLUG@)
+    list(APPEND _module_frontends umicom-@SLUG@)
+endif()
+if(BUILD_TESTING)
+    add_executable(umicom-@SLUG@-model-test tests/test_model.c)
+    target_link_libraries(umicom-@SLUG@-model-test PRIVATE umicom_@IDENTIFIER@_model)
+    list(APPEND _module_targets umicom-@SLUG@-model-test)
+    add_test(NAME @SLUG@.model COMMAND umicom-@SLUG@-model-test)
+    add_test(NAME @SLUG@.console COMMAND @CONSOLE_EXECUTABLE@ Contributor)
+    set_tests_properties(@SLUG@.console PROPERTIES PASS_REGULAR_EXPRESSION "Hello, Contributor")
+endif()
+foreach(_target IN LISTS _module_targets)
+    set_target_properties("${_target}" PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED ON C_EXTENSIONS OFF)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings("${_target}")
+    endif()
+endforeach()
+
+# In the suite, the discovery helper sets the installation component. A
+# standalone install retains the normal CMake default component.
+install(TARGETS ${_module_frontends} RUNTIME DESTINATION bin)
+install(FILES application.umicom.yaml DESTINATION share/umicom/applications/@SLUG@)
+install(FILES README.md LICENSE docs/application-features.md DESTINATION share/doc/@SLUG@)

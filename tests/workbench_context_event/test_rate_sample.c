@@ -151,6 +151,27 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextEventRateSampleTransferCases, UmiWork
     umi_workbench_context_event_rate_sample_archive_encode, umi_workbench_context_event_rate_sample_archive_decode,
     UmiWorkbenchContextEventRateSampleTransferEqual, UmiWorkbenchContextEventRateSampleTransferTails, UmiWorkbenchContextEventRateSampleTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextEventRateSampleReviewedCases, UmiWorkbenchContextEventRateSample,
+    record_id, label, umi_workbench_context_event_rate_sample_replace_if_current, UmiWorkbenchContextEventRateSampleTransferEqual)
+static int UmiWorkbenchContextEventRateSampleMutationGuards(const UmiWorkbenchContextEventRateSample *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventRateSample, source_id, umi_workbench_context_event_rate_sample_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventRateSample, subject_id, umi_workbench_context_event_rate_sample_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventRateSample, group_id, umi_workbench_context_event_rate_sample_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventRateSample, label, umi_workbench_context_event_rate_sample_set_label, sample);
+    UmiWorkbenchContextEventRateSample value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_event_rate_sample_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_context_event_rate_sample_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextEventRateSample record;
@@ -162,6 +183,8 @@ int main(void)
     assert(umi_workbench_context_event_rate_sample_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextEventRateSampleTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextEventRateSampleReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextEventRateSampleMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_context_event_rate_sample_set_source(

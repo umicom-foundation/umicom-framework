@@ -1,0 +1,26 @@
+/* @NAME@: shared application behaviour.
+ * Sammy Hegab, Umicom Foundation. MIT licence. */
+#include "model.h"
+#include <stdio.h>
+#include <string.h>
+
+UmiStatus @IDENTIFIER@_greeting(const char *name, char *output, size_t capacity)
+{
+    if (output == NULL || capacity == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    output[0] = '\0';
+    if (name == NULL || name[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    /* Bound user input before formatting. The frontends present the same
+     * validation result; neither frontend duplicates this business rule. */
+    size_t length = 0U;
+    while (length <= 120U && name[length] != '\0') ++length;
+    if (length > 120U) return UMI_STATUS_CAPACITY_EXCEEDED;
+    for (size_t i = 0U; i < length; ++i)
+        if ((unsigned char)name[i] < 32U || (unsigned char)name[i] == 127U)
+            return UMI_STATUS_INVALID_ARGUMENT;
+    int written = snprintf(output, capacity, "Hello, %s from @NAME@.", name);
+    if (written < 0 || (size_t)written >= capacity) {
+        output[0] = '\0';
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    return UMI_STATUS_OK;
+}

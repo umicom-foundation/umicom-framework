@@ -200,6 +200,9 @@ int main(int argc, char **argv)
     if (strcmp(command, "dev") == 0)
         return umi_cli_command_dev(&context, argc - 2, argv + 2);
     /* Use the stable identifier comparison to choose the matching record or policy. */
+    /* SDK inspection is a read-only metadata operation with no toolchain discovery. */
+    if (strcmp(command, "sdk") == 0)
+        return umi_cli_command_sdk(argc - 2, argv + 2);
     if (strcmp(command, "repo") == 0)
         return umi_cli_command_repo(&context, argc - 2, argv + 2);
     /*

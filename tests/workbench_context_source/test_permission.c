@@ -169,6 +169,28 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextSourcePermissionTransferCases, UmiWor
     umi_workbench_context_source_permission_archive_encode, umi_workbench_context_source_permission_archive_decode,
     UmiWorkbenchContextSourcePermissionTransferEqual, UmiWorkbenchContextSourcePermissionTransferTails, UmiWorkbenchContextSourcePermissionTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextSourcePermissionReviewedCases, UmiWorkbenchContextSourcePermission,
+    record_id, label, umi_workbench_context_source_permission_replace_if_current, UmiWorkbenchContextSourcePermissionTransferEqual)
+static int UmiWorkbenchContextSourcePermissionMutationGuards(const UmiWorkbenchContextSourcePermission *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourcePermission, source_id, umi_workbench_context_source_permission_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourcePermission, panel_id, umi_workbench_context_source_permission_set_panel, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourcePermission, subject_id, umi_workbench_context_source_permission_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourcePermission, group_id, umi_workbench_context_source_permission_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourcePermission, label, umi_workbench_context_source_permission_set_label, sample);
+    UmiWorkbenchContextSourcePermission value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_source_permission_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_context_source_permission_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextSourcePermission record;
@@ -180,6 +202,8 @@ int main(void)
     assert(umi_workbench_context_source_permission_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextSourcePermissionTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourcePermissionReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourcePermissionMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_context_source_permission_set_source(

@@ -169,6 +169,28 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextSourceQueryTransferCases, UmiWorkbenc
     umi_workbench_context_source_query_archive_encode, umi_workbench_context_source_query_archive_decode,
     UmiWorkbenchContextSourceQueryTransferEqual, UmiWorkbenchContextSourceQueryTransferTails, UmiWorkbenchContextSourceQueryTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextSourceQueryReviewedCases, UmiWorkbenchContextSourceQuery,
+    record_id, label, umi_workbench_context_source_query_replace_if_current, UmiWorkbenchContextSourceQueryTransferEqual)
+static int UmiWorkbenchContextSourceQueryMutationGuards(const UmiWorkbenchContextSourceQuery *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceQuery, source_id, umi_workbench_context_source_query_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceQuery, panel_id, umi_workbench_context_source_query_set_panel, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceQuery, subject_id, umi_workbench_context_source_query_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceQuery, group_id, umi_workbench_context_source_query_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceQuery, label, umi_workbench_context_source_query_set_label, sample);
+    UmiWorkbenchContextSourceQuery value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_source_query_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_context_source_query_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextSourceQuery record;
@@ -180,6 +202,8 @@ int main(void)
     assert(umi_workbench_context_source_query_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextSourceQueryTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceQueryReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceQueryMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_context_source_query_set_source(

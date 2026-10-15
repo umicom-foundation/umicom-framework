@@ -65,4 +65,34 @@ UmiStatus Function(Record *value, const char *id) \
     *value = staged; \
     return UMI_STATUS_OK; \
 }
+
+/* Workbench records use domain-specific identity members such as record_id.
+ * Keep that member explicit in each binding. This helper is only for inline
+ * values whose complete shape is already covered by a domain validator; it
+ * neither publishes events nor acquires resources on behalf of an application. */
+#define UMI_DEFINE_REVIEWED_IDENTITY_RECORD_EDIT(Function, Record, Identity, Validate) \
+UmiStatus Function(Record *value, uint64_t expected_revision, const Record *proposal) \
+{ \
+    if (value == NULL || proposal == NULL) return UMI_STATUS_INVALID_ARGUMENT; \
+    if (value->revision != expected_revision) return UMI_STATUS_INVALID_STATE; \
+    if (value->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED; \
+    /* An identity is bounded before comparison or domain validation. A draft \
+     * belongs to one existing record; renaming remains a separate operation. */ \
+    if (!UmiRecordTextFits(value->Identity, sizeof value->Identity) || \
+        !UmiRecordTextFits(proposal->Identity, sizeof proposal->Identity) || \
+        value->Identity[0] == '\0' || proposal->Identity[0] == '\0') \
+        return UMI_STATUS_INVALID_ARGUMENT; \
+    UmiStatus status = Validate(value); \
+    if (status != UMI_STATUS_OK) return status; \
+    status = Validate(proposal); \
+    if (status != UMI_STATUS_OK) return status; \
+    if (strcmp(value->Identity, proposal->Identity) != 0) return UMI_STATUS_INVALID_ARGUMENT; \
+    /* Only the owner issues the next observation token. Imported or edited \
+     * proposal revisions do not confer authority to replace a newer value. */ \
+    Record staged = *proposal; \
+    staged.revision = value->revision + 1U; \
+    *value = staged; \
+    return UMI_STATUS_OK; \
+}
+
 #endif

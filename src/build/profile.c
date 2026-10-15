@@ -66,6 +66,10 @@ void umi_build_profile_init(UmiBuildProfile *profile)
     profile->strict_warnings = 1;
 }
 
+/* Preserve the earlier in-place initializer for review. Building the default
+ * profile privately lets fields refer to the old profile and prevents a long
+ * or missing path from erasing accepted compiler, launch and project settings. */
+#if 0
 UmiStatus umi_build_profile_set(UmiBuildProfile *profile,
                                 const char *profile_id,
                                 const char *source_directory,
@@ -89,6 +93,24 @@ UmiStatus umi_build_profile_set(UmiBuildProfile *profile,
                            sizeof(profile->build_directory),
                            build_directory);
     }
+    return status;
+}
+
+#endif
+UmiStatus umi_build_profile_set(UmiBuildProfile *profile,
+    const char *profile_id, const char *source_directory, const char *build_directory)
+{
+    if (profile == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiBuildProfile candidate;
+    umi_build_profile_init(&candidate);
+    UmiStatus status = copy_text(candidate.profile_id, sizeof candidate.profile_id, profile_id);
+    if (status == UMI_STATUS_OK)
+        status = copy_text(candidate.source_directory, sizeof candidate.source_directory, source_directory);
+    if (status == UMI_STATUS_OK)
+        status = copy_text(candidate.build_directory, sizeof candidate.build_directory, build_directory);
+    /* Initialization still selects the established defaults on success. This is
+     * a new profile operation, not an edit that retains an existing compiler. */
+    if (status == UMI_STATUS_OK) *profile = candidate;
     return status;
 }
 

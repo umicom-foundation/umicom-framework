@@ -151,6 +151,27 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextEventCoalescingPolicyTransferCases, U
     umi_workbench_context_event_coalescing_policy_archive_encode, umi_workbench_context_event_coalescing_policy_archive_decode,
     UmiWorkbenchContextEventCoalescingPolicyTransferEqual, UmiWorkbenchContextEventCoalescingPolicyTransferTails, UmiWorkbenchContextEventCoalescingPolicyTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextEventCoalescingPolicyReviewedCases, UmiWorkbenchContextEventCoalescingPolicy,
+    record_id, label, umi_workbench_context_event_coalescing_policy_replace_if_current, UmiWorkbenchContextEventCoalescingPolicyTransferEqual)
+static int UmiWorkbenchContextEventCoalescingPolicyMutationGuards(const UmiWorkbenchContextEventCoalescingPolicy *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventCoalescingPolicy, source_id, umi_workbench_context_event_coalescing_policy_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventCoalescingPolicy, subject_id, umi_workbench_context_event_coalescing_policy_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventCoalescingPolicy, group_id, umi_workbench_context_event_coalescing_policy_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventCoalescingPolicy, label, umi_workbench_context_event_coalescing_policy_set_label, sample);
+    UmiWorkbenchContextEventCoalescingPolicy value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_event_coalescing_policy_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_context_event_coalescing_policy_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextEventCoalescingPolicy record;
@@ -162,6 +183,8 @@ int main(void)
     assert(umi_workbench_context_event_coalescing_policy_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextEventCoalescingPolicyTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextEventCoalescingPolicyReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextEventCoalescingPolicyMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_context_event_coalescing_policy_set_source(

@@ -96,6 +96,15 @@ int umi_cli_command_repair(UmiCliContext *context, int argc, char **argv);
  * Provide the cli command shell operation used by this module and its client applications.
  */
 int umi_cli_command_shell(UmiCliContext *context, int argc, char **argv);
+/** Inspect an explicitly selected installed SDK without executing its package. */
+int umi_cli_command_sdk(int argc, char **argv);
+/** Inspect registered applications and report missing or invalid manifests. */
+int umi_cli_command_application_catalogue(int argc, char **argv);
+/* Review registration metadata without mutating a repository. */
+int umi_cli_command_application_registration(int argc, char **argv);
+/** Preview or create a manifest-ready module through Framework scaffolding. */
+int umi_cli_command_application_module(int argc, char **argv);
+
 /**
  * Provide the cli command repository operation used by this module and its client
  * applications.

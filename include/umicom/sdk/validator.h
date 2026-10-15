@@ -35,6 +35,10 @@ typedef struct UmiSdkValidationResult { UmiSdkProbeResult probe; UmiSdkConforman
  * Provide the sdk validate prefix operation used by this module and its client
  * applications.
  */
+/** Check file presence and declared version/ABI from the selected SDK receipt.
+ * Missing metadata returns NOT_FOUND instead of using the running library version.
+ * Output clears on failure. This does not replace consumer compile/link tests,
+ * validate every exported component or authenticate the installed files. */
 UmiStatus umi_sdk_validate_prefix(const char *prefix,const UmiSdkRequirement *requirement,UmiSdkValidationResult *out_result);
 #ifdef __cplusplus
 }

@@ -30,6 +30,7 @@ target_sources(umicom_repository PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/inspection/divergence_probe.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/inspection/fetch_state_probe.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/inspection/git_command.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/repository/inspection/git_capture.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/inspection/git_output.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/inspection/gitlink_probe.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/inspection/gitmodules_probe.c"
@@ -48,6 +49,7 @@ target_sources(umicom_repository PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/inspection/inspection_types.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/inspection/nested_repository_probe.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/inspection/porcelain_parser.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/repository/inspection/porcelain_bytes.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/inspection/remote_probe.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/inspection/repository_identity.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/inspection/repository_snapshot.c"
@@ -215,3 +217,108 @@ umicom_add_framework_completion_test(
 endif()
 
 message(STATUS "Framework repository inspection runtime enabled")
+
+# Capture failures must retain diagnostics and refuse incomplete machine output.
+if(BUILD_TESTING)
+    add_executable(umicom-repository-git-capture-tests
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/repository_inspection/test_git_capture.c")
+    target_link_libraries(umicom-repository-git-capture-tests PRIVATE Umicom::repository)
+    umicom_apply_warnings(umicom-repository-git-capture-tests)
+    umicom_apply_sanitizers(umicom-repository-git-capture-tests)
+    foreach(captureCase success nonzero exit_only timeout cancel termination truncated unterminated launch invalid)
+        add_test(NAME framework.repository_inspection.git.capture.${captureCase}
+            COMMAND umicom-repository-git-capture-tests "${captureCase}")
+        set_tests_properties(framework.repository_inspection.git.capture.${captureCase} PROPERTIES
+            LABELS "framework;repository;process;regression" TIMEOUT 20)
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-repository-git-capture-tests)
+    endif()
+endif()
+
+# Raw Git protocol capture must retain NUL bytes independently of diagnostic tails.
+if(BUILD_TESTING)
+    add_executable(umicom-repository-git-bytes-tests
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/repository_inspection/test_git_bytes.c")
+    target_link_libraries(umicom-repository-git-bytes-tests PRIVATE Umicom::platform)
+    umicom_apply_warnings(umicom-repository-git-bytes-tests)
+    umicom_apply_sanitizers(umicom-repository-git-bytes-tests)
+    foreach(_case binary bytewise empty exact overflow tail nonzero exit_only timeout cancel termination launch invalid)
+        add_test(NAME "framework.repository.git_bytes.${_case}"
+            COMMAND umicom-repository-git-bytes-tests "${_case}")
+        set_tests_properties("framework.repository.git_bytes.${_case}" PROPERTIES
+            LABELS "framework;repository;process;regression" TIMEOUT 15)
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-repository-git-bytes-tests)
+    endif()
+endif()
+
+# A malformed final record must invalidate the whole shared status snapshot.
+if(BUILD_TESTING)
+    add_executable(umicom-repository-porcelain-bytes-tests
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/repository_inspection/test_porcelain_bytes.c")
+    add_executable(umicom-repository-status-capture-tests
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/repository_inspection/test_status_capture.c")
+    foreach(_target umicom-repository-porcelain-bytes-tests umicom-repository-status-capture-tests)
+        target_link_libraries(${_target} PRIVATE Umicom::repository)
+        umicom_apply_warnings(${_target})
+        umicom_apply_sanitizers(${_target})
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(${_target})
+        endif()
+    endforeach()
+    foreach(_case clean initial detached tracking modified staged deleted rename copy conflict
+            clean_submodule dirty_submodule changed_gitlink gitlink_to_file file_to_gitlink worktree_gitlink mixed_conflict_hash untracked ignored unknown_header sha256
+            truncated empty_record unknown_record diagnostic rename_source_missing rename_source_empty
+            bad_xy bad_submodule bad_mode bad_hash bad_score mixed_hash ordinary_rename score_mismatch
+            bad_conflict count_overflow count_suffix
+            duplicate_header empty_path missing_fields null long_path long_branch)
+        add_test(NAME "framework.repository.porcelain_bytes.${_case}"
+            COMMAND umicom-repository-porcelain-bytes-tests "${_case}")
+        set_tests_properties("framework.repository.porcelain_bytes.${_case}" PROPERTIES
+            LABELS "framework;repository;protocol;regression" TIMEOUT 15)
+    endforeach()
+    foreach(_case good empty missing_branch malformed failed truncated cancelled timeout null)
+        add_test(NAME "framework.repository.status_capture.${_case}"
+            COMMAND umicom-repository-status-capture-tests "${_case}")
+        set_tests_properties("framework.repository.status_capture.${_case}" PROPERTIES
+            LABELS "framework;repository;process;regression" TIMEOUT 15)
+    endforeach()
+endif()
+
+# Publishing status and findings is one in-memory operation, including failures.
+if(BUILD_TESTING)
+    add_executable(umicom-repository-refresh-publication-tests
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/repository_inspection/test_refresh_publication.c")
+    target_link_libraries(umicom-repository-refresh-publication-tests PRIVATE Umicom::repository)
+    umicom_apply_warnings(umicom-repository-refresh-publication-tests)
+    umicom_apply_sanitizers(umicom-repository-refresh-publication-tests)
+    foreach(_case success collect evaluate report allocation revision maintenance_revision null)
+        add_test(NAME "framework.repository.refresh_publication.${_case}"
+            COMMAND umicom-repository-refresh-publication-tests "${_case}")
+        set_tests_properties("framework.repository.refresh_publication.${_case}" PROPERTIES
+            LABELS "framework;repository;ownership;regression" TIMEOUT 15)
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-repository-refresh-publication-tests)
+    endif()
+endif()
+
+# Keep observation and proposal failures visible to repository consumers.
+if(BUILD_TESTING)
+    add_executable(umicom-repository-inspection-evidence-state-tests
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/repository_inspection/test_evidence_state.c")
+    target_link_libraries(umicom-repository-inspection-evidence-state-tests PRIVATE Umicom::repository)
+    umicom_apply_warnings(umicom-repository-inspection-evidence-state-tests)
+    umicom_apply_sanitizers(umicom-repository-inspection-evidence-state-tests)
+    foreach(_case empty initial_failure current failed mismatch warning error plan_failed plan_empty null small_output)
+        add_test(NAME "framework.repository_inspection.evidence_state.${_case}"
+            COMMAND umicom-repository-inspection-evidence-state-tests "${_case}")
+        set_tests_properties("framework.repository_inspection.evidence_state.${_case}" PROPERTIES
+            LABELS "framework;repository;ownership;regression" TIMEOUT 15)
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-repository-inspection-evidence-state-tests)
+    endif()
+endif()

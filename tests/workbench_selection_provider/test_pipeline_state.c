@@ -188,6 +188,29 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionProviderPipelineStateTransferCases,
     umi_workbench_selection_provider_pipeline_state_archive_encode, umi_workbench_selection_provider_pipeline_state_archive_decode,
     UmiWorkbenchSelectionProviderPipelineStateTransferEqual, UmiWorkbenchSelectionProviderPipelineStateTransferTails, UmiWorkbenchSelectionProviderPipelineStateTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchSelectionProviderPipelineStateReviewedCases, UmiWorkbenchSelectionProviderPipelineState,
+    record_id, description, umi_workbench_selection_provider_pipeline_state_replace_if_current, UmiWorkbenchSelectionProviderPipelineStateTransferEqual)
+static int UmiWorkbenchSelectionProviderPipelineStateMutationGuards(const UmiWorkbenchSelectionProviderPipelineState *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderPipelineState, provider_id, umi_workbench_selection_provider_pipeline_state_set_provider, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderPipelineState, source_id, umi_workbench_selection_provider_pipeline_state_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderPipelineState, subject_id, umi_workbench_selection_provider_pipeline_state_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderPipelineState, related_id, umi_workbench_selection_provider_pipeline_state_set_related, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderPipelineState, group_id, umi_workbench_selection_provider_pipeline_state_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderPipelineState, description, umi_workbench_selection_provider_pipeline_state_set_description, sample);
+    UmiWorkbenchSelectionProviderPipelineState value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_selection_provider_pipeline_state_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_selection_provider_pipeline_state_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchSelectionProviderPipelineState record;
@@ -199,6 +222,8 @@ int main(void)
     assert(umi_workbench_selection_provider_pipeline_state_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionProviderPipelineStateTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionProviderPipelineStateReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionProviderPipelineStateMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_selection_provider_pipeline_state_set_provider(

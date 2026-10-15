@@ -38,6 +38,10 @@ extern "C"
         int child_untracked;
         int unmerged;
         unsigned similarity;
+        /* True only for a staged change whose old or new index entry is a
+         * gitlink. Kept explicitly because conversion to/from an ordinary file
+         * cannot be reconstructed from a filename or a dirty-child count. */
+        int staged_gitlink;
         /* Rename sources and destinations are raw repository-relative bytes, not display labels. */
     } UmiVcsWorkingTreeEntry;
 

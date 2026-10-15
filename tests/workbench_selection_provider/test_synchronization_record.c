@@ -188,6 +188,29 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionProviderSynchronizationRecordTransf
     umi_workbench_selection_provider_synchronization_record_archive_encode, umi_workbench_selection_provider_synchronization_record_archive_decode,
     UmiWorkbenchSelectionProviderSynchronizationRecordTransferEqual, UmiWorkbenchSelectionProviderSynchronizationRecordTransferTails, UmiWorkbenchSelectionProviderSynchronizationRecordTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchSelectionProviderSynchronizationRecordReviewedCases, UmiWorkbenchSelectionProviderSynchronizationRecord,
+    record_id, description, umi_workbench_selection_provider_synchronization_record_replace_if_current, UmiWorkbenchSelectionProviderSynchronizationRecordTransferEqual)
+static int UmiWorkbenchSelectionProviderSynchronizationRecordMutationGuards(const UmiWorkbenchSelectionProviderSynchronizationRecord *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderSynchronizationRecord, provider_id, umi_workbench_selection_provider_synchronization_record_set_provider, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderSynchronizationRecord, source_id, umi_workbench_selection_provider_synchronization_record_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderSynchronizationRecord, subject_id, umi_workbench_selection_provider_synchronization_record_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderSynchronizationRecord, related_id, umi_workbench_selection_provider_synchronization_record_set_related, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderSynchronizationRecord, group_id, umi_workbench_selection_provider_synchronization_record_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderSynchronizationRecord, description, umi_workbench_selection_provider_synchronization_record_set_description, sample);
+    UmiWorkbenchSelectionProviderSynchronizationRecord value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_selection_provider_synchronization_record_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_selection_provider_synchronization_record_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchSelectionProviderSynchronizationRecord record;
@@ -199,6 +222,8 @@ int main(void)
     assert(umi_workbench_selection_provider_synchronization_record_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionProviderSynchronizationRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionProviderSynchronizationRecordReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionProviderSynchronizationRecordMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_selection_provider_synchronization_record_set_provider(

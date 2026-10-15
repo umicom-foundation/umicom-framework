@@ -169,6 +169,28 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextSourceDebugLocationTransferCases, Umi
     umi_workbench_context_source_debug_location_archive_encode, umi_workbench_context_source_debug_location_archive_decode,
     UmiWorkbenchContextSourceDebugLocationTransferEqual, UmiWorkbenchContextSourceDebugLocationTransferTails, UmiWorkbenchContextSourceDebugLocationTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextSourceDebugLocationReviewedCases, UmiWorkbenchContextSourceDebugLocation,
+    record_id, label, umi_workbench_context_source_debug_location_replace_if_current, UmiWorkbenchContextSourceDebugLocationTransferEqual)
+static int UmiWorkbenchContextSourceDebugLocationMutationGuards(const UmiWorkbenchContextSourceDebugLocation *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceDebugLocation, source_id, umi_workbench_context_source_debug_location_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceDebugLocation, panel_id, umi_workbench_context_source_debug_location_set_panel, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceDebugLocation, subject_id, umi_workbench_context_source_debug_location_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceDebugLocation, group_id, umi_workbench_context_source_debug_location_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceDebugLocation, label, umi_workbench_context_source_debug_location_set_label, sample);
+    UmiWorkbenchContextSourceDebugLocation value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_source_debug_location_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_context_source_debug_location_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextSourceDebugLocation record;
@@ -180,6 +202,8 @@ int main(void)
     assert(umi_workbench_context_source_debug_location_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextSourceDebugLocationTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceDebugLocationReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceDebugLocationMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_context_source_debug_location_set_source(

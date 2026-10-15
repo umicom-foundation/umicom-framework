@@ -188,6 +188,29 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionProviderCausationRecordTransferCase
     umi_workbench_selection_provider_causation_record_archive_encode, umi_workbench_selection_provider_causation_record_archive_decode,
     UmiWorkbenchSelectionProviderCausationRecordTransferEqual, UmiWorkbenchSelectionProviderCausationRecordTransferTails, UmiWorkbenchSelectionProviderCausationRecordTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchSelectionProviderCausationRecordReviewedCases, UmiWorkbenchSelectionProviderCausationRecord,
+    record_id, description, umi_workbench_selection_provider_causation_record_replace_if_current, UmiWorkbenchSelectionProviderCausationRecordTransferEqual)
+static int UmiWorkbenchSelectionProviderCausationRecordMutationGuards(const UmiWorkbenchSelectionProviderCausationRecord *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderCausationRecord, provider_id, umi_workbench_selection_provider_causation_record_set_provider, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderCausationRecord, source_id, umi_workbench_selection_provider_causation_record_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderCausationRecord, subject_id, umi_workbench_selection_provider_causation_record_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderCausationRecord, related_id, umi_workbench_selection_provider_causation_record_set_related, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderCausationRecord, group_id, umi_workbench_selection_provider_causation_record_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderCausationRecord, description, umi_workbench_selection_provider_causation_record_set_description, sample);
+    UmiWorkbenchSelectionProviderCausationRecord value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_selection_provider_causation_record_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_selection_provider_causation_record_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchSelectionProviderCausationRecord record;
@@ -199,6 +222,8 @@ int main(void)
     assert(umi_workbench_selection_provider_causation_record_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionProviderCausationRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionProviderCausationRecordReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionProviderCausationRecordMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_selection_provider_causation_record_set_provider(

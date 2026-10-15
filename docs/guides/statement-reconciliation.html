@@ -30,6 +30,11 @@ partially exported after a calculation failure.</p>
 conversion, automatic pagination or bank login. The local file is the evidence source; no provider URL in
 that file is followed. Closing the source window closes its comparison windows. Closing a window prevents
 new exports but does not undo a file write already accepted.</p>
+<h2>Import a prepared CSV statement</h2>
+<p>The same window also accepts an explicitly formatted CSV. Select <strong>Statement CSV</strong>
+before importing. Follow <a href="statement-csv-import.html">Import a statement CSV</a> for its
+nine columns, signed amounts, invented example and error recovery. The JSON instructions above
+remain supported. Arbitrary provider CSV and PDF layouts still need a separate converter.</p>
 <h2>For contributors</h2><p>The portable contract is <code>umicom/bank_feed/statement.h</code>.
 Applications call the common GTK report launcher. Extend the shared selector and report together so
 arithmetic and exported rows always use the same account, currency and booking-date rules.

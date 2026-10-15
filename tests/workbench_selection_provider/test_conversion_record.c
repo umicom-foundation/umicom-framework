@@ -188,6 +188,29 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionProviderConversionRecordTransferCas
     umi_workbench_selection_provider_conversion_record_archive_encode, umi_workbench_selection_provider_conversion_record_archive_decode,
     UmiWorkbenchSelectionProviderConversionRecordTransferEqual, UmiWorkbenchSelectionProviderConversionRecordTransferTails, UmiWorkbenchSelectionProviderConversionRecordTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchSelectionProviderConversionRecordReviewedCases, UmiWorkbenchSelectionProviderConversionRecord,
+    record_id, description, umi_workbench_selection_provider_conversion_record_replace_if_current, UmiWorkbenchSelectionProviderConversionRecordTransferEqual)
+static int UmiWorkbenchSelectionProviderConversionRecordMutationGuards(const UmiWorkbenchSelectionProviderConversionRecord *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderConversionRecord, provider_id, umi_workbench_selection_provider_conversion_record_set_provider, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderConversionRecord, source_id, umi_workbench_selection_provider_conversion_record_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderConversionRecord, subject_id, umi_workbench_selection_provider_conversion_record_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderConversionRecord, related_id, umi_workbench_selection_provider_conversion_record_set_related, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderConversionRecord, group_id, umi_workbench_selection_provider_conversion_record_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderConversionRecord, description, umi_workbench_selection_provider_conversion_record_set_description, sample);
+    UmiWorkbenchSelectionProviderConversionRecord value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_selection_provider_conversion_record_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_selection_provider_conversion_record_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchSelectionProviderConversionRecord record;
@@ -199,6 +222,8 @@ int main(void)
     assert(umi_workbench_selection_provider_conversion_record_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionProviderConversionRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionProviderConversionRecordReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionProviderConversionRecordMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_selection_provider_conversion_record_set_provider(

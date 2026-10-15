@@ -151,6 +151,27 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextEventWorkspaceBindingTransferCases, U
     umi_workbench_context_event_workspace_binding_archive_encode, umi_workbench_context_event_workspace_binding_archive_decode,
     UmiWorkbenchContextEventWorkspaceBindingTransferEqual, UmiWorkbenchContextEventWorkspaceBindingTransferTails, UmiWorkbenchContextEventWorkspaceBindingTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextEventWorkspaceBindingReviewedCases, UmiWorkbenchContextEventWorkspaceBinding,
+    record_id, label, umi_workbench_context_event_workspace_binding_replace_if_current, UmiWorkbenchContextEventWorkspaceBindingTransferEqual)
+static int UmiWorkbenchContextEventWorkspaceBindingMutationGuards(const UmiWorkbenchContextEventWorkspaceBinding *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventWorkspaceBinding, source_id, umi_workbench_context_event_workspace_binding_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventWorkspaceBinding, subject_id, umi_workbench_context_event_workspace_binding_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventWorkspaceBinding, group_id, umi_workbench_context_event_workspace_binding_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventWorkspaceBinding, label, umi_workbench_context_event_workspace_binding_set_label, sample);
+    UmiWorkbenchContextEventWorkspaceBinding value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_event_workspace_binding_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_context_event_workspace_binding_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextEventWorkspaceBinding record;
@@ -162,6 +183,8 @@ int main(void)
     assert(umi_workbench_context_event_workspace_binding_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextEventWorkspaceBindingTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextEventWorkspaceBindingReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextEventWorkspaceBindingMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_context_event_workspace_binding_set_source(

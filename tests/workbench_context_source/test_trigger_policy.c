@@ -169,6 +169,28 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextSourceTriggerPolicyTransferCases, Umi
     umi_workbench_context_source_trigger_policy_archive_encode, umi_workbench_context_source_trigger_policy_archive_decode,
     UmiWorkbenchContextSourceTriggerPolicyTransferEqual, UmiWorkbenchContextSourceTriggerPolicyTransferTails, UmiWorkbenchContextSourceTriggerPolicyTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextSourceTriggerPolicyReviewedCases, UmiWorkbenchContextSourceTriggerPolicy,
+    record_id, label, umi_workbench_context_source_trigger_policy_replace_if_current, UmiWorkbenchContextSourceTriggerPolicyTransferEqual)
+static int UmiWorkbenchContextSourceTriggerPolicyMutationGuards(const UmiWorkbenchContextSourceTriggerPolicy *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceTriggerPolicy, source_id, umi_workbench_context_source_trigger_policy_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceTriggerPolicy, panel_id, umi_workbench_context_source_trigger_policy_set_panel, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceTriggerPolicy, subject_id, umi_workbench_context_source_trigger_policy_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceTriggerPolicy, group_id, umi_workbench_context_source_trigger_policy_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceTriggerPolicy, label, umi_workbench_context_source_trigger_policy_set_label, sample);
+    UmiWorkbenchContextSourceTriggerPolicy value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_source_trigger_policy_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_context_source_trigger_policy_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextSourceTriggerPolicy record;
@@ -180,6 +202,8 @@ int main(void)
     assert(umi_workbench_context_source_trigger_policy_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextSourceTriggerPolicyTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceTriggerPolicyReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceTriggerPolicyMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_context_source_trigger_policy_set_source(

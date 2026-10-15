@@ -31,6 +31,9 @@ typedef struct UmiSdkInstallation { char prefix[1024]; char include_dir[1024]; c
  * Provide the sdk installation from prefix operation used by this module and its client
  * applications.
  */
+/** Assemble conventional include/lib paths with checked capacities.
+ * Failure preserves output. No filesystem access occurs; input and output must
+ * not overlap. Receipt-based inspection supports other relative layouts. */
 UmiStatus umi_sdk_installation_from_prefix(const char *prefix,UmiSdkInstallation *out_installation);
 #ifdef __cplusplus
 }

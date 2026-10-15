@@ -188,6 +188,29 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionProviderSnapshotItemTransferCases, 
     umi_workbench_selection_provider_snapshot_item_archive_encode, umi_workbench_selection_provider_snapshot_item_archive_decode,
     UmiWorkbenchSelectionProviderSnapshotItemTransferEqual, UmiWorkbenchSelectionProviderSnapshotItemTransferTails, UmiWorkbenchSelectionProviderSnapshotItemTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchSelectionProviderSnapshotItemReviewedCases, UmiWorkbenchSelectionProviderSnapshotItem,
+    record_id, description, umi_workbench_selection_provider_snapshot_item_replace_if_current, UmiWorkbenchSelectionProviderSnapshotItemTransferEqual)
+static int UmiWorkbenchSelectionProviderSnapshotItemMutationGuards(const UmiWorkbenchSelectionProviderSnapshotItem *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderSnapshotItem, provider_id, umi_workbench_selection_provider_snapshot_item_set_provider, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderSnapshotItem, source_id, umi_workbench_selection_provider_snapshot_item_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderSnapshotItem, subject_id, umi_workbench_selection_provider_snapshot_item_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderSnapshotItem, related_id, umi_workbench_selection_provider_snapshot_item_set_related, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderSnapshotItem, group_id, umi_workbench_selection_provider_snapshot_item_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderSnapshotItem, description, umi_workbench_selection_provider_snapshot_item_set_description, sample);
+    UmiWorkbenchSelectionProviderSnapshotItem value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_selection_provider_snapshot_item_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_selection_provider_snapshot_item_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchSelectionProviderSnapshotItem record;
@@ -199,6 +222,8 @@ int main(void)
     assert(umi_workbench_selection_provider_snapshot_item_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionProviderSnapshotItemTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionProviderSnapshotItemReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionProviderSnapshotItemMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_selection_provider_snapshot_item_set_provider(

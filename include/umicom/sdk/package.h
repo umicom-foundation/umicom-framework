@@ -32,6 +32,9 @@ typedef struct UmiSdkPackage { char prefix[UMI_SDK_PATH_CAPACITY]; char config_f
  * Provide the sdk package from prefix operation used by this module and its client
  * applications.
  */
+/** Assemble conventional lib-based paths without filesystem access.
+ * Every derived path is bounded; failure leaves output unchanged. Input strings
+ * and output must not overlap. Use installation inspection for custom layouts. */
 UmiStatus umi_sdk_package_from_prefix(const char *prefix,UmiSdkPackage *out_package);
 #ifdef __cplusplus
 }

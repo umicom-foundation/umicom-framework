@@ -1,0 +1,78 @@
+<!doctype html>
+<!-- Umicom Framework | Sammy Hegab, Umicom Foundation | MIT -->
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Import a statement CSV</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:980px;margin:3rem auto;padding:0 1rem;color:#182b3e}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#eef3f7;padding:1rem}h1,h2{line-height:1.2}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bdc9d4;padding:.6rem;text-align:left;vertical-align:top}a{color:#075aa7}</style>
+</head><body><main><h1>Import a statement CSV</h1>
+<p>Trader, Bank and TMS share a local transaction-review window. Choose <strong>Statement CSV</strong>
+when your file follows the format below. A bank's own download may use different columns, dates or
+amount signs. Convert a copy into this explicit format and check it against the original first.
+No bank-specific layout is guessed, and importing never posts transactions or contacts a bank.</p>
+<p>If your file uses different headers, the
+<a href="statement-csv-mapping.html">custom column mapping workflow</a> can interpret them
+without rearranging the original CSV. Choose date and amount conventions explicitly.</p>
+<h2>Try the included example</h2><ol>
+<li>Open <strong>Bank transaction reports</strong> in Trader, Bank or TMS.</li>
+<li>Select <strong>Statement CSV</strong> in the format selector. The default remains
+<strong>Open Banking JSON</strong> for existing response files.</li>
+<li>Choose <code>C:\umicom\Umicom-Applications\framework\examples\bank_feed\statement.csv</code>,
+then select <strong>Import for review</strong>. The installed example is under
+<code>share/umicom/examples/bank_feed/statement.csv</code> beneath your installation folder.</li>
+<li>Select <code>practice-account | GBP</code>. Expect booked credits of <code>12.50</code>,
+booked debits of <code>2.25</code> and net movement of <code>10.25</code>.
+The pending debit of <code>999.00</code> appears separately.</li>
+<li>Select <strong>Reconcile selected account</strong>. Use <code>2026-10-12</code> for both dates,
+<code>100.00</code> for opening and <code>110.25</code> for closing. The arithmetic should match.
+See <a href="statement-reconciliation.html">Compare statement balances</a> for interpreting the result.</li>
+<li>Export to a private folder you choose. Changing the path or input format clears the current
+report and retires its export. Each already-open comparison keeps its own snapshot.</li></ol>
+<h2>Prepare the nine columns</h2>
+<p>Use this exact header and order. Every record must have all nine fields, including empty optional fields.</p>
+<pre>account,transaction,reference,information,booking_date,currency,amount,status,mutability
+practice-account,credit-one,ref,Example credit,2026-10-12,GBP,12.50,BOOK,Immutable
+practice-account,debit-one,,Example debit,2026-10-12,GBP,-2.25,BOOK,Immutable</pre>
+<table><thead><tr><th>Column</th><th>Meaning and accepted values</th></tr></thead><tbody>
+<tr><td>account</td><td>Required account identifier, at most 40 Unicode characters. Accounts are kept separate.</td></tr>
+<tr><td>transaction</td><td>Optional source transaction ID, at most 210 characters. Repeated nonempty IDs within one account are rejected, even across currencies. Missing IDs remain separate observations and are counted.</td></tr>
+<tr><td>reference</td><td>Optional reference, at most 210 characters.</td></tr>
+<tr><td>information</td><td>Optional description, at most 500 characters. Quoted descriptions may contain commas, quotes, tabs and line breaks.</td></tr>
+<tr><td>booking_date</td><td>A valid <code>YYYY-MM-DD</code> date, years 1600 through 9999.
+This is the date as supplied; no time or timezone is invented.</td></tr>
+<tr><td>currency</td><td>Exactly three uppercase ASCII letters, such as <code>GBP</code>.
+This checks spelling, not whether a currency exists or a bank supports it.</td></tr>
+<tr><td>amount</td><td>Positive or unsigned means credit; a leading minus means debit.
+Use 1 to 13 integer digits and at most 5 fractional digits after a dot.
+Do not use plus signs, currency symbols, spaces, thousands separators or exponents.
+The value is parsed exactly, without rounding or currency conversion.</td></tr>
+<tr><td>status</td><td><code>BOOK</code> for booked or <code>PDNG</code> for pending.
+Only booked rows affect a statement balance comparison.</td></tr>
+<tr><td>mutability</td><td><code>Immutable</code> or <code>Mutable</code>, reflecting your source.
+Pending rows remain mutable regardless of this field. An immutable flag is an imported assertion, not independent verification.</td></tr>
+</tbody></table>
+<h2>CSV text rules</h2><p>Save as UTF-8 with commas as separators and LF or CRLF line endings.
+An initial UTF-8 byte-order mark is accepted. Double quotes enclose fields containing commas or
+line breaks; write a literal quote as two quotes inside a quoted field. Spaces are significant.
+Blank records and unexpected columns cause a statement import error. Header-only files are accepted
+as empty observations, not as proof of a zero balance. The file limit is 4 MiB and the transaction limit is 1,024.</p>
+<pre>practice-account,description-example,,"Payment, reference ""North""",2026-10-12,GBP,-2.25,BOOK,Immutable</pre>
+<h2>Resolve an import error</h2><ol>
+<li>Check the selected format. The filename extension does not select a parser.</li>
+<li>Use the displayed logical record and column when supplied. The header is record 1.
+A quoted multiline description still belongs to one record. Column 0 means the whole record.</li>
+<li>Correct the source copy and import again. If any record is invalid, the entire new feed is refused;
+there is no partial balance calculation. The previous report is cleared before loading starts.</li></ol>
+<p>The CSV produced by <strong>Export</strong> is a review report with additional metadata and
+spreadsheet text protection. It is not this nine-column input format and is not intended as a
+lossless re-import file. Preserve your original statement separately.</p>
+<h2>For contributors</h2><p><code>UmiCsvReader</code> in <code>umicom/base/csv_reader.h</code>
+owns its input and yields borrowed, decoded text fields. Copy fields before the next read.
+It handles syntax and UTF-8 only. <code>UmiBankFeedCsvCreate</code> in
+<code>umicom/bank_feed/csv_import.h</code> applies the explicit financial schema and returns the
+same owned feed used by JSON imports. Reuse <code>UmiBankFeedSum</code>,
+<code>UmiBankStatementReview</code> and the existing CSV exporters afterwards.
+A future bank-specific adapter should translate documented source fields into validated observations,
+with its own fixtures; it should not change the generic parser or infer debit signs from a filename.</p>
+<p>False pagination flags mean this format supplies no pagination evidence. Neither those flags nor
+an arithmetic match establishes completeness, authenticity, available funds or settlement.</p>
+</main></body></html>

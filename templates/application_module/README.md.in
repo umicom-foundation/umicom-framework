@@ -1,0 +1,53 @@
+# @NAME@
+
+This application can build on its own using the installed Umicom Framework SDK.
+The same repository can be registered below `applications/@SLUG@` in the Umicom
+Applications suite. Registration uses Git; copying a folder does not register it.
+
+## Build independently
+
+1. Install the Umicom Framework development package and a C23 compiler, CMake
+   and Ninja. For the GTK4 frontend, also install GTK4 and pkg-config.
+2. Open PowerShell in this directory. Replace the SDK prefix with your installation.
+3. Run each command separately and stop if it fails.
+
+```powershell
+cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH="C:/umicom/installed/applications" -DBUILD_TESTING=ON
+cmake --build build --parallel 2
+ctest --test-dir build --output-on-failure --no-tests=error
+cmake --install build --prefix "C:/umicom/installed/@SLUG@"
+```
+
+For a console build, pass `-DUMICOM_@IDENTIFIER@_BUILD_GTK4=OFF` when configuring.
+On Windows, launch `.\build\@CONSOLE_EXECUTABLE@.exe Contributor`.
+When the GTK4 frontend is enabled, launch `.\build\umicom-@SLUG@.exe`.
+On Linux use the same executable paths without `.exe`.
+
+A successful console run prints a greeting. The model and console tests must
+both pass. A compiler or missing-SDK error is not a test result. If CMake cannot
+find UmicomFramework, check that the SDK prefix contains its CMake package and
+headers, then configure again. To change compilers, choose a new build directory.
+
+## Add to a suite
+
+1. Review and publish this repository using your normal Git workflow.
+2. In your suite checkout, run `git submodule add <your-repository-url> applications/@SLUG@`.
+3. Read this module's identity with `umicom repo inspect-module applications/@SLUG@/application.umicom.yaml`.
+4. Enable the build option printed by that command at the next suite configure.
+5. Build and test before publishing the parent repository's submodule pointer.
+
+The Framework discovery helper creates the build option and reuses this
+module's tests and installer rules. It does not generate an application launcher
+entry or a product-specific shared workstation controller. The optional GTK
+window is owned by this module.
+
+## Extend the application
+
+Keep rules in the model and display code in the frontends. The generated tests
+cover validation and output bounds. Expand them whenever behaviour changes.
+See `docs/application-features.md` for the supported feature list.
+
+Creation writes source only. No repository is committed, no remote is created,
+and no existing suite is changed. If creation fails, inspect any retained
+partial directory and choose a fresh destination; existing files are never
+overwritten on retry.

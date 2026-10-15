@@ -151,6 +151,27 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextEventSubscriptionTransferCases, UmiWo
     umi_workbench_context_event_subscription_archive_encode, umi_workbench_context_event_subscription_archive_decode,
     UmiWorkbenchContextEventSubscriptionTransferEqual, UmiWorkbenchContextEventSubscriptionTransferTails, UmiWorkbenchContextEventSubscriptionTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextEventSubscriptionReviewedCases, UmiWorkbenchContextEventSubscription,
+    record_id, label, umi_workbench_context_event_subscription_replace_if_current, UmiWorkbenchContextEventSubscriptionTransferEqual)
+static int UmiWorkbenchContextEventSubscriptionMutationGuards(const UmiWorkbenchContextEventSubscription *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventSubscription, source_id, umi_workbench_context_event_subscription_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventSubscription, subject_id, umi_workbench_context_event_subscription_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventSubscription, group_id, umi_workbench_context_event_subscription_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventSubscription, label, umi_workbench_context_event_subscription_set_label, sample);
+    UmiWorkbenchContextEventSubscription value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_event_subscription_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_context_event_subscription_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextEventSubscription record;
@@ -162,6 +183,8 @@ int main(void)
     assert(umi_workbench_context_event_subscription_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextEventSubscriptionTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextEventSubscriptionReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextEventSubscriptionMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_context_event_subscription_set_source(

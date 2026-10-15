@@ -18,6 +18,10 @@
 
 #include "umicom/workbench_selection_provider/types.h"
 #include "umicom/base/value_archive.h"
+/* Text setters preserve the field and revision on invalid or oversized input,
+ * permit a suffix of the same field as input, and refuse exhausted revisions.
+ * Each successful edit advances once, even when the text is unchanged. */
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -112,6 +116,9 @@ uint64_t umi_workbench_selection_provider_migration_record_hash(
  * Provide the workbench selection provider migration record touch operation used by this
  * module and its client applications.
  */
+/** Update sequence and time only when the record revision can advance.
+ * This legacy void operation preserves every field at UINT64_MAX. Use
+ * replace_if_current when a caller needs an explicit refusal status. */
 void umi_workbench_selection_provider_migration_record_touch(
     UmiWorkbenchSelectionProviderMigrationRecord *record,
     uint64_t sequence,
@@ -127,6 +134,18 @@ UmiStatus umi_workbench_selection_provider_migration_record_archive_encode(const
     void *bytes, size_t capacity, size_t *out_size);
 UmiStatus umi_workbench_selection_provider_migration_record_archive_decode(const void *bytes, size_t byte_count,
     UmiWorkbenchSelectionProviderMigrationRecord *value);
+
+/** Publish a reviewed migration record value while its observed revision matches.
+ * Both values must pass domain validation and retain the same record_id.
+ * A stale token returns INVALID_STATE; an exhausted token returns
+ * CAPACITY_EXCEEDED. Every refusal preserves the complete live value.
+ * Success copies the proposal and assigns one new owner revision, ignoring
+ * the proposal's token. Self-assignment is allowed; other overlap is not.
+ * Serialize access on the owner. This edits an inline value only: it does
+ * not publish events, activate a provider, authenticate evidence or perform I/O.
+ * Constructors remain for new values and must not reset a live review token. */
+UmiStatus umi_workbench_selection_provider_migration_record_replace_if_current(UmiWorkbenchSelectionProviderMigrationRecord *value,
+    uint64_t expected_revision, const UmiWorkbenchSelectionProviderMigrationRecord *proposal);
 
 #ifdef __cplusplus
 }

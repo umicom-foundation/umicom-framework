@@ -32,6 +32,12 @@ int umi_repository_inspection_health_code(
     if (service->last_status != UMI_STATUS_OK) {
         return 2;
     }
+    /* No observation is not a healthy checkout. A revision mismatch also
+     * invalidates readiness even if a caller retained an OK result code. */
+    if (UmiRepositoryInspectionEvidenceRead(service) == UMI_REPOSITORY_INSPECTION_NONE)
+        return -1;
+    if (UmiRepositoryInspectionEvidenceRead(service) == UMI_REPOSITORY_INSPECTION_STALE)
+        return 2;
     /* Typed error issues take precedence over warning degradation. */
     if (service->maintenance.report.errors > 0U || service->report.errors > 0U) {
         return 2;

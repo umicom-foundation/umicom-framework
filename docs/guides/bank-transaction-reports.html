@@ -28,6 +28,11 @@
 <p>Imports accept at most 4 MiB and 1,024 rows. Amount text contains 1–13 integer digits and at most five decimal places. Malformed dates, incorrect field types, duplicate known keys and duplicate nonempty transaction IDs within one account are rejected. Booking timestamps must use years 1600–9999, valid calendar dates, a <code>Z</code> or numeric timezone, and at most nine fractional-second digits. Control characters in selected text fields are refused. Unknown optional fields are discarded. Imported links are never followed. Amounts too large to sum are reported as unavailable; individual rows remain inspectable.</p>
 <p>If an import fails, check the source format and obtain a fresh export from your bank or authorised provider. Do not edit a real statement merely to make it pass. The reader does not accept PDF statements, arbitrary bank CSV layouts, or the proprietary Wise, Revolut Business and PayPal JSON formats. Those need separate mappings.</p>
 <p>Loading does not save data automatically. Clearing or closing the window removes its retained report. An export already accepted may finish after closing; an I/O failure may leave a partial new file. Inspect that file and choose a different filename when retrying.</p>
+<h2>Import a prepared CSV statement</h2>
+<p>The same window also accepts an explicitly formatted CSV. Select <strong>Statement CSV</strong>
+before importing. Follow <a href="statement-csv-import.html">Import a statement CSV</a> for its
+nine columns, signed amounts, invented example and error recovery. The JSON instructions above
+remain supported. Arbitrary provider CSV and PDF layouts still need a separate converter.</p>
 <h2>For contributors</h2>
 <p>Use <code>Umicom::bank_feed</code> for parsing, row copies, account/currency totals and owned CSV reports. The GTK window adds file selection and asynchronous loading. Keep provider authentication outside this importer: a future connector must establish consent, validate account scope and preserve pagination before handing a response to a reader. Reuse Framework’s exact decimal and file owners when adding adapters.</p>
 <p>Reference: <a href="https://openbankinguk.github.io/read-write-api-site3/v4.0.1/resources-and-data-models/aisp/Transactions.html">Open Banking transaction resource</a>.</p>

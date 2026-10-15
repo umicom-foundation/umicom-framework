@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Registering an Umicom application module</title>
+<style>body{font:17px/1.65 system-ui,sans-serif;max-width:1050px;margin:auto;padding:32px;color:#172536;background:#f7f9fc}h1,h2{line-height:1.25}pre{background:#e9eff5;padding:18px;overflow:auto}code{font-size:.92em}a{color:#165b97}table{border-collapse:collapse;width:100%}th,td{border:1px solid #c6d1df;text-align:left;padding:10px}aside{background:#e7f1fa;padding:16px}</style>
+<main><h1>Registering an Umicom application module</h1>
+<p>An application module is a repository containing a CMake project and an
+<code>application.umicom.yaml</code> manifest. The manifest describes the application.
+The Applications suite discovers registered modules from its <code>.gitmodules</code>
+file. Adding an initialised module no longer requires three matching declarations
+in <code>UmicomExtendedApplicationModules.cmake</code>.</p>
+<aside>Discovery reads source metadata. It does not clone repositories, commit files,
+prove that an application works, or grant permission to run arbitrary CMake code.
+Review the module before configuring it. Configure-time support requires CMake 3.24
+or later and Git.</aside>
+<h2>1. Prepare a module</h2>
+<p>Start with the complete <code>examples/application_module</code> directory.
+Keep the project, manifest and application source at the root of the module repository.
+Give your module unique application and executable identities. Build identity values
+use plain ASCII identifiers, and display names may additionally contain spaces,
+parentheses, dots and hyphens. Quoted YAML, expressions and multiline build identities
+are deliberately unsupported.</p>
+<pre>schema: umicom.application.v1
+
+application:
+  id: org.example.notes
+  name: Example Notes
+  version: 0.1.0
+  executable: example-notes
+  console_executable: example-notes
+
+frontends:
+  - console
+
+installation:
+  component: ExampleNotes</pre>
+<p>Keep <code>docs/application-features.md</code> in the module, with sections named
+<strong>Supported features</strong>, <strong>Getting started</strong> and
+<strong>Limitations</strong>. Describe real behaviour and recovery steps. The suite
+accepts this guide or an existing entry in its central application coverage document.</p>
+<h2>2. Inspect the manifest</h2>
+<p>From a terminal where the native Umicom command is available:</p>
+<pre>umicom repo inspect-module "C:\Projects\example-notes\application.umicom.yaml"</pre>
+<p>Expect the identity, build option, installer component and declared frontend names.
+The command reads only the chosen manifest. Native inspection also uses the existing
+runtime manifest validator. A successful inspection does not replace compilation
+or workflow testing.</p>
+<h2>3. Register the repository</h2>
+<p>From the Applications suite, add your reviewed module using ordinary Git or the
+existing native repository command. Replace the example repository address with yours:</p>
+<pre>git submodule add https://example.org/team/example-notes.git applications/example-notes</pre>
+<p>Use a direct path under <code>applications/</code> containing lowercase letters,
+digits and hyphens. Initialised modules must have a manifest and
+<code>CMakeLists.txt</code> within their directory. Discovery checks all available
+identities, including disabled modules, for collisions. It rejects paths and metadata
+that resolve outside their permitted source directory.</p>
+<h2>4. Select and build the module</h2>
+<p>The option comes from <code>native_executable</code>, when present, otherwise
+<code>executable</code>. Discovery removes a leading <code>umicom-</code>, changes
+dots and hyphens to underscores, and uppercases the result. Existing core products
+keep their specialised options and setup. New module options default to off.</p>
+<table><tr><th>Executable</th><th>Build option</th></tr>
+<tr><td>umicom-weather</td><td>UMICOM_APPLICATIONS_BUILD_WEATHER</td></tr>
+<tr><td>example-notes</td><td>UMICOM_APPLICATIONS_BUILD_EXAMPLE_NOTES</td></tr></table>
+<pre>cmake --preset windows-ucrt64-all-debug -DUMICOM_APPLICATIONS_BUILD_EXAMPLE_NOTES=ON
+cmake --build --preset windows-ucrt64-all-debug --target example-notes --parallel 2
+ctest --preset windows-ucrt64-all-debug -R "^example-notes\." --output-on-failure --no-tests=error</pre>
+<p>Use the actual CTest names registered by your module. Stop when configure fails;
+a later build cannot repair a missing manifest or an uninitialised repository.
+The all-module option enables every registered module and fails if any checkout is
+missing. After initialising a missing checkout, explicitly configure again.</p>
+<h2>5. Keep installation and tests with the application</h2>
+<p>The Framework registration helper calls the module's existing
+<code>add_subdirectory</code> integration. It sets
+<code>CMAKE_INSTALL_DEFAULT_COMPONENT_NAME</code> before entering the module,
+so ordinary <code>install()</code> rules inherit that component. An explicit
+<code>installation.component</code> is preferred; otherwise the component comes
+from the display name with non-alphanumeric characters removed. Module
+<code>add_test()</code> rules remain active when testing is enabled.</p>
+<pre>cmake --install build/windows-ucrt64-all-debug --component ExampleNotes --prefix "C:/Projects/installed"</pre>
+<p>Rules that explicitly name another install component remain explicit. Discovery
+does not rewrite them. Install the required Framework runtime and resources too.</p>
+<h2>6. Compose a graphical frontend</h2>
+<p>Declare <code>native_executable</code> separately from
+<code>console_executable</code> and list <code>gtk</code> under frontends.
+If your module defines its own non-imported executable with that native name,
+the suite adds it to <code>umicom-desktop-products</code> and retains its own
+install rules. An unrelated target, alias or library with that name is rejected.
+The existing shared host remains available to applications with an implemented
+Framework product experience. A new manifest alone does not create controllers,
+panels, a product experience or a launcher-catalogue entry.</p>
+<h2>Standalone SDK use</h2>
+<p>The example also supports an independent build against an installed SDK:</p>
+<pre>cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH="C:/Projects/installed" -DBUILD_TESTING=ON
+cmake --build build --parallel 2
+ctest --test-dir build --output-on-failure --no-tests=error</pre>
+<p>The installed package exports the C23 descriptor API through
+<code>Umicom::runtime</code> and the CMake helpers through
+<code>UmicomApplicationModules.cmake</code>.</p>
+<h2>Troubleshooting and limits</h2>
+<ul><li><strong>Missing checkout:</strong> initialise the named submodule, then configure again.
+Discovery never fetches or resets a checkout. The suite's existing governance audit
+may also require all registered checkouts even when building selected modules.</li>
+<li><strong>Identity or option collision:</strong> choose distinct identities and executable names;
+changing only letter case is insufficient on Windows.</li>
+<li><strong>Metadata rejected:</strong> use the nested schema first, direct two-space
+application fields and ordinary scalar identities. Keep manifests within 64 KiB.
+Older flat manifests remain supported by the runtime API but must be converted for automatic build discovery.</li>
+<li><strong>Frontend unavailable:</strong> declaring a native executable does not implement
+its product UI. Supply the executable or implement the corresponding Framework experience.</li>
+<li><strong>Scope:</strong> discovery supports at most 128 direct application modules.
+Native inspection accepts a normal local file and does not follow a final symlink.
+Parent directories must be trusted. These checks are not a sandbox for a malicious build script.</li></ul>
+<!-- The discovery-only scope statement is retained for review. The native
+source creator and Studio form now provide creation, separately from registration.
+<p>The native project creator still has its existing behaviour. Coordinated creation
+of separate standalone and module repositories, remote publication and a Studio
+creation wizard are not supplied by this discovery feature.</p>
+-->
+<p>The <a href="creating-application-modules.html">native source creator and Studio form</a>
+can create a standalone application whose build also works as a registered suite module.
+Coordinated creation of separate remote repositories and automatic publication are not supplied.
+Repository changes remain an explicit workflow after source review.</p>
+<h2>Inspect registrations before configuring</h2>
+<p>The native command reads registered direct children of <code>applications</code>
+and their manifests without configuring, building, fetching or changing Git state:</p>
+<pre><code>umicom repo modules "C:\umicom\Umicom-Applications"</code></pre>
+<p>It prints the number of registered applications, ready manifests and unavailable
+manifests. Each ready row names its build option, installer component and advertised
+frontends. An uninitialised checkout or invalid manifest remains in the report with
+its status; it is not silently treated as an application that can build.</p>
+<p>An absent registration file produces an empty catalogue. A copied directory that
+is not registered in <code>.gitmodules</code> is not included. Duplicate paths or
+colliding application IDs, build options, installer components and executable names
+reject the catalogue and identify the conflicting paths. Comparisons ignore ASCII
+letter case to keep names portable across supported filesystems.</p>
+<p>This is local source evidence. It does not prove that a submodule commit is pushed,
+that the parent records its current commit, or that the application compiles. Git
+include files are disabled during this inspection. The service rereads the registration
+file to detect an observable edit during collection; it does not lock the repository
+or provide a transaction across all manifests. Paths must use the portable
+<code>applications/lower-case-slug</code> layout. Resolve reported missing manifests
+or collisions before registering another module or enabling its build option.</p>
+<p>Native hosts can link <code>Umicom::scaffold</code> and use
+<code>UmiApplicationCatalogueLoad</code> from
+<code>umicom/scaffold/application_catalogue.h</code> on a worker. Entry pointers are
+borrowed until <code>UmiApplicationCatalogueDestroy</code>. Do not use this read-only
+catalogue as authority to overwrite source, alter a Git index or execute an application.</p>
+<p>For the source creator and Studio form, see <a href="creating-application-modules.html">creating application modules</a>. Those workflows are separate from discovery and do not publish repositories.</p>
+
+<h2>Check a proposed module before registration</h2>
+<ol>
+<li>Create the application source in a folder you selected, then inspect its manifest.</li>
+<li>Run the registration preflight against the suite and the proposed direct application path:
+<pre><code>umicom repo check-module "C:\umicom\Umicom-Applications" "C:\projects\weather\application.umicom.yaml" applications/weather</code></pre></li>
+<li>Read the reported application ID, build option and installer component.
+Success prints <code>No registration conflict observed</code> and returns exit code 0.
+No submodule, Git index, commit or remote is changed.</li>
+<li>If the command identifies an existing registration, choose a distinct identity,
+executable or installer component in the proposed manifest and repeat the check.
+Names that differ only by letter case still conflict. If an existing manifest is
+unavailable, restore that checkout or repair its manifest before treating the review as complete.</li>
+<li>Review source and repository ownership before using your usual explicit submodule
+registration procedure. Configure after registration so the suite discovers the manifest.
+Repeat the preflight if any existing manifest or registration changes.</li>
+</ol>
+<p>The preflight checks metadata in a local snapshot. It does not verify Git history,
+remote ownership, the parent gitlink, build-script safety or executable readiness.
+It is not a lock and does not reserve names. The catalogue has a 128-application bound;
+a full catalogue reports capacity rather than silently omitting an application.</p>
+<p>Native clients can call <code>UmiApplicationCatalogueCheckCandidate</code> with a
+descriptor produced by the manifest parser or source creator. The function checks
+the bounds of all copied fields, validates the derived option and returns a copied
+reason and conflicting path. It performs no I/O. Keep the catalogue alive for the call,
+then reload it when the user changes the suite or its manifests.</p>
+</main></html>

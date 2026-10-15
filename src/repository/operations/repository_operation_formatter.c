@@ -23,4 +23,16 @@
 #include "umicom/repository/inspection_text.h"
 #include "umicom/repository/remediation_text.h"
 /* Reuse inspection/remediation formatters instead of duplicating presentation logic. */
+/* Preserve the earlier formatter for review. Its replacement rejects stale or
+ * never-collected plans before emitting counts or actionable proposal text. */
+#if 0
 UmiStatus umi_repository_operation_formatter_format(UmiRepositoryOperationKind kind,const UmiRepositoryRemediationService *service,UmiRepositoryOperationResult *out_result){UmiStatus s;/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(!service||!out_result)return UMI_STATUS_INVALID_ARGUMENT;umi_repository_operation_result_init(out_result);out_result->issue_count=service->inspection.maintenance.report.issues.count+service->inspection.report.count;out_result->warning_count=service->inspection.maintenance.report.warnings+service->inspection.report.warnings;out_result->error_count=service->inspection.maintenance.report.errors+service->inspection.report.errors;out_result->action_count=service->plan.actions.count;/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(kind==UMI_REPOSITORY_OPERATION_PLAN){s=umi_repository_remediation_text_format(&service->plan,out_result->text,sizeof(out_result->text));}/* Use this fallback path when the earlier condition does not apply. */ else{s=umi_repository_inspection_text_format(&service->inspection,out_result->text,sizeof(out_result->text));}out_result->status=s;return s;}
+
+#endif
+UmiStatus umi_repository_operation_formatter_format(UmiRepositoryOperationKind kind,const UmiRepositoryRemediationService *service,UmiRepositoryOperationResult *out_result){UmiStatus s;/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(!service||!out_result)return UMI_STATUS_INVALID_ARGUMENT;umi_repository_operation_result_init(out_result);/* A retained or uncollected plan is never a current operation result. */
+if (!UmiRepositoryRemediationEvidenceCurrent(service)) {
+    out_result->status = service->last_status != UMI_STATUS_OK
+        ? service->last_status : UMI_STATUS_INVALID_STATE;
+    return out_result->status;
+}
+out_result->issue_count=service->inspection.maintenance.report.issues.count+service->inspection.report.count;out_result->warning_count=service->inspection.maintenance.report.warnings+service->inspection.report.warnings;out_result->error_count=service->inspection.maintenance.report.errors+service->inspection.report.errors;out_result->action_count=service->plan.actions.count;/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(kind==UMI_REPOSITORY_OPERATION_PLAN){s=umi_repository_remediation_text_format(&service->plan,out_result->text,sizeof(out_result->text));}/* Use this fallback path when the earlier condition does not apply. */ else{s=umi_repository_inspection_text_format(&service->inspection,out_result->text,sizeof(out_result->text));}out_result->status=s;return s;}

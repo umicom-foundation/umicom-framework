@@ -29,6 +29,18 @@ typedef UmiStatus (*UmiGtk4BuildSettingsApplied)(const UmiBuildProfile *profile,
  * The owner must destroy this handle before releasing the callback context. */
 UmiStatus UmiGtk4NewProjectDialogCreate(GtkWindow *parent,
     UmiGtk4ProjectCreated onCreated, void *context, UmiGtk4DeveloperDialog **outDialog);
+/**
+ * Open a source-review form for a native application module. The user supplies
+ * a parent folder, reviews rendered files, then explicitly creates a new folder.
+ * Reading templates and writing files run in background workers. No Git, build,
+ * install, launch or network action is performed. After creation, Open Project
+ * invokes onCreated with borrowed model/profile values under the same lifetime
+ * contract as the ordinary project dialog. The owner must destroy the handle
+ * before releasing context. Closing during a write does not undo created files.
+ */
+UmiStatus UmiGtk4ApplicationModuleDialogCreate(GtkWindow *parent,
+    UmiGtk4ProjectCreated onCreated, void *context, UmiGtk4DeveloperDialog **outDialog);
+
 UmiStatus UmiGtk4BuildSettingsDialogCreate(GtkWindow *parent,
     const UmiBuildProfile *profile, int trusted, UmiGtk4BuildSettingsApplied onApplied,
     void *context, UmiGtk4DeveloperDialog **outDialog);

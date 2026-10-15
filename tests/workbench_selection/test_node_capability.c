@@ -170,6 +170,28 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionNodeCapabilityTransferCases, UmiWor
     umi_workbench_selection_node_capability_archive_encode, umi_workbench_selection_node_capability_archive_decode,
     UmiWorkbenchSelectionNodeCapabilityTransferEqual, UmiWorkbenchSelectionNodeCapabilityTransferTails, UmiWorkbenchSelectionNodeCapabilityTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchSelectionNodeCapabilityReviewedCases, UmiWorkbenchSelectionNodeCapability,
+    record_id, description, umi_workbench_selection_node_capability_replace_if_current, UmiWorkbenchSelectionNodeCapabilityTransferEqual)
+static int UmiWorkbenchSelectionNodeCapabilityMutationGuards(const UmiWorkbenchSelectionNodeCapability *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionNodeCapability, source_id, umi_workbench_selection_node_capability_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionNodeCapability, subject_id, umi_workbench_selection_node_capability_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionNodeCapability, related_id, umi_workbench_selection_node_capability_set_related, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionNodeCapability, group_id, umi_workbench_selection_node_capability_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionNodeCapability, description, umi_workbench_selection_node_capability_set_description, sample);
+    UmiWorkbenchSelectionNodeCapability value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_selection_node_capability_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_selection_node_capability_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchSelectionNodeCapability record;
@@ -180,6 +202,8 @@ int main(void)
     assert(umi_workbench_selection_node_capability_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionNodeCapabilityTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionNodeCapabilityReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionNodeCapabilityMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_selection_node_capability_set_source(
         &record, "source") == UMI_STATUS_OK);

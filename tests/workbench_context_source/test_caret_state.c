@@ -169,6 +169,28 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextSourceCaretStateTransferCases, UmiWor
     umi_workbench_context_source_caret_state_archive_encode, umi_workbench_context_source_caret_state_archive_decode,
     UmiWorkbenchContextSourceCaretStateTransferEqual, UmiWorkbenchContextSourceCaretStateTransferTails, UmiWorkbenchContextSourceCaretStateTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextSourceCaretStateReviewedCases, UmiWorkbenchContextSourceCaretState,
+    record_id, label, umi_workbench_context_source_caret_state_replace_if_current, UmiWorkbenchContextSourceCaretStateTransferEqual)
+static int UmiWorkbenchContextSourceCaretStateMutationGuards(const UmiWorkbenchContextSourceCaretState *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceCaretState, source_id, umi_workbench_context_source_caret_state_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceCaretState, panel_id, umi_workbench_context_source_caret_state_set_panel, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceCaretState, subject_id, umi_workbench_context_source_caret_state_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceCaretState, group_id, umi_workbench_context_source_caret_state_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceCaretState, label, umi_workbench_context_source_caret_state_set_label, sample);
+    UmiWorkbenchContextSourceCaretState value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_source_caret_state_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_context_source_caret_state_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextSourceCaretState record;
@@ -180,6 +202,8 @@ int main(void)
     assert(umi_workbench_context_source_caret_state_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextSourceCaretStateTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceCaretStateReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceCaretStateMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_context_source_caret_state_set_source(

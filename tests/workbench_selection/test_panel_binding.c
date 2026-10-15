@@ -169,6 +169,28 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionPanelBindingTransferCases, UmiWorkb
     umi_workbench_selection_panel_binding_archive_encode, umi_workbench_selection_panel_binding_archive_decode,
     UmiWorkbenchSelectionPanelBindingTransferEqual, UmiWorkbenchSelectionPanelBindingTransferTails, UmiWorkbenchSelectionPanelBindingTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchSelectionPanelBindingReviewedCases, UmiWorkbenchSelectionPanelBinding,
+    record_id, label, umi_workbench_selection_panel_binding_replace_if_current, UmiWorkbenchSelectionPanelBindingTransferEqual)
+static int UmiWorkbenchSelectionPanelBindingMutationGuards(const UmiWorkbenchSelectionPanelBinding *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionPanelBinding, source_id, umi_workbench_selection_panel_binding_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionPanelBinding, subject_id, umi_workbench_selection_panel_binding_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionPanelBinding, secondary_id, umi_workbench_selection_panel_binding_set_secondary, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionPanelBinding, group_id, umi_workbench_selection_panel_binding_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionPanelBinding, label, umi_workbench_selection_panel_binding_set_label, sample);
+    UmiWorkbenchSelectionPanelBinding value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_selection_panel_binding_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_selection_panel_binding_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchSelectionPanelBinding record;
@@ -180,6 +202,8 @@ int main(void)
     assert(umi_workbench_selection_panel_binding_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionPanelBindingTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionPanelBindingReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionPanelBindingMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_selection_panel_binding_set_source(
         &record, "source") == UMI_STATUS_OK);

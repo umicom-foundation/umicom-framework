@@ -21,6 +21,8 @@
 #include "umicom/sdk/component.h"
 #include "umicom/sdk/manifest.h"
 #include "umicom/sdk/package.h"
+#include "umicom/sdk/installed_metadata.h"
+#include "umicom/sdk/installation_inspection.h"
 #include "umicom/sdk/locator.h"
 #include "umicom/sdk/probe.h"
 #include "umicom/sdk/compatibility.h"

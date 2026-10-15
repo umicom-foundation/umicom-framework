@@ -188,6 +188,29 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionProviderProblemMappingTransferCases
     umi_workbench_selection_provider_problem_mapping_archive_encode, umi_workbench_selection_provider_problem_mapping_archive_decode,
     UmiWorkbenchSelectionProviderProblemMappingTransferEqual, UmiWorkbenchSelectionProviderProblemMappingTransferTails, UmiWorkbenchSelectionProviderProblemMappingTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchSelectionProviderProblemMappingReviewedCases, UmiWorkbenchSelectionProviderProblemMapping,
+    record_id, description, umi_workbench_selection_provider_problem_mapping_replace_if_current, UmiWorkbenchSelectionProviderProblemMappingTransferEqual)
+static int UmiWorkbenchSelectionProviderProblemMappingMutationGuards(const UmiWorkbenchSelectionProviderProblemMapping *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderProblemMapping, provider_id, umi_workbench_selection_provider_problem_mapping_set_provider, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderProblemMapping, source_id, umi_workbench_selection_provider_problem_mapping_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderProblemMapping, subject_id, umi_workbench_selection_provider_problem_mapping_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderProblemMapping, related_id, umi_workbench_selection_provider_problem_mapping_set_related, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderProblemMapping, group_id, umi_workbench_selection_provider_problem_mapping_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderProblemMapping, description, umi_workbench_selection_provider_problem_mapping_set_description, sample);
+    UmiWorkbenchSelectionProviderProblemMapping value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_selection_provider_problem_mapping_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_selection_provider_problem_mapping_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchSelectionProviderProblemMapping record;
@@ -199,6 +222,8 @@ int main(void)
     assert(umi_workbench_selection_provider_problem_mapping_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionProviderProblemMappingTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionProviderProblemMappingReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionProviderProblemMappingMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_selection_provider_problem_mapping_set_provider(

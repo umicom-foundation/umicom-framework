@@ -16,4 +16,7 @@ struct UmiBankFeed {
 /* Keep timestamp parsing private until another consumer needs a broader date
  * contract. This validates source spelling; it never applies a local timezone. */
 bool BankFeedTimestamp(const char *text);
+/* All import formats use the same amount and currency validation. Callers
+ * supply a nonnegative magnitude after interpreting their source direction. */
+UmiStatus BankFeedAmount(UmiBankFeedRow *row);
 #endif

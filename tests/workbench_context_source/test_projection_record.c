@@ -169,6 +169,28 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextSourceProjectionRecordTransferCases, 
     umi_workbench_context_source_projection_record_archive_encode, umi_workbench_context_source_projection_record_archive_decode,
     UmiWorkbenchContextSourceProjectionRecordTransferEqual, UmiWorkbenchContextSourceProjectionRecordTransferTails, UmiWorkbenchContextSourceProjectionRecordTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextSourceProjectionRecordReviewedCases, UmiWorkbenchContextSourceProjectionRecord,
+    record_id, label, umi_workbench_context_source_projection_record_replace_if_current, UmiWorkbenchContextSourceProjectionRecordTransferEqual)
+static int UmiWorkbenchContextSourceProjectionRecordMutationGuards(const UmiWorkbenchContextSourceProjectionRecord *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceProjectionRecord, source_id, umi_workbench_context_source_projection_record_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceProjectionRecord, panel_id, umi_workbench_context_source_projection_record_set_panel, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceProjectionRecord, subject_id, umi_workbench_context_source_projection_record_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceProjectionRecord, group_id, umi_workbench_context_source_projection_record_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceProjectionRecord, label, umi_workbench_context_source_projection_record_set_label, sample);
+    UmiWorkbenchContextSourceProjectionRecord value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_source_projection_record_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_context_source_projection_record_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextSourceProjectionRecord record;
@@ -180,6 +202,8 @@ int main(void)
     assert(umi_workbench_context_source_projection_record_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextSourceProjectionRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceProjectionRecordReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceProjectionRecordMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_context_source_projection_record_set_source(

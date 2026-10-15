@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Review workbench values before applying edits</title>
+<style>body{max-width:56rem;margin:2rem auto;padding:0 1rem;font:1rem/1.65 system-ui;color:#162130}pre{white-space:pre-wrap;background:#eef2f6;padding:1rem}code{overflow-wrap:anywhere}</style></head>
+<body><h1>Review workbench values before applying edits</h1>
+<p>A panel may show one selection while a worker or another panel produces a newer
+one. Copying an older edited value back without checking its revision can overwrite
+the newer selection. The Framework's reviewed replacement functions make that
+decision explicit for selection-provider, selection, context-source and context-event
+records that contain inline text and scalar fields.</p>
+<h2>Prepare and apply a draft</h2>
+<ol><li>Read the live value and its revision while holding the owner's normal access
+boundary. A revision is a counter identifying a published value; it is not a timestamp.</li>
+<li>Copy the value into a separate draft. Change its fields using the existing
+domain setters and present the result for review.</li>
+<li>Call the type's <code>replace_if_current</code> function with the live value,
+the originally observed revision and the draft.</li>
+<li>If the live revision has changed, stop and show the newer value. Do not retry
+automatically with a newly read token: that would turn a rejected stale review into
+an unreviewed overwrite.</li></ol>
+<pre>uint64_t observed = selection.revision;
+UmiWorkbenchSelectionAccountItem draft = selection;
+UmiStatus status =
+    umi_workbench_selection_account_item_set_label(&amp;draft, "Selected account");
+if (status == UMI_STATUS_OK) {
+    status = umi_workbench_selection_account_item_replace_if_current(
+        &amp;selection, observed, &amp;draft);
+}
+/* Handle INVALID_STATE by reviewing the current selection again. */</pre>
+<p>The example requires an already initialized, valid
+<code>UmiWorkbenchSelectionAccountItem</code> and serialized owner access.
+Use <code>umicom/workbench_selection/account_item.h</code> for its declarations.
+The replacement validates both values, requires the same record identity and
+publishes all fields with exactly one new live revision. A draft's own revision
+does not determine the live token.</p>
+<h2>Understand refusal and ownership</h2>
+<p><code>INVALID_STATE</code> means the observation is stale.
+<code>CAPACITY_EXCEEDED</code> means the revision counter cannot advance.
+Invalid identities or fields are refused through the existing domain validator.
+Every refusal leaves the live record unchanged. Self-replacement is permitted and
+advances once; partially overlapping records are not supported.</p>
+<p>Text setters now preserve accepted text and its revision when input is null,
+too large or the counter is exhausted. A setter can accept a suffix of its own
+field as input. A successful setter still advances once when the text is identical.
+The existing void <code>touch</code> functions preserve sequence, timestamp and
+revision at exhaustion; they cannot return an error. Use reviewed replacement
+when the caller needs a status.</p>
+<p>These are value operations. They do not emit a context event, update a registry,
+activate a provider, perform a trade, or authorize an action. Continue using the
+owning service's publication API for those operations. They do not supply locks,
+cross-thread synchronization, storage transactions or durable recovery.</p>
+<p>Keep constructors for new records. Reinitializing an actively observed record
+resets its revision and would invalidate the meaning of outstanding tokens.
+Resource-owning structures need their own lifetime rules and are not candidates
+for a plain struct-copy replacement.</p>
+<h2>Extend a record safely</h2>
+<ol><li>Add validation for every new field, including termination checks for fixed text arrays.</li>
+<li>Update the portable archive reader, writer and schema when the saved representation changes.</li>
+<li>Extend the fixture's field-by-field equality function. Successful replacement must
+copy the complete semantic value without relying on struct padding.</li>
+<li>Exercise stale reviews, invalid drafts, self-replacement, aliasing, capacity refusal
+and the final usable revision. Existing constructors, setters and public interfaces remain available.</li></ol>
+</body></html>

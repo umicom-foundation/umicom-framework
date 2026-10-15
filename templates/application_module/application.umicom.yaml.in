@@ -1,0 +1,21 @@
+schema: umicom.application.v1
+
+application:
+  id: @ID@
+  name: @NAME@
+  version: 0.1.0
+  executable: umicom-@SLUG@
+@NATIVE_FIELD@  console_executable: @CONSOLE_EXECUTABLE@
+
+framework:
+  minimum_version: 0.9.0
+  compatible_major: 0
+
+frontends:
+  - console
+@GTK_FRONTEND@
+installation:
+  component: @IDENTIFIER@
+
+capabilities:
+  - diagnostics

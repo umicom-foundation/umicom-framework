@@ -15,6 +15,8 @@
 
 #include "umicom/workbench_context_event/metric.h"
 #include "../base/value_archive_internal.h"
+#include "../base/record_update_internal.h"
+#include "umicom/base/text.h"
 
 #include <string.h>
 
@@ -84,6 +86,9 @@ UmiStatus umi_workbench_context_event_metric_validate(
  * Provide the workbench context event metric set source operation used by this module and
  * its client applications.
  */
+/* Replace the separate copy and increment with the shared checked edit.
+ * The earlier implementation is retained to review its failure behaviour. */
+#if 0
 UmiStatus umi_workbench_context_event_metric_set_source(
     UmiWorkbenchContextEventMetric *record,
     const char *source_id)
@@ -100,11 +105,26 @@ UmiStatus umi_workbench_context_event_metric_set_source(
     if (status == UMI_STATUS_OK) ++record->revision;
     return status;
 }
+#endif
+UmiStatus umi_workbench_context_event_metric_set_source(
+    UmiWorkbenchContextEventMetric *record,
+    const char *source_id)
+{
+    /* Publish a whole string and one new token together. Failed input leaves
+     * the accepted field available to readers and supports an aliased suffix. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_update(record->source_id, sizeof record->source_id,
+        source_id, &record->revision);
+}
+
 
 /*
  * Provide the workbench context event metric set subject operation used by this module and
  * its client applications.
  */
+/* Replace the separate copy and increment with the shared checked edit.
+ * The earlier implementation is retained to review its failure behaviour. */
+#if 0
 UmiStatus umi_workbench_context_event_metric_set_subject(
     UmiWorkbenchContextEventMetric *record,
     const char *subject_id)
@@ -121,11 +141,26 @@ UmiStatus umi_workbench_context_event_metric_set_subject(
     if (status == UMI_STATUS_OK) ++record->revision;
     return status;
 }
+#endif
+UmiStatus umi_workbench_context_event_metric_set_subject(
+    UmiWorkbenchContextEventMetric *record,
+    const char *subject_id)
+{
+    /* Publish a whole string and one new token together. Failed input leaves
+     * the accepted field available to readers and supports an aliased suffix. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_update(record->subject_id, sizeof record->subject_id,
+        subject_id, &record->revision);
+}
+
 
 /*
  * Provide the workbench context event metric set group operation used by this module and
  * its client applications.
  */
+/* Replace the separate copy and increment with the shared checked edit.
+ * The earlier implementation is retained to review its failure behaviour. */
+#if 0
 UmiStatus umi_workbench_context_event_metric_set_group(
     UmiWorkbenchContextEventMetric *record,
     const char *group_id)
@@ -142,11 +177,26 @@ UmiStatus umi_workbench_context_event_metric_set_group(
     if (status == UMI_STATUS_OK) ++record->revision;
     return status;
 }
+#endif
+UmiStatus umi_workbench_context_event_metric_set_group(
+    UmiWorkbenchContextEventMetric *record,
+    const char *group_id)
+{
+    /* Publish a whole string and one new token together. Failed input leaves
+     * the accepted field available to readers and supports an aliased suffix. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_update(record->group_id, sizeof record->group_id,
+        group_id, &record->revision);
+}
+
 
 /*
  * Provide the workbench context event metric set label operation used by this module and
  * its client applications.
  */
+/* Replace the separate copy and increment with the shared checked edit.
+ * The earlier implementation is retained to review its failure behaviour. */
+#if 0
 UmiStatus umi_workbench_context_event_metric_set_label(
     UmiWorkbenchContextEventMetric *record,
     const char *label)
@@ -163,6 +213,18 @@ UmiStatus umi_workbench_context_event_metric_set_label(
     if (status == UMI_STATUS_OK) ++record->revision;
     return status;
 }
+#endif
+UmiStatus umi_workbench_context_event_metric_set_label(
+    UmiWorkbenchContextEventMetric *record,
+    const char *label)
+{
+    /* Publish a whole string and one new token together. Failed input leaves
+     * the accepted field available to readers and supports an aliased suffix. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_text_update(record->label, sizeof record->label,
+        label, &record->revision);
+}
+
 
 /*
  * Provide the workbench context event metric hash operation used by this module and its
@@ -198,6 +260,10 @@ uint64_t umi_workbench_context_event_metric_hash(
  * Provide the workbench context event metric touch operation used by this module and its
  * client applications.
  */
+/* Guard sequence/timestamp publication before any write so an exhausted
+ * revision never wraps and makes an old review appear current. The original
+ * touch operation remains below for engineering review. */
+#if 0
 void umi_workbench_context_event_metric_touch(
     UmiWorkbenchContextEventMetric *record,
     uint64_t sequence,
@@ -212,6 +278,20 @@ void umi_workbench_context_event_metric_touch(
     record->timestamp_ms = timestamp_ms;
     ++record->revision;
 }
+#endif
+void umi_workbench_context_event_metric_touch(
+    UmiWorkbenchContextEventMetric *record,
+    uint64_t sequence,
+    uint64_t timestamp_ms)
+{
+    /* This legacy void API cannot report exhaustion. Preserve the whole record
+     * when its token cannot advance; use reviewed replacement for a status. */
+    if (record == NULL || record->revision == UINT64_MAX) return;
+    record->sequence = sequence;
+    record->timestamp_ms = timestamp_ms;
+    ++record->revision;
+}
+
 
 /* State transfer belongs to this Framework value owner. Explicit fields keep
  * padding and unused text out of saved data. Extend both directions and the
@@ -284,3 +364,9 @@ static UmiStatus UmiWorkbenchContextEventMetricArchiveValidate(const UmiWorkbenc
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_context_event_metric_archive_encode, umi_workbench_context_event_metric_archive_decode,
     UmiWorkbenchContextEventMetric, UmiWorkbenchContextEventMetricArchiveSchema, UmiWorkbenchContextEventMetricArchiveBound, UmiWorkbenchContextEventMetricArchiveWrite, UmiWorkbenchContextEventMetricArchiveRead, UmiWorkbenchContextEventMetricArchiveValidate)
+
+/* A delayed metric draft must name the revision it reviewed.
+ * Domain validation remains with this value owner; the shared guard publishes
+ * all fields together without emitting events or changing any external service. */
+UMI_DEFINE_REVIEWED_IDENTITY_RECORD_EDIT(umi_workbench_context_event_metric_replace_if_current,
+    UmiWorkbenchContextEventMetric, record_id, UmiWorkbenchContextEventMetricArchiveValidate)

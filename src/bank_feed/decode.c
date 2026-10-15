@@ -203,3 +203,9 @@ UmiStatus UmiBankFeedCreate(const void *bytes, size_t length, UmiBankFeed **out)
     UmiBankFeedDestroy(feed);
   return status;
 }
+
+/* The JSON implementation remains the shared amount contract. The CSV adapter
+ * reaches it through this internal bridge instead of copying financial rules. */
+UmiStatus BankFeedAmount(UmiBankFeedRow *row) {
+  return row != NULL ? FeedAmount(row) : UMI_STATUS_INVALID_ARGUMENT;
+}

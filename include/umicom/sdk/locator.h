@@ -26,6 +26,9 @@ extern "C" {
 /**
  * Provide the sdk locate operation used by this module and its client applications.
  */
+/** A supplied prefix must be absolute and is the only location inspected.
+ * Null or empty selects the retained conventional-location search. Output clears
+ * on failure; presence is not compiler, linker or ABI qualification. */
 UmiStatus umi_sdk_locate(const char *preferred_prefix,char *out_prefix,size_t capacity);
 #ifdef __cplusplus
 }

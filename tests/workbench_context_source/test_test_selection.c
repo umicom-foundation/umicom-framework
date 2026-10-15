@@ -169,6 +169,28 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextSourceTestSelectionTransferCases, Umi
     umi_workbench_context_source_test_selection_archive_encode, umi_workbench_context_source_test_selection_archive_decode,
     UmiWorkbenchContextSourceTestSelectionTransferEqual, UmiWorkbenchContextSourceTestSelectionTransferTails, UmiWorkbenchContextSourceTestSelectionTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextSourceTestSelectionReviewedCases, UmiWorkbenchContextSourceTestSelection,
+    record_id, label, umi_workbench_context_source_test_selection_replace_if_current, UmiWorkbenchContextSourceTestSelectionTransferEqual)
+static int UmiWorkbenchContextSourceTestSelectionMutationGuards(const UmiWorkbenchContextSourceTestSelection *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceTestSelection, source_id, umi_workbench_context_source_test_selection_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceTestSelection, panel_id, umi_workbench_context_source_test_selection_set_panel, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceTestSelection, subject_id, umi_workbench_context_source_test_selection_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceTestSelection, group_id, umi_workbench_context_source_test_selection_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceTestSelection, label, umi_workbench_context_source_test_selection_set_label, sample);
+    UmiWorkbenchContextSourceTestSelection value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_source_test_selection_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_context_source_test_selection_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextSourceTestSelection record;
@@ -180,6 +202,8 @@ int main(void)
     assert(umi_workbench_context_source_test_selection_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextSourceTestSelectionTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceTestSelectionReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceTestSelectionMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_context_source_test_selection_set_source(

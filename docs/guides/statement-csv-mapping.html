@@ -1,0 +1,96 @@
+<!doctype html>
+<!-- Umicom Framework | Sammy Hegab, Umicom Foundation | MIT -->
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Match statement CSV columns</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:980px;margin:3rem auto;padding:0 1rem;color:#182b3e}pre{white-space:pre-wrap;background:#eef3f7;padding:1rem}table{border-collapse:collapse;width:100%}th,td{padding:.6rem;border:1px solid #bdc9d4;text-align:left;vertical-align:top}a{color:#075aa7}</style>
+</head><body><main>
+<h1>Match statement CSV columns</h1>
+<p>A mapping tells the importer which source column contains each value. Trader, Bank and TMS
+use this shared Framework tool. It reads a local file you select and keeps its observations
+separate from any ledger. It does not authenticate a bank or create an account connection.</p>
+<h2>Import the example with separate debit and credit columns</h2>
+<ol>
+<li>Open <strong>Bank transaction reports</strong> and select <strong>CSV with custom columns</strong>.
+Expand <strong>Match your CSV columns</strong> if it is collapsed.</li>
+<li>Select <code>C:\umicom\Umicom-Applications\framework\examples\bank_feed\mapped-statement.csv</code>.
+An installed copy is under <code>share/umicom/examples/bank_feed</code> in your installation folder.</li>
+<li>Enter the settings in the table below. A blank header means that column is absent; it does
+not replace empty cells in a selected column.</li>
+<li>Select <strong>Import for review</strong>, then <code>practice-account | GBP</code>.
+Expect booked credits of <code>12.50</code>, booked debits of <code>2.25</code>,
+and booked net movement of <code>10.25</code>. Both example rows are marked mutable.</li>
+<li>For a balance comparison, choose <strong>Reconcile selected account</strong>, both dates
+<code>2026-10-12</code>, opening <code>100.00</code> and closing <code>110.25</code>.
+The arithmetic should match. An arithmetic match does not establish statement completeness.</li>
+</ol>
+<table><thead><tr><th>Setting</th><th>Example value</th></tr></thead><tbody>
+<tr><td>Account header; Currency header</td><td>Leave both blank.</td></tr>
+<tr><td>Account constant; Currency constant</td><td><code>practice-account</code>; <code>GBP</code></td></tr>
+<tr><td>Transaction ID header</td><td><code>ID</code></td></tr>
+<tr><td>Reference header</td><td>Leave blank.</td></tr>
+<tr><td>Description header; Booking date header</td><td><code>Description</code>; <code>Date</code></td></tr>
+<tr><td>Signed amount header</td><td>Leave blank.</td></tr>
+<tr><td>Debit header; Credit header</td><td><code>Debit</code>; <code>Credit</code></td></tr>
+<tr><td>Status header; Mutability header</td><td>Leave both blank.</td></tr>
+<tr><td>Date format; Amount format</td><td><code>DD/MM/YYYY</code>; <code>Separate debit and credit</code></td></tr>
+<tr><td>When status header is absent</td><td><code>Booked</code>, because these invented example rows represent booked observations.</td></tr>
+<tr><td>When mutability header is absent</td><td><code>Mutable</code></td></tr>
+</tbody></table>
+<h2>Choose meanings from your own statement</h2>
+<p>Open a copy of the source file in a text editor to inspect its first record. Header names are
+case-sensitive and spaces are significant. All headers must be nonempty, unique and shorter
+than 256 UTF-8 bytes. Extra source columns may remain unmapped. Each data record must have the
+same number of fields as the header; quoted commas and line breaks do not create extra fields.</p>
+<ol>
+<li>Map account and currency columns when the file contains several accounts or currencies.
+For a single-account file without those columns, clear each header and enter its constant.
+Supplying both a header and a constant is rejected. Empty mapped cells are errors.</li>
+<li>Choose the date convention from the source: <code>YYYY-MM-DD</code>, <code>DD/MM/YYYY</code>
+or <code>MM/DD/YYYY</code>. The importer never guesses whether <code>03/04/2026</code> is March
+4 or April 3. All forms require leading zeros and four-digit years. No timezone is invented.</li>
+<li>For a signed amount column, map <strong>Signed amount header</strong>, clear both Debit
+and Credit headers, and choose the signed format. Negative means debit.
+For separate columns, clear Signed amount and map both Debit and Credit.</li>
+<li>Separate amounts must be nonnegative. One side may be empty or zero. Two nonzero sides
+are rejected rather than subtracted, and two empty sides are rejected. Two zeros represent
+a zero credit. Amounts use a dot, at most 13 integer digits and 5 fractional digits.
+Currency symbols, grouping separators, plus signs, rounding and automatic sign reversal
+are unsupported.</li>
+<li>If supplied, status cells must be <code>BOOK</code> or <code>PDNG</code>, and mutability
+cells <code>Immutable</code> or <code>Mutable</code>. Otherwise choose the absent-header
+settings deliberately. Pending and mutable are the initial defaults; pending rows always
+remain mutable. A mutable row is one whose source may still change.</li>
+<li>Leave absent transaction ID, reference and description headers blank. Missing IDs remain
+separate observations, so importing data without IDs cannot establish deduplication.
+Repeated nonempty IDs in one account are rejected.</li>
+</ol>
+<h2>Errors and changing settings</h2>
+<p>Errors identify the original logical record and column when possible. The header is record 1;
+a quoted multiline description counts as one record. Column 0 means the whole record, a missing
+header or a constant. Check spelling and duplicate names first for header errors. For a settings
+error, check account/currency sources and the selected amount columns. Correct the settings or a
+copy of the source file and import again.</p>
+<p>Any invalid record rejects the whole import. Editing a mapping clears the report and disables
+its export; an older background result cannot repopulate it. Click Import again after changes.
+An already-open reconciliation keeps its own independent snapshot.</p>
+<p>Mappings stay in memory for this window and are not saved as profiles. The source file is
+never rewritten. Export creates a review report, not a lossless copy of your bank's CSV.
+Store it privately and retain the original separately.</p>
+<h2>For contributors</h2>
+<p><code>UmiBankFeedCsvMapping</code> in <code>umicom/bank_feed/csv_mapping.h</code> is a bounded
+value object. Initialise it with <code>UmiBankFeedCsvMappingInit</code>, replace header names
+and explicitly select interpretation rules, then pass it with input bytes to
+<code>UmiBankFeedCsvMappedCreate</code>. The call copies accepted observations; it borrows
+the mapping and input only until return. The result supports the same totals, export and
+statement-review APIs as JSON and normalised CSV.</p>
+<p>The shared CSV reader handles syntax. The mapper resolves exact headers and translates dates
+and separate amounts. The common row validator enforces identity, decimal and publication rules.
+Extend these layers separately, with examples showing ambiguous and invalid input.
+No filename, bank brand or date locale is an implicit parser setting.</p>
+<p>The input limit remains 4 MiB and 1,024 transactions. Only comma-separated UTF-8 files are
+supported. Files with introductory prose, semicolons, local decimal commas, balances used as
+amounts, or other status vocabularies need explicit conversion first. No built-in bank-specific
+profile is claimed. See the <a href="statement-csv-import.html">normalised CSV reference</a>
+and <a href="statement-reconciliation.html">statement comparison guide</a>.</p>
+</main></body></html>

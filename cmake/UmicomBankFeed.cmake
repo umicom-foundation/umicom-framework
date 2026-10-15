@@ -141,3 +141,89 @@ endif()
 # Ship invented observations so the workflow can be tried without private data.
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../examples/bank_feed/statement.json"
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/examples/bank_feed COMPONENT Learning)
+
+# A second input format shares the existing totals, review and export owners.
+target_sources(umicom_bank_feed PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/bank_feed/csv_import.c")
+if(BUILD_TESTING)
+    add_executable(umicom-bank-feed-csv-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/bank_feed/test_csv_import.c")
+    target_link_libraries(umicom-bank-feed-csv-test PRIVATE Umicom::bank_feed)
+    umicom_apply_warnings(umicom-bank-feed-csv-test)
+    umicom_apply_sanitizers(umicom-bank-feed-csv-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-bank-feed-csv-test)
+    endif()
+    foreach(case values reconcile duplicate account-scope missing-id header columns date currency
+        amount precision status mutability multiline formula late-failure empty row-limit utf8 ownership invalid field-limit)
+        add_test(NAME framework.bank_feed.csv.${case} COMMAND umicom-bank-feed-csv-test ${case})
+        set_tests_properties(framework.bank_feed.csv.${case} PROPERTIES
+            TIMEOUT 20 LABELS "framework;banking;csv;import;regression")
+    endforeach()
+endif()
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-bank-feed-csv-native-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/bank_feed/test_csv_native.c")
+    target_link_libraries(umicom-bank-feed-csv-native-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-bank-feed-csv-native-test)
+    umicom_apply_sanitizers(umicom-bank-feed-csv-native-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-bank-feed-csv-native-test)
+    endif()
+    foreach(case import format-change loading-change retained invalid reconcile prepare-format)
+        add_test(NAME framework.bank_feed.csv.native.${case}
+            COMMAND umicom-bank-feed-csv-native-test ${case})
+        set_tests_properties(framework.bank_feed.csv.native.${case} PROPERTIES
+            TIMEOUT 20 SKIP_RETURN_CODE 77 LABELS "framework;banking;csv;gtk4;regression")
+    endforeach()
+endif()
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../examples/bank_feed/statement.csv"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/examples/bank_feed COMPONENT Learning)
+
+# Column mappings belong to the bank-feed library so every consumer shares the
+# same exact decimal, identity and publication rules.
+target_sources(umicom_bank_feed PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/bank_feed/csv_mapping.c")
+if(BUILD_TESTING)
+    add_executable(umicom-bank-feed-csv-mapping-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/bank_feed/test_csv_mapping.c")
+    set_target_properties(umicom-bank-feed-csv-mapping-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-bank-feed-csv-mapping-test PRIVATE Umicom::bank_feed)
+    umicom_apply_warnings(umicom-bank-feed-csv-mapping-test)
+    umicom_apply_sanitizers(umicom-bank-feed-csv-mapping-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-bank-feed-csv-mapping-test)
+    endif()
+    foreach(case default-schema reordered ownership pending month-first iso
+        mapped-identity mapped-status split split-zero split-both split-empty
+        split-negative split-precision duplicate-id late-failure duplicate-header missing-header
+        record-width date amount header-text formula empty
+        row-limit invalid duplicate-role missing-account conflicting-account currency
+        unterminated unknown-format invalid-utf8 account-limit)
+        add_test(NAME framework.bank_feed.csv.mapping.${case}
+            COMMAND umicom-bank-feed-csv-mapping-test ${case})
+        set_tests_properties(framework.bank_feed.csv.mapping.${case} PROPERTIES
+            TIMEOUT 20 LABELS "framework;banking;csv;import;regression")
+    endforeach()
+endif()
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-bank-feed-csv-mapping-native-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/bank_feed/test_csv_mapping_native.c")
+    set_target_properties(umicom-bank-feed-csv-mapping-native-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-bank-feed-csv-mapping-native-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-bank-feed-csv-mapping-native-test)
+    umicom_apply_sanitizers(umicom-bank-feed-csv-mapping-native-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-bank-feed-csv-mapping-native-test)
+    endif()
+    foreach(case import pending separate change-after-import change-loading prepare-change invalidation-change close-loading retained invalid oversized)
+        add_test(NAME framework.bank_feed.csv.mapping.native.${case}
+            COMMAND umicom-bank-feed-csv-mapping-native-test ${case})
+        set_tests_properties(framework.bank_feed.csv.mapping.native.${case} PROPERTIES
+            TIMEOUT 20 SKIP_RETURN_CODE 77 LABELS "framework;banking;csv;gtk4;regression")
+    endforeach()
+endif()
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../examples/bank_feed/mapped-statement.csv"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/examples/bank_feed COMPONENT Learning)

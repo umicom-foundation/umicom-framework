@@ -160,3 +160,21 @@ umicom_add_framework_completion_test(
 endif()
 
 message(STATUS "Framework plan-only repository remediation enabled")
+
+# Keep observation and proposal failures visible to repository consumers.
+if(BUILD_TESTING)
+    add_executable(umicom-repository-remediation-plan-publication-tests
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/repository_remediation/test_plan_publication.c")
+    target_link_libraries(umicom-repository-remediation-plan-publication-tests PRIVATE Umicom::repository)
+    umicom_apply_warnings(umicom-repository-remediation-plan-publication-tests)
+    umicom_apply_sanitizers(umicom-repository-remediation-plan-publication-tests)
+    foreach(_case success allocation refresh build report revision null)
+        add_test(NAME "framework.repository_remediation.plan_publication.${_case}"
+            COMMAND umicom-repository-remediation-plan-publication-tests "${_case}")
+        set_tests_properties("framework.repository_remediation.plan_publication.${_case}" PROPERTIES
+            LABELS "framework;repository;ownership;regression" TIMEOUT 15)
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-repository-remediation-plan-publication-tests)
+    endif()
+endif()

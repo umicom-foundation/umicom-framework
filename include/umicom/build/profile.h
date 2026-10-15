@@ -101,6 +101,10 @@ UmiStatus UmiBuildProfileLaunchDirectory(const UmiBuildProfile *profile,
     const char *absoluteProjectDirectory, char *outDirectory, size_t capacity);
 
 void umi_build_profile_init(UmiBuildProfile *profile);
+/** Initialize a new profile from three strings and the established defaults.
+ * Invalid or oversized input preserves the destination. Input strings may
+ * refer to that destination's existing fields. This resets other settings on
+ * success; it does not inspect paths, validate a toolchain or grant trust. */
 UmiStatus umi_build_profile_set(UmiBuildProfile *profile,
                                 const char *profile_id,
                                 const char *source_directory,

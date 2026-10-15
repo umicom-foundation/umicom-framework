@@ -26,6 +26,8 @@
 extern "C" {
 #endif
 /* Project inspection service state into a simple healthy/degraded/error code. */
+/** Return -1 for no observation, 0 for healthy findings, 1 for warnings,
+ * or 2 for errors or stale evidence. This does not certify remote publication. */
 int umi_repository_inspection_health_code(const UmiRepositoryInspectionService *service);
 #ifdef __cplusplus
 }

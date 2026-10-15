@@ -29,6 +29,9 @@ extern "C" {
 
 #include "umicom/repository/inspection_service.h"
 /* Format a stable human-readable inspection summary into caller-owned storage. */
+/** Include observation availability, accepted revision and last refresh status.
+ * Formatting can succeed for stale evidence; inspect the printed state or use
+ * UmiRepositoryInspectionEvidenceRead before treating its findings as current. */
 UmiStatus umi_repository_inspection_text_format(const UmiRepositoryInspectionService *service, char *out_text, size_t capacity);
 
 #ifdef __cplusplus

@@ -169,6 +169,28 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionAccountItemTransferCases, UmiWorkbe
     umi_workbench_selection_account_item_archive_encode, umi_workbench_selection_account_item_archive_decode,
     UmiWorkbenchSelectionAccountItemTransferEqual, UmiWorkbenchSelectionAccountItemTransferTails, UmiWorkbenchSelectionAccountItemTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchSelectionAccountItemReviewedCases, UmiWorkbenchSelectionAccountItem,
+    record_id, label, umi_workbench_selection_account_item_replace_if_current, UmiWorkbenchSelectionAccountItemTransferEqual)
+static int UmiWorkbenchSelectionAccountItemMutationGuards(const UmiWorkbenchSelectionAccountItem *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionAccountItem, source_id, umi_workbench_selection_account_item_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionAccountItem, subject_id, umi_workbench_selection_account_item_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionAccountItem, secondary_id, umi_workbench_selection_account_item_set_secondary, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionAccountItem, group_id, umi_workbench_selection_account_item_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionAccountItem, label, umi_workbench_selection_account_item_set_label, sample);
+    UmiWorkbenchSelectionAccountItem value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_selection_account_item_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_selection_account_item_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchSelectionAccountItem record;
@@ -180,6 +202,8 @@ int main(void)
     assert(umi_workbench_selection_account_item_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionAccountItemTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionAccountItemReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionAccountItemMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_selection_account_item_set_source(
         &record, "source") == UMI_STATUS_OK);

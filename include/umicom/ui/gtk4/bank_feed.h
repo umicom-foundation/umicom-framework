@@ -14,6 +14,10 @@
 extern "C" {
 #endif
 /** Create a floating launcher for the local bank transaction inspector.
+ * Statement CSV is also supported through the schema in UmiBankFeedCsvCreate;
+ * the window does not guess a bank's export layout.
+ * Custom CSV columns use UmiBankFeedCsvMapping. Settings remain in memory for
+ * this window; their value copy belongs to the import worker that captured them.
  * A click opens a window attached to the live parent. Users explicitly select
  * a saved Open Banking JSON response; loading never contacts a bank or posts
  * ledger entries. The window shows per-account/currency totals and exports
@@ -22,6 +26,8 @@ GtkWidget *UmiBankFeedGtk4LauncherCreate(void);
 /** Create an unpresented bank transaction window owned by GTK. parent may be
  * NULL; a removed parent returns NULL. The caller presents it and eventually destroys it. Import
  * work runs off the GTK thread; each result belongs to the path generation that started it.
+ * Changing the selected format also retires exports and pending imports.
+ * Editing any column mapping or fallback value applies the same retirement.
  * Changing path or clearing the view invalidates earlier work. */
 GtkWindow *UmiBankFeedGtk4Create(GtkWindow *parent);
 /** Return whether an import worker is still pending, including after native

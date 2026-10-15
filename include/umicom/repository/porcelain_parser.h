@@ -24,6 +24,7 @@
 #include "umicom/repository/branch_status.h"
 #include "umicom/repository/worktree_status.h"
 #include "umicom/repository/index_status.h"
+#include "umicom/vcs/working_tree.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -40,6 +41,24 @@ typedef struct UmiRepositoryPorcelainStatus {
 } UmiRepositoryPorcelainStatus;
 /* Parse branch headers and path records from one status --porcelain=v2 stream. */
 UmiStatus umi_repository_porcelain_parse(const char *text, UmiRepositoryPorcelainStatus *out_status);
+
+/** Parse exact NUL-delimited porcelain status bytes. Paths may contain spaces,
+ * tabs and newlines; rename source paths are consumed as separate records.
+ * Unknown optional headers are ignored, but malformed known headers, truncated
+ * records, invalid fields and overflowing counts reject the whole snapshot.
+ * Supports SHA-1 and SHA-256 object names and the documented status record types.
+ * Input is limited to 4 MiB, with the shared VCS path and entry bounds.
+ * Clears output on failure; output must not overlap
+ * input. This function performs no I/O and never grants permission to mutate Git.
+ */
+UmiStatus umi_repository_porcelain_parse_bytes(const void *bytes, size_t length,
+    UmiRepositoryPorcelainStatus *out_status);
+/** Project the existing immutable VCS observation into maintenance counters.
+ * tree remains caller-owned. No Git process is launched. Clears output on
+ * failure. Retain the VCS summary when an unknown divergence must remain distinct
+ * from zero; the legacy maintenance value has no field for that distinction. */
+UmiStatus UmiRepositoryPorcelainFromWorkingTree(const UmiVcsWorkingTree *tree,
+    UmiRepositoryPorcelainStatus *out_status);
 
 #ifdef __cplusplus
 }

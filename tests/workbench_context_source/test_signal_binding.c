@@ -169,6 +169,28 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextSourceSignalBindingTransferCases, Umi
     umi_workbench_context_source_signal_binding_archive_encode, umi_workbench_context_source_signal_binding_archive_decode,
     UmiWorkbenchContextSourceSignalBindingTransferEqual, UmiWorkbenchContextSourceSignalBindingTransferTails, UmiWorkbenchContextSourceSignalBindingTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextSourceSignalBindingReviewedCases, UmiWorkbenchContextSourceSignalBinding,
+    record_id, label, umi_workbench_context_source_signal_binding_replace_if_current, UmiWorkbenchContextSourceSignalBindingTransferEqual)
+static int UmiWorkbenchContextSourceSignalBindingMutationGuards(const UmiWorkbenchContextSourceSignalBinding *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceSignalBinding, source_id, umi_workbench_context_source_signal_binding_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceSignalBinding, panel_id, umi_workbench_context_source_signal_binding_set_panel, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceSignalBinding, subject_id, umi_workbench_context_source_signal_binding_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceSignalBinding, group_id, umi_workbench_context_source_signal_binding_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceSignalBinding, label, umi_workbench_context_source_signal_binding_set_label, sample);
+    UmiWorkbenchContextSourceSignalBinding value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_source_signal_binding_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_context_source_signal_binding_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextSourceSignalBinding record;
@@ -180,6 +202,8 @@ int main(void)
     assert(umi_workbench_context_source_signal_binding_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextSourceSignalBindingTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceSignalBindingReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceSignalBindingMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_context_source_signal_binding_set_source(

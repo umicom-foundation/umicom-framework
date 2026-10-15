@@ -1,0 +1,23 @@
+schema: umicom.application.v1
+
+application:
+  id: org.umicom.weather
+  name: Umicom Weather
+  version: 0.1.0
+  executable: umicom-weather
+  native_executable: umicom-weather
+  console_executable: umicom-weather-console
+
+framework:
+  minimum_version: 0.9.0
+  compatible_major: 0
+
+frontends:
+  - console
+  - gtk
+
+capabilities:
+  - diagnostics
+
+installation:
+  component: WeatherTools

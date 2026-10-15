@@ -169,6 +169,28 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionSelectionOriginTransferCases, UmiWo
     umi_workbench_selection_selection_origin_archive_encode, umi_workbench_selection_selection_origin_archive_decode,
     UmiWorkbenchSelectionSelectionOriginTransferEqual, UmiWorkbenchSelectionSelectionOriginTransferTails, UmiWorkbenchSelectionSelectionOriginTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchSelectionSelectionOriginReviewedCases, UmiWorkbenchSelectionSelectionOrigin,
+    record_id, label, umi_workbench_selection_selection_origin_replace_if_current, UmiWorkbenchSelectionSelectionOriginTransferEqual)
+static int UmiWorkbenchSelectionSelectionOriginMutationGuards(const UmiWorkbenchSelectionSelectionOrigin *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionSelectionOrigin, source_id, umi_workbench_selection_selection_origin_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionSelectionOrigin, subject_id, umi_workbench_selection_selection_origin_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionSelectionOrigin, secondary_id, umi_workbench_selection_selection_origin_set_secondary, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionSelectionOrigin, group_id, umi_workbench_selection_selection_origin_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionSelectionOrigin, label, umi_workbench_selection_selection_origin_set_label, sample);
+    UmiWorkbenchSelectionSelectionOrigin value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_selection_selection_origin_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_selection_selection_origin_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchSelectionSelectionOrigin record;
@@ -180,6 +202,8 @@ int main(void)
     assert(umi_workbench_selection_selection_origin_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionSelectionOriginTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionSelectionOriginReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionSelectionOriginMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_selection_selection_origin_set_source(
         &record, "source") == UMI_STATUS_OK);

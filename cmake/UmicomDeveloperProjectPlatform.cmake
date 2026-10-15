@@ -27,6 +27,9 @@ if(NOT TARGET umicom_developer)
         "Developer Project Platform requires the canonical umicom_developer target")
 endif()
 
+# Application creation shares the owned scaffold service with the CLI.
+target_link_libraries(umicom_developer PUBLIC Umicom::scaffold)
+
 target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/build/project_profile.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/build_plan.c"
@@ -38,6 +41,7 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/generation_request.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/generator.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/new_project.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/application_scaffold.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/destination.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/entry_point.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/tool_catalogue.c"
@@ -447,7 +451,7 @@ function(umicom_attach_developer_dialogs_gtk4)
     endif()
     target_sources(umicom_ui_gtk4 PRIVATE
         "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../adapters/gtk4/developer_dialog_gtk4.c")
-    target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::developer)
+    target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::developer Umicom::scaffold)
     set_property(TARGET umicom_ui_gtk4 PROPERTY UMICOM_DEVELOPER_DIALOGS_ATTACHED TRUE)
     if(BUILD_TESTING)
         add_executable(umicom-developer-dialog-gtk4-test

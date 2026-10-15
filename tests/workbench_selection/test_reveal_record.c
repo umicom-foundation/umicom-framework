@@ -170,6 +170,28 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionRevealRecordTransferCases, UmiWorkb
     umi_workbench_selection_reveal_record_archive_encode, umi_workbench_selection_reveal_record_archive_decode,
     UmiWorkbenchSelectionRevealRecordTransferEqual, UmiWorkbenchSelectionRevealRecordTransferTails, UmiWorkbenchSelectionRevealRecordTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchSelectionRevealRecordReviewedCases, UmiWorkbenchSelectionRevealRecord,
+    record_id, description, umi_workbench_selection_reveal_record_replace_if_current, UmiWorkbenchSelectionRevealRecordTransferEqual)
+static int UmiWorkbenchSelectionRevealRecordMutationGuards(const UmiWorkbenchSelectionRevealRecord *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionRevealRecord, source_id, umi_workbench_selection_reveal_record_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionRevealRecord, subject_id, umi_workbench_selection_reveal_record_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionRevealRecord, related_id, umi_workbench_selection_reveal_record_set_related, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionRevealRecord, group_id, umi_workbench_selection_reveal_record_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionRevealRecord, description, umi_workbench_selection_reveal_record_set_description, sample);
+    UmiWorkbenchSelectionRevealRecord value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_selection_reveal_record_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_selection_reveal_record_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchSelectionRevealRecord record;
@@ -180,6 +202,8 @@ int main(void)
     assert(umi_workbench_selection_reveal_record_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionRevealRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionRevealRecordReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionRevealRecordMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_selection_reveal_record_set_source(
         &record, "source") == UMI_STATUS_OK);

@@ -7,6 +7,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/base/csv_document.h"
+#include "csv_text_private.h"
 #include <float.h>
 #include <inttypes.h>
 #include <locale.h>
@@ -37,6 +38,9 @@ UmiCsvCell UmiCsvUnsigned(uint64_t value)
 UmiCsvCell UmiCsvReal(double value)
 { UmiCsvCell cell = {0}; cell.kind = UMI_CSV_REAL; cell.realValue = value; return cell; }
 
+/* The original validator remains available for source review. Both CSV input
+ * and output now use csv_text_private.h so their Unicode policy cannot drift. */
+#if 0
 static int ValidText(const char *text, size_t length)
 {
     if (length > UMI_CSV_MAX_TEXT_BYTES || (text == NULL && length != 0U)) return 0;
@@ -61,6 +65,11 @@ static int ValidText(const char *text, size_t length)
         if (value < minimum || value > 0x10ffffU || (value >= 0xd800U && value <= 0xdfffU)) return 0;
     }
     return 1;
+}
+#endif
+static int ValidText(const char *text, size_t length)
+{
+    return CsvTextValid(text, length, UMI_CSV_MAX_TEXT_BYTES);
 }
 
 static int FormulaPrefix(const char *text, size_t length)

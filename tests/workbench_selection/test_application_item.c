@@ -169,6 +169,28 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionApplicationItemTransferCases, UmiWo
     umi_workbench_selection_application_item_archive_encode, umi_workbench_selection_application_item_archive_decode,
     UmiWorkbenchSelectionApplicationItemTransferEqual, UmiWorkbenchSelectionApplicationItemTransferTails, UmiWorkbenchSelectionApplicationItemTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchSelectionApplicationItemReviewedCases, UmiWorkbenchSelectionApplicationItem,
+    record_id, label, umi_workbench_selection_application_item_replace_if_current, UmiWorkbenchSelectionApplicationItemTransferEqual)
+static int UmiWorkbenchSelectionApplicationItemMutationGuards(const UmiWorkbenchSelectionApplicationItem *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionApplicationItem, source_id, umi_workbench_selection_application_item_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionApplicationItem, subject_id, umi_workbench_selection_application_item_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionApplicationItem, secondary_id, umi_workbench_selection_application_item_set_secondary, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionApplicationItem, group_id, umi_workbench_selection_application_item_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionApplicationItem, label, umi_workbench_selection_application_item_set_label, sample);
+    UmiWorkbenchSelectionApplicationItem value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_selection_application_item_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_selection_application_item_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchSelectionApplicationItem record;
@@ -180,6 +202,8 @@ int main(void)
     assert(umi_workbench_selection_application_item_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionApplicationItemTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionApplicationItemReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionApplicationItemMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_selection_application_item_set_source(
         &record, "source") == UMI_STATUS_OK);

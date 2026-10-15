@@ -1,0 +1,27 @@
+/* @NAME@: model behaviour without a display.
+ * Sammy Hegab, Umicom Foundation. MIT licence. */
+#include "model.h"
+#include <stdio.h>
+#include <string.h>
+
+#define CHECK(condition) do { if (!(condition)) { \
+    (void)fprintf(stderr, "Check failed at line %d: %s\n", __LINE__, #condition); \
+    return 1; } } while (0)
+
+int main(void)
+{
+    char text[320], long_name[122];
+    CHECK(@IDENTIFIER@_greeting("Contributor", text, sizeof(text)) == UMI_STATUS_OK);
+    CHECK(strcmp(text, "Hello, Contributor from @NAME@.") == 0);
+    CHECK(@IDENTIFIER@_greeting("", text, sizeof(text)) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(text[0] == '\0');
+    CHECK(@IDENTIFIER@_greeting(NULL, text, sizeof(text)) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(@IDENTIFIER@_greeting("Ada", NULL, 0U) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(@IDENTIFIER@_greeting("Ada", text, 2U) == UMI_STATUS_CAPACITY_EXCEEDED);
+    CHECK(text[0] == '\0');
+    CHECK(@IDENTIFIER@_greeting("Ada\n", text, sizeof(text)) == UMI_STATUS_INVALID_ARGUMENT);
+    memset(long_name, 'a', sizeof(long_name) - 1U);
+    long_name[sizeof(long_name) - 1U] = '\0';
+    CHECK(@IDENTIFIER@_greeting(long_name, text, sizeof(text)) == UMI_STATUS_CAPACITY_EXCEEDED);
+    return 0;
+}

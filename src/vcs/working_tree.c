@@ -275,8 +275,15 @@ static UmiStatus ParseEntry(StatusSpan record, UmiVcsWorkingTreeEntry *entry, in
         for (size_t index = 3U; index < 7U; ++index)
             if (!ValidMode(fields[index]))
                 return UMI_STATUS_PARSE_ERROR;
+        /* Retain the independent object checks for review. All conflict stages
+         * belong to one repository and must use the same object-name width. */
+#if 0
         for (size_t index = 7U; index < 10U; ++index)
             if (!ValidObject(fields[index]))
+                return UMI_STATUS_PARSE_ERROR;
+#endif
+        for (size_t index = 7U; index < 10U; ++index)
+            if (!ValidObject(fields[index]) || fields[index].length != fields[7].length)
                 return UMI_STATUS_PARSE_ERROR;
         entry->change.index_state = entry->change.worktree_state = UMI_VCS_CHANGE_CONFLICTED;
     }
@@ -294,6 +301,9 @@ static UmiStatus ParseEntry(StatusSpan record, UmiVcsWorkingTreeEntry *entry, in
         if (status != UMI_STATUS_OK)
             return status;
         entry->change.staged = entry->index_code != '.';
+        /* Index gitlinks include additions, removals and type conversions. */
+        entry->staged_gitlink = entry->change.staged &&
+            (SpanEquals(fields[3], "160000") || SpanEquals(fields[4], "160000"));
         if (*needs_source)
         {
             size_t similarity;

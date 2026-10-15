@@ -1,0 +1,28 @@
+/* @NAME@: thin command-line frontend.
+ * Sammy Hegab, Umicom Foundation. MIT licence. */
+#include "model.h"
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char **argv)
+{
+    char greeting[320];
+    if (argc == 2 && strcmp(argv[1], "--help") == 0) {
+        (void)puts("Usage: @CONSOLE_EXECUTABLE@ [NAME]");
+        return 0;
+    }
+    if (argc > 2) {
+        (void)fputs("Supply one name, quoted if it contains spaces.\n", stderr);
+        return 2;
+    }
+    /* Pass only validated model output to the terminal. Return a failing exit
+     * code so Studio and CTest can recognise an unsuccessful command. */
+    UmiStatus status = @IDENTIFIER@_greeting(argc == 2 ? argv[1] : "Contributor",
+        greeting, sizeof(greeting));
+    if (status != UMI_STATUS_OK) {
+        (void)fprintf(stderr, "Cannot prepare greeting: %s\n", umi_status_text(status));
+        return 1;
+    }
+    (void)puts(greeting);
+    return 0;
+}

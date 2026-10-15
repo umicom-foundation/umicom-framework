@@ -1,0 +1,12 @@
+/* @NAME@: toolkit-independent application model.
+ * Sammy Hegab, Umicom Foundation. MIT licence. */
+#ifndef UMICOM_@IDENTIFIER@_MODEL_H
+#define UMICOM_@IDENTIFIER@_MODEL_H
+#include <stddef.h>
+#include "umicom/base/status.h"
+
+/* Format a greeting into caller-owned storage. Failure clears a nonempty output
+ * buffer. Input and output must not overlap. Put future business rules here so
+ * the console, GTK frontend and tests can share them. */
+UmiStatus @IDENTIFIER@_greeting(const char *name, char *output, size_t capacity);
+#endif

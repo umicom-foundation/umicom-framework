@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Create an Umicom application module</title>
+<style>body{font:17px/1.65 system-ui,sans-serif;max-width:1000px;margin:40px auto;padding:0 24px;color:#182c40}
+h1,h2{line-height:1.2}pre{background:#eef3f8;padding:18px;overflow:auto}code{font-family:Consolas,monospace}
+table{border-collapse:collapse;width:100%}td,th{text-align:left;border:1px solid #bdcbd8;padding:10px}
+a{color:#075b9c}</style></head>
+<body><h1>Create an Umicom application module</h1>
+<p>An application module is a source repository with its own manifest, build rules,
+tests and installation rules. The native project creator can prepare this source
+for an independent SDK build or for registration as an Umicom Applications submodule.
+It uses shared C23 Framework services; no Python or PowerShell generator is involved.</p>
+
+<h2>Choose a source folder and preview the files</h2>
+<ol>
+<li>Use a built or installed <code>umicom</code> command that includes module creation.
+Choose an existing folder for your projects. The tool never chooses a hidden user folder.</li>
+<li>Choose a lower-case folder name, an application title and a dotted application ID.
+Use the same ID throughout the life of the application. The example below assumes
+<code>C:\Projects</code> already exists.</li>
+<li>Run the preview. It reads templates and prints the destination, build option
+and file list. It creates no application directory.</li>
+</ol>
+<pre><code>umicom repo create "Weather" --module --parent "C:\Projects" --slug weather --id org.example.weather</code></pre>
+<p>The expected option is <code>UMICOM_APPLICATIONS_BUILD_WEATHER</code>.
+Use <code>--console-only</code> for a project whose manifest advertises only the console.
+Otherwise the generated project includes console and GTK4 frontends.</p>
+<p>Preview an individual file before applying:</p>
+<pre><code>umicom repo create "Weather" --module --parent "C:\Projects" --slug weather --id org.example.weather --show CMakeLists.txt</code></pre>
+<p>The file argument is one of the relative paths in the preview. It cannot read arbitrary files.
+<code>--dry-run</code> explicitly selects the default preview behaviour.
+<code>--show</code> and <code>--dry-run</code> cannot be combined with <code>--apply</code>.</p>
+
+<h2>Create and use the project</h2>
+<ol>
+<li>Keep the destination absent. An existing directory is rejected even when empty.</li>
+<li>Repeat the request with <code>--apply</code>. Each invocation reads the templates
+again; if you edited them since your earlier preview, review them again first.</li>
+<li>Open the generated README and follow its configure, build, test and installation steps.
+Install the Framework SDK before an independent build. GTK4 development packages
+are also required for the graphical frontend.</li>
+</ol>
+<pre><code>umicom repo create "Weather" --module --parent "C:\Projects" --slug weather --id org.example.weather --apply</code></pre>
+<p>The generated model formats a greeting and validates the name. The console accepts
+a name argument. The GTK4 window lets you enter a name and create the same greeting.
+The model is independent of GTK, so contributors can add and test business rules once.</p>
+<table><thead><tr><th>Location</th><th>Purpose</th></tr></thead><tbody>
+<tr><td><code>application.umicom.yaml</code></td><td>Identity, frontend names and installer component used by discovery.</td></tr>
+<tr><td><code>src/model.h</code> and <code>src/model.c</code></td><td>Shared application behaviour.</td></tr>
+<tr><td><code>src/console.c</code> and <code>src/gtk.c</code></td><td>Thin frontends calling that behaviour.</td></tr>
+<tr><td><code>tests/test_model.c</code></td><td>Validation and output-bound checks.</td></tr>
+<tr><td><code>docs/application-features.md</code></td><td>Supported features, steps and limits for users and suite governance.</td></tr>
+</tbody></table>
+
+<h2>Register the module with a suite</h2>
+<p>The creator writes source only. Review it, create its Git repository and publish it
+using your normal repository workflow. Register that repository as
+<code>applications/weather</code> with Git submodule add. The suite reads registered
+Git membership; a copied folder alone is not registered. See
+<a href="application-module-discovery.html">application module discovery</a> for the
+manifest contract and existing native registration commands.</p>
+<p>Enable the printed suite option during configuration. The module supplies its own
+tests and installer rules. The generated GTK frontend owns its window and is recognised
+by the shared host integration. Keep GTK enabled when using a GUI-declaring module
+in the shared native suite; disabling it does not create a generic replacement window.
+A console-only module does not declare a GUI.</p>
+<p>Separate wrapper repositories, automatic remote creation and automatic submodule
+registration are not performed by this mode. It does not add a launcher catalogue entry
+or a product-specific shared workstation controller. The existing
+<code>umicom repo create</code> workflow without <code>--module</code> remains available
+with its established Git options.</p>
+
+<h2>Use the creator from a native application</h2>
+<p>Link <code>Umicom::scaffold</code> and include
+<code>umicom/scaffold/application_module.h</code>. These interfaces can serve a Studio
+wizard without duplicating file generation:</p>
+<ol>
+<li>Collect explicit source and template folders, a slug, name and ID.</li>
+<li>Call <code>umi_application_scaffold_plan</code> on a worker. The returned plan owns
+all rendered bytes and validates the generated manifest.</li>
+<li>Read the summary and file views to present the preview. File views remain valid
+until the plan is destroyed. Keep access on one owner thread.</li>
+<li>After the user chooses to create the source, call
+<code>umi_application_scaffold_apply</code> with that same plan.</li>
+<li>Show the result and release the plan. An apply attempt consumes it even when
+creation fails. The native form described below uses this same service.</li>
+<!-- The earlier availability statement is retained for review. The native
+     application form replaces the CLI-only workflow described at that time. -->
+<!-- Previously displayed availability text:
+creation fails. A Studio wizard is not yet included in this implementation.</li>
+-->
+</ol>
+
+<h2>Create from Studio</h2>
+<ol>
+<li>Open Studio's welcome page and choose <strong>New Umicom Application</strong>.
+The ordinary <strong>Create New Project</strong> recipes remain available.</li>
+<li>Enter the name, dotted application identifier and module slug. Select an existing
+parent folder with <strong>Choose Parent Folder</strong>, or enter its absolute path.
+The creator makes a new child folder named after the slug.</li>
+<li>Leave the template folder blank to use the resources shipped with Framework,
+or select trusted templates explicitly. Choose whether to include the GTK frontend.</li>
+<li>Choose <strong>Preview Source</strong>. Select each file in the list to inspect
+its rendered contents. No destination directory exists yet. Editing any field,
+including changing it back, invalidates that preview.</li>
+<li>Choose <strong>Create Source</strong> after reviewing it. The form writes the
+same bytes it displayed. It does not reread templates during this step.</li>
+<li>When creation succeeds, choose <strong>Open Project</strong>. Studio opens the
+source and applies the generated build settings. If another operation prevents
+opening, finish that operation and retry; the generated source remains in place.</li>
+<li>Review <strong>Build Settings</strong> and workspace trust before configuring.
+For an independent build, provide the installed Framework SDK prefix in the
+CMake definitions, for example <code>-DCMAKE_PREFIX_PATH="C:/umicom/installed/applications"</code>.
+Install GTK development packages if the graphical frontend is enabled.</li>
+<li>Configure, build and run tests using Studio's existing build actions. Read the
+build target catalogue and explicitly choose the program for Run or Debug.
+The creator leaves the run path empty because generators place binaries differently.</li>
+</ol>
+<p>Template reads and source writes use workers. Closing a preview discards its
+authority; creating files requires another preview after reopening. Normal close
+and Cancel wait while an accepted write finishes. Destroying the host does not
+undo a write already started, and a background completion never opens another
+workspace automatically.</p>
+<p>Embedding applications can call <code>UmiGtk4ApplicationModuleDialogCreate</code>
+from <code>umicom/ui/gtk4/developer_dialog.h</code>. Keep its owned handle until
+<code>UmiGtk4DeveloperDialogDestroy</code>, and destroy it before freeing callback
+context. Headless clients can use <code>UmiDeveloperApplicationScaffoldProject</code>
+to prepare the same untrusted project model and build profile from a reviewed plan.
+An identifier may fit a manifest but exceed the IDE model's capacity; preview rejects
+that case before writing any files. The graphical preview also requires UTF-8 templates.</p>
+
+<h2>Limits and recovery</h2>
+<p>Creation is exclusive: it never overwrites a pre-existing file or folder.
+If a write or close fails, the command reports the last path and completed file count,
+and retains partial source for inspection. It does not delete that work or claim a
+project-wide transaction. Choose a fresh destination after inspecting a failed attempt.
+Do not let another process replace the selected parent or generated directories during
+creation. Parent aliases are trusted; this service is not a filesystem security sandbox.</p>
+<p>Template files are limited to 32 KiB each and to the fixed catalogue. Unknown
+replacement tokens, embedded NUL bytes, missing files and invalid manifests fail
+before any destination is created. Custom templates are source you must review before
+building; the size and token checks do not make arbitrary CMake or C code safe to run.</p>
+<p>Names use a portable subset: slugs contain lower-case letters, digits and hyphens,
+start with a letter and do not end in a hyphen; titles contain letters, digits, spaces
+and hyphens and start with a letter. IDs have nonempty dotted segments that start with
+letters. Windows device names are refused on every platform. Internationalised project
+identities are outside this template contract; a generated application can later provide
+translated user-facing text.</p>
+<p>If templates are missing, reinstall the Framework component or pass
+<code>--template-root</code> with the absolute path to
+<code>templates/application_module</code> in a trusted Framework checkout.
+Installed templates are found relative to the executable and configured data directory;
+a source build also has its configured source location as a fallback.
+No compiler, Git credentials, remote account or GUI session is required just to preview
+or write the source.</p>
+<h2>Choose the installed SDK</h2>
+<p>After creating a standalone project, use the
+<a href="inspecting-an-installed-sdk.html">installed SDK inspection workflow</a>
+to select its Framework package in Build Settings. A chosen package location
+does not grant workspace trust or replace compiler and linker qualification.</p>
+</body></html>

@@ -169,6 +169,28 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextSourceTradeSelectionTransferCases, Um
     umi_workbench_context_source_trade_selection_archive_encode, umi_workbench_context_source_trade_selection_archive_decode,
     UmiWorkbenchContextSourceTradeSelectionTransferEqual, UmiWorkbenchContextSourceTradeSelectionTransferTails, UmiWorkbenchContextSourceTradeSelectionTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextSourceTradeSelectionReviewedCases, UmiWorkbenchContextSourceTradeSelection,
+    record_id, label, umi_workbench_context_source_trade_selection_replace_if_current, UmiWorkbenchContextSourceTradeSelectionTransferEqual)
+static int UmiWorkbenchContextSourceTradeSelectionMutationGuards(const UmiWorkbenchContextSourceTradeSelection *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceTradeSelection, source_id, umi_workbench_context_source_trade_selection_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceTradeSelection, panel_id, umi_workbench_context_source_trade_selection_set_panel, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceTradeSelection, subject_id, umi_workbench_context_source_trade_selection_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceTradeSelection, group_id, umi_workbench_context_source_trade_selection_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextSourceTradeSelection, label, umi_workbench_context_source_trade_selection_set_label, sample);
+    UmiWorkbenchContextSourceTradeSelection value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_source_trade_selection_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_context_source_trade_selection_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextSourceTradeSelection record;
@@ -180,6 +202,8 @@ int main(void)
     assert(umi_workbench_context_source_trade_selection_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextSourceTradeSelectionTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceTradeSelectionReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceTradeSelectionMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_context_source_trade_selection_set_source(

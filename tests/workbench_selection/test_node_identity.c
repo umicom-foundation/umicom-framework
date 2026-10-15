@@ -170,6 +170,28 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionNodeIdentityTransferCases, UmiWorkb
     umi_workbench_selection_node_identity_archive_encode, umi_workbench_selection_node_identity_archive_decode,
     UmiWorkbenchSelectionNodeIdentityTransferEqual, UmiWorkbenchSelectionNodeIdentityTransferTails, UmiWorkbenchSelectionNodeIdentityTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchSelectionNodeIdentityReviewedCases, UmiWorkbenchSelectionNodeIdentity,
+    record_id, description, umi_workbench_selection_node_identity_replace_if_current, UmiWorkbenchSelectionNodeIdentityTransferEqual)
+static int UmiWorkbenchSelectionNodeIdentityMutationGuards(const UmiWorkbenchSelectionNodeIdentity *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionNodeIdentity, source_id, umi_workbench_selection_node_identity_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionNodeIdentity, subject_id, umi_workbench_selection_node_identity_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionNodeIdentity, related_id, umi_workbench_selection_node_identity_set_related, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionNodeIdentity, group_id, umi_workbench_selection_node_identity_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionNodeIdentity, description, umi_workbench_selection_node_identity_set_description, sample);
+    UmiWorkbenchSelectionNodeIdentity value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_selection_node_identity_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_selection_node_identity_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchSelectionNodeIdentity record;
@@ -180,6 +202,8 @@ int main(void)
     assert(umi_workbench_selection_node_identity_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionNodeIdentityTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionNodeIdentityReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionNodeIdentityMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_selection_node_identity_set_source(
         &record, "source") == UMI_STATUS_OK);

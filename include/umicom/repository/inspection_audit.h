@@ -26,6 +26,8 @@
 extern "C" {
 #endif
 /* Combine existing doctor report semantics with the richer inspection report. */
+/** Require a successfully collected observation and no typed errors.
+ * Warnings remain visible but do not prevent this report-level readiness check. */
 int umi_repository_inspection_audit_ready(const UmiRepositoryInspectionService *service);
 #ifdef __cplusplus
 }

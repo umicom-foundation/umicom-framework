@@ -188,6 +188,29 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionProviderInstrumentMappingTransferCa
     umi_workbench_selection_provider_instrument_mapping_archive_encode, umi_workbench_selection_provider_instrument_mapping_archive_decode,
     UmiWorkbenchSelectionProviderInstrumentMappingTransferEqual, UmiWorkbenchSelectionProviderInstrumentMappingTransferTails, UmiWorkbenchSelectionProviderInstrumentMappingTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchSelectionProviderInstrumentMappingReviewedCases, UmiWorkbenchSelectionProviderInstrumentMapping,
+    record_id, description, umi_workbench_selection_provider_instrument_mapping_replace_if_current, UmiWorkbenchSelectionProviderInstrumentMappingTransferEqual)
+static int UmiWorkbenchSelectionProviderInstrumentMappingMutationGuards(const UmiWorkbenchSelectionProviderInstrumentMapping *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderInstrumentMapping, provider_id, umi_workbench_selection_provider_instrument_mapping_set_provider, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderInstrumentMapping, source_id, umi_workbench_selection_provider_instrument_mapping_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderInstrumentMapping, subject_id, umi_workbench_selection_provider_instrument_mapping_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderInstrumentMapping, related_id, umi_workbench_selection_provider_instrument_mapping_set_related, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderInstrumentMapping, group_id, umi_workbench_selection_provider_instrument_mapping_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionProviderInstrumentMapping, description, umi_workbench_selection_provider_instrument_mapping_set_description, sample);
+    UmiWorkbenchSelectionProviderInstrumentMapping value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_selection_provider_instrument_mapping_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_selection_provider_instrument_mapping_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchSelectionProviderInstrumentMapping record;
@@ -199,6 +222,8 @@ int main(void)
     assert(umi_workbench_selection_provider_instrument_mapping_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionProviderInstrumentMappingTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionProviderInstrumentMappingReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionProviderInstrumentMappingMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_selection_provider_instrument_mapping_set_provider(

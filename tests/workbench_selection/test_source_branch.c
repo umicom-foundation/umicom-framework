@@ -169,6 +169,28 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionSourceBranchTransferCases, UmiWorkb
     umi_workbench_selection_source_branch_archive_encode, umi_workbench_selection_source_branch_archive_decode,
     UmiWorkbenchSelectionSourceBranchTransferEqual, UmiWorkbenchSelectionSourceBranchTransferTails, UmiWorkbenchSelectionSourceBranchTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchSelectionSourceBranchReviewedCases, UmiWorkbenchSelectionSourceBranch,
+    record_id, label, umi_workbench_selection_source_branch_replace_if_current, UmiWorkbenchSelectionSourceBranchTransferEqual)
+static int UmiWorkbenchSelectionSourceBranchMutationGuards(const UmiWorkbenchSelectionSourceBranch *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionSourceBranch, source_id, umi_workbench_selection_source_branch_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionSourceBranch, subject_id, umi_workbench_selection_source_branch_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionSourceBranch, secondary_id, umi_workbench_selection_source_branch_set_secondary, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionSourceBranch, group_id, umi_workbench_selection_source_branch_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionSourceBranch, label, umi_workbench_selection_source_branch_set_label, sample);
+    UmiWorkbenchSelectionSourceBranch value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_selection_source_branch_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_selection_source_branch_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchSelectionSourceBranch record;
@@ -180,6 +202,8 @@ int main(void)
     assert(umi_workbench_selection_source_branch_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionSourceBranchTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionSourceBranchReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionSourceBranchMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_selection_source_branch_set_source(
         &record, "source") == UMI_STATUS_OK);

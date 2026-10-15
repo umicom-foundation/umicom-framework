@@ -30,6 +30,10 @@ typedef struct UmiSdkProbeResult { int package_config; int public_header; int li
 /**
  * Provide the sdk probe prefix operation used by this module and its client applications.
  */
+/** Check presence at an explicit absolute prefix, clearing output on failure.
+ * A valid receipt supplies the layout. Without a receipt, inspect only the
+ * conventional lib/include layout and known static base archive names. A directory
+ * alone never satisfies libraries. passed is file presence, not ABI evidence. */
 UmiStatus umi_sdk_probe_prefix(const char *prefix,UmiSdkProbeResult *out_result);
 #ifdef __cplusplus
 }

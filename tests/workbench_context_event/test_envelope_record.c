@@ -151,6 +151,27 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextEventEnvelopeRecordTransferCases, Umi
     umi_workbench_context_event_envelope_record_archive_encode, umi_workbench_context_event_envelope_record_archive_decode,
     UmiWorkbenchContextEventEnvelopeRecordTransferEqual, UmiWorkbenchContextEventEnvelopeRecordTransferTails, UmiWorkbenchContextEventEnvelopeRecordTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextEventEnvelopeRecordReviewedCases, UmiWorkbenchContextEventEnvelopeRecord,
+    record_id, label, umi_workbench_context_event_envelope_record_replace_if_current, UmiWorkbenchContextEventEnvelopeRecordTransferEqual)
+static int UmiWorkbenchContextEventEnvelopeRecordMutationGuards(const UmiWorkbenchContextEventEnvelopeRecord *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventEnvelopeRecord, source_id, umi_workbench_context_event_envelope_record_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventEnvelopeRecord, subject_id, umi_workbench_context_event_envelope_record_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventEnvelopeRecord, group_id, umi_workbench_context_event_envelope_record_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventEnvelopeRecord, label, umi_workbench_context_event_envelope_record_set_label, sample);
+    UmiWorkbenchContextEventEnvelopeRecord value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_event_envelope_record_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_context_event_envelope_record_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextEventEnvelopeRecord record;
@@ -162,6 +183,8 @@ int main(void)
     assert(umi_workbench_context_event_envelope_record_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextEventEnvelopeRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextEventEnvelopeRecordReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextEventEnvelopeRecordMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_context_event_envelope_record_set_source(

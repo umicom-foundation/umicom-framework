@@ -170,6 +170,28 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionEvidenceRecordTransferCases, UmiWor
     umi_workbench_selection_evidence_record_archive_encode, umi_workbench_selection_evidence_record_archive_decode,
     UmiWorkbenchSelectionEvidenceRecordTransferEqual, UmiWorkbenchSelectionEvidenceRecordTransferTails, UmiWorkbenchSelectionEvidenceRecordTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchSelectionEvidenceRecordReviewedCases, UmiWorkbenchSelectionEvidenceRecord,
+    record_id, description, umi_workbench_selection_evidence_record_replace_if_current, UmiWorkbenchSelectionEvidenceRecordTransferEqual)
+static int UmiWorkbenchSelectionEvidenceRecordMutationGuards(const UmiWorkbenchSelectionEvidenceRecord *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionEvidenceRecord, source_id, umi_workbench_selection_evidence_record_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionEvidenceRecord, subject_id, umi_workbench_selection_evidence_record_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionEvidenceRecord, related_id, umi_workbench_selection_evidence_record_set_related, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionEvidenceRecord, group_id, umi_workbench_selection_evidence_record_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchSelectionEvidenceRecord, description, umi_workbench_selection_evidence_record_set_description, sample);
+    UmiWorkbenchSelectionEvidenceRecord value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_selection_evidence_record_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_selection_evidence_record_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchSelectionEvidenceRecord record;
@@ -180,6 +202,8 @@ int main(void)
     assert(umi_workbench_selection_evidence_record_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionEvidenceRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionEvidenceRecordReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionEvidenceRecordMutationGuards(&record) != 0) return 1;
 
     assert(umi_workbench_selection_evidence_record_set_source(
         &record, "source") == UMI_STATUS_OK);

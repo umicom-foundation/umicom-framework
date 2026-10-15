@@ -151,6 +151,27 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextEventRejectionRecordTransferCases, Um
     umi_workbench_context_event_rejection_record_archive_encode, umi_workbench_context_event_rejection_record_archive_decode,
     UmiWorkbenchContextEventRejectionRecordTransferEqual, UmiWorkbenchContextEventRejectionRecordTransferTails, UmiWorkbenchContextEventRejectionRecordTransferMalformed)
 
+/* Exercise the accepted domain fixture through reviewed publication and
+ * legacy mutation boundaries. These checks stay active in release builds. */
+#include "../record_integrity/reviewed_value_cases.h"
+UMI_TEST_REVIEWED_VALUE(UmiWorkbenchContextEventRejectionRecordReviewedCases, UmiWorkbenchContextEventRejectionRecord,
+    record_id, label, umi_workbench_context_event_rejection_record_replace_if_current, UmiWorkbenchContextEventRejectionRecordTransferEqual)
+static int UmiWorkbenchContextEventRejectionRecordMutationGuards(const UmiWorkbenchContextEventRejectionRecord *sample)
+{
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventRejectionRecord, source_id, umi_workbench_context_event_rejection_record_set_source, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventRejectionRecord, subject_id, umi_workbench_context_event_rejection_record_set_subject, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventRejectionRecord, group_id, umi_workbench_context_event_rejection_record_set_group, sample);
+    UMI_TEST_REVIEWED_TEXT_FIELD(UmiWorkbenchContextEventRejectionRecord, label, umi_workbench_context_event_rejection_record_set_label, sample);
+    UmiWorkbenchContextEventRejectionRecord value = *sample;
+    value.revision = UINT64_MAX - 1U;
+    umi_workbench_context_event_rejection_record_touch(&value, 33U, 44U);
+    if (value.revision != UINT64_MAX || value.sequence != 33U || value.timestamp_ms != 44U) return 1;
+    unsigned char before[sizeof value]; memcpy(before, &value, sizeof value);
+    umi_workbench_context_event_rejection_record_touch(&value, 55U, 66U);
+    if (memcmp(before, &value, sizeof value) != 0) return 1;
+    return 0;
+}
+
 int main(void)
 {
     UmiWorkbenchContextEventRejectionRecord record;
@@ -162,6 +183,8 @@ int main(void)
     assert(umi_workbench_context_event_rejection_record_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextEventRejectionRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextEventRejectionRecordReviewedCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextEventRejectionRecordMutationGuards(&record) != 0) return 1;
 
 
     assert(umi_workbench_context_event_rejection_record_set_source(

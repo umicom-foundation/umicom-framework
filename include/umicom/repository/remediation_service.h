@@ -37,7 +37,13 @@ typedef struct UmiRepositoryRemediationService { UmiRepositoryInspectionService 
 /* Initialise the service with conservative execution policy. */
 void umi_repository_remediation_service_init(UmiRepositoryRemediationService *service);
 /* Refresh inspection and build a plan; this function never applies the plan. */
+/** Publish new evidence and a proposal together; preserve both on failure.
+ * last_status describes the latest attempt. A failed attempt makes the retained
+ * plan stale. One owner must serialize access; no disk transaction is implied. */
 UmiStatus umi_repository_remediation_service_plan(UmiRepositoryRemediationService *service,const UmiRepositoryInspectionContext *context);
+/** Return whether a plan and its observation belong to successful refreshes.
+ * This is evidence freshness, not permission to execute a proposed action. */
+int UmiRepositoryRemediationEvidenceCurrent(const UmiRepositoryRemediationService *service);
 #ifdef __cplusplus
 }
 #endif

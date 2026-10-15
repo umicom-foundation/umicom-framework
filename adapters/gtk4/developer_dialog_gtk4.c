@@ -15,6 +15,7 @@
 #include "umicom/platform/process_environment.h"
 #include "umicom/platform/process_search_path.h"
 #include "umicom/ui/gtk4/developer_dialog.h"
+#include "umicom/developer_project/application_scaffold.h"
 #include "umicom/ui/gtk4/build_configurations.h"
 #include "umicom/ui/gtk4/compilation_database.h"
 #include "umicom/developer_project/compilation_database.h"
@@ -24,6 +25,9 @@
 #include "umicom/developer_project/build_cache.h"
 #include "umicom/developer_project/tool_catalogue.h"
 #include "umicom/build/launch_plan.h"
+#include "umicom/build/configure_definitions.h"
+#include "umicom/sdk/installation_inspection.h"
+#include <inttypes.h>
 #include "umicom/platform/path.h"
 #include "umicom/platform/output_file.h"
 #include "umicom/base/text.h"
@@ -47,6 +51,7 @@
 #define UMI_DEVELOPER_FORM_FIELDS 13U
 #endif
 #define UMI_DEVELOPER_FORM_FIELDS 14U
+typedef struct DeveloperApplicationForm DeveloperApplicationForm;
 struct UmiGtk4DeveloperDialog {
     GtkWindow *window;
     /* Observe the host without prolonging its lifetime after it closes. */
@@ -119,7 +124,18 @@ struct UmiGtk4DeveloperDialog {
     GtkWidget *projectFolderName, *projectChooseParent;
     GCancellable *projectChooserCancel;
     int projectChoosing;
+    /* The module form owns reviewed source; ordinary project forms leave it null. */
+    DeveloperApplicationForm *application;
+    GtkWidget *acceptButton;
+    /* SDK observations are owned snapshots, never build or trust authority. */
+    UmiSdkInstallationObservation *sdkObservation;
+    GtkWidget *sdkPrefix, *sdkRead, *sdkUse, *sdkDetail;
+    int sdkLoading, sdkInvalidated, sdkChanging;
 };
+
+/* Application-module state shares the existing form ownership and callbacks. */
+static void DeveloperApplicationDispose(DeveloperApplicationForm *form);
+static int DeveloperApplicationMayClose(UmiGtk4DeveloperDialog *dialog);
 
 typedef struct UmiDeveloperProfileField {
     const char *title;
@@ -152,6 +168,8 @@ static const UmiDeveloperProfileField PROFILE_FIELDS[] = {
 static void DeveloperRelease(UmiGtk4DeveloperDialog *dialog)
 {
     if (--dialog->references != 0U) return;
+    DeveloperApplicationDispose(dialog->application);
+    free(dialog->sdkObservation);
     umi_developer_project_service_destroy(dialog->projects);
     UmiProjectPresetCatalogueDestroy(dialog->presetCatalogue);
     UmiProjectTargetCatalogueDestroy(dialog->targetCatalogue);
@@ -175,6 +193,10 @@ static int DeveloperVisible(const UmiGtk4DeveloperDialog *dialog)
 #endif
 /* Native removal ends the form's authority even if GTK objects are retained.
  * Checking both windows also protects late worker completions after host close. */
+/* The visible-only lifetime check is retained for review. Separate lifetime
+ * from visibility so a hidden, still-owned form can receive a write result.
+ * Action callbacks continue to require visibility through DeveloperAcquire. */
+#if 0
 static int DeveloperVisible(const UmiGtk4DeveloperDialog *dialog)
 {
     if (dialog == NULL || dialog->closed ||
@@ -189,9 +211,31 @@ static int DeveloperVisible(const UmiGtk4DeveloperDialog *dialog)
     g_clear_object(&parent);
     return available;
 }
+#endif
+static int DeveloperAlive(const UmiGtk4DeveloperDialog *dialog)
+{
+    if (dialog == NULL || dialog->closed ||
+        !UmiGtk4WindowIsOpen(dialog->window) ||
+        gtk_window_get_child(dialog->window) != dialog->root)
+        return 0;
+    /* GWeakRef has a mutable lock even though this inspection leaves the
+     * controller unchanged. GTK owns all calls on the main thread. */
+    GtkWindow *parent = g_weak_ref_get((GWeakRef *)&dialog->parentWindow);
+    int available = parent != NULL && UmiGtk4WindowIsOpen(parent);
+    g_clear_object(&parent);
+    return available;
+}
+static int DeveloperVisible(const UmiGtk4DeveloperDialog *dialog)
+{
+    return DeveloperAlive(dialog) && gtk_widget_get_visible(GTK_WIDGET(dialog->window));
+}
+
 static UmiGtk4DeveloperDialog *DeveloperAcquire(UmiGtk4DeveloperDialog *dialog)
 {
     if (!DeveloperVisible(dialog)) return NULL;
+    /* SDK publication may synchronously notify extensions. Reentrant actions
+     * cannot accept or replace a form while its definition field is changing. */
+    if (dialog->sdkChanging) return NULL;
     ++dialog->references;
     return dialog;
 }
@@ -233,6 +277,7 @@ static gboolean HideOnClose(GtkWindow *window, gpointer context)
 {
     UmiGtk4DeveloperDialog *dialog = DeveloperAcquire(context);
     if (dialog == NULL) return TRUE;
+    if (!DeveloperApplicationMayClose(dialog)) { DeveloperRelease(dialog); return TRUE; }
     gtk_widget_set_visible(GTK_WIDGET(window), FALSE);
     DeveloperRelease(dialog);
     return TRUE;
@@ -254,6 +299,7 @@ static void CancelClicked(GtkButton *button, gpointer context)
     (void)button;
     UmiGtk4DeveloperDialog *dialog = DeveloperAcquire(context);
     if (dialog == NULL) return;
+    if (!DeveloperApplicationMayClose(dialog)) { DeveloperRelease(dialog); return; }
     gtk_widget_set_visible(GTK_WIDGET(dialog->window), FALSE);
     DeveloperRelease(dialog);
 }
@@ -272,6 +318,7 @@ static void ShowStatus(UmiGtk4DeveloperDialog *dialog, UmiStatus status, const c
 #include "developer_installed_gtk4.inc"
 #include "developer_project_location_gtk4.inc"
 #include "developer_tools_gtk4.inc"
+#include "developer_sdk_gtk4.inc"
 
 /* Generate once. A failed adoption can be retried without generating over its files. */
 /* Acceptance now holds owned form state and checks visibility after callbacks; this preserves settings and project generation while preventing use of a retired application context.
@@ -779,6 +826,7 @@ static UmiStatus CreateForm(GtkWindow *parent, const char *title,
     buttons = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
     cancel = gtk_button_new_with_label("Cancel");
     accept = gtk_button_new_with_label(acceptTitle);
+    dialog->acceptButton = accept;
     /* Owned signal registrations replace the raw callback below; it is kept
      * for review of the previous lifetime contract. */
 #if 0
@@ -968,6 +1016,7 @@ UmiStatus UmiGtk4BuildSettingsDialogCreate(GtkWindow *parent,
     gtk_label_set_xalign(GTK_LABEL(argumentHelp), 0.0F);
     gtk_box_append(GTK_BOX(dialog->body), argumentHelp);
     DeveloperToolsControls(dialog);
+    DeveloperSdkControls(dialog);
     DeveloperLaunchControls(dialog);
     DeveloperTargetControls(dialog);
     DeveloperInstalledControls(dialog);
@@ -1028,3 +1077,6 @@ void UmiGtk4DeveloperDialogDestroy(UmiGtk4DeveloperDialog *dialog)
 
 /* Named settings use the same form lifetime and field ownership. */
 #include "developer_configurations_gtk4.inc"
+
+/* Application creation uses the same owner-managed window contract. */
+#include "developer_application_gtk4.inc"
