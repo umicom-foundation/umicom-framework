@@ -232,6 +232,11 @@ UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter)
         ? umi_ui_application_shell_workbench(adapter->shell)
         : NULL;
     adapter->window = GTK_WINDOW(gtk_application_window_new(adapter->application));
+    /* GTK owns the initial toplevel reference and drops it when the window
+     * closes. Keep an adapter reference until its bindings and timers retire:
+     * a closed window must remain a valid object during that final cleanup.
+     * umi_gtk4_adapter_destroy releases this reference after detaching services. */
+    g_object_ref(adapter->window);
     gtk_widget_add_css_class(GTK_WIDGET(adapter->window), "umicom-workbench");
     adapter->root_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_widget_add_css_class(adapter->root_box, "umicom-workbench-root");

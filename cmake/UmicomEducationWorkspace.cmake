@@ -78,6 +78,11 @@ if(TARGET Umicom::ui_gtk4)
     umicom_education_configure_target(umicom_education_workspace_gtk4)
     # Register the shared inspector beside this consumer, including focused builds.
     include("${CMAKE_CURRENT_LIST_DIR}/UmicomEducationInspectionGtk4.cmake")
+    # This panel calls the inspection UI directly, so it owns the dependency.
+    # Declaring the link here works even when the provider's guarded module was
+    # included earlier, and carries the required archive into SDK consumers.
+    target_link_libraries(umicom_education_workspace_gtk4 PRIVATE
+        Umicom::education_inspection_gtk4)
     install(TARGETS umicom_education_workspace_gtk4 EXPORT UmicomFrameworkTargets
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Framework)
     install(FILES "${_umicom_education_root}/include/umicom/ui/gtk4/education_workspace.h"
@@ -161,6 +166,21 @@ if(BUILD_TESTING)
         message(STATUS "Education independent output check not registered: Python3 interpreter unavailable")
     endif()
     if(TARGET Umicom::education_workspace_gtk4)
+        # Link the panel as a thin consumer without naming its private providers.
+        # This catches missing transitive archives before a product executable
+        # reaches the linker, including when inspection was registered first.
+        add_executable(umicom-education-workspace-link-test
+            "${_umicom_education_root}/tests/education_workspace/test_workspace_link.c")
+        target_link_libraries(umicom-education-workspace-link-test PRIVATE
+            Umicom::education_workspace_gtk4)
+        umicom_education_configure_target(umicom-education-workspace-link-test)
+        add_test(NAME framework.education_workspace.link_dependencies
+            COMMAND umicom-education-workspace-link-test)
+        set_tests_properties(framework.education_workspace.link_dependencies PROPERTIES
+            TIMEOUT 30 LABELS "framework;education-workspace;link;regression")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-education-workspace-link-test)
+        endif()
         # These cases exercise the native asynchronous owner and exclusive writer.
         add_executable(umicom-education-project-export-async-test
             "${_umicom_education_root}/tests/education_workspace/test_project_export_async.c")

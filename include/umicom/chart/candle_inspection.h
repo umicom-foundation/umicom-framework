@@ -1,6 +1,8 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/chart/candle_inspection.h
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
  * PURPOSE: Select an observed candle for data inspection without inventing values between
  * observations. AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation LICENCE: MIT
  *---------------------------------------------------------------------------*/

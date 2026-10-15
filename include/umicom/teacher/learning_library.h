@@ -1,6 +1,8 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/teacher/learning_library.h
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
  * PURPOSE: Resolve an explicitly selected lesson library independently of project and application
  * data folders. AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation LICENCE: MIT
  *---------------------------------------------------------------------------*/

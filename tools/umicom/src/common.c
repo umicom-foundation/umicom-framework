@@ -22,6 +22,11 @@
 #include "umicom/toolchain/operation_context.h"
 
 /* Provide the cli print help operation used by this module and its client applications. */
+/* Retained for review: the complete help text previously formed one string
+ * longer than the portable C translation limit. The active implementation
+ * prints the same text in smaller sections so contributors can extend it
+ * without relying on a compiler-specific string-length extension. */
+#if 0
 void umi_cli_print_help(void)
 {
     (void)puts(
@@ -53,6 +58,97 @@ void umi_cli_print_help(void)
         "  umicom dependencies audit [PATH] [--strict] [--dry-run]\n"
         "  umicom workflow plan|verify|build|test|publish|update|complete [options]\n"
         "  umicom repo help\n"
+        "  umicom sdk inspect SDK_PREFIX\n"
+        "  umicom repo inspect-module MANIFEST\n"
+        "  umicom repo modules [SUITE_DIRECTORY]\n"
+        "  umicom repo check-module SUITE_DIRECTORY MANIFEST applications/slug\n"
+        "  umicom repo create NAME --module --parent DIR --slug SLUG --id ID [--apply]\n"
+        "    Source preview by default; --show PATH displays a generated file.\n"
+        "  umicom repo status [PATH]\n"
+        "  umicom repo review [PATH] [--children] [--timeout-ms MILLISECONDS]\n"
+        "  umicom repo audit [PATH] [quality options]\n"
+        "  umicom repo verify [PATH]\n"
+        "  umicom repo lock [PATH] [--dry-run]\n"
+        "  umicom repo create NAME [repository options]\n"
+        "  umicom repo clone URL DESTINATION [--root PATH] [--branch NAME] [--depth N]\n"
+        "  umicom repo init [PATH] [--branch NAME] [--remote-url URL]\n"
+        "  umicom repo submodule add URL PATH [--root PATH] [--branch NAME]\n"
+        "  umicom repo stage|add [PATH] [--dry-run]\n"
+        "  umicom repo commit [PATH] (--message MESSAGE | --auto-message) [--dry-run]\n"
+        "  umicom repo push [PATH] [--remote NAME] [--branch NAME]\n"
+        "  umicom repo publish [PATH] (--message MESSAGE | --auto-message) [push options]\n"
+        "  umicom repo update [PATH] [--remote NAME] [--branch NAME]\n"
+        "  umicom status|add|commit|push ... (familiar repository aliases)\n"
+        "  umicom create repo NAME [options]\n"
+        "  umicom new repo NAME [options]\n"
+        "  umicom capabilities\n"
+        "  umicom suite sample PATH\n\n"
+        "Repository lock:\n"
+        "  PATH                      Parent repository root (default: .)\n"
+        "  --dry-run                 Resolve HEADs without staging gitlinks\n"
+        "  The lock command never commits and never pushes.\n\n"
+        "Repository options:\n"
+        "  --parent PATH             Parent directory for the new repository\n"
+        "  --repo-name NAME          Repository/folder name (default: app name)\n"
+        "  --id APPLICATION_ID       Stable application identifier\n"
+        "  --frontends LIST          console,gtk,web,qt,wt,mobile\n"
+        "  --console --gtk --web     Friendly individual frontend flags\n"
+        "  --framework-url URL       Framework Git submodule URL\n"
+        "  --framework-branch NAME   Framework branch (default: main)\n"
+        "  --framework-installed     Use an installed Framework package\n"
+        "  --framework-vendored      Reserved vendored Framework mode\n"
+        "  --no-git --no-commit      Skip local Git or initial commit\n"
+        "  --owner OWNER             GitHub organisation or user\n"
+        "  --public | --private      Remote visibility\n"
+        "  --remote                  Create the GitHub repository with gh\n"
+        "  --push                    Push the initial commit\n"
+        "  --dry-run                 Display plan without changing files\n"
+        "\nRepository workflow safety:\n"
+        "  publish runs add -A, status, diff --check, a non-empty commit, and push.\n"
+        "  --auto-message derives a local message from staged path names only.\n"
+        "  --dry-run plans a mutation without changing local or remote state.\n"
+        "  Index locks are reported but never deleted automatically.\n"
+        "  Force push is not supported by the safe workflow.\n"
+    );
+}
+#endif
+
+void umi_cli_print_help(void)
+{
+    /* Keep each help section within the portable string-literal limit.
+     * fputs does not append a newline, so splitting the output preserves
+     * the exact command list and the final newline supplied by puts. */
+    (void)fputs(
+        "Umicom Framework native command\n\n"
+        "Usage:\n"
+        "  umicom version\n"
+        "  umicom qemu targets|plan|review|run (qemu --help for options)\n"
+        "  umicom check [--all] [--gtk] [--github] [--project PATH]\n"
+        "  umicom env\n"
+        "  umicom repair [--dry-run]\n"
+        "  umicom shell [powershell.exe|cmd.exe|/bin/sh]\n"
+        "  umicom configure [--source PATH] [--preset NAME | --build PATH]\n"
+        "  umicom build [--source PATH] [--preset NAME | --build PATH] [--target TARGET] [--jobs N]\n"
+        "  umicom test [--source PATH] [--preset NAME | --build PATH] [--tests REGEX]\n"
+        "  umicom clean [--source PATH] [--preset NAME | --build PATH]\n"
+        "  umicom install [--source PATH] [--preset NAME] [--prefix PATH] [--component NAME]\n"
+        "  umicom package [--source PATH] [--preset NAME] [--jobs N]\n"
+        "  umicom deliver [--source PATH] [--preset NAME] [--prefix PATH]\n"
+        "  umicom make [--source PATH] [--preset NAME | --build PATH] [--jobs N]\n"
+        "  umicom automate plan|run|watch [PATH] [--all] [--no-tests] [--deploy]\n"
+        "  umicom run studio [--source PATH] [--preset NAME]\n"
+        "  umicom run --executable PATH [--source PATH] [--preset NAME]\n"
+        "  umicom dev doctor|configure|build|test|clean|install|package|deliver|run|automate\n"
+        "  umicom quality scan [PATH] [--profile NAME] [--format NAME]\n"
+        "  umicom security scan [PATH]\n"
+        "  umicom architecture check [PATH]\n"
+        "  umicom memory scan [PATH]\n"
+        "  umicom dependencies inventory [PATH]\n"
+        "  umicom dependencies audit [PATH] [--strict] [--dry-run]\n"
+        "  umicom workflow plan|verify|build|test|publish|update|complete [options]\n"
+        "  umicom repo help\n"
+        , stdout);
+    (void)puts(
         "  umicom sdk inspect SDK_PREFIX\n"
         "  umicom repo inspect-module MANIFEST\n"
         "  umicom repo modules [SUITE_DIRECTORY]\n"

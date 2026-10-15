@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4.h"
+#include "umicom/ui/gtk4/window_lifecycle.h"
 #include "umicom/ui/gtk4/workstation/shell_header.h"
 
 #include <stdlib.h>
@@ -122,7 +123,19 @@ void umi_gtk4_adapter_destroy(UmiGtk4Adapter *adapter)
      * used.
      */
     if (adapter->window != NULL) {
+        /* A user may already have closed the toplevel. Retain the former
+         * unconditional close for review; the shared lifecycle check prevents
+         * a second removal from GTK's toplevel list during adapter cleanup. */
+#if 0
         gtk_window_destroy(adapter->window);
+#endif
+        if (UmiGtk4WindowIsOpen(adapter->window)) {
+            gtk_window_destroy(adapter->window);
+        }
+        /* Match the reference acquired when the shell creates its window.
+         * External closure may already have released GTK's reference; the
+         * adapter's reference keeps cleanup above safe in either order. */
+        g_clear_object(&adapter->window);
     }
     /*
      * Protect caller-owned memory by checking that required state is available before it is

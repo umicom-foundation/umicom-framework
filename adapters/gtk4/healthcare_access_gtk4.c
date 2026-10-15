@@ -1,5 +1,6 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
+ * File: adapters/gtk4/healthcare_access_gtk4.c
  * PURPOSE: Present explicit synthetic access transitions without clinical data.
  * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
  * LICENCE: MIT

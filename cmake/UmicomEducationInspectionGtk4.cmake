@@ -1,9 +1,15 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 # Teaching-file UI uses the same SDK parsers as the command and installed example.
-include_guard(GLOBAL)
+# Retained for review: guarding before the availability check prevented a later
+# GTK-enabled consumer from retrying this module. The guard below records only
+# an inclusion that can actually create the provider.
+if(FALSE)
+    include_guard(GLOBAL)
+endif()
 if(NOT TARGET Umicom::ui_gtk4)
     return()
 endif()
+include_guard(GLOBAL)
 # Focused learning builds must name the same parser and path-picker owners.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomEducationInspection.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomPathPicker.cmake")
@@ -20,8 +26,13 @@ install(TARGETS umicom_education_inspection_gtk4 EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Framework)
 install(FILES "${_education_inspection_ui_root}/include/umicom/ui/gtk4/education_inspection.h"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)
-if(TARGET umicom_education_workspace_gtk4)
-    target_link_libraries(umicom_education_workspace_gtk4 PRIVATE Umicom::education_inspection_gtk4)
+# Retained for review: this reverse attachment depended on the consumer already
+# existing. UmicomEducationWorkspace.cmake now declares its own dependency after
+# including this provider, so both inclusion orders retain the inspection UI.
+if(FALSE)
+    if(TARGET umicom_education_workspace_gtk4)
+        target_link_libraries(umicom_education_workspace_gtk4 PRIVATE Umicom::education_inspection_gtk4)
+    endif()
 endif()
 if(BUILD_TESTING)
     add_executable(umicom-education-inspection-ui-test

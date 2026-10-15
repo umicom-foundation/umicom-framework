@@ -14,6 +14,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/web/workbench/request.h"
+/* The target-replacement regression exercises the server request model as well
+ * as the editable workbench request. Include its public owner explicitly rather
+ * than relying on unrelated workbench headers to expose the type. */
+#include "umicom/web/request.h"
 
 /*
  * Start this command or application, report setup failures, and return a process exit code

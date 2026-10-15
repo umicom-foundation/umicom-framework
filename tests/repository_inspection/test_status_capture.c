@@ -1,3 +1,10 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/repository_inspection/test_status_capture.c
+ * PURPOSE: Reject failed or incomplete repository status captures at the VCS seam.
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
 /* Retain the direct-capture fixture for review. Maintenance now delegates
  * process handling to the existing VCS reader, tested through the seam below. */
 #if 0

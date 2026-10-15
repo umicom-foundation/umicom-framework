@@ -9,6 +9,7 @@
  *---------------------------------------------------------------------------*/
 #include "gtk4_internal.h"
 #include "umicom/ui/gtk4/automation.h"
+#include "umicom/ui/gtk4/window_lifecycle.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -88,10 +89,27 @@ static void RecoveryMonitorDetach(GObject *lifetime);
 static void RecoveryReviewClose(GtkWidget *window);
 static void SnippetReviewClose(GtkWidget *window,int notify,UmiStatus status);
 
+/* Retained for review: object destruction can occur after a retained window
+ * has closed. The lifecycle observer below retires editing at native closure
+ * instead, and resolves the adapter through its invalidatable binding token. */
+#if 0
 static void EditWindowDestroyed(GtkWidget *window, gpointer data)
 {
     (void)window;
     (void)UmiGtk4AdapterBindDocumentEditing(data, NULL, NULL, NULL);
+}
+#endif
+
+/* A worker can keep the token alive after the adapter has been freed. Reading
+ * its cleared owner slot prevents a late close observation from using that
+ * former adapter. Framework holds the receiver alive during this callback. */
+static void EditWindowClosed(GtkWidget *window, gpointer data)
+{
+    (void)window;
+    UmiGtk4Adapter *adapter = g_object_get_data(G_OBJECT(data), "adapter");
+    if (adapter != NULL) {
+        (void)UmiGtk4AdapterBindDocumentEditing(adapter, NULL, NULL, NULL);
+    }
 }
 
 /* Recovery uses the existing invalidatable editing lifetime so retained controls cannot restore into a retired coordinator.
@@ -250,8 +268,20 @@ UmiStatus UmiGtk4AdapterBindDocumentEditing(UmiGtk4Adapter *adapter,
     if (coordinator != NULL) {
         adapter->edit_lifetime = g_object_new(G_TYPE_OBJECT, NULL);
         g_object_set_data(adapter->edit_lifetime, "adapter", adapter);
+        /* The earlier signal waited for final object destruction. Keep it for
+         * review; native window removal now retires the binding immediately,
+         * even while the adapter keeps a reference for orderly cleanup. */
+#if 0
         adapter->edit_window_destroy_handler = g_signal_connect(adapter->window,
             "destroy", G_CALLBACK(EditWindowDestroyed), adapter);
+#endif
+        UmiStatus status = UmiGtk4WatchWindowClosed(adapter->window,
+            adapter->edit_lifetime, EditWindowClosed, adapter->edit_lifetime);
+        if (status != UMI_STATUS_OK) {
+            /* A binding without its close observer must not retain authority. */
+            (void)UmiGtk4AdapterBindDocumentEditing(adapter, NULL, NULL, NULL);
+            return status;
+        }
     }
     return UMI_STATUS_OK;
 }

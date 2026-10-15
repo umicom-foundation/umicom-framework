@@ -1,6 +1,8 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/platform/native_arguments.h
+ * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ * LICENCE: MIT
  * PURPOSE: Give native applications owned Unicode command arguments without changing global process
  * state. AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation LICENCE: MIT
  *---------------------------------------------------------------------------*/

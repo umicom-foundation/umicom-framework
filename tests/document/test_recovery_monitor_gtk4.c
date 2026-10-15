@@ -115,6 +115,11 @@ int main(int argc, char **argv)
     if (!gtk_init_check())
         return 77;
     int failed = 0;
+    /* Observe lifetime without retaining the window: an extra test reference
+     * would conceal premature finalization in the adapter itself. */
+    GWeakRef closedWindow;
+    g_weak_ref_init(&closedWindow, NULL);
+    bool observedClosedWindow = false;
     GtkApplication *application = NULL;
     UmiCommandRegistry *commands = NULL;
     UmiUiWorkbench *workbench = NULL;
@@ -205,7 +210,20 @@ int main(int argc, char **argv)
     {
         unsigned notifications = event.count;
         if (strcmp(mode, "parent-close") == 0)
+        {
+            g_weak_ref_set(&closedWindow, umi_gtk4_adapter_native_window(adapter));
+            observedClosedWindow = true;
             gtk_window_destroy(GTK_WINDOW(umi_gtk4_adapter_native_window(adapter)));
+            /* Cleanup still needs a live object after GTK releases its reference. */
+            GObject *retainedWindow = g_weak_ref_get(&closedWindow);
+            bool retained = retainedWindow != NULL;
+            g_clear_object(&retainedWindow);
+            CHECK(retained);
+            /* Retaining the object must not retain editing authority. Closure
+             * retires the binding before another timer or worker can use it. */
+            UmiDocumentRecoveryScheduleInfo retired;
+            CHECK(UmiGtk4AdapterRecoveryState(adapter, &retired) == UMI_STATUS_UNAVAILABLE);
+        }
         else
             CHECK(UmiGtk4AdapterBindDocumentEditing(adapter, NULL, NULL, NULL) == UMI_STATUS_OK);
         PumpFor(2200);
@@ -271,6 +289,19 @@ cleanup:
     umi_ui_workbench_destroy(workbench);
     umi_command_registry_destroy(commands);
     g_clear_object(&application);
+    if (observedClosedWindow)
+    {
+        /* Adapter destruction must also release its reference. Check both
+         * sides of ownership so fixing early finalization cannot hide a leak. */
+        GObject *retainedWindow = g_weak_ref_get(&closedWindow);
+        if (retainedWindow != NULL)
+        {
+            fprintf(stderr, "Closed adapter window was not released\n");
+            failed = 1;
+        }
+        g_clear_object(&retainedWindow);
+    }
+    g_weak_ref_clear(&closedWindow);
     g_free(base);
     return failed;
 }
