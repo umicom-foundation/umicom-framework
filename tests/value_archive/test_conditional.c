@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "construction_cases.h"
+#include "conditional_cases.h"
 #include "../../src/base/conditional_archive_internal.h"
 
 typedef struct ImportSample { char name[16]; uint64_t revision; } ImportSample;
@@ -57,6 +58,29 @@ UMI_DEFINE_CONDITIONAL_ARCHIVE(ImportRestore, ImportEncode, ImportSample,
 #undef free
 #undef malloc
 
+/* Exercise the common fixture with a checker that owns its invalid copy.
+ * A checker reports success as zero; it never changes the caller's expected
+ * state. This prevents the same mistaken mutation assumption across codecs. */
+static int ImportMalformed(const ImportSample *sample)
+{
+    ImportSample invalid = *sample;
+    invalid.name[0] = '\0';
+    size_t size = 0U;
+    return ImportEncode(&invalid, NULL, 0U, &size) == UMI_STATUS_INVALID_ARGUMENT ? 0 : 1;
+}
+static int ImportEqual(const ImportSample *left, const ImportSample *right)
+{
+    return left->revision == right->revision && strcmp(left->name, right->name) == 0;
+}
+static void ImportTails(ImportSample *sample)
+{
+    /* Bytes beyond the terminator are not part of the encoded text value. */
+    size_t used = strlen(sample->name) + 1U;
+    memset(sample->name + used, 0x5a, sizeof sample->name - used);
+}
+UMI_TEST_CONDITIONAL_ARCHIVE(ImportFixtureContract, ImportSample, ImportEncode,
+    ImportRestore, ImportEqual, ImportTails, ImportMalformed)
+
 int main(void)
 {
     ImportSample expected = {"old", 9U}, value = {"old", 9U}, imported = {"new", 4U};
@@ -72,6 +96,7 @@ int main(void)
         UMI_CONSTRUCTION_REQUIRE(memcmp(before, &value, sizeof(value)) == 0);
     }
     attempts = 0U; fail_at = 0U;
+    UMI_CONSTRUCTION_REQUIRE(ImportFixtureContract(&expected) == 0 && outstanding == 0U);
     value.revision = 10U;
     memcpy(before, &value, sizeof(value));
     UMI_CONSTRUCTION_REQUIRE(ImportRestore(bytes, size, &expected, &value) == UMI_STATUS_INVALID_STATE);

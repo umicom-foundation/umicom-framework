@@ -358,6 +358,10 @@ static int RunNativeCommand(int argc, char **argv)
     if (strcmp(command, "dev") == 0)
         return umi_cli_command_dev(&context, argc - 2, argv + 2);
     /* Use the stable identifier comparison to choose the matching record or policy. */
+    /* Keep SDK inspection available after native argument conversion. The SDK
+     * service owns inspection; this dispatcher only forwards its UTF-8 arguments. */
+    if (strcmp(command, "sdk") == 0)
+        return umi_cli_command_sdk(argc - 2, argv + 2);
     if (strcmp(command, "repo") == 0)
         return umi_cli_command_repo(&context, argc - 2, argv + 2);
     /*

@@ -27,5 +27,14 @@ int main(void)
     CHECK(umi_path_is_within("C:/", "C:/source/main.c"));
     CHECK(!umi_path_is_within("C:/", "D:/source/main.c"));
     CHECK(!umi_path_is_within("C:/source", "C:/source-extra/main.c"));
+    /* A Windows current-drive root remains rooted during normalisation, but
+     * it is not a fully qualified path suitable for a queued process launch. */
+#ifdef _WIN32
+    CHECK(umi_path_equal("/source", "\\source"));
+    CHECK(!umi_path_equal("/source", "source"));
+    CHECK(!umi_path_is_absolute("/source"));
+    CHECK(!umi_path_is_absolute("\\source"));
+    CHECK(!umi_path_is_within("/source", "relative/file"));
+#endif
     return 0;
 }

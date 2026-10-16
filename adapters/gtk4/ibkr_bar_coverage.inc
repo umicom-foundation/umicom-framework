@@ -12,25 +12,27 @@ static void BarCoverageAppend(ConnectionUi *ui, bool streaming, uint32_t request
                               uint32_t intervalMs, GString *text) {
   if (count == 0U || count > UMI_BAR_COVERAGE_MAX_TIMESTAMPS)
     return;
-  int64_t *times = g_new(int64_t, count);
+  /* Historical and streaming readers share this capture-local array. The
+   * coverage analyser borrows it for this call, before the array is released. */
+  int64_t *barTimestamps = g_new(int64_t, count);
   UmiStatus status = UMI_STATUS_OK;
   for (size_t i = 0U; i < count && status == UMI_STATUS_OK; ++i) {
     if (streaming) {
       UmiIbkrRealtimeBar bar;
       status = UmiIbkrRealtimeBarCopy(ui->connection, request, i, &bar);
       if (status == UMI_STATUS_OK)
-        times[i] = bar.timeMilliseconds;
+        barTimestamps[i] = bar.timeMilliseconds;
     } else {
       UmiIbkrHistoricalBar bar;
       status = UmiIbkrHistoricalBarCopy(ui->connection, request, i, &bar);
       if (status == UMI_STATUS_OK)
-        times[i] = bar.timeMilliseconds;
+        barTimestamps[i] = bar.timeMilliseconds;
     }
   }
   UmiBarCoverage coverage;
   if (status == UMI_STATUS_OK)
-    status = UmiBarCoverageAnalyze(times, count, intervalMs, &coverage);
-  g_free(times);
+    status = UmiBarCoverageAnalyze(barTimestamps, count, intervalMs, &coverage);
+  g_free(barTimestamps);
   if (status != UMI_STATUS_OK) {
     g_string_append(text, "\nTimestamp coverage could not be described for this capture.");
     return;

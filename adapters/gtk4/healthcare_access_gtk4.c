@@ -7,6 +7,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/healthcare/access_gtk4.h"
 #include "umicom/healthcare/synthetic_access.h"
+#include "umicom/ui/gtk4/drop_down.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -311,8 +312,16 @@ UmiStatus UmiHealthcareAccessWorkspaceNew(GtkWidget **outWidget)
     workspace->coordinator = labelled_field(grid, 5, "Synthetic follow-up owner", gtk_entry_new());
     gtk_editable_set_text(GTK_EDITABLE(workspace->coordinator), "STF-000001");
     workspace->requests = gtk_string_list_new(NULL);
+    /* Retain the direct construction for ownership review. The shared helper
+     * below now makes the consumed reference explicit for every application. */
+#if 0
     /* GtkDropDown takes its own model reference; the owner retains one for append. */
     workspace->selector = gtk_drop_down_new(G_LIST_MODEL(g_object_ref(workspace->requests)), NULL);
+#endif
+    /* The workspace retains its list reference for appends. Transfer a separate
+     * reference to the dropdown so either owner can release its lifetime safely. */
+    workspace->selector = umi_ui_gtk4_drop_down_new_take_string_list(
+        g_object_ref(workspace->requests));
     gtk_widget_set_name(workspace->selector, "healthcare-requests");
     gtk_box_append(GTK_BOX(root), workspace->selector);
     connect_owned(workspace, workspace->selector, "notify::selected", G_CALLBACK(selection_changed));

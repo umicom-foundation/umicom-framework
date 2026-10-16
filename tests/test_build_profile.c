@@ -32,5 +32,17 @@ int main(void)
     assert(umi_build_profile_equal(&a, &b));
     b.parallel_jobs += 1U;
     assert(!umi_build_profile_equal(&a, &b));
+    /* Stored profiles normalise paths. Equivalent source spellings must not
+     * invalidate a settings round trip, while a different project still must. */
+    b = a;
+    strcpy(a.source_directory, "project/source");
+    strcpy(b.source_directory, "project/./source");
+    assert(umi_build_profile_equal(&a, &b));
+#ifdef _WIN32
+    strcpy(b.source_directory, "project\\source");
+    assert(umi_build_profile_equal(&a, &b));
+#endif
+    strcpy(b.source_directory, "project/another-source");
+    assert(!umi_build_profile_equal(&a, &b));
     return 0;
 }
