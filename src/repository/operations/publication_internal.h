@@ -52,6 +52,10 @@ typedef struct UmiPublicationState {
     const UmiRepositoryPublicationRequest *request;
     UmiRepositoryPublicationReport *report;
     UmiPublicationBackend backend;
+    /* Recovery is a separate opt-in; ordinary publication never attaches HEAD. */
+    int attach_published_main;
+    unsigned char attach_ready[UMI_REPOSITORY_PUBLICATION_CAPACITY];
+    char previous_main[UMI_REPOSITORY_PUBLICATION_CAPACITY][65];
     char root[UMI_PATH_CAPACITY];
     char identity[UMI_REPOSITORY_PUBLICATION_CAPACITY][1024];
     UmiPublicationEdge edges[UMI_PUBLICATION_EDGE_CAPACITY];
@@ -89,4 +93,10 @@ UmiStatus umi_publication_safe_path(UmiPublicationState *, const char *);
 UmiStatus umi_publication_run_backend(const UmiToolchainProfile *,
     UmiEnvironmentPlan *, const UmiRepositoryPublicationRequest *,
     UmiRepositoryPublicationReport *, const UmiPublicationBackend *);
+UmiStatus umi_publication_branch(UmiPublicationState *, size_t);
+UmiStatus umi_publication_attachment_check(UmiPublicationState *, size_t);
+UmiStatus umi_publication_attach_published(UmiPublicationState *, size_t);
+UmiStatus umi_publication_run_recovery_backend(const UmiToolchainProfile *,
+    UmiEnvironmentPlan *, const UmiRepositoryPublicationRequest *,
+    UmiRepositoryPublicationReport *, const UmiPublicationBackend *, int);
 #endif

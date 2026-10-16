@@ -166,11 +166,17 @@ UmiStatus umi_publication_inspect(UmiPublicationState *state, size_t index)
                     "Vendor checkout differs from its approved parent pin or has local changes.");
         return UMI_STATUS_OK;
     }
+/* Distinguish detached HEAD from a Git transport failure before considering explicit recovery. The former implementation is retained for review. */
+#if 0
     status = umi_publication_text(state, index, branch, 4U, entry->branch, sizeof(entry->branch));
     if (status != UMI_STATUS_OK) return status;
     if (strcmp(entry->branch, "main") != 0)
         return umi_publication_fail(state, index, UMI_STATUS_INVALID_STATE,
             "Owned checkouts must already be on main; no branch switch was attempted.");
+#endif
+    (void)branch; /* The compatibility command remains documented above. */
+    status = umi_publication_branch(state, index);
+    if (status != UMI_STATUS_OK) return status;
     status = umi_publication_text(state, index, origin, 4U, text, sizeof(text));
     if (status != UMI_STATUS_OK) return status;
     status = umi_publication_origin_identity(text, state->identity[index], sizeof(state->identity[index]));
@@ -201,6 +207,8 @@ UmiStatus umi_publication_inspect(UmiPublicationState *state, size_t index)
     if ((entry->ahead && entry->behind) || (entry->behind && state->dirty[index]))
         return umi_publication_fail(state, index, UMI_STATUS_INVALID_STATE,
             "Divergence or local edits behind origin/main require a reviewed reconciliation.");
+    status = umi_publication_attachment_check(state, index);
+    if (status != UMI_STATUS_OK) return status;
     status = umi_publication_check_paths(state, index, files, 5U);
     if (status == UMI_STATUS_OK) status = umi_publication_check_history(state, index);
     return status;

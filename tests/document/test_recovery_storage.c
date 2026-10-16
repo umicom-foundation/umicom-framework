@@ -16,6 +16,43 @@
 #ifndef _WIN32
 #include <unistd.h>
 #endif
+
+#ifdef _WIN32
+/* Exercise the same link rejection contracts on Windows whenever the host can
+ * create symbolic links. Developer Mode permits the unprivileged form; older
+ * systems may still allow the ordinary form through their process privilege.
+ * Only a missing platform capability skips coverage; other errors fail it. */
+static int RecoveryLink(const char *alias, const char *target, int directory)
+{
+    wchar_t alias_wide[UMI_PATH_CAPACITY], target_wide[UMI_PATH_CAPACITY];
+    CHECK(MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, alias, -1, alias_wide,
+                              (int)UMI_PATH_CAPACITY) > 0);
+    CHECK(MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, target, -1, target_wide,
+                              (int)UMI_PATH_CAPACITY) > 0);
+    DWORD flags = directory ? SYMBOLIC_LINK_FLAG_DIRECTORY : 0U;
+    /* The value is the Windows unprivileged-create flag, also accepted when
+     * compiling against SDK headers that predate its symbolic definition. */
+    if (CreateSymbolicLinkW(alias_wide, target_wide, flags | 2U))
+        return 1;
+    DWORD error = GetLastError();
+    if (error == ERROR_INVALID_PARAMETER)
+    {
+        if (CreateSymbolicLinkW(alias_wide, target_wide, flags))
+            return 1;
+        error = GetLastError();
+    }
+    if (error == ERROR_PRIVILEGE_NOT_HELD || error == ERROR_NOT_SUPPORTED ||
+        error == ERROR_INVALID_FUNCTION)
+    {
+        fprintf(stderr, "Symbolic-link fixture unavailable on this Windows host (error %lu).\n",
+                (unsigned long)error);
+        return 0;
+    }
+    fprintf(stderr, "Symbolic-link fixture creation failed (error %lu).\n", (unsigned long)error);
+    CHECK(0);
+    return 0;
+}
+#endif
 static UmiDocumentRecoveryDraft *Make(const char *key, const char *text)
 {
     UmiDocumentRecoveryInfo info = {0};
@@ -137,8 +174,38 @@ int main(int argc, char **argv)
     if (strcmp(mode, "root-symlink") == 0 || strcmp(mode, "leaf-symlink") == 0)
     {
 #ifdef _WIN32
+/* Windows link fixtures now probe the actual host capability instead of skipping unconditionally. The former implementation is retained for review. */
+#if 0
         UmiDocumentRecoveryDraftDestroy(draft);
         return 77;
+#endif
+        if (strcmp(mode, "root-symlink") == 0)
+        {
+            FixturePath(directory, root, "alias");
+            if (!RecoveryLink(directory, root, 1))
+            {
+                UmiDocumentRecoveryDraftDestroy(draft);
+                return 77;
+            }
+            CHECK(UmiDocumentRecoverySave(directory, draft, NULL) == UMI_STATUS_PERMISSION_DENIED);
+            CHECK(UmiDocumentRecoveryList(directory, NULL, &catalogue) == UMI_STATUS_PERMISSION_DENIED);
+        }
+        else
+        {
+            FixturePath(path, root, leaf);
+            if (!RecoveryLink(path, "missing", 0))
+            {
+                UmiDocumentRecoveryDraftDestroy(draft);
+                return 77;
+            }
+            CHECK(UmiDocumentRecoverySave(root, draft, NULL) == UMI_STATUS_ALREADY_EXISTS);
+            CHECK(UmiDocumentRecoveryLoad(root, key, NULL, &loaded) != UMI_STATUS_OK && loaded == NULL);
+            CHECK(UmiDocumentRecoveryList(root, NULL, &catalogue) == UMI_STATUS_OK);
+            UmiDocumentRecoveryEntry entry;
+            CHECK(UmiDocumentRecoveryCatalogueAt(catalogue, 0U, &entry) == UMI_STATUS_OK &&
+                  entry.availability == UMI_STATUS_PERMISSION_DENIED);
+        }
+        goto done;
 #else
         if (strcmp(mode, "root-symlink") == 0)
         {

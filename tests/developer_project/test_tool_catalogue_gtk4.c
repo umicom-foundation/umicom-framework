@@ -189,6 +189,9 @@ int main(int argc, char **argv)
         CHECK(probe.notifications == 1U);
     if (probe.dialog == NULL)
     {
+        /* Retaining the native window must not retain a focused form tree. */
+        CHECK(gtk_window_get_child(form) == NULL && gtk_window_get_focus(form) == NULL);
+        CHECK(!gtk_widget_get_mapped(GTK_WIDGET(form)));
         g_signal_emit_by_name(probe.inspect, "clicked");
         CHECK(probe.applied == 0U && Released(&rootReference));
     }
@@ -208,8 +211,16 @@ cleanup:
             }
             g_usleep(1000U);
         }
+/* A teardown timeout must report its mode instead of failing silently. The former implementation is retained for review. */
+#if 0
         if (!Released(&rootReference))
             failed = 1;
+#endif
+        if (!Released(&rootReference))
+        {
+            fprintf(stderr, "Tool form tree remained owned after destruction (%s).\n", probe.mode);
+            failed = 1;
+        }
     }
     g_weak_ref_clear(&rootReference);
     if (form != NULL)

@@ -1199,6 +1199,9 @@ GtkWidget *UmiGtk4TradingInteractiveChartCreate(UmiGtk4TradingPanelContext *cont
     ChartCoordinatesCreate(state);
     ChartHistoryCreate(state);
     g_signal_connect_object(state->objects,"notify::selected",G_CALLBACK(ChartObjectSelectionChanged),G_OBJECT(root),0);
+    /* Replacing or removing the model invalidates a captured move even when
+     * GTK keeps the previous numeric selection without a selected notification. */
+    g_signal_connect_object(state->objects,"notify::model",G_CALLBACK(ChartObjectSelectionChanged),G_OBJECT(root),0);
 
 /* Chart drawings now have explicit profile persistence. Save and reviewed Restore replace the session-only guidance while order drafting remains unchanged. The previous implementation remains for engineering review. */
 #if 0

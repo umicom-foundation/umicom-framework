@@ -14,6 +14,7 @@ target_sources(umicom_repository PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/publication_lock.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/publication_discovery.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/publication_inspection.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/publication_recovery.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/publication_plan.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/publication_execution.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/publication_service.c")

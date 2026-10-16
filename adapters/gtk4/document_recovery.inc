@@ -585,6 +585,9 @@ UmiStatus UmiGtk4AdapterReviewRecovery(UmiGtk4Adapter *adapter, const char *appl
     g_signal_connect_object(panel->load, "clicked", G_CALLBACK(RecoveryLoadClicked), window, 0);
     g_signal_connect_object(panel->restore, "clicked", G_CALLBACK(RecoveryRestoreClicked), window, 0);
     g_signal_connect_object(panel->choice, "notify::selected", G_CALLBACK(RecoveryChoiceChanged), window, 0);
+    /* GTK may retain the numeric selection when a contributed model is removed.
+     * Retire the pending load on model replacement as well as selection changes. */
+    g_signal_connect_object(panel->choice, "notify::model", G_CALLBACK(RecoveryChoiceChanged), window, 0);
     g_signal_connect_object(gtk_text_view_get_buffer(GTK_TEXT_VIEW(panel->preview)), "changed",
                             G_CALLBACK(RecoveryPreviewChanged), window, 0);
     g_signal_connect_object(close, "clicked", G_CALLBACK(RecoveryCancel), window, 0);

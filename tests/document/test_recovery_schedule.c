@@ -44,6 +44,7 @@ int main(int argc, char **argv)
                                             "duplicate",
                                             "zero-id",
                                             "zero-revision",
+                                            "zero-store-revision",
                                             "invalid-dirty",
                                             "capacity",
                                             "null-observe",
@@ -64,6 +65,29 @@ int main(int argc, char **argv)
     CHECK(UmiDocumentRecoveryScheduleCreate(&schedule) == UMI_STATUS_OK);
     UmiDocumentRecoveryTicket ticket = {0}, next = {0};
     UmiDocumentRecoveryObservation observations[2] = {{1U, 1U, 1U, 1}, {2U, 1U, 1U, 1}};
+    if (strcmp(mode, "zero-store-revision") == 0)
+    {
+        /* An editor can contain unsaved text while its new DocumentStore entry
+         * still has revision zero. Only its visible text revision must be nonzero. */
+        observations[0].store_revision = 0U;
+        CHECK(UmiDocumentRecoveryScheduleObserve(schedule, observations, 1U, 100U) == UMI_STATUS_OK);
+        CHECK(UmiDocumentRecoveryScheduleConfigure(schedule, 1, 1000U, 100U) == UMI_STATUS_OK);
+        CHECK(UmiDocumentRecoveryScheduleBegin(schedule, 1099U, &ticket) == UMI_STATUS_NOT_FOUND);
+        CHECK(UmiDocumentRecoveryScheduleBegin(schedule, 1100U, &ticket) == UMI_STATUS_OK);
+        CHECK(ticket.captured.store_revision == 0U && ticket.captured.text_revision == 1U);
+        CHECK(UmiDocumentRecoveryScheduleFinish(schedule, &ticket, UMI_STATUS_OK, 1100U) == UMI_STATUS_OK);
+        CHECK(UmiDocumentRecoveryScheduleBegin(schedule, 2100U, &ticket) == UMI_STATUS_NOT_FOUND);
+        observations[0].text_revision = 2U;
+        CHECK(UmiDocumentRecoveryScheduleObserve(schedule, observations, 1U, 2100U) == UMI_STATUS_OK);
+        CHECK(UmiDocumentRecoveryScheduleBegin(schedule, 2100U, &ticket) == UMI_STATUS_OK);
+        CHECK(ticket.captured.store_revision == 0U && ticket.captured.text_revision == 2U);
+        CHECK(UmiDocumentRecoveryScheduleFinish(schedule, &ticket, UMI_STATUS_IO_ERROR, 2100U) == UMI_STATUS_OK);
+        UmiDocumentRecoveryScheduleInfo initial;
+        CHECK(UmiDocumentRecoveryScheduleInspect(schedule, &initial) == UMI_STATUS_OK);
+        CHECK(initial.saved_snapshots == 1U && initial.paused_after_failure);
+        goto done;
+    }
+
     CHECK(UmiDocumentRecoveryScheduleObserve(schedule, observations, 2U, 100U) == UMI_STATUS_OK);
     if (strcmp(mode, "disabled") == 0)
     {

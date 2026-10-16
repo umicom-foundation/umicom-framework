@@ -6,7 +6,10 @@
 <p>The native <code>umicom repo publish-all</code> command finds Git repositories in a workspace, publishes changed children, and then records those child revisions in their parents. The Framework owns discovery, ordering and publication policy; the command presents its results. Git and working authentication for each remote are required.</p>
 <h2>1. Prepare the workspace</h2>
 <p>Finish editing and review the files that belong in the public repository. Keep local notes, credentials and generated output outside source repositories or properly ignored. The command uses <code>git add -A</code>, which includes additions, modifications and deletions. Ignore rules do not protect files already tracked by Git.</p>
+<!-- Explicit recovery supplements the original branch prerequisite; retain that description for compatibility review.
 <p>Each repository managed by this command must already be on <code>main</code>, with one <code>origin</code> whose fetch and push destinations identify the same repository. Use a credential-free HTTPS URL or the usual <code>git@host:organisation/repository.git</code> spelling. Configure credentials through Git's credential helper. All registered submodules must already be checked out. The command does not switch branches or initialise missing checkouts.</p>
+-->
+<p>Ordinary publication requires every managed checkout to be on <code>main</code>. A narrow, explicit recovery option described below can attach a clean detached leaf checkout that already contains exactly the published revision. Every checkout needs one <code>origin</code> whose fetch and push destinations identify the same repository. Use a credential-free HTTPS URL or the usual <code>git@host:organisation/repository.git</code> spelling and configure credentials through Git's credential helper. Registered submodules must already be checked out; publication does not initialise missing checkouts.</p>
 <p>Choose a root that contains all related repositories and their Git metadata. Repositories are discovered immediately below that root and through their registered Git submodules. If the root is itself a repository, only that repository and its registered children are selected. Arbitrary nested source folders are not searched. Third-party submodules under <code>third_party/</code>, <code>third-party/</code> or <code>vendor/</code> retain their parent pins; the <code>third_party/umicom/</code> namespace remains managed.</p>
 <h2>2. Preview</h2>
 <pre><code>umicom repo publish-all "C:\umicom"</code></pre>
@@ -27,6 +30,15 @@
 <h2>4. Monitor without publishing</h2>
 <pre><code>umicom repo watch "C:\umicom" --interval 30</code></pre>
 <p>The foreground monitor prints a new report when the local snapshot changes. It uses cached remote references and does not fetch, stage, commit, lock or push. Press Ctrl+C to stop; a running bounded Git probe may finish first. Monitoring does not automatically upload edits while they are being written. Use <code>publish-all --apply</code> when the changes are ready.</p>
+<section><h2>Attach an already-published detached checkout</h2>
+<p>A submodule can show a detached HEAD: its current commit is selected directly instead of through a local branch. If its files are clean and that commit equals freshly fetched <code>origin/main</code>, preview the bounded recovery option:</p>
+<pre><code>umicom repo publish-all "C:\umicom" --attach-published-main</code></pre>
+<p>The report shows the branch and both revisions. Eligible leaf repositories have no managed children, an existing local main branch whose commits are all contained in the published commit, and no other worktree using main. A worktree is another checkout sharing the same Git repository. Dirty files, unpublished commits, an old detached revision, divergent history, a missing local main branch or a different named branch stop recovery.</p>
+<p>After reviewing the complete workspace preview, apply recovery and the normal publication sequence together:</p>
+<pre><code>umicom repo publish-all "C:\umicom" --attach-published-main --apply</code></pre>
+<p>This command can publish other reviewed changes in the selected workspace. Attachment alone updates Git references and their reflogs, which record their previous values; it does not rewrite working files or the index. If main was an ancestor, its advance remains recorded even if the later attachment fails. Read the completed-action report and preview again. Keep other Git processes idle: the publisher marker coordinates Umicom publishers, not every external editor or Git process.</p>
+<p>Use one authoring checkout for shared Framework source. Commit and publish there, then let clean copies receive that revision through checked fast-forward pulls. The parent lock records the resulting child commits. Recovery never chooses between independent edits or invents a resolution for a source conflict. The foreground watch command does not accept this option.</p>
+</section>
 <h2>Resolve a blocked run</h2>
 <table><thead><tr><th>Message or condition</th><th>Action</th></tr></thead><tbody>
 <tr><td>Detached checkout or branch other than main</td><td>Inspect <code>git status</code> and preserve any local commits. Decide which main history should contain them before changing branches. Publication does not choose that history for you.</td></tr>

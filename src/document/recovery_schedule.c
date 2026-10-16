@@ -25,7 +25,15 @@ struct UmiDocumentRecoverySchedule
 };
 static int ScheduleObservationValid(const UmiDocumentRecoveryObservation *item)
 {
+/* Automatic recovery must accept unsynchronized new drafts with the store's legitimate initial revision. The former implementation is retained for review. */
+#if 0
     return item->document_id != 0U && item->text_revision != 0U && item->store_revision != 0U &&
+           (item->dirty == 0 || item->dirty == 1);
+#endif
+    /* A new untitled DocumentStore entry starts at revision zero. Editor text
+     * can already be dirty before any synchronization into that store. Its
+     * nonzero view revision identifies the draft without forcing a save or edit. */
+    return item->document_id != 0U && item->text_revision != 0U &&
            (item->dirty == 0 || item->dirty == 1);
 }
 static int ScheduleObservationEqual(const UmiDocumentRecoveryObservation *left,

@@ -179,6 +179,13 @@ UmiStatus umi_publication_update_initial(UmiPublicationState *state, int *update
     *updated = 0;
     for (size_t i = 0U; i < state->report->count; ++i) {
         UmiRepositoryPublicationEntry *entry = &state->report->entries[i];
+        /* Recover only an explicitly eligible leaf before normal fast-forwards.
+         * A fresh graph is then built, just as after a successful pull. */
+        if (!entry->vendor && state->attach_ready[i]) {
+            UmiStatus status = umi_publication_attach_published(state, i);
+            if (status != UMI_STATUS_OK) return status;
+            *updated = 1;
+        }
         if (!entry->vendor && entry->behind) {
             UmiStatus status = fast_forward(state, i, entry->remote_head);
             if (status != UMI_STATUS_OK) return status;

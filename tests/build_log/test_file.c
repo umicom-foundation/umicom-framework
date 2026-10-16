@@ -47,7 +47,13 @@ int main(int argc, char **argv)
     }
     if (strcmp(name, "symlink") == 0) {
 #ifdef _WIN32
+/* Run exclusive-create link collision coverage on Windows whenever native link creation is available. The former implementation is retained for review. */
+#if 0
         return 77; /* Creating Windows symlinks requires a machine-specific privilege. */
+#endif
+        if (!FixtureSymbolicLink(path, "missing-target", 0)) return 77;
+        CHECK(UmiOutputFileCreate(path, &file) == UMI_STATUS_ALREADY_EXISTS && file == NULL);
+        return 0;
 #else
         CHECK(symlink("missing-target", path) == 0);
         CHECK(UmiOutputFileCreate(path, &file) == UMI_STATUS_ALREADY_EXISTS && file == NULL); return 0;

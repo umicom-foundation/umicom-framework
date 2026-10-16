@@ -100,6 +100,11 @@ int main(int argc, char **argv) {
     /* Open both logical containers before calling the embedded report. A
      * collapsed child is deliberately not an active window-owned panel; this
      * follows the visible workflow without weakening the retired-owner check. */
+    /* The account tools are an outer collapsed owner. Expand ancestors in
+     * visible workflow order before asserting the report belongs to the window. */
+    GtkWidget *accountTools = Find(GTK_WIDGET(broker), "ibkr-account-tools");
+    CHECK(GTK_IS_EXPANDER(accountTools));
+    gtk_expander_set_expanded(GTK_EXPANDER(accountTools), TRUE);
     GtkWidget *policySection = Find(GTK_WIDGET(broker), "ibkr-fill-policy-section");
     GtkWidget *reportSection = Find(GTK_WIDGET(broker), "ibkr-rule-report-section");
     CHECK(GTK_IS_EXPANDER(policySection) && GTK_IS_EXPANDER(reportSection));

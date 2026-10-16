@@ -78,6 +78,8 @@
 #include "games/games_viewport.inc"
 #include "governance/shared_audit.inc"
 #include "governance/shared_surveillance.inc"
+/* Keep synthetic Healthcare behavior paired with its panel specification. */
+#include "healthcare/synthetic_access.inc"
 #include "integration/integration_designer.inc"
 #include "integration/integration_monitor.inc"
 #include "integration/shared_messaging.inc"

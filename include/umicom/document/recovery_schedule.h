@@ -45,9 +45,17 @@ extern "C"
  * waits one interval after this call. Invalid time/interval changes nothing. */
     UmiStatus UmiDocumentRecoveryScheduleConfigure(UmiDocumentRecoverySchedule *schedule, int enabled,
                                                    uint64_t interval_ms, uint64_t now_ms);
+/* The original all-revisions-nonzero description is retained for contract review. */
+#if 0
     /* Replace the complete observed set, preserving successful identities of
  * surviving IDs. Reject duplicates, zero revisions, invalid flags or excess
  * capacity before changing state. Closed documents disappear from tracking;
+ * a pending ticket still completes safely after its document closes. */
+#endif
+    /* Replace the complete observed set, preserving successful identities of
+ * surviving IDs. Reject duplicates, zero text revisions, invalid flags or excess
+ * capacity before changing state. Store revision zero is valid for a new draft
+ * not yet synchronized from its editor. Closed documents disappear from tracking;
  * a pending ticket still completes safely after its document closes. */
     UmiStatus UmiDocumentRecoveryScheduleObserve(UmiDocumentRecoverySchedule *schedule,
                                                  const UmiDocumentRecoveryObservation *documents,

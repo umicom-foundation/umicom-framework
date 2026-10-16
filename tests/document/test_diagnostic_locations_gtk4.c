@@ -270,6 +270,9 @@ static int ProgramMain(int argc, char **argv)
     }
     if (strcmp(mode, "caret-changed") == 0)
     {
+        /* Text insertion copies the snapshot rather than updating this local
+         * value. Reload it so a caret-only edit cannot restore an empty draft. */
+        CHECK(umi_ui_document_view_model_find(views, primary.view_id, &primary_view) == UMI_STATUS_OK);
         primary_view.cursor_offset = 1U;
         CHECK(umi_ui_document_view_model_upsert(views, &primary_view) == UMI_STATUS_OK);
     }

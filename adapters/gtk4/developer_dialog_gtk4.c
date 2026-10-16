@@ -1070,8 +1070,19 @@ void UmiGtk4DeveloperDialogDestroy(UmiGtk4DeveloperDialog *dialog)
     gtk_window_destroy(dialog->window);
     DeveloperRelease(dialog);
 #endif
+/* Native text input teardown must finish before unparenting the form. The former implementation is retained for review. */
+#if 0
     gtk_window_set_child(dialog->window, NULL);
     gtk_window_destroy(dialog->window);
+    DeveloperRelease(dialog);
+#endif
+    /* Release focus while the native surface and text input contexts still
+     * exist. Unrealize the intact hierarchy before detaching its owned tree;
+     * retained windows must not keep a focus/default-widget reference alive. */
+    gtk_window_set_focus(dialog->window, NULL);
+    gtk_window_set_default_widget(dialog->window, NULL);
+    gtk_window_destroy(dialog->window);
+    gtk_window_set_child(dialog->window, NULL);
     DeveloperRelease(dialog);
 }
 

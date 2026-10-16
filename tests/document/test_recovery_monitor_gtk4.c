@@ -52,6 +52,10 @@ static int WaitEvent(Event *event, uint64_t saved, int paused)
             return 1;
         g_usleep(1000U);
     }
+    fprintf(stderr, "Recovery wait: callbacks=%u documents=%zu enabled=%d pending=%d paused=%d saved=%llu status=%s\n",
+            event->count, event->last.documents, event->last.enabled, event->last.pending,
+            event->last.paused_after_failure, (unsigned long long)event->last.saved_snapshots,
+            umi_status_text(event->last.last_status));
     return 0;
 }
 static void PumpFor(gint64 milliseconds)
@@ -155,6 +159,13 @@ int main(int argc, char **argv)
     /* UpsertText copies its input; reload the owned preview before later
      * metadata edits so this fixture cannot restore the previous draft. */
     CHECK(umi_ui_document_view_model_find(views, view.view_id, &view) == UMI_STATUS_OK);
+    /* This must remain a real unsynchronized editor draft. Synchronizing it
+     * here would conceal the initial-store-revision rejection in the scheduler. */
+    UmiDocumentWorkingCopySnapshot unsynchronized;
+    CHECK(umi_document_coordinator_active_snapshot(documents, &unsynchronized) == UMI_STATUS_OK);
+    UmiDocumentSnapshot stored;
+    CHECK(umi_document_store_snapshot(store, unsynchronized.document_id, &stored) == UMI_STATUS_OK);
+    CHECK(stored.revision == 0U);
     CHECK(UmiDocumentRecoveryDirectory("MonitorTest", base, directory, sizeof(directory)) == UMI_STATUS_OK);
     if (strcmp(mode, "form-enable") == 0 || strcmp(mode, "form-pause") == 0)
     {

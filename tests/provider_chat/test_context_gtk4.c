@@ -73,6 +73,15 @@ static GtkWidget *Find(GtkWidget *root, const char *id)
     }
     return NULL;
 }
+/* GTK runs its unrealize class handler after ordinary signal handlers. The
+ * controller must still own its text input state at this boundary, then retire
+ * before gtk_window_destroy returns even if the caller retains the window. */
+static void BeforeUnrealize(GtkWidget *window, gpointer data)
+{
+    bool *observed = data;
+    CHECK(g_object_get_data(G_OBJECT(window), "umicom-chat-panel") != NULL);
+    *observed = true;
+}
 static GtkWindow *NewChat(GtkWindow *except)
 {
     GListModel *windows = gtk_window_get_toplevels();
@@ -207,9 +216,23 @@ int main(int argc, char **argv)
         UmiProviderChatGtk *second_panel = g_object_get_data(G_OBJECT(second), "umicom-chat-panel");
         CHECK(Equals(second_panel->context, "") && UmiProviderChatGtkCanClose(second_panel));
         CHECK(Equals(first_panel->context, "Selected code"));
+/* The handoff fixture now checks controller retirement against GTK native unrealization ordering. The former implementation is retained for review. */
+#if 0
         gtk_window_destroy(second);
         g_object_unref(second);
         gtk_window_destroy(first);
+        g_object_unref(first);
+#endif
+        bool first_unrealized = false, second_unrealized = false;
+        g_signal_connect(first, "unrealize", G_CALLBACK(BeforeUnrealize), &first_unrealized);
+        g_signal_connect(second, "unrealize", G_CALLBACK(BeforeUnrealize), &second_unrealized);
+        gtk_window_destroy(second);
+        CHECK(second_unrealized && !gtk_widget_get_realized(GTK_WIDGET(second)));
+        CHECK(g_object_get_data(G_OBJECT(second), "umicom-chat-panel") == NULL);
+        g_object_unref(second);
+        gtk_window_destroy(first);
+        CHECK(first_unrealized && !gtk_widget_get_realized(GTK_WIDGET(first)));
+        CHECK(g_object_get_data(G_OBJECT(first), "umicom-chat-panel") == NULL);
         g_object_unref(first);
     }
     else if (strcmp(name, "failed-handoff") == 0)

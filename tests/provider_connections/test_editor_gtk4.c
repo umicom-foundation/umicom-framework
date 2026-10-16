@@ -7,6 +7,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "../../adapters/gtk4/provider_connections_internal.h"
+#include "umicom/ui/gtk4/selection_list.h"
 #include <glib/gstdio.h>
 #include <stdio.h>
 #include <string.h>
@@ -96,7 +97,15 @@ static int SaveReopen(void)
     CHECK(!f.panel->dirty && f.panel->editing_existing);
     CHECK(Retire()); CHECK(Open() == 0); CHECK(Wait(f.panel));
     GtkDropDown *selector = GTK_DROP_DOWN(Control("connections.select"));
+/* The shared selection policy adds a prompt row; verify saved records separately from native row count. The former implementation is retained for review. */
+#if 0
     CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(selector)) == 1U);
+#endif
+    /* Reopening must preserve the one saved connection without silently
+     * selecting it. The second native row is the explicit unselected prompt. */
+    CHECK(f.panel->snapshot.count == 1U);
+    CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(selector)) == 2U);
+    CHECK(UmiGtk4SelectionListSelected(selector) == GTK_INVALID_LIST_POSITION);
     gtk_drop_down_set_selected(selector, 0U);
     CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(Control("connections.label"))), "My local model") == 0);
     CHECK(!gtk_editable_get_editable(GTK_EDITABLE(Control("connections.id"))));

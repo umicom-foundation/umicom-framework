@@ -75,12 +75,20 @@ int main(int argc, char **argv)
         char link[UMI_PATH_CAPACITY];
         FixturePath(link, root, "linked.txt");
 #ifdef _WIN32
+/* Use checked platform capability probing so arbitrary link-creation errors fail rather than disappear as skipped coverage. The former implementation is retained for review. */
+#if 0
         wchar_t widePath[UMI_PATH_CAPACITY], wideLink[UMI_PATH_CAPACITY];
         CHECK(MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path, -1, widePath,
                                   (int)UMI_PATH_CAPACITY) != 0);
         CHECK(MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, link, -1, wideLink,
                                   (int)UMI_PATH_CAPACITY) != 0);
         if (!CreateSymbolicLinkW(wideLink, widePath, 2U))
+        {
+            free(bytes);
+            return 77;
+        }
+#endif
+        if (!FixtureSymbolicLink(link, path, 0))
         {
             free(bytes);
             return 77;

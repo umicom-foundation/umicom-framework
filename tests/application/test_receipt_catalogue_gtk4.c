@@ -84,20 +84,39 @@ int main(int argc, char **argv)
     /* A delegated request is not native process evidence. The observer must
      * never manufacture a running receipt on behalf of an external host. */
     CHECK(umi_gtk4_ws_shell_header_set_application_open_handler(header, host, &calls) == UMI_STATUS_OK);
+/* Bank cannot select itself from its own catalogue. The former implementation is retained for review. */
+#if 0
     open = find(root, "workstation.application.org.umicom.bank");
+#endif
+    /* A host is excluded from its own cross-application catalogue. Select
+     * another real product so every host exercises the same delegated action. */
+    const char *target_id = strcmp(product->application_id, "org.umicom.bank") == 0
+                                ? "org.umicom.trader" : "org.umicom.bank";
+    char open_id[128], instance_id[128];
+    (void)snprintf(open_id, sizeof(open_id), "workstation.application.%s", target_id);
+    (void)snprintf(instance_id, sizeof(instance_id), "workstation.application.new-window.%s", target_id);
+    open = find(root, open_id);
     CHECK(GTK_IS_BUTTON(open));
     g_object_ref(open);
     open_retained = true;
     g_signal_emit_by_name(open, "clicked");
     CHECK(calls == 1U);
     CHECK(last_mode == UMI_GTK4_WORKSTATION_APPLICATION_OPEN_STANDARD);
+/* Use the same eligible target for both delegated modes. The former implementation is retained for review. */
+#if 0
     GtkWidget *new_instance = find(root, "workstation.application.new-window.org.umicom.bank");
+#endif
+    GtkWidget *new_instance = find(root, instance_id);
     CHECK(GTK_IS_BUTTON(new_instance));
     g_signal_emit_by_name(new_instance, "clicked");
     CHECK(calls == 2U);
     CHECK(last_mode == UMI_GTK4_WORKSTATION_APPLICATION_OPEN_NEW_WINDOW);
 
+/* Delegation must not manufacture a receipt for the selected product. The former implementation is retained for review. */
+#if 0
     CHECK(UmiGtk4WorkstationApplicationReceipt(header, "org.umicom.bank", &receipt) == UMI_STATUS_NOT_FOUND);
+#endif
+    CHECK(UmiGtk4WorkstationApplicationReceipt(header, target_id, &receipt) == UMI_STATUS_NOT_FOUND);
     umi_gtk4_ws_shell_header_destroy(header);
     header = NULL;
     g_signal_emit_by_name(open, "clicked");

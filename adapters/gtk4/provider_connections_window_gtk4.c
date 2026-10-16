@@ -88,7 +88,11 @@ static UmiStatus PresentContext(GtkWindow *parent,
     gtk_window_set_child(GTK_WINDOW(window), UmiProviderConnectionsGtkWidget(panel));
     g_object_set_data_full(G_OBJECT(window), "umicom-provider-panel", panel, ReleasePanel);
     g_signal_connect(window, "close-request", G_CALLBACK(CloseRequested), NULL);
+/* Retire controllers after GTK unrealizes the child tree so text input contexts remain alive through native surface teardown. The former implementation is retained for review. */
+#if 0
     g_signal_connect(window, "unrealize", G_CALLBACK(RetirePanel), NULL);
+#endif
+    g_signal_connect_after(window, "unrealize", G_CALLBACK(RetirePanel), NULL);
     gtk_window_present(GTK_WINDOW(window));
     return UMI_STATUS_OK;
 }

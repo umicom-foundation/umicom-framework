@@ -73,6 +73,12 @@ if(NOT MODE STREQUAL "missing")
         "${FRAMEWORK}/src/platform/threading.c"
         "${FRAMEWORK}/src/platform/output_file.c"
         "${FRAMEWORK}/src/platform/cancellation.c")
+    # Observation-export tests now read back files through the real platform
+    # boundary. Include its dependencies in this deliberately small host too.
+    target_sources(umicom_platform PRIVATE
+        "${FRAMEWORK}/src/platform/input_file.c"
+        "${FRAMEWORK}/src/platform/filesystem.c"
+        "${FRAMEWORK}/src/platform/path.c")
     set(_owners base trading platform)
     if(NOT MODE STREQUAL "partial")
         add_library(umicom_trading_ui STATIC "${FRAMEWORK}/src/strategy_research/backtest_engine.c")
@@ -133,7 +139,8 @@ if(NOT MODE STREQUAL "missing")
     foreach(_header IN ITEMS base/value_archive.h finance/decimal.h
         trading/price_increment.h broker_connectivity/order_observation.h
         base/csv_document.h chart/candle.h chart/plot.h chart/render_scene.h
-        chart/types.h platform/cancellation.h platform/output_file.h)
+        chart/types.h platform/cancellation.h platform/output_file.h
+        platform/input_file.h platform/filesystem.h platform/path.h)
         get_filename_component(_dir "${_header}" DIRECTORY)
         install(FILES "${FRAMEWORK}/include/umicom/${_header}"
             DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/${_dir}")

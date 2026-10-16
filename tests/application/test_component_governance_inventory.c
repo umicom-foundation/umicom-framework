@@ -35,7 +35,34 @@ int main(void) {
   assert(inventory != NULL);
   assert(umi_component_inventory_build(NULL, 0U, inventory) == UMI_STATUS_OK);
   assert(inventory->component_count == umi_application_component_catalogue_count());
+/* The fixed domain total predates the canonical Healthcare component; validate complete domain membership instead. The former implementation is retained for review. */
+#if 0
   assert(inventory->domain_count == 31U);
+#endif
+  /* New product domains must be governed too. Count distinct canonical domain
+   * identities rather than freezing the inventory at an earlier portfolio. */
+  size_t expected_domains = 0U;
+  for (size_t index = 0U; index < umi_application_component_catalogue_count(); ++index) {
+    const UmiApplicationComponentDefinition *component =
+        umi_application_component_catalogue_at(index);
+    assert(component != NULL);
+    size_t previous = 0U;
+    for (; previous < index; ++previous) {
+      const UmiApplicationComponentDefinition *earlier =
+          umi_application_component_catalogue_at(previous);
+      assert(earlier != NULL);
+      if (strcmp(earlier->domain_id, component->domain_id) == 0) break;
+    }
+    if (previous == index) {
+      const UmiComponentDomainInventory *domain =
+          umi_component_inventory_domain_find(inventory, component->domain_id);
+      assert(domain != NULL);
+      assert(domain->component_count == umi_application_component_domain_count(component->domain_id));
+      ++expected_domains;
+    }
+  }
+  assert(inventory->domain_count == expected_domains);
+  assert(umi_component_inventory_domain_find(inventory, "healthcare") != NULL);
   assert(umi_component_inventory_validate(inventory) == UMI_STATUS_OK);
   trading = umi_component_inventory_domain_find(inventory, "trading");
   assert(trading != NULL);

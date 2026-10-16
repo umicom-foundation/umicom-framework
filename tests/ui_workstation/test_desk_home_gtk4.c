@@ -251,7 +251,14 @@ int main(void)
 #endif
     /* Use an eligible fixture product so the request reaches Desk's host
      * policy. An unregistered identity is rejected earlier by discovery. */
+/* The host must be registered and distinct from the Studio target. The former implementation is retained for review. */
+#if 0
     header_config = umi_gtk4_ws_shell_header_config_default("org.umicom.studio", "Desk test");
+#endif
+    /* Register the host explicitly so independent-window rejection reaches
+     * Desk policy, while Studio remains eligible for catalogue selection. */
+    CHECK(register_fixture(runtime, "org.umicom.desktop", "Desk host", true, true, true) == UMI_STATUS_OK);
+    header_config = umi_gtk4_ws_shell_header_config_default("org.umicom.desktop", "Desk test");
     CHECK(umi_gtk4_ws_shell_header_create_managed(&header_config, &header) == UMI_STATUS_OK);
     CHECK(umi_gtk4_desk_bind_shell_header(NULL, header) == UMI_STATUS_INVALID_ARGUMENT);
     CHECK(umi_gtk4_desk_bind_shell_header(fixture.desk, header) == UMI_STATUS_OK);

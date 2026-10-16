@@ -26,6 +26,9 @@ typedef struct FakeRepository {
     char pin[65];
     int dirty;
     int staged;
+    /* Recovery changes only references; the fixture keeps file state separate. */
+    int detached;
+    char local_main[65];
 } FakeRepository;
 
 typedef struct FakeWorkspace {
@@ -36,6 +39,7 @@ typedef struct FakeWorkspace {
     const char *scenario;
     int owns_fixture;
     size_t adds, commits, pushes, fetches, locks, merges;
+    size_t advances, attachments;
     int sequence[32];
     size_t sequence_count;
 } FakeWorkspace;
@@ -107,11 +111,57 @@ static UmiStatus fake_git(void *context, const char *path,
                 "ffffffffffffffffffffffffffffffffffffffff" :
                 "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
         if (count == 3U && strcmp(args[2], "HEAD") == 0) return answer(out, 0, "%s\n", repo->head);
+        if (count == 3U && strcmp(args[2], "refs/heads/main") == 0) {
+            if (strcmp(scenario, "attach-missing-main") == 0) return answer(out, 1, "");
+            return answer(out, 0, "%s\n", repo->local_main);
+        }
         return answer(out, 0, "%s\n", remote);
     }
+/* The fake backend now models detached HEAD and compare-and-swap branch recovery independently from source files. The former implementation is retained for review. */
+#if 0
     if (strcmp(args[0], "symbolic-ref") == 0) {
         if (primary && strcmp(scenario, "detached") == 0) return answer(out, 1, "");
         return answer(out, 0, "main\n");
+    }
+#endif
+    if (strcmp(args[0], "symbolic-ref") == 0) {
+        if (count == 5U && strcmp(args[1], "-m") == 0) {
+            if (strcmp(args[3], "HEAD") != 0 || strcmp(args[4], "refs/heads/main") != 0 ||
+                !repo->detached || strcmp(repo->head, repo->local_main) != 0)
+                return UMI_STATUS_INVALID_ARGUMENT;
+            if (strcmp(scenario, "attach-bind-failure") == 0) return answer(out, 1, "");
+            repo->detached = 0;
+            ++workspace->attachments;
+            return answer(out, 0, "");
+        }
+        if (repo->detached || (primary && strcmp(scenario, "detached") == 0))
+            return answer(out, 1, "");
+        return answer(out, 0, "main\n");
+    }
+    if (strcmp(args[0], "merge-base") == 0) {
+        if (count != 4U || strcmp(args[1], "--is-ancestor") != 0 ||
+            strcmp(args[2], repo->local_main) != 0 || strcmp(args[3], repo->head) != 0)
+            return UMI_STATUS_INVALID_ARGUMENT;
+        return answer(out, strcmp(scenario, "attach-divergent-main") == 0 ? 1 : 0, "");
+    }
+    if (strcmp(args[0], "worktree") == 0) {
+        if (count != 4U || strcmp(args[1], "list") != 0 ||
+            strcmp(args[2], "--porcelain") != 0 || strcmp(args[3], "-z") != 0)
+            return UMI_STATUS_INVALID_ARGUMENT;
+        if (strcmp(scenario, "attach-empty-worktrees") == 0) return answer(out, 0, "");
+        if (strcmp(scenario, "attach-other-worktree") == 0)
+            return answer(out, 0, "worktree other%cbranch refs/heads/main%c%c", 0, 0, 0);
+        return answer(out, 0, "worktree %s%cdetached%c%c", path, 0, 0, 0);
+    }
+    if (strcmp(args[0], "update-ref") == 0) {
+        if (count != 6U || strcmp(args[1], "-m") != 0 ||
+            strcmp(args[3], "refs/heads/main") != 0 ||
+            strcmp(args[4], repo->head) != 0 || strcmp(args[5], repo->local_main) != 0)
+            return UMI_STATUS_INVALID_ARGUMENT;
+        if (strcmp(scenario, "attach-race") == 0) return answer(out, 1, "");
+        (void)snprintf(repo->local_main, sizeof(repo->local_main), "%s", args[4]);
+        ++workspace->advances;
+        return answer(out, 0, "");
     }
     if (strcmp(args[0], "remote") == 0) {
         if (primary && count == 5U && (strcmp(scenario, "push-url") == 0 ||
@@ -251,6 +301,7 @@ static UmiStatus create_fixture(FakeWorkspace *workspace, const char *scenario, 
         status = umi_fs_make_directories(metadata);
         if (status != UMI_STATUS_OK) return status;
         sha(workspace->repos[i].head, i == 1U ? 'b' : 'a');
+        sha(workspace->repos[i].local_main, i == 1U ? 'b' : 'a');
     }
     sha(workspace->repos[1].pin, 'a');
     sha(workspace->child_remote, 'a');
@@ -334,6 +385,61 @@ finish:
     return passed;
 }
 
+
+/* These cases execute the complete planner through a fake transport. They
+ * prove that attachment never commits files, pushes, or guesses conflict text. */
+static int run_attachment_case(const char *scenario, unsigned number)
+{
+    FakeWorkspace *workspace = calloc(1U, sizeof(*workspace));
+    UmiRepositoryPublicationReport *report = calloc(1U, sizeof(*report));
+    UmiRepositoryPublicationRequest request;
+    int passed = 0;
+    if (!workspace || !report) goto finish;
+    if (create_fixture(workspace, scenario, number) != UMI_STATUS_OK) goto finish;
+    FakeRepository *repo = &workspace->repos[0];
+    repo->dirty = strcmp(scenario, "attach-dirty") == 0;
+    repo->detached = 1;
+    sha(repo->local_main, strcmp(scenario, "attach-at-tip") == 0 ? 'a' : '0');
+    if (strcmp(scenario, "attach-unpublished") == 0) sha(repo->head, 'c');
+    UmiPublicationBackend backend = {workspace, fake_git, fake_lock};
+    umi_repository_publication_request_init(&request, workspace->root);
+    request.apply = strcmp(scenario, "attach-preview") != 0;
+    request.refresh = strcmp(scenario, "attach-without-refresh") != 0;
+    UmiStatus status = umi_publication_run_recovery_backend(NULL, NULL, &request,
+        report, &backend, 1);
+    if (strcmp(scenario, "attach-preview") == 0) {
+        passed = status == UMI_STATUS_OK && repo->detached &&
+            workspace->advances == 0U && workspace->attachments == 0U &&
+            workspace->adds == 0U && workspace->locks == 0U;
+    } else if (strcmp(scenario, "attach-success") == 0 || strcmp(scenario, "attach-at-tip") == 0) {
+        passed = status == UMI_STATUS_OK && !repo->detached &&
+            strcmp(repo->head, repo->local_main) == 0 && workspace->attachments == 1U &&
+            workspace->advances == (strcmp(scenario, "attach-at-tip") == 0 ? 0U : 1U) &&
+            report->updated_count == 1U;
+        /* Repeating recovery is a no-op, including the already-published branch. */
+        size_t advances = workspace->advances;
+        status = umi_publication_run_recovery_backend(NULL, NULL, &request, report, &backend, 1);
+        passed = passed && status == UMI_STATUS_OK && workspace->attachments == 1U &&
+            workspace->advances == advances && report->updated_count == 0U;
+    } else {
+        passed = status != UMI_STATUS_OK && repo->detached && workspace->attachments == 0U &&
+            workspace->advances == (strcmp(scenario, "attach-bind-failure") == 0 ? 1U : 0U) &&
+            workspace->adds == 0U && workspace->locks == 0U;
+    }
+    passed = passed && workspace->commits == 0U && workspace->pushes == 0U &&
+        workspace->merges == 0U && repo->dirty == (strcmp(scenario, "attach-dirty") == 0) &&
+        repo->head[0] == (strcmp(scenario, "attach-unpublished") == 0 ? 'c' : 'a');
+    if (!passed) (void)fprintf(stderr,
+        "Recovery %s: status=%d advances=%zu attachments=%zu; %s\n", scenario,
+        (int)status, workspace->advances, workspace->attachments, report->detail);
+finish:
+    if (workspace && workspace->owns_fixture && umi_fs_exists(workspace->root))
+        if (umi_fs_remove_tree(workspace->root) != UMI_STATUS_OK) passed = 0;
+    free(workspace);
+    free(report);
+    return passed;
+}
+
 int main(void)
 {
     const char *scenarios[] = {"success", "preview", "watch", "duplicate-dirty",
@@ -345,5 +451,11 @@ int main(void)
     int passed = 1;
     for (unsigned i = 0U; i < sizeof(scenarios) / sizeof(scenarios[0]); ++i)
         passed = run_case(scenarios[i], i) && passed;
+    const char *recovery[] = {"attach-preview", "attach-success", "attach-at-tip",
+        "attach-dirty", "attach-unpublished", "attach-divergent-main",
+        "attach-other-worktree", "attach-race", "attach-bind-failure",
+        "attach-missing-main", "attach-empty-worktrees", "attach-without-refresh"};
+    for (unsigned i = 0U; i < sizeof(recovery) / sizeof(recovery[0]); ++i)
+        passed = run_attachment_case(recovery[i], 100U + i) && passed;
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

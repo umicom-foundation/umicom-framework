@@ -111,8 +111,17 @@ int main(void)
     g_weak_ref_clear(&weak); CHECK(retired);
 cleanup:
     UmiWorkspaceLibraryGtkDestroy(library); g_clear_object(&retained); g_free(text);
+    /* Each cleanup owns one resource; independent guarded statements avoid
+     * implying that the directory cleanup depends on the preceding file.
+     * Retain the former compact spelling for implementation review. */
+#if 0
     if (settings) (void)g_remove(settings); if (preferences) (void)g_rmdir(preferences);
     if (first) (void)g_remove(first); if (directory) (void)g_rmdir(directory);
+#endif
+    if (settings != NULL) { (void)g_remove(settings); }
+    if (preferences != NULL) { (void)g_rmdir(preferences); }
+    if (first != NULL) { (void)g_remove(first); }
+    if (directory != NULL) { (void)g_rmdir(directory); }
     g_free(settings); g_free(preferences); g_free(first); g_free(second); g_free(directory);
     return result;
 }

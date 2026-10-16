@@ -74,4 +74,39 @@ static inline unsigned char *FixtureRead(const char *path, size_t *length)
     CHECK(fread(bytes, 1U, (size_t)size, file) == (size_t)size && fclose(file) == 0);
     *length = (size_t)size; return bytes;
 }
+
+/* POSIX callers already exercise symlink directly; keep this optional helper
+ * out of their translation units and feature-test macro requirements. */
+#ifdef _WIN32
+/* Create a link only inside caller-owned test fixtures. Windows can grant this
+ * through Developer Mode or process privileges. A missing capability returns
+ * zero; an unexpected filesystem error fails instead of hiding a regression. */
+static inline int FixtureSymbolicLink(const char *alias, const char *target, int directory)
+{
+#ifdef _WIN32
+    wchar_t alias_wide[UMI_PATH_CAPACITY], target_wide[UMI_PATH_CAPACITY];
+    CHECK(MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, alias, -1, alias_wide,
+                              (int)UMI_PATH_CAPACITY) > 0);
+    CHECK(MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, target, -1, target_wide,
+                              (int)UMI_PATH_CAPACITY) > 0);
+    DWORD flags = directory ? SYMBOLIC_LINK_FLAG_DIRECTORY : 0U;
+    if (CreateSymbolicLinkW(alias_wide, target_wide, flags | 2U)) return 1;
+    DWORD error = GetLastError();
+    if (error == ERROR_INVALID_PARAMETER) {
+        if (CreateSymbolicLinkW(alias_wide, target_wide, flags)) return 1;
+        error = GetLastError();
+    }
+    fprintf(stderr, "Symbolic-link fixture creation unavailable or failed (Windows error %lu).\n",
+            (unsigned long)error);
+    if (error == ERROR_PRIVILEGE_NOT_HELD || error == ERROR_NOT_SUPPORTED ||
+        error == ERROR_INVALID_FUNCTION) return 0;
+    CHECK(0);
+    return 0;
+#else
+    (void)directory;
+    CHECK(symlink(target, alias) == 0);
+    return 1;
+#endif
+}
+#endif /* _WIN32 fixture capability helper */
 #endif

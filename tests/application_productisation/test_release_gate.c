@@ -18,6 +18,7 @@
 
 #include "umicom/application/productisation/runtime.h"
 #include "umicom/application/application.h"
+#include "umicom/application/experience_catalogue.h"
 
 /*
  * Start this command or application, report setup failures, and return a process exit code
@@ -34,7 +35,24 @@ int main(void)
     assert(runtime->release_gate.application_count == 25U);
 #endif
     assert(umi_application_portfolio_find("org.umicom.healthcare") != NULL);
+/* Launch aliases must not create duplicate product evidence. The former implementation is retained for review. */
+#if 0
     assert(runtime->release_gate.application_count == umi_application_portfolio_count());
+#endif
+    /* Release evidence is per canonical experience; the focused IDE launcher
+     * intentionally shares Studio. Check coverage by identity, not launcher count. */
+    assert(runtime->release_gate.application_count == umi_application_experience_catalogue_count());
+    for (size_t index = 0U; index < umi_application_portfolio_count(); ++index) {
+        const UmiApplicationDefinition *application = umi_application_portfolio_at(index);
+        assert(application != NULL);
+        const UmiApplicationExperienceDefinition *experience =
+            umi_application_experience_catalogue_find(application->application_id);
+        assert(experience != NULL);
+        assert(umi_product_portfolio_inventory_find(&runtime->inventory,
+                    experience->application_id) != NULL);
+    }
+    assert(umi_application_experience_catalogue_find("org.umicom.ide") ==
+           umi_application_experience_catalogue_find("org.umicom.studio"));
     assert(runtime->release_gate.experience_catalogue_valid);
     assert(!runtime->release_gate.trader_live_execution_allowed);
     assert(runtime->revision == 1U);

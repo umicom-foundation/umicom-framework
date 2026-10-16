@@ -97,6 +97,8 @@ int main(int argc,char **argv)
         CHECK(GTK_IS_DROP_DOWN(drawings));
         gtk_drop_down_set_model(drawings, NULL);
         CHECK(gtk_drop_down_get_selected(drawings) == GTK_INVALID_LIST_POSITION);
+        /* Cancellation must retire the gesture before any subsequent click. */
+        CHECK(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(Find(root, "trading.chart.cursor"))));
         /* Cancelling a move must not turn its second click into a new drawing. */
         ClickPrice(root,0.7,0.65);ClickPrice(root,0.4,0.45);
         CHECK(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(Find(root,"trading.chart.cursor"))));

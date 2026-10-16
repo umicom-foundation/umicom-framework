@@ -42,10 +42,12 @@ static void show_report(const UmiRepositoryPublicationReport *report)
             entry->blocked ? "BLOCKED" : entry->vendor ? "Vendor pin" :
             entry->primary == i ? "Primary" : "Shared copy",
             entry->changed_paths, entry->ahead, entry->behind, entry->path);
+        (void)printf("  Branch: %s | HEAD: %.12s | origin/main: %.12s\n",
+            entry->branch[0] ? entry->branch : "detached", entry->head, entry->remote_head);
         if (entry->detail[0]) (void)printf("  %s\n", entry->detail);
     }
     (void)printf("%s\n", report->detail);
-    (void)printf("%zu commits; %zu pushes; %zu fast-forwards completed.\n",
+    (void)printf("%zu commits; %zu pushes; %zu checkout updates completed.\n",
         report->committed_count, report->pushed_count, report->updated_count);
 }
 
@@ -63,11 +65,12 @@ int umi_cli_command_repository_publication(
     UmiRepositoryPublicationReport *report = NULL, *previous = NULL;
     unsigned interval = 30U;
     int apply = 0;
+    int attach_published_main = 0;
     int watch;
     UmiStatus status;
     void (*old_signal)(int) = SIG_DFL;
     if (!context || argc < 2 || argv[1][0] == '-') {
-        (void)fputs("Usage: umicom repo publish-all WORKSPACE [--apply] [--message TEXT]\n"
+        (void)fputs("Usage: umicom repo publish-all WORKSPACE [--apply] [--attach-published-main] [--message TEXT]\n"
             "       umicom repo watch WORKSPACE [--interval SECONDS]\n", stderr);
         return 2;
     }
@@ -77,6 +80,9 @@ int umi_cli_command_repository_publication(
         if (!watch && strcmp(argv[i], "--apply") == 0) {
             if (apply) return 2;
             apply = 1;
+        } else if (!watch && strcmp(argv[i], "--attach-published-main") == 0) {
+            if (attach_published_main) return 2;
+            attach_published_main = 1;
         } else if (!watch && strcmp(argv[i], "--message") == 0 &&
             i + 1 < argc && request.commit_message == NULL) {
             request.commit_message = argv[++i];
@@ -114,8 +120,13 @@ int umi_cli_command_repository_publication(
     }
     int first = 1;
     do {
+/* Explicit recovery extends the existing publication request without changing its defaults. The former implementation is retained for review. */
+#if 0
         status = umi_repository_publication_run(&context->discovery.profile,
             &context->environment, &request, report);
+#endif
+        status = umi_repository_publication_run_recovery(&context->discovery.profile,
+            &context->environment, &request, report, attach_published_main);
         if (!watch || first || memcmp(previous, report, sizeof(*report)) != 0) {
             show_report(report);
             (void)fflush(stdout);
@@ -134,8 +145,13 @@ int umi_cli_command_repository_publication(
         (void)puts("Applying with a fresh preflight. Keep repository editors idle until completion.");
         request.apply = 1;
         request.observer = show_action;
+/* Explicit recovery extends the existing publication request without changing its defaults. The former implementation is retained for review. */
+#if 0
         status = umi_repository_publication_run(&context->discovery.profile,
             &context->environment, &request, report);
+#endif
+        status = umi_repository_publication_run_recovery(&context->discovery.profile,
+            &context->environment, &request, report, attach_published_main);
         show_report(report);
     } else if (!watch && status == UMI_STATUS_OK) {
         (void)puts("Preview only. Add --apply to stage, commit, push and lock parents.");

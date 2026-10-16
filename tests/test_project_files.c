@@ -26,9 +26,41 @@
 #ifndef _WIN32
 #include <unistd.h>
 #endif
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
 #define CHECK(expression) do { if (!(expression)) { \
     fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, #expression); \
     return EXIT_FAILURE; } } while (0)
+
+#ifdef _WIN32
+/* Test project containment against a native directory link when Windows grants
+ * link creation. Convert UTF-8 explicitly so path spelling cannot weaken the
+ * fixture; retain CTest's skip result only for unavailable host capability. */
+static int CreateDirectoryLink(const char *alias, const char *target)
+{
+    wchar_t alias_wide[UMI_PATH_CAPACITY], target_wide[UMI_PATH_CAPACITY];
+    CHECK(MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, alias, -1, alias_wide,
+                              (int)UMI_PATH_CAPACITY) > 0);
+    CHECK(MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, target, -1, target_wide,
+                              (int)UMI_PATH_CAPACITY) > 0);
+    /* Flag 2 requests unprivileged creation on Developer Mode hosts. Retry the
+     * ordinary directory flag for SDK/runtime combinations that lack it. */
+    if (CreateSymbolicLinkW(alias_wide, target_wide, SYMBOLIC_LINK_FLAG_DIRECTORY | 2U))
+        return EXIT_SUCCESS;
+    DWORD error = GetLastError();
+    if (error == ERROR_INVALID_PARAMETER) {
+        if (CreateSymbolicLinkW(alias_wide, target_wide, SYMBOLIC_LINK_FLAG_DIRECTORY))
+            return EXIT_SUCCESS;
+        error = GetLastError();
+    }
+    fprintf(stderr, "Directory-link fixture unavailable or failed (Windows error %lu).\n",
+            (unsigned long)error);
+    return error == ERROR_PRIVILEGE_NOT_HELD || error == ERROR_NOT_SUPPORTED ||
+           error == ERROR_INVALID_FUNCTION ? 77 : EXIT_FAILURE;
+}
+#endif
 
 /* Every test runs in a separate, CTest-owned working directory. */
 static int Root(char *root)
@@ -150,9 +182,41 @@ static int Creation(const char *test)
         CHECK(unlink(path) == 0);
         CHECK(umi_fs_remove_tree(outside) == UMI_STATUS_OK);
 #else
+/* Native Windows link creation now exercises the same project containment contract as POSIX. The former implementation is retained for review. */
+#if 0
         umi_workspace_graph_destroy(graph);
         CHECK(umi_fs_remove_tree(root) == UMI_STATUS_OK);
         return 77; /* Reparse-point creation needs a separate native Windows fixture. */
+#endif
+        char outside[UMI_PATH_CAPACITY], escaped[UMI_PATH_CAPACITY];
+        CHECK(umi_path_join(root, "link", path, sizeof(path)) == UMI_STATUS_OK);
+        CHECK(umi_path_join(root, "../outside", outside, sizeof(outside)) == UMI_STATUS_OK);
+        CHECK(umi_fs_make_directories(outside) == UMI_STATUS_OK);
+        int link_status = CreateDirectoryLink(path, outside);
+        if (link_status == 77) {
+            umi_workspace_graph_destroy(graph);
+            CHECK(umi_fs_remove_tree(root) == UMI_STATUS_OK);
+            CHECK(umi_fs_remove_tree(outside) == UMI_STATUS_OK);
+            return 77;
+        }
+        CHECK(link_status == EXIT_SUCCESS);
+        if (strcmp(test, "symlink-parent") == 0) {
+            CHECK(UmiWorkspaceCreateEntry(graph, 0U, "link/escape.c", UMI_WORKSPACE_ENTRY_FILE,
+                                          &result) == UMI_STATUS_PERMISSION_DENIED);
+        } else {
+            CHECK(UmiWorkspaceCreateEntry(graph, 0U, "link", UMI_WORKSPACE_ENTRY_FILE,
+                                          &result) == UMI_STATUS_ALREADY_EXISTS);
+        }
+        CHECK(!result.created);
+        CHECK(umi_path_join(outside, "escape.c", escaped, sizeof(escaped)) == UMI_STATUS_OK);
+        CHECK(!umi_fs_exists(escaped));
+        /* Remove only the fixture link itself before ordinary fixture cleanup;
+         * never ask a recursive directory walker to follow its target. */
+        wchar_t alias_wide[UMI_PATH_CAPACITY];
+        CHECK(MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path, -1, alias_wide,
+                                  (int)UMI_PATH_CAPACITY) > 0);
+        CHECK(RemoveDirectoryW(alias_wide));
+        CHECK(umi_fs_remove_tree(outside) == UMI_STATUS_OK);
 #endif
     } else if (strcmp(test, "parallel-create") == 0) {
         CreationWorker workers[8]; UmiThread *threads[8]; size_t created = 0U;

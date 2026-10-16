@@ -497,6 +497,11 @@ static void CompletionReviewInvalidateDisplay(CompletionReview *review)
     if (review->generation != UINT64_MAX)
         ++review->generation;
     review->presented = 0U;
+    /* Diagnostic navigation owns the currently displayed range. Retire that
+     * action before rebuilding its choices, including synchronous GTK observers
+     * that can invalidate settings while the replacement is being displayed. */
+    if (review->source_diagnostics)
+        gtk_widget_set_sensitive(review->preview, FALSE);
     if (review->call_location != NULL)
     {
         gtk_drop_down_set_model(GTK_DROP_DOWN(review->call_location), NULL);
@@ -625,6 +630,8 @@ static void CompletionReviewInvalidate(CompletionReview *review)
     while ((child = gtk_widget_get_first_child(review->comparison)) != NULL)
         gtk_box_remove(GTK_BOX(review->comparison), child);
 }
+/* Separate explicit user completion from external window retirement to avoid nested GTK destruction. The former implementation is retained for review. */
+#if 0
 static void CompletionReviewClose(GtkWidget *window, int notify, UmiStatus status)
 {
     g_object_ref(window);
@@ -644,6 +651,44 @@ static void CompletionReviewClose(GtkWidget *window, int notify, UmiStatus statu
         g_object_unref(lifetime);
     }
     g_object_unref(window);
+}
+#endif
+/* External unmap may be inside gtk_window_destroy. Finish retirement now,
+ * then let GTK complete its toplevel-list update before any further destroy. */
+static gboolean CompletionReviewDestroyLater(gpointer data)
+{
+    GtkWindow *window = GTK_WINDOW(data);
+    if (UmiGtk4WindowIsOpen(window))
+        gtk_window_destroy(window);
+    return G_SOURCE_REMOVE;
+}
+static void CompletionReviewRetire(GtkWidget *window, int notify, UmiStatus status, int destroy_window)
+{
+    g_object_ref(window);
+    CompletionReview *review = CompletionReviewState(window);
+    if (review != NULL && !review->closed)
+    {
+        GObject *lifetime = g_object_ref(review->lifetime);
+        UmiGtk4Adapter *owner = CompletionReviewOwner(window, review);
+        review->closed = 1;
+        if (g_object_get_data(lifetime, "completion-review") == window)
+            g_object_set_data(lifetime, "completion-review", NULL);
+        CompletionReviewInvalidate(review);
+        if (destroy_window)
+            gtk_window_destroy(GTK_WINDOW(window));
+        else
+            g_idle_add_full(G_PRIORITY_DEFAULT_IDLE, CompletionReviewDestroyLater,
+                            g_object_ref(window), g_object_unref);
+        if (notify && owner != NULL && g_object_get_data(lifetime, "adapter") == owner &&
+            owner->window != NULL && UmiGtk4WindowIsOpen(owner->window))
+            (void)EditFinished(owner, status);
+        g_object_unref(lifetime);
+    }
+    g_object_unref(window);
+}
+static void CompletionReviewClose(GtkWidget *window, int notify, UmiStatus status)
+{
+    CompletionReviewRetire(window, notify, status, 1);
 }
 /* Retire local snippet reviews with the document binding, alongside language requests.
  * The former implementation is retained for engineering review. */
@@ -668,10 +713,20 @@ static gboolean CompletionReviewClosing(GtkWindow *window, gpointer data)
     CompletionReviewClose(GTK_WIDGET(window), 1, UMI_STATUS_CANCELLED);
     return TRUE;
 }
+/* External removal cannot recursively destroy an in-flight GTK toplevel or invoke an edit completion. The former implementation is retained for review. */
+#if 0
 static void CompletionReviewRemoved(GtkWidget *window, gpointer data)
 {
     (void)data;
     CompletionReviewClose(window, 1, UMI_STATUS_CANCELLED);
+}
+#endif
+static void CompletionReviewRemoved(GtkWidget *window, gpointer data)
+{
+    (void)data;
+    /* Removing a native window retires authority without reporting a user edit.
+     * Explicit Cancel and close-request continue to report cancellation. */
+    CompletionReviewRetire(window, 0, UMI_STATUS_CANCELLED, 0);
 }
 static void CompletionReviewParentRemoved(GtkWidget *parent, gpointer data)
 {
@@ -13699,6 +13754,8 @@ static void CompletionReviewOpenLocation(GtkWidget *window, CompletionReview *re
     review->rendering = 0;
 }
 #endif
+/* Retained call controls must not navigate after their visible destination model is cleared. The former implementation is retained for review. */
+#if 0
 static void CompletionReviewOpenLocation(GtkWidget *window, CompletionReview *review, UmiGtk4Adapter *owner)
 {
     review->rendering = 1;
@@ -13711,6 +13768,65 @@ static void CompletionReviewOpenLocation(GtkWidget *window, CompletionReview *re
         {
             size_t destination = gtk_drop_down_get_selected(GTK_DROP_DOWN(review->call_location));
             status = UmiLanguageCallResultLocation(review->calls, selected, destination, &location);
+        }
+        else if (review->source_diagnostics)
+        {
+            size_t destination = gtk_drop_down_get_selected(GTK_DROP_DOWN(review->diagnostic_location));
+            status =
+                UmiLanguageDiagnosticCatalogueLocation(review->diagnostics, selected, destination, &location);
+        }
+        else if (review->document_symbols)
+        {
+            UmiLanguageSymbol symbol;
+            status = UmiLanguageSymbolCatalogueAt(review->symbols, selected, &symbol);
+            if (status == UMI_STATUS_OK)
+                location = symbol.location;
+        }
+        else
+            status = UmiLanguageLocationCatalogueAt(review->locations, selected, &location);
+    }
+    char *uri = NULL;
+    if (status == UMI_STATUS_OK)
+    {
+        uri = g_strdup(location.uri);
+        status = UmiDocumentCoordinatorOpenSourceRange(owner->edit_coordinator, uri, location.selection.start,
+                                                       location.selection.end, NULL, NULL, NULL);
+    }
+    g_free(uri);
+    if (CompletionReviewOwner(window, review) != NULL)
+    {
+        if (status == UMI_STATUS_OK)
+            CompletionReviewClose(window, 1, status);
+        else
+        {
+            char *message = g_strdup_printf("Could not open this source location: %s. Choose a valid local "
+                                            "target or capture again if the source changed.",
+                                            umi_status_text(status));
+            gtk_label_set_text(GTK_LABEL(review->message), message);
+            g_free(message);
+        }
+    }
+    review->rendering = 0;
+}
+#endif
+static void CompletionReviewOpenLocation(GtkWidget *window, CompletionReview *review, UmiGtk4Adapter *owner)
+{
+    review->rendering = 1;
+    UmiStatus status = UmiDocumentSourceRequestCheck(owner->edit_coordinator, review->source);
+    UmiLanguageSourceLocation location;
+    if (status == UMI_STATUS_OK)
+    {
+        size_t selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(review->choice));
+        if (review->call_direction != 0)
+        {
+            size_t destination = gtk_drop_down_get_selected(GTK_DROP_DOWN(review->call_location));
+            GListModel *relations = gtk_drop_down_get_model(GTK_DROP_DOWN(review->choice));
+            GListModel *destinations = gtk_drop_down_get_model(GTK_DROP_DOWN(review->call_location));
+            status = relations != NULL && destinations != NULL &&
+                selected < g_list_model_get_n_items(relations) &&
+                destination < g_list_model_get_n_items(destinations)
+                ? UmiLanguageCallResultLocation(review->calls, selected, destination, &location)
+                : UMI_STATUS_INVALID_STATE;
         }
         else if (review->source_diagnostics)
         {
@@ -14673,6 +14789,8 @@ static void CompletionReviewPreview(GtkButton *button, gpointer data)
     g_object_unref(window);
 }
 #endif
+/* Call hierarchy uses its own result catalogue; validate it before dispatching through source navigation. The former implementation is retained for review. */
+#if 0
 static void CompletionReviewPreview(GtkButton *button, gpointer data)
 {
     (void)button;
@@ -14682,6 +14800,175 @@ static void CompletionReviewPreview(GtkButton *button, gpointer data)
     if (owner == NULL || review->source_information || review->pending != NULL ||
         review->preference_pending != NULL || review->rendering ||
         (review->source_diagnostics ? review->diagnostics == NULL
+         : review->code_actions     ? review->actions == NULL
+         : review->document_symbols ? review->symbols == NULL
+         : review->navigation       ? review->locations == NULL
+         : review->formatting       ? review->formatted == NULL
+                                    : review->catalogue == NULL))
+    {
+        g_object_unref(window);
+        return;
+    }
+    if (review->code_actions && review->workspace_actions)
+    {
+        CompletionWorkspaceActionPreview(window, review, owner);
+        g_object_unref(window);
+        return;
+    }
+    if (review->navigation)
+    {
+        CompletionReviewOpenLocation(window, review, owner);
+        g_object_unref(window);
+        return;
+    }
+    review->rendering = 1;
+    CompletionReviewInvalidate(review);
+    uint64_t generation = review->generation;
+    owner = CompletionReviewOwner(window, review);
+    UmiStatus status = owner == NULL ? UMI_STATUS_CANCELLED
+                                     : UmiDocumentSourceRequestCheck(owner->edit_coordinator, review->source);
+    UmiDocumentSourceRequestSummary summary;
+    const char *source = NULL, *proposed = NULL;
+    size_t bytes = 0U, proposed_bytes = 0U, caret = 0U;
+    if (status == UMI_STATUS_OK)
+        status = UmiDocumentSourceRequestInspect(review->source, &summary);
+    if (status == UMI_STATUS_OK)
+        status = UmiDocumentSourceRequestRead(review->source, &source, &bytes);
+    UmiLanguageCompletionPreview *preview = NULL;
+    char *format_copy = NULL;
+    UmiLanguageTextEditPreview *action_preview = NULL;
+    char *action_details = NULL, *action_title = NULL;
+    if (status == UMI_STATUS_OK && review->code_actions)
+    {
+        size_t selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(review->choice));
+        UmiLanguageCodeAction action;
+        UmiLanguageWorkspaceEditCatalogue *changes = NULL;
+        status = UmiLanguageCodeActionCatalogueAt(review->actions, selected, &action);
+        if (status == UMI_STATUS_OK)
+        {
+            action_title = g_strdup(action.title);
+            status = UmiLanguageCodeActionCatalogueReadEdits(review->actions, selected, NULL, &changes);
+        }
+        if (status == UMI_STATUS_OK)
+        {
+            action_details = CompletionDescribeWorkspaceChanges(changes);
+            const int32_t version = 1;
+            status = UmiLanguageWorkspaceEditCataloguePreviewSingleDocument(
+                changes, summary.uri, source, bytes, summary.cursor_offset, &version, NULL, &action_preview);
+        }
+        if (status == UMI_STATUS_OK)
+            status = UmiLanguageTextEditPreviewRead(action_preview, &proposed, &proposed_bytes, &caret);
+        UmiLanguageWorkspaceEditCatalogueDestroy(changes);
+    }
+    else if (status == UMI_STATUS_OK && review->formatting)
+    {
+        status = UmiLanguageTextEditPreviewRead(review->formatted, &proposed, &proposed_bytes, &caret);
+        if (status == UMI_STATUS_OK)
+        {
+            /* A widget observer can invalidate stored formatter output during
+             * comparison construction. Hold an independent local text copy. */
+            format_copy = g_try_malloc(proposed_bytes + 1U);
+            if (format_copy == NULL)
+                status = UMI_STATUS_OUT_OF_MEMORY;
+            else
+            {
+                memcpy(format_copy, proposed, proposed_bytes + 1U);
+                proposed = format_copy;
+            }
+        }
+    }
+    else
+    {
+        if (status == UMI_STATUS_OK)
+            status = UmiLanguageCompletionPreviewCreate(
+                review->catalogue, gtk_drop_down_get_selected(GTK_DROP_DOWN(review->choice)), summary.uri,
+                "selected-language-server", source, bytes, summary.cursor_offset + summary.selection_bytes,
+                summary.cursor_offset, summary.cursor_offset + summary.selection_bytes,
+                UMI_LANGUAGE_COMPLETION_REPLACE, NULL, &preview);
+        if (status == UMI_STATUS_OK)
+            status = UmiLanguageCompletionPreviewRead(preview, &proposed, &proposed_bytes, &caret);
+    }
+    if (status == UMI_STATUS_OK)
+        status =
+            UmiDocumentSourceRequestStage(review->source, summary.revision, proposed, proposed_bytes, caret);
+    if (status == UMI_STATUS_OK)
+        status = UmiDocumentSourceRequestInspect(review->source, &summary);
+    GtkWidget *comparison = NULL;
+    GtkWidget *action_notes = action_details == NULL ? NULL : CompletionActionNotes(action_details);
+    GtkWidget *rename_notes = status == UMI_STATUS_OK && review->rename_symbol
+                                  ? CompletionRenameNotes(review->rename_details)
+                                  : NULL;
+    if (status == UMI_STATUS_OK)
+        status = UmiGtk4TextComparisonCreate(source, bytes, proposed, proposed_bytes, "Captured source draft",
+                                             review->code_actions    ? action_title
+                                             : review->rename_symbol ? "Renamed document"
+                                             : review->formatting    ? "Formatted document"
+                                                                     : "Completion result",
+                                             &comparison);
+    if (comparison != NULL)
+        g_object_ref_sink(comparison);
+    UmiLanguageCompletionPreviewDestroy(preview);
+    g_free(format_copy);
+    UmiLanguageTextEditPreviewDestroy(action_preview);
+    g_free(action_details);
+    g_free(action_title);
+    if (action_notes != NULL && CompletionReviewOwner(window, review) != NULL &&
+        review->generation == generation)
+        gtk_box_append(GTK_BOX(review->comparison), action_notes);
+    if (CompletionReviewOwner(window, review) != NULL && review->generation == generation)
+    {
+        if (status == UMI_STATUS_OK)
+        {
+            if (rename_notes != NULL)
+                gtk_box_append(GTK_BOX(review->comparison), rename_notes);
+            if (CompletionReviewOwner(window, review) != NULL && review->generation == generation)
+                gtk_box_append(GTK_BOX(review->comparison), comparison);
+            if (CompletionReviewOwner(window, review) != NULL && review->generation == generation)
+            {
+                review->presented = summary.revision;
+                gtk_widget_set_sensitive(review->apply, TRUE);
+                if (CompletionReviewOwner(window, review) != NULL && review->generation == generation)
+                    gtk_label_set_text(
+                        GTK_LABEL(review->message),
+                        (review->rename_symbol || review->code_actions)
+                            ? "Inspect the complete change and every listed confirmation request, approve "
+                              "them, "
+                              "then Apply. Undo restores the draft; Save is separate."
+                            : "Inspect the complete result, approve it, then Apply. Undo restores the "
+                              "captured draft. Save remains separate.");
+            }
+        }
+        else
+        {
+            char *message = g_strdup_printf(
+                review->code_actions
+                    ? "Cannot preview this action: %s. This form accepts complete text-only changes for its "
+                      "captured draft. Commands, deferred actions and changes to other documents cannot be "
+                      "applied here."
+                    : "Cannot preview this choice: %s. Unsupported snippets or commands are not "
+                      "applied. Try another choice or capture the current source again.",
+                umi_status_text(status));
+            gtk_label_set_text(GTK_LABEL(review->message), message);
+            g_free(message);
+        }
+    }
+    g_clear_object(&comparison);
+    g_clear_object(&rename_notes);
+    g_clear_object(&action_notes);
+    review->rendering = 0;
+    g_object_unref(window);
+}
+#endif
+static void CompletionReviewPreview(GtkButton *button, gpointer data)
+{
+    (void)button;
+    GtkWidget *window = g_object_ref(data);
+    CompletionReview *review = CompletionReviewState(window);
+    UmiGtk4Adapter *owner = CompletionReviewOwner(window, review);
+    if (owner == NULL || review->source_information || review->pending != NULL ||
+        review->preference_pending != NULL || review->rendering ||
+        (review->call_direction != 0 ? review->calls == NULL
+         : review->source_diagnostics ? review->diagnostics == NULL
          : review->code_actions     ? review->actions == NULL
          : review->document_symbols ? review->symbols == NULL
          : review->navigation       ? review->locations == NULL
@@ -22243,6 +22530,9 @@ static UmiStatus CompletionReviewCreateWithCallDirection(
             "Choose the related symbol or a reported call expression. "
             "Call expressions stay in their caller's file. Opening a destination preserves unsaved drafts.");
         g_signal_connect_object(review->call_location, "notify::selected",
+                                G_CALLBACK(CompletionReviewCallLocationChanged), window, 0);
+        /* A model can change without a selected-index notification. */
+        g_signal_connect_object(review->call_location, "notify::model",
                                 G_CALLBACK(CompletionReviewCallLocationChanged), window, 0);
     }
     if (source_diagnostics)

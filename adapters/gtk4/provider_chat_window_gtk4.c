@@ -69,7 +69,11 @@ UmiStatus UmiProviderChatGtkPresentWithContext(GtkWindow *parent, const UmiProvi
     }
     gtk_window_set_child(GTK_WINDOW(window), UmiProviderChatGtkWidget(panel));
     g_object_set_data_full(G_OBJECT(window), "umicom-chat-panel", panel, Release);
+/* Retire controllers after GTK unrealizes the child tree so text input contexts remain alive through native surface teardown. The former implementation is retained for review. */
+#if 0
     g_signal_connect(window, "unrealize", G_CALLBACK(Retire), NULL);
+#endif
+    g_signal_connect_after(window, "unrealize", G_CALLBACK(Retire), NULL);
     g_signal_connect(window, "close-request", G_CALLBACK(Close), NULL);
     gtk_window_present(GTK_WINDOW(window));
     return UMI_STATUS_OK;

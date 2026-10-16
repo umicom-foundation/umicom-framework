@@ -73,5 +73,17 @@ int main(void)
     assert(live_preview != NULL);
     assert(live_preview->connectivity == UMI_APPLICATION_PRESENTATION_CONNECTIVITY_OPTIONAL);
     assert(live_preview->accept_context);
+    /* Synthetic Healthcare must not acquire live connectivity, persistence or
+     * automatic context sharing merely by entering the panel catalogue. */
+    const UmiApplicationPresentationSurfaceBehavior *healthcare =
+        umi_application_presentation_surface_behavior_catalogue_find(
+            "umicom.healthcare.synthetic-access");
+    assert(healthcare != NULL);
+    assert(healthcare->connectivity == UMI_APPLICATION_PRESENTATION_CONNECTIVITY_OFFLINE);
+    assert(healthcare->persistence_policy == UMI_APPLICATION_PRESENTATION_PERSISTENCE_TRANSIENT);
+    assert(healthcare->refresh_policy == UMI_APPLICATION_PRESENTATION_REFRESH_MANUAL);
+    assert(!healthcare->publish_context && !healthcare->accept_context);
+    assert(umi_application_presentation_surface_behavior_can_activate(
+               healthcare, 0, UMI_APPLICATION_PRESENTATION_DATA_INTERNAL) == UMI_STATUS_OK);
     return 0;
 }

@@ -77,6 +77,8 @@
 #include "games/games_viewport.inc"
 #include "governance/shared_audit.inc"
 #include "governance/shared_surveillance.inc"
+/* Synthetic Healthcare participates in the same presentation coverage contract. */
+#include "healthcare/synthetic_access.inc"
 #include "integration/integration_designer.inc"
 #include "integration/integration_monitor.inc"
 #include "integration/shared_messaging.inc"

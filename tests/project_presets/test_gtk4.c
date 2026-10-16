@@ -373,7 +373,18 @@ cleanup:
     }
     if (rootWeak != NULL)
     {
+/* Report form ownership separately from asynchronous worker readiness. The former implementation is retained for review. */
+#if 0
         fprintf(stderr, "Preset worker did not retire before the deadline\n");
+#endif
+        /* A retained form can outlive a completed worker. Report those states
+         * separately so a lifetime defect is not mistaken for slow disk I/O. */
+        fprintf(stderr, "Preset form retained after retirement: case=%s read-ready=%d "
+                        "root-parented=%d window-child=%d\n",
+                argc == 2 ? argv[1] : "unknown",
+                probe.read != NULL && gtk_widget_get_sensitive(probe.read),
+                gtk_widget_get_parent(GTK_WIDGET(rootWeak)) != NULL,
+                form != NULL && gtk_window_get_child(form) != NULL);
         g_object_remove_weak_pointer(G_OBJECT(rootWeak), &rootWeak);
         failed = 1;
     }

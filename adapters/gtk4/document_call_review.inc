@@ -90,7 +90,22 @@ static void CompletionReviewCallLocationChanged(GObject *control, GParamSpec *pr
     if (owner != NULL && review->call_direction != 0 && !review->rendering && review->pending == NULL &&
         review->calls != NULL)
     {
+/* Visible call destination models determine whether a selection remains valid. The former implementation is retained for review. */
+#if 0
         UmiStatus status = UmiDocumentSourceRequestCheck(owner->edit_coordinator, review->source);
+        UmiLanguageSourceLocation location;
+#endif
+        /* A retained numeric selection is not authority after its visible model
+         * has been removed. Validate both lists before enabling navigation. */
+        GListModel *relations = gtk_drop_down_get_model(GTK_DROP_DOWN(review->choice));
+        GListModel *destinations = gtk_drop_down_get_model(GTK_DROP_DOWN(review->call_location));
+        guint relation = gtk_drop_down_get_selected(GTK_DROP_DOWN(review->choice));
+        guint destination = gtk_drop_down_get_selected(GTK_DROP_DOWN(review->call_location));
+        UmiStatus status = relations != NULL && destinations != NULL &&
+            relation < g_list_model_get_n_items(relations) &&
+            destination < g_list_model_get_n_items(destinations)
+            ? UmiDocumentSourceRequestCheck(owner->edit_coordinator, review->source)
+            : UMI_STATUS_INVALID_STATE;
         UmiLanguageSourceLocation location;
         if (status == UMI_STATUS_OK)
             status = UmiLanguageCallResultLocation(

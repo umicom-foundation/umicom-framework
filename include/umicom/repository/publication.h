@@ -106,6 +106,24 @@ UmiStatus umi_repository_publication_run_sized(
     umi_repository_publication_run_sized((profile), (environment), (request), \
         (report), sizeof(*(report)))
 
+/** Preview or apply narrowly bounded recovery alongside publication.
+ * attach_published_main must be 0 or 1. When enabled, only a clean detached
+ * leaf checkout exactly at fetched origin/main may attach to an existing main
+ * branch whose history is an ancestor of that commit. Main must not be checked
+ * out elsewhere. No source files or index entries are rewritten. Unique local
+ * commits, dirty copies and true conflicts still require owner review.
+ * Preview never changes refs other than the normal fetch. Existing publication
+ * entry points retain their original no-attachment behavior. */
+UmiStatus umi_repository_publication_run_recovery_sized(
+    const UmiToolchainProfile *profile, UmiEnvironmentPlan *environment,
+    const UmiRepositoryPublicationRequest *request,
+    UmiRepositoryPublicationReport *report, size_t report_size,
+    int attach_published_main);
+
+#define umi_repository_publication_run_recovery(profile, environment, request, report, attach) \
+    umi_repository_publication_run_recovery_sized((profile), (environment), (request), \
+        (report), sizeof(*(report)), (attach))
+
 /** Classify a repository-relative path before broad staging. Returns nonzero
  * for private working records or generated build outputs requiring review. */
 int umi_repository_publication_private_path(const char *path);
