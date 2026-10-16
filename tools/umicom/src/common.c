@@ -210,6 +210,10 @@ void umi_cli_print_help(void)
  */
 void umi_cli_print_repo_help(void)
 {
+    /* Keep workspace automation discoverable without replacing existing help. */
+    (void)puts("Workspace publication: umicom repo publish-all WORKSPACE [--apply] [--message TEXT]");
+    (void)puts("Local monitoring:      umicom repo watch WORKSPACE [--interval SECONDS]");
+    (void)puts("Publication previews fetch metadata. Watch reads cached refs and never publishes.\n");
     (void)puts(
         "Umicom Framework native repository commands\n\n"
         "Usage:\n"

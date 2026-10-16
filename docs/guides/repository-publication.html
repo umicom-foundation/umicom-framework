@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Publish a workspace with Umicom</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:980px;margin:40px auto;padding:0 24px;color:#182a3c}h1,h2{line-height:1.2}pre{background:#edf2f7;padding:18px;overflow:auto}code{font-family:Consolas,monospace}table{border-collapse:collapse;width:100%}td,th{border:1px solid #cad4df;text-align:left;padding:10px}</style></head>
+<body><h1>Publish a workspace with Umicom</h1>
+<p>The native <code>umicom repo publish-all</code> command finds Git repositories in a workspace, publishes changed children, and then records those child revisions in their parents. The Framework owns discovery, ordering and publication policy; the command presents its results. Git and working authentication for each remote are required.</p>
+<h2>1. Prepare the workspace</h2>
+<p>Finish editing and review the files that belong in the public repository. Keep local notes, credentials and generated output outside source repositories or properly ignored. The command uses <code>git add -A</code>, which includes additions, modifications and deletions. Ignore rules do not protect files already tracked by Git.</p>
+<p>Each repository managed by this command must already be on <code>main</code>, with one <code>origin</code> whose fetch and push destinations identify the same repository. Use a credential-free HTTPS URL or the usual <code>git@host:organisation/repository.git</code> spelling. Configure credentials through Git's credential helper. All registered submodules must already be checked out. The command does not switch branches or initialise missing checkouts.</p>
+<p>Choose a root that contains all related repositories and their Git metadata. Repositories are discovered immediately below that root and through their registered Git submodules. If the root is itself a repository, only that repository and its registered children are selected. Arbitrary nested source folders are not searched. Third-party submodules under <code>third_party/</code>, <code>third-party/</code> or <code>vendor/</code> retain their parent pins; the <code>third_party/umicom/</code> namespace remains managed.</p>
+<h2>2. Preview</h2>
+<pre><code>umicom repo publish-all "C:\umicom"</code></pre>
+<p>The preview fetches current <code>origin/main</code> metadata and lists changed paths and commits ahead of or behind the remote. It does not stage, commit, push, or change working files. A blocked checkout stops publication for the workspace before source changes are staged. Review every blocker before applying.</p>
+<h2>3. Publish</h2>
+<pre><code>umicom repo publish-all "C:\umicom" --apply</code></pre>
+<p>The command displays a preview and performs a fresh preflight before applying. Keep editors and other Git processes idle until it finishes. Its sequence is:</p>
+<ol><li>Acquire exclusive publisher markers in Git metadata. Fast-forward clean older checkouts and inspect the resulting repository graph again.</li>
+<li>Select one publishing copy for each remote. Publish dependencies before repositories that refer to them.</li>
+<li>Run the existing Framework submodule lock service for each parent after its children have been published.</li>
+<li>Stage with <code>git add -A</code>, check staged whitespace and known private paths, and commit only when the index differs from the current commit.</li>
+<li>Push the local <code>main</code> branch to remote <code>main</code>, using Git's submodule publication check. A previously committed change is pushed even when no new commit is needed.</li>
+<li>Fast-forward other clean copies of that remote and continue with their parents.</li>
+<li>Check the final working trees, child revisions and remote branches. Report completed actions and release publisher markers.</li></ol>
+<p>The default commit message is <code>chore: update source, tests and public documentation</code>. Supply a more specific message for a focused change:</p>
+<pre><code>umicom repo publish-all "C:\umicom" --apply --message "fix: repair archive regressions and bank test dependencies"</code></pre>
+<p>Repeating a successful invocation does not create empty commits. Publication is sequential across remotes, not an all-or-nothing transaction. If a later push fails, earlier successful pushes remain published and local commits remain available. The command never resets, cleans, stashes, rebases, force-pushes or creates a merge commit.</p>
+<h2>4. Monitor without publishing</h2>
+<pre><code>umicom repo watch "C:\umicom" --interval 30</code></pre>
+<p>The foreground monitor prints a new report when the local snapshot changes. It uses cached remote references and does not fetch, stage, commit, lock or push. Press Ctrl+C to stop; a running bounded Git probe may finish first. Monitoring does not automatically upload edits while they are being written. Use <code>publish-all --apply</code> when the changes are ready.</p>
+<h2>Resolve a blocked run</h2>
+<table><thead><tr><th>Message or condition</th><th>Action</th></tr></thead><tbody>
+<tr><td>Detached checkout or branch other than main</td><td>Inspect <code>git status</code> and preserve any local commits. Decide which main history should contain them before changing branches. Publication does not choose that history for you.</td></tr>
+<tr><td>Divergence, or local edits behind origin/main</td><td>Review the incoming and local changes together. The command stops rather than resolving a conflict or replacing files.</td></tr>
+<tr><td>Several copies contain independent edits</td><td>Compare the copies and integrate the intended source into one publishing copy. Clean copies can then advance to its published commit.</td></tr>
+<tr><td>Private or generated path</td><td>Review the named file and move private material outside the repository. Previously committed material also needs review: deleting it in a later unpublished commit does not remove it from the earlier commit.</td></tr>
+<tr><td>Missing submodule or changed .gitmodules</td><td>Review and complete repository registration separately before running workspace publication.</td></tr>
+<tr><td>Authentication or push rejection</td><td>Fix credentials or review the updated remote. Completed local commits are retained. Run a new preview before retrying.</td></tr>
+<tr><td>Publisher marker already exists</td><td>Check whether another publisher is active. After a process interruption, inspect its output and Git state before manually removing only the stale <code>umicom-publication.lock</code> marker. Never remove an active Git lock.</td></tr>
+<tr><td>A commit hook changed the reviewed tree</td><td>Inspect the local commit and hook output. The commit is retained without being pushed by this invocation.</td></tr>
+</tbody></table>
+<h2>Scope and limits</h2>
+<p>The filename policy blocks known working records such as Batch/Update documents, private tool folders, environment files and generated build output, including files found in unpublished commit trees. It is not a content or secret scanner and cannot identify every private sentence in an otherwise ordinary source file. Review remains necessary. It does not rewrite existing public history.</p>
+<p>The bounded service supports 128 checkouts, 512 child relationships, 32 levels of nesting and inspection of up to 256 unpublished commits per checkout. Git output capture is bounded at 16 MiB per command. Paths through links or Git metadata outside the selected workspace are rejected. Git hooks and credential helpers execute normally; use trusted repositories. Filesystem edits by other processes are not a transaction with this service.</p>
+<p>Applications can use <code>umicom/repository/publication.h</code> to present the same workflow on a worker thread. Allocate the report on the heap and keep borrowed request strings and cancellation state alive until the call returns. Existing single-repository commands retain their behavior.</p>
+</body></html>

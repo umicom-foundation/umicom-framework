@@ -50,3 +50,19 @@ install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../examples/value_archive/"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/value_archive" COMPONENT Framework)
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/PORTABLE_STATE_ARCHIVES.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs" COMPONENT Framework)
+
+# Compile both conditional callback families against a real typed codec.
+if(BUILD_TESTING)
+    add_executable(umicom-value-archive-callback-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/value_archive/test_conditional_callbacks.c")
+    target_link_libraries(umicom-value-archive-callback-test PRIVATE Umicom::test_runtime)
+    umicom_apply_warnings(umicom-value-archive-callback-test)
+    umicom_apply_sanitizers(umicom-value-archive-callback-test)
+    add_test(NAME framework.value_archive.conditional_callbacks
+        COMMAND umicom-value-archive-callback-test)
+    set_tests_properties(framework.value_archive.conditional_callbacks PROPERTIES
+        TIMEOUT 30 LABELS "framework;value-archive;regression")
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-value-archive-callback-test)
+    endif()
+endif()

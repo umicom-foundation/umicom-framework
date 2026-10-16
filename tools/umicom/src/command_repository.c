@@ -637,6 +637,10 @@ int umi_cli_command_repo(
         return 0;
     }
     /* Use the stable identifier comparison to choose the matching record or policy. */
+    /* Ecosystem publication delegates ordering and policy to Framework;
+     * established single-repository commands retain their existing behaviour. */
+    if (strcmp(argv[0], "publish-all") == 0 || strcmp(argv[0], "watch") == 0)
+        return umi_cli_command_repository_publication(context, argc, argv);
     /* Manifest inspection reads source without toolchain discovery. */
     if (strcmp(argv[0], "check-module") == 0)
         return umi_cli_command_application_registration(argc - 1, argv + 1);

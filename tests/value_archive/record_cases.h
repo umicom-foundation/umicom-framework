@@ -23,9 +23,50 @@ static void ArchiveConditionalMalformed(ARCHIVE_TYPE *value)
 {
     memset(value->id, 'x', sizeof(value->id));
 }
+/* The generic conditional fixture accepts a checker returning zero on success.
+ * Record fixtures retain their void mutator above; this adapter exercises that
+ * mutator on an owned copy and verifies rejection without changing the caller.
+ * Keeping the contracts distinct preserves both families of archive tests. */
+static int ArchiveConditionalMalformedChecks(const ARCHIVE_TYPE *sample)
+{
+    ARCHIVE_TYPE *expected = malloc(sizeof(*expected)), *value = malloc(sizeof(*value));
+    unsigned char *before = malloc(sizeof(*value)), *bytes = NULL;
+    size_t size = 0U, written = 0U;
+    int result = 1;
+    if (expected == NULL || value == NULL || before == NULL) goto construction_cleanup;
+    memcpy(expected, sample, sizeof(*expected));
+    memcpy(value, sample, sizeof(*value));
+    memcpy(before, value, sizeof(*value));
+    UMI_CONSTRUCTION_REQUIRE(ARCHIVE_ENCODE(sample, NULL, 0U, &size) == UMI_STATUS_OK);
+    bytes = malloc(size);
+    if (bytes == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(ARCHIVE_ENCODE(sample, bytes, size, &written) == UMI_STATUS_OK);
+    UMI_CONSTRUCTION_REQUIRE(written == size);
+    ArchiveConditionalMalformed(expected);
+    UMI_CONSTRUCTION_REQUIRE(
+        ARCHIVE_CONDITIONAL_DECODE(bytes, size, expected, value) != UMI_STATUS_OK);
+    UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof(*value)) == 0);
+    memcpy(expected, sample, sizeof(*expected));
+    UMI_CONSTRUCTION_REQUIRE(
+        ARCHIVE_CONDITIONAL_DECODE(bytes, size, expected, value) == UMI_STATUS_OK);
+    UMI_CONSTRUCTION_REQUIRE(ARCHIVE_EQUAL(sample, value));
+    result = 0;
+construction_cleanup:
+    free(bytes); free(before); free(value); free(expected);
+    return result;
+}
+
+/* The earlier invocation passed a void mutator to a status-returning callback.
+ * Retain it for comparison; the adapter below preserves the malformed-review
+ * check while satisfying the shared conditional fixture's callback contract. */
+#if 0
 UMI_TEST_CONDITIONAL_ARCHIVE(ArchiveConditionalCases, ARCHIVE_TYPE,
     ARCHIVE_ENCODE, ARCHIVE_CONDITIONAL_DECODE, ARCHIVE_EQUAL,
     ArchiveFillUnusedText, ArchiveConditionalMalformed)
+#endif
+UMI_TEST_CONDITIONAL_ARCHIVE(ArchiveConditionalCases, ARCHIVE_TYPE,
+    ARCHIVE_ENCODE, ARCHIVE_CONDITIONAL_DECODE, ARCHIVE_EQUAL,
+    ArchiveFillUnusedText, ArchiveConditionalMalformedChecks)
 
 /* A changed revision is part of encoded evidence. It must refuse a delayed
  * import, then allow the same bytes when the caller reviews the newer state. */

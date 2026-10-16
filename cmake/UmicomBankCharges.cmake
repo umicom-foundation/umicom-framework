@@ -7,6 +7,9 @@ if(BUILD_TESTING)
         target_link_libraries(umicom-bank-charge-${kind}-test PRIVATE Umicom::bank_operations)
         umicom_bank_review_target(umicom-bank-charge-${kind}-test)
     endforeach()
+    # Storage fixtures reserve unique evidence files through the platform
+    # output-file owner. Link it explicitly instead of relying on UI libraries.
+    target_link_libraries(umicom-bank-charge-storage-test PRIVATE Umicom::platform)
     foreach(case IN ITEMS lifecycle idempotency authority fields money duplicate-reference cancel-reject holds
             blocked-account blocked-customer reverse-overflow close-pending close-approved capacity
             review review-post stale-review review-ownership)

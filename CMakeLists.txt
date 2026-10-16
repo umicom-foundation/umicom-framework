@@ -3344,6 +3344,7 @@ if(UMICOM_BUILD_NATIVE_TOOL)
         tools/umicom/src/command_application_catalogue.c
             tools/umicom/src/command_application_registration.c
         tools/umicom/src/command_repository_workflow.c
+        tools/umicom/src/command_repository_publication.c
         tools/umicom/src/command_catalogue.c
         tools/umicom/src/command_security.c
         tools/umicom/src/command_dependencies.c

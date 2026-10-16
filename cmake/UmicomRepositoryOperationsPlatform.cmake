@@ -133,3 +133,6 @@ if(BUILD_TESTING)
         umicom_register_validation_target(umicom-repository-operations-operation-boundary-tests)
     endif()
 endif()
+
+# Workspace publication composes the existing repository and lock services.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomRepositoryPublication.cmake")

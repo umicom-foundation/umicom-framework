@@ -13,6 +13,9 @@ if(BUILD_TESTING)
             umicom_register_validation_target(umicom-bank-reconciliation-${group}-test)
         endif()
     endforeach()
+    # Storage fixtures reserve unique evidence files through the platform
+    # output-file owner. Link it explicitly instead of relying on UI libraries.
+    target_link_libraries(umicom-bank-reconciliation-storage-test PRIVATE Umicom::platform)
     foreach(case resolve idempotency reopen authority fields missing wrong-account unrelated-posting closed
         unmatched-evidence superseded-evidence older-evidence posted net-zero-postings stale invalid-state blocked hold)
         add_test(NAME framework.bank_reconciliation.workflow.${case} COMMAND umicom-bank-reconciliation-workflow-test ${case})
