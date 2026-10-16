@@ -46,12 +46,24 @@ typedef struct UmiPublicationEdge {
     char pinned[65];
 } UmiPublicationEdge;
 
+/* Keep completed flags by checkout path while discovery rebuilds row indices.
+ * These records belong to one invocation and never restore repository files. */
+typedef struct UmiPublicationProgress {
+    char path[UMI_PATH_CAPACITY];
+    int committed;
+    int pushed;
+    int fast_forwarded;
+    int locked;
+} UmiPublicationProgress;
+
 typedef struct UmiPublicationState {
     const UmiToolchainProfile *profile;
     UmiEnvironmentPlan *environment;
     const UmiRepositoryPublicationRequest *request;
     UmiRepositoryPublicationReport *report;
     UmiPublicationBackend backend;
+    UmiPublicationProgress progress[UMI_REPOSITORY_PUBLICATION_CAPACITY];
+    size_t progress_count;
     /* Recovery is a separate opt-in; ordinary publication never attaches HEAD. */
     int attach_published_main;
     unsigned char attach_ready[UMI_REPOSITORY_PUBLICATION_CAPACITY];
@@ -80,6 +92,8 @@ UmiStatus umi_publication_fail(UmiPublicationState *, size_t,
 UmiStatus umi_publication_discover(UmiPublicationState *);
 UmiStatus umi_publication_inspect(UmiPublicationState *, size_t);
 UmiStatus umi_publication_plan(UmiPublicationState *);
+UmiStatus umi_publication_remember_progress(UmiPublicationState *);
+void umi_publication_restore_progress(UmiPublicationState *);
 UmiStatus umi_publication_execute(UmiPublicationState *);
 UmiStatus umi_publication_acquire_locks(UmiPublicationState *);
 UmiStatus umi_publication_release_locks(UmiPublicationState *);

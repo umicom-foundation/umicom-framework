@@ -17,10 +17,16 @@ target_sources(umicom_repository PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/publication_recovery.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/publication_plan.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/publication_execution.c"
-    "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/publication_service.c")
+    "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/publication_service.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/publication_progress.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/publication_report.c")
+
+# Use the established JSON escaping service for publication evidence.
+target_link_libraries(umicom_repository PRIVATE Umicom::protocol)
 
 if(BUILD_TESTING)
-    foreach(_case policy plan execution)
+    # Existing cases remain registered; evidence and graph refresh add regressions.
+    foreach(_case policy plan execution progress report report_file)
         add_executable("umicom-repo-publication-${_case}-test"
             "${CMAKE_CURRENT_LIST_DIR}/../tests/repository_operations/test_publication_${_case}.c")
         target_link_libraries("umicom-repo-publication-${_case}-test" PRIVATE Umicom::repository)

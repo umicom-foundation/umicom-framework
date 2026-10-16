@@ -31,6 +31,10 @@ void umi_repository_publication_request_init(
 static UmiStatus prepare(UmiPublicationState *state)
 {
     UmiStatus first_failure = UMI_STATUS_OK;
+    /* A refreshed graph can reorder checkouts; retain successful actions by
+     * path before clearing observations so partial results remain truthful. */
+    UmiStatus progress_status = umi_publication_remember_progress(state);
+    if (progress_status != UMI_STATUS_OK) return progress_status;
     state->report->count = 0U;
     state->report->blocked_count = 0U;
     state->report->repository_count = 0U;
@@ -39,6 +43,8 @@ static UmiStatus prepare(UmiPublicationState *state)
     memset(state->identity, 0, sizeof(state->identity));
     state->edge_count = 0U;
     UmiStatus status = umi_publication_discover(state);
+    /* Restore completed flags even if discovery only reached a partial graph. */
+    umi_publication_restore_progress(state);
     if (status != UMI_STATUS_OK) return status;
     /* Continue read-only inspection to show all checkout problems in one
      * report, but never enter execution if any repository failed preflight. */

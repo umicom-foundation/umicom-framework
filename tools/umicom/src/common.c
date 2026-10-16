@@ -241,6 +241,7 @@ void umi_cli_print_repo_help(void)
     (void)puts("  umicom pull [PATH] — clean fast-forward, no recursive child checkout\n"
         "  update/pull defaults to --no-submodules; --with-submodules explicitly checks out child pins.\n");
     (void)puts("Workspace publication: umicom repo publish-all WORKSPACE [--apply] [--message TEXT]");
+    (void)puts("Publication evidence: add --report ABSOLUTE_PATH for a new private JSON result outside Git repositories");
     (void)puts("Local monitoring:      umicom repo watch WORKSPACE [--interval SECONDS]");
     (void)puts("Publication previews fetch metadata. Watch reads cached refs and never publishes.\n");
     (void)puts(

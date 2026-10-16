@@ -162,15 +162,28 @@ static UmiStatus fast_forward(UmiPublicationState *state, size_t index, const ch
     if (status != UMI_STATUS_OK) return status;
     status = command(state, index, args, 9U);
     if (status != UMI_STATUS_OK) return status;
+    /* A successful pull remains completed even if the following HEAD probe
+     * fails. Keep the last observed revision separate from action evidence. */
+    state->report->entries[index].fast_forwarded = 1;
+    ++state->report->updated_count;
+    completed(state, index, "Fast-forwarded; checking resulting revision");
     status = umi_publication_text(state, index, head, 3U,
         state->report->entries[index].head, sizeof(state->report->entries[index].head));
     if (status != UMI_STATUS_OK) return status;
+    /* The successful pull has already moved files. Record that action before
+     * validating its destination, so a remote race cannot hide completed work.
+     * The former ordering is retained for comparison. */
+#if 0
     if (strcmp(state->report->entries[index].head, target) != 0)
         return umi_publication_fail(state, index, UMI_STATUS_INVALID_STATE,
             "Fast-forward did not produce the expected commit.");
     state->report->entries[index].fast_forwarded = 1;
     ++state->report->updated_count;
     completed(state, index, "Fast-forwarded");
+#endif
+    if (strcmp(state->report->entries[index].head, target) != 0)
+        return umi_publication_fail(state, index, UMI_STATUS_INVALID_STATE,
+            "Fast-forward did not produce the expected commit; the observed HEAD and completed update are retained.");
     return UMI_STATUS_OK;
 }
 
@@ -240,6 +253,10 @@ static UmiStatus publish_primary(UmiPublicationState *state, size_t index)
         if (status != UMI_STATUS_OK) return status;
         entry->committed = 1;
         ++state->report->committed_count;
+        /* Read the new commit before checking hook effects. A rejected hook
+         * tree must still report the retained local commit, not its predecessor. */
+        status = umi_publication_text(state, index, head, 3U, entry->head, sizeof(entry->head));
+        if (status != UMI_STATUS_OK) return status;
         completed(state, index, "Committed locally");
         status = umi_publication_text(state, index, committed_tree, 2U,
             actual_tree, sizeof(actual_tree));
@@ -247,8 +264,12 @@ static UmiStatus publish_primary(UmiPublicationState *state, size_t index)
         if (strcmp(planned_tree, actual_tree) != 0)
             return umi_publication_fail(state, index, UMI_STATUS_INVALID_STATE,
                 "A commit hook changed the reviewed tree; local commit retained without pushing.");
+        /* HEAD is now captured immediately after commit; retain the former late
+         * read for review because it hid a commit when tree validation failed. */
+#if 0
         status = umi_publication_text(state, index, head, 3U, entry->head, sizeof(entry->head));
         if (status != UMI_STATUS_OK) return status;
+#endif
     }
     /* A previously committed but unpushed change is published even when the
      * worktree needs no new commit. Clean, current repositories skip pushing. */

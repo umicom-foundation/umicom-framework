@@ -110,6 +110,11 @@ static UmiStatus fake_git(void *context, const char *path,
             return answer(out, 0, "%s\n", strcmp(scenario, "hook-tree") == 0 ?
                 "ffffffffffffffffffffffffffffffffffffffff" :
                 "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+        /* Preserve the earlier successful HEAD response while injecting a
+         * probe failure after the fake pull has already completed. */
+        if (count == 3U && strcmp(args[2], "HEAD") == 0 && index == 2 &&
+            strcmp(scenario, "pull-head-read-failure") == 0 && workspace->merges)
+            return answer(out, 1, "");
         if (count == 3U && strcmp(args[2], "HEAD") == 0) return answer(out, 0, "%s\n", repo->head);
         if (count == 3U && strcmp(args[2], "refs/heads/main") == 0) {
             if (strcmp(scenario, "attach-missing-main") == 0) return answer(out, 1, "");
@@ -175,6 +180,8 @@ static UmiStatus fake_git(void *context, const char *path,
     }
     if (strcmp(args[0], "fetch") == 0) {
         ++workspace->fetches;
+        if (primary && strcmp(scenario, "refresh-failure-after-pull") == 0 && workspace->merges)
+            return answer(out, 1, "");
         return answer(out, 0, "");
     }
     if (strcmp(args[0], "rev-list") == 0) {
@@ -218,6 +225,7 @@ static UmiStatus fake_git(void *context, const char *path,
             if (strcmp(args[i], expected[i]) != 0) return UMI_STATUS_INVALID_ARGUMENT;
         (void)snprintf(repo->head, sizeof(repo->head), "%s", remote);
         ++workspace->merges; /* Existing counter represents completed fast-forwards. */
+        if (strcmp(scenario, "pull-destination-race") == 0) sha(repo->head, 'f');
         return answer(out, 0, "");
     }
     if (strcmp(args[0], "add") == 0) {
@@ -309,6 +317,15 @@ static UmiStatus create_fixture(FakeWorkspace *workspace, const char *scenario, 
     workspace->repos[0].dirty = 1;
     if (strcmp(scenario, "duplicate-dirty") == 0) workspace->repos[2].dirty = 1;
     if (strcmp(scenario, "behind-copy") == 0) sha(workspace->repos[2].head, '0');
+    /* A clean-only update cannot regain its lost progress flag through a second
+     * publication update. It exposes evidence lost during graph rediscovery. */
+    if (strcmp(scenario, "clean-behind-only") == 0 ||
+        strcmp(scenario, "refresh-failure-after-pull") == 0 ||
+        strcmp(scenario, "pull-destination-race") == 0 ||
+        strcmp(scenario, "pull-head-read-failure") == 0) {
+        workspace->repos[0].dirty = 0;
+        sha(workspace->repos[2].head, '0');
+    }
     if (strcmp(scenario, "dirty-behind") == 0) sha(workspace->repos[0].head, '0');
     if (strcmp(scenario, "unpublished") == 0 || strcmp(scenario, "history-private") == 0) {
         workspace->repos[0].dirty = 0;
@@ -367,6 +384,26 @@ static int run_case(const char *scenario, unsigned number)
     } else {
         passed = status != UMI_STATUS_OK && workspace->commits == 0U &&
             workspace->pushes == 0U && workspace->locks == 0U;
+    }
+    /* Inspect retained evidence independently of the fake remote's state. */
+    if (strcmp(scenario, "clean-behind-only") == 0 ||
+        strcmp(scenario, "refresh-failure-after-pull") == 0 ||
+        strcmp(scenario, "pull-destination-race") == 0 ||
+        strcmp(scenario, "pull-head-read-failure") == 0) {
+        UmiRepositoryPublicationEntry *updated = NULL;
+        for (size_t i = 0U; i < report->count; ++i)
+            if (umi_path_equal(report->entries[i].path, workspace->repos[2].path)) updated = &report->entries[i];
+        passed = updated && updated->fast_forwarded && report->updated_count == 1U &&
+            workspace->commits == 0U && workspace->pushes == 0U &&
+            (strcmp(scenario, "clean-behind-only") == 0 ? status == UMI_STATUS_OK : status != UMI_STATUS_OK);
+        if (strcmp(scenario, "pull-destination-race") == 0)
+            passed = passed && updated->head[0] == 'f';
+    }
+    if (strcmp(scenario, "hook-tree") == 0 || strcmp(scenario, "push-failure") == 0) {
+        UmiRepositoryPublicationEntry *committed = NULL;
+        for (size_t i = 0U; i < report->count; ++i)
+            if (umi_path_equal(report->entries[i].path, workspace->repos[0].path)) committed = &report->entries[i];
+        passed = passed && committed && committed->committed && !committed->pushed && committed->head[0] == 'c';
     }
     if (strcmp(scenario, "existing-lock") == 0) {
         char marker[UMI_PATH_CAPACITY];
@@ -447,7 +484,8 @@ int main(void)
         "history-private", "unpublished", "push-url", "remote-race",
         "check-failure", "commit-failure", "push-failure", "hook-tree",
         "existing-lock", "missing-child", "stage-conflict", "malformed-index",
-        "index-change", "dirty-behind", "late-push-url", "hook-history"};
+        "index-change", "dirty-behind", "late-push-url", "hook-history",
+        "clean-behind-only", "refresh-failure-after-pull", "pull-destination-race", "pull-head-read-failure"};
     int passed = 1;
     for (unsigned i = 0U; i < sizeof(scenarios) / sizeof(scenarios[0]); ++i)
         passed = run_case(scenarios[i], i) && passed;

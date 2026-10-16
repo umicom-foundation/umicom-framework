@@ -15,6 +15,7 @@
 
 #include "cli.h"
 #include "umicom/repository/publication.h"
+#include "umicom/repository/publication_report.h"
 #include "umicom/platform/threading.h"
 #include <errno.h>
 #include <signal.h>
@@ -45,6 +46,13 @@ static void show_report(const UmiRepositoryPublicationReport *report)
         (void)printf("  Branch: %s | HEAD: %.12s | origin/main: %.12s\n",
             entry->branch[0] ? entry->branch : "detached", entry->head, entry->remote_head);
         if (entry->detail[0]) (void)printf("  %s\n", entry->detail);
+        /* Completed flags survive failed validation and graph rediscovery. */
+        if (entry->committed || entry->pushed || entry->fast_forwarded || entry->locked)
+            (void)printf("  Completed:%s%s%s%s\n",
+                entry->committed ? " commit" : "",
+                entry->pushed ? " push" : "",
+                entry->fast_forwarded ? " fast-forward" : "",
+                entry->locked ? " parent lock" : "");
     }
     (void)printf("%s\n", report->detail);
     (void)printf("%zu commits; %zu pushes; %zu checkout updates completed.\n",
@@ -64,6 +72,9 @@ int umi_cli_command_repository_publication(
     UmiRepositoryPublicationRequest request;
     UmiRepositoryPublicationReport *report = NULL, *previous = NULL;
     unsigned interval = 30U;
+    const char *report_path = NULL;
+    UmiOutputFile *report_file = NULL;
+    UmiStatus report_status = UMI_STATUS_OK;
     int apply = 0;
     int attach_published_main = 0;
     int watch;
@@ -71,6 +82,7 @@ int umi_cli_command_repository_publication(
     void (*old_signal)(int) = SIG_DFL;
     if (!context || argc < 2 || argv[1][0] == '-') {
         (void)fputs("Usage: umicom repo publish-all WORKSPACE [--apply] [--attach-published-main] [--message TEXT]\n"
+            "       Add --report ABSOLUTE_PATH to save a new private JSON result.\n"
             "       umicom repo watch WORKSPACE [--interval SECONDS]\n", stderr);
         return 2;
     }
@@ -83,6 +95,9 @@ int umi_cli_command_repository_publication(
         } else if (!watch && strcmp(argv[i], "--attach-published-main") == 0) {
             if (attach_published_main) return 2;
             attach_published_main = 1;
+        } else if (!watch && strcmp(argv[i], "--report") == 0 &&
+            i + 1 < argc && report_path == NULL) {
+            report_path = argv[++i];
         } else if (!watch && strcmp(argv[i], "--message") == 0 &&
             i + 1 < argc && request.commit_message == NULL) {
             request.commit_message = argv[++i];
@@ -138,25 +153,58 @@ int umi_cli_command_repository_publication(
             umi_thread_sleep_ms(100U);
     } while (!publication_stop);
     if (watch && old_signal != SIG_ERR) (void)signal(SIGINT, old_signal);
-    if (!watch && apply && status == UMI_STATUS_OK) {
-        /* --apply is the owner's explicit publication instruction. Display a
-         * preview and then take a fresh preflight; no interactive loop or shell
-         * script is needed to publish a whole workspace. */
-        (void)puts("Applying with a fresh preflight. Keep repository editors idle until completion.");
-        request.apply = 1;
-        request.observer = show_action;
-/* Explicit recovery extends the existing publication request without changing its defaults. The former implementation is retained for review. */
+    /* Reserve the explicitly chosen new evidence file after preview and before
+     * any publication. Placement or open failures must not silently run apply.
+     * A blocked preview can still be saved for review without changing Git. */
+    if (report_path) {
+        report_status = umi_repository_publication_report_check_path(report, report_path);
+        if (report_status == UMI_STATUS_OK)
+            report_status = UmiOutputFileCreate(report_path, &report_file);
+        if (report_status != UMI_STATUS_OK)
+            (void)fprintf(stderr, "Cannot create publication report: %s. Choose a new absolute file outside Git repositories in an existing trusted directory. No apply was started.\n",
+                umi_status_text(report_status));
+    }
+    if (report_status == UMI_STATUS_OK) {
+        if (!watch && apply && status == UMI_STATUS_OK) {
+            /* --apply is the owner's explicit publication instruction. Display a
+             * preview and then take a fresh preflight; no interactive loop or shell
+             * script is needed to publish a whole workspace. */
+            (void)puts("Applying with a fresh preflight. Keep repository editors idle until completion.");
+            request.apply = 1;
+            request.observer = show_action;
+    /* Explicit recovery extends the existing publication request without changing its defaults. The former implementation is retained for review. */
 #if 0
-        status = umi_repository_publication_run(&context->discovery.profile,
-            &context->environment, &request, report);
+            status = umi_repository_publication_run(&context->discovery.profile,
+                &context->environment, &request, report);
 #endif
-        status = umi_repository_publication_run_recovery(&context->discovery.profile,
-            &context->environment, &request, report, attach_published_main);
-        show_report(report);
-    } else if (!watch && status == UMI_STATUS_OK) {
-        (void)puts("Preview only. Add --apply to stage, commit, push and lock parents.");
+            status = umi_repository_publication_run_recovery(&context->discovery.profile,
+                &context->environment, &request, report, attach_published_main);
+            show_report(report);
+        } else if (!watch && status == UMI_STATUS_OK) {
+            (void)puts("Preview only. Add --apply to stage, commit, push and lock parents.");
+        }
+    }
+    if (report_file) {
+        /* Publication failure and evidence I/O failure remain separate. A late
+         * write error cannot undo commits or pushes that already succeeded. */
+        report_status = umi_repository_publication_report_write_json(report,
+            request.apply ? UMI_REPOSITORY_PUBLICATION_REPORT_APPLY :
+                UMI_REPOSITORY_PUBLICATION_REPORT_PREVIEW, report_file);
+        UmiStatus close_status = UmiOutputFileClose(report_file);
+        if (report_status == UMI_STATUS_OK) report_status = close_status;
+        UmiOutputFileDestroy(report_file);
+        if (report_status == UMI_STATUS_OK)
+            (void)printf("Publication report: %s\n", report_path);
+        else
+            (void)fprintf(stderr, "Publication report is incomplete: %s (%s). Completed Git actions are retained; inspect terminal output before retrying.\n",
+                report_path, umi_status_text(report_status));
     }
     free(previous);
     free(report);
+    /* A report failure now contributes to command failure without changing the
+     * Git result. Retain the former return rule for compatibility review. */
+#if 0
     return watch || status == UMI_STATUS_OK ? 0 : 1;
+#endif
+    return (watch || status == UMI_STATUS_OK) && report_status == UMI_STATUS_OK ? 0 : 1;
 }
