@@ -42,6 +42,18 @@ function(Execute step)
         message(FATAL_ERROR "${step} failed (${_status}). Logs: ${RUN}\n${_error}")
     endif()
 endfunction()
+# CMake renamed developer warnings to author warnings. Query the running
+# tool so older supported CMake installations retain their accepted spelling
+# without emitting a deprecation warning on newer installations.
+execute_process(COMMAND "${CMAKE_COMMAND}" --help
+    RESULT_VARIABLE _help_status OUTPUT_VARIABLE _cmake_help ERROR_VARIABLE _help_error)
+if(NOT "${_help_status}" STREQUAL "0")
+    message(FATAL_ERROR "Cannot inspect CMake warning options: ${_help_error}")
+endif()
+set(_author_warning_option -Werror=dev)
+if(_cmake_help MATCHES "-Werror=author")
+    set(_author_warning_option -Werror=author)
+endif()
 set(_common -G "${HOST_GENERATOR}" -DCMAKE_BUILD_TYPE=Release)
 if(HOST_TOOLCHAIN)
     list(APPEND _common "-DCMAKE_TOOLCHAIN_FILE=${HOST_TOOLCHAIN}")
@@ -64,7 +76,7 @@ if(CASE STREQUAL "tests_off")
 endif()
 Execute(configure "${CMAKE_COMMAND}" -S "${_source}" -B "${_build}" ${_common}
     "-DFRAMEWORK=${FRAMEWORK}" "-DMODE=${_mode}" "-DBUILD_TESTING=${_testing}"
-    -DPROBE_REGISTER_MATRIX=OFF -Werror=dev)
+    -DPROBE_REGISTER_MATRIX=OFF ${_author_warning_option})
 Execute(build "${CMAKE_COMMAND}" --build "${_build}" --config Release --parallel 2)
 # Comparing names, not just a count, catches both omitted and duplicate tests.
 function(CheckInventory stage)
@@ -92,7 +104,12 @@ function(CheckInventory stage)
 #[=[
 if(_mode STREQUAL "partial" AND NOT _name MATCHES "^framework[.]ibkr_connection[.]")
 ]=]
+# Market tape is present when the partial host supplies trading and platform.
+# Preserve the earlier broker-only inventory condition for comparison.
+#[=[
 if(_mode STREQUAL "partial" AND NOT _name MATCHES "^framework[.]ibkr_")
+]=]
+if(_mode STREQUAL "partial" AND NOT _name MATCHES "^framework[.](ibkr_|market_tape[.])")
                     continue()
                 endif()
                 if(_kind STREQUAL "COMMON" OR
@@ -125,7 +142,7 @@ if(CASE STREQUAL "reconfigure")
         math(EXPR _iteration_number "${_iteration_number}+1")
         set(_mode "${_iteration}")
         Execute(reconfigure-${_iteration_number}-${_iteration} "${CMAKE_COMMAND}" -S "${_source}" -B "${_build}"
-            "-DMODE=${_mode}" -Werror=dev)
+            "-DMODE=${_mode}" ${_author_warning_option})
         Execute(rebuild-${_iteration_number}-${_iteration} "${CMAKE_COMMAND}" --build "${_build}" --config Release --parallel 2)
         CheckInventory(reinventory-${_iteration_number}-${_iteration})
     endforeach()
@@ -149,7 +166,7 @@ if(CASE STREQUAL "installed")
     set(_client "${RUN}/client build")
     Execute(client-configure "${CMAKE_COMMAND}"
         -S "${FRAMEWORK}/examples/component_integration/client" -B "${_client}" ${_common}
-        "-DCMAKE_PREFIX_PATH=${_prefix}" -Werror=dev)
+        "-DCMAKE_PREFIX_PATH=${_prefix}" ${_author_warning_option})
     Execute(client-build "${CMAKE_COMMAND}" --build "${_client}" --config Release --parallel 2)
     if(NOT HOST_CROSSCOMPILING)
         Execute(client-test "${_ctest}" --test-dir "${_client}" -C Release --no-tests=error --output-on-failure)

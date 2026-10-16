@@ -54,15 +54,35 @@ int main(int argc, char **argv)
     CHECK(umi_build_project_session_snapshot(session, &state) == UMI_STATUS_OK &&
           state.operation_id == 0U);
     const char *log_path = NULL;
+    /* Log capture requires an absolute output path. Keep both cases in the
+     * CTest-owned directory so the existing-file case checks preservation,
+     * rather than passing merely because a relative path was rejected. */
+    char newLogPath[UMI_PATH_CAPACITY], existingLogPath[UMI_PATH_CAPACITY];
+    CHECK(umi_path_join(profile->source_directory, "new.log", newLogPath,
+                        sizeof newLogPath) == UMI_STATUS_OK);
+    CHECK(umi_path_join(profile->source_directory, "existing.log", existingLogPath,
+                        sizeof existingLogPath) == UMI_STATUS_OK);
     if (strcmp(argv[1], "log-existing") == 0)
     {
+        /* Retain the former relative-path call for comparison. */
+#if 0
         CHECK(umi_fs_write_text("existing.log", "retain this evidence\n") == UMI_STATUS_OK);
+#endif
+        CHECK(umi_fs_write_text(existingLogPath, "retain this evidence\n") == UMI_STATUS_OK);
+        /* Retain the former relative-path call for comparison. */
+#if 0
         CHECK(UmiBuildProjectSessionRunCurrent(session, profile, true, "existing.log") !=
+#endif
+        CHECK(UmiBuildProjectSessionRunCurrent(session, profile, true, existingLogPath) !=
               UMI_STATUS_OK);
         CHECK(atomic_load(&probe.calls) == 0);
         char *text = NULL;
         size_t length = 0U;
+        /* Retain the former relative-path call for comparison. */
+#if 0
         CHECK(umi_fs_read_text("existing.log", &text, &length) == UMI_STATUS_OK);
+#endif
+        CHECK(umi_fs_read_text(existingLogPath, &text, &length) == UMI_STATUS_OK);
         CHECK(strcmp(text, "retain this evidence\n") == 0);
         umi_fs_free_text(text);
     }
@@ -71,7 +91,11 @@ int main(int argc, char **argv)
         bool cancel = strcmp(argv[1], "cancel") == 0;
         probe.fail = strcmp(argv[1], "failure") == 0;
         if (strcmp(argv[1], "log") == 0)
+        /* Retain the former relative-path call for comparison. */
+#if 0
             log_path = "new.log";
+#endif
+            log_path = newLogPath;
         CHECK(cancel || probe.fail || log_path != NULL || strcmp(argv[1], "copied") == 0 ||
               strcmp(argv[1], "repeat") == 0);
         CHECK(UmiBuildProjectSessionRunCurrent(session, profile, true, log_path) == UMI_STATUS_OK);

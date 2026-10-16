@@ -608,7 +608,13 @@ int umi_build_profile_equal(const UmiBuildProfile *left,
         strcmp(left->build_preset, right->build_preset) != 0 ||
         strcmp(left->test_preset, right->test_preset) != 0) return 0;
     return strcmp(left->profile_id, right->profile_id) == 0 &&
+           /* Persistence normalizes the project identity. Equivalent separators
+            * and dot segments must not invalidate an otherwise unchanged profile.
+            * This is lexical equality; it does not resolve filesystem links. */
+#if 0
            strcmp(left->source_directory, right->source_directory) == 0 &&
+#endif
+           umi_path_equal(left->source_directory, right->source_directory) &&
            strcmp(left->build_directory, right->build_directory) == 0 &&
            strcmp(left->generator, right->generator) == 0 &&
            strcmp(left->compiler, right->compiler) == 0 &&

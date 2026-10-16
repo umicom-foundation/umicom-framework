@@ -133,10 +133,15 @@ UmiStatus UmiTerminalSessionPollJob(UmiTerminalSession *session,
             session->job_id = 0U;
             session->job_supervisor = NULL;
             session->execution.pending = 0;
+            /* The former notice preceded the captured output and could itself
+             * be evicted from the bounded transcript. Retain that ordering for
+             * review; the active notice follows all output below. */
+#if 0
             if (snapshot.output_truncated)
                 TerminalAppendCaptured(session, UMI_TERMINAL_STREAM_SYSTEM,
                                        "Only the most recent captured output is retained; earlier "
                                        "output was truncated.");
+#endif
             TerminalAppendCaptured(session,
                                    snapshot.state == UMI_PROCESS_JOB_SUCCEEDED
                                        ? UMI_TERMINAL_STREAM_OUTPUT
@@ -150,6 +155,12 @@ UmiStatus UmiTerminalSessionPollJob(UmiTerminalSession *session,
                                                                          : "failed",
                            snapshot.exit_code);
             TerminalAppendCaptured(session, UMI_TERMINAL_STREAM_SYSTEM, result);
+            /* Publish truncation last so even a short transcript explains why
+             * earlier bytes are missing. This does not alter process status. */
+            if (snapshot.output_truncated)
+                TerminalAppendCaptured(session, UMI_TERMINAL_STREAM_SYSTEM,
+                                       "Only the most recent captured output is retained; earlier "
+                                       "output was truncated.");
             (void)umi_mutex_lock(session->mutex);
             ++session->commands_executed;
             session->last_exit_code = snapshot.exit_code;

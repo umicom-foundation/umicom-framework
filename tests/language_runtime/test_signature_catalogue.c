@@ -98,8 +98,16 @@ static const Example examples[] = {
     {"split-surrogate",
      "{\"signatures\":[{\"label\":\"f(\\ud83d\\ude00)\",\"parameters\":[{\"label\":[2,3]}]}]}",
      UMI_STATUS_PARSE_ERROR, 1U, 0U, 1, 1, "right", 10U, 15U},
+    /* The label occupies five UTF-16 code units, so end offset five is
+     * valid. Use six to exercise rejection beyond the label. Retain the
+     * former fixture to explain the boundary correction. */
+#if 0
     {"range-overflow",
      "{\"signatures\":[{\"label\":\"f(\\ud83d\\ude00)\",\"parameters\":[{\"label\":[2,5]}]}]}",
+     UMI_STATUS_PARSE_ERROR, 1U, 0U, 1, 1, "right", 10U, 15U},
+#endif
+    {"range-overflow",
+     "{\"signatures\":[{\"label\":\"f(\\ud83d\\ude00)\",\"parameters\":[{\"label\":[2,6]}]}]}",
      UMI_STATUS_PARSE_ERROR, 1U, 0U, 1, 1, "right", 10U, 15U},
     {"range-negative",
      "{\"signatures\":[{\"label\":\"f(\\ud83d\\ude00)\",\"parameters\":[{\"label\":[-1,2]}]}]}",

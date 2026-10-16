@@ -188,6 +188,12 @@ UmiStatus umi_path_normalise(const char *path,
         unc = 1;
         rooted = 1;
         read_index = 2U;
+    } else if (is_separator(path[0])) {
+        /* A Windows current-drive root still has a leading separator. Preserve
+         * that boundary during lexical normalization without inventing a drive
+         * or classifying the path as a fully qualified absolute pathname. */
+        rooted = 1;
+        read_index = 1U;
     }
 #else
     /* Apply this branch only when its contract condition is satisfied. */

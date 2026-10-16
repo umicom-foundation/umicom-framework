@@ -16,4 +16,7 @@ configure_package_config_file(
     INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework")
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/UmicomFrameworkConfig.cmake"
     "${FRAMEWORK_ROOT}/cmake/UmicomApplicationBranding.cmake"
+    # The real package configuration includes module discovery even for a
+    # focused export. Ship its implementation alongside the same config.
+    "${FRAMEWORK_ROOT}/cmake/UmicomApplicationModules.cmake"
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework")

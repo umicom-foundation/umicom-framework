@@ -87,7 +87,16 @@ int main(int argc,char **argv)
         OK(umi_chart_drawing_registry_find(registry,drawing.id,&changed));CHECK(changed.time1==drawing.time1&&changed.value1==drawing.value1&&changed.locked);
     }else if(strcmp(name,"selection-change")==0){
         g_signal_emit_by_name(Find(root,"trading.chart.move-drawing"),"clicked");ClickPrice(root,0.3,0.35);
+        /* GtkDropDown can retain its selected item when an invalid index is
+         * assigned to a nonempty model. Removing the model makes the loss of
+         * selection explicit, which exercises cancellation before another click. */
+#if 0
         gtk_drop_down_set_selected(GTK_DROP_DOWN(Find(root,"trading.chart.drawings")),GTK_INVALID_LIST_POSITION);
+#endif
+        GtkDropDown *drawings = GTK_DROP_DOWN(Find(root, "trading.chart.drawings"));
+        CHECK(GTK_IS_DROP_DOWN(drawings));
+        gtk_drop_down_set_model(drawings, NULL);
+        CHECK(gtk_drop_down_get_selected(drawings) == GTK_INVALID_LIST_POSITION);
         /* Cancelling a move must not turn its second click into a new drawing. */
         ClickPrice(root,0.7,0.65);ClickPrice(root,0.4,0.45);
         CHECK(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(Find(root,"trading.chart.cursor"))));

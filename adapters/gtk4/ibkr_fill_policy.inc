@@ -281,6 +281,9 @@ static void FillChoiceChanged(GObject *object, GParamSpec *property, gpointer da
 static void FillPolicyControls(GtkWindow *window, ConnectionUi *ui, GtkWidget *root)
 {
     GtkWidget *section = gtk_expander_new("Full-quantity policy and local liquidity watch");
+    /* Stable names let accessibility tools and fixtures open the same panels
+     * a person opens before interacting with their owned controls. */
+    gtk_widget_set_name(section, "ibkr-fill-policy-section");
     GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
     gtk_expander_set_child(GTK_EXPANDER(section), box);
     gtk_box_append(GTK_BOX(root), section);
@@ -343,6 +346,7 @@ static void FillPolicyControls(GtkWindow *window, ConnectionUi *ui, GtkWidget *r
     g_signal_connect_object(ui->fillSkew, "value-changed", G_CALLBACK(FillChanged), window, 0);
 #ifdef UMI_IBKR_HAS_RULE_REPORT
     GtkWidget *reportSection = gtk_expander_new("Saved contract and route rules");
+    gtk_widget_set_name(reportSection, "ibkr-rule-report-section");
     ui->ruleReportPanel = UmiIbkrRuleReportGtk4Create();
     gtk_expander_set_child(GTK_EXPANDER(reportSection), ui->ruleReportPanel);
     gtk_box_append(GTK_BOX(box), reportSection);

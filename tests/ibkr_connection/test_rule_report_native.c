@@ -97,10 +97,19 @@ int main(int argc, char **argv) {
     GtkWindow *broker = UmiIbkrGtkCreate(NULL);
     CHECK(broker);
     g_object_ref(broker);
+    /* Open both logical containers before calling the embedded report. A
+     * collapsed child is deliberately not an active window-owned panel; this
+     * follows the visible workflow without weakening the retired-owner check. */
+    GtkWidget *policySection = Find(GTK_WIDGET(broker), "ibkr-fill-policy-section");
+    GtkWidget *reportSection = Find(GTK_WIDGET(broker), "ibkr-rule-report-section");
+    CHECK(GTK_IS_EXPANDER(policySection) && GTK_IS_EXPANDER(reportSection));
+    gtk_expander_set_expanded(GTK_EXPANDER(policySection), TRUE);
+    gtk_expander_set_expanded(GTK_EXPANDER(reportSection), TRUE);
     GtkWidget *embedded = Find(GTK_WIDGET(broker), "ibkr-rule-report");
     GtkWidget *review = Find(GTK_WIDGET(broker), "ibkr-fill-review");
     GtkWidget *price = Find(GTK_WIDGET(broker), "ibkr-fill-price");
     CHECK(embedded && review && price);
+    CHECK(gtk_widget_get_root(embedded) == GTK_ROOT(broker));
     CHECK(UmiIbkrRuleReportGtk4SetExpectation(embedded, 123U, UMI_SIDE_BUY, "SMART") ==
           UMI_STATUS_OK);
     gtk_editable_set_text(GTK_EDITABLE(price), "4.25");

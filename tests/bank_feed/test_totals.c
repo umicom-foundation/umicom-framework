@@ -8,7 +8,12 @@
 
 #include "fixture.h"
 int main(void) {
+  /* The unquoted search also matched the CreditDebitIndicator property name.
+   * Retain that setup for review; replace the JSON value token below. */
+#if 0
   char *debit = BankReplace(BANK_TEST_ROW, "Credit", "Debit");
+#endif
+  char *debit = BankReplace(BANK_TEST_ROW, "\"Credit\"", "\"Debit\"");
   CHECK(debit);
   char *debitId = BankReplace(debit, "credit-one", "debit-one");
   CHECK(debitId);

@@ -116,8 +116,16 @@ int main(int argc, char **argv)
         bool found = false, other = false;
         for (size_t i = 0U; i < parsed->count; ++i)
         {
+            /* The service emits a normalized native path. Verify the option
+             * spelling exactly and its directory using portable path equality. */
+#if 0
             if (strcmp(parsed->values[i],
                        "--compile-commands-dir=" DATABASE_ROOT "/build caf\xc3\xa9") == 0)
+#endif
+            if (strncmp(parsed->values[i], "--compile-commands-dir=",
+                        sizeof("--compile-commands-dir=") - 1U) == 0 &&
+                umi_path_equal(parsed->values[i] + sizeof("--compile-commands-dir=") - 1U,
+                               DATABASE_ROOT "/build caf\xc3\xa9"))
                 found = true;
             if (strcmp(parsed->values[i], "--background-index") == 0)
                 other = true;

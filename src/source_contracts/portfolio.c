@@ -72,7 +72,12 @@ static bool scalar(const char *text, const char *key, char *out, size_t capacity
 }
 static bool dedicated(const char *name)
 {
+    /* Healthcare now supplies its own GTK frontend. Keep the previous list
+     * for review while checking the current portfolio below. */
+#if 0
     static const char *const entries[] = {"desktop","studio","trader","bank","tms","music"};
+#endif
+    static const char *const entries[] = {"desktop","studio","trader","bank","tms","music","healthcare"};
     for (size_t i = 0U; i < sizeof(entries) / sizeof(entries[0]); ++i)
         if (strcmp(entries[i], name) == 0) return true;
     return false;
@@ -159,7 +164,12 @@ int ScPortfolio(const char *root, UmiSourceContractReport *report)
         free(applicationRoot); goto done;
     }
     free(applicationRoot);
+    /* This baseline includes Healthcare; individual manifests must still pass
+     * every experience, recipe and module check below. */
+#if 0
     require(manifests.count == 24U, "applications", "Expected the existing 24-product manifest portfolio", report);
+#endif
+    require(manifests.count == 25U, "applications", "Expected the application portfolio including Healthcare", report);
     size_t sharedCount = 0U;
     for (size_t i = 0U; i < manifests.count; ++i) {
         const char *manifestPath = manifests.items[i];
@@ -232,7 +242,11 @@ int ScPortfolio(const char *root, UmiSourceContractReport *report)
             }
         }
     }
+    /* The shared count remains unchanged because Healthcare owns its host. */
+#if 0
     require(sharedCount == 18U, "applications", "Expected 18 shared native frontends and six dedicated frontends", report);
+#endif
+    require(sharedCount == 18U, "applications", "Expected 18 shared native frontends and seven dedicated frontends", report);
 done:
     ScTextFree(&catalogue); ScTextFree(&includes); ScTextFree(&records); ScTextFree(&modules); ScTextFree(&extended); ScFilesFree(&manifests);
     return report->findings != before ? 1 : 0;

@@ -13,6 +13,7 @@
 #ifdef _WIN32
 #include <fcntl.h>
 #include <io.h>
+#include <windows.h>
 #endif
 int main(int argc, char **argv)
 {
@@ -31,8 +32,26 @@ int main(int argc, char **argv)
     }
     if (strcmp(mode, "environment") == 0)
     {
+        /* Windows stores the inherited environment as UTF-16. Read that
+         * representation and emit UTF-8 so this fixture checks the process
+         * channel rather than the active Windows ANSI code page. The existing
+         * narrow environment path remains appropriate on POSIX hosts. */
+#ifdef _WIN32
+        const wchar_t *wideValue = _wgetenv(L"UMICOM_CONSOLE_FIXTURE_VALUE");
+        char encodedValue[4096];
+        if (wideValue != NULL)
+        {
+            if (WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, wideValue, -1,
+                                    encodedValue, (int)sizeof encodedValue, NULL, NULL) == 0)
+                return 5;
+            printf("value=%s\n", encodedValue);
+        }
+        else
+            fputs("value=(absent)\n", stdout);
+#else
         const char *value = getenv("UMICOM_CONSOLE_FIXTURE_VALUE");
         printf("value=%s\n", value != NULL ? value : "(absent)");
+#endif
         return 0;
     }
     if (strcmp(mode, "large") == 0)

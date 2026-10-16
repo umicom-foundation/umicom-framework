@@ -8,7 +8,11 @@
 
 #include "order_review_fixture.h"
 #include "umicom/trading_ui/gtk4/interactive_chart.h"
+#include "umicom/ui/gtk4/automation.h"
 #define CHECK REVIEW_CHECK
+/* Collapsed chart tools remain part of the logical widget tree. Retain the
+ * earlier rendered-child traversal for review and use the shared lookup. */
+#if 0
 static GtkWidget *Find(GtkWidget *root, const char *id)
 {
     const char *tag = g_object_get_data(G_OBJECT(root), "umicom-automation-id");
@@ -17,6 +21,11 @@ static GtkWidget *Find(GtkWidget *root, const char *id)
         GtkWidget *found = Find(child, id); if (found != NULL) return found;
     }
     return NULL;
+}
+#endif
+static GtkWidget *Find(GtkWidget *root, const char *id)
+{
+    return umi_gtk4_automation_find_tagged_widget(root, id);
 }
 static void ClickPrice(GtkWidget *root, double fraction_x, double fraction_y)
 {

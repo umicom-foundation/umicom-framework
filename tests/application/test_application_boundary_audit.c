@@ -18,6 +18,7 @@
 #include <stdlib.h>
 
 #include "umicom/application/application.h"
+#include "umicom/application/component_catalogue.h"
 
 /*
  * Start this command or application, report setup failures, and return a process exit code
@@ -44,6 +45,11 @@ int main(void) {
                     report->findings[finding_index].subject, report->findings[finding_index].message);
     }
   }
+  /* A registered application must resolve its actual reusable domain surface.
+   * Keep this assertion independent of the total portfolio size as products grow. */
+  assert(umi_application_component_catalogue_find(
+      "umicom.healthcare.synthetic-access") != NULL);
+  assert(umi_application_component_domain_exists("healthcare"));
   assert(report->passed);
   assert(report->error_count == 0U);
   assert(report->application_count == umi_application_portfolio_count());

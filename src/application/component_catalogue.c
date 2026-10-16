@@ -23,6 +23,13 @@
 
 static const UmiApplicationComponentDefinition COMPONENTS[] = {
 #include "component_catalogue/records.inc"
+    /* Publish the existing synthetic workspace in the same catalogue used by
+     * portfolio validation and discovery. This describes session-only access
+     * coordination, without implying clinical or production readiness. */
+    COMP("umicom.healthcare.synthetic-access", "healthcare", "Synthetic access requests",
+         "umicom.ui", "Fictional requests, provider replies and collection in session memory.",
+         UMI_APPLICATION_COMPONENT_SERVICE_SURFACE, UMI_CAPABILITY_FOUNDATION, 1, 0,
+         "healthcare synthetic requests availability collection"),
 };
 
 typedef struct UmiApplicationComponentDomainAlias {

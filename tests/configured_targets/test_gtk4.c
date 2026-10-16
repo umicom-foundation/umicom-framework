@@ -379,6 +379,11 @@ cleanup:
     int retired = rootWeak == NULL;
     if (!retired)
     {
+        /* A silent nonzero exit hides whether the worker or its widget tree
+         * failed to retire. Keep the assertion and report its lifetime boundary
+         * so the saved CTest log identifies the failure without a debugger. */
+        fprintf(stderr, "%s:%d: dialog content remained alive after disposal\n",
+                __FILE__, __LINE__);
         g_object_remove_weak_pointer(G_OBJECT(rootWeak), &rootWeak);
         failed = 1;
     }

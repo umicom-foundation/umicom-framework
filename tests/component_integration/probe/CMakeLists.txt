@@ -166,7 +166,12 @@ endif()
 function(VerifyIntegration)
     set(_expected)
     if(MODE STREQUAL "partial")
-        set(_expected ibkr_connection)
+        # The partial host owns both trading and platform, so it also satisfies
+        # the real market-tape dependencies. Only research replay is unavailable.
+        if(FALSE)
+            set(_expected ibkr_connection)
+        endif()
+        set(_expected market_tape ibkr_connection)
     elseif(NOT MODE STREQUAL "missing")
         set(_expected market_tape research_replay ibkr_connection)
     endif()

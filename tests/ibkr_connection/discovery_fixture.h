@@ -89,7 +89,13 @@ static int ChainFeed(Fixture *f, uint32_t request, const char *mode)
         fields[6] = "129";
     if (!strcmp(mode, "date"))
         fields[7] = "20260229";
+    /* Compare equal-length mode names before reading their bytes. This keeps
+     * optimized fixture calls valid even when mode is a shorter literal. */
+#if 0
     if (!strcmp(mode, "duplicate-expiry"))
+#endif
+    if (strlen(mode) == sizeof("duplicate-expiry") - 1U &&
+        memcmp(mode, "duplicate-expiry", sizeof("duplicate-expiry") - 1U) == 0)
         fields[8] = fields[7];
     if (!strcmp(mode, "strikes"))
         fields[9] = "513";
@@ -99,7 +105,13 @@ static int ChainFeed(Fixture *f, uint32_t request, const char *mode)
         fields[10] = "0.12345678901";
     if (!strcmp(mode, "negative"))
         fields[10] = "-10";
+    /* Compare equal-length mode names before reading their bytes. This keeps
+     * optimized fixture calls valid even when mode is a shorter literal. */
+#if 0
     if (!strcmp(mode, "duplicate-strike"))
+#endif
+    if (strlen(mode) == sizeof("duplicate-strike") - 1U &&
+        memcmp(mode, "duplicate-strike", sizeof("duplicate-strike") - 1U) == 0)
         fields[11] = "100.0";
     if (!strcmp(mode, "short"))
         --count;

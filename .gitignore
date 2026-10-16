@@ -148,3 +148,12 @@ id_ed25519*
 /BATCH_*.txt
 *.private.*
 *.local.*
+
+# Private working records belong outside the public source tree. These rules
+# protect new root-level notes; they do not remove files already tracked by Git.
+/_local/
+/[Bb][Aa][Tt][Cc][Hh]_*
+/[Uu][Pp][Dd][Aa][Tt][Ee]_*
+/ROADMAP_MAJOR_UPDATES.md
+/UMICOM_EDUCATION_NATIVE_BATCH.md
+/SITE_MIGRATION.md

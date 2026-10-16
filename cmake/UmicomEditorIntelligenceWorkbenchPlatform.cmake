@@ -279,11 +279,27 @@ add_custom_target(
     umicom-editor-intelligence-workbench-code-action-applicability-model-test
     DEPENDS umicom-eiw-action-applicability-test
 )
+# The full target name consumed too much of the Windows object-path budget
+# in nested application checkouts. Keep its registration for review; the compact
+# target below builds the same source with the same CTest name and executable.
+if(FALSE)
 umicom_add_editor_intelligence_workbench_test(
     umicom-editor-intelligence-workbench-code-action-diagnostic-binding-test
     framework.editor_intelligence_workbench.code.action.diagnostic.binding
     tests/editor_intelligence_workbench/test_code_action_diagnostic_binding.c
 )
+endif()
+umicom_add_editor_intelligence_workbench_test(
+    umicom-editor-diagnostic-binding-test
+    framework.editor_intelligence_workbench.code.action.diagnostic.binding
+    tests/editor_intelligence_workbench/test_code_action_diagnostic_binding.c
+)
+set_target_properties(umicom-editor-diagnostic-binding-test PROPERTIES
+    OUTPUT_NAME umicom-editor-intelligence-workbench-code-action-diagnostic-binding-test)
+# Existing build commands can still request the original target name.
+add_custom_target(
+    umicom-editor-intelligence-workbench-code-action-diagnostic-binding-test
+    DEPENDS umicom-editor-diagnostic-binding-test)
 umicom_add_editor_intelligence_workbench_test(
     umicom-editor-intelligence-workbench-code-action-menu-item-test
     framework.editor_intelligence_workbench.code.action.menu.item

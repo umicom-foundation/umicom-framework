@@ -46,7 +46,15 @@ static const unsigned char validTrace[24] = {'U','M','I','D','I','O','1',0,1};
 #include "../../src/education/schedule_trace.c"
 typedef UmiEducationScheduleReport Report;
 #define INSPECT UmiEducationScheduleTraceInspectFile
+/* The original initializer supplied seventeen bytes to a sixteen-byte header.
+ * Retain it for review; explicit header fields below leave the record count
+ * and reserved bytes zero so this fixture exercises close errors on valid input. */
+#if 0
 static const unsigned char validTrace[16] = {'U','M','I','S','C','H','1',0,1,0,0,0,0,0,0,0,0};
+#endif
+static const unsigned char validTrace[16] = {
+    'U', 'M', 'I', 'S', 'C', 'H', '1', 0, 1
+};
 #endif
 #undef fclose
 #define CHECK(condition) do { if (!(condition)) { \

@@ -4861,10 +4861,24 @@ if(BUILD_TESTING)
         umicom-application-presentation-surface-behavior-catalogue-test
         framework.application_presentation.surface_behavior_catalogue
         tests/application_presentation/test_surface_behavior_catalogue.c)
+    # The verbose target placed object files beyond the Windows path budget in
+    # nested products. Retain it for review and use the compact target below;
+    # its executable, CTest identity and original build entry point stay stable.
+    if(FALSE)
     umicom_add_application_test(
         umicom-application-presentation-workspace-runtime-policy-catalogue-test
         framework.application_presentation.workspace_runtime_policy_catalogue
         tests/application_presentation/test_workspace_runtime_policy_catalogue.c)
+    endif()
+    umicom_add_application_test(
+        umicom-workspace-runtime-policy-test
+        framework.application_presentation.workspace_runtime_policy_catalogue
+        tests/application_presentation/test_workspace_runtime_policy_catalogue.c)
+    set_target_properties(umicom-workspace-runtime-policy-test PROPERTIES
+        OUTPUT_NAME umicom-application-presentation-workspace-runtime-policy-catalogue-test)
+    add_custom_target(
+        umicom-application-presentation-workspace-runtime-policy-catalogue-test
+        DEPENDS umicom-workspace-runtime-policy-test)
     umicom_add_application_test(
         umicom-application-presentation-surface-runtime-scheduling-test
         framework.application_presentation.surface_runtime_scheduling
