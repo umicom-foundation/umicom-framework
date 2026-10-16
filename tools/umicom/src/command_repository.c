@@ -706,6 +706,7 @@ int umi_cli_command_repo(
         strcmp(argv[0], "commit") == 0 ||
         strcmp(argv[0], "push") == 0 ||
         strcmp(argv[0], "publish") == 0 ||
+        strcmp(argv[0], "pull") == 0 ||
         strcmp(argv[0], "update") == 0 ||
         strcmp(argv[0], "sync") == 0) {
         return umi_cli_command_repository_workflow(

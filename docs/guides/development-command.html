@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Develop projects with the Umicom command</title>
+<style>body{max-width:960px;margin:40px auto;padding:0 24px;font:17px/1.6 system-ui;color:#203047;background:#f7f9fc}h1,h2{line-height:1.2}pre{padding:18px;background:#142237;color:#edf4ff;overflow:auto;border-radius:8px}code{font-family:Consolas,monospace}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bac7d6;padding:10px;text-align:left}a{color:#165d9b}.note{padding:16px;background:#e6effa}</style></head>
+<body><h1>Develop projects with the Umicom command</h1>
+<p>The native <code>umicom</code> program coordinates Git, CMake, CTest and application processes through Framework services. Install a build of the CLI that includes these commands, and make its executable available on your PATH. The selected development tools must already be installed; the CLI does not install compilers or create packaging targets.</p>
+<p class="note">Run the CLI from a separate tools installation when rebuilding Umicom itself. On Windows, an executable cannot be replaced while it is running. Keep the running CLI outside both the build folder and the installation destination; keep its required runtime libraries available as well. A project build or install must not overwrite the command supervising it.</p>
+<h2>Publish a workspace consistently</h2>
+<ol><li>Keep each development checkout on its intended <code>main</code> branch. Edit shared source in one primary checkout. Other copies should be clean.</li>
+<li>Review changes before publication. Keep private notes, logs and credentials outside public repositories. Filename checks cannot determine whether every document is appropriate for publication.</li>
+<li>Preview the workspace. This discovers repositories and fetches remote metadata; it does not stage source, commit, push or switch branches.</li></ol>
+<pre>umicom repo publish-all C:\work
+umicom repo publish-all C:\work --apply</pre>
+<p><code>--apply</code> performs a fresh preflight. Framework publishes each changed child repository once using <code>git add -A</code>, a non-empty commit and a normal push to <code>main</code>. It pulls clean duplicate copies with fast-forward-only, nonrecursive updates, locks parent child revisions, then commits and pushes parents. A dependency is published before the parent that records its revision. Existing vendor pins are retained.</p>
+<p>Detached checkouts, independent work in duplicate copies, divergence and changed registrations stop the workflow for review. It never uses force-push, reset, clean, automatic stash or rebase to make publication succeed. A later failure can leave earlier repositories successfully published; inspect the completed-action report and rerun after resolving the cause. Publication across independent remotes is not a transaction.</p>
+<pre>umicom repo watch C:\work --interval 30
+umicom add -A
+umicom commit -m "Improve application commands and regression coverage"
+umicom push
+umicom pull
+umicom repo lock .</pre>
+<p><code>watch</code> observes local changes without publishing. <code>pull</code> and <code>repo update</code> require a clean checkout on the requested branch and default to leaving nested checkouts untouched. The advanced <code>--with-submodules</code> update option explicitly checks out registered child pins and may detach those children; it is not part of the main-branch development routine. <code>repo lock</code> records checked-out child commits; it does not download newer code. Prefer <code>publish-all</code> when publishing an ecosystem with duplicate copies and parent repositories. Individual commands do not automatically coordinate other checkouts.</p>
+<p>See <a href="repository-publication.html">repository publication</a> for the discovery rules and limits.</p>
+<h2>Preview before running development tools</h2>
+<p>Use <code>--dry-run</code> on configure, build, test, install, package, make, deliver or launch. It shows the working directory and literal process arguments without discovering tools, launching them or creating a log. Printed arguments are an inspection view, not a shell script. A successful preview is not compiler or test evidence.</p>
+<pre>umicom build --source C:\work\my-project --build build\debug --jobs 2 --dry-run
+umicom build --help</pre>
+<h2>Configure, build and test</h2>
+<p>A preset is a named configuration defined by the project's CMake files. Choose a preset that exists in that project. The following preset name is an example; replace it when working on a different project. Unknown or duplicate CLI options fail before tool discovery.</p>
+<pre>umicom configure --source C:\work\my-project --preset windows-ucrt64-all-debug --log C:\work\logs\configure-01.log
+umicom build --source C:\work\my-project --preset windows-ucrt64-all-debug --jobs 2 --log C:\work\logs\build-01.log
+umicom test --source C:\work\my-project --preset windows-ucrt64-all-debug --jobs 2 --log C:\work\logs\test-01.log</pre>
+<p>Choose an existing, private log directory and a new filename for each invocation. Existing files are never overwritten. Output appears live and the log retains raw merged stdout/stderr, including output longer than the diagnostic tail. A failed log open prevents execution. A later write failure stops subsequent phases after the active child finishes. A flush error is reported even if the child succeeds. Tool-discovery diagnostics and the CLI's command descriptions are displayed separately from the raw child-output log.</p>
+<p><code>test</code> always supplies <code>--output-on-failure</code> and <code>--no-tests=error</code>. No matching tests is a failure. CTest still defines how disabled/skipped tests and compiler warnings affect its exit status: inspect the log rather than interpreting zero as proof that every test ran or every warning disappeared.</p>
+<pre>umicom make --source C:\work\my-project --preset windows-ucrt64-all-debug --jobs 2 --log C:\work\logs\make-01.log
+umicom test --source C:\work\my-project --build build\debug --tests "^framework[.]toolchain" --jobs 2
+umicom configure --source C:\work\my-project --build build\debug --define BUILD_TESTING=ON --define CMAKE_BUILD_TYPE=Debug</pre>
+<p><code>make</code> runs configure, build and test in sequence, stopping on the first failure. Up to sixteen <code>--define NAME=VALUE</code> options can be passed to configure/make/deliver. Values are literal arguments; they are not interpreted by a shell.</p>
+<h2>Select binary folders explicitly</h2>
+<p>Some presets use a <code>binaryDir</code> outside <code>build/preset-name</code>. Umicom does not infer that directory for installation or launch. Use the actual binary folder with <code>--build</code>. Relative paths, including executable, install and log paths, are resolved against <code>--source</code>; the source is resolved against the invocation directory.</p>
+<p>If both <code>--preset</code> and <code>--build</code> are supplied, configure uses that configure preset with an explicit <code>-B</code> override. Build, test and package then operate directly on that directory. In this mode build/test preset-specific arguments and environment settings are not applied; supply the corresponding CLI selectors explicitly. Use preset-only commands when those preset settings are needed.</p>
+<h2>Install and package</h2>
+<pre>umicom install --source C:\work\my-project --build build\debug --prefix C:\work\installed\my-project --config Debug --log C:\work\logs\install-01.log
+umicom package --source C:\work\my-project --build build\debug --config Debug --jobs 2 --log C:\work\logs\package-01.log</pre>
+<p>Installation requires both <code>--build</code> and <code>--prefix</code>. Add <code>--component Framework</code> to install only a configured component. Packaging builds the project's <code>package</code> target, or a target selected with <code>--package-target</code>. A project without that target reports an error; Umicom does not invent an installer.</p>
+<pre>umicom deliver --source C:\work\my-project --preset windows-ucrt64-all-debug --build build\delivery --prefix C:\work\installed\my-project --config Debug --jobs 2 --log C:\work\logs\delivery-01.log</pre>
+<p><code>deliver</code> runs configure, build, test, install and package. It performs no Git publication. A failed package step does not undo a completed installation. Use separate commands when publishing source before qualification, or when a project has no package target.</p>
+<h2>Launch applications</h2>
+<pre>umicom launch studio --source C:\work\my-project --build build\debug
+umicom launch --source C:\work\my-project --executable C:\work\installed\my-project\bin\my-app.exe -- --workspace "C:\work\examples with spaces"
+umicom qemu --help</pre>
+<p><code>launch</code> and <code>run</code> share the same execution service. Application aliases select <code>bin/umicom-NAME</code> under the explicit binary directory, with the native executable suffix. Studio and Desk have their established executable names. Use <code>--executable</code> for a different layout, including multi-configuration output folders. Arguments after <code>--</code> go to the application unchanged. A run is supervised until the application exits. Use the separate QEMU commands for supported virtual machines and kernel boot workflows.</p>
+<h2>Recover from a failed step</h2>
+<ol><li>Read the named failing phase, child exit code and log path. Later phases were not attempted.</li>
+<li>Correct the reported source, tool, configuration or permission problem. Do not delete a log to disguise a failure.</li>
+<li>Rerun the failed command with a new log filename. A per-process limit can be set with <code>--timeout-ms</code>.</li>
+<li>For an explicitly requested clean, use a separate binary directory containing a CMake cache for the selected source. Source directories, ancestors and unrelated folders are refused. Keep the directory and its parents under your control; this check is not an adversarial filesystem sandbox.</li></ol>
+<p>The original Framework request and report layouts remain available to native callers. The extended execution contract adds optional observers and an injectable process transport; Studio can share the same orchestration without implementing shell commands.</p>
+</body></html>

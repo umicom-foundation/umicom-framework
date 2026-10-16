@@ -1026,6 +1026,7 @@ target_include_directories(umicom_toolchain PUBLIC
 )
 umicom_apply_warnings(umicom_toolchain)
 umicom_apply_sanitizers(umicom_toolchain)
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomBuildExecution.cmake")
 
 # -----------------------------------------------------------------------------
 # Batch 58 compiler, polyglot and Umicc integration contracts.

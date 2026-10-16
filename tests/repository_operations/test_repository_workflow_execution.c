@@ -24,6 +24,23 @@
  * from validation or commit hooks. */
 static int fake_git(int argc, char **argv, const char *scenario)
 {
+    if (argc == 5 && strcmp(argv[1], "symbolic-ref") == 0) {
+        if (strcmp(scenario, "update-detached") == 0) return 1;
+        (void)puts(strcmp(scenario, "update-branch") == 0 ? "feature" : "main");
+        return 0;
+    }
+    if (argc == 5 && strcmp(argv[1], "status") == 0) {
+        if (strcmp(scenario, "update-untracked") == 0) (void)puts("?? local-note.txt");
+        return 0;
+    }
+    if (argc == 10 && strcmp(argv[1], "-c") == 0) {
+        const char *expected[] = {"-c", "submodule.recurse=false", "pull", "--ff-only",
+            "--no-rebase", "--no-autostash", "--no-recurse-submodules", "origin", "main"};
+        for (int i = 1; i < argc; ++i) if (strcmp(argv[i], expected[i - 1]) != 0) return 98;
+        if (strcmp(scenario, "update-rejected") == 0) return 1;
+        (void)puts("fake pull completed");
+        return 0;
+    }
     if (argc == 3 && strcmp(argv[1], "add") == 0 &&
         strcmp(argv[2], "-A") == 0) return 0;
     if (argc == 4 && strcmp(argv[1], "status") == 0) {
@@ -32,7 +49,8 @@ static int fake_git(int argc, char **argv, const char *scenario)
     }
     if (argc >= 3 && strcmp(argv[1], "diff") == 0) {
         if (strcmp(argv[argc - 1], "--quiet") == 0) {
-            if (strcmp(scenario, "clean") == 0) return 0;
+            if (strcmp(scenario, "clean") == 0 ||
+                (strncmp(scenario, "update-", 7U) == 0 && strcmp(scenario, "update-dirty") != 0)) return 0;
             if (strcmp(scenario, "diff-error") == 0) {
                 (void)fputs("simulated diff failure\n", stderr);
                 return 2;
@@ -88,6 +106,7 @@ static int verify_scenario(
     if (umi_environment_plan_add(environment, "UMICOM_TEST_FAKE_GIT", scenario)
         != UMI_STATUS_OK) return 0;
     umi_repository_workflow_request_init(&request, action, ".");
+    if (action == UMI_REPOSITORY_WORKFLOW_UPDATE) request.recursive = 0;
     if (action == UMI_REPOSITORY_WORKFLOW_PUBLISH) {
         request.auto_commit_message = 1;
     }
@@ -161,6 +180,15 @@ int main(int argc, char **argv)
         UMI_REPOSITORY_WORKFLOW_UPDATE, UMI_STATUS_INVALID_STATE, 1, 0, 0,
         "Update stopped: tracked working-tree changes") && passed;
 
+    passed = verify_scenario(profile, environment, report, "update-clean",
+        UMI_REPOSITORY_WORKFLOW_UPDATE, UMI_STATUS_OK, 0, 0, 0,
+        "fake pull completed") && passed;
+    passed = verify_scenario(profile, environment, report, "update-untracked",
+        UMI_REPOSITORY_WORKFLOW_UPDATE, UMI_STATUS_INVALID_STATE, 0, 0, 0,
+        "Pull stopped: local files") && passed;
+    passed = verify_scenario(profile, environment, report, "update-branch",
+        UMI_REPOSITORY_WORKFLOW_UPDATE, UMI_STATUS_INVALID_STATE, 0, 0, 0,
+        "not on the requested branch") && passed;
     free(profile); free(environment); free(report);
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

@@ -424,6 +424,8 @@ static UmiStatus umi_repository_workflow_push(
  * can hide a conflict until much later. The two quiet diff checks protect both
  * unstaged and staged tracked work before any remote state is applied.
  */
+/* Checked nonrecursive pulls retain main-branch development and override repository settings that could stash, rebase or detach children. Explicit recursive callers retain their separate opt-in submodule operation. The earlier implementation is retained for engineering review. */
+#if 0
 static UmiStatus umi_repository_workflow_update(
     const UmiToolInfo *git,
     UmiEnvironmentPlan *environment,
@@ -486,6 +488,98 @@ static UmiStatus umi_repository_workflow_update(
         merge_arguments, 3U, 0, report);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    report->updated = 1;
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (!request->recursive) return UMI_STATUS_OK;
+    status = umi_repository_workflow_run_git(
+        git, environment, request->repository_root,
+        sync_arguments, 3U, 0, report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_repository_workflow_run_git(
+        git, environment, request->repository_root,
+        submodule_arguments, 4U, 0, report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) report->submodules_updated = 1;
+    return status;
+}
+#endif
+static UmiStatus umi_repository_workflow_update(
+    const UmiToolInfo *git,
+    UmiEnvironmentPlan *environment,
+    const UmiRepositoryWorkflowRequest *request,
+    UmiRepositoryWorkflowReport *report)
+{
+    const char *worktree_arguments[] = {"diff", "--quiet"};
+    const char *index_arguments[] = {"diff", "--cached", "--quiet"};
+    const char *pull_arguments[] = {"-c", "submodule.recurse=false", "pull", "--ff-only",
+        "--no-rebase", "--no-autostash", "--no-recurse-submodules", request->remote_name, request->branch};
+    const char *branch_arguments[] = {"symbolic-ref", "--quiet", "--short", "HEAD"};
+    const char *status_arguments[] = {"status", "--porcelain=v1", "--untracked-files=all", "--ignore-submodules=none"};
+    char observed[UMI_PATH_CAPACITY];
+    const char *sync_arguments[] = {"submodule", "sync", "--recursive"};
+    const char *submodule_arguments[] = {
+        "submodule", "update", "--init", "--recursive"
+    };
+    UmiStatus status;
+
+    /* A pull updates the selected branch only. Never attach a detached HEAD or
+     * mix another branch's history into the caller's intended main branch. */
+    status = umi_repository_workflow_capture_git(git, environment, request->repository_root,
+        branch_arguments, 4U, observed, sizeof observed, report);
+    if (status != UMI_STATUS_OK) return status;
+    observed[strcspn(observed, "\r\n")] = '\0';
+    if (strcmp(observed, request->branch) != 0) {
+        (void)umi_repository_workflow_append_output(report, "Pull stopped: checkout is not on the requested branch; all work is preserved.");
+        return UMI_STATUS_INVALID_STATE;
+    }
+    status = umi_repository_workflow_run_git(
+        git, environment, request->repository_root,
+        worktree_arguments, 2U, 1, report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (report->last_exit_code != 0) {
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (report->last_exit_code != 1) return UMI_STATUS_IO_ERROR;
+        (void)umi_repository_workflow_append_output(
+            report,
+            "Update stopped: tracked working-tree changes are preserved. "
+            "Review or publish them before pulling.");
+        return UMI_STATUS_INVALID_STATE;
+    }
+
+    status = umi_repository_workflow_run_git(
+        git, environment, request->repository_root,
+        index_arguments, 3U, 1, report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (report->last_exit_code != 0) {
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (report->last_exit_code != 1) return UMI_STATUS_IO_ERROR;
+        (void)umi_repository_workflow_append_output(
+            report,
+            "Update stopped: staged changes are preserved. Review or "
+            "publish them before pulling.");
+        return UMI_STATUS_INVALID_STATE;
+    }
+
+    /* Untracked files and dirty child repositories belong to the owner too.
+     * Reject them before the pull rather than relying on Git's overwrite test. */
+    status = umi_repository_workflow_capture_git(git, environment, request->repository_root,
+        status_arguments, 4U, observed, sizeof observed, report);
+    if (status != UMI_STATUS_OK) return status;
+    if (observed[0]) {
+        (void)umi_repository_workflow_append_output(report, "Pull stopped: local files or submodule changes need review; nothing was discarded.");
+        return UMI_STATUS_INVALID_STATE;
+    }
+    status = umi_repository_workflow_run_git(git, environment, request->repository_root,
+        pull_arguments, 9U, 0, report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    report->fetched = 1;
     report->updated = 1;
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */

@@ -129,6 +129,8 @@ UmiStatus umi_publication_verify_links(UmiPublicationState *state, size_t index)
     return UMI_STATUS_OK;
 }
 
+/* Clean copies now use the same explicit nonrecursive fast-forward pull as the documented workflow. Disabling autostash and rebase prevents local Git configuration from changing the publication policy. The earlier implementation is retained for engineering review. */
+#if 0
 static UmiStatus fast_forward(UmiPublicationState *state, size_t index, const char *target)
 {
     const char *args[] = {"merge", "--ff-only", "--no-edit", target};
@@ -136,6 +138,29 @@ static UmiStatus fast_forward(UmiPublicationState *state, size_t index, const ch
     UmiStatus status = verify_head(state, index);
     if (status != UMI_STATUS_OK) return status;
     status = command(state, index, args, 4U);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_publication_text(state, index, head, 3U,
+        state->report->entries[index].head, sizeof(state->report->entries[index].head));
+    if (status != UMI_STATUS_OK) return status;
+    if (strcmp(state->report->entries[index].head, target) != 0)
+        return umi_publication_fail(state, index, UMI_STATUS_INVALID_STATE,
+            "Fast-forward did not produce the expected commit.");
+    state->report->entries[index].fast_forwarded = 1;
+    ++state->report->updated_count;
+    completed(state, index, "Fast-forwarded");
+    return UMI_STATUS_OK;
+}
+#endif
+static UmiStatus fast_forward(UmiPublicationState *state, size_t index, const char *target)
+{
+    const char *args[] = {"-c", "submodule.recurse=false", "pull", "--ff-only",
+        "--no-rebase", "--no-autostash", "--no-recurse-submodules", "origin", "main"};
+    const char *head[] = {"rev-parse", "--verify", "HEAD"};
+    UmiStatus status = verify_head(state, index);
+    if (status != UMI_STATUS_OK) return status;
+    status = remote_is(state, index, target);
+    if (status != UMI_STATUS_OK) return status;
+    status = command(state, index, args, 9U);
     if (status != UMI_STATUS_OK) return status;
     status = umi_publication_text(state, index, head, 3U,
         state->report->entries[index].head, sizeof(state->report->entries[index].head));

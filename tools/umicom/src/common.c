@@ -115,6 +115,13 @@ void umi_cli_print_help(void)
 
 void umi_cli_print_help(void)
 {
+    /* Current CLI options are reported separately from the retained earlier
+     * usage examples below. Installation never guesses a preset binaryDir. */
+    (void)puts("Development commands: use umicom build --help for exact options.\n"
+        "  umicom install --build PATH --prefix PATH [--log NEW_FILE]\n"
+        "  umicom deliver --preset NAME --build PATH --prefix PATH [--log NEW_FILE]\n"
+        "  umicom launch studio --build PATH [-- ARGUMENTS]\n"
+        "  --dry-run previews each action; --log records complete child output.\n");
     /* Keep each help section within the portable string-literal limit.
      * fputs does not append a newline, so splitting the output preserves
      * the exact command list and the final newline supplied by puts. */
@@ -130,14 +137,34 @@ void umi_cli_print_help(void)
         "  umicom configure [--source PATH] [--preset NAME | --build PATH]\n"
         "  umicom build [--source PATH] [--preset NAME | --build PATH] [--target TARGET] [--jobs N]\n"
         "  umicom test [--source PATH] [--preset NAME | --build PATH] [--tests REGEX]\n"
+        /* Retain the earlier shorthand; clean now requires its precise binary directory. */
+#if 0
         "  umicom clean [--source PATH] [--preset NAME | --build PATH]\n"
+#endif
+        "  umicom clean [--source PATH] --build PATH\n"
+        /* Earlier syntax retained; explicit binary and prefix paths replace inference. */
+#if 0
         "  umicom install [--source PATH] [--preset NAME] [--prefix PATH] [--component NAME]\n"
+#endif
+        "  umicom install [--source PATH] --build PATH --prefix PATH [--component NAME]\n"
         "  umicom package [--source PATH] [--preset NAME] [--jobs N]\n"
+        /* Preserved former shorthand; delivery now requires the selected binary folder. */
+#if 0
         "  umicom deliver [--source PATH] [--preset NAME] [--prefix PATH]\n"
+#endif
+        "  umicom deliver [--source PATH] [--preset NAME] --build PATH --prefix PATH\n"
         "  umicom make [--source PATH] [--preset NAME | --build PATH] [--jobs N]\n"
         "  umicom automate plan|run|watch [PATH] [--all] [--no-tests] [--deploy]\n"
+        /* Retained old alias example; binaryDir is no longer guessed. */
+#if 0
         "  umicom run studio [--source PATH] [--preset NAME]\n"
+#endif
+        "  umicom run studio [--source PATH] --build PATH [-- ARGUMENTS]\n"
+        /* Retained former preset example; explicit executable selects the program. */
+#if 0
         "  umicom run --executable PATH [--source PATH] [--preset NAME]\n"
+#endif
+        "  umicom run --executable PATH [--source PATH] [-- ARGUMENTS]\n"
         "  umicom dev doctor|configure|build|test|clean|install|package|deliver|run|automate\n"
         "  umicom quality scan [PATH] [--profile NAME] [--format NAME]\n"
         "  umicom security scan [PATH]\n"
@@ -211,6 +238,8 @@ void umi_cli_print_help(void)
 void umi_cli_print_repo_help(void)
 {
     /* Keep workspace automation discoverable without replacing existing help. */
+    (void)puts("  umicom pull [PATH] — clean fast-forward, no recursive child checkout\n"
+        "  update/pull defaults to --no-submodules; --with-submodules explicitly checks out child pins.\n");
     (void)puts("Workspace publication: umicom repo publish-all WORKSPACE [--apply] [--message TEXT]");
     (void)puts("Local monitoring:      umicom repo watch WORKSPACE [--interval SECONDS]");
     (void)puts("Publication previews fetch metadata. Watch reads cached refs and never publishes.\n");

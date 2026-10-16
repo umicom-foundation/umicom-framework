@@ -148,11 +148,26 @@ static UmiStatus fake_git(void *context, const char *path,
             return answer(out, 0, "ffffffffffffffffffffffffffffffffffffffff\trefs/heads/main\n");
         return answer(out, 0, "%s\trefs/heads/main\n", remote);
     }
+    /* Retain the old transport assertion for review. The active transport must
+     * explicitly disable recursion, rebase and autostash even when Git config
+     * enables them, and must pull exactly origin main. */
+#if 0
     if (strcmp(args[0], "merge") == 0) {
         if (strcmp(args[1], "--ff-only") != 0 || count != 4U)
             return UMI_STATUS_INVALID_ARGUMENT;
         (void)snprintf(repo->head, sizeof(repo->head), "%s", args[3]);
         ++workspace->merges;
+        return answer(out, 0, "");
+    }
+#endif
+    if (strcmp(args[0], "-c") == 0) {
+        const char *expected[] = {"-c", "submodule.recurse=false", "pull", "--ff-only",
+            "--no-rebase", "--no-autostash", "--no-recurse-submodules", "origin", "main"};
+        if (count != sizeof expected / sizeof expected[0]) return UMI_STATUS_INVALID_ARGUMENT;
+        for (size_t i = 0U; i < count; ++i)
+            if (strcmp(args[i], expected[i]) != 0) return UMI_STATUS_INVALID_ARGUMENT;
+        (void)snprintf(repo->head, sizeof(repo->head), "%s", remote);
+        ++workspace->merges; /* Existing counter represents completed fast-forwards. */
         return answer(out, 0, "");
     }
     if (strcmp(args[0], "add") == 0) {

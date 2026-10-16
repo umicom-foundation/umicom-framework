@@ -14,12 +14,16 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "cli.h"
+#include "umicom/toolchain/build_invocation.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 /* Provide the cli option value operation used by this module and its client applications. */
+/* Framework invocation parsing replaces this permissive lookup. Preserve the
+ * former helper disabled so it cannot create an unused-function warning. */
+#if 0
 static const char *umi_cli_option_value(int argc,
                                         char **argv,
                                         const char *option)
@@ -32,6 +36,8 @@ static const char *umi_cli_option_value(int argc,
     }
     return NULL;
 }
+
+#endif
 
 /* Provide the cli has flag operation used by this module and its client applications. */
 static int umi_cli_has_flag(int argc, char **argv, const char *option)
@@ -69,6 +75,8 @@ static int umi_cli_build_report_exit_code(const UmiBuildReport *report)
 }
 
 /* Provide the cli command build operation used by this module and its client applications. */
+/* Argument validation, path ownership and execution now live in Framework; the CLI only presents the selected commands and streamed output. The earlier implementation is retained for engineering review. */
+#if 0
 int umi_cli_command_build(UmiCliContext *context,
                           UmiBuildAction action,
                           int argc,
@@ -251,6 +259,111 @@ int umi_cli_command_build(UmiCliContext *context,
         return 1;
     }
     return 0;
+}
+#endif
+/* Stream raw bytes while the child is running; do not print the bounded tail
+ * again afterwards. The file sink independently retains the complete stream. */
+static void build_output(const char *bytes, size_t size, void *context)
+{
+    (void)context;
+    (void)fwrite(bytes, 1U, size, stdout);
+    (void)fflush(stdout);
+}
+
+/* Quote for human inspection, not for shell execution. Each printed argument
+ * is passed as one literal value through the Framework process service. */
+static void build_print_argument(const char *text)
+{
+    (void)fputc('"', stdout);
+    for (const unsigned char *p = (const unsigned char *)text; *p; ++p) {
+        if (*p == '"' || *p == '\\') (void)fputc('\\', stdout);
+        if (*p < 32U) (void)printf("\\x%02x", (unsigned)*p);
+        else (void)fputc(*p, stdout);
+    }
+    (void)fputc('"', stdout);
+}
+
+static void build_command(UmiBuildAction action, const UmiProcessRequest *command, void *context)
+{
+    (void)context;
+    (void)printf("\n[%s] directory: %s\n", umi_build_action_text(action), command->working_directory);
+    build_print_argument(command->program);
+    for (size_t i = 0U; i < command->argument_count; ++i) {
+        (void)fputc(' ', stdout);
+        build_print_argument(command->arguments[i]);
+    }
+    (void)fputc('\n', stdout);
+    (void)fflush(stdout);
+}
+
+int umi_cli_command_build(UmiCliContext *context, UmiBuildAction action, int argc, char **argv)
+{
+    if (argc == 1 && (strcmp(argv[0], "--help") == 0 || strcmp(argv[0], "help") == 0)) {
+        (void)puts("Usage: umicom configure|build|test|install|package|make|deliver|run|launch [options]\n"
+            "  --source PATH      Project root (default: current directory)\n"
+            "  --preset NAME      CMake configure/build/test preset\n"
+            "  --build PATH       Explicit binary directory; overrides preset binaryDir\n"
+            "  --config NAME      Build/test/install/package configuration\n"
+            "  --define NAME=VALUE  Configure cache definition (repeat, up to 16)\n"
+            "  --jobs N           Build/test/package parallel jobs (1..1024)\n"
+            "  --target NAME      Build target; --tests REGEX selects tests\n"
+            "  --prefix PATH      Installation destination; --component NAME is optional\n"
+            "  --package-target NAME  Configured package target (default: package)\n"
+            "  --executable PATH  Launch path; or use run studio --build PATH\n"
+            "  --timeout-ms N     Per-process timeout (1..86400000)\n"
+            "  --log PATH         New output file; parent must exist, never overwritten\n"
+            "  --dry-run          Show commands without discovery, execution or log creation\n"
+            "  --clean            Explicit configure/make/deliver cache cleanup\n"
+            "  -- ARGUMENTS       Literal launch arguments only\n"
+            "Install/deliver require --build and --prefix. Launch aliases need --build.\n"
+            "Make: configure, build, test. Deliver: make, install, package. Stop on failure.\n"
+            "Paths are relative to --source. Logs may contain private source paths and output.");
+        return 0;
+    }
+    if (!context) return 2;
+    UmiBuildInvocation *inv = calloc(1U, sizeof *inv);
+    UmiBuildReport *report = calloc(1U, sizeof *report);
+    if (!inv || !report) { free(inv); free(report); return 1; }
+    char cwd[UMI_PATH_CAPACITY], message[256] = {0};
+    UmiStatus status = umi_fs_current_directory(cwd, sizeof cwd);
+    if (status == UMI_STATUS_OK) status = UmiBuildInvocationParse(action, argc,
+        (const char *const *)argv, cwd, inv, message, sizeof message);
+    if (status != UMI_STATUS_OK) {
+        (void)fprintf(stderr, "%s: %s\n", umi_status_text(status), message);
+        free(inv); free(report); return 2;
+    }
+    if (inv->options.preview) {
+        /* A preview must work even before tools are installed. The native
+         * executor uses descriptive tool names and never launches a process. */
+        memset(context, 0, sizeof *context);
+        umi_toolchain_profile_init(&context->discovery.profile);
+        (void)puts("Preview only; no tools, build actions, logs or Git operations are executed.");
+    } else if (action == UMI_BUILD_RUN) {
+        status = umi_cli_context_prepare_operation(context, inv->source, UMI_TOOLCHAIN_OPERATION_RUN);
+    } else {
+        status = umi_cli_context_prepare(context, inv->source, 0, 0);
+    }
+    if (status != UMI_STATUS_OK) {
+        (void)fprintf(stderr, "Cannot prepare tools: %s\n", umi_status_text(status));
+        free(inv); free(report); return 1;
+    }
+    if (inv->options.preview && (action == UMI_BUILD_CLEAN || inv->request.clean))
+        (void)printf("Preview: clean only the selected project binary directory: %s\n", inv->binary);
+    inv->options.output = build_output;
+    inv->options.command = build_command;
+    UmiBuildExecutionLog log;
+    status = UmiBuildExecuteLogged(&context->discovery.profile, &context->environment,
+        action, &inv->request, &inv->options, inv->log[0] ? inv->log : NULL, &log, report);
+    if (log.created) (void)printf("\nLog: %s (%llu bytes; %s)\n", log.file.path,
+        (unsigned long long)log.file.bytes_written, log.capture_complete ? "capture closed" : "capture incomplete");
+    if (log.log_status != UMI_STATUS_OK)
+        (void)fprintf(stderr, "Log operation failed: %s\n", umi_status_text(log.log_status));
+    if (status != UMI_STATUS_OK) (void)fprintf(stderr, "%s failed: %s (child exit %d). Later phases were not run.\n",
+        umi_build_action_text(report->last_action), umi_status_text(status), umi_cli_build_report_exit_code(report));
+    else if (inv->options.preview) (void)puts("Preview complete; this is not build or test evidence.");
+    else (void)printf("%s completed.\n", umi_build_action_text(action));
+    free(inv); free(report);
+    return status == UMI_STATUS_OK ? 0 : 1;
 }
 
 /*

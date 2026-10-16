@@ -15,6 +15,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/build.h"
+#include "umicom/toolchain/build_execution.h"
 
 #include <limits.h>
 #include <stdio.h>
@@ -146,6 +147,15 @@ UmiStatus umi_build_request_validate(UmiBuildAction action,
         umi_build_message(out_message, message_capacity,
                           "Run argument count exceeds the process limit.");
         return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    /* These values are consumed before a child starts, including in preview.
+     * Reject inconsistent pointer/count pairs and unspecified clean targets. */
+    if ((request->run_argument_count && !request->run_arguments) ||
+        (request->clean && !umi_build_has_text(request->build_directory))) {
+        umi_build_message(out_message, message_capacity,
+            "Run arguments require storage; clean requires an explicit build directory.");
+        return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     /* Select the behaviour associated with the requested command or state value. */
@@ -307,6 +317,8 @@ static UmiStatus umi_build_process_status(const UmiProcessResult *result,
  * non-zero exit code. The Framework therefore records both the child evidence
  * and an operation status suitable for Studio/automation.
  */
+/* Execution observers expose commands and raw output to every host without a second process implementation. The earlier implementation is retained for engineering review. */
+#if 0
 static UmiStatus umi_build_run_process(
     const UmiToolInfo *tool,
     const char *const *arguments,
@@ -388,11 +400,108 @@ static UmiStatus umi_build_run_process(
 
     return status;
 }
+#endif
+static UmiStatus umi_build_run_process(
+    const UmiToolInfo *tool,
+    const char *const *arguments,
+    size_t argument_count,
+    const char *working_directory,
+    UmiEnvironmentPlan *environment,
+    const UmiBuildRequest *build_request,
+    UmiBuildAction action,
+    int *out_exit_code,
+    UmiBuildReport *report,
+    const UmiBuildExecutionOptions *options)
+{
+    UmiProcessRequest process_request;
+    UmiProcessResult result;
+    UmiStatus transport_status;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if ((!options || !options->preview) &&
+        (tool == NULL || tool->state != UMI_TOOL_VALIDATED)) {
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
+        if (report != NULL) {
+            report->last_action = action;
+            report->last_status = UMI_STATUS_NOT_FOUND;
+        }
+        return UMI_STATUS_NOT_FOUND;
+    }
+
+    (void)memset(&process_request, 0, sizeof(process_request));
+    (void)memset(&result, 0, sizeof(result));
+    result.exit_code = -1;
+
+    process_request.program = tool && tool->path[0] ? tool->path :
+        (action == UMI_BUILD_TEST ? "ctest" : "cmake");
+    process_request.arguments = arguments;
+    process_request.argument_count = argument_count;
+    process_request.working_directory = working_directory;
+    process_request.environment = environment != NULL
+        ? umi_environment_plan_variables(environment)
+        : NULL;
+    process_request.environment_count = environment != NULL
+        ? environment->count
+        : 0U;
+    process_request.capture_stdout = 1;
+    process_request.capture_stderr = 1;
+    process_request.timeout_ms =
+        build_request != NULL ? build_request->timeout_ms : 0U;
+    process_request.poll_interval_ms = 25U;
+    process_request.cancellation =
+        build_request != NULL ? build_request->cancellation : NULL;
+    process_request.window_mode =
+        build_request != NULL
+            ? build_request->window_mode
+            : UMI_PROCESS_WINDOW_HIDDEN;
+
+    if (options && options->command)
+        options->command(action, &process_request, options->observer_context);
+    if (options && options->preview) {
+        report->last_action = action;
+        return UMI_STATUS_OK;
+    }
+    transport_status = options && options->executor
+        ? options->executor(&process_request, options->output, options->observer_context,
+            &result, options->executor_context)
+        : UmiProcessExecuteStreamed(&process_request,
+            options ? options->output : NULL, options ? options->observer_context : NULL, &result);
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (out_exit_code != NULL) {
+        *out_exit_code = result.exit_code;
+    }
+
+    umi_build_accumulate_result(report, action, &result);
+    status = umi_build_process_status(&result, transport_status);
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (report != NULL) {
+        report->last_status = status;
+    }
+
+    return status;
+}
 
 /*
  * Provide the build clean internal operation used by this module and its client
  * applications.
  */
+/* Cache ownership and resolved path bounds prevent an explicit clean from removing source or an unrelated directory. The earlier implementation is retained for engineering review. */
+#if 0
 static UmiStatus umi_build_clean_internal(const UmiBuildRequest *request,
                                           UmiBuildReport *report)
 {
@@ -431,11 +540,58 @@ static UmiStatus umi_build_clean_internal(const UmiBuildRequest *request,
 
     return status;
 }
+#endif
+static UmiStatus umi_build_clean_internal(const UmiBuildRequest *request,
+    UmiBuildReport *report)
+{
+    if (!request || !request->source_root || !request->build_directory) return UMI_STATUS_INVALID_ARGUMENT;
+    char cwd[UMI_PATH_CAPACITY], source[UMI_PATH_CAPACITY], binary[UMI_PATH_CAPACITY];
+    char cache_path[UMI_PATH_CAPACITY];
+    UmiStatus status = umi_fs_current_directory(cwd, sizeof cwd);
+    if (status == UMI_STATUS_OK) status = umi_path_absolute(request->source_root, cwd, source, sizeof source);
+    if (status == UMI_STATUS_OK) status = umi_path_absolute(request->build_directory, source, binary, sizeof binary);
+    /* Never remove source, an ancestor of source, or an unrelated folder. The
+     * CMake cache must name this project before a previously created tree can
+     * be removed. The owner must keep the selected parent directory trusted. */
+    if (status == UMI_STATUS_OK && umi_path_is_within(binary, source)) status = UMI_STATUS_INVALID_ARGUMENT;
+    if (status == UMI_STATUS_OK && umi_fs_exists(binary)) {
+        status = umi_path_join(binary, "CMakeCache.txt", cache_path, sizeof cache_path);
+        char *cache = NULL;
+        if (status == UMI_STATUS_OK) status = umi_fs_read_text(cache_path, &cache, NULL);
+        if (status == UMI_STATUS_OK) {
+            const char *key = "CMAKE_HOME_DIRECTORY:INTERNAL=";
+            char *line = cache;
+            int matches = 0;
+            while (line && *line) {
+                char *end = strchr(line, '\n');
+                if (end) *end = '\0';
+                size_t length = strlen(line);
+                if (length && line[length - 1U] == '\r') line[length - 1U] = '\0';
+                if (strncmp(line, key, strlen(key)) == 0)
+                    matches = umi_path_equal(source, line + strlen(key));
+                line = end ? end + 1 : NULL;
+            }
+            if (!matches) status = UMI_STATUS_INVALID_STATE;
+        }
+        umi_fs_free_text(cache);
+        if (status == UMI_STATUS_OK) status = umi_fs_remove_tree(binary);
+    }
+    if (report) {
+        report->last_action = UMI_BUILD_CLEAN;
+        report->last_status = status;
+        (void)snprintf(report->last_output, sizeof report->last_output, "%s",
+            status == UMI_STATUS_OK ? "Build directory cleaned." :
+            "Clean refused or failed; select this project's separate CMake binary directory.");
+    }
+    return status;
+}
 
 /*
  * Provide the build configure internal operation used by this module and its client
  * applications.
  */
+/* The shared execution path now supports previews, explicit binary directories and complete output capture. The earlier implementation is retained for engineering review. */
+#if 0
 static UmiStatus umi_build_configure_internal(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
@@ -473,11 +629,61 @@ static UmiStatus umi_build_configure_internal(
         &report->configure_exit_code,
         report);
 }
+#endif
+static UmiStatus umi_build_configure_internal(
+    const UmiToolchainProfile *profile,
+    UmiEnvironmentPlan *environment,
+    const UmiBuildRequest *request,
+    UmiBuildReport *report,
+    const UmiBuildExecutionOptions *options)
+{
+    const UmiToolInfo *cmake =
+        umi_toolchain_profile_tool(profile, UMI_TOOL_CMAKE);
+    const char *arguments[UMI_PROCESS_MAX_ARGUMENTS];
+    size_t count = 0U;
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (umi_build_has_text(request->preset)) {
+        arguments[count++] = "--preset";
+        arguments[count++] = request->preset;
+        if (options && options->explicit_build_directory) {
+            arguments[count++] = "-B";
+            arguments[count++] = request->build_directory;
+        }
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
+        arguments[count++] = "-S";
+        arguments[count++] = request->source_root;
+        arguments[count++] = "-B";
+        arguments[count++] = request->build_directory;
+        arguments[count++] = "-G";
+        arguments[count++] = "Ninja";
+        arguments[count++] = "-DCMAKE_BUILD_TYPE=Debug";
+        arguments[count++] = "-DBUILD_TESTING=ON";
+    }
+
+    /* CMake receives each definition as a literal argument, never shell text. */
+    if (options) for (size_t i = 0U; i < options->configure_definition_count; ++i) {
+        arguments[count++] = "-D";
+        arguments[count++] = options->configure_definitions[i];
+    }
+    return umi_build_run_process(
+        cmake,
+        arguments,
+        count,
+        request->source_root,
+        environment,
+        request,
+        UMI_BUILD_CONFIGURE,
+        &report->configure_exit_code,
+        report, options);
+}
 
 /*
  * Provide the build compile internal operation used by this module and its client
  * applications.
  */
+/* The shared execution path now supports previews, explicit binary directories and complete output capture. The earlier implementation is retained for engineering review. */
+#if 0
 static UmiStatus umi_build_compile_internal(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
@@ -524,11 +730,67 @@ static UmiStatus umi_build_compile_internal(
         &report->build_exit_code,
         report);
 }
+#endif
+static UmiStatus umi_build_compile_internal(
+    const UmiToolchainProfile *profile,
+    UmiEnvironmentPlan *environment,
+    const UmiBuildRequest *request,
+    UmiBuildReport *report,
+    const UmiBuildExecutionOptions *options)
+{
+    const UmiToolInfo *cmake =
+        umi_toolchain_profile_tool(profile, UMI_TOOL_CMAKE);
+    const char *arguments[16];
+    char jobs[32];
+    size_t count = 0U;
+
+    arguments[count++] = "--build";
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (umi_build_has_text(request->preset) &&
+        !(options && options->explicit_build_directory)) {
+        arguments[count++] = "--preset";
+        arguments[count++] = request->preset;
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
+        arguments[count++] = request->build_directory;
+    }
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (umi_build_has_text(request->target)) {
+        arguments[count++] = "--target";
+        arguments[count++] = request->target;
+    }
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (request->jobs > 0) {
+        (void)snprintf(jobs, sizeof(jobs), "%d", request->jobs);
+        arguments[count++] = "--parallel";
+        arguments[count++] = jobs;
+    }
+
+    /* A multi-configuration build must use the same configuration as install. */
+    if (umi_build_has_text(request->configuration)) {
+        arguments[count++] = "--config";
+        arguments[count++] = request->configuration;
+    }
+    return umi_build_run_process(
+        cmake,
+        arguments,
+        count,
+        request->source_root,
+        environment,
+        request,
+        UMI_BUILD_COMPILE,
+        &report->build_exit_code,
+        report, options);
+}
 
 /*
  * Provide the build test internal operation used by this module and its client
  * applications.
  */
+/* The shared execution path now supports previews, explicit binary directories and complete output capture. The earlier implementation is retained for engineering review. */
+#if 0
 static UmiStatus umi_build_test_internal(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
@@ -576,11 +838,71 @@ static UmiStatus umi_build_test_internal(
         &report->test_exit_code,
         report);
 }
+#endif
+static UmiStatus umi_build_test_internal(
+    const UmiToolchainProfile *profile,
+    UmiEnvironmentPlan *environment,
+    const UmiBuildRequest *request,
+    UmiBuildReport *report,
+    const UmiBuildExecutionOptions *options)
+{
+    const UmiToolInfo *ctest =
+        umi_toolchain_profile_tool(profile, UMI_TOOL_CTEST);
+    const char *arguments[16];
+    size_t count = 0U;
+    char jobs[32];
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (umi_build_has_text(request->preset) &&
+        !(options && options->explicit_build_directory)) {
+        arguments[count++] = "--preset";
+        arguments[count++] = request->preset;
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
+        arguments[count++] = "--test-dir";
+        arguments[count++] = request->build_directory;
+        /* Common test reporting flags are appended for both selection modes. */
+    }
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (umi_build_has_text(request->configuration)) {
+        arguments[count++] = "-C";
+        arguments[count++] = request->configuration;
+    }
+
+    /*
+     * A focused regular expression lets the automated coordinator run only
+     * tests owned by affected scopes instead of traversing the whole suite.
+     */
+    if (umi_build_has_text(request->test_expression)) {
+        arguments[count++] = "-R";
+        arguments[count++] = request->test_expression;
+    }
+
+    arguments[count++] = "--output-on-failure";
+    arguments[count++] = "--no-tests=error";
+    if (request->jobs > 0) {
+        (void)snprintf(jobs, sizeof jobs, "%d", request->jobs);
+        arguments[count++] = "--parallel";
+        arguments[count++] = jobs;
+    }
+    return umi_build_run_process(
+        ctest,
+        arguments,
+        count,
+        request->source_root,
+        environment,
+        request,
+        UMI_BUILD_TEST,
+        &report->test_exit_code,
+        report, options);
+}
 
 /*
  * Provide the build install internal operation used by this module and its client
  * applications.
  */
+/* The shared execution path now supports previews, explicit binary directories and complete output capture. The earlier implementation is retained for engineering review. */
+#if 0
 static UmiStatus umi_build_install_internal(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
@@ -624,11 +946,58 @@ static UmiStatus umi_build_install_internal(
         &report->install_exit_code,
         report);
 }
+#endif
+static UmiStatus umi_build_install_internal(
+    const UmiToolchainProfile *profile,
+    UmiEnvironmentPlan *environment,
+    const UmiBuildRequest *request,
+    UmiBuildReport *report,
+    const UmiBuildExecutionOptions *options)
+{
+    const UmiToolInfo *cmake =
+        umi_toolchain_profile_tool(profile, UMI_TOOL_CMAKE);
+    const char *arguments[16];
+    size_t count = 0U;
+
+    arguments[count++] = "--install";
+    arguments[count++] = request->build_directory;
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (umi_build_has_text(request->configuration)) {
+        arguments[count++] = "--config";
+        arguments[count++] = request->configuration;
+    }
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (umi_build_has_text(request->install_prefix)) {
+        arguments[count++] = "--prefix";
+        arguments[count++] = request->install_prefix;
+    }
+
+    /* Install only the product component selected by an automated plan. */
+    if (umi_build_has_text(request->install_component)) {
+        arguments[count++] = "--component";
+        arguments[count++] = request->install_component;
+    }
+
+    return umi_build_run_process(
+        cmake,
+        arguments,
+        count,
+        request->source_root,
+        environment,
+        request,
+        UMI_BUILD_INSTALL,
+        &report->install_exit_code,
+        report, options);
+}
 
 /*
  * Provide the build package internal operation used by this module and its client
  * applications.
  */
+/* The shared execution path now supports previews, explicit binary directories and complete output capture. The earlier implementation is retained for engineering review. */
+#if 0
 static UmiStatus umi_build_package_internal(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
@@ -676,11 +1045,68 @@ static UmiStatus umi_build_package_internal(
         &report->package_exit_code,
         report);
 }
+#endif
+static UmiStatus umi_build_package_internal(
+    const UmiToolchainProfile *profile,
+    UmiEnvironmentPlan *environment,
+    const UmiBuildRequest *request,
+    UmiBuildReport *report,
+    const UmiBuildExecutionOptions *options)
+{
+    const UmiToolInfo *cmake =
+        umi_toolchain_profile_tool(profile, UMI_TOOL_CMAKE);
+    const char *arguments[16];
+    const char *package_target =
+        umi_build_has_text(request->package_target)
+            ? request->package_target
+            : "package";
+    char jobs[32];
+    size_t count = 0U;
+
+    arguments[count++] = "--build";
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (umi_build_has_text(request->preset) &&
+        !(options && options->explicit_build_directory)) {
+        arguments[count++] = "--preset";
+        arguments[count++] = request->preset;
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
+        arguments[count++] = request->build_directory;
+    }
+
+    arguments[count++] = "--target";
+    arguments[count++] = package_target;
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (request->jobs > 0) {
+        (void)snprintf(jobs, sizeof(jobs), "%d", request->jobs);
+        arguments[count++] = "--parallel";
+        arguments[count++] = jobs;
+    }
+
+    /* A multi-configuration build must use the same configuration as install. */
+    if (umi_build_has_text(request->configuration)) {
+        arguments[count++] = "--config";
+        arguments[count++] = request->configuration;
+    }
+    return umi_build_run_process(
+        cmake,
+        arguments,
+        count,
+        request->source_root,
+        environment,
+        request,
+        UMI_BUILD_PACKAGE,
+        &report->package_exit_code,
+        report, options);
+}
 
 /*
  * Provide the build run internal operation used by this module and its client
  * applications.
  */
+/* The shared execution path now supports previews, explicit binary directories and complete output capture. The earlier implementation is retained for engineering review. */
+#if 0
 static UmiStatus umi_build_run_internal(
     UmiEnvironmentPlan *environment,
     const UmiBuildRequest *request,
@@ -726,11 +1152,70 @@ static UmiStatus umi_build_run_internal(
     report->last_status = status;
     return status;
 }
+#endif
+static UmiStatus umi_build_run_internal(
+    UmiEnvironmentPlan *environment,
+    const UmiBuildRequest *request,
+    UmiBuildAction action,
+    UmiBuildReport *report,
+    const UmiBuildExecutionOptions *options)
+{
+    UmiProcessRequest process_request;
+    UmiProcessResult result;
+    UmiStatus transport_status;
+    UmiStatus status;
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (!umi_build_has_text(request->executable)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    (void)memset(&process_request, 0, sizeof(process_request));
+    (void)memset(&result, 0, sizeof(result));
+    result.exit_code = -1;
+
+    process_request.program = request->executable;
+    process_request.arguments = request->run_arguments;
+    process_request.argument_count = request->run_argument_count;
+    process_request.working_directory = request->source_root;
+    process_request.environment = environment != NULL
+        ? umi_environment_plan_variables(environment)
+        : NULL;
+    process_request.environment_count = environment != NULL
+        ? environment->count
+        : 0U;
+    process_request.capture_stdout = 1;
+    process_request.capture_stderr = 1;
+    process_request.timeout_ms = request->timeout_ms;
+    process_request.poll_interval_ms = 25U;
+    process_request.cancellation = request->cancellation;
+    process_request.window_mode = request->window_mode;
+
+    if (options && options->command)
+        options->command(action, &process_request, options->observer_context);
+    if (options && options->preview) {
+        report->last_action = action;
+        return UMI_STATUS_OK;
+    }
+    transport_status = options && options->executor
+        ? options->executor(&process_request, options->output, options->observer_context,
+            &result, options->executor_context)
+        : UmiProcessExecuteStreamed(&process_request,
+            options ? options->output : NULL, options ? options->observer_context : NULL, &result);
+    report->run_exit_code = result.exit_code;
+    umi_build_accumulate_result(report, action, &result);
+
+    status = umi_build_process_status(&result, transport_status);
+    report->last_status = status;
+    return status;
+}
 
 /*
  * Perform build through the module contract so client applications do not duplicate its
  * policy.
  */
+/* The extended entry point shares phase ordering with legacy callers and allows hosts to preview or observe execution. The earlier implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_execute(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
@@ -842,6 +1327,152 @@ UmiStatus umi_build_execute(
 
     report->last_status = UMI_STATUS_OK;
     return UMI_STATUS_OK;
+}
+#endif
+UmiStatus UmiBuildExecuteWithOptions(
+    const UmiToolchainProfile *profile,
+    UmiEnvironmentPlan *environment,
+    UmiBuildAction action,
+    const UmiBuildRequest *request,
+    const UmiBuildExecutionOptions *options,
+    UmiBuildReport *out_report)
+{
+    UmiBuildReport local_report;
+    UmiBuildReport *report =
+        out_report != NULL ? out_report : &local_report;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    umi_build_report_init(report);
+    report->last_action = action;
+    if (profile == NULL) {
+        report->last_status = UMI_STATUS_INVALID_ARGUMENT;
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (options) {
+        if ((options->explicit_build_directory && (!request ||
+                !umi_build_has_text(request->build_directory))) ||
+            options->configure_definition_count > 16U ||
+            (options->configure_definition_count && !options->configure_definitions)) {
+            report->last_status = UMI_STATUS_INVALID_ARGUMENT;
+            return UMI_STATUS_INVALID_ARGUMENT;
+        }
+        for (size_t i = 0U; i < options->configure_definition_count; ++i) {
+            const char *definition = options->configure_definitions[i];
+            const char *equals = definition ? strchr(definition, '=') : NULL;
+            if (!equals || equals == definition || definition[0] == '-') {
+                report->last_status = UMI_STATUS_INVALID_ARGUMENT;
+                return UMI_STATUS_INVALID_ARGUMENT;
+            }
+        }
+    }
+
+    status = umi_build_request_validate(
+        action, request, NULL, 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) {
+        report->last_action = action;
+        report->last_status = status;
+        return status;
+    }
+
+    /* Preview is descriptive and must never enter the legacy clean operation. */
+    if (options && options->preview && (request->clean || action == UMI_BUILD_CLEAN)) {
+        (void)snprintf(report->last_output, sizeof report->last_output,
+            "Preview: clean build directory %s\n", request->build_directory);
+        if (action == UMI_BUILD_CLEAN) return UMI_STATUS_OK;
+    }
+    /* Create this optional product surface only when its build option is enabled. */
+    if (request->clean && action != UMI_BUILD_CLEAN && !(options && options->preview)) {
+        status = umi_build_clean_internal(request, report);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) {
+            return status;
+        }
+    }
+
+    /* Create this optional product surface only when its build option is enabled. */
+    if (action == UMI_BUILD_CLEAN) {
+        return umi_build_clean_internal(request, report);
+    }
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (action == UMI_BUILD_CONFIGURE ||
+        action == UMI_BUILD_MAKE ||
+        action == UMI_BUILD_DELIVER) {
+        status = umi_build_configure_internal(
+            profile, environment, request, report, options);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) {
+            return status;
+        }
+    }
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (action == UMI_BUILD_COMPILE ||
+        action == UMI_BUILD_MAKE ||
+        action == UMI_BUILD_DELIVER) {
+        status = umi_build_compile_internal(
+            profile, environment, request, report, options);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) {
+            return status;
+        }
+    }
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (action == UMI_BUILD_TEST ||
+        action == UMI_BUILD_MAKE ||
+        action == UMI_BUILD_DELIVER) {
+        status = umi_build_test_internal(
+            profile, environment, request, report, options);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) {
+            return status;
+        }
+    }
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (action == UMI_BUILD_INSTALL ||
+        action == UMI_BUILD_DELIVER) {
+        status = umi_build_install_internal(
+            profile, environment, request, report, options);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) {
+            return status;
+        }
+    }
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (action == UMI_BUILD_PACKAGE ||
+        action == UMI_BUILD_DELIVER) {
+        status = umi_build_package_internal(
+            profile, environment, request, report, options);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) {
+            return status;
+        }
+    }
+
+    /* Create this optional product surface only when its build option is enabled. */
+    if (action == UMI_BUILD_RUN || action == UMI_BUILD_COMMAND) {
+        return umi_build_run_internal(
+            environment, request, action, report, options);
+    }
+
+    report->last_status = UMI_STATUS_OK;
+    return UMI_STATUS_OK;
+}
+
+/* Preserve the established entry point and request/report layouts. */
+UmiStatus umi_build_execute(const UmiToolchainProfile *profile,
+    UmiEnvironmentPlan *environment, UmiBuildAction action,
+    const UmiBuildRequest *request, UmiBuildReport *report)
+{
+    return UmiBuildExecuteWithOptions(profile, environment, action, request, NULL, report);
 }
 
 /*

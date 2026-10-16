@@ -75,7 +75,7 @@ static int umi_cli_command_dev(
             context, UMI_BUILD_DELIVER, argc - 1, argv + 1);
     }
     /* Use the stable identifier comparison to choose the matching record or policy. */
-    if (strcmp(argv[0], "run") == 0) {
+    if (strcmp(argv[0], "run") == 0 || strcmp(argv[0], "launch") == 0) {
         return umi_cli_command_build(
             context, UMI_BUILD_RUN, argc - 1, argv + 1);
     }
@@ -345,7 +345,7 @@ static int RunNativeCommand(int argc, char **argv)
                                      argc - 2,
                                      argv + 2);
     /* Use the stable identifier comparison to choose the matching record or policy. */
-    if (strcmp(command, "run") == 0)
+    if (strcmp(command, "run") == 0 || strcmp(command, "launch") == 0)
         return umi_cli_command_build(&context,
                                      UMI_BUILD_RUN,
                                      argc - 2,
@@ -375,6 +375,7 @@ static int RunNativeCommand(int argc, char **argv)
         strcmp(command, "commit") == 0 ||
         strcmp(command, "push") == 0 ||
         strcmp(command, "publish") == 0 ||
+        strcmp(command, "pull") == 0 ||
         strcmp(command, "update") == 0 ||
         strcmp(command, "sync") == 0 ||
         strcmp(command, "clone") == 0 ||

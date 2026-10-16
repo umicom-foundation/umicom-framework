@@ -392,7 +392,7 @@ static int umi_cli_repository_simple(
         "--message", "--remote", "--branch"
     };
     static const char *const update_flags[] = {
-        "--dry-run", "--no-submodules"
+        "--dry-run", "--no-submodules", "--with-submodules"
     };
     const char *const *flags = dry_run_flag;
     const char *const *options = NULL;
@@ -477,8 +477,15 @@ static int umi_cli_repository_simple(
     }
     request.set_upstream = umi_cli_repository_has_flag(
         argc, argv, "--set-upstream");
+    /* The earlier default checked out child pins and could detach development
+     * branches. Keep it for review; recursion is now an explicit opt-in. */
+#if 0
     request.recursive = !umi_cli_repository_has_flag(
         argc, argv, "--no-submodules");
+#endif
+    if (umi_cli_repository_has_flag(argc, argv, "--with-submodules") &&
+        umi_cli_repository_has_flag(argc, argv, "--no-submodules")) return 2;
+    request.recursive = umi_cli_repository_has_flag(argc, argv, "--with-submodules");
     request.dry_run = umi_cli_repository_has_flag(argc, argv, "--dry-run");
     return umi_cli_repository_run_workflow(context, &request);
 }
@@ -528,7 +535,8 @@ int umi_cli_command_repository_workflow(
             context, UMI_REPOSITORY_WORKFLOW_PUBLISH, argc, argv);
     }
     /* Use the stable identifier comparison to choose the matching record or policy. */
-    if (strcmp(command, "update") == 0 || strcmp(command, "sync") == 0) {
+    if (strcmp(command, "update") == 0 || strcmp(command, "sync") == 0 ||
+        strcmp(command, "pull") == 0) {
         return umi_cli_repository_simple(
             context, UMI_REPOSITORY_WORKFLOW_UPDATE, argc, argv);
     }
