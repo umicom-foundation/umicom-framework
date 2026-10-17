@@ -237,7 +237,15 @@ static int VerifyExecution(const char *mode)
             ? UMI_TEST_PLATFORM_RESULT_CAPACITY : 1U;
         for (size_t index = 0U; index < count; ++index) {
             UmiTestPlatformResultSnapshot record = {0};
+            /* Superseded: for generated-id-collision only, insertion starts
+             * at revision 1 and the pre-existing upsert advances it to 2,
+             * so the executed result ID is result.3, not result.2. Keep the
+             * original seed for comparison and retain the full-results case. */
+#if 0
             (void)snprintf(record.id, sizeof(record.id), "result.%zu", index + 2U);
+#endif
+            const size_t first_id = strcmp(mode, "generated-id-collision") == 0 ? 3U : 2U;
+            (void)snprintf(record.id, sizeof(record.id), "result.%zu", index + first_id);
             (void)strcpy(record.item_id, "alpha");
             record.outcome = UMI_TEST_PLATFORM_OUTCOME_PASSED;
             CHECK(umi_test_platform_result_registry_upsert(results, &record) == UMI_STATUS_OK);

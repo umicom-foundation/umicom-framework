@@ -7,6 +7,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/toolchain/build_invocation.h"
+#include "umicom/platform/path.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,8 +28,18 @@ int main(void)
         "--jobs", "2", "--config", "Debug", "--log", "logs/run.txt", "--dry-run"};
     CHECK(UmiBuildInvocationParse(UMI_BUILD_DELIVER, 17, valid, WORK, inv, message, sizeof message) == UMI_STATUS_OK);
     CHECK(inv->options.preview && inv->options.explicit_build_directory);
+    /* Superseded: slash-sensitive substring assertions assumed POSIX paths.
+     * Windows Framework path normalisation uses native backslashes. Keep the
+     * previous expectations below, disabled, for comparison. */
+#if 0
     CHECK(strstr(inv->binary, "project with spaces/output"));
     CHECK(strstr(inv->prefix, "project with spaces/installed"));
+#endif
+    char expected_binary[UMI_PATH_CAPACITY], expected_prefix[UMI_PATH_CAPACITY];
+    CHECK(umi_path_absolute("output", inv->source, expected_binary, sizeof expected_binary) == UMI_STATUS_OK);
+    CHECK(umi_path_absolute("installed", inv->source, expected_prefix, sizeof expected_prefix) == UMI_STATUS_OK);
+    CHECK(umi_path_equal(inv->binary, expected_binary));
+    CHECK(umi_path_equal(inv->prefix, expected_prefix));
     CHECK(inv->request.jobs == 2 && inv->options.configure_definition_count == 1U);
     CHECK(strcmp(inv->definitions[0], "BUILD_TESTING=ON") == 0);
     const char *bad[][4] = {
@@ -51,7 +62,19 @@ int main(void)
     CHECK(inv->log[0] == '\0');
     const char *alias[] = {"studio", "--build", "custom/Debug"};
     CHECK(UmiBuildInvocationParse(UMI_BUILD_RUN, 3, alias, WORK, inv, message, sizeof message) == UMI_STATUS_OK);
+    /* Superseded: executable substring assumed / on Windows and omitted
+     * the platform-dependent executable suffix. Keep it for code review. */
+#if 0
     CHECK(strstr(inv->executable, "custom/Debug/bin/umicom-studio-ide"));
+#endif
+    char expected_executable[UMI_PATH_CAPACITY];
+#ifdef _WIN32
+    const char *expected_name = "bin/umicom-studio-ide.exe";
+#else
+    const char *expected_name = "bin/umicom-studio-ide";
+#endif
+    CHECK(umi_path_absolute(expected_name, inv->binary, expected_executable, sizeof expected_executable) == UMI_STATUS_OK);
+    CHECK(umi_path_equal(inv->executable, expected_executable));
     CHECK(UmiBuildInvocationParse(UMI_BUILD_RUN, 1, alias, WORK, inv, message, sizeof message) != UMI_STATUS_OK);
     const char *escape[] = {"../unrelated", "--build", "output"};
     CHECK(UmiBuildInvocationParse(UMI_BUILD_RUN, 3, escape, WORK, inv, message, sizeof message) != UMI_STATUS_OK);
