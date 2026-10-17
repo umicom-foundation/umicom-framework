@@ -3488,6 +3488,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-application-surface-transfer-test framework.application.surface_transfer tests/test_surface_transfer.c)
 
     # Unified immutable diagnostics, Problems and Output pipeline.
+    umicom_add_framework_test(umicom-log-status-test framework.log_status tests/test_log_status.c)
     umicom_add_framework_test(umicom-diagnostic-snapshot-test framework.diagnostic_snapshot tests/test_diagnostic_snapshot.c)
     umicom_add_framework_test(umicom-diagnostic-model-test framework.diagnostic_model tests/test_diagnostic_model.c)
     umicom_add_framework_test(umicom-diagnostic-filter-test framework.diagnostic_filter tests/test_diagnostic_filter.c)
@@ -3592,6 +3593,31 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-test-platform-artifact-tests framework.test_platform.artifact tests/test_test_platform_artifact.c)
     umicom_add_framework_test(umicom-test-platform-structured-report-tests framework.test_platform.structured_report tests/test_test_platform_structured_report.c)
     umicom_add_framework_test(umicom-test-platform-execution-tests framework.test_platform.execution tests/test_test_platform_execution.c)
+    # Provider evidence and execution plans share one bounded native fixture.
+    add_executable(umicom-test-execution-boundaries-test
+        tests/test_test_platform_execution_boundaries.c)
+    target_link_libraries(umicom-test-execution-boundaries-test PRIVATE Umicom::Framework)
+    umicom_apply_warnings(umicom-test-execution-boundaries-test)
+    umicom_apply_sanitizers(umicom-test-execution-boundaries-test)
+    foreach(execution_case IN ITEMS
+        oversized-selection unterminated-selection overlong-id addition-overflow invalid-kind
+        plan-generation controller-generation controller-last-budget
+        normal zero-repeat maximum-repeat-stop mutated-plan missing-item bad-plan-count
+        negative-duration nan-duration infinite-duration range-duration sum-duration
+        unknown-outcome unfinished-outcome wrong-item unterminated-result
+        provider-error provider-timeout provider-cancelled timeout-stop
+        generated-id-collision explicit-id-conflict explicit-id-update full-results
+        selection-overflow selection-rerun-overflow selection-generation
+        selection-rerun-generation selection-invalid-filter selection-success)
+        add_test(NAME "framework.test_platform.execution-boundaries.${execution_case}"
+            COMMAND umicom-test-execution-boundaries-test "${execution_case}")
+        set_tests_properties("framework.test_platform.execution-boundaries.${execution_case}"
+            PROPERTIES TIMEOUT 30 LABELS "framework;test-platform;execution;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-test-execution-boundaries-test)
+    endif()
+
     # Build readiness closes the gap between CTest registration and executable
     # production, so Not Run results report their real pre-test cause.
     umicom_add_framework_test(umicom-test-build-readiness-types-test framework.test_platform.build_readiness.types tests/test_platform_build_readiness/test_build_readiness_types.c)
@@ -5848,3 +5874,7 @@ include(cmake/UmicomApplicationModuleTests.cmake)
 
 # Passive SDK inspection fixtures do not compile or execute package scripts.
 include(cmake/UmicomSdkInspectionChecks.cmake)
+
+# The installed SDK includes the public workflow for diagnosing native startup failures.
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/docs/DIAGNOSTIC_FAILURES.html"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs" COMPONENT Framework)

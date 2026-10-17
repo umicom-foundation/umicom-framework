@@ -22,6 +22,11 @@ typedef struct ProcessPanel
     UmiDesktopProcessCatalog *catalog;
     UmiDesktopProcessReport report;
     size_t first;
+    /* Native notifications may reenter this panel. One publication owns its
+     * catalogue and row mapping until all synchronous callbacks have returned. */
+    gboolean updating, choosing, searchPending;
+    guint renderSource;
+    GTask *completion; /* Own a finished task while a native callback is active. */
     GCancellable *cancel;
     ProcessProvider *provider;
     UmiGtk4ProcessChoose choose;
@@ -62,6 +67,7 @@ static void ProcessPanelFree(gpointer data)
     if (panel->cancel != NULL)
         g_cancellable_cancel(panel->cancel);
     g_clear_object(&panel->cancel);
+    g_clear_object(&panel->completion);
     UmiDesktopProcessCatalogDestroy(panel->catalog);
     ProcessProviderRelease(panel->provider);
     if (panel->destroy != NULL)
@@ -97,12 +103,51 @@ static void ProcessCaptureRun(GTask *task, gpointer object, gpointer data, GCanc
         job->status = UMI_STATUS_INVALID_STATE;
     g_task_return_boolean(task, TRUE);
 }
+
+/* Deferred rendering coalesces entry edits made by synchronous observers.
+ * The idle source owns the root; unmapping cancels it so a closed window is
+ * not retained solely to redraw controls which can no longer be used. */
+static void ProcessRender(ProcessPanel *panel);
+static void ProcessCaptureComplete(GObject *object, GAsyncResult *result, gpointer data);
+static gboolean ProcessRenderIdle(gpointer data)
+{
+    GtkWidget *root = data;
+    ProcessPanel *panel = g_object_get_data(G_OBJECT(root), "umicom-process-picker");
+    panel->renderSource = 0U;
+    if (gtk_widget_get_mapped(root))
+        ProcessRender(panel);
+    return G_SOURCE_REMOVE;
+}
+static void ProcessQueueRender(ProcessPanel *panel)
+{
+    if (panel->renderSource == 0U && gtk_widget_get_mapped(panel->root))
+        panel->renderSource = g_idle_add_full(G_PRIORITY_DEFAULT_IDLE, ProcessRenderIdle,
+            g_object_ref(panel->root), g_object_unref);
+}
+/* A nested main loop can deliver a finished worker during a row notification.
+ * Hold that task until the current native operation has relinquished ownership. */
+static void ProcessFinishUpdate(ProcessPanel *panel)
+{
+    panel->updating = FALSE;
+    if (!panel->choosing && panel->completion != NULL)
+    {
+        GTask *task = panel->completion;
+        panel->completion = NULL;
+        ProcessCaptureComplete(NULL, G_ASYNC_RESULT(task), NULL);
+        g_object_unref(task);
+    }
+    if (panel->searchPending && panel->cancel == NULL && !panel->choosing)
+        ProcessQueueRender(panel);
+}
+
 static void ProcessRowsClear(ProcessPanel *panel)
 {
     GtkWidget *child;
     while ((child = gtk_widget_get_first_child(panel->rows)) != NULL)
         gtk_box_remove(GTK_BOX(panel->rows), child);
 }
+/* Keep process catalogue and native control ownership stable while synchronous callbacks reenter the picker. The earlier implementation remains below for engineering review. */
+#if 0
 static void ProcessChoose(GtkButton *button, gpointer data)
 {
     ProcessChoice *choice = data;
@@ -126,6 +171,34 @@ static void ProcessChoose(GtkButton *button, gpointer data)
     }
     g_object_unref(root);
 }
+#endif
+static void ProcessChoose(GtkButton *button, gpointer data)
+{
+    ProcessChoice *choice = data;
+    GtkWidget *root = g_weak_ref_get(&choice->root);
+    if (root == NULL)
+        return;
+    ProcessPanel *panel = g_object_get_data(G_OBJECT(root), "umicom-process-picker");
+    if (panel != NULL && !panel->updating && !panel->choosing && panel->cancel == NULL &&
+        gtk_widget_get_mapped(GTK_WIDGET(button)) &&
+        gtk_widget_is_ancestor(GTK_WIDGET(button), root) &&
+        gtk_widget_get_sensitive(GTK_WIDGET(button)))
+    {
+        /* Copy before calling the host: it may close the panel, rebuild rows,
+         * or change workspace while handling the explicit selection. */
+        UmiDesktopSystemProcess process = choice->process;
+        panel->choosing = TRUE;
+        UmiStatus status = panel->choose(panel->context, &process);
+        if (gtk_widget_get_mapped(root))
+            gtk_label_set_text(GTK_LABEL(panel->status),
+                status == UMI_STATUS_OK
+                    ? "Process copied to the attach form. Review it, then choose Attach to process."
+                    : umi_status_text(status));
+        panel->choosing = FALSE;
+        ProcessFinishUpdate(panel);
+    }
+    g_object_unref(root);
+}
 static gboolean ProcessMatches(const UmiDesktopSystemProcess *process, const char *query)
 {
     char pid[32];
@@ -137,6 +210,8 @@ static gboolean ProcessMatches(const UmiDesktopSystemProcess *process, const cha
     g_free(name);
     return match;
 }
+/* Render a stable catalogue under a publication guard, and defer reentrant search edits until that render finishes. The earlier implementation remains below for engineering review. */
+#if 0
 static void ProcessRender(ProcessPanel *panel)
 {
     ProcessRowsClear(panel);
@@ -194,6 +269,88 @@ static void ProcessRender(ProcessPanel *panel)
         g_free(summary);
     }
 }
+#endif
+static void ProcessRenderRows(ProcessPanel *panel)
+{
+    ProcessRowsClear(panel);
+    char *query = g_ascii_strdown(gtk_editable_get_text(GTK_EDITABLE(panel->search)), -1);
+    size_t matches = 0U, shown = 0U, count = UmiDesktopProcessCatalogCount(panel->catalog);
+    for (size_t i = 0U; i < count; ++i)
+    {
+        UmiDesktopSystemProcess process;
+        if (UmiDesktopProcessCatalogAt(panel->catalog, i, &process) != UMI_STATUS_OK ||
+            !ProcessMatches(&process, query))
+            continue;
+        size_t match = matches++;
+        if (match < panel->first || shown >= PROCESS_PAGE_ROWS)
+            continue;
+        GtkWidget *row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+        char *text = g_strdup_printf("%llu  %s  (parent %llu)%s", (unsigned long long)process.pid,
+                                     process.name, (unsigned long long)process.parentPid,
+                                     process.startKnown ? "" : " — creation time unavailable");
+        GtkWidget *label = gtk_label_new(text);
+        g_free(text);
+        gtk_label_set_xalign(GTK_LABEL(label), 0.0F);
+        gtk_label_set_wrap(GTK_LABEL(label), TRUE);
+        gtk_widget_set_hexpand(label, TRUE);
+        GtkWidget *choose = gtk_button_new_with_label("Use process");
+        gboolean selectable = !panel->report.fixture && process.startKnown && process.pid > 0U &&
+                              process.pid <= INT32_MAX && process.state != 'Z' &&
+                              process.state != 'X';
+        gtk_widget_set_sensitive(choose, selectable);
+        ProcessChoice *choice = g_new0(ProcessChoice, 1);
+        choice->process = process;
+        g_weak_ref_init(&choice->root, panel->root);
+        g_object_set_data_full(G_OBJECT(choose), "umicom-process-choice", choice,
+                               ProcessChoiceFree);
+        g_signal_connect(choose, "clicked", G_CALLBACK(ProcessChoose), choice);
+        char tag[80];
+        g_snprintf(tag, sizeof tag, "process.picker.choose.%zu", shown++);
+        (void)umi_gtk4_automation_tag_widget(choose, tag);
+        gtk_box_append(GTK_BOX(row), label);
+        gtk_box_append(GTK_BOX(row), choose);
+        gtk_box_append(GTK_BOX(panel->rows), row);
+    }
+    g_free(query);
+    gtk_widget_set_sensitive(panel->previous, panel->first != 0U);
+    gtk_widget_set_sensitive(panel->next, panel->first + shown < matches);
+    if (panel->catalog != NULL)
+    {
+        char *summary = g_strdup_printf(
+            "%zu–%zu of %zu matching captured processes; %zu observed, %zu unreadable "
+            "or without creation identity.%s%s Refresh to capture changes.",
+            shown ? panel->first + 1U : 0U, panel->first + shown, matches, panel->report.seen,
+            panel->report.unreadable,
+            panel->report.limited ? " Scan limit reached; this list is incomplete." : "",
+            panel->report.fixture ? " Fixture observations; selection is disabled." : "");
+        gtk_label_set_text(GTK_LABEL(panel->status), summary);
+        g_free(summary);
+    }
+}
+
+/* Only worker completion calls ProcessRenderRows while already holding the
+ * publication boundary. User actions enter through this guarded renderer. */
+static void ProcessRender(ProcessPanel *panel)
+{
+    if (panel->updating || panel->choosing || panel->cancel != NULL)
+    {
+        panel->searchPending = TRUE;
+        return;
+    }
+    GtkWidget *root = g_object_ref(panel->root);
+    panel->updating = TRUE;
+    if (panel->searchPending)
+    {
+        panel->first = 0U;
+        panel->searchPending = FALSE;
+    }
+    ProcessRenderRows(panel);
+    ProcessFinishUpdate(panel);
+    g_object_unref(root);
+}
+
+/* Keep process catalogue and native control ownership stable while synchronous callbacks reenter the picker. The earlier implementation remains below for engineering review. */
+#if 0
 static void ProcessCaptureComplete(GObject *object, GAsyncResult *result, gpointer data)
 {
     (void)object;
@@ -227,6 +384,56 @@ static void ProcessCaptureComplete(GObject *object, GAsyncResult *result, gpoint
     }
     g_object_unref(root);
 }
+#endif
+static void ProcessCaptureComplete(GObject *object, GAsyncResult *result, gpointer data)
+{
+    (void)object;
+    (void)data;
+    GTask *task = G_TASK(result);
+    ProcessCaptureJob *job = g_task_get_task_data(task);
+    GtkWidget *root = g_weak_ref_get(&job->root);
+    if (root == NULL)
+        return;
+    ProcessPanel *panel = g_object_get_data(G_OBJECT(root), "umicom-process-picker");
+    if (panel != NULL && panel->cancel == job->cancel)
+    {
+        if (panel->updating || panel->choosing)
+        {
+            /* A nested main loop may deliver this result during a native
+             * notification. Defer it without consuming the GTask result twice. */
+            if (panel->completion == NULL)
+                panel->completion = g_object_ref(task);
+            g_object_unref(root);
+            return;
+        }
+        GError *error = NULL;
+        (void)g_task_propagate_boolean(task, &error);
+        g_clear_error(&error);
+        panel->updating = TRUE;
+        gboolean cancelled = g_cancellable_is_cancelled(job->cancel);
+        if (!cancelled && gtk_widget_get_mapped(root) && job->status == UMI_STATUS_OK)
+        {
+            panel->catalog = job->catalog;
+            job->catalog = NULL;
+            (void)UmiDesktopProcessCatalogReport(panel->catalog, &panel->report);
+            panel->first = 0U;
+            panel->searchPending = FALSE;
+            ProcessRenderRows(panel);
+        }
+        else if (gtk_widget_get_mapped(root))
+            gtk_label_set_text(GTK_LABEL(panel->status),
+                cancelled ? "Process discovery stopped." : umi_status_text(job->status));
+        /* Keep the cancellation identity and publication guard through both
+         * notifications. A refresh observer must not create a competing job. */
+        gtk_widget_set_sensitive(panel->stop, FALSE);
+        gtk_widget_set_sensitive(panel->refresh, TRUE);
+        g_clear_object(&panel->cancel);
+        ProcessFinishUpdate(panel);
+    }
+    g_object_unref(root);
+}
+/* Keep process catalogue and native control ownership stable while synchronous callbacks reenter the picker. The earlier implementation remains below for engineering review. */
+#if 0
 static void ProcessRefresh(GtkButton *button, gpointer data)
 {
     ProcessPanel *panel = g_object_get_data(G_OBJECT(data), "umicom-process-picker");
@@ -253,6 +460,45 @@ static void ProcessRefresh(GtkButton *button, gpointer data)
     g_task_run_in_thread(task, ProcessCaptureRun);
     g_object_unref(task);
 }
+#endif
+static void ProcessRefresh(GtkButton *button, gpointer data)
+{
+    GtkWidget *root = g_object_ref(data);
+    ProcessPanel *panel = g_object_get_data(G_OBJECT(root), "umicom-process-picker");
+    if (panel == NULL || panel->updating || panel->choosing || panel->cancel != NULL ||
+        !gtk_widget_get_mapped(GTK_WIDGET(button)))
+    {
+        g_object_unref(root);
+        return;
+    }
+    panel->updating = TRUE;
+    panel->cancel = g_cancellable_new();
+    UmiDesktopProcessCatalogDestroy(panel->catalog);
+    panel->catalog = NULL;
+    ProcessRowsClear(panel);
+    gtk_widget_set_sensitive(panel->previous, FALSE);
+    gtk_widget_set_sensitive(panel->next, FALSE);
+    ProcessCaptureJob *job = g_new0(ProcessCaptureJob, 1);
+    g_weak_ref_init(&job->root, root);
+    job->cancel = g_object_ref(panel->cancel);
+    job->provider = panel->provider;
+    g_atomic_int_inc(&job->provider->references);
+    gtk_widget_set_sensitive(panel->refresh, FALSE);
+    gtk_widget_set_sensitive(panel->stop, TRUE);
+    gtk_label_set_text(GTK_LABEL(panel->status), "Reading process names and creation identities…");
+    /* The task holds no widget or workbench owner. Closing the panel cancels
+     * discovery without keeping an otherwise closed application window alive. */
+    GTask *task = g_task_new(NULL, job->cancel, ProcessCaptureComplete, NULL);
+    g_task_set_task_data(task, job, ProcessCaptureFree);
+    if (!gtk_widget_get_mapped(root))
+        g_cancellable_cancel(job->cancel);
+    g_task_run_in_thread(task, ProcessCaptureRun);
+    g_object_unref(task);
+    ProcessFinishUpdate(panel);
+    g_object_unref(root);
+}
+/* Cancellation is a worker action and cannot replace a completed publication through a retained native signal. The earlier implementation remains below for engineering review. */
+#if 0
 static void ProcessStop(GtkButton *button, gpointer data)
 {
     ProcessPanel *panel = g_object_get_data(G_OBJECT(data), "umicom-process-picker");
@@ -262,6 +508,19 @@ static void ProcessStop(GtkButton *button, gpointer data)
         gtk_label_set_text(GTK_LABEL(panel->status), "Stopping process discovery…");
     }
 }
+#endif
+static void ProcessStop(GtkButton *button, gpointer data)
+{
+    ProcessPanel *panel = g_object_get_data(G_OBJECT(data), "umicom-process-picker");
+    if (!panel->updating && !panel->choosing &&
+        gtk_widget_get_mapped(GTK_WIDGET(button)) && panel->cancel != NULL)
+    {
+        g_cancellable_cancel(panel->cancel);
+        gtk_label_set_text(GTK_LABEL(panel->status), "Stopping process discovery…");
+    }
+}
+/* Keep process catalogue and native control ownership stable while synchronous callbacks reenter the picker. The earlier implementation remains below for engineering review. */
+#if 0
 static void ProcessUnmap(GtkWidget *widget, gpointer data)
 {
     (void)data;
@@ -269,6 +528,22 @@ static void ProcessUnmap(GtkWidget *widget, gpointer data)
     if (panel->cancel != NULL)
         g_cancellable_cancel(panel->cancel);
 }
+#endif
+static void ProcessUnmap(GtkWidget *widget, gpointer data)
+{
+    (void)data;
+    ProcessPanel *panel = g_object_get_data(G_OBJECT(widget), "umicom-process-picker");
+    if (panel->cancel != NULL)
+        g_cancellable_cancel(panel->cancel);
+    if (panel->renderSource != 0U)
+    {
+        guint source = panel->renderSource;
+        panel->renderSource = 0U;
+        g_source_remove(source);
+    }
+}
+/* Keep process catalogue and native control ownership stable while synchronous callbacks reenter the picker. The earlier implementation remains below for engineering review. */
+#if 0
 static void ProcessSearch(GtkEditable *editable, gpointer data)
 {
     (void)editable;
@@ -276,6 +551,17 @@ static void ProcessSearch(GtkEditable *editable, gpointer data)
     panel->first = 0U;
     ProcessRender(panel);
 }
+#endif
+static void ProcessSearch(GtkEditable *editable, gpointer data)
+{
+    (void)editable;
+    ProcessPanel *panel = g_object_get_data(G_OBJECT(data), "umicom-process-picker");
+    panel->searchPending = TRUE;
+    if (gtk_widget_get_mapped(panel->root))
+        ProcessRender(panel);
+}
+/* Keep process catalogue and native control ownership stable while synchronous callbacks reenter the picker. The earlier implementation remains below for engineering review. */
+#if 0
 static void ProcessPage(GtkButton *button, gpointer data)
 {
     ProcessPanel *panel = g_object_get_data(G_OBJECT(data), "umicom-process-picker");
@@ -287,6 +573,29 @@ static void ProcessPage(GtkButton *button, gpointer data)
         panel->first += PROCESS_PAGE_ROWS;
     ProcessRender(panel);
 }
+#endif
+static void ProcessPage(GtkButton *button, gpointer data)
+{
+    ProcessPanel *panel = g_object_get_data(G_OBJECT(data), "umicom-process-picker");
+    if (panel->updating || panel->choosing || panel->cancel != NULL ||
+        !gtk_widget_get_mapped(GTK_WIDGET(button)) || !gtk_widget_get_sensitive(GTK_WIDGET(button)))
+        return;
+    if (GTK_WIDGET(button) == panel->previous)
+        panel->first = panel->first >= PROCESS_PAGE_ROWS ? panel->first - PROCESS_PAGE_ROWS : 0U;
+    else
+        panel->first += PROCESS_PAGE_ROWS;
+    ProcessRender(panel);
+}
+/* Hidden search edits are retained as input. Reopening the same panel renders
+ * them once, without automatically starting another system process capture. */
+static void ProcessMap(GtkWidget *widget, gpointer data)
+{
+    (void)data;
+    ProcessPanel *panel = g_object_get_data(G_OBJECT(widget), "umicom-process-picker");
+    if (panel->searchPending && panel->cancel == NULL)
+        ProcessRender(panel);
+}
+
 GtkWidget *UmiGtk4ProcessPickerCreate(const UmiGtk4ProcessProvider *provider,
                                       UmiGtk4ProcessChoose choose, void *context,
                                       GDestroyNotify destroy)
@@ -337,5 +646,6 @@ GtkWidget *UmiGtk4ProcessPickerCreate(const UmiGtk4ProcessProvider *provider,
     g_signal_connect_object(panel->next, "clicked", G_CALLBACK(ProcessPage), panel->root, 0);
     g_signal_connect_object(panel->search, "changed", G_CALLBACK(ProcessSearch), panel->root, 0);
     g_signal_connect(panel->root, "unmap", G_CALLBACK(ProcessUnmap), NULL);
+    g_signal_connect(panel->root, "map", G_CALLBACK(ProcessMap), NULL);
     return panel->root;
 }

@@ -67,7 +67,17 @@ int main(int argc,char **argv)
         GtkWidget *inspector = Find(root, "trading.chart.inspector");
         CHECK(GTK_IS_EXPANDER(inspector));
         CHECK(!gtk_expander_get_expanded(GTK_EXPANDER(inspector)));
+        /* A collapsed expander retains its body without parenting that body
+         * into the rendered tree. Check ownership through the public child
+         * property, then verify window-tree ancestry after expansion below.
+         * The earlier assertion is retained to explain that distinction. */
+#if 0
         CHECK(gtk_widget_is_ancestor(undo, inspector));
+#endif
+        GtkWidget *inspectorBody = gtk_expander_get_child(GTK_EXPANDER(inspector));
+        CHECK(GTK_IS_BOX(inspectorBody));
+        CHECK(gtk_widget_is_ancestor(undo, inspectorBody));
+        CHECK(!gtk_widget_is_ancestor(area, inspectorBody));
         CHECK(!gtk_widget_is_ancestor(area, inspector));
         GtkWidget *trend = Find(root, "trading.chart.trend");
         CHECK(GTK_IS_TOGGLE_BUTTON(trend));
@@ -76,6 +86,7 @@ int main(int argc,char **argv)
         /* Expanding and collapsing must preserve the same editor controls and
          * drawing history; these presentation actions cannot submit an order. */
         gtk_expander_set_expanded(GTK_EXPANDER(inspector), TRUE);
+        CHECK(gtk_widget_is_ancestor(undo, inspector));
         CHECK(Find(root, "trading.chart.undo-drawing") == undo);
         g_signal_emit_by_name(undo, "clicked");
         CHECK(umi_chart_drawing_registry_count(registry) == 0U);

@@ -25,6 +25,11 @@ extern "C" {
 /**
  * Provide the ide workflow evaluate operation used by this module and its client
  * applications.
+ *
+ * Evaluate on the bound services' owning thread using a current context. The
+ * test gate reads retained result records without changing them. It does not
+ * establish discovery coverage, source-revision identity or latest-session
+ * selection; hosts remain responsible for the evidence scope.
  */
 UmiStatus umi_ide_workflow_evaluate(
     const UmiIdeIntegrationBindings *bindings,

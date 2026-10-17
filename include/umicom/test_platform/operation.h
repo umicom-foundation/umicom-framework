@@ -71,8 +71,21 @@ void umi_test_platform_operation_plan_init(
     UmiTestPlatformOperationKind kind
 );
 /**
+ * Validate a caller-owned plan without changing it. Empty plans are accepted
+ * during construction. Identifier termination, selection capacity, operation
+ * kind and the repeated execution count are checked before any traversal.
+ * Returns INVALID_ARGUMENT for malformed identity/kind and CAPACITY_EXCEEDED
+ * for capacity or count overflow. No registry or provider is accessed.
+ */
+UmiStatus umi_test_platform_operation_plan_validate(
+    const UmiTestPlatformOperationPlan *plan
+);
+
+/**
  * Provide the test platform operation plan all operation used by this module and its
  * client applications.
+ * Publish a complete selection only on success. Failure leaves the prior plan
+ * unchanged, including its generation; identifiers are never silently truncated.
  */
 UmiStatus umi_test_platform_operation_plan_all(
     UmiTestPlatformOperationPlan *plan,
@@ -83,6 +96,8 @@ UmiStatus umi_test_platform_operation_plan_all(
 /**
  * Provide the test platform operation plan failed operation used by this module and its
  * client applications.
+ * Retain the existing plan if failed-test history exceeds selection capacity
+ * or the plan generation cannot advance.
  */
 UmiStatus umi_test_platform_operation_plan_failed(
     UmiTestPlatformOperationPlan *plan,

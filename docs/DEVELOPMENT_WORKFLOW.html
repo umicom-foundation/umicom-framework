@@ -284,4 +284,70 @@ int main(int argc, char **argv)
 <tr><td>Project changed while Debug was waiting</td><td>Stop that request, review the new profile, save the intended sources and start again. Do not use an old build result as approval for a different executable.</td></tr>
 <tr><td>Interface appears delayed during debugging</td><td>Wait for the bounded adapter request to finish or time out. Record the operation and adapter output. The present debugger handshake is synchronous, unlike the compiler worker.</td></tr></table>
 <p>For a reproducible GUI problem, use <strong>Report problem</strong>, repeat the smallest sequence, add what you expected and what actually happened, and export the local report. Review screenshots and logs before sharing: they may contain source code and paths. A screenshot of a button is not enough to prove that its file, build or debugger operation succeeded.</p>
-<h2>10. Continue towards a daily-use IDE</h2><p>A dependable IDE also needs responsive language intelligence, fully qualified native debugging, interactive terminals, workspace recovery, reliable Git workflows and clean-machine installation. Keep testing the complete Notes journey rather than judging a feature by whether its menu item is present. Each confirmed problem should name the failing operation, the affected project and the observed result.</p></main></body></html>
+<h2>10. Continue towards a daily-use IDE</h2><p>A dependable IDE also needs responsive language intelligence, fully qualified native debugging, interactive terminals, workspace recovery, reliable Git workflows and clean-machine installation. Keep testing the complete Notes journey rather than judging a feature by whether its menu item is present. Each confirmed problem should name the failing operation, the affected project and the observed result.</p>
+<h2 id="test-readiness">Understand the IDE test-readiness gate</h2>
+<p>A readiness gate is a check that decides whether a workflow may proceed.
+The IDE integration layer reads the Test Platform's retained result records.
+It keeps passed, failed, timed-out, skipped, cancelled and not-run results
+separate. Skipping a test does not prove that the feature passed.</p>
+<ol>
+<li>Run the intended tests and wait for the operation to finish. A required
+test gate remains blocked while a run is in progress, even if earlier results passed.</li>
+<li>Refresh the active IDE context before evaluating readiness. The evaluator
+must run on the Test Platform owner's thread. A changed result count means
+the context needs refreshing; this check does not replace thread ownership.</li>
+<li>Inspect the Tests gate detail. It reports the observed result count and
+each outcome, including unknown or unreadable records. An empty result set
+does not satisfy a required test gate.</li>
+<li>With <code>require_all_tests_passed</code>, every retained result must be
+a completed pass. This policy requires a bound Test Platform service even
+when <code>require_tests</code> is off. With only <code>require_tests</code>,
+at least one completed execution is needed; failures and skipped records
+remain visible as warnings. Use the pass-all policy for a workflow that must
+reject unsuccessful evidence.</li>
+</ol>
+<p>Optional test gates warn about missing or unsuccessful evidence without
+blocking the workflow. This policy choice does not turn that evidence into
+a pass. The gate evaluates retained records: it does not prove discovery
+coverage, associate results with a source revision, or choose the latest run
+session. Applications must scope their evidence and verify the intended
+tests independently before claiming complete qualification.</p>
+<p>If a gate stays blocked, inspect its outcome counts, resolve failures or
+missing test prerequisites, run the intended tests again and refresh the
+context. Do not replace a skipped result with a fabricated pass.</p>
+
+<h3>Write a test provider that retains reliable evidence</h3>
+<p><code>umi_test_platform_execute</code> receives a bounded operation plan and
+a callback supplied by a test provider. The Framework copies the plan before
+calling the provider. Editing the caller's selection during a callback therefore
+affects a later request, not the running operation.</p>
+<ol>
+<li>Initialize a plan and add stable test identifiers with
+<code>umi_test_platform_operation_plan_add</code>. Overlong identifiers are
+rejected instead of truncated. <code>umi_test_platform_operation_plan_validate</code>
+can check a plan before presenting it; an empty plan is valid during editing but
+cannot begin execution.</li>
+<li>In the provider callback, supply a finished outcome and a finite,
+nonnegative duration. Keep the result's item identifier equal to the requested
+test. The callback receives a one-based attempt number. A repeat count of zero
+retains the established meaning of one attempt.</li>
+<li>Return a non-OK status when the provider itself fails. The runner maps
+provider cancellation and timeout to their corresponding retained outcomes,
+and other provider errors to failed evidence. It never retains a conflicting
+passed outcome from an unsuccessful callback.</li>
+<li>Check both the execution status and its summary. The executed count records
+callback invocations. Outcome counts and total duration cover only retained
+records, so they can be smaller when malformed evidence or storage exhaustion
+stops a run. Earlier records remain available.</li>
+</ol>
+<p>The stop-on-failure option includes timed-out tests and provider errors.
+Cooperative cancellation prevents subsequent callbacks. Unknown test identifiers,
+oversized selections and exhausted controller generations are rejected before
+execution starts. A result with invalid text, mismatched identity, an unfinished
+outcome or an invalid duration stops further callbacks. An automatically generated
+identifier collision is reported without overwriting the existing result.</p>
+<p>All operations remain synchronous and belong to one owner thread. Providers
+must not destroy their registries or controller from inside a callback. This
+contract does not promise rollback of external actions already performed by a
+provider, and retaining a result does not by itself establish full test coverage.</p>
+</main></body></html>

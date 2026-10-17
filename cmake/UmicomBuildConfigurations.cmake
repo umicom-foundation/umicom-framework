@@ -70,3 +70,13 @@ if(TARGET Umicom::ui_gtk4)
             TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;build;configurations;gtk4;ownership")
     endforeach()
 endif()
+
+# Fixture ownership is exercised without SQLite so backend availability cannot
+# hide reservation collisions or accidental replacement of previous evidence.
+umicom_build_configuration_target(umicom-build-configurations-fixture-test test_fixture_ownership.c Umicom::platform)
+foreach(case collision capacity invalid-path)
+    add_test(NAME framework.build_configurations.fixture.${case}
+        COMMAND umicom-build-configurations-fixture-test "${case}")
+    set_tests_properties(framework.build_configurations.fixture.${case} PROPERTIES
+        TIMEOUT 30 LABELS "framework;build;configurations;ownership")
+endforeach()

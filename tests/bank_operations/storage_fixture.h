@@ -14,6 +14,10 @@
  * Exclusive creation claims each candidate without opening an existing leaf.
  * A failed earlier run remains available for diagnosis; only the current run
  * may remove its successfully reserved database after its checks finish. */
+/* Reservation now belongs to the shared test fixture boundary so database
+ * suites use identical collision handling. Keep the original implementation
+ * disabled for review of its ownership contract. */
+#if 0
 static inline UmiStatus BankStorageFixtureReserve(const char *base, char *out, size_t capacity)
 {
     if (base == NULL || out == NULL || capacity == 0U)
@@ -39,5 +43,12 @@ static inline UmiStatus BankStorageFixtureReserve(const char *base, char *out, s
     }
     out[0] = '\0';
     return UMI_STATUS_CAPACITY_EXCEEDED;
+}
+#endif
+#include "../storage_fixture.h"
+
+static inline UmiStatus BankStorageFixtureReserve(const char *base, char *out, size_t capacity)
+{
+    return UmiTestStorageReserve(base, out, capacity);
 }
 #endif

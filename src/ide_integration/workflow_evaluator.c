@@ -127,6 +127,8 @@ static UmiStatus add_problems(
 }
 
 /* Provide the add tests operation used by this module and its client applications. */
+/* The Framework readiness gate now distinguishes completed passes from skipped, cancelled and unfinished results. This replaces failure-only counting so required workflows cannot treat absent evidence as success. The earlier implementation remains below for engineering review. */
+#if 0
 static UmiStatus add_tests(
     const UmiIdeIntegrationBindings *bindings,
     const UmiIdeActiveContext *context,
@@ -211,6 +213,92 @@ static UmiStatus add_tests(
         detail,
         state,
         policy->require_tests || policy->require_all_tests_passed);
+}
+#endif
+static UmiStatus add_tests(
+    const UmiIdeIntegrationBindings *bindings,
+    const UmiIdeActiveContext *context,
+    const UmiIdeWorkflowPolicy *policy,
+    UmiIdeWorkflowReport *report)
+{
+    const int required = policy->require_tests || policy->require_all_tests_passed;
+    UmiTestPlatformResultRegistry *results;
+    size_t count;
+    size_t passed = 0U;
+    size_t failed = 0U;
+    size_t timed_out = 0U;
+    size_t skipped = 0U;
+    size_t cancelled = 0U;
+    size_t not_run = 0U;
+    size_t unknown = 0U;
+    size_t unreadable = 0U;
+    char detail[512];
+    UmiIdeWorkflowGateState state;
+
+    /* Requiring every result to pass also requires the source of that evidence.
+     * Hosts must evaluate on the Test Platform owner's thread with a current
+     * active-context snapshot; this traversal does not introduce locking. */
+    if (!context->has_tests || bindings->tests == NULL) {
+        return umi_ide_workflow_report_add(
+            report, "tests", "Tests", "Test Platform service not bound.",
+            required ? UMI_IDE_GATE_BLOCK : UMI_IDE_GATE_WARN, required);
+    }
+
+    results = umi_test_platform_service_result(bindings->tests);
+    count = results != NULL ? umi_test_platform_result_registry_count(results) : 0U;
+    for (size_t index = 0U; index < count; ++index) {
+        UmiTestPlatformResultSnapshot item;
+        if (umi_test_platform_result_registry_at(results, index, &item) != UMI_STATUS_OK) {
+            /* A missing record is missing evidence, never an implicit pass. */
+            unreadable += 1U;
+            continue;
+        }
+        switch (item.outcome) {
+        case UMI_TEST_PLATFORM_OUTCOME_PASSED: passed += 1U; break;
+        case UMI_TEST_PLATFORM_OUTCOME_FAILED: failed += 1U; break;
+        case UMI_TEST_PLATFORM_OUTCOME_TIMED_OUT: timed_out += 1U; break;
+        case UMI_TEST_PLATFORM_OUTCOME_SKIPPED: skipped += 1U; break;
+        case UMI_TEST_PLATFORM_OUTCOME_CANCELLED: cancelled += 1U; break;
+        case UMI_TEST_PLATFORM_OUTCOME_NOT_RUN: not_run += 1U; break;
+        default: unknown += 1U; break;
+        }
+    }
+
+    /* Keep incomplete outcomes separate so the UI can explain a blocked gate.
+     * Registry counts describe retained evidence, not discovery coverage or a
+     * guarantee that the application's entire test suite has been executed. */
+    const int count_changed = count != context->tests.result_count;
+    const size_t executed = passed + failed + timed_out;
+    (void)snprintf(
+        detail, sizeof(detail),
+        "items=%zu results=%zu observed=%zu passed=%zu failed=%zu timed_out=%zu "
+        "skipped=%zu cancelled=%zu not_run=%zu unknown=%zu unreadable=%zu "
+        "running=%d stale_count=%d",
+        context->tests.item_count, context->tests.result_count, count,
+        passed, failed, timed_out, skipped, cancelled, not_run, unknown,
+        unreadable, context->tests.operation_running != 0, count_changed);
+
+    /* A completed execution is needed before required evidence can authorize
+     * a workflow. An explicit pass-all policy additionally rejects every
+     * retained outcome other than PASSED, including empty result sets. */
+    if (count_changed || unreadable != 0U || results == NULL ||
+        context->tests.operation_running) {
+        state = required ? UMI_IDE_GATE_BLOCK : UMI_IDE_GATE_WARN;
+    } else if (policy->require_all_tests_passed &&
+               (count == 0U || passed != count)) {
+        state = UMI_IDE_GATE_BLOCK;
+    } else if (policy->require_tests && executed == 0U) {
+        state = UMI_IDE_GATE_BLOCK;
+    } else if (count == 0U || passed != count) {
+        /* Optional or execution-only policy may permit work, but the visible
+         * test gate still reports incomplete or unsuccessful evidence. */
+        state = UMI_IDE_GATE_WARN;
+    } else {
+        state = UMI_IDE_GATE_PASS;
+    }
+
+    return umi_ide_workflow_report_add(
+        report, "tests", "Tests", detail, state, required);
 }
 
 /*

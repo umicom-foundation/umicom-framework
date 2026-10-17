@@ -101,6 +101,11 @@ UmiStatus DebugResponseJsonBoolean(const UmiLanguageRuntimeJsonDocument *documen
         *out = 0;
         return UMI_STATUS_OK;
     }
+    /* A present non-boolean field is malformed adapter input. The generic
+     * token accessor uses INVALID_ARGUMENT for a token of the wrong kind;
+     * classify that mismatch here, at the protocol schema boundary. */
+    if (document->tokens[token].type != UMI_LANGUAGE_RUNTIME_JSON_PRIMITIVE)
+        return UMI_STATUS_PARSE_ERROR;
     return umi_language_runtime_json_bool(document, token, out);
 }
 UmiStatus DebugResponseJsonResponse(const UmiLanguageRuntimeJsonDocument *document,
@@ -137,6 +142,10 @@ UmiStatus DebugResponseJsonUnsigned(const UmiLanguageRuntimeJsonDocument *docume
     *out = 0U;
     if (token < 0)
         return required ? UMI_STATUS_PARSE_ERROR : UMI_STATUS_OK;
+    /* Numeric protocol fields must not coerce strings or containers. Keep
+     * schema errors consistent with booleans and textual response fields. */
+    if (document->tokens[token].type != UMI_LANGUAGE_RUNTIME_JSON_PRIMITIVE)
+        return UMI_STATUS_PARSE_ERROR;
     int64_t value = 0;
     UmiStatus status = umi_language_runtime_json_int64(document, token, &value);
     if (status != UMI_STATUS_OK)

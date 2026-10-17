@@ -71,3 +71,12 @@ if(TARGET umicom-native-attach-adapter-fixture)
             "$<TARGET_FILE:umicom-native-attach-adapter-fixture>" "${directory}")
     endforeach()
 endif()
+
+# Peer schema failures have a stable classification before transport-specific
+# control retirement tests inspect the same malformed acknowledgements.
+umicom_instruction_test(umicom-instruction-response-fields-test test_response_fields.c Umicom::developer)
+foreach(case boolean-string boolean-object boolean-array boolean-null boolean-number boolean-true boolean-false
+        unsigned-string unsigned-object unsigned-array unsigned-null unsigned-boolean unsigned-fraction
+        unsigned-negative unsigned-bound unsigned-valid)
+    umicom_instruction_case(response_fields umicom-instruction-response-fields-test "${case}")
+endforeach()

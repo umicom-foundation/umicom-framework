@@ -7,6 +7,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "fixture.h"
+#include "../storage_fixture.h"
 #include "umicom/platform/filesystem.h"
 int main(int argc, char **argv)
 {
@@ -14,12 +15,25 @@ int main(int argc, char **argv)
     bool remove_failure = strcmp(argv[1], "remove-failure") == 0;
     bool rename_failure = strcmp(argv[1], "rename-failure") == 0;
     CHECK(remove_failure || rename_failure || strcmp(argv[1], "reopen") == 0);
+    /* A fixed filename let an interrupted earlier run block every later run.
+     * Preserve it for review; exclusive reservation now owns a fresh leaf in
+     * the CTest fixture directory without deleting earlier evidence. */
+#if 0
     const char *path = "configuration-lifecycle.sqlite";
     CHECK(!umi_fs_exists(path));
+#endif
+    char directory[UMI_PATH_CAPACITY], base[UMI_PATH_CAPACITY], path[UMI_PATH_CAPACITY];
+    CHECK(umi_fs_current_directory(directory, sizeof directory) == UMI_STATUS_OK);
+    CHECK(umi_path_join(directory, "configuration-lifecycle.sqlite", base, sizeof base) == UMI_STATUS_OK);
+    CHECK(UmiTestStorageReserve(base, path, sizeof path) == UMI_STATUS_OK);
     UmiDataServer *first = NULL, *second = NULL;
     UmiStatus status = umi_data_server_create_sqlite(path, &first);
     if (status == UMI_STATUS_UNAVAILABLE)
+    {
+        /* The reservation is ours even when this build has no SQLite backend. */
+        CHECK(umi_fs_remove_tree(path) == UMI_STATUS_OK);
         return 77;
+    }
     CHECK(status == UMI_STATUS_OK);
     CHECK(umi_data_server_create_sqlite(path, &second) == UMI_STATUS_OK);
     UmiBuildProfile *profile = malloc(sizeof *profile), *loaded = malloc(sizeof *loaded);

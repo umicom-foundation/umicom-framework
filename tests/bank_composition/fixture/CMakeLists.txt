@@ -6,6 +6,9 @@ include(CTest)
 # names stand in for the surrounding application; no executable is built/run.
 add_library(Umicom::finance INTERFACE IMPORTED)
 add_library(Umicom::data INTERFACE IMPORTED)
+# Storage checks use the canonical exclusive-file owner. This configuration-only
+# host must name that dependency too; native banking tests link the real library.
+add_library(Umicom::platform INTERFACE IMPORTED)
 function(umicom_apply_warnings target)
     if(NOT TARGET "${target}")
         message(FATAL_ERROR "Warning policy received a missing target")
@@ -44,3 +47,14 @@ foreach(_test framework.bank_activity.capture.all framework.bank_reservations.ca
         message(FATAL_ERROR "Disabled tests leaked into bank composition: ${_test}")
     endif()
 endforeach()
+
+# Storage registration must retain its explicit platform link when optional
+# banking is composed without the GTK application host.
+if(BUILD_TESTING)
+    foreach(_storage IN ITEMS umicom-bank-charge-storage-test umicom-bank-reconciliation-storage-test)
+        get_target_property(_links "${_storage}" LINK_LIBRARIES)
+        if(NOT "Umicom::platform" IN_LIST _links)
+            message(FATAL_ERROR "${_storage} lost its native file ownership dependency")
+        endif()
+    endforeach()
+endif()

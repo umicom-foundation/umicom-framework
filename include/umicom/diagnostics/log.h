@@ -36,6 +36,20 @@ typedef struct UmiLogger {
 void umi_log(UmiLogger *logger, UmiDiagnosticSeverity severity,
              const char *message, uint64_t correlation_id);
 
+/**
+ * Emit one error for a failed operation through the existing diagnostic sink.
+ * Success emits nothing. The operation is a public identifier of at most 96
+ * ASCII letters, digits, dots, underscores or hyphens; invalid identifiers are
+ * replaced by "unspecified-operation" rather than copied into the message.
+ * Supply a fixed operation name, never a path, credential or user document.
+ * Formatting uses bounded stack storage even when reporting allocation failure.
+ * The sink receives borrowed message storage for the duration of this call.
+ * A null logger or sink is allowed. This does not change the supplied status,
+ * perform recovery, or make a failed constructor usable.
+ */
+void umi_log_status(UmiLogger *logger, const char *operation,
+                    UmiStatus status, uint64_t correlation_id);
+
 #ifdef __cplusplus
 }
 #endif

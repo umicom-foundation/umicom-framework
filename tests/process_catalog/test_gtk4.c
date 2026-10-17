@@ -29,6 +29,9 @@ typedef struct Host
     bool denied, slow, fixture, unknown, bad;
     GtkWindow *window;
     bool close_choose;
+    const char *mode;
+    bool reentered;
+    GtkWidget *panel, *refresh, *search, *choice;
 } Host;
 static UmiStatus Capture(void *context, const UmiDesktopProcessCaptureOptions *options,
                          UmiDesktopProcessCatalog **out)
@@ -68,6 +71,18 @@ static UmiStatus Choose(void *context, const UmiDesktopSystemProcess *process)
     Host *host = context;
     ++host->chosen;
     host->pid = process->pid;
+    if (!host->reentered && strncmp(host->mode, "choose-", 7U) == 0)
+    {
+        /* A host may synchronously dispatch another control signal while
+         * accepting this copied row. It must not receive a recursive choice. */
+        host->reentered = true;
+        if (strcmp(host->mode, "choose-reenter") == 0)
+            g_signal_emit_by_name(host->choice, "clicked");
+        else if (strcmp(host->mode, "choose-refresh") == 0)
+            g_signal_emit_by_name(host->refresh, "clicked");
+        else
+            gtk_editable_set_text(GTK_EDITABLE(host->search), "pid:124");
+    }
     if (host->close_choose)
         gtk_window_destroy(host->window);
     return host->denied ? UMI_STATUS_PERMISSION_DENIED : UMI_STATUS_OK;
@@ -77,6 +92,8 @@ static void ProviderFree(gpointer context)
     g_atomic_int_inc(&((Host *)context)->provider_destroyed);
 }
 static void ChooseFree(gpointer context) { ++((Host *)context)->chosen_destroyed; }
+/* A bounded event pump lets fixture deadlines remain effective even when a native backend continuously schedules work. The earlier implementation remains below for engineering review. */
+#if 0
 static void Drain(void)
 {
     for (unsigned i = 0U; i < 30U; ++i)
@@ -87,6 +104,34 @@ static void Drain(void)
         g_usleep(1000U);
     }
 }
+#endif
+static void Drain(void)
+{
+    /* Keep polling bounded when a backend continuously queues native events.
+     * Ready/WaitMapped own the condition deadline; this helper must return so
+     * their timeout checks and fixture teardown can still execute. */
+    for (unsigned round = 0U; round < 30U; ++round)
+    {
+        for (unsigned dispatched = 0U; dispatched < 64U && g_main_context_pending(NULL);
+             ++dispatched)
+            (void)g_main_context_iteration(NULL, FALSE);
+        g_usleep(1000U);
+    }
+}
+/* Native actions require a mapped widget. A deadline checks that condition;
+ * an arbitrary delay does not establish that the operating system drew it. */
+static bool WaitMapped(GtkWidget *widget)
+{
+    gint64 deadline = g_get_monotonic_time() + 5 * G_TIME_SPAN_SECOND;
+    while (!gtk_widget_get_mapped(widget) && g_get_monotonic_time() < deadline)
+    {
+        for (unsigned i = 0U; i < 64U && g_main_context_pending(NULL); ++i)
+            (void)g_main_context_iteration(NULL, FALSE);
+        g_usleep(1000U);
+    }
+    return gtk_widget_get_mapped(widget);
+}
+
 static bool Ready(GtkWidget *refresh)
 {
     gint64 until = g_get_monotonic_time() + 5000000;
@@ -98,6 +143,26 @@ static GtkWidget *Find(GtkWidget *panel, const char *tag)
 {
     return umi_gtk4_automation_find_tagged_widget(panel, tag);
 }
+
+/* Exercise synchronous extension callbacks while the picker is publishing
+ * sensitivity changes. One-shot injection keeps the expected action bounded. */
+static void ReenterPublication(GObject *object, GParamSpec *property, gpointer context)
+{
+    (void)property;
+    Host *host = context;
+    if (host->reentered || !gtk_widget_get_sensitive(GTK_WIDGET(object)))
+        return;
+    host->reentered = true;
+    if (strcmp(host->mode, "publication-close") == 0)
+        gtk_window_destroy(host->window);
+    else if (strcmp(host->mode, "publication-page") == 0)
+        g_signal_emit_by_name(Find(host->panel, "process.picker.next"), "clicked");
+    else if (strcmp(host->mode, "publication-search") == 0)
+        gtk_editable_set_text(GTK_EDITABLE(host->search), "pid:124");
+    else
+        g_signal_emit_by_name(host->refresh, "clicked");
+}
+
 int main(int argc, char **argv)
 {
     if (argc != 2)
@@ -105,7 +170,10 @@ int main(int argc, char **argv)
     const char *mode = argv[1],
                *cases[] = {"normal",         "search", "page",        "old-row", "fixture",
                            "unknown",        "cancel", "close",       "hidden",  "retained",
-                           "failed-refresh", "denied", "close-choose"};
+                           "failed-refresh", "denied", "close-choose",
+                           "publication-refresh", "publication-page", "publication-search",
+                           "publication-render-refresh", "publication-close", "choose-reenter",
+                           "choose-refresh", "choose-search", "hidden-search"};
     bool known = false;
     for (size_t i = 0U; i < sizeof cases / sizeof cases[0]; ++i)
         if (strcmp(mode, cases[i]) == 0)
@@ -116,6 +184,7 @@ int main(int argc, char **argv)
         return 77;
     int failed = 0;
     Host host = {0};
+    host.mode = mode;
     host.fixture = strcmp(mode, "fixture") == 0;
     host.unknown = strcmp(mode, "unknown") == 0;
     host.slow = strcmp(mode, "cancel") == 0 || strcmp(mode, "close") == 0;
@@ -132,6 +201,36 @@ int main(int argc, char **argv)
     GtkWidget *refresh = Find(panel, "process.picker.refresh"),
               *search = Find(panel, "process.picker.search");
     CHECK(refresh != NULL && search != NULL && g_atomic_int_get(&host.captures) == 0);
+    CHECK(WaitMapped(refresh));
+    host.panel = panel;
+    host.refresh = refresh;
+    host.search = search;
+    if (strncmp(mode, "publication-", 12U) == 0)
+    {
+        GtkWidget *observed = strcmp(mode, "publication-page") == 0 ||
+                              strcmp(mode, "publication-search") == 0 ||
+                              strcmp(mode, "publication-render-refresh") == 0
+                                  ? Find(panel, "process.picker.next") : refresh;
+        CHECK(observed != NULL);
+        g_signal_connect(observed, "notify::sensitive", G_CALLBACK(ReenterPublication), &host);
+        g_signal_emit_by_name(refresh, "clicked");
+        CHECK(!gtk_widget_get_sensitive(refresh));
+        CHECK(Ready(refresh));
+        Drain();
+        CHECK(host.reentered && g_atomic_int_get(&host.captures) == 1 && host.chosen == 0U);
+        if (strcmp(mode, "publication-close") == 0)
+        {
+            CHECK(!gtk_widget_get_mapped(panel));
+            goto done;
+        }
+        GtkWidget *first = Find(panel, "process.picker.choose.0");
+        CHECK(first != NULL && WaitMapped(first));
+        g_signal_emit_by_name(first, "clicked");
+        CHECK(host.chosen == 1U && host.pid ==
+            (strcmp(mode, "publication-search") == 0 ? 124U : 100U));
+        goto done;
+    }
+
     if (strcmp(mode, "hidden") == 0)
         gtk_widget_set_visible(panel, FALSE);
     if (strcmp(mode, "retained") == 0)
@@ -161,6 +260,19 @@ int main(int argc, char **argv)
     CHECK(choice != NULL &&
           strstr(gtk_label_get_text(GTK_LABEL(Find(panel, "process.picker.status"))),
                  "incomplete") != NULL);
+    if (strcmp(mode, "hidden-search") == 0)
+    {
+        gtk_widget_set_visible(panel, FALSE);
+        gtk_editable_set_text(GTK_EDITABLE(search), "pid:124");
+        gtk_widget_set_visible(panel, TRUE);
+        Drain();
+        GtkWidget *first = Find(panel, "process.picker.choose.0");
+        CHECK(first != NULL && WaitMapped(first));
+        g_signal_emit_by_name(first, "clicked");
+        CHECK(host.chosen == 1U && host.pid == 124U &&
+              g_atomic_int_get(&host.captures) == 1);
+        goto done;
+    }
     if (host.fixture || host.unknown)
     {
         CHECK(!gtk_widget_get_sensitive(choice));
@@ -192,12 +304,33 @@ int main(int argc, char **argv)
         goto done;
     }
     Drain();
+    CHECK(WaitMapped(choice));
+    host.choice = choice;
     g_signal_emit_by_name(choice, "clicked");
     CHECK(host.chosen == 1U &&
           host.pid == (strcmp(mode, "page") == 0                                       ? 120U
                        : (strcmp(mode, "search") == 0 || strcmp(mode, "old-row") == 0) ? 124U
                                                                                        : 100U));
+    if (strncmp(mode, "choose-", 7U) == 0)
+    {
+        Drain();
+        CHECK(host.reentered && host.chosen == 1U &&
+              g_atomic_int_get(&host.captures) == 1);
+        if (strcmp(mode, "choose-search") == 0)
+        {
+            GtkWidget *first = Find(panel, "process.picker.choose.0");
+            CHECK(first != NULL && WaitMapped(first));
+            g_signal_emit_by_name(first, "clicked");
+            CHECK(host.chosen == 2U && host.pid == 124U);
+        }
+    }
 done:
+    /* Disconnect test observers before releasing their borrowed Host data. */
+    if (panel != NULL) {
+        GtkWidget *observed[] = {Find(panel, "process.picker.refresh"), Find(panel, "process.picker.next")};
+        for (size_t i = 0U; i < 2U; ++i)
+            if (observed[i] != NULL) g_signal_handlers_disconnect_by_data(observed[i], &host);
+    }
     g_clear_object(&retained);
     gtk_window_destroy(host.window);
     g_clear_object(&panel);

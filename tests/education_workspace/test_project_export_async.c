@@ -8,6 +8,7 @@
 #include "../build_log/fixture.h"
 #include "../../adapters/gtk4/education_workspace_private.h"
 #include "umicom/platform/filesystem.h"
+#include "umicom/platform/path.h"
 
 typedef struct ExportProbe {
     UmiEducationGtkPanel *panel;
@@ -137,6 +138,13 @@ static int ProgramMain(int argc, char **argv)
     GtkWidget *export = g_object_ref(Find(root, "education.export-project"));
     GtkWidget *open = g_object_ref(Find(root, "education.open-project"));
     if (strcmp(argv[1], "destination") == 0) {
+        /* FixturePath intentionally accepts mixed separators. Destination
+         * preparation publishes a normalized native path, so compare against
+         * that spelling while keeping the same Unicode folder and ownership.
+         * This also makes the later export/adoption checks use one path form. */
+        char normalized[UMI_PATH_CAPACITY];
+        CHECK(umi_path_normalise(probe.destination, normalized, sizeof normalized) == UMI_STATUS_OK);
+        memcpy(probe.destination, normalized, strlen(normalized) + 1U);
         GtkWidget *folder = Find(root, "education.project-parent");
         GtkWidget *name = Find(root, "education.project-name");
         GtkWidget *use = Find(root, "education.project-destination");

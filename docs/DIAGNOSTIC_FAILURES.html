@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Report native application failures</title><style>body{font:17px/1.6 system-ui,sans-serif;max-width:850px;margin:auto;padding:32px;color:#152338;background:#fafcff}pre{padding:16px;background:#eaf0f7;overflow:auto}code{font-family:ui-monospace,monospace}h1,h2{line-height:1.25}a{color:#135aab}</style></head>
+<body><h1>Report native application failures</h1>
+<p>A failed constructor should tell you which operation failed. Framework provides a small logging helper that records a public operation name and the original status. It uses the existing diagnostic sink: the callback that receives a message for a console, a log or the Problems view.</p>
+<h2>1. Connect a diagnostic sink</h2>
+<p>The following sink writes messages to standard error. A host with a diagnostic pipeline can use <code>umi_diagnostic_pipeline_sink</code> and pass its pipeline as the logger's user data instead. The callback must copy text if it needs to retain it after returning.</p>
+<pre><code>#include "umicom/diagnostics/log.h"
+#include &lt;stdio.h&gt;
+
+static void report(const UmiDiagnostic *event, void *data)
+{
+    (void)data;
+    fprintf(stderr, "[%s] %s\n", event-&gt;source, event-&gt;message);
+}
+
+UmiLogger logger = {report, NULL, "application-startup"};
+</code></pre>
+<h2>2. Report the failed operation</h2>
+<p>Call the helper with the status returned by the operation. Successful operations produce no message. Continue to return the original failure and release partially created resources through their normal owners.</p>
+<pre><code>umi_log_status(&amp;logger, "adapter.prepare", status, correlation_id);
+</code></pre>
+<p>For <code>UMI_STATUS_INVALID_STATE</code>, the message is:</p>
+<pre><code>Operation adapter.prepare failed: Invalid state (2).</code></pre>
+<p>Use fixed names from your source code. An operation name accepts up to 96 ASCII letters, digits, dots, hyphens or underscores. Invalid names become <code>unspecified-operation</code>. Do not supply paths, account names, credentials or document content. This validation is not a general secret detector. The helper formats its message without heap allocation; the receiving sink can have its own allocation and retention policies.</p>
+<h2>3. Keep native toolkit messages visible</h2>
+<p>The built-in runtime parser recognizes warning and critical markers from Gtk, Gdk, Gsk, GLib, GLib-GObject and GLib-GIO. Applications that feed process output into the default diagnostic pipeline receive these messages in its diagnostic model.</p>
+<ul><li>A warning marker becomes a warning with code <code>native-toolkit-warning</code>.</li><li>A critical marker becomes an error with code <code>native-toolkit-critical</code>. It does not prove that the process terminated.</li><li>The original source, message and correlation identifier remain available for the host to display.</li></ul>
+<p>Keep collecting the process exit status separately. Recognizing a message does not fix its cause, suppress it or change whether a test succeeds.</p>
+<h2>4. Investigate a Studio startup failure</h2>
+<ol><li>Launch Studio from a terminal and retain standard error with the rest of the process log.</li><li>Find the first <code>[Studio startup]</code> message. It identifies the failed operation, such as <code>window.titlebar</code> or <code>bootstrap.create</code>.</li><li>Read the following higher-level messages as context for that same failure. For example, a bootstrap failure can also prevent runtime attachment and workbench creation.</li><li>Inspect the named operation and its status before changing unrelated application settings. Rebuild the changed libraries and the application before repeating the same workflow.</li></ol>
+<p>These diagnostics describe initialization failures. They do not certify a completed build, successful tests, working broker connections or a release-ready application.</p>
+</body></html>

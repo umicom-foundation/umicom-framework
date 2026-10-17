@@ -37,7 +37,12 @@ extern "C"
  * creation identities are displayed but cannot be chosen. Positive int32 PIDs only
  * are selectable for debugger compatibility. Recheck identity before attaching.
  * Search operates on captured names and decimal PIDs, not the current process table.
- * A pid:123 query selects an exact decimal PID instead of a substring. */
+ * A pid:123 query selects an exact decimal PID instead of a substring.
+ * Native notifications during publication cannot start another capture, page
+ * the catalogue or invoke a recursive choose callback. Search edits made during
+ * publication or the host callback are coalesced for the next complete render.
+ * Hiding cancels pending capture and redraw work; showing a retained panel
+ * reapplies changed search input without automatically capturing processes. */
     GtkWidget *UmiGtk4ProcessPickerCreate(const UmiGtk4ProcessProvider *provider,
                                           UmiGtk4ProcessChoose choose, void *context,
                                           GDestroyNotify destroy);

@@ -39,5 +39,9 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 if(TARGET umicom_ui_gtk4)
     umicom_process_catalog_test(umicom-process-picker-gtk4-test test_gtk4.c Umicom::ui_gtk4)
+    # Reentrant native notifications must not change an active scan or row publication.
+    umicom_process_catalog_cases(gtk4 umicom-process-picker-gtk4-test
+        publication-refresh publication-page publication-search publication-render-refresh
+        publication-close choose-reenter choose-refresh choose-search hidden-search)
     umicom_process_catalog_cases(gtk4 umicom-process-picker-gtk4-test normal search page old-row fixture unknown cancel close hidden retained failed-refresh denied close-choose)
 endif()

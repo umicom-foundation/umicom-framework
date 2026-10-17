@@ -29,6 +29,10 @@ UmiDiagnosticParser umi_runtime_diagnostic_parser(void);
 /**
  * Read runtime diagnostic into validated module state and return a status when input
  * cannot be used.
+ * Recognized Gtk, Gdk, Gsk and GLib warning/critical markers retain warning/error
+ * severity; a critical check alone is not evidence that the process terminated.
+ * Sanitizer, memory-fault and exception recognition remains available. A line
+ * with no recognized marker leaves the diagnostic unchanged and clears matched.
  */
 UmiStatus umi_runtime_diagnostic_parse(const UmiOutputRecord *output,
                                        UmiDiagnosticSnapshot *out_diagnostic,

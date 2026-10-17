@@ -795,3 +795,31 @@ if(BUILD_TESTING)
         umicom_register_validation_target(umicom-ide-workspace-identity-test)
     endif()
 endif()
+
+# Retained results can include skipped, cancelled or unfinished work. Exercise
+# readiness policy independently from providers, GUI mapping and external tools.
+if(BUILD_TESTING)
+    add_executable(umicom-ide-test-evidence-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_workflow_test_evidence.c")
+    target_link_libraries(umicom-ide-test-evidence-test PRIVATE Umicom::Framework)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-ide-test-evidence-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-ide-test-evidence-test)
+    endif()
+    foreach(evidence_case IN ITEMS
+        passed failed timed-out skipped cancelled not-run unknown empty unbound
+        missing-binding missing-context running stale-count mixed-skipped
+        mixed-failed all-passed execution-empty execution-skipped execution-failed
+        execution-mixed execution-running optional-empty optional-skipped
+        optional-failed optional-running optional-unbound optional-stale optional-passed)
+        add_test(NAME "framework.ide_integration.test-evidence.${evidence_case}"
+            COMMAND umicom-ide-test-evidence-test "${evidence_case}")
+        set_tests_properties("framework.ide_integration.test-evidence.${evidence_case}"
+            PROPERTIES TIMEOUT 20 LABELS "framework;ide;test-evidence;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-ide-test-evidence-test)
+    endif()
+endif()

@@ -285,13 +285,16 @@ static int fixture(const char *base, const char *relative, const char *text)
     }
     int result = writeText(path, text); free(path); return result;
 }
+/* Healthcare extends the original 24-product fixture without changing the
+ * compatibility name used by existing source-contract callers. */
 static int portfolio(const char *base)
 {
     static const char *const names[] = {
         "desktop","studio","trader","bank","tms","music", "accountant",
         "cad","creator","database-studio","education","exchange","games",
         "integration-studio","kitchen","llm","marketplace","media",
-        "mobile-studio","operations","os","rag","security-centre","web-studio"
+        "mobile-studio","operations","os","rag","security-centre","web-studio",
+        "healthcare"
     };
     char catalogue[8192] = "static Getter GETTERS[] = {\n";
     char includes[8192] = "", records[8192] = "", modules[8192] = "";
@@ -328,7 +331,31 @@ static int portfolio(const char *base)
     const char *group = "all_24_products_have_catalogued_experiences_and_standard_recipes";
     UmiSourceContractReport report = {0};
     CHECK(UmiSourceContractWorkbenchGroup(base, group, &report) == 0);
+    /* Retain the previous portfolio baseline for comparison. Each product
+     * contributes an experience, manifest and recipe; only the 18 shared
+     * frontends contribute a module file to this source check. */
+#if 0
     CHECK(report.files_checked == 95U && report.findings == 0U);
+#endif
+    const size_t expectedFiles = 5U + 3U * (sizeof(names) / sizeof(names[0])) + 18U;
+    CHECK(report.files_checked == expectedFiles && report.findings == 0U);
+    /* A newly added dedicated host must still declare its default layout.
+     * Restore the valid experience before exercising the independent recipe
+     * mutation below so one defect cannot conceal another. */
+    CHECK(fixture(base, "framework/src/application/experiences/product24.c",
+        "UmiApplicationExperienceDefinition DEFINITION = {\"org.umicom.healthcare\",\"Fixture\",\"missing\"};\n"
+        "Layout L[] = {{sizeof(UmiExperienceLayoutDefinition),\"default\"}};\n"
+        "Panel P[] = {{sizeof(UmiExperiencePanelDefinition)}};\n") == 0);
+    report = (UmiSourceContractReport){0};
+    CHECK(UmiSourceContractWorkbenchGroup(base, group, &report) == 1);
+    CHECK(report.findings == 1U);
+    CHECK(fixture(base, "framework/src/application/experiences/product24.c",
+        "UmiApplicationExperienceDefinition DEFINITION = {\"org.umicom.healthcare\",\"Fixture\",\"default\"};\n"
+        "Layout L[] = {{sizeof(UmiExperienceLayoutDefinition),\"default\"}};\n"
+        "Panel P[] = {{sizeof(UmiExperiencePanelDefinition)}};\n") == 0);
+    report = (UmiSourceContractReport){0};
+    CHECK(UmiSourceContractWorkbenchGroup(base, group, &report) == 0);
+    CHECK(report.files_checked == expectedFiles && report.findings == 0U);
     CHECK(fixture(base, "framework/src/application/component/recipes/studio/standard.inc",
         "UmiApplicationComponentRecipe recipe1 = {\"org.umicom.studio\",WRONG_AUDIENCE};") == 0);
     report = (UmiSourceContractReport){0};

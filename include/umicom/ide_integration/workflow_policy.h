@@ -28,7 +28,11 @@ typedef struct UmiIdeWorkflowPolicy {
     int allow_dirty_document;
     int require_no_errors;
     int require_no_fatals;
+    /* Require a bound service, a finished operation and at least one completed
+     * execution. Failed executions remain warnings unless pass-all is set. */
     int require_tests;
+    /* Require nonempty retained evidence containing only PASSED outcomes.
+     * Skipped, cancelled, unknown and not-run records do not satisfy this gate. */
     int require_all_tests_passed;
     int require_source_control;
     int require_clean_source_control;
